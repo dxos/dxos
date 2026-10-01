@@ -151,10 +151,8 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
     return (
       <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
         <Banner.Root valence='info'>
-          <Banner.Content classNames='m-trim-md'>
-            <Banner.Title>{t('not-configured.title')}</Banner.Title>
-            <Banner.Body>{t('not-configured.message')}</Banner.Body>
-          </Banner.Content>
+          <Banner.Title>{t('not-configured.title')}</Banner.Title>
+          <Banner.Body>{t('not-configured.message')}</Banner.Body>
         </Banner.Root>
       </div>
     );
@@ -167,10 +165,8 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
     return (
       <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
         <Banner.Root valence='error'>
-          <Banner.Content classNames='m-trim-md'>
-            <Banner.Title>{t('connection-failed.title')}</Banner.Title>
-            <Banner.Body>{error.message}</Banner.Body>
-          </Banner.Content>
+          <Banner.Title>{t('connection-failed.title')}</Banner.Title>
+          <Banner.Body>{error.message}</Banner.Body>
         </Banner.Root>
       </div>
     );

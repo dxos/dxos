@@ -12,6 +12,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { random } from '@dxos/random';
 import { Field, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { TogglePanel, type TogglePanelRootProps } from './TogglePanel.tsx';
@@ -73,22 +74,22 @@ const DefaultStory = (props: TogglePanelRootProps) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Field.Root>
-            <Field.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
+            <Next.Switch checked={running} onCheckedChange={(checked) => setRunning(checked)} />
           </Field.Root>
           <div className='grow' />
           <div>{count}</div>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <TogglePanel.Root {...props}>
           <TogglePanel.Content>
             <TogglePanel.Header
               icon={
                 running ? (
-                  <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
+                  <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size='md' />
                 ) : undefined
               }
             >
@@ -101,7 +102,7 @@ const DefaultStory = (props: TogglePanelRootProps) => {
             </TogglePanel.Body>
           </TogglePanel.Content>
         </TogglePanel.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

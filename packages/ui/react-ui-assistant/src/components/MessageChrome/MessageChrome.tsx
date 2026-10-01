@@ -4,14 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import {
-  Icon,
-  IconButton,
-  SystemIconButton,
-  type ThemedClassName,
-  createContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, Icon, SystemButton, type ThemedClassName, createContext, useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
 import { type MessageChromeProps, isPrompt } from '@dxos/react-ui-feed';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -55,11 +48,11 @@ export { MessageChromeProvider };
 const CopyButton = ({ message }: { message: Message.Message }) => {
   const { t } = useTranslation(translationKey);
   return (
-    <SystemIconButton.Clipboard
+    <SystemButton.Clipboard
       iconOnly
       label={t('copy.label')}
       variant='ghost'
-      density='sm'
+      size='sm'
       onCopy={() => Message.extractText(message)}
     />
   );
@@ -105,12 +98,12 @@ export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
     <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-description', classNames)}>
       <CopyButton message={message} />
       {onRewind && (
-        <IconButton
+        <Button
           icon='ph--clock-counter-clockwise--regular'
           iconOnly
           label={t('rewind.label')}
           variant='ghost'
-          density='sm'
+          size='sm'
           data-testid='chat.rewind'
           onClick={() => onRewind(message.id)}
         />
@@ -190,7 +183,7 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
         <TogglePanel.Content classNames='border border-subdued-separator rounded-sm'>
           <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
             <span className='grow text-description truncate'>{t('context.label')}</span>
-            <Icon icon='ph--brain--regular' size={4} classNames='text-description' />
+            <Icon icon='ph--brain--regular' size='md' classNames='text-description' />
           </TogglePanel.Header>
           <TogglePanel.Body>
             <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-description whitespace-pre-wrap'>

@@ -5,8 +5,8 @@
 import React, { Children, type PropsWithChildren, useId } from 'react';
 
 import {
+  Block,
   Collapsible,
-  Field,
   Fieldset,
   Icon,
   type ThemedClassName,
@@ -83,7 +83,7 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
         aria-label={description}
         className='grid size-6 place-items-center rounded-xs text-description hover:bg-hover-surface'
       >
-        <Icon icon='ph--question--regular' size={4} />
+        <Icon icon='ph--question--regular' size='md' />
       </Tooltip.Trigger>
     );
 
@@ -109,7 +109,7 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
             actions={
               <>
                 {trailing}
-                <Field.Block>
+                <Block>
                   {/* Not a `Button`: its open-state styling would read the trigger's `data-state`. */}
                   <Collapsible.Trigger
                     aria-labelledby={labelId}
@@ -117,11 +117,11 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
                   >
                     <Icon
                       icon='ph--caret-right--regular'
-                      size={3}
+                      size='xs'
                       classNames='transition-transform group-data-[state=open]:rotate-90'
                     />
                   </Collapsible.Trigger>
-                </Field.Block>
+                </Block>
               </>
             }
           />

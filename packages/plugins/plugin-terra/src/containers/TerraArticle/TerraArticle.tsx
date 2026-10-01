@@ -347,7 +347,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild classNames='dx-expand'>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
           <div className='grow' />
           {view === 'camera' && (
@@ -359,21 +359,21 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
             onValueChange={handleViewChange}
             selectedVariant={hasAttention ? 'primary' : 'default'}
           >
-            <Tabs.Tablist>
-              <Tabs.Button value='scene' data-testid='terra.toolbar.view-scene'>
+            <Tabs.List>
+              <Tabs.Trigger value='scene' data-testid='terra.toolbar.view-scene'>
                 {t('scene-view.label')}
-              </Tabs.Button>
-              <Tabs.Button value='map' data-testid='terra.toolbar.view-map'>
+              </Tabs.Trigger>
+              <Tabs.Trigger value='map' data-testid='terra.toolbar.view-map'>
                 {t('map-view.label')}
-              </Tabs.Button>
-              <Tabs.Button value='camera' data-testid='terra.toolbar.view-camera'>
+              </Tabs.Trigger>
+              <Tabs.Trigger value='camera' data-testid='terra.toolbar.view-camera'>
                 {t('camera-view.label')}
-              </Tabs.Button>
-            </Tabs.Tablist>
+              </Tabs.Trigger>
+            </Tabs.List>
           </Tabs.Root>
         </ActionToolbar>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className='relative grow'>
           {/* Kept mounted and merely hidden while the map shows: the render loop is what advances
                 the simulation the map draws, and `display: none` would collapse the canvas to 0x0. */}
@@ -392,7 +392,7 @@ export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticl
             <TelemetryPanel rows={telemetry} selectedId={selectedId} onSelect={setSelectedId} />
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -410,22 +410,16 @@ const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelect
   const { t } = useTranslation(meta.profile.key);
   return (
     <Select.Root value={value} onValueChange={onChange}>
-      <Select.TriggerButton
+      <Select.Trigger
         placeholder={t('camera-target.placeholder')}
         data-testid='terra.toolbar.camera-target'
         classNames='min-w-32'
       />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {definitions.map((definition) => (
-              <Select.Option key={definition.id} value={definition.id}>
-                {definition.name ?? definition.kind}
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+      <Select.Content>
+        {definitions.map((definition) => (
+          <Select.Item key={definition.id} item={{ value: definition.id, label: definition.name ?? definition.kind }} />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

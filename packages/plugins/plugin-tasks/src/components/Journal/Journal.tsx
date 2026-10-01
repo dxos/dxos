@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -73,7 +73,7 @@ export const Journal = composable<HTMLDivElement, JournalProps>(({ journal, onSe
         ))}
         {!hasTodayEntry && (
           <div className='p-2'>
-            <IconButton label={t('start-today.label')} icon='ph--calendar-plus--regular' onClick={handleCreateEntry} />
+            <Button label={t('start-today.label')} icon='ph--calendar-plus--regular' onClick={handleCreateEntry} />
           </div>
         )}
       </ScrollArea.Viewport>
@@ -122,7 +122,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
       {...{ 'data-has-focus': focused ? true : undefined }}
     >
       <div className='flex items-center gap-2 bg-transparent'>
-        <IconButton
+        <Button
           label={date ? format(date, 'MMM d, yyyy') : ''}
           icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
           onClick={handleFocus}

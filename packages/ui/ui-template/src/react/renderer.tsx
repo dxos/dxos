@@ -14,7 +14,7 @@
 import type * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { type Align, Button, Field, Flex, type Gap, Grid, type Justify, Tabs } from '@dxos/react-ui';
+import { type Align, Button, Field, Flex, type Gap, Grid, Input, type Justify, Tabs } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Combobox, Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
@@ -171,7 +171,7 @@ export const createReactRenderer = ({
         <Field.Root key={path}>
           <Flex column>
             {props.label ? <Field.Label>{asText(props.label)}</Field.Label> : null}
-            <Field.Input
+            <Input
               placeholder={asText(props.placeholder)}
               value={asText(data.value)}
               // MVU: the input is controlled from published state; each change dispatches.
@@ -206,27 +206,25 @@ export const createReactRenderer = ({
       const selections = Array.isArray(data.selections) ? data.selections.map(asText) : [];
       return (
         <Listbox.Root key={path} multiselectable>
-          <Listbox.Viewport>
-            <Listbox.Content>
-              {items.map((item, index) => {
-                const id = asText(itemField(node, scope, item, 'id') ?? index);
-                return (
-                  <Listbox.Item
-                    key={id}
-                    id={id}
-                    selected={selections.includes(id)}
-                    // A shift-click must not start a text selection before the row's click handler runs.
-                    onMouseDown={(event) => event.shiftKey && event.preventDefault()}
-                    onClick={(event) =>
-                      event.shiftKey && event.altKey ? api.extendTo(id) : api.select(id, event.shiftKey)
-                    }
-                  >
-                    <Listbox.ItemLabel>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemLabel>
-                  </Listbox.Item>
-                );
-              })}
-            </Listbox.Content>
-          </Listbox.Viewport>
+          <Listbox.Content>
+            {items.map((item, index) => {
+              const id = asText(itemField(node, scope, item, 'id') ?? index);
+              return (
+                <Listbox.Item
+                  key={id}
+                  id={id}
+                  selected={selections.includes(id)}
+                  // A shift-click must not start a text selection before the row's click handler runs.
+                  onMouseDown={(event) => event.shiftKey && event.preventDefault()}
+                  onClick={(event) =>
+                    event.shiftKey && event.altKey ? api.extendTo(id) : api.select(id, event.shiftKey)
+                  }
+                >
+                  <Listbox.ItemText>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemText>
+                </Listbox.Item>
+              );
+            })}
+          </Listbox.Content>
         </Listbox.Root>
       );
     }
@@ -241,19 +239,17 @@ export const createReactRenderer = ({
           // fires this only when something was selected, so an empty selection dispatches nothing.
           onDeselect={() => handlers.select?.(undefined)}
         >
-          <Listbox.Viewport>
-            <Listbox.Content>
-              {items.map((item, index) => {
-                const id = asText(itemField(node, scope, item, 'id') ?? index);
-                return (
-                  <Listbox.Item key={id} id={id}>
-                    <Listbox.ItemLabel>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemLabel>
-                    <Listbox.Indicator />
-                  </Listbox.Item>
-                );
-              })}
-            </Listbox.Content>
-          </Listbox.Viewport>
+          <Listbox.Content>
+            {items.map((item, index) => {
+              const id = asText(itemField(node, scope, item, 'id') ?? index);
+              return (
+                <Listbox.Item key={id} id={id}>
+                  <Listbox.ItemText>{asText(itemField(node, scope, item, 'label') ?? id)}</Listbox.ItemText>
+                  <Listbox.ItemIndicator />
+                </Listbox.Item>
+              );
+            })}
+          </Listbox.Content>
         </Listbox.Root>
       );
     }
@@ -360,18 +356,18 @@ export const createReactRenderer = ({
       value={asText(data.value) || undefined}
       onValueChange={(next) => handlers.select?.(next)}
     >
-      <Tabs.Tablist>
+      <Tabs.List>
         {(node.children ?? [])
           .filter((child) => child.tag === 'tab')
           .map((tab) => {
             const value = asText(tab.props?.value);
             return (
-              <Tabs.Button key={value} value={value}>
+              <Tabs.Trigger key={value} value={value}>
                 {asText(tab.props?.label ?? value)}
-              </Tabs.Button>
+              </Tabs.Trigger>
             );
           })}
-      </Tabs.Tablist>
+      </Tabs.List>
     </Tabs.Root>
   ),
 

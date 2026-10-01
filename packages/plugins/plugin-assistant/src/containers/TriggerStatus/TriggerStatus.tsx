@@ -8,7 +8,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type InvocationsState } from '@dxos/compute-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { Flex, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -72,7 +72,7 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton
+          <Button
             variant='ghost'
             icon={getIcon(triggerState)}
             iconOnly
@@ -81,18 +81,15 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
           />
         </StatusBar.Item>
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content side='left'>
-          <TriggerStatusPopover
-            state={triggerState}
-            currentFunctionName={
-              state?.invocations.at(-1)?.function?.meta.name ?? state?.invocations.at(-1)?.function?.meta.key
-            }
-            lastInvocation={state?.invocations.at(-1)}
-          />
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content side='left'>
+        <TriggerStatusPopover
+          state={triggerState}
+          currentFunctionName={
+            state?.invocations.at(-1)?.function?.meta.name ?? state?.invocations.at(-1)?.function?.meta.key
+          }
+          lastInvocation={state?.invocations.at(-1)}
+        />
+      </Popover.Content>
     </Popover.Root>
   );
 };

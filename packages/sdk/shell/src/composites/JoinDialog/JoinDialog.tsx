@@ -22,25 +22,21 @@ export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
       defaultOpen
       onOpenChange={(open) => open || (joinPanelProps.onExit ? joinPanelProps.onExit() : joinPanelProps.onDone?.(null))}
     >
-      <AlertDialog.Portal>
-        <AlertDialog.Overlay classNames='backdrop-blur' {...(height && { style: { blockSize: `${height}px` } })}>
-          <AlertDialog.Content aria-labelledby={titleId}>
-            <AlertDialog.Body>
-              <AlertDialog.Description srOnly>
-                {t(joinPanelProps.mode === 'halo-only' ? 'selecting-identity.heading' : 'joining-space.heading')}
-              </AlertDialog.Description>
-              <JoinPanel
-                {...{
-                  ...joinPanelProps,
-                  titleId,
-                  exitActionParent: <AlertDialog.Cancel asChild />,
-                  doneActionParent: <AlertDialog.Action asChild />,
-                }}
-              />
-            </AlertDialog.Body>
-          </AlertDialog.Content>
-        </AlertDialog.Overlay>
-      </AlertDialog.Portal>
+      <AlertDialog.Content aria-labelledby={titleId}>
+        <AlertDialog.Body>
+          <AlertDialog.Description srOnly>
+            {t(joinPanelProps.mode === 'halo-only' ? 'selecting-identity.heading' : 'joining-space.heading')}
+          </AlertDialog.Description>
+          <JoinPanel
+            {...{
+              ...joinPanelProps,
+              titleId,
+              exitActionParent: <AlertDialog.Cancel asChild />,
+              doneActionParent: <AlertDialog.Action asChild />,
+            }}
+          />
+        </AlertDialog.Body>
+      </AlertDialog.Content>
     </AlertDialog.Root>
   );
 };

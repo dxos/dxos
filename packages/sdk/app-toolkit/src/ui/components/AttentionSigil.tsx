@@ -123,58 +123,53 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
         <Menu.Trigger asChild ref={forwardedRef}>
           {button}
         </Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Content classNames='z-[31]'>
-            <Menu.Viewport>
-              {actionGroups?.map((actions, index) => {
-                const separator = index > 0 ? <Menu.Separator /> : null;
-                return (
-                  <Fragment key={index}>
-                    {separator}
-                    {actions.map((action) => {
-                      const shortcut = resolveKeyBinding(action.properties.keyBinding);
+        <Menu.Content classNames='z-[31]'>
+          {actionGroups?.map((actions, index) => {
+            const separator = index > 0 ? <Menu.Separator /> : null;
+            return (
+              <Fragment key={index}>
+                {separator}
+                {actions.map((action) => {
+                  const shortcut = resolveKeyBinding(action.properties.keyBinding);
 
-                      const menuItemType = action.properties.menuItemType;
-                      const Root = menuItemType === 'toggle' ? Menu.CheckboxItem : Menu.Item;
+                  const menuItemType = action.properties.menuItemType;
+                  const Root = menuItemType === 'toggle' ? Menu.CheckboxItem : Menu.Item;
 
-                      return (
-                        <Root
-                          key={action.id}
-                          onClick={(event) => {
-                            if (action.properties.disabled) {
-                              return;
-                            }
-                            event.stopPropagation();
-                            // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                            setOptionsMenuOpen(false);
-                            onAction?.(action);
-                          }}
-                          classNames='gap-2'
-                          disabled={action.properties.disabled}
-                          checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
-                          {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                        >
-                          <Icon icon={action.properties.icon ?? 'ph--circle-dashed--regular'} size={4} />
-                          <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
-                          {menuItemType === 'toggle' && (
-                            <Menu.ItemIndicator asChild>
-                              <Icon icon='ph--check--regular' size={4} />
-                            </Menu.ItemIndicator>
-                          )}
-                          {shortcut && (
-                            <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>
-                          )}
-                        </Root>
-                      );
-                    })}
-                  </Fragment>
-                );
-              })}
-              {children}
-            </Menu.Viewport>
-            <Menu.Arrow />
-          </Menu.Content>
-        </Menu.Portal>
+                  return (
+                    <Root
+                      key={action.id}
+                      onClick={(event) => {
+                        if (action.properties.disabled) {
+                          return;
+                        }
+                        event.stopPropagation();
+                        // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                        setOptionsMenuOpen(false);
+                        onAction?.(action);
+                      }}
+                      classNames='gap-2'
+                      disabled={action.properties.disabled}
+                      checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
+                      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
+                    >
+                      <Icon icon={action.properties.icon ?? 'ph--circle-dashed--regular'} size='md' />
+                      <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
+                      {menuItemType === 'toggle' && (
+                        <Menu.ItemIndicator asChild>
+                          <Icon icon='ph--check--regular' size='md' />
+                        </Menu.ItemIndicator>
+                      )}
+                      {shortcut && (
+                        <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>
+                      )}
+                    </Root>
+                  );
+                })}
+              </Fragment>
+            );
+          })}
+          {children}
+        </Menu.Content>
       </Menu.Root>
     );
   },

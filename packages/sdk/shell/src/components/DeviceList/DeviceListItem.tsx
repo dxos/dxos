@@ -111,30 +111,28 @@ export const DeviceListItem = forwardRef<
                 </Button>
               </Menu.Trigger>
               <Menu.Content>
-                <Menu.Viewport>
-                  {/* <Menu.Item disabled onClick={onClickEdit}> */}
-                  {/*  <PencilSimpleLine className={getSize(5)} /> */}
-                  {/*  {t('edit-device.label')} */}
-                  {/* </Menu.Item> */}
-                  {onClickJoinExisting && (
-                    <Menu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
-                      <Icon icon='ph--share-fat--regular' />
-                      {t('choose-join-new-identity.label')}
-                    </Menu.Item>
-                  )}
-                  {onClickRecover && (
-                    <Menu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
-                      <Icon icon='ph--first-aid-kit--regular' />
-                      {t('choose-recover-identity.label')}
-                    </Menu.Item>
-                  )}
-                  {onClickReset && (
-                    <Menu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
-                      <Icon icon='ph--power--regular' />
-                      {t('reset-device.label')}
-                    </Menu.Item>
-                  )}
-                </Menu.Viewport>
+                {/* <Menu.Item disabled onClick={onClickEdit}> */}
+                {/*  <PencilSimpleLine className={getSize(5)} /> */}
+                {/*  {t('edit-device.label')} */}
+                {/* </Menu.Item> */}
+                {onClickJoinExisting && (
+                  <Menu.Item data-testid='device-list-item-current.join-existing' onClick={onClickJoinExisting}>
+                    <Icon icon='ph--share-fat--regular' />
+                    {t('choose-join-new-identity.label')}
+                  </Menu.Item>
+                )}
+                {onClickRecover && (
+                  <Menu.Item data-testid='device-list-item-current.recover' onClick={onClickRecover}>
+                    <Icon icon='ph--first-aid-kit--regular' />
+                    {t('choose-recover-identity.label')}
+                  </Menu.Item>
+                )}
+                {onClickReset && (
+                  <Menu.Item data-testid='device-list-item-current.reset' onClick={onClickReset}>
+                    <Icon icon='ph--power--regular' />
+                    {t('reset-device.label')}
+                  </Menu.Item>
+                )}
               </Menu.Content>
             </Menu.Root>
           )}

@@ -351,12 +351,12 @@ export const MessageArticle = ({
       onOpenAttachment={mailbox ? handleOpenAttachment : onOpenAttachment}
     >
       <Panel.Root role={role} data-testid={testId}>
-        <Panel.Toolbar>
+        <Panel.Header>
           <ConversationStack.Toolbar classNames='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <ConversationStack.Content />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </ConversationStack.Root>
   );

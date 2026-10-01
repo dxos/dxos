@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { FundamentalsPanel, TradingViewChart } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
@@ -56,12 +56,12 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
             <Card.Root fullWidth border={false}>
               <Card.Header>
-                <Card.Block />
+                <Block />
                 <Flex column gap='xs' classNames='min-w-0'>
                   <Card.Title>
                     {instrument.symbol}
@@ -73,7 +73,7 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
                     </Card.Text>
                   )}
                 </Flex>
-                <Card.Block />
+                <Block />
               </Card.Header>
               <Card.Body>
                 <Card.Row fullWidth>
@@ -87,7 +87,7 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
             <FundamentalsPanel snapshot={fundamentals} loading={loading} error={error} onRefresh={loadFundamentals} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -14,7 +14,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Dialog, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Dialog, ScrollArea, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -109,9 +109,9 @@ export const CreateSpaceDialog = () => {
       >
         <Dialog.Header>
           <Dialog.Title>{t('create-space-dialog.title')}</Dialog.Title>
-          <Dialog.Close asChild>
-            <Dialog.ActionIconButton action='close' ref={closeRef} />
-          </Dialog.Close>
+          <Dialog.CloseTrigger asChild>
+            <SystemButton.Close ref={closeRef} />
+          </Dialog.CloseTrigger>
         </Dialog.Header>
         <Dialog.Body>
           {/* A ScrollArea rather than Form.Viewport's own scrolling Column, which would nest a second

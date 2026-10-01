@@ -156,12 +156,11 @@ const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
         ]}
         ref={forwardedRef}
       >
-        <Popover.Viewport classNames='w-full min-w-0'>
+        <Popover.Body classNames='w-full min-w-0'>
           <Picker.Root resetSelectionOnChange={resetSelectionOnChange}>{children}</Picker.Root>
-        </Popover.Viewport>
+        </Popover.Body>
         {/* Beside the viewport, never inside it: the arrow is positioned against the content, so
             nested in the scrolling viewport it lands over the first row instead of beyond the edge. */}
-        <Popover.Arrow />
       </Popover.Content>
     );
   },
@@ -206,7 +205,7 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
               <span className={styles.comboboxTriggerText({ class: !value && 'text-placeholder' })}>
                 {displayValue || value || placeholder}
               </span>
-              <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
+              <Icon icon='ph--caret-down--bold' size='xs' classNames='mx-0.5' />
             </>
           )}
         </Button>

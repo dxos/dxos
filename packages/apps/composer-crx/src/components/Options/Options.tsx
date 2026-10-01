@@ -6,8 +6,9 @@ import React, { type ChangeEvent, useEffect, useState } from 'react';
 
 import { Composer, DXOSHorizontalType } from '@dxos/brand';
 import { SpaceId } from '@dxos/keys';
-import { Field, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Field, Input, ScrollArea, Textarea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import {
   DEFAULT_COMPOSER_URLS,
@@ -115,7 +116,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Field.Root>
               <Field.Label>{t('settings.dev-mode.label')}</Field.Label>
               <div className='text-end'>
-                <Field.Switch checked={developerMode} onCheckedChange={handleDeveloperModeChange} />
+                <Next.Switch checked={developerMode} onCheckedChange={handleDeveloperModeChange} />
               </div>
             </Field.Root>
           </div>
@@ -124,7 +125,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Field.Root>
               <Field.Label>{t('settings.space-mode.label')}</Field.Label>
               <div className='text-end'>
-                <Field.Switch checked={spaceMode} onCheckedChange={handleSpaceModeChange} />
+                <Next.Switch checked={spaceMode} onCheckedChange={handleSpaceModeChange} />
               </div>
             </Field.Root>
           </div>
@@ -133,7 +134,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Field.Root>
               <Field.Label>{t('settings.space-id.label')}</Field.Label>
               <div className='text-end'>
-                <Field.Input value={spaceId ?? ''} onChange={handleSpaceIdChange} />
+                <Input value={spaceId ?? ''} onChange={handleSpaceIdChange} />
               </div>
             </Field.Root>
           </div>
@@ -142,7 +143,7 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
             <Field.Root>
               <Field.Label classNames='self-start'>{t('settings.composer-urls.label')}</Field.Label>
               <div className='text-end'>
-                <Field.Textarea
+                <Textarea
                   rows={4}
                   placeholder={DEFAULT_COMPOSER_URLS.join('\n')}
                   value={composerUrls}

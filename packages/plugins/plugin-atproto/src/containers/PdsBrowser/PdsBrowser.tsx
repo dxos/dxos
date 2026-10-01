@@ -12,7 +12,19 @@ import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection } from '@dxos/link';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Card, Field, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import {
+  Block,
+  Button,
+  Card,
+  Field,
+  Flex,
+  Icon,
+  Input,
+  Panel,
+  ScrollArea,
+  Toolbar,
+  useTranslation,
+} from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { getStyles } from '@dxos/ui-theme';
@@ -204,12 +216,12 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
               {preview && previewIcon && (
                 <Card.Root>
                   <Card.Header>
-                    <Card.Block>
+                    <Block>
                       <Icon
                         icon={previewIcon.icon}
                         classNames={previewIcon.hue ? getStyles(previewIcon.hue).text : undefined}
                       />
-                    </Card.Block>
+                    </Block>
                     <Card.Title>{Obj.getLabel(preview)}</Card.Title>
                   </Card.Header>
                   <Surface.Surface type={AppSurface.CardContent} data={{ subject: preview }} limit={1} />
@@ -233,11 +245,11 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root classNames='px-2'>
-          <Icon icon='ph--at--regular' size={4} classNames='text-description' />
+          <Icon icon='ph--at--regular' size='md' classNames='text-description' />
           <Field.Root>
-            <Field.Input
+            <Input
               classNames='grow'
               placeholder={t('handle.placeholder')}
               value={handleInput}
@@ -251,8 +263,8 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
           </Field.Root>
           <Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>{t('browse.label')}</Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col dx-grow py-2'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col dx-grow py-2'>
         {error && <div className='px-2 pb-2 text-sm text-error-text'>{error}</div>}
         <MasterDetail<CollectionItem>
           orientation='horizontal'
@@ -280,7 +292,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
             ) : null
           }
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

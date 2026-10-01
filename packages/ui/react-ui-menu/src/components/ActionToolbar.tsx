@@ -5,7 +5,10 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import {
+  Block,
+  Button,
   Field,
+  ToggleGroup,
   Toolbar,
   type ToolbarRootProps,
   Tooltip,
@@ -15,6 +18,7 @@ import {
   useTranslation,
 } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProperties } from '@dxos/ui-types';
 
@@ -80,7 +84,7 @@ const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   };
 
   return icon ? (
-    <Toolbar.IconButton
+    <Button
       {...commonProps}
       icon={icon}
       size={iconSize}
@@ -89,9 +93,9 @@ const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
       label={actionLabel(action, t)}
     />
   ) : (
-    <Toolbar.Button {...commonProps}>
+    <Button {...commonProps}>
       <ActionLabel action={action} />
-    </Toolbar.Button>
+    </Button>
   );
 };
 
@@ -114,7 +118,7 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   }
 
   const switchInput = (
-    <Field.Switch
+    <Next.Switch
       checked={checked}
       disabled={disabled}
       aria-label={iconOnly ? labelStr : undefined}
@@ -127,10 +131,10 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
     <Field.Root>
       {iconOnly ? (
         <Tooltip.Trigger asChild content={labelStr}>
-          <Field.Block>{switchInput}</Field.Block>
+          <Block>{switchInput}</Block>
         </Tooltip.Trigger>
       ) : (
-        <Field.Block>{switchInput}</Field.Block>
+        <Block>{switchInput}</Block>
       )}
       {!iconOnly && <Field.Label>{labelStr}</Field.Label>}
     </Field.Root>
@@ -159,7 +163,7 @@ const DropdownToolbarItem = ({ menu, group }: ItemProps<{ group: MenuItemGroup<D
   const labelAction = applyActive && activeItem ? activeItem : group;
 
   const trigger = icon ? (
-    <Toolbar.IconButton
+    <Button
       variant='ghost'
       disabled={disabled}
       icon={icon}
@@ -171,14 +175,14 @@ const DropdownToolbarItem = ({ menu, group }: ItemProps<{ group: MenuItemGroup<D
       {...(testId && { 'data-testid': testId })}
     />
   ) : (
-    <Toolbar.Button
+    <Button
       variant='ghost'
       disabled={disabled}
       caretDown={caretDown && !disabled}
       {...(testId && { 'data-testid': testId })}
     >
       <ActionLabel action={labelAction} />
-    </Toolbar.Button>
+    </Button>
   );
 
   // No menu behind a disabled trigger, since `disabled` alone does not gate the machine's open handler and the
@@ -221,7 +225,7 @@ const ToggleGroupItem = ({
   };
 
   return hidden ? null : icon ? (
-    <Toolbar.ToggleGroupIconItem
+    <ToggleGroup.Item
       {...commonProps}
       icon={icon}
       size={iconSize}
@@ -230,9 +234,9 @@ const ToggleGroupItem = ({
       label={actionLabel(action, t)}
     />
   ) : (
-    <Toolbar.ToggleGroupItem {...commonProps}>
+    <ToggleGroup.Item {...commonProps}>
       <ActionLabel action={action} />
-    </Toolbar.ToggleGroupItem>
+    </ToggleGroup.Item>
   );
 };
 

@@ -8,7 +8,7 @@ import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useContext, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Field, IconButton, Toolbar } from '@dxos/react-ui';
+import { Button, Field, Input, Toolbar } from '@dxos/react-ui';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -48,7 +48,7 @@ export const DropdownMenu: Story = {
 
     return (
       <ActionMenu {...menu}>
-        <IconButton icon='ph--list-checks--regular' label='Options' />
+        <Button icon='ph--list-checks--regular' label='Options' />
       </ActionMenu>
     );
   },
@@ -120,7 +120,7 @@ export const TrailingChildren: Story = {
     return (
       <ActionToolbar {...menu} alwaysActive>
         <Field.Root>
-          <Field.Input variant='subdued' placeholder='Filter…' classNames='grow min-w-40' />
+          <Input variant='subdued' placeholder='Filter…' classNames='grow min-w-40' />
         </Field.Root>
       </ActionToolbar>
     );
@@ -137,10 +137,10 @@ export const EmbeddedMenu: Story = {
 
     return (
       <Toolbar.Root>
-        <Toolbar.Button>Foo</Toolbar.Button>
+        <Button>Foo</Button>
         <Toolbar.Separator />
         <ActionMenu {...menu}>
-          <Toolbar.IconButton icon='ph--dots-three-vertical--regular' label='More' />
+          <Button icon='ph--dots-three-vertical--regular' label='More' />
         </ActionMenu>
       </Toolbar.Root>
     );

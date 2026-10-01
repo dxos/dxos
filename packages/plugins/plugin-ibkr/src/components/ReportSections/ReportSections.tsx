@@ -164,18 +164,12 @@ export const ReportSections = ({ positions, trades, cash, openLots, closedLots }
     <div className='grid grid-rows-[min-content_1fr] min-h-0 h-full'>
       <div className='p-2'>
         <Select.Root value={active?.id} onValueChange={setSelected}>
-          <Select.TriggerButton />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {sections.map((section) => (
-                  <Select.Option key={section.id} value={section.id}>
-                    {section.label}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
+          <Select.Trigger />
+          <Select.Content>
+            {sections.map((section) => (
+              <Select.Item key={section.id} item={{ value: section.id, label: section.label }} />
+            ))}
+          </Select.Content>
         </Select.Root>
       </div>
       {active && (

@@ -1505,7 +1505,7 @@ const TreeNodeHeading = <T extends { id: string }>({
         ) : (
           props.icon && (
             <Icon
-              size={5}
+              size='lg'
               icon={props.icon}
               // Centred in a block, the column a child row's toggle sits in.
               classNames={['my-1 mx-0.5', styles?.text]}

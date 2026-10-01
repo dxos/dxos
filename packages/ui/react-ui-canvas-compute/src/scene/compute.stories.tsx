@@ -124,18 +124,14 @@ const DefaultStory = ({ controller, circuit, sidebar: sidebarProp }: StoryProps)
         <div className='flex flex-col h-full overflow-hidden border-l border-separator'>
           <Toolbar.Root>
             <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as Sidebar)}>
-              <Select.TriggerButton classNames='w-full'>{sidebar}</Select.TriggerButton>
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {sidebarTypes.map((type) => (
-                      <Select.Item key={type} value={type}>
-                        {type}
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
+              <Select.Trigger classNames='w-full'>{sidebar}</Select.Trigger>
+              <Select.Content>
+                {sidebarTypes.map((type) => (
+                  <Select.Item key={type} value={type}>
+                    {type}
+                  </Select.Item>
+                ))}
+              </Select.Content>
             </Select.Root>
           </Toolbar.Root>
           <SidebarJson sidebar={sidebar} controller={controller} projection={projection} atoms={atoms} />

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { IconButton, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -115,26 +115,20 @@ const DefaultStory = ({
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <IconButton
+          <Button
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
             iconOnly
             label={running ? 'Stop' : 'Start'}
             data-testid='follow.toggle'
             onClick={handleToggle}
           />
-          <IconButton
-            icon='ph--arrow-line-up--regular'
-            iconOnly
-            label='Top'
-            data-testid='follow.top'
-            onClick={handleTop}
-          />
+          <Button icon='ph--arrow-line-up--regular' iconOnly label='Top' data-testid='follow.top' onClick={handleTop} />
         </Toolbar.Root>
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport data-testid='follow.viewport' ref={setViewport}>
             {items.map(({ index }) => (
@@ -148,9 +142,9 @@ const DefaultStory = ({
             ))}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
 
-      <Panel.Statusbar>
+      <Panel.Footer>
         <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description tabular-nums'>
           <span data-testid='follow.items'>{items.length} items</span>
           <span data-testid='follow.position'>
@@ -164,7 +158,7 @@ const DefaultStory = ({
           </span>
           <span className='text-right'>{running ? 'following' : 'idle'}</span>
         </div>
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

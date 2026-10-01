@@ -12,7 +12,7 @@ import { Filter, Obj, Query, Scope } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { parentId } from '@dxos/graph/GraphNode';
 import { useNode } from '@dxos/plugin-graph/hooks';
-import { Banner, useTranslation } from '@dxos/react-ui';
+import { Empty, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { type Event, Message } from '@dxos/types';
 
@@ -90,7 +90,7 @@ export const MailboxMessageCompanion = ({ role, attendableId, mailbox }: Mailbox
   const selected = useSelection(attendableId, 'single');
   const message = messages.find(({ id }) => id === selected);
   if (!message) {
-    return <Banner.Empty label={t('no-message-selected.message')} />;
+    return <Empty>{t('no-message-selected.message')}</Empty>;
   }
 
   return <MessageArticle role={role} subject={message} attendableId={`${attendableId}/message`} mailbox={mailbox} />;

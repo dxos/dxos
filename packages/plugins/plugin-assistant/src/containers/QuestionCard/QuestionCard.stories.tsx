@@ -14,7 +14,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { Card, Icon } from '@dxos/react-ui';
+import { Block, Card, Icon } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
@@ -69,9 +69,9 @@ const DefaultStory = () => {
             <CardContainer role={role} icon='ph--question--regular'>
               <Card.Root border={false}>
                 <Card.Header>
-                  <Card.Block>
+                  <Block>
                     <Icon icon='ph--question--regular' />
-                  </Card.Block>
+                  </Block>
                   <Card.Title>{task.title}</Card.Title>
                   <Card.Menu />
                 </Card.Header>

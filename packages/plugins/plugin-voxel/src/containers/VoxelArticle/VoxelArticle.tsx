@@ -119,7 +119,7 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <VoxelToolbar
           toolMode={toolMode}
           selectedHue={selectedHue}
@@ -133,8 +133,8 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
           onToggleLife={handleToggleLife}
           onSeedLife={handleSeedLife}
         />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className='relative grow'>
           <VoxelEditor
             voxels={voxels}
@@ -152,7 +152,7 @@ export const VoxelArticle = ({ subject: world, attendableId: _attendableId }: Vo
             <Hint toolMode={toolMode} />
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

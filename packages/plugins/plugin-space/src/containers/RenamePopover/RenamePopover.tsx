@@ -9,7 +9,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Entity, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Space, isSpace } from '@dxos/react-client/echo';
-import { Field, useTranslation } from '@dxos/react-ui';
+import { Field, Input, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -98,7 +98,7 @@ export const RenamePopover = ({ subject }: RenamePopoverProps) => {
     <div className='p-2'>
       <Field.Root>
         <Field.Label srOnly>{t(space ? 'space-name.label' : 'object-name.label')}</Field.Label>
-        <Field.Input
+        <Input
           autoFocus
           value={name}
           placeholder={t(space ? 'unnamed-space.label' : 'object.placeholder')}

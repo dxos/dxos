@@ -5,7 +5,7 @@
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { GeoLocation, type GeoPoint } from '@dxos/echo/Format';
-import { Field, useTranslation } from '@dxos/react-ui';
+import { Field, NumberInput, useTranslation } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -64,8 +64,7 @@ export const GeoPointField = ({
       <div>
         <Field.Root>
           {resolved.showLabel && <Field.Label>{t('latitude.label')}</Field.Label>}
-          <Field.Input
-            type='number'
+          <NumberInput
             step='0.00001'
             min='-90'
             max='90'
@@ -80,8 +79,7 @@ export const GeoPointField = ({
       <div>
         <Field.Root>
           {resolved.showLabel && <Field.Label>{t('longitude.label')}</Field.Label>}
-          <Field.Input
-            type='number'
+          <NumberInput
             step='0.00001'
             min='-180'
             max='180'

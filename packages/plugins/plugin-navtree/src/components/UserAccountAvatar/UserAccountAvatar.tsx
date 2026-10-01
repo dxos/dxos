@@ -32,16 +32,14 @@ export const UserAccountAvatar = ({ size, userId, hue, emoji, status, badge }: U
       >
         {/* Sized by the avatar so the badge sits on its corner, not the cell's. */}
         <span className='relative inline-grid'>
-          <Avatar.Root>
-            <Avatar.Content
-              variant='circle'
-              size={size ?? 12}
-              {...(resolved && { status: status ?? 'active' })}
-              hue={hue || fallbackValue?.hue}
-              fallback={emoji || fallbackValue?.emoji || ''}
-              data-testid={resolved ? 'treeView.userAccount' : 'treeView.userAccount.pending'}
-            />
-          </Avatar.Root>
+          <Avatar.Root
+            variant='circle'
+            size={size ?? 12}
+            {...(resolved && { status: status ?? 'active' })}
+            hue={hue || fallbackValue?.hue}
+            fallback={emoji || fallbackValue?.emoji || ''}
+            data-testid={resolved ? 'treeView.userAccount' : 'treeView.userAccount.pending'}
+          />
           {badge && (
             <span
               className='absolute top-0 right-0 size-2.5 rounded-full bg-error-text'

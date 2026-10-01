@@ -5,9 +5,10 @@
 import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -60,7 +61,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
             </span>
           )}
           <Field.Root>
-            <Field.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
+            <Next.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
           </Field.Root>
         </Flex>
       </Form.Field>
@@ -74,7 +75,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
           >
             <Flex gap='sm' align='center'>
               <span className='grow truncate font-mono text-sm'>{status.session}</span>
-              <SystemIconButton.Clipboard
+              <SystemButton.Clipboard
                 iconOnly
                 label={t('settings.debug-port.copy-session.label')}
                 value={status.session ?? ''}

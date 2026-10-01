@@ -14,7 +14,7 @@ export const NotFoundArticle = () => {
   const { t } = useTranslation(osTranslations);
   return (
     <div className='flex flex-col items-center justify-center h-full gap-4 p-8'>
-      <Icon icon='ph--warning--regular' size={12} />
+      <Icon icon='ph--warning--regular' size='xl' />
       <h2 className='text-lg font-medium'>{t('not-found.heading')}</h2>
       <p className='text-sm text-description'>{t('not-found.description')}</p>
     </div>

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Grid, IconButton, SystemIconButton, Tooltip } from '@dxos/react-ui';
+import { Button, Grid, SystemButton, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -41,7 +41,7 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
         title='Sync'
         info={pending > 0 ? `${pending} syncing` : `${spaces.length} spaces`}
         action={
-          onCopy && <IconButton iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />
+          onCopy && <Button iconOnly variant='ghost' icon='ph--copy--regular' label='Copy raw' onClick={onCopy} />
         }
       />
       {spaces.length === 0 && <StatCard.Row span label='No spaces.' />}
@@ -66,8 +66,8 @@ export const SyncCard = ({ spaces = [], onCopy }: SyncCardProps) => {
           >
             <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='text-end'>
               <Tooltip.Trigger asChild content={row.name}>
-                <SystemIconButton.Clipboard
-                  density='sm'
+                <SystemButton.Clipboard
+                  size='sm'
                   variant='ghost'
                   compact
                   iconEnd

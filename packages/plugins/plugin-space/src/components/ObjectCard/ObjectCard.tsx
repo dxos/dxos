@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot, CardMenuSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
@@ -44,24 +44,19 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu }: ObjectCardPr
   return (
     <Card.Root ref={cardRef} classNames={classNames}>
       <Card.Header>
-        <Card.Block>
+        <Block>
           <CardIconSlot subject={subject}>
             <Icon icon={icon} />
           </CardIconSlot>
-        </Card.Block>
+        </Block>
         <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
-        <Card.Block end>
+        <Block end>
           <CardMenuSlot subject={subject} menu={menu} />
           {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
           <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-            <IconButton
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label={t('more-actions.label')}
-            />
+            <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('more-actions.label')} />
           </ActionMenu>
-        </Card.Block>
+        </Block>
       </Card.Header>
       <Card.Body>
         <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />

@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { type Key } from '@dxos/echo';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -46,13 +46,7 @@ const KeyItem = ({ forignKey, onDelete }: KeyItemProps) => {
         <div>{forignKey.source}</div>
         <div className='text-description text-sm truncate'>{forignKey.id}</div>
       </div>
-      <IconButton
-        iconOnly
-        icon='ph--x--regular'
-        variant='ghost'
-        label={t('delete-key.button')}
-        onClick={handleDelete}
-      />
+      <Button iconOnly icon='ph--x--regular' variant='ghost' label={t('delete-key.button')} onClick={handleDelete} />
     </Listbox.Item>
   );
 };

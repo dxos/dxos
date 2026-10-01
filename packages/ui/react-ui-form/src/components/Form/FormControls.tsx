@@ -6,11 +6,11 @@ import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import {
+  Button,
   Column,
   type ColumnRootProps,
   DIALOG_AUTOFOCUS_ATTRIBUTE,
   Field,
-  IconButton,
   type IconButtonProps,
   ScrollArea,
   type ThemedClassName,
@@ -234,9 +234,8 @@ export const FormActions = ({ classNames, submitLabel, submitIcon, submitDisable
   return (
     <div className={mx(withColumn.center(), formTheme.styles().actions(), classNames)}>
       {onCancel && (
-        <IconButton
-          icon='ph--x--regular'
-          iconEnd
+        <Button
+          iconEnd='ph--x--regular'
           label={t('cancel-button.label')}
           onClick={onCancel}
           data-testid='cancel-button'
@@ -246,12 +245,11 @@ export const FormActions = ({ classNames, submitLabel, submitIcon, submitDisable
         />
       )}
       {onSave && (
-        <IconButton
+        <Button
           type='submit'
           variant='primary'
           disabled={!canSave || submitDisabled}
-          icon={submitIcon ?? 'ph--check--regular'}
-          iconEnd
+          iconEnd={submitIcon ?? 'ph--check--regular'}
           label={submitLabel ?? t('save-button.label')}
           onClick={onSave}
           data-testid='save-button'
@@ -285,7 +283,7 @@ export const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProp
 
   return (
     <div className={mx(formTheme.styles().submit(), classNames)}>
-      <IconButton
+      <Button
         classNames='w-full'
         type='submit'
         variant='primary'

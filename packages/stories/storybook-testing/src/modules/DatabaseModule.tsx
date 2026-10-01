@@ -12,7 +12,18 @@ import { type EntityId } from '@dxos/keys';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { useGraphModel } from '@dxos/plugin-explorer/hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
-import { Card, Icon, IconButton, Panel, ScrollArea, Toolbar, composable, composableProps } from '@dxos/react-ui';
+import {
+  Block,
+  Button,
+  Card,
+  Icon,
+  Panel,
+  ScrollArea,
+  ToggleGroup,
+  Toolbar,
+  composable,
+  composableProps,
+} from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -82,10 +93,10 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root classNames='relative h-full'>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <DatabaseSearchBar space={space} view={view} onSubmit={handleSubmit} onViewChange={handleViewChange} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='relative min-h-0'>
+      </Panel.Header>
+      <Panel.Body classNames='relative min-h-0'>
         {view === 'graph' && <ForceGraph classNames='min-h-[50vh]' model={model} />}
 
         {view === 'object-tree' && (
@@ -129,7 +140,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
         )}
 
         <div className='absolute bottom-4 right-4 z-10'>
-          <IconButton
+          <Button
             variant='ghost'
             icon={open ? 'ph--x--regular' : 'ph--arrow-line-up--regular'}
             iconOnly
@@ -137,7 +148,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
             onClick={() => setOpen((open) => !open)}
           />
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -158,9 +169,9 @@ const DatabaseSearchBar = composable<HTMLDivElement, DatabaseSearchBarProps>(
         <QueryEditor classNames='p-1 w-full' db={space.db} onChange={onSubmit} />
         <Toolbar.ToggleGroup type='single' value={view} onValueChange={onViewChange}>
           {VIEW_OPTIONS.map(({ value, icon, label }) => (
-            <Toolbar.ToggleGroupItem key={value} value={value} aria-label={label} title={label}>
-              <Icon icon={icon} size={4} />
-            </Toolbar.ToggleGroupItem>
+            <ToggleGroup.Item key={value} value={value} aria-label={label} title={label}>
+              <Icon icon={icon} size='md' />
+            </ToggleGroup.Item>
           ))}
         </Toolbar.ToggleGroup>
         {/* <Toolbar.IconButton
@@ -243,9 +254,9 @@ const DatabaseCardTile = ({ data }: { data: DatabaseCardTileData | undefined; in
       onClick={() => onSelect(object.id)}
     >
       <Card.Header>
-        <Card.Block>
+        <Block>
           <Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} classNames='text-subdued' />
-        </Card.Block>
+        </Block>
         <Card.Title classNames='truncate'>{label}</Card.Title>
       </Card.Header>
     </Card.Root>

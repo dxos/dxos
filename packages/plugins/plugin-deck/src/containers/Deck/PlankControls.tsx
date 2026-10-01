@@ -6,7 +6,7 @@ import React, { forwardRef, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { DeckOperation } from '#types';
@@ -49,7 +49,7 @@ export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionC
 );
 
 const PlankControl = ({ icon, label, ...props }: Omit<ButtonProps, 'children'> & { label: string; icon: string }) => {
-  return <IconButton label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
+  return <Button label={label} icon={icon} iconOnly variant='ghost' tooltipSide='bottom' {...props} />;
 };
 
 //

@@ -36,9 +36,9 @@ export const TestContainer = ({ role, script }: TestContainerProps) => {
 
   return (
     <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <TestPanel onInvoke={existingFunctionId ? handleInvoke : undefined} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -53,18 +53,12 @@ export const FileSettings = ({ subject }: FileSettingsProps) => {
               description={active?.description ?? t('settings.backend.description')}
             >
               <Select.Root value={activeStorage} onValueChange={handleChange}>
-                <Select.TriggerButton placeholder={t('settings.backend.placeholder')} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {backends.map((backend) => (
-                        <Select.Option key={backend.storage} value={backend.storage}>
-                          {backend.name}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
+                <Select.Trigger placeholder={t('settings.backend.placeholder')} />
+                <Select.Content>
+                  {backends.map((backend) => (
+                    <Select.Item key={backend.storage} item={{ value: backend.storage, label: backend.name }} />
+                  ))}
+                </Select.Content>
               </Select.Root>
             </Form.Field>
           </Form.FieldSet>

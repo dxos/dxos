@@ -29,9 +29,9 @@ export const RelatedItemsList = ({ items, onNavigate }: RelatedItemsListProps) =
               onClick={() => onNavigate?.(item.id)}
               className='flex w-full items-center gap-2 px-3 py-2 text-start dx-focus-ring'
             >
-              <Icon icon='ph--book-open--regular' size={4} />
-              <Listbox.ItemLabel>{item.name ?? 'Untitled'}</Listbox.ItemLabel>
-              <Icon icon='ph--caret-right--regular' size={4} />
+              <Icon icon='ph--book-open--regular' size='md' />
+              <Listbox.ItemText>{item.name ?? 'Untitled'}</Listbox.ItemText>
+              <Icon icon='ph--caret-right--regular' size='md' />
             </button>
           </Listbox.Item>
         ))}

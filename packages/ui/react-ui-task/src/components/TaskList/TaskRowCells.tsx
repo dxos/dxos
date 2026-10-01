@@ -5,8 +5,9 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Button, Field, Icon, IconBlock, IconButton, SystemIconButton, Tag, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Field, Icon, SystemButton, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
+import { Next } from '@dxos/react-ui/next';
 import { Task } from '@dxos/types';
 import { getHashHue, mx } from '@dxos/ui-theme';
 
@@ -77,10 +78,10 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
     // `IconButton iconOnly` occupies, or the readonly list's status column collapses to the glyph's
     // own width and stops lining up with the editable list's.
     return (
-      <IconBlock square aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
+      <Block aria-hidden={false} data-testid='taskList.item.status' classNames={classNames}>
         <Icon icon={icon} classNames={iconClassNames} />
         <span className='sr-only'>{t(`status-${status}.label`)}</span>
-      </IconBlock>
+      </Block>
     );
   }
 
@@ -88,7 +89,7 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   // too, and a trigger above it would never receive it. The block still gives every control in the
   // row one rail-item square.
   const trigger = (
-    <IconButton
+    <Button
       data-testid='taskList.item.status'
       // The hue goes on the icon, not the button: the row dims icons through `--icons-color`,
       // which the `Icon` root reads, so a colour set on the button is overridden at rest and
@@ -104,12 +105,12 @@ export const TaskStatusControl = ({ task, onTaskUpdate, active, classNames }: Ta
   );
 
   return (
-    <IconBlock square classNames={classNames}>
+    <Block classNames={classNames}>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu deferUntilOpen actions={actions}>
         {trigger}
       </ActionMenu>
-    </IconBlock>
+    </Block>
   );
 };
 
@@ -123,9 +124,9 @@ TaskStatusControl.displayName = 'TaskList.StatusControl';
  * an MCP call, another space.
  */
 export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => (
-  <SystemIconButton.Clipboard
+  <SystemButton.Clipboard
     classNames='font-mono'
-    density='sm'
+    size='sm'
     variant='tag'
     // Hashed from the mnemonic so the task's Gantt lane, which hashes the same string, shares its hue.
     hue={getHashHue(Obj.getMnemonic(task))}
@@ -151,11 +152,11 @@ export const TaskOrdinal = ({ task, ordinal, classNames }: TaskOrdinalProps) => 
   return (
     // The same square every other cell in the row occupies, so the badge centres under the pane's
     // column rather than hugging the track's start.
-    <IconBlock square aria-hidden={false} data-testid='taskList.item.ordinal' classNames={classNames}>
+    <Block aria-hidden={false} data-testid='taskList.item.ordinal' classNames={classNames}>
       <Tag hue={hue} classNames='tabular-nums'>
         {ordinal}
       </Tag>
-    </IconBlock>
+    </Block>
   );
 };
 
@@ -178,9 +179,9 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
   return (
     // `IconBlock square` so the box is centred in the same square an `IconButton iconOnly` occupies;
     // bare, the 1rem box hugged the start of a 2rem track beside 2rem controls.
-    <IconBlock square aria-hidden={false} classNames={classNames}>
+    <Block aria-hidden={false} classNames={classNames}>
       <Field.Root>
-        <Field.Checkbox
+        <Next.Checkbox
           checked={checked}
           data-testid='taskList.item.checkbox'
           aria-label={t('task-check.label')}
@@ -189,7 +190,7 @@ export const TaskCheckbox = ({ task, checked, onCheckedChange, classNames }: Tas
           onClick={(event) => event.stopPropagation()}
         />
       </Field.Root>
-    </IconBlock>
+    </Block>
   );
 };
 
@@ -208,12 +209,12 @@ export const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
   const label = estimate?.toUpperCase() ?? <Icon icon={UNSET_ICON} classNames='text-neutral-500' />;
 
   if (!onTaskUpdate) {
-    return <IconBlock classNames={estimateTextStyle(estimate)}>{label}</IconBlock>;
+    return <Block classNames={estimateTextStyle(estimate)}>{label}</Block>;
   }
 
   return (
     <>
-      <IconBlock>
+      <Block>
         {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
         <ActionMenu
           deferUntilOpen
@@ -235,7 +236,7 @@ export const TaskEstimateControl = ({ task }: { task: Task.Task }) => {
             {label}
           </Button>
         </ActionMenu>
-      </IconBlock>
+      </Block>
     </>
   );
 };
@@ -262,14 +263,14 @@ export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
     // Falls back to the dot rather than rendering nothing: a readonly row still says "no priority"
     // in the same column its neighbours use, so the list reads as one column and not a ragged one.
     return (
-      <IconBlock square>
+      <Block>
         <Icon icon={icon} classNames={mx('shrink-0', styles)} />
-      </IconBlock>
+      </Block>
     );
   }
 
   return (
-    <IconBlock>
+    <Block>
       {/* Deferred: a list renders one of these per task, and the menu is opened for at most one. */}
       <ActionMenu
         deferUntilOpen
@@ -284,7 +285,7 @@ export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           )
         }
       >
-        <IconButton
+        <Button
           variant='ghost'
           icon={icon}
           iconOnly
@@ -294,6 +295,6 @@ export const TaskPriorityIcon = ({ task }: { task: Task.Task }) => {
           onClick={(event) => event.stopPropagation()}
         />
       </ActionMenu>
-    </IconBlock>
+    </Block>
   );
 };

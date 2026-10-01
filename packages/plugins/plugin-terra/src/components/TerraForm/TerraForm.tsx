@@ -6,8 +6,9 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useCallback } from 'react';
 
-import { Field, IconButton, Slider } from '@dxos/react-ui';
+import { Button, Slider } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import { Next } from '@dxos/react-ui/next';
 
 import { Terra } from '#types';
 
@@ -136,9 +137,9 @@ export const TerraForm = ({ config, onChange, onWaterSheen }: TerraFormProps) =>
         </Form.Viewport>
       </Form.Root>
 
-      <IconButton icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
+      <Button icon='ph--arrow-clockwise--regular' label='Reseed' onClick={handleReseed} />
 
-      <Field.Checkbox onCheckedChange={handleWaterSheenChange}>Water sheen</Field.Checkbox>
+      <Next.Checkbox onCheckedChange={handleWaterSheenChange} label='Water sheen' />
     </div>
   );
 };

@@ -10,7 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Flex, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
 
@@ -35,7 +35,9 @@ const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean 
   return (
     <div className='relative'>
       <GalleryImage src={src} contentType={contentType} alt={data.artifact.name} />
-      {selected && <Icon icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />}
+      {selected && (
+        <Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-primary-500' />
+      )}
     </div>
   );
 };
@@ -108,23 +110,23 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <IconButton
+          <Button
             icon='ph--plus--regular'
             label={t('create.label')}
             disabled={!db}
             onClick={() => void handleCreate()}
           />
-          <IconButton
+          <Button
             icon='ph--trash--regular'
             label={t('delete.label')}
             disabled={selectedIds.size === 0}
             onClick={handleDelete}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         {items.length === 0 ? (
           <Flex role='status' center classNames='h-full text-subdued'>
             {t('empty.message')}
@@ -141,7 +143,7 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

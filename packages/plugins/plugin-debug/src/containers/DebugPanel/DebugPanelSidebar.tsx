@@ -113,7 +113,7 @@ export const DebugPanelSidebar = () => {
           path={ROOT_PATH}
           ariaLabel={t('debug-panel.tree.label')}
           model={model}
-          density='sm'
+          size='sm'
           onOpenChange={handleOpenChange}
           onSelect={handleSelect}
         />

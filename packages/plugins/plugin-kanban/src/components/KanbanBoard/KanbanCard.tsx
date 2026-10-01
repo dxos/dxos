@@ -7,7 +7,7 @@ import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Card, IconButton, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, DragHandle, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
@@ -63,19 +63,19 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         <Focus.Item asChild>
           <Card.Root ref={forwardedRef} data-testid='board-item'>
             <Card.Header ref={cardRef}>
-              <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
+              <DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
               <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Card.Block end>
+              <Block end>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <IconButton
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             <Card.Body>
               {projection && (

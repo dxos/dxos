@@ -325,10 +325,10 @@ export const TaskSetArticle = ({
       on={role}
       fallback={
         <Panel.Root role={role}>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root disabled={!hasAttention}>{filterRow}</Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content>{content}</Panel.Content>
+          </Panel.Header>
+          <Panel.Body>{content}</Panel.Body>
         </Panel.Root>
       }
     >

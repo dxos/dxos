@@ -23,13 +23,13 @@ export const DocumentArticle = ({ role, subject: document }: DocumentArticleProp
 
   return (
     <Panel.Root role={role} classNames='relative'>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <PresentationShell fullscreen={fullscreen} onExit={handleExit}>
           {content !== undefined && (
             <RevealPlayer data-testid='presenter.deck' fullscreen={fullscreen} content={content} />
           )}
         </PresentationShell>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

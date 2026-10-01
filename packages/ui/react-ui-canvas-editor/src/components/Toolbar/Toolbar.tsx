@@ -22,58 +22,49 @@ export const Toolbar = ({ classNames, onAction }: ToolbarProps) => {
   // TODO(burdon): Translations.
   return (
     <NaturalToolbar.Root classNames={['p-1', classNames]}>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'debug' })} title='Toggle debug.'>
+      <NaturalButton onClick={() => handleAction({ type: 'debug' })} title='Toggle debug.'>
         <Icon icon='ph--bug--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'grid' })} title='Toggle snap.'>
+      </NaturalButton>
+      <NaturalButton onClick={() => handleAction({ type: 'grid' })} title='Toggle snap.'>
         <Icon icon='ph--dots-nine--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'grid-snap' })} title='Toggle snap.'>
+      </NaturalButton>
+      <NaturalButton onClick={() => handleAction({ type: 'grid-snap' })} title='Toggle snap.'>
         <Icon icon='ph--arrows-in-line-horizontal--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'center' })} title='Center canvas.'>
+      </NaturalButton>
+      <NaturalButton onClick={() => handleAction({ type: 'center' })} title='Center canvas.'>
         <Icon icon='ph--crosshair-simple--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-in' })} title='Center canvas.'>
+      </NaturalButton>
+      <NaturalButton onClick={() => handleAction({ type: 'zoom-in' })} title='Center canvas.'>
         <Icon icon='ph--magnifying-glass-plus--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-out' })} title='Center canvas.'>
+      </NaturalButton>
+      <NaturalButton onClick={() => handleAction({ type: 'zoom-out' })} title='Center canvas.'>
         <Icon icon='ph--magnifying-glass-minus--regular' />
-      </NaturalToolbar.Button>
+      </NaturalButton>
       <Select.Root value={layout} onValueChange={(value) => setLayout(value as LayoutKind)}>
-        <NaturalToolbar.Button asChild>
-          <Select.TriggerButton variant='ghost' classNames='w-[100px]' />
-        </NaturalToolbar.Button>
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {LAYOUTS.map((layout) => (
-                <Select.Option key={layout} value={layout}>
-                  {layout}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
+        <NaturalButton asChild>
+          <Select.Trigger variant='ghost' classNames='w-[100px]' />
+        </NaturalButton>
+        <Select.Content>
+          {LAYOUTS.map((layout) => (
+            <Select.Item key={layout} item={{ value: layout, label: layout }} />
+          ))}
+        </Select.Content>
       </Select.Root>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'layout', layout })} title='Do layout.'>
+      <NaturalButton onClick={() => handleAction({ type: 'layout', layout })} title='Do layout.'>
         <Icon icon='ph--graph--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'zoom-to-fit' })} title='Expand selected.'>
+      </NaturalButton>
+      <NaturalButton onClick={() => handleAction({ type: 'zoom-to-fit' })} title='Expand selected.'>
         <Icon icon='ph--arrows-out--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button
-        onClick={(ev) => handleAction({ type: 'delete', all: ev.shiftKey })}
-        title='Delete objects.'
-      >
+      </NaturalButton>
+      <NaturalButton onClick={(ev) => handleAction({ type: 'delete', all: ev.shiftKey })} title='Delete objects.'>
         <Icon icon='ph--trash--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'create' })} title='Create objects.'>
+      </NaturalButton>
+      <NaturalButton onClick={() => handleAction({ type: 'create' })} title='Create objects.'>
         <Icon icon='ph--plus--regular' />
-      </NaturalToolbar.Button>
-      <NaturalToolbar.Button onClick={() => handleAction({ type: 'trigger' })} title='Trigger event.'>
+      </NaturalButton>
+      <NaturalButton onClick={() => handleAction({ type: 'trigger' })} title='Trigger event.'>
         <Icon icon='ph--play--regular' />
-      </NaturalToolbar.Button>
+      </NaturalButton>
     </NaturalToolbar.Root>
   );
 };

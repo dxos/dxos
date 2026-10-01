@@ -9,7 +9,7 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import { Field, Flex, Select, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Field, Flex, Input, Select, SystemButton, useTranslation } from '@dxos/react-ui';
 import { ContactPicker } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -90,20 +90,14 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
             setRole(ROLES.find((candidate) => String(candidate) === value) ?? SpaceMember_Role.EDITOR)
           }
         >
-          <Select.TriggerButton classNames='min-w-[6rem]' disabled={!canAdmit} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {ROLES.map((value) => (
-                  <Select.Option key={value} value={String(value)}>
-                    {t(roleLabel[value])}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
+          <Select.Trigger classNames='min-w-[6rem]' disabled={!canAdmit} />
+          <Select.Content>
+            {ROLES.map((value) => (
+              <Select.Item key={value} item={{ value: String(value), label: t(roleLabel[value]) }} />
+            ))}
+          </Select.Content>
         </Select.Root>
-        <SystemIconButton.Add
+        <SystemButton.Add
           iconOnly
           label={t('contact-picker-add.label')}
           disabled={!canAdmit || pending || !selected}
@@ -114,9 +108,9 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
       {joinUrl && (
         <Flex gap='sm'>
           <Field.Root readOnly>
-            <Field.Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
+            <Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
           </Field.Root>
-          <SystemIconButton.Clipboard value={joinUrl} />
+          <SystemButton.Clipboard value={joinUrl} />
         </Flex>
       )}
     </Flex>

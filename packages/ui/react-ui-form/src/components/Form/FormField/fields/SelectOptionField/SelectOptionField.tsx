@@ -6,7 +6,7 @@ import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, us
 
 import { type SelectOption } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
-import { type ChromaticPalette, Field, IconButton, Tag, ToggleIconButton, useTranslation } from '@dxos/react-ui';
+import { Button, type ChromaticPalette, Field, Input, Tag, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { osTranslations } from '@dxos/ui-theme';
@@ -153,7 +153,7 @@ export const SelectOptionField = ({
                     <div className='flex flex-col p-form-padding gap-form-gap dx-density-md'>
                       <Field.Label classNames='text-sm'>{t('select-option.label')}</Field.Label>
                       <div className='grid grid-cols-[1fr_min-content_min-content] gap-form-gap'>
-                        <Field.Input
+                        <Input
                           disabled={!!readonly}
                           placeholder={t('select-option-label.placeholder')}
                           ref={selected === item.id ? inputRef : undefined}
@@ -163,7 +163,7 @@ export const SelectOptionField = ({
                           classNames='flex-1'
                         />
                         <HuePicker disabled={!!readonly} value={item.color} onChange={handleColorChange(item.id)} />
-                        <IconButton
+                        <Button
                           disabled={!!readonly}
                           icon='ph--trash--fill'
                           iconOnly
@@ -175,7 +175,7 @@ export const SelectOptionField = ({
                   )}
                 </OrderedList.Item>
               ))}
-              <IconButton
+              <Button
                 classNames='w-full'
                 variant='ghost'
                 icon='ph--plus--regular'

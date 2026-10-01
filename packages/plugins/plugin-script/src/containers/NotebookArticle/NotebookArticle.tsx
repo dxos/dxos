@@ -20,7 +20,7 @@ import { QueryBuilder } from '@dxos/echo-query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Graph from '@dxos/plugin-explorer/Graph';
-import { IconButton, Menu, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Menu, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Text, ViewModel } from '@dxos/schema';
 import { isNonNullable } from '@dxos/util';
@@ -175,15 +175,15 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
 
   return (
     <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root disabled={!hasAttention}>
           <Menu.Root>
             <Menu.Trigger asChild>
-              <IconButton icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
+              <Button icon='ph--plus--regular' iconOnly label={t('notebook-cell-insert.label')} />
             </Menu.Trigger>
             <NotebookMenu onCellInsert={handleCellInsert} />
           </Menu.Root>
-          <Toolbar.IconButton
+          <Button
             icon='ph--play--fill'
             iconOnly
             label={t('compute.label')}
@@ -191,8 +191,8 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
             onClick={handleCompute}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <NotebookStack
           db={db}
           notebook={notebook}
@@ -202,7 +202,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
           onCellInsert={handleCellInsert}
           onCellDelete={handleCellDelete}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -17,14 +17,14 @@ export const IdentityArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <VaultSelector />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <JsonView data={{ ...identity, devices }} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

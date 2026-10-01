@@ -8,7 +8,7 @@ import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useProgressMonitors } from '@dxos/app-toolkit/ui';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Popover, useTranslation } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 
 import { meta } from '#meta';
@@ -28,7 +28,7 @@ export const ProgressStatusIndicator = () => {
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton
+          <Button
             variant='ghost'
             icon='ph--circle-notch--regular'
             iconOnly
@@ -38,21 +38,18 @@ export const ProgressStatusIndicator = () => {
         </StatusBar.Item>
       </Popover.Trigger>
       {active.length > 0 && (
-        <Popover.Portal>
-          <Popover.Content side='left' border>
-            <div className='flex flex-col gap-1 w-[18rem] p-1 overflow-hidden'>
-              {active.map((monitor) => (
-                <ProgressMeter
-                  key={monitor.name}
-                  delay={0}
-                  state={monitor}
-                  onCancel={() => registry.cancel(monitor.name)}
-                />
-              ))}
-            </div>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content side='left' border>
+          <div className='flex flex-col gap-1 w-[18rem] p-1 overflow-hidden'>
+            {active.map((monitor) => (
+              <ProgressMeter
+                key={monitor.name}
+                delay={0}
+                state={monitor}
+                onCancel={() => registry.cancel(monitor.name)}
+              />
+            ))}
+          </div>
+        </Popover.Content>
       )}
     </Popover.Root>
   );

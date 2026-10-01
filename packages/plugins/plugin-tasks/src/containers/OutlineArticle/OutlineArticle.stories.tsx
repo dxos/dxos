@@ -124,8 +124,8 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
 
   return (
     <Panel.Root>
-      <Panel.Toolbar />
-      <Panel.Content>
+      <Panel.Header />
+      <Panel.Body>
         <TaskList.Root
           tasks={filtered}
           onTaskCreate={handleCreate}
@@ -135,7 +135,7 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
           <TaskList.Content />
           <TaskList.Editor grid />
         </TaskList.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -158,10 +158,10 @@ const SourceView = ({ text }: { text: Text.Text }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar />
-      <Panel.Content asChild>
+      <Panel.Header />
+      <Panel.Body asChild>
         <div ref={parentRef} className='overflow-auto text-sm p-trim-md' />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

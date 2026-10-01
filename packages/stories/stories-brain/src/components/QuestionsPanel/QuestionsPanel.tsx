@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { Field, IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Button, Field, Input, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 
 export type QuestionRow = {
   readonly id: string;
@@ -36,10 +36,10 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Field.Root>
-            <Field.Input
+            <Input
               placeholder='Ask a standing question…'
               value={text}
               disabled={disabled}
@@ -47,7 +47,7 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
               onKeyDown={(event) => event.key === 'Enter' && handleAdd()}
             />
           </Field.Root>
-          <IconButton
+          <Button
             icon='ph--plus--regular'
             iconOnly
             label='Add question'
@@ -55,8 +55,8 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
             onClick={handleAdd}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='overflow-y-auto'>
+      </Panel.Header>
+      <Panel.Body classNames='overflow-y-auto'>
         {questions.length === 0 ? (
           <p className='p-2 text-subdued'>No questions yet.</p>
         ) : (
@@ -69,7 +69,7 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
             ))}
           </dl>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

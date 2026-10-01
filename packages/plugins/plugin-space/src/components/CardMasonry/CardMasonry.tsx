@@ -8,7 +8,7 @@ import React, { createContext, useContext, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { Card, Icon } from '@dxos/react-ui';
+import { Block, Card, Icon } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { isNonNullable } from '@dxos/util';
 
@@ -105,9 +105,9 @@ const CardMasonryTile = ({ data: tile }: { data: Tile }) => {
 const PendingCard = ({ label }: { label: string }) => (
   <Card.Root data-testid='cardMasonry.pending' aria-busy='true'>
     <Card.Header>
-      <Card.Block>
+      <Block>
         <Icon icon='ph--spinner-gap--regular' classNames='animate-spin' />
-      </Card.Block>
+      </Block>
       <Card.Title classNames='truncate text-description'>{label}</Card.Title>
     </Card.Header>
   </Card.Root>

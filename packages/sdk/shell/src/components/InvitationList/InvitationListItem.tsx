@@ -15,8 +15,7 @@ import {
   Avatar,
   type AvatarContentProps,
   Button,
-  IconButton,
-  SystemIconButton,
+  SystemButton,
   type ThemedClassName,
   Tooltip,
   useThemeContext,
@@ -148,9 +147,9 @@ export const InvitationListItemImpl = ({
       {...props}
       classNames={['flex gap-2 ps-3 pe-1 items-center relative', props.classNames]}
     >
-      <Listbox.ItemLabel classNames='sr-only'>
+      <Listbox.ItemText classNames='sr-only'>
         {t(multiUse ? 'invite-many-list-item.label' : 'invite-one-list-item.label')}
-      </Listbox.ItemLabel>
+      </Listbox.ItemText>
       {multiUse && (
         <AvatarStackEffect status={avatarStatus} animation={avatarAnimation} reverseEffects={reverseEffects} />
       )}
@@ -183,7 +182,7 @@ export const InvitationListItemImpl = ({
               <span>{t('open-share-panel.label')}</span>
             </Button>
           </Tooltip.Trigger>
-          <SystemIconButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
+          <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />
@@ -203,9 +202,9 @@ export const InvitationListItemImpl = ({
         <span className='grow'> </span>
       )}
       {isCancellable ? (
-        <IconButton
+        <Button
           icon='ph--x--regular'
-          size={4}
+          iconSize='md'
           label={t('cancel-invitation.label')}
           iconOnly
           variant='ghost'
@@ -214,9 +213,9 @@ export const InvitationListItemImpl = ({
           data-testid='cancel-invitation'
         />
       ) : (
-        <IconButton
+        <Button
           icon='ph--x--regular'
-          size={4}
+          iconSize='md'
           label={t('remove-invitation.label')}
           iconOnly
           variant='ghost'

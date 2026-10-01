@@ -8,12 +8,13 @@ import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, use
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
 import {
+  Block,
+  Button,
   Card,
   DxAnchorActivate,
   Icon,
-  IconButton,
   type IconButtonProps,
-  SystemIconButton,
+  SystemButton,
   Tag,
   useTranslation,
 } from '@dxos/react-ui';
@@ -151,7 +152,7 @@ const AnchorIconButton = ({
   }, [value, openCard, onClick]);
 
   return (
-    <IconButton
+    <Button
       onPointerEnter={startHover}
       onPointerLeave={cancelHover}
       classNames={compact ? 'min-h-0' : 'aspect-square'}
@@ -188,9 +189,9 @@ const RowDate = ({ start, end }: RowDateProps) => {
 
   return (
     <Card.Row>
-      <Card.Block>
+      <Block>
         <Icon icon='ph--calendar--regular' />
-      </Card.Block>
+      </Block>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
         <div className='truncate text-description'>{format(start, 'PPp')}</div>
         {duration.length > 0 && <div className='text-description text-xs'>({duration})</div>}
@@ -218,9 +219,9 @@ const RowRef = ({ object }: RowRefProps) => {
   // TODO(burdon): Nav?
   return (
     <Card.Row>
-      <Card.Block>
+      <Block>
         <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
-      </Card.Block>
+      </Block>
       <div className='flex items-center'>
         <span className='truncate text-primary-text'>{label}</span>
       </div>
@@ -267,9 +268,9 @@ type RowPersonProps = {
  */
 const PersonAvatarRow = ({ actor, size, onClick }: Pick<RowPersonProps, 'actor' | 'size' | 'onClick'>) => (
   <Card.Row>
-    <Card.Block>
+    <Block>
       <Avatar actor={actor} size={size} onClick={onClick} />
-    </Card.Block>
+    </Block>
     <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
   </Card.Row>
 );
@@ -350,7 +351,7 @@ export const ContactAvatar = ({
         <Avatar actor={actor} size={size} onClick={onClick} />
       </div>
       {canCreate && (
-        <IconButton
+        <Button
           variant='ghost'
           iconOnly
           icon='ph--user-circle-plus--regular'
@@ -382,7 +383,7 @@ const PersonContactRow = ({
 
   return (
     <Card.Row>
-      <Card.Block>
+      <Block>
         <ContactAvatar
           actor={actor}
           role={role}
@@ -392,18 +393,18 @@ const PersonContactRow = ({
           onContactCreate={onContactCreate}
           onClick={onClick}
         />
-      </Card.Block>
+      </Block>
       <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
       {onRemove && (
-        <Card.Block end>
-          <IconButton
+        <Block end>
+          <Button
             variant='ghost'
             iconOnly
             icon='ph--x--regular'
             label={t('remove-attendee.label')}
             onClick={onRemove}
           />
-        </Card.Block>
+        </Block>
       )}
     </Card.Row>
   );
@@ -440,9 +441,9 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
 
   return (
     <Card.Row>
-      <Card.Block>
+      <Block>
         <Icon icon='ph--tag--regular' />
-      </Card.Block>
+      </Block>
       <div className='flex flex-wrap gap-1 py-1' data-testid='extracted-tags'>
         {tags.map((tag) => (
           <Tag
@@ -495,7 +496,7 @@ const RowStar = ({ starred, onToggle }: RowStarProps) => {
     return null;
   }
 
-  return <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={handleClick} />;
+  return <SystemButton.Star iconOnly variant='ghost' active={starred} onClick={handleClick} />;
 };
 
 RowStar.displayName = 'Row.Star';
@@ -522,9 +523,9 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
 
   return (
     <Card.Row>
-      <Card.Block>
+      <Block>
         <Icon icon='ph--paperclip--regular' />
-      </Card.Block>
+      </Block>
       <div className='flex flex-wrap gap-1 py-1' data-testid='message-attachments'>
         {attachments.map((attachment, index) => (
           <Tag
@@ -551,7 +552,7 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
               },
             })}
           >
-            <Icon icon='ph--file--regular' size={3} />
+            <Icon icon='ph--file--regular' size='xs' />
             {attachment.name ?? attachment.ref.uri}
           </Tag>
         ))}

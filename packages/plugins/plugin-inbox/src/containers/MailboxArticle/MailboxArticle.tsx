@@ -449,11 +449,11 @@ export const MailboxArticle = ({
   return (
     <Panel.Root data-testid='inbox.mailbox'>
       <ElevationProvider elevation='positioned'>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-        </Panel.Toolbar>
+        </Panel.Header>
       </ElevationProvider>
-      <Panel.Content>
+      <Panel.Body>
         <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
@@ -471,14 +471,14 @@ export const MailboxArticle = ({
             onAction={handleAction}
           />
         </Deferred>
-      </Panel.Content>
-      <Panel.Statusbar asChild>
+      </Panel.Body>
+      <Panel.Footer>
         <ProgressMeter
           classNames='border-t border-subdued-separator'
           state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
           onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
         />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

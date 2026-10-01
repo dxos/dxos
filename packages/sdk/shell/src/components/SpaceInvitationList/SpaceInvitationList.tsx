@@ -9,7 +9,7 @@ import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Contact } from '@dxos/react-client/halo';
-import { Avatar, Button, IconButton, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { keyToFallback } from '@dxos/util';
 
@@ -101,13 +101,12 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
     <Listbox.Item classNames='p-2 rounded-sm' id={invitation.id} data-testid='space-invitation-list.item'>
       <Listbox.ItemContent
         icon={
-          <Avatar.Root labelId={labelId}>
-            <Avatar.Content
-              size={8}
-              hue={profileString(invitation.sender, 'hue') ?? fallback.hue}
-              fallback={profileString(invitation.sender, 'emoji') ?? fallback.emoji}
-            />
-          </Avatar.Root>
+          <Avatar.Root
+            aria-labelledby={labelId}
+            size={8}
+            hue={profileString(invitation.sender, 'hue') ?? fallback.hue}
+            fallback={profileString(invitation.sender, 'emoji') ?? fallback.emoji}
+          />
         }
         title={
           <div className='flex items-center justify-between gap-1'>
@@ -116,7 +115,7 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
             </span>
             <div className='flex items-center gap-1'>
               <Button
-                density='sm'
+                size='sm'
                 variant='primary'
                 disabled={disabled}
                 onClick={() => onJoin?.(invitation)}
@@ -124,9 +123,9 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
               >
                 {t('join-space-invitation.label')}
               </Button>
-              <IconButton
+              <Button
                 iconOnly
-                density='sm'
+                size='sm'
                 variant='ghost'
                 icon='ph--x--regular'
                 label={t('dismiss-space-invitation.label')}

@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { Fragment } from 'react';
 
-import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, DensityProvider, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
@@ -57,7 +57,7 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
     const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
 
     return (
-      <DensityProvider density='md'>
+      <DensityProvider size='md'>
         <Toolbar.Root
           {...composableProps(props, {
             role: 'banner',
@@ -70,15 +70,9 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
           ref={forwardedRef}
         >
           {keyboardOpen ? (
-            <IconButton
-              variant='ghost'
-              icon='ph--x--regular'
-              iconOnly
-              label={t('done.label')}
-              classNames={TOUCH_TARGET}
-            />
+            <Button variant='ghost' icon='ph--x--regular' iconOnly label={t('done.label')} classNames={TOUCH_TARGET} />
           ) : showBackButton ? (
-            <IconButton
+            <Button
               variant='ghost'
               icon='ph--caret-left--regular'
               iconOnly
@@ -93,7 +87,7 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
           {hasActions ? (
             <AnchorRoot>
               <ActionMenu {...menuActions} caller={meta.profile.key} onAction={onAction}>
-                <IconButton
+                <Button
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
                   iconOnly

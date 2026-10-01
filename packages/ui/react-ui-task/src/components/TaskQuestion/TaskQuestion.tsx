@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useState } from 'react';
 
-import { Button, Field, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Icon, Input, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -185,7 +185,7 @@ export const TaskQuestion = ({
               <div className='flex-[1_1_10rem] min-w-0'>
                 <Field.Root>
                   <Field.Label srOnly>{t('question-answer.label')}</Field.Label>
-                  <Field.Input
+                  <Input
                     value={text}
                     disabled={busy}
                     placeholder={t('question-answer.placeholder')}

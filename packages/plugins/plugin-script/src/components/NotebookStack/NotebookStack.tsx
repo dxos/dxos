@@ -5,7 +5,7 @@
 import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { IconButton, Menu, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Menu, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -137,7 +137,7 @@ const NotebookSection = ({
     >
       {/* Side rail */}
       <div className='flex flex-col p-1 border-e border-subdued-separator dx-attention-surface'>
-        <IconButton
+        <Button
           ref={setDragHandle}
           variant='ghost'
           icon='ph--dots-six-vertical--regular'
@@ -146,12 +146,7 @@ const NotebookSection = ({
         />
         <Menu.Root>
           <Menu.Trigger asChild>
-            <IconButton
-              variant='ghost'
-              icon='ph--dots-three--regular'
-              iconOnly
-              label={t('notebook-cell-insert.label')}
-            />
+            <Button variant='ghost' icon='ph--dots-three--regular' iconOnly label={t('notebook-cell-insert.label')} />
           </Menu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
         </Menu.Root>

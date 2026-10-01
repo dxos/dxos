@@ -6,7 +6,7 @@ import React, { type ComponentPropsWithoutRef, useEffect, useRef, useState } fro
 
 import { Progress as ProgressModel } from '@dxos/progress';
 import {
-  IconButton,
+  Button,
   Progress,
   Steps,
   TextCrawl,
@@ -206,10 +206,10 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
               <span className='text-description'>({formatDuration(etaMs)})</span>
             )}
             {onCancel && (
-              <IconButton
-                density='sm'
+              <Button
+                size='sm'
                 variant='ghost'
-                size={3}
+                iconSize='xs'
                 icon='ph--x--regular'
                 iconOnly
                 disabled={!cancellable}
@@ -236,7 +236,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
         ) : (
           <Progress
             classNames='w-full self-center'
-            progress={fraction}
+            value={fraction}
             // Uncounted while it runs, and still uncounted when it fails — that is what fills the
             // bar red rather than emptying it. A run that simply ended has nothing left to sweep.
             indeterminate={indeterminate && (active || failed)}

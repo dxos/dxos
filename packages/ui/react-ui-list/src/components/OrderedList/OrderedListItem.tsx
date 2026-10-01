@@ -15,8 +15,8 @@ import React, {
 
 import { useFocusGroup } from '@dxos/react-focus';
 import {
-  IconBlock,
-  IconButton,
+  Block,
+  Button,
   type IconButtonProps,
   type ThemedClassName,
   ToggleIconButton,
@@ -188,10 +188,10 @@ export const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHand
     );
   }
   return (
-    <IconButton
+    <Button
       variant='ghost'
       disabled={disabled}
-      noTooltip
+      showTooltip={false}
       icon='ph--dots-six-vertical--regular'
       iconOnly
       label={t('drag-handle.label')}
@@ -245,15 +245,15 @@ export const OrderedListIconButton = ({
   classNames,
   ...props
 }: IconButtonProps & { autoHide?: boolean }) => (
-  <IconBlock>
-    <IconButton
+  <Block>
+    <Button
       {...props}
       variant='ghost'
       iconOnly
       disabled={disabled}
       classNames={[classNames, autoHide && disabled && 'hidden']}
     />
-  </IconBlock>
+  </Block>
 );
 
 /**

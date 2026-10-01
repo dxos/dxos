@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Field, type InputProps } from '@dxos/react-ui';
+import { type InputProps, PasswordInput } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -31,8 +31,7 @@ export const PasswordField = ({
   }
 
   return (
-    <Field.Input
-      type='password'
+    <PasswordInput
       noAutoFill
       spellCheck={false}
       disabled={!!readonly}

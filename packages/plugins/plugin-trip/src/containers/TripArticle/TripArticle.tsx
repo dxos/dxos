@@ -269,26 +269,26 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         <div className='grid grid-cols-1 @3xl:grid-cols-[min-content_1fr] overflow-hidden'>
           <NaturalCalendar.Root>
             <Panel.Root classNames='hidden @3xl:block border-r border-subdued-separator'>
-              <Panel.Toolbar asChild>
+              <Panel.Header>
                 <NaturalCalendar.Toolbar />
-              </Panel.Toolbar>
-              <Panel.Content asChild>
+              </Panel.Header>
+              <Panel.Body asChild>
                 <NaturalCalendar.Grid
                   dates={calendarDates.map((startDate) => ({ startDate }))}
                   onSelect={handleDateSelect}
                   onSelectRange={handleDateRangeSelect}
                 />
-              </Panel.Content>
+              </Panel.Body>
             </Panel.Root>
           </NaturalCalendar.Root>
 
           <Panel.Root>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <ActionToolbar {...menuActions} attendableId={attendableId} />
-            </Panel.Toolbar>
-            <Panel.Content asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <SegmentStack id={id} segments={segments} currentId={currentId} onAction={handleAction} />
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         </div>
 
@@ -296,9 +296,9 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
             markers via the contributed MarkerProvider and reads the current selection via useSelection. */}
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
-            <Panel.Content>
+            <Panel.Body>
               <Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         )}
       </div>

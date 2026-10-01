@@ -22,7 +22,7 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Avatar, Field, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import { Avatar, Button, Field, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -162,7 +162,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
 
       <Toolbar.Root>
         <Field.Root>
-          <Field.Input
+          <Input
             ref={inputRef}
             autoFocus
             placeholder={'Input JSON'}
@@ -171,8 +171,8 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Field.Root>
-        <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
-        <Toolbar.IconButton
+        <Button icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+        <Button
           icon={isExecuting ? 'ph--stop--regular' : 'ph--trash--regular'}
           label={isExecuting ? 'Stop' : 'Clear'}
           iconOnly
@@ -226,11 +226,7 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
   );
 };
 
-const RobotAvatar = () => (
-  <Avatar.Root>
-    <Avatar.Content size={6} variant='circle' icon='ph--drone--regular' />
-  </Avatar.Root>
-);
+const RobotAvatar = () => <Avatar.Root size={6} variant='circle' icon='ph--drone--regular' />;
 
 const createLocalExecutionContext = (
   space: Space,

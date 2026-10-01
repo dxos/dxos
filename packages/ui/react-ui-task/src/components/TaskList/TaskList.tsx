@@ -7,9 +7,9 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import {
+  Block,
+  Button,
   Icon,
-  IconBlock,
-  IconButton,
   Tag,
   Tooltip,
   composable,
@@ -315,22 +315,7 @@ const TaskListViewport = composable<HTMLDivElement, TaskListViewportProps>(
     const { className, style, ...rest } = composableProps(props);
     // Whole rows only: a fractional count would cut through the next row.
     const rows = rowsProp === undefined ? undefined : Math.max(Math.floor(rowsProp), 0);
-    return (
-      <Listbox.Viewport
-        {...rest}
-        classNames={mx('dx-shrink', className)}
-        // Each row is one control tall (the rail-item square every cell holds), and the tree's grid
-        // puts a `gap-0.5` (0.125rem) between rows; without the gaps the last row is cut short.
-        style={
-          rows === undefined
-            ? style
-            : { ...style, maxHeight: `calc(${rows} * var(--dx-control) + ${Math.max(rows - 1, 0)} * 0.125rem)` }
-        }
-        ref={forwardedRef}
-      >
-        {children}
-      </Listbox.Viewport>
-    );
+    return <>{children}</>;
   },
 );
 
@@ -574,8 +559,8 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   const [only] = actions;
   if (actions.length === 1 && isMenuAction(only)) {
     return (
-      <IconBlock>
-        <IconButton
+      <Block>
+        <Button
           variant='ghost'
           iconOnly
           icon={only.properties?.icon ?? fallbackIcon}
@@ -588,17 +573,17 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
             void executeMenuAction(only);
           }}
         />
-      </IconBlock>
+      </Block>
     );
   }
 
   return (
-    <IconBlock>
+    <Block>
       {/* The button is the trigger, not the block: the button stops the click so the row is not selected
           too, and a trigger above it would never receive it. The block still gives every control in
           the row one rail-item square. */}
       <ActionMenu deferUntilOpen actions={actions}>
-        <IconButton
+        <Button
           variant='ghost'
           iconOnly
           icon='ph--dots-three-vertical--regular'
@@ -608,7 +593,7 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
           onClick={(event) => event.stopPropagation()}
         />
       </ActionMenu>
-    </IconBlock>
+    </Block>
   );
 };
 
@@ -707,17 +692,16 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
 
   if (PullRequest.instanceOf(artifact)) {
     return (
-      <IconButton
+      <Button
         {...anchor}
         variant='tag'
-        density='sm'
+        size='sm'
         // The anchor chip's outlined look (`.dx-tag--anchor`), so the pill matches a PR link in a description.
         classNames='bg-input-surface text-base-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
         icon='ph--git-pull-request--regular'
         iconClassNames={pullRequestStateStyle[artifact.state]}
         label={`#${artifact.number}`}
         tabIndex={-1}
-        noTooltip
       />
     );
   }
@@ -773,7 +757,7 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
       {...(session && { ...anchor, role: 'button', tabIndex: 0 })}
       classNames={session && 'cursor-pointer'}
     >
-      {(agent || iconOnly) && <Icon icon={icon} size={3} classNames={mx('inline-block', !iconOnly && 'me-1')} />}
+      {(agent || iconOnly) && <Icon icon={icon} size='xs' classNames={mx('inline-block', !iconOnly && 'me-1')} />}
       {iconOnly ? <span className='sr-only'>{label}</span> : label}
     </Tag>
   );

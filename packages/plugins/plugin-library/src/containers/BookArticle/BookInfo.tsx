@@ -144,7 +144,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               <img src={cover} alt='' className='w-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
               <Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input-surface'>
-                <Icon icon='ph--book--regular' size={8} classNames='text-description' />
+                <Icon icon='ph--book--regular' size='xl' classNames='text-description' />
               </Flex>
             )}
             <Flex column gap='sm' classNames='min-w-0'>
@@ -237,7 +237,7 @@ const StarRating = ({ value }: { value: number }) => (
         <Icon
           key={index}
           icon={filled ? 'ph--star--fill' : half ? 'ph--star-half--fill' : 'ph--star--regular'}
-          size={5}
+          size='lg'
           classNames={filled || half ? 'text-primary-500' : 'text-subdued'}
         />
       );

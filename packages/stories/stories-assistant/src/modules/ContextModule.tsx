@@ -57,19 +57,19 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>
             Context Objects ({objects.length}); Artifacts ({artifacts.length})
           </Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
+      </Panel.Header>
       <Masonry.Root Tile={Tile}>
-        <Panel.Content asChild>
+        <Panel.Body asChild>
           <Masonry.Content centered padding thin classNames='p-1'>
             <Masonry.Viewport items={items} getId={(item) => item.id} />
           </Masonry.Content>
-        </Panel.Content>
+        </Panel.Body>
       </Masonry.Root>
     </Panel.Root>
   );

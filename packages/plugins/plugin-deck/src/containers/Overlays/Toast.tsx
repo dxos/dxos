@@ -37,13 +37,13 @@ export const Toast = ({
       </NaturalToast.Title>
       {description && <NaturalToast.Description>{toLocalizedString(description, t)}</NaturalToast.Description>}
       {onAction && actionAlt && actionLabel && (
-        <NaturalToast.Actions>
-          <NaturalToast.Action altText={toLocalizedString(actionAlt, t)} asChild>
+        <NaturalToast.Footer>
+          <NaturalToast.ActionTrigger asChild>
             <Button data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
               {toLocalizedString(actionLabel, t)}
             </Button>
-          </NaturalToast.Action>
-        </NaturalToast.Actions>
+          </NaturalToast.ActionTrigger>
+        </NaturalToast.Footer>
       )}
     </NaturalToast.Root>
   );

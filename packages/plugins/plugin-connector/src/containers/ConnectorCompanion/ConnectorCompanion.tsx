@@ -106,7 +106,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <Form.Root variant='settings' schema={EMPTY_SCHEMA} values={EMPTY_VALUES}>
@@ -148,7 +148,7 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
             </Form.Root>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { IconButton, useControlledState, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Button, useControlledState, useThemeContext, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -74,7 +74,7 @@ export const WorldMap = ({ markers = [], selected, view: viewProp = 'map', onVie
           features={features}
         />
         <Globe.Panel position='topright'>
-          <IconButton
+          <Button
             data-testid='worldMap.toggle'
             icon={view === 'globe' ? 'ph--map-trifold--regular' : 'ph--globe-hemisphere-west--regular'}
             iconOnly

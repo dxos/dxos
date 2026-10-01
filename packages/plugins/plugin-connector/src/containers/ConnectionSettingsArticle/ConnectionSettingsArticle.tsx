@@ -65,7 +65,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
 
   return (
     <Panel.Root>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
@@ -84,13 +84,11 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
                   {connections.length > 0 && (
                     <Form.FieldSet label={t('connections.label')}>
                       <Listbox.Root>
-                        <Listbox.Viewport>
-                          <Listbox.Content aria-label={t('connections.label')}>
-                            {connections.map((connection) => (
-                              <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
-                            ))}
-                          </Listbox.Content>
-                        </Listbox.Viewport>
+                        <Listbox.Content aria-label={t('connections.label')}>
+                          {connections.map((connection) => (
+                            <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
+                          ))}
+                        </Listbox.Content>
                       </Listbox.Root>
                     </Form.FieldSet>
                   )}
@@ -99,7 +97,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
             </Form.Root>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

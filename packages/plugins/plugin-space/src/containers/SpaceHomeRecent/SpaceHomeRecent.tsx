@@ -12,7 +12,7 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Card, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { getStyles } from '@dxos/ui-theme';
 
@@ -90,9 +90,9 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   return (
     <Card.Root role='button' fullWidth classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Card.Block>
+        <Block>
           <Icon icon={icon} classNames={iconStyles?.text} />
-        </Card.Block>
+        </Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
     </Card.Root>

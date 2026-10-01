@@ -39,7 +39,7 @@ export const MediaArtifactArticle = ({
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content classNames={produced ? 'grid grid-rows-[1fr_1fr] gap-2' : 'grid grid-rows-[1fr]'}>
+      <Panel.Body classNames={produced ? 'grid grid-rows-[1fr_1fr] gap-2' : 'grid grid-rows-[1fr]'}>
         <MediaArtifactForm artifact={artifact} attendableId={attendableId} nodeId={nodeId} />
         {produced && (
           <MediaArtifactVariants
@@ -48,7 +48,7 @@ export const MediaArtifactArticle = ({
             attendableId={attendableId}
           />
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

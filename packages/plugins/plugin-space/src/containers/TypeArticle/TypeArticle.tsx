@@ -12,7 +12,7 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Banner, Panel, Tabs, useTranslation } from '@dxos/react-ui';
+import { Empty, Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -279,13 +279,13 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
   return (
     <SearchList.Root onSearch={handleSearch}>
-      <Tabs.Root asChild value={layout} onValueChange={(value) => setLayout(value as Layout)}>
+      <Tabs.Root asChild value={layout} onValueChange={(value) => setLayout(value as Layout)} orientation='vertical'>
         <Panel.Root role={role}>
-          <Panel.Toolbar classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
+          <Panel.Header classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
             {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
             <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
-          </Panel.Toolbar>
-          <Panel.Content>
+          </Panel.Header>
+          <Panel.Body>
             <LayoutPanel value='masonry' empty={noResults}>
               <ObjectMasonry cacheKey={typeUri} items={tileItems} />
             </LayoutPanel>
@@ -307,10 +307,10 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
                 <ObjectMasonry cacheKey={typeUri} items={tileItems} />
               </LayoutPanel>
             )}
-          </Panel.Content>
-          <Panel.Statusbar classNames='flex items-center p-1 border-t border-subdued-separator'>
+          </Panel.Body>
+          <Panel.Footer classNames='flex items-center p-1 border-t border-subdued-separator'>
             {t('item-count.label', { count: tileItems.length })}
-          </Panel.Statusbar>
+          </Panel.Footer>
         </Panel.Root>
       </Tabs.Root>
     </SearchList.Root>
@@ -319,9 +319,9 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
 /** One layout's content, or the message standing in for it when the layout has nothing to show. */
 const LayoutPanel = ({ value, empty, children }: PropsWithChildren<{ value: Layout; empty?: string }>) => (
-  <Tabs.Panel value={value} classNames='contents'>
-    {empty ? <Banner.Empty classNames='h-full' label={empty} /> : children}
-  </Tabs.Panel>
+  <Tabs.Content value={value} classNames='contents'>
+    {empty ? <Empty classNames='h-full'>{empty}</Empty> : children}
+  </Tabs.Content>
 );
 
 TypeArticle.displayName = 'TypeArticle';

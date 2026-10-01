@@ -14,7 +14,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Card, Icon, Toolbar } from '@dxos/react-ui';
+import { Block, Button, Card, Icon, Toolbar } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
@@ -70,9 +70,9 @@ const DefaultStory = () => {
       {[...people, ...organizations].map((subject) => (
         <Card.Root key={subject.id} fullWidth>
           <Card.Header>
-            <Card.Block>
+            <Block>
               <Icon icon={Obj.instanceOf(Person.Person, subject) ? 'ph--user--regular' : 'ph--buildings--regular'} />
-            </Card.Block>
+            </Block>
             <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           </Card.Header>
           <Card.Body>

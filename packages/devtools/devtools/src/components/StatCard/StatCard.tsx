@@ -5,12 +5,13 @@
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import {
+  Block,
+  Button,
   Card,
   type CardMenuProps,
   type CardRootProps,
   Flex,
   Icon,
-  IconButton,
   type ThemedClassName,
   Tooltip,
 } from '@dxos/react-ui';
@@ -36,7 +37,7 @@ type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string; densit
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
 const StatCardRoot = ({ id, density = 'sm', classNames, children }: StatCardRootProps) => (
-  <Card.Root id={id} density={density} fullWidth classNames={classNames}>
+  <Card.Root id={id} size={density} fullWidth classNames={classNames}>
     {children}
   </Card.Root>
 );
@@ -61,14 +62,14 @@ type StatCardHeaderProps = {
 
 const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
   <Card.Header>
-    <Card.Block>
+    <Block>
       <Icon icon={icon} classNames={hue && getStyles(hue).text} />
-    </Card.Block>
+    </Block>
     <Flex align='center' gap='sm' classNames='min-w-0'>
       <Card.Title>{title}</Card.Title>
       {info !== undefined && <span className='shrink-0 font-mono text-xs text-description'>{info}</span>}
     </Flex>
-    {action && <Card.Block end>{action}</Card.Block>}
+    {action && <Block end>{action}</Block>}
     {menu && <Card.Menu items={menu} />}
   </Card.Header>
 );
@@ -138,21 +139,21 @@ const StatCardRow = ({
       onClick={onClick}
       current={current}
     >
-      <Card.Block compact>
+      <Block compact>
         {control ??
           (onToggle ? (
-            <IconButton
+            <Button
               variant='ghost'
               icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
               iconOnly
-              density='sm'
+              size='sm'
               label={open ? 'Collapse' : 'Expand'}
               onClick={() => onToggle(!open)}
             />
           ) : (
             icon && <Icon icon={icon} classNames={iconClassNames} />
           ))}
-      </Card.Block>
+      </Block>
       <Flex
         align='center'
         justify='between'
@@ -176,9 +177,9 @@ const StatCardRow = ({
       </Flex>
       {trailing && (
         // A unit reads on from its value, so it sits at the gutter's start; a control stays centred.
-        <Card.Block end compact classNames={!action && 'justify-items-start'}>
+        <Block end compact classNames={!action && 'justify-items-start'}>
           {trailing}
-        </Card.Block>
+        </Block>
       )}
     </Card.Row>
   );

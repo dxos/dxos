@@ -53,7 +53,7 @@ export const DisableDependentsAlert = ({
           ))}
         </ul>
       </AlertDialog.Body>
-      <AlertDialog.ActionBar>
+      <AlertDialog.Footer>
         <div className='grow' />
         <AlertDialog.Cancel asChild>
           <Button>{t('cancel.label')}</Button>
@@ -63,7 +63,7 @@ export const DisableDependentsAlert = ({
             {t('disable-dependents-dialog.confirm.label')}
           </Button>
         </AlertDialog.Action>
-      </AlertDialog.ActionBar>
+      </AlertDialog.Footer>
     </AlertDialog.Content>
   );
 };

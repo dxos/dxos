@@ -55,20 +55,20 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
+      <Panel.Header>
         <FeedToolbar attendableId={attendableId} onSync={handleSync} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <PostStack
           id={subscription?.id ?? subject.id}
           posts={posts}
           currentId={currentPostId}
           onAction={handleAction}
         />
-      </Panel.Content>
-      <Panel.Statusbar classNames='border-t border-subdued-separator' asChild>
+      </Panel.Body>
+      <Panel.Footer classNames='border-t border-subdued-separator'>
         <ProgressMeter state={syncProgress} />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

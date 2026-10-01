@@ -6,7 +6,7 @@ import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
-import { DensityProvider, IconButton, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
+import { Button, DensityProvider, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { iconSize, mx } from '@dxos/ui-theme';
 import type { Merge } from '@dxos/util';
@@ -60,7 +60,7 @@ const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
       })}
       ref={forwardedRef}
     >
-      <DensityProvider density='lg'>{children}</DensityProvider>
+      <DensityProvider size='lg'>{children}</DensityProvider>
     </ark.div>
   );
 });
@@ -144,7 +144,7 @@ const PaneTabs = forwardRef<HTMLDivElement, PaneTabsProps>(
         ref={forwardedRef}
       >
         {tabs.map(({ id, icon, label, testId }) => (
-          <IconButton
+          <Button
             key={id}
             role='tab'
             aria-selected={value === id}

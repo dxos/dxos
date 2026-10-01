@@ -7,7 +7,18 @@ import React, { useCallback } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, Column, Field, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Column,
+  Field,
+  Flex,
+  Input,
+  Panel,
+  ScrollArea,
+  Textarea,
+  Toolbar,
+  useTranslation,
+} from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Support } from '#types';
@@ -62,29 +73,29 @@ export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>{t(`status-${status}.label`)}</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Column.Root>
           <ScrollArea.Root orientation='vertical' padding>
             <ScrollArea.Viewport>
               <Field.Root>
                 <Field.Label>{t('title.label')}</Field.Label>
-                <Field.Input value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
+                <Input value={ticket.title ?? ''} onChange={(event) => handleSetTitle(event.target.value)} />
               </Field.Root>
 
               <Field.Root>
                 <Field.Label>{t('body.label')}</Field.Label>
-                <Field.Textarea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
+                <Textarea value={ticket.body ?? ''} onChange={(event) => handleSetBody(event.target.value)} />
               </Field.Root>
 
               {status === 'resolved' && (
                 <Field.Root>
                   <Field.Label>{t('resolution.label')}</Field.Label>
-                  <Field.Textarea
+                  <Textarea
                     value={ticket.resolution ?? ''}
                     onChange={(event) => handleSetResolution(event.target.value)}
                   />
@@ -111,7 +122,7 @@ export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Column.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

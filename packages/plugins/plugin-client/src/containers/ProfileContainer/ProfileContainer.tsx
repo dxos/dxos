@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Field, Flex, SystemIconButton, useControlledState, useTranslation } from '@dxos/react-ui';
+import { ButtonGroup, Flex, Input, SystemButton, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue } from '@dxos/util';
@@ -132,7 +132,7 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Field.Input
+            <Input
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
@@ -182,8 +182,8 @@ export const ProfileContainer = () => {
             <ButtonGroup classNames='w-full'>
               {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
                     stays inside the row at phone widths; a fixed `min-w-*` would push it past the panel edge. */}
-              <Field.Input value={getValue()} disabled classNames='w-full min-w-0' />
-              <SystemIconButton.Clipboard iconOnly value={getValue() ?? ''} />
+              <Input value={getValue()} disabled classNames='w-full min-w-0' />
+              <SystemButton.Clipboard iconOnly value={getValue() ?? ''} />
             </ButtonGroup>
           </Form.Field>
         );

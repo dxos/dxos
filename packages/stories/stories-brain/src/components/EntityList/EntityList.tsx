@@ -4,7 +4,7 @@
 
 import React, { useRef } from 'react';
 
-import { Banner, IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Button, Empty, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { type EntityItem } from '../types.ts';
@@ -32,10 +32,10 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
   const pointerSelectionRef = useRef<{ itemId: string; selected: string | undefined } | undefined>(undefined);
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text classNames='grow'>Entities{entities.length > 0 ? ` (${entities.length})` : ''}</Toolbar.Text>
-          <IconButton
+          <Button
             icon='ph--x--regular'
             iconOnly
             label='Clear'
@@ -43,10 +43,10 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
             onClick={() => onSelect(undefined)}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='overflow-auto'>
+      </Panel.Header>
+      <Panel.Body classNames='overflow-auto'>
         {entities.length === 0 ? (
-          <Banner.Empty label='No entities.' />
+          <Empty>No entities.</Empty>
         ) : (
           <Listbox.Root value={selected} onValueChange={onSelect}>
             <Listbox.Content aria-label='Entities'>
@@ -70,15 +70,15 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
                     }
                   }}
                 >
-                  <Listbox.ItemLabel>{entity.label}</Listbox.ItemLabel>
+                  <Listbox.ItemText>{entity.label}</Listbox.ItemText>
                   <span className='shrink-0 text-subdued tabular-nums'>{entity.count}</span>
-                  <Listbox.Indicator />
+                  <Listbox.ItemIndicator />
                 </Listbox.Item>
               ))}
             </Listbox.Content>
           </Listbox.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

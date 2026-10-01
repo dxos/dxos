@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, ScrollArea } from '@dxos/react-ui';
+import { Block, Card, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
 
@@ -115,7 +115,7 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth ref={forwardedRef}>
           <Card.Header>
-            <Card.Block />
+            <Block />
             <Card.Title>{result.label}</Card.Title>
           </Card.Header>
           {result.snippet && (

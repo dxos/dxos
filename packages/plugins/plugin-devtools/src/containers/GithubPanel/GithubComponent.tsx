@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
-import { Flex, IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -170,7 +170,7 @@ const StatusBar = () => {
   const { t } = useTranslation(meta.profile.key);
   const { repo } = useComponentContext();
   return (
-    <IconButton
+    <Button
       icon='ph--github-logo--regular'
       label={t('view-on-github.button')}
       variant='primary'

@@ -14,14 +14,16 @@ import React, {
 
 import { logFileRegistry } from '@dxos/log';
 import {
+  Button,
   ErrorStack,
   Field,
   Icon,
+  Input,
   Panel,
   Popover,
   ScrollArea,
   Select,
-  SystemIconButton,
+  SystemButton,
   type ThemedClassName,
   ToggleIconButton,
   Toolbar,
@@ -33,6 +35,7 @@ import {
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -234,7 +237,7 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
   return (
     <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
       <Field.Root>
-        <Field.Input
+        <Input
           placeholder={t('filter.placeholder')}
           value={filter}
           autoComplete='off'
@@ -243,18 +246,12 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
         />
       </Field.Root>
       <Select.Root value={selectedLevel} onValueChange={setFilter}>
-        <Select.TriggerButton classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {LEVELS.map((level) => (
-                <Select.Option key={level} value={level} classNames='text-sm'>
-                  {t(`level.${level}`)}
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
+        <Select.Trigger classNames='w-[6rem] text-sm' placeholder={t('level.label')} />
+        <Select.Content>
+          {LEVELS.map((level) => (
+            <Select.Item key={level} classNames='text-sm' item={{ value: level, label: t(`level.${level}`) }} />
+          ))}
+        </Select.Content>
       </Select.Root>
       <LoggerLevels />
       <ToggleIconButton
@@ -265,8 +262,8 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
         label={t('record.label')}
         onClick={() => setRecording((value) => !value)}
       />
-      <Toolbar.IconButton icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
-      <Toolbar.IconButton icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
+      <Button icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
+      <Button icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
     </Toolbar.Root>
   );
 });
@@ -292,105 +289,95 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <Toolbar.IconButton
+        <Button
           icon='ph--sliders--regular'
           iconOnly
           label={t('levels.label')}
           classNames={mx(fileLevels.size > 0 && 'text-primary-text', classNames)}
         />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content>
-          <Popover.Viewport classNames='w-[24rem] max-h-[22rem]'>
-            <Panel.Root>
-              <Panel.Toolbar asChild>
-                <Toolbar.Root>
-                  <Field.Root>
-                    <Field.Input
-                      placeholder={t('levels.filter.placeholder')}
-                      value={fileFilter}
-                      autoComplete='off'
-                      spellCheck={false}
-                      onChange={(ev) => setFileFilter(ev.target.value)}
-                    />
-                  </Field.Root>
-                  <Toolbar.IconButton
-                    icon='ph--trash--regular'
-                    iconOnly
-                    label={t('levels.reset.label')}
-                    disabled={fileLevels.size === 0}
-                    onClick={clearFileLevels}
+      <Popover.Content>
+        <Popover.Body classNames='w-[24rem] max-h-[22rem]'>
+          <Panel.Root>
+            <Panel.Header>
+              <Toolbar.Root>
+                <Field.Root>
+                  <Input
+                    placeholder={t('levels.filter.placeholder')}
+                    value={fileFilter}
+                    autoComplete='off'
+                    spellCheck={false}
+                    onChange={(ev) => setFileFilter(ev.target.value)}
                   />
-                </Toolbar.Root>
-              </Panel.Toolbar>
-              <Panel.Content asChild>
-                <ScrollArea.Root orientation='vertical' thin>
-                  <ScrollArea.Viewport>
-                    {visibleFiles.length === 0 && (
-                      <div className='p-2 text-xs text-subdued'>
-                        {t(files.length === 0 ? 'levels.empty.message' : 'search.no-matches.message')}
-                      </div>
-                    )}
-                    {visibleFiles.length > 0 && (
-                      <Listbox.Root>
-                        <Listbox.Content classNames='dx-density-sm'>
-                          {visibleFiles.map((file) => {
-                            const basename = file.split('/').pop() ?? file;
-                            const pkg = packageName(file);
-                            const value = fileLevels.get(file) ?? 'inherit';
-                            return (
-                              <Listbox.Item
-                                key={file}
-                                id={file}
-                                classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'
-                              >
-                                {/* One line so the row can honour the compact density; the package
+                </Field.Root>
+                <Button
+                  icon='ph--trash--regular'
+                  iconOnly
+                  label={t('levels.reset.label')}
+                  disabled={fileLevels.size === 0}
+                  onClick={clearFileLevels}
+                />
+              </Toolbar.Root>
+            </Panel.Header>
+            <Panel.Body asChild>
+              <ScrollArea.Root orientation='vertical' thin>
+                <ScrollArea.Viewport>
+                  {visibleFiles.length === 0 && (
+                    <div className='p-2 text-xs text-subdued'>
+                      {t(files.length === 0 ? 'levels.empty.message' : 'search.no-matches.message')}
+                    </div>
+                  )}
+                  {visibleFiles.length > 0 && (
+                    <Listbox.Root>
+                      <Listbox.Content classNames='dx-density-sm'>
+                        {visibleFiles.map((file) => {
+                          const basename = file.split('/').pop() ?? file;
+                          const pkg = packageName(file);
+                          const value = fileLevels.get(file) ?? 'inherit';
+                          return (
+                            <Listbox.Item
+                              key={file}
+                              id={file}
+                              classNames='grid grid-cols-[1fr_7rem] items-center gap-1 py-0.5'
+                            >
+                              {/* One line so the row can honour the compact density; the package
                                     and full path are carried in the tooltip instead of a second line. */}
-                                <Listbox.ItemLabel
-                                  classNames='truncate text-xs'
-                                  title={pkg ? `${pkg} · ${file}` : file}
-                                >
-                                  {basename}
-                                </Listbox.ItemLabel>
-                                <Select.Root
-                                  value={value}
-                                  onValueChange={(next) =>
-                                    setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
-                                  }
-                                >
-                                  <Select.TriggerButton
-                                    classNames='w-full text-sm'
-                                    placeholder={t('levels.inherit.label')}
+                              <Listbox.ItemText classNames='truncate text-xs' title={pkg ? `${pkg} · ${file}` : file}>
+                                {basename}
+                              </Listbox.ItemText>
+                              <Select.Root
+                                value={value}
+                                onValueChange={(next) =>
+                                  setFileLevel(file, next === 'inherit' ? undefined : (next as LevelName))
+                                }
+                              >
+                                <Select.Trigger classNames='w-full text-sm' placeholder={t('levels.inherit.label')} />
+                                <Select.Content>
+                                  <Select.Item
+                                    classNames='text-sm'
+                                    item={{ value: 'inherit', label: t('levels.inherit.label') }}
                                   />
-                                  <Select.Portal>
-                                    <Select.Content>
-                                      <Select.Viewport>
-                                        <Select.Option value='inherit' classNames='text-sm'>
-                                          {t('levels.inherit.label')}
-                                        </Select.Option>
-                                        {LEVELS.map((level) => (
-                                          <Select.Option key={level} value={level} classNames='text-sm'>
-                                            {t(`level.${level}`)}
-                                          </Select.Option>
-                                        ))}
-                                      </Select.Viewport>
-                                    </Select.Content>
-                                  </Select.Portal>
-                                </Select.Root>
-                              </Listbox.Item>
-                            );
-                          })}
-                        </Listbox.Content>
-                      </Listbox.Root>
-                    )}
-                  </ScrollArea.Viewport>
-                </ScrollArea.Root>
-              </Panel.Content>
-            </Panel.Root>
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+                                  {LEVELS.map((level) => (
+                                    <Select.Item
+                                      key={level}
+                                      classNames='text-sm'
+                                      item={{ value: level, label: t(`level.${level}`) }}
+                                    />
+                                  ))}
+                                </Select.Content>
+                              </Select.Root>
+                            </Listbox.Item>
+                          );
+                        })}
+                      </Listbox.Content>
+                    </Listbox.Root>
+                  )}
+                </ScrollArea.Viewport>
+              </ScrollArea.Root>
+            </Panel.Body>
+          </Panel.Root>
+        </Popover.Body>
+      </Popover.Content>
     </Popover.Root>
   );
 };
@@ -485,7 +472,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
               >
                 <div className='flex items-center pl-2'>
                   <Field.Root>
-                    <Field.Checkbox
+                    <Next.Checkbox
                       tabIndex={-1}
                       size={3}
                       checked={checked.has(id)}
@@ -503,9 +490,9 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 <span className='truncate' title={record.message}>
                   {record.message}
                 </span>
-                <SystemIconButton.Clipboard
+                <SystemButton.Clipboard
                   iconOnly
-                  density='sm'
+                  size='sm'
                   tabIndex={-1}
                   label={t('copy-entry.label')}
                   variant='ghost'
@@ -552,7 +539,7 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
   return (
     <Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent' })} ref={forwardedRef}>
       <Field.Root>
-        <Field.Input
+        <Input
           placeholder={t('search.placeholder')}
           value={textFilter}
           autoComplete='off'
@@ -562,12 +549,7 @@ const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
         />
       </Field.Root>
       {textFilter.length > 0 && (
-        <Toolbar.IconButton
-          icon='ph--x--regular'
-          iconOnly
-          label={t('search.clear.label')}
-          onClick={() => setTextFilter('')}
-        />
+        <Button icon='ph--x--regular' iconOnly label={t('search.clear.label')} onClick={() => setTextFilter('')} />
       )}
     </Toolbar.Root>
   );

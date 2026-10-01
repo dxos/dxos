@@ -6,7 +6,7 @@ import React from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Accordion, Banner, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Accordion, Empty, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -42,36 +42,38 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {runs.length === 0 ? (
-              <Banner.Empty label={t('history.empty.message')} />
+              <Empty>{t('history.empty.message')}</Empty>
             ) : (
               <Accordion.Root<RoutineRun> items={runs} getId={getRunId}>
                 {({ items }) => (
                   <Flex column>
                     {items.map((run) => (
                       <Accordion.Item key={run.pid} item={run}>
-                        <Accordion.ItemHeader hover>
-                          <Listbox.ItemContent
-                            icon={
-                              <Icon icon={STATUS_ICONS[run.status]} size={5} classNames={STATUS_CLASSES[run.status]} />
-                            }
-                            title={<span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>}
-                            description={`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}
+                        <Accordion.ItemTrigger hover>
+                          <Listbox.ItemIcon
+                            icon={STATUS_ICONS[run.status]}
+                            size='lg'
+                            classNames={STATUS_CLASSES[run.status]}
                           />
-                        </Accordion.ItemHeader>
+                          <Listbox.ItemText>
+                            {<span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>}
+                          </Listbox.ItemText>
+                          <Listbox.ItemDescription>{`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}</Listbox.ItemDescription>
+                        </Accordion.ItemTrigger>
                         {/* Match `ItemContent`'s rail/content grid so the JSON aligns under the title column. */}
-                        <Accordion.ItemBody classNames='grid grid-cols-[var(--dx-rail-item)_1fr] gap-x-2'>
+                        <Accordion.ItemContent classNames='grid grid-cols-[var(--dx-rail-item)_1fr] gap-x-2'>
                           <JsonHighlighter
                             data={toJsonData(run)}
                             classNames='col-start-2 [&_pre]:!text-xs [&_code]:!text-xs'
                           />
-                        </Accordion.ItemBody>
+                        </Accordion.ItemContent>
                       </Accordion.Item>
                     ))}
                   </Flex>
@@ -80,7 +82,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

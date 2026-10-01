@@ -74,7 +74,7 @@ export const TldrawArticle = ({
 
 const Article = composable<HTMLDivElement, PropsWithChildren>((props, forwardedRef) => (
   <Panel.Root {...composableProps(props, { classNames: 'aspect-square' })} ref={forwardedRef}>
-    <Panel.Content>{props.children}</Panel.Content>
+    <Panel.Body>{props.children}</Panel.Body>
   </Panel.Root>
 ));
 

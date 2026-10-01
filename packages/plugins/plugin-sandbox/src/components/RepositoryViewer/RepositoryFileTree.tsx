@@ -108,7 +108,7 @@ export const RepositoryFileTree = ({
                 ? 'ph--git-fork--regular'
                 : 'ph--file--regular'
           }
-          size={4}
+          size='md'
         />
       ),
     [expanded],
@@ -120,7 +120,7 @@ export const RepositoryFileTree = ({
       model={model}
       ariaLabel={t('files-tree.label')}
       classNames='text-sm'
-      density='sm'
+      size='sm'
       renderIcon={renderIcon}
       onOpenChange={handleOpenChange}
       onSelect={handleSelect}

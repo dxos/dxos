@@ -38,14 +38,14 @@ export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
   return (
     <SearchList.Root onSearch={handleSearch}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <SearchList.Input placeholder='Search...' autoFocus={autoFocus} />
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <SearchResultStack results={allResults} query={query ?? ''} />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </SearchList.Root>
   );

@@ -5,7 +5,7 @@
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, IconButton, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { SettingsOperation } from '../../operations/index.ts';
@@ -30,7 +30,7 @@ export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistry
     }
 
     return (
-      <IconButton
+      <Button
         {...props}
         ref={forwardedRef}
         icon='ph--squares-four--regular'

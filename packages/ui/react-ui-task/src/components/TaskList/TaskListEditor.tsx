@@ -16,9 +16,10 @@ import React, {
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import {
+  Button,
   Field,
   Icon,
-  IconButton,
+  Input,
   Tag,
   Toolbar,
   composable,
@@ -389,7 +390,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           ))}
 
         <Field.Root>
-          <Field.Input
+          <Input
             variant='subdued'
             // An input clips its overflow rather than wrapping it, so a long title ends mid-word
             // against the trailing controls with nothing to say it continues; the ellipsis says so.
@@ -468,14 +469,14 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                   classNames='inline-flex items-center gap-1'
                   data-testid='taskList.edit.file'
                 >
-                  <Icon icon='ph--paperclip--regular' size={3} />
+                  <Icon icon='ph--paperclip--regular' size='xs' />
                   <span data-testid='taskList.edit.file.name'>{file.name}</span>
-                  <IconButton
+                  <Button
                     variant='ghost'
-                    density='sm'
+                    size='sm'
                     iconOnly
                     icon='ph--x--regular'
-                    size={3}
+                    iconSize='xs'
                     label={t('remove-file.label', { name: file.name })}
                     classNames='p-0 min-h-0 h-auto'
                     onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
@@ -491,7 +492,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             chrome floating over the title. */}
         {(showControls ? current || draft.trim().length > 0 : !current && draft.trim().length > 0) && (
           <Toolbar.Root
-            density='sm'
+            size='sm'
             classNames={mx(
               'row-start-1 justify-end p-0 bg-transparent',
               // `-2` is the icon column once the pane has only two tracks, which would put the
@@ -503,7 +504,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                 priority on until it is saved. */}
             {showControls && task && showEstimates && <TaskEstimateControl task={task} />}
             {showControls && task && <TaskPriorityIcon task={task} />}
-            <Toolbar.IconButton
+            <Button
               variant='ghost'
               iconOnly
               icon='ph--check--regular'
@@ -512,7 +513,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
               onClick={handleSave}
               onMouseDown={(event) => event.preventDefault()}
             />
-            <Toolbar.IconButton
+            <Button
               variant='ghost'
               iconOnly
               icon='ph--x--regular'

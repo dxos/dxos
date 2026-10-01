@@ -11,7 +11,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj } from '@dxos/echo';
-import { ScrollArea, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Block, ScrollArea, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card, Icon } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
@@ -73,9 +73,9 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   return (
     <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Card.Block>
+        <Block>
           <Icon icon={item.icon} classNames={styles?.fg} />
-        </Card.Block>
+        </Block>
         <Card.Title>{label}</Card.Title>
         <Card.Menu items={archiveItem ? [archiveItem] : undefined} />
       </Card.Header>

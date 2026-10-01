@@ -29,23 +29,19 @@ export const Picker = <T extends { value: string; label: string }>({
 
   return (
     <Select.Root value={value ?? NULL} onValueChange={(value) => onChange?.(value === NULL ? null : value)}>
-      <Select.TriggerButton placeholder={placeholder ?? t('picker-select.label')} />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            <Select.Group>
-              <Select.Item value={NULL}>
-                <Select.ItemText>{t('picker-none.label')}</Select.ItemText>
-              </Select.Item>
-              {sorted.map(({ value, label }) => (
-                <Select.Item key={value} value={value}>
-                  <Select.ItemText>{label}</Select.ItemText>
-                </Select.Item>
-              ))}
-            </Select.Group>
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+      <Select.Trigger placeholder={placeholder ?? t('picker-select.label')} />
+      <Select.Content>
+        <Select.ItemGroup>
+          <Select.Item value={NULL}>
+            <Select.ItemText>{t('picker-none.label')}</Select.ItemText>
+          </Select.Item>
+          {sorted.map(({ value, label }) => (
+            <Select.Item key={value} value={value}>
+              <Select.ItemText>{label}</Select.ItemText>
+            </Select.Item>
+          ))}
+        </Select.ItemGroup>
+      </Select.Content>
     </Select.Root>
   );
 };

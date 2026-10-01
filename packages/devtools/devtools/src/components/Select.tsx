@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SelectRootProps, Toolbar, Select as UiSelect } from '@dxos/react-ui';
+import { Button, type SelectRootProps, Select as UiSelect } from '@dxos/react-ui';
 
 export type SelectProps = SelectRootProps & {
   items?: { value: string; label: string }[];
@@ -13,20 +13,16 @@ export type SelectProps = SelectRootProps & {
 export const Select = ({ items = [], ...props }: SelectProps) => {
   return (
     <UiSelect.Root {...props}>
-      <Toolbar.Button asChild>
-        <UiSelect.TriggerButton placeholder={'Select value'} />
-      </Toolbar.Button>
-      <UiSelect.Portal>
-        <UiSelect.Content>
-          <UiSelect.Viewport>
-            {items?.map(({ value, label }) => (
-              <UiSelect.Option key={value} value={value}>
-                <span className='font-mono'>{label}</span>
-              </UiSelect.Option>
-            ))}
-          </UiSelect.Viewport>
-        </UiSelect.Content>
-      </UiSelect.Portal>
+      <Button asChild>
+        <UiSelect.Trigger placeholder={'Select value'} />
+      </Button>
+      <UiSelect.Content>
+        {items?.map(({ value, label }) => (
+          <UiSelect.Item key={value} value={value}>
+            <span className='font-mono'>{label}</span>
+          </UiSelect.Item>
+        ))}
+      </UiSelect.Content>
     </UiSelect.Root>
   );
 };

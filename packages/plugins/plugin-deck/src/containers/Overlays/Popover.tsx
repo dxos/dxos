@@ -9,9 +9,10 @@ import { AppSurface, CardIconSlot, CardMenuSlot, useObjectMenuItems } from '@dxo
 import { Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import {
+  Block,
+  Button,
   Card,
   Icon,
-  IconButton,
   Popover,
   type PopoverContentInteractOutsideEvent,
   toLocalizedString,
@@ -152,77 +153,68 @@ export const PopoverContent = () => {
   const roundedClassNames = 'rounded-sm';
 
   return (
-    <Popover.Portal>
-      <Popover.Content
-        side={side}
-        border
-        hideWhenDetached
-        onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
-        onInteractOutside={handleInteractOutside}
-        onEscapeKeyDown={handleInteractOutside}
-        classNames={[
-          roundedClassNames,
-          !isRename && [
-            'origin-(--transform-origin)',
-            'data-[state=open]:animate-popover-in',
-            'data-[state=closed]:animate-popover-out',
-          ],
-        ]}
-      >
-        <Popover.Viewport>
-          {isComponentPopover && content && 'component' in content ? (
-            /*
-             * Base popover: a plugin-provided component (e.g., editor link preview).
-             */
-            <Surface.Surface type={AppSurface.Popover} data={content} limit={1} />
-          ) : (
-            /*
-             * Card popover (default). Rendered for any open popover that isn't an explicit
-             * base-component popover so the popover can never collapse to a bare 1px frame: the
-             * header (icon + title + menu) always renders, and the body falls back to a fixed-
-             * height "no preview" row when no subject resolves a card Surface (e.g. system-type
-             * objects like a raw Feed that have no registered card and no renderable fields).
-             */
+    <Popover.Content
+      side={side}
+      border
+      hideWhenDetached
+      onOpenAutoFocus={isRename ? undefined : (event) => event.preventDefault()}
+      onInteractOutside={handleInteractOutside}
+      onEscapeKeyDown={handleInteractOutside}
+      classNames={[
+        roundedClassNames,
+        !isRename && [
+          'origin-(--transform-origin)',
+          'data-[state=open]:animate-popover-in',
+          'data-[state=closed]:animate-popover-out',
+        ],
+      ]}
+    >
+      <Popover.Body>
+        {isComponentPopover && content && 'component' in content ? (
+          /*
+           * Base popover: a plugin-provided component (e.g., editor link preview).
+           */
+          <Surface.Surface type={AppSurface.Popover} data={content} limit={1} />
+        ) : (
+          /*
+           * Card popover (default). Rendered for any open popover that isn't an explicit
+           * base-component popover so the popover can never collapse to a bare 1px frame: the
+           * header (icon + title + menu) always renders, and the body falls back to a fixed-
+           * height "no preview" row when no subject resolves a card Surface (e.g. system-type
+           * objects like a raw Feed that have no registered card and no renderable fields).
+           */
 
-            <Card.Root border={false} classNames={['dx-card-popover', roundedClassNames]}>
-              <Card.Header>
-                <Card.Block>
-                  <CardIconSlot subject={popoverSubject}>
-                    {icon && <Icon icon={icon} classNames={iconStyles?.text} />}
-                  </CardIconSlot>
-                </Card.Block>
-                <Card.Title>{title}</Card.Title>
-                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Card.Block end>
-                  {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
-                  <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                    <IconButton
-                      variant='ghost'
-                      density='sm'
-                      icon='ph--dots-three-vertical--regular'
-                      iconOnly
-                      label='Actions'
-                    />
-                  </ActionMenu>
-                </Card.Block>
-              </Card.Header>
+          <Card.Root border={false} classNames={['dx-card-popover', roundedClassNames]} size='sm'>
+            <Card.Header>
+              <Block>
+                <CardIconSlot subject={popoverSubject}>
+                  {icon && <Icon icon={icon} classNames={iconStyles?.text} />}
+                </CardIconSlot>
+              </Block>
+              <Card.Title>{title}</Card.Title>
+              {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+              <Block end>
+                {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
+                <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
+                  <Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
+                </ActionMenu>
+              </Block>
+            </Card.Header>
 
-              {content && 'subject' in content ? (
-                /** CardContent must render the Card.Body. */
-                <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
-              ) : (
-                <Card.Body classNames='min-h-8'>
-                  <Card.Row>
-                    <Card.Text variant='description'>{t('popover-no-preview.message')}</Card.Text>
-                  </Card.Row>
-                </Card.Body>
-              )}
-            </Card.Root>
-          )}
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
+            {content && 'subject' in content ? (
+              /** CardContent must render the Card.Body. */
+              <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
+            ) : (
+              <Card.Body classNames='min-h-8'>
+                <Card.Row>
+                  <Card.Text variant='description'>{t('popover-no-preview.message')}</Card.Text>
+                </Card.Row>
+              </Card.Body>
+            )}
+          </Card.Root>
+        )}
+      </Popover.Body>
+    </Popover.Content>
   );
 };
 

@@ -21,7 +21,7 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { Button, Field, Flex, Icon, Menu, Tabs, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Flex, Icon, Input, Menu, Tabs, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '../../../meta.ts';
@@ -402,18 +402,18 @@ export const Welcome = ({
             }}
           >
             <Tabs.Viewport classNames='flex flex-col gap-6'>
-              <Tabs.Tablist classNames='p-0 gap-1 border-b border-neutral-700'>
-                <Tabs.Button value='login' classNames={tabClassNames}>
+              <Tabs.List classNames='p-0 gap-1 border-b border-neutral-700'>
+                <Tabs.Trigger value='login' classNames={tabClassNames}>
                   {t('login-tab.label')}
-                </Tabs.Button>
-                <Tabs.Button value='signup' classNames={tabClassNames}>
+                </Tabs.Trigger>
+                <Tabs.Trigger value='signup' classNames={tabClassNames}>
                   {t('signup-tab.label')}
-                </Tabs.Button>
-              </Tabs.Tablist>
+                </Tabs.Trigger>
+              </Tabs.List>
 
-              <Tabs.Panel value='login'>{loginTab}</Tabs.Panel>
+              <Tabs.Content value='login'>{loginTab}</Tabs.Content>
 
-              <Tabs.Panel value='signup'>
+              <Tabs.Content value='signup'>
                 {signupStep === 'collect' && signupMode === 'code' && codeSignupEnabled && (
                   <Flex column gap='xl'>
                     <Flex column gap='sm'>
@@ -530,7 +530,7 @@ export const Welcome = ({
                     <SwapLink onClick={() => setSignupStep('collect')}>{t('use-different-code-link.label')}</SwapLink>
                   </Flex>
                 )}
-              </Tabs.Panel>
+              </Tabs.Content>
             </Tabs.Viewport>
           </Tabs.Root>
         )}
@@ -757,7 +757,7 @@ const LoginTab = ({
             disabled={pending}
             onClick={onPasskey}
           >
-            <Icon icon='ph--key--regular' size={5} />
+            <Icon icon='ph--key--regular' size='lg' />
             <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
           </Button>
           {error?.startsWith('passkey-') && (
@@ -821,32 +821,28 @@ const LoginTab = ({
               className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4 outline-none'
             >
               <span>{t('more-ways-to-sign-in.label')}</span>
-              <Icon icon='ph--caret-down--regular' size={4} />
+              <Icon icon='ph--caret-down--regular' size='md' />
             </button>
           </Menu.Trigger>
-          <Menu.Portal>
-            {/* Raise above the dialog overlay (z-40): radix copies the content's computed z-index
+          {/* Raise above the dialog overlay (z-40): radix copies the content's computed z-index
                 onto the popper wrapper, and the default menu z-20 renders behind the overlay. */}
-            <Menu.Content
-              side='bottom'
-              sideOffset={8}
-              collisionPadding={16}
-              classNames='!w-80 !z-50'
-              onCloseAutoFocus={handleMoreMenuCloseAutoFocus}
-            >
-              <Menu.Viewport>
-                {moreOptions.map((opt) => (
-                  <Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
-                    <Icon icon={opt.icon} size={6} classNames={mx('shrink-0', opt.classNames)} />
-                    <Flex column gap='xs'>
-                      <span>{opt.label}</span>
-                      <span className='text-xs text-description font-normal'>{opt.description}</span>
-                    </Flex>
-                  </Menu.Item>
-                ))}
-              </Menu.Viewport>
-            </Menu.Content>
-          </Menu.Portal>
+          <Menu.Content
+            side='bottom'
+            sideOffset={8}
+            collisionPadding={16}
+            classNames='!w-80 !z-50'
+            onCloseAutoFocus={handleMoreMenuCloseAutoFocus}
+          >
+            {moreOptions.map((opt) => (
+              <Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
+                <Icon icon={opt.icon} size='xl' classNames={mx('shrink-0', opt.classNames)} />
+                <Flex column gap='xs'>
+                  <span>{opt.label}</span>
+                  <span className='text-xs text-description font-normal'>{opt.description}</span>
+                </Flex>
+              </Menu.Item>
+            ))}
+          </Menu.Content>
         </Menu.Root>
       )}
     </Flex>
@@ -884,7 +880,7 @@ const InlineForm = ({
   return (
     <Field.Root>
       <div className='flex flex-col md:gap-1 flex-row gap-0 sm:items-stretch'>
-        <Field.Input
+        <Input
           {...rest}
           disabled={pending || rest.disabled}
           classNames={mx('bg-deck-surface flex-1 sm:rounded-r-none', inputClasses)}

@@ -64,15 +64,15 @@ export type NavigationToolbarProps = ThemedClassName<{
 export const NavigationToolbar = ({ classNames, actions, children }: NavigationToolbarProps) => {
   const { path } = actions;
   return (
-    <NaturalToolbar.Root density='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-toolbar'>
-      <NaturalToolbar.Button
+    <NaturalToolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-toolbar'>
+      <NaturalButton
         variant='ghost'
         disabled={path.length < 2}
         data-testid='toolbar-up'
         onClick={() => actions.onPath(path.length - 2)}
       >
         Up
-      </NaturalToolbar.Button>
+      </NaturalButton>
       <Breadcrumbs path={path} nameOf={actions.nameOf} onSelect={actions.onPath} />
       {children && (
         <>
@@ -89,7 +89,7 @@ export type DebugToolbarProps = ThemedClassName<{ children?: React.ReactNode }>;
 /** The camera's own numbers, away from the controls: nothing here acts on the scene. */
 export const DebugToolbar = ({ classNames, children }: DebugToolbarProps) => {
   return (
-    <NaturalToolbar.Root density='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
+    <NaturalToolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-debug'>
       <NaturalToolbar.Text classNames={readoutClasses}>{children}</NaturalToolbar.Text>
     </NaturalToolbar.Root>
   );
@@ -104,8 +104,8 @@ export type ActionToolbarProps = ThemedClassName<{
 /** Everything that changes the view or the scene: camera, history, clipboard, creation and debug. */
 export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: ActionToolbarProps) => {
   return (
-    <NaturalToolbar.Root density='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
-      <NaturalToolbar.IconButton
+    <NaturalToolbar.Root size='sm' classNames={mx(barClasses, classNames)} data-testid='canvas-actions'>
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--arrows-out--regular'
@@ -113,7 +113,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-fit'
         onClick={actions.fit}
       />
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--magnifying-glass-plus--regular'
@@ -121,7 +121,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-zoom-in'
         onClick={actions.zoomIn}
       />
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--magnifying-glass-minus--regular'
@@ -129,7 +129,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-zoom-out'
         onClick={actions.zoomOut}
       />
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--grid-four--regular'
@@ -139,7 +139,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         onClick={actions.toggleSnap}
       />
       <NaturalToolbar.Separator variant='line' />
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--arrow-u-up-left--regular'
@@ -148,7 +148,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='undo'
         onClick={actions.undo}
       />
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--arrow-u-up-right--regular'
@@ -158,7 +158,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         onClick={actions.redo}
       />
       <NaturalToolbar.Separator variant='line' />
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--scissors--regular'
@@ -167,7 +167,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='cut'
         onClick={actions.cut}
       />
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--copy--regular'
@@ -176,7 +176,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='copy'
         onClick={actions.copy}
       />
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--clipboard-text--regular'
@@ -185,7 +185,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='paste'
         onClick={actions.paste}
       />
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--trash--regular'
@@ -197,7 +197,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
       <NaturalToolbar.Separator variant='line' />
       <Menu.Root>
         <Menu.Trigger asChild>
-          <NaturalToolbar.IconButton
+          <NaturalButton
             variant='ghost'
             iconOnly
             icon='ph--plus--regular'
@@ -207,19 +207,15 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
           />
         </Menu.Trigger>
         {/* Portalled: inside the bar's flex flow the items would sit under the readout and the canvas. */}
-        <Menu.Portal>
-          <Menu.Content side='bottom' align='end' sideOffset={4}>
-            <Menu.Viewport>
-              {Object.values(nodes).map((def) => (
-                <Menu.Item key={def.type} data-testid={`create-${def.type}`} onSelect={() => actions.create(def.type)}>
-                  {def.name}
-                </Menu.Item>
-              ))}
-            </Menu.Viewport>
-          </Menu.Content>
-        </Menu.Portal>
+        <Menu.Content side='bottom' align='end' sideOffset={4}>
+          {Object.values(nodes).map((def) => (
+            <Menu.Item key={def.type} data-testid={`create-${def.type}`} onSelect={() => actions.create(def.type)}>
+              {def.name}
+            </Menu.Item>
+          ))}
+        </Menu.Content>
       </Menu.Root>
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--tree-structure--regular'
@@ -228,7 +224,7 @@ export const ActionToolbar = ({ classNames, actions, nodes, capabilities }: Acti
         data-testid='toolbar-layout'
         onClick={actions.layout}
       />
-      <NaturalToolbar.IconButton
+      <NaturalButton
         variant='ghost'
         iconOnly
         icon='ph--bug--regular'

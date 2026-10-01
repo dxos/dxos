@@ -13,7 +13,7 @@ import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { persistentClientServices, withClientProvider } from '@dxos/react-client/testing';
-import { Button, Card, Field, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
+import { Button, Card, Field, NumberInput, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -108,14 +108,14 @@ const VirtualStackPaginationStory = () => {
   return (
     <Dnd.Root>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <div className='flex grow justify-center'>
               Range {range} of {TOTAL_ITEMS} ({items.length} loaded) {atHead && '(at head)'}
             </div>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Mosaic.Container asChild eventHandler={{ id: 'virtual-stack-pagination', canDrop: () => false }}>
             <ScrollArea.Root orientation='vertical'>
               <ScrollArea.Viewport ref={setViewport}>
@@ -132,7 +132,7 @@ const VirtualStackPaginationStory = () => {
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Mosaic.Container>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Dnd.Root>
   );
@@ -288,12 +288,11 @@ const FeedPaginationStory = () => {
   return (
     <Dnd.Root>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <div className='shrink-0' style={{ inlineSize: '6rem' }}>
               <Field.Root>
-                <Field.Input
-                  type='number'
+                <NumberInput
                   min={1}
                   value={addCount}
                   onChange={(event) => setAddCount(event.target.valueAsNumber || 0)}
@@ -311,31 +310,23 @@ const FeedPaginationStory = () => {
               value={sortField}
               onValueChange={(value) => setSortField(value === 'number' || value === 'word' ? value : 'natural')}
             >
-              <Toolbar.Button asChild>
-                <Select.TriggerButton classNames='shrink-0' />
-              </Toolbar.Button>
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    <Select.Option value='natural'>Natural</Select.Option>
-                    <Select.Option value='number'>Number</Select.Option>
-                    <Select.Option value='word'>Word</Select.Option>
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
+              <Button asChild>
+                <Select.Trigger classNames='shrink-0' />
+              </Button>
+              <Select.Content>
+                <Select.Item item={{ value: 'natural', label: 'Natural' }} />
+                <Select.Item item={{ value: 'number', label: 'Number' }} />
+                <Select.Item item={{ value: 'word', label: 'Word' }} />
+              </Select.Content>
             </Select.Root>
             <Select.Root value={direction} onValueChange={(value) => setDirection(value === 'asc' ? 'asc' : 'desc')}>
-              <Toolbar.Button asChild>
-                <Select.TriggerButton classNames='shrink-0' />
-              </Toolbar.Button>
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    <Select.Option value='asc'>Ascending</Select.Option>
-                    <Select.Option value='desc'>Descending</Select.Option>
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
+              <Button asChild>
+                <Select.Trigger classNames='shrink-0' />
+              </Button>
+              <Select.Content>
+                <Select.Item item={{ value: 'asc', label: 'Ascending' }} />
+                <Select.Item item={{ value: 'desc', label: 'Descending' }} />
+              </Select.Content>
             </Select.Root>
             <div className='grow text-end truncate whitespace-nowrap'>
               {items.length} loaded of {total}
@@ -344,8 +335,8 @@ const FeedPaginationStory = () => {
               {!hasMore && ' · end'}
             </div>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Mosaic.Container asChild eventHandler={{ id: 'virtual-stack-feed-pagination', canDrop: () => false }}>
             <ScrollArea.Root orientation='vertical'>
               <ScrollArea.Viewport ref={setViewport}>
@@ -362,7 +353,7 @@ const FeedPaginationStory = () => {
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Mosaic.Container>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Dnd.Root>
   );

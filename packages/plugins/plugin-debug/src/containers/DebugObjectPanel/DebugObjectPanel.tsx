@@ -38,10 +38,10 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <div className={mx('grid divide-y divide-subdued-separator', db && 'grid-rows-[1fr_2fr]')}>
           {db && (
             <ScrollArea.Root>
@@ -61,21 +61,21 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
             getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
           >
             <Panel.Root>
-              <Panel.Toolbar asChild>
+              <Panel.Header>
                 <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
                   <Syntax.Filter />
                   <Syntax.Depth />
                 </Toolbar.Root>
-              </Panel.Toolbar>
-              <Panel.Content asChild>
+              </Panel.Header>
+              <Panel.Body asChild>
                 <Syntax.Viewport>
                   <Syntax.Code />
                 </Syntax.Viewport>
-              </Panel.Content>
+              </Panel.Body>
             </Panel.Root>
           </Syntax.Root>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

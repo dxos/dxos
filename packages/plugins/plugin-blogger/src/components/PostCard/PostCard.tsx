@@ -6,7 +6,7 @@ import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Blog } from '#types';
@@ -55,9 +55,9 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
       tabIndex={onClick ? 0 : undefined}
     >
       <Card.Header>
-        <Card.Block>
+        <Block>
           <Icon icon={icon} />
-        </Card.Block>
+        </Block>
         <Card.Title classNames='line-clamp-2'>{title}</Card.Title>
       </Card.Header>
       <Card.Body>
@@ -69,9 +69,9 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
           </Card.Row>
         )}
         <Card.Row>
-          <Card.Block>
+          <Block>
             <Icon icon={status === 'published' ? 'ph--cloud-check--regular' : 'ph--pencil-simple--regular'} />
-          </Card.Block>
+          </Block>
           <Card.Text variant='description'>{t(`post-card.status.${status}.label`)}</Card.Text>
         </Card.Row>
       </Card.Body>

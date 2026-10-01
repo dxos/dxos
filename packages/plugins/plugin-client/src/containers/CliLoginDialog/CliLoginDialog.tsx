@@ -125,7 +125,7 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
           {status === 'error' && t('cli-login-error.message', { error })}
         </p>
       </AlertDialog.Body>
-      <AlertDialog.ActionBar>
+      <AlertDialog.Footer>
         {status === 'confirm' || status === 'sending' ? (
           <>
             <AlertDialog.Cancel asChild>
@@ -150,7 +150,7 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
             </Button>
           </AlertDialog.Action>
         )}
-      </AlertDialog.ActionBar>
+      </AlertDialog.Footer>
     </AlertDialog.Content>
   );
 };

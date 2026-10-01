@@ -9,7 +9,7 @@ import React, { type KeyboardEvent, type MouseEvent, forwardRef, useCallback, us
 import { type Database, Filter } from '@dxos/echo';
 import { type PaginationResult, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { Card, Icon, ScrollArea } from '@dxos/react-ui';
+import { Block, Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { CardTile, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
@@ -297,7 +297,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                 <div role='status' className='grid place-items-center px-2 py-3'>
                   <Icon
                     icon='ph--spinner-gap--regular'
-                    size={5}
+                    size='lg'
                     classNames='text-subdued [animation:spin_1s_linear_infinite]'
                   />
                 </div>
@@ -627,9 +627,9 @@ const ConversationMessageRow = ({
 
   return (
     <Card.Row classNames='items-start'>
-      <Card.Block classNames='h-8 items-center'>
+      <Block classNames='h-8 items-center'>
         <ContactAvatar actor={message.sender} getContact={getContact} onContactCreate={onContactCreate} />
-      </Card.Block>
+      </Block>
       <div className='flex flex-col' onClick={(event) => onMessageClick(event, message.id)}>
         <button type='button' className='flex items-center w-full h-8 text-start text-sm'>
           <span className='truncate'>{from}</span>

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { Banner, IconButton, Progress, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
 import { formatForDisplay } from '@dxos/schema';
 
@@ -105,7 +105,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
               {asOfDescription && <p className='text-description'>{asOfDescription}</p>}
             </div>
             {onRefresh ? (
-              <IconButton
+              <Button
                 iconOnly
                 variant='ghost'
                 icon='ph--arrows-clockwise--regular'
@@ -120,17 +120,13 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
             <Progress indeterminate aria-label={t('fundamentals.heading')} />
           ) : error ? (
             <Banner.Root valence='error'>
-              <Banner.Content>
-                <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>
-                <Banner.Body>{error}</Banner.Body>
-              </Banner.Content>
+              <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>
+              <Banner.Body>{error}</Banner.Body>
             </Banner.Root>
           ) : empty ? (
             <Banner.Root valence='neutral'>
-              <Banner.Content>
-                <Banner.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Banner.Title>
-                <Banner.Body>{t('fundamentals.empty.label')}</Banner.Body>
-              </Banner.Content>
+              <Banner.Title icon='ph--chart-bar--duotone'>{t('fundamentals.heading')}</Banner.Title>
+              <Banner.Body>{t('fundamentals.empty.label')}</Banner.Body>
             </Banner.Root>
           ) : (
             <Form.Fields readonly fieldProvider={fieldProvider} />

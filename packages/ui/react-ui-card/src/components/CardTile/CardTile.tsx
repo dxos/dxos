@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent, PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { Card, type ThemedClassName } from '@dxos/react-ui';
+import { Block, Card, type ThemedClassName } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 
 import { Row } from '../Row/index.ts';
@@ -81,9 +81,9 @@ type CardTileHeaderProps = {
  */
 const CardTileHeader = ({ title, starred, menu = false, menuItems, onToggleStar }: CardTileHeaderProps) => (
   <Card.Header>
-    <Card.Block>
+    <Block>
       <Row.Star starred={starred} onToggle={onToggleStar} />
-    </Card.Block>
+    </Block>
     <Card.Title classNames='flex items-center gap-3'>{title}</Card.Title>
     {menu && <Card.Menu items={menuItems} />}
   </Card.Header>

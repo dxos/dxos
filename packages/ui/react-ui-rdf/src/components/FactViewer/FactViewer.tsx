@@ -5,7 +5,18 @@
 import React, { type ReactNode, createContext, forwardRef, useContext, useMemo, useState } from 'react';
 
 import { type RDF, buildFactGraph, factSourceFromFacts } from '@dxos/pipeline-rdf';
-import { Banner, Field, Icon, IconButton, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import {
+  Button,
+  Empty,
+  Field,
+  Icon,
+  Input,
+  Panel,
+  ScrollArea,
+  Tag,
+  type ThemedClassName,
+  Toolbar,
+} from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-graph';
 import { Listbox } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
@@ -126,25 +137,25 @@ type FactViewerToolbarProps = ThemedClassName<{}>;
 const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
   const { filter, setFilter, view, setView } = useFactViewerContext('Toolbar');
   return (
-    <Panel.Toolbar asChild>
+    <Panel.Header>
       <Toolbar.Root classNames={classNames}>
         <Field.Root>
           <Field.Label srOnly>Filter facts</Field.Label>
-          <Field.Input
+          <Input
             placeholder='Filter by entity or predicate…'
             value={filter}
             onChange={(event) => setFilter(event.target.value)}
           />
         </Field.Root>
         <div className={styles.toolbarSpacer()} />
-        <IconButton
+        <Button
           icon='ph--list--regular'
           iconOnly
           label='List view'
           variant={view === 'list' ? 'primary' : 'default'}
           onClick={() => setView('list')}
         />
-        <IconButton
+        <Button
           icon='ph--graph--regular'
           iconOnly
           label='Graph view'
@@ -152,7 +163,7 @@ const FactViewerToolbar = ({ classNames }: FactViewerToolbarProps) => {
           onClick={() => setView('graph')}
         />
       </Toolbar.Root>
-    </Panel.Toolbar>
+    </Panel.Header>
   );
 };
 
@@ -167,16 +178,16 @@ type FactViewerListProps = ThemedClassName<{}>;
 const FactViewerList = ({ classNames }: FactViewerListProps) => {
   const { groups } = useFactViewerContext('List');
   return (
-    <Panel.Content asChild>
+    <Panel.Body asChild>
       <ScrollArea.Root padding classNames={classNames}>
         <ScrollArea.Viewport classNames={styles.listViewport()}>
-          {groups.length === 0 && <Banner.Empty label='No facts.' />}
+          {groups.length === 0 && <Empty>No facts.</Empty>}
           {groups.map((group) => (
             <FactViewerGroup key={group.subject} group={group} />
           ))}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Panel.Content>
+    </Panel.Body>
   );
 };
 
@@ -191,13 +202,13 @@ type FactViewerGraphProps = ThemedClassName<{}>;
 const FactViewerGraph = ({ classNames }: FactViewerGraphProps) => {
   const { graph } = useFactViewerContext('Graph');
   return (
-    <Panel.Content classNames={mx(styles.graphContent(), classNames)}>
+    <Panel.Body classNames={mx(styles.graphContent(), classNames)}>
       {graph ? (
         <Tree data={graph} variant='tidy' margin={80} classNames={styles.graphTree()} />
       ) : (
-        <Banner.Empty icon='ph--graph--regular' label='Select an entity to root the graph.' />
+        <Empty icon='ph--graph--regular'>Select an entity to root the graph.</Empty>
       )}
-    </Panel.Content>
+    </Panel.Body>
   );
 };
 
@@ -216,7 +227,7 @@ const FactViewerGroup = forwardRef<HTMLDivElement, FactViewerGroupProps>(({ clas
       {group.conflicted && (
         <Tag hue='warning'>
           <span className={styles.groupConflict()}>
-            <Icon icon='ph--warning--regular' size={3} />
+            <Icon icon='ph--warning--regular' size='xs' />
             conflict
           </span>
         </Tag>

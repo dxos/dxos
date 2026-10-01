@@ -20,7 +20,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useSubmitOnEnter } from '@dxos/react-ui-form';
 import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
@@ -345,9 +345,9 @@ export const ObjectFormDialog = ({
             object: t('typename.label', { ns: typename, defaultValue: views ? 'View' : 'Object' }),
           })}
         </Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' ref={closeRef} />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close ref={closeRef} />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body ref={bodyRef}>
         <CreateObjectPanel
@@ -368,22 +368,22 @@ export const ObjectFormDialog = ({
         />
       </Dialog.Body>
       {object ? (
-        <Dialog.ActionBar>
-          <Dialog.Close asChild>
+        <Dialog.Footer>
+          <Dialog.CloseTrigger asChild>
             <Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button>
-          </Dialog.Close>
+          </Dialog.CloseTrigger>
           <Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
             {t('object-form-confirm.label')}
           </Button>
-        </Dialog.ActionBar>
+        </Dialog.Footer>
       ) : (
         showTypeSelector &&
         registryAvailable && (
-          <Dialog.ActionBar>
-            <Dialog.Close asChild>
+          <Dialog.Footer>
+            <Dialog.CloseTrigger asChild>
               <PluginRegistryButton />
-            </Dialog.Close>
-          </Dialog.ActionBar>
+            </Dialog.CloseTrigger>
+          </Dialog.Footer>
         )
       )}
     </Dialog.Content>

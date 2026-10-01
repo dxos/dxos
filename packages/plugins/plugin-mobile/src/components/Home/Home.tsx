@@ -10,7 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections } from '@dxos/plugin-graph/hooks';
-import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Block, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
@@ -106,7 +106,7 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
         <Avatar.Root>
           {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
               `Card.Title` are what keep the icon, label, and caret on one row. */}
-          <Card.Block>
+          <Block>
             <Avatar.Content
               icon={data.properties.icon}
               hue={data.properties.hue}
@@ -115,11 +115,11 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
               size={8}
               fallback={name}
             />
-          </Card.Block>
+          </Block>
           <Avatar.Label asChild>
             <Card.Title classNames='cursor-pointer'>{name}</Card.Title>
           </Avatar.Label>
-          <Card.Block end>{!pending && <Icon icon='ph--caret-right--regular' />}</Card.Block>
+          <Block end>{!pending && <Icon icon='ph--caret-right--regular' />}</Block>
         </Avatar.Root>
       </Card.Header>
     </Card.Root>

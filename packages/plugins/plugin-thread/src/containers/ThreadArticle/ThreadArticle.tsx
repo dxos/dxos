@@ -73,8 +73,8 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
 
     return (
       <Panel.Root>
-        <Panel.Toolbar></Panel.Toolbar>
-        <Panel.Content asChild>
+        <Panel.Header></Panel.Header>
+        <Panel.Body asChild>
           <MessageThread
             {...composableProps(props)}
             id={id}
@@ -87,7 +87,7 @@ export const ThreadArticle = composable<HTMLDivElement, ThreadArticleProps>(
             current={current}
             ref={forwardedRef}
           />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },

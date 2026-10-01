@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { Column, IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
 import { Task } from '@dxos/types';
@@ -73,15 +73,15 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar>
+      <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
           {/* Actions only: what the task IS — its status, estimate and priority — reads with the
               text below, while the toolbar carries what can be done to it. */}
           <Toolbar.Separator variant='gap' />
           <TaskActions task={task} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root thin>
           <ScrollArea.Viewport classNames='dx-document'>
             <TaskAttachmentDropZone onFiles={handleAttach}>
@@ -136,7 +136,7 @@ export const TaskArticle = ({ role, subject: task, attendableId }: TaskArticlePr
             </TaskAttachmentDropZone>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -158,7 +158,7 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
 
   return (
     <ActionMenu deferUntilOpen actions={actions}>
-      <IconButton
+      <Button
         variant='ghost'
         iconOnly
         icon='ph--dots-three-vertical--regular'

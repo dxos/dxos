@@ -68,14 +68,14 @@ const DefaultStory = ({ feedUrl }: FeedArticleStoryArgs) => {
 
   return (
     <Panel.Root role='article' classNames='dx-document'>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>{feed.name}</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <PostStack id='story-feed' posts={posts} currentId={currentPostId} onAction={handleAction} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

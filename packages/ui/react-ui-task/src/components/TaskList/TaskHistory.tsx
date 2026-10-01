@@ -129,7 +129,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
           {/* The hue comes from the event table, through the same palette the status and priority
               glyphs read. */}
           <div className={TASK_GRID_ICON}>
-            <Icon icon={item.icon} classNames={item.hue} size={4} />
+            <Icon icon={item.icon} classNames={item.hue} size='md' />
           </div>
           {/* The time rides with the description rather than in a column of its own: flush right
               against the content's edge is where the eye reads it, and a third track would make the

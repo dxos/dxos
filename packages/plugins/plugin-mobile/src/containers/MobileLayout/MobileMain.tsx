@@ -81,10 +81,10 @@ export const MobileMain = () => {
 
   return (
     <Panel.Root {...attentionAttrs} classNames='dx-document'>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <MobileAppBar {...appBarProps} />
-      </Panel.Toolbar>
-      <Panel.Content role='article' classNames='dx-base-surface'>
+      </Panel.Header>
+      <Panel.Body role='article' classNames='dx-base-surface'>
         <NavigationStack
           classNames='size-full'
           items={stack}
@@ -92,11 +92,11 @@ export const MobileMain = () => {
           onIndexChange={pop}
           renderItem={(itemId) => <MainPanel id={itemId} popoverAnchorId={state.popoverAnchorId} />}
         />
-      </Panel.Content>
+      </Panel.Body>
       {showNavBar && (
-        <Panel.Statusbar asChild>
+        <Panel.Footer>
           <MobileNavBar actions={actions} onAction={onAction} />
-        </Panel.Statusbar>
+        </Panel.Footer>
       )}
     </Panel.Root>
   );

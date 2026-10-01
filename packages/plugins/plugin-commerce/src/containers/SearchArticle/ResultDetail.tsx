@@ -5,7 +5,7 @@
 import React, { Fragment } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Banner, Carousel, Flex, Grid, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Carousel, Empty, Flex, Grid, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Result } from '#types';
@@ -24,7 +24,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
   // Subscribe so the pane re-renders when the result loads.
   const [result] = useObject(subject);
   if (!result) {
-    return <Banner.Empty label={t('no-result-selected.message')} />;
+    return <Empty>{t('no-result-selected.message')}</Empty>;
   }
 
   const properties = Object.entries(result.properties ?? {});
@@ -33,9 +33,9 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
     <Flex column gap='md' classNames='p-3 overflow-y-auto'>
       <Grid cols={['minmax(0, 1fr)', 'min-content', 'min-content']} grow={false} gap='sm' align='start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
-        <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
+        <SystemButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
         {onClose && (
-          <IconButton iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
+          <Button iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
         )}
       </Grid>
 
@@ -54,16 +54,14 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
 
       {result.images.length > 0 && (
         <Carousel.Root count={result.images.length}>
-          <Carousel.Content classNames='rounded-xs overflow-hidden'>
-            <Carousel.Previous />
-            <Carousel.Viewport>
-              {result.images.map((image, index) => (
-                <Carousel.Slide key={index} index={index} src={image} alt={result.title ?? t('product.label')} />
-              ))}
-            </Carousel.Viewport>
-            <Carousel.Next />
-            <Carousel.Indicators />
-          </Carousel.Content>
+          <Carousel.PrevTrigger />
+          <Carousel.ItemGroup>
+            {result.images.map((image, index) => (
+              <Carousel.Item key={index} index={index} src={image} alt={result.title ?? t('product.label')} />
+            ))}
+          </Carousel.ItemGroup>
+          <Carousel.NextTrigger />
+          <Carousel.IndicatorGroup />
         </Carousel.Root>
       )}
 

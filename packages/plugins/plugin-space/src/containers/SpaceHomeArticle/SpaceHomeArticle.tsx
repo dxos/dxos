@@ -41,11 +41,11 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <Column.Root gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
           <ScrollArea.Root orientation='vertical' centered padding>
             <ScrollArea.Viewport>
@@ -58,7 +58,7 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
             <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
           </Column.Center>
         </Column.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

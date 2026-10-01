@@ -7,7 +7,7 @@
 import React, { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import { IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -245,7 +245,7 @@ const StatusBar = () => {
   }
 
   return (
-    <IconButton
+    <Button
       icon='ph--discord-logo--regular'
       label={t('join-discord.button')}
       variant='primary'

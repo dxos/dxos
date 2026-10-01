@@ -11,10 +11,10 @@ import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
 import {
-  Banner,
+  Button,
   DensityProvider,
+  Empty,
   Icon,
-  IconButton,
   ScrollArea,
   Tabs,
   toLocalizedString,
@@ -67,7 +67,7 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
   const shouldRenderContent = isCurrent || isActivated;
 
   return (
-    <Tabs.Panel
+    <Tabs.Content
       key={id}
       value={id}
       classNames={[
@@ -98,23 +98,22 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
             className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
             style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
           >
-            <Icon icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
+            <Icon icon='ph--spinner-gap--regular' size='xl' classNames='animate-spin' />
           </div>
         ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
           unavailable && (
-            <Banner.Empty
+            <Empty
               key={id}
-              label={t('workspace-unavailable.description')}
-              // Second grid row, so the message clears the rail exactly as the tree does, and
-              // hugging its top rather than stretching to the row's full height.
               classNames='row-start-2 self-start animate-fade-in'
               style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
-            />
+            >
+              {t('workspace-unavailable.description')}
+            </Empty>
           )
         ))}
-    </Tabs.Panel>
+    </Tabs.Content>
   );
 };
 
@@ -146,7 +145,7 @@ const L1PanelContent = ({
   const navTreeContext = useNavTreeContext();
 
   return (
-    <DensityProvider density='md'>
+    <DensityProvider size='md'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
       <ScrollArea.Root centered padding thin orientation='vertical'>
         <ScrollArea.Viewport>
@@ -193,12 +192,12 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
       style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
-        <IconButton
+        <Button
           classNames={[hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--caret-left--regular'
           iconOnly
-          size={4}
+          iconSize='md'
           label={t('button-back.button')}
           data-testid='treeView.primaryTreeButton'
           onClick={() => onBack?.()}
@@ -242,12 +241,12 @@ const MenuActions = ({
 
   if (menuActions.length === 1) {
     return (
-      <IconButton
+      <Button
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
         iconOnly
-        size={4}
+        iconSize='md'
         label={toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}
         onClick={() => onAction(menuActions[0] as AppGraphNode.Action)}
@@ -257,12 +256,12 @@ const MenuActions = ({
 
   return (
     <ActionMenu caller={NAV_TREE_ITEM} onAction={onAction} group={item} actions={menuActions as MenuItem[]}>
-      <IconButton
+      <Button
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon='ph--dots-three-vertical--regular'
         iconOnly
-        size={4}
+        iconSize='md'
         label={t('tree-item-actions.label')}
         data-testid='navtree.treeItem.actionsLevel0'
       />

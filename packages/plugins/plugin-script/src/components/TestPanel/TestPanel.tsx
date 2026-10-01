@@ -5,7 +5,18 @@
 import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Avatar, Field, Grid, Icon, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import {
+  Avatar,
+  Button,
+  Field,
+  Grid,
+  Icon,
+  Input,
+  ScrollArea,
+  type ThemedClassName,
+  Toolbar,
+  useTranslation,
+} from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -116,7 +127,7 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
         {/* TODO(burdon): Replace with Form based on the function's input schema. */}
         <Toolbar.Root>
           <Field.Root>
-            <Field.Input
+            <Input
               ref={inputRef}
               autoFocus
               placeholder={t('function-request.placeholder')}
@@ -125,8 +136,8 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
               onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
             />
           </Field.Root>
-          <Toolbar.IconButton icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
-          <Toolbar.IconButton icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
+          <Button icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+          <Button icon='ph--trash--regular' label='Clear' iconOnly onClick={handleClear} />
         </Toolbar.Root>
       </div>
     );
@@ -159,7 +170,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
           {state === 'pending' && (
             <Grid cols={MESSAGE_COLS} grow={false}>
               <div className='p-1'>
-                <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />
+                <Icon icon='ph--spinner--regular' size='xl' classNames='animate-spin' />
               </div>
             </Grid>
           )}
@@ -187,8 +198,4 @@ const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message
   );
 };
 
-const RobotAvatar = () => (
-  <Avatar.Root>
-    <Avatar.Content size={6} variant='circle' icon='ph--drone--regular' />
-  </Avatar.Root>
-);
+const RobotAvatar = () => <Avatar.Root size={6} variant='circle' icon='ph--drone--regular' />;

@@ -11,7 +11,7 @@ import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Flex, Icon, IconButton, QrCode, SystemIconButton, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Icon, QrCode, SystemButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
@@ -219,7 +219,7 @@ const InvitationSection = ({
   return activeView === 'init' ? (
     <>
       <p className='text-description mb-2'>{t('add-device.description')}</p>
-      <IconButton
+      <Button
         icon='ph--plus--regular'
         label={t('create-device-invitation.label')}
         disabled={!!event}
@@ -271,7 +271,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
       {/* TODO(burdon): Factor out button bar */}
       <Flex justify='center'>
         <Flex gap='sm'>
-          <SystemIconButton.Clipboard value={url ?? 'never'} />
+          <SystemButton.Clipboard value={url ?? 'never'} />
           <Button variant='ghost' onClick={onCancel}>
             {t('cancel.label')}
           </Button>
@@ -300,9 +300,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
 const InvitationComplete = ({ succeeded }: { succeeded: boolean }) => {
   return succeeded ? (
-    <Icon icon='ph--check--regular' size={6} classNames='m-trim-xs' />
+    <Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size={6} classNames='m-trim-xs' />
+    <Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
   );
 };
 

@@ -11,7 +11,7 @@ import { type Extension } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import React, { ReactNode, useRef } from 'react';
 
-import { Banner, Flex, useThemeContext } from '@dxos/react-ui';
+import { Empty, Flex, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { Listbox } from '@dxos/react-ui-list';
 import { compactSlots, createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
@@ -134,18 +134,16 @@ export type OperationLogProps = {
  */
 export const OperationLog = ({ entries }: OperationLogProps) => (
   <Listbox.Root>
-    <Listbox.Viewport>
-      <Listbox.Content aria-label='Operation log'>
-        {entries.map((entry) => (
-          <Listbox.Item key={entry.seq} id={String(entry.seq)}>
-            <Listbox.ItemLabel classNames='font-mono text-xs'>
-              {entry.operation}
-              {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
-            </Listbox.ItemLabel>
-          </Listbox.Item>
-        ))}
-        {entries.length === 0 && <Banner.Empty label='No operations dispatched.' />}
-      </Listbox.Content>
-    </Listbox.Viewport>
+    <Listbox.Content aria-label='Operation log'>
+      {entries.map((entry) => (
+        <Listbox.Item key={entry.seq} id={String(entry.seq)}>
+          <Listbox.ItemText classNames='font-mono text-xs'>
+            {entry.operation}
+            {entry.payload !== undefined ? ` ${JSON.stringify(entry.payload)}` : ''}
+          </Listbox.ItemText>
+        </Listbox.Item>
+      ))}
+      {entries.length === 0 && <Empty>No operations dispatched.</Empty>}
+    </Listbox.Content>
   </Listbox.Root>
 );

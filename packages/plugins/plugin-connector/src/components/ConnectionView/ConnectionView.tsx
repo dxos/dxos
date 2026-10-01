@@ -8,7 +8,7 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { Banner, Button, Field, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Empty, Input, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
@@ -111,7 +111,7 @@ export const ConnectionView = ({
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
@@ -122,7 +122,7 @@ export const ConnectionView = ({
 
                     {onRename && (
                       <Form.Field label={t('connection-name.label')}>
-                        <Field.Input
+                        <Input
                           // Remounted when the stored name changes. The input is uncontrolled, so
                           // React would otherwise keep the old text after a replicated rename
                           // arrives — and the next blur would write that stale value back over it.
@@ -233,9 +233,7 @@ export const ConnectionView = ({
                   {canSync && (
                     <Form.FieldSet label={t('targets.label')}>
                       {bindings.length === 0 ? (
-                        <Banner.Empty
-                          label={canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')}
-                        />
+                        <Empty>{canChangeTargets ? t('no-targets.message') : t('no-targets-yet.message')}</Empty>
                       ) : (
                         bindings.map((binding) => (
                           <BindingRow
@@ -253,7 +251,7 @@ export const ConnectionView = ({
             </Form.Root>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

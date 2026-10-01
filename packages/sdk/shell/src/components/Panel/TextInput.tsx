@@ -21,7 +21,7 @@ export const TextInput = ({ validationMessage, label, ...props }: InputProps) =>
   return (
     <NaturalField.Root>
       <NaturalField.Label>{label}</NaturalField.Label>
-      <NaturalField.Input {...props} classNames='py-2 mt-2 text-center' />
+      <NaturalInput {...props} classNames='py-2 mt-2 text-center' />
       {validationMessage && <NaturalField.ErrorText>{validationMessage}</NaturalField.ErrorText>}
     </NaturalField.Root>
   );

@@ -21,7 +21,7 @@ export const Breadcrumbs = ({ path, nameOf, onSelect }: BreadcrumbsProps) => (
     {path.map((id, index) => (
       <Fragment key={`${index}:${id}`}>
         {index > 0 && <span className='text-subdued'>›</span>}
-        <Button variant='ghost' density='sm' disabled={index === path.length - 1} onClick={() => onSelect(index)}>
+        <Button variant='ghost' size='sm' disabled={index === path.length - 1} onClick={() => onSelect(index)}>
           {nameOf(id)}
         </Button>
       </Fragment>

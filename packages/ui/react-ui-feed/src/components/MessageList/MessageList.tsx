@@ -15,9 +15,9 @@ import React, {
 } from 'react';
 
 import {
+  Button,
   Column,
   ColumnRootProps,
-  IconButton,
   ScrollArea,
   type ScrollAreaRootProps,
   composable,
@@ -785,7 +785,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
   return (
     <div role='group' {...composableProps(props)} onKeyDown={onKeyDown} ref={forwardedRef}>
       {ends && (
-        <IconButton
+        <Button
           icon='ph--arrow-line-up--regular'
           iconOnly
           label='First message'
@@ -794,7 +794,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
           onClick={() => navigation.first()}
         />
       )}
-      <IconButton
+      <Button
         icon='ph--caret-up--regular'
         iconOnly
         label='Previous message'
@@ -802,7 +802,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
         data-testid='feed.nav.back'
         onClick={() => navigation.step(-1)}
       />
-      <IconButton
+      <Button
         icon='ph--caret-down--regular'
         iconOnly
         label='Next message'
@@ -811,7 +811,7 @@ const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends =
         onClick={() => navigation.step(1)}
       />
       {ends && (
-        <IconButton
+        <Button
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Last message'

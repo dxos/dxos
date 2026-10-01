@@ -8,7 +8,7 @@ import React, { type MouseEvent, type RefObject, useCallback, useRef, useState }
 import { defaultRowSize } from '@dxos/lit-grid';
 import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
-import { Menu } from '@dxos/react-ui';
+import { Menu, virtualAnchor } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
 import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
@@ -72,11 +72,9 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
       </Grid.Root>
 
       {/* Menu */}
-      <Menu.Root open={menuOpen} onOpenChange={setMenuOpen}>
-        <Menu.VirtualTrigger virtualRef={triggerRef} />
+      <Menu.Root open={menuOpen} onOpenChange={setMenuOpen} positioning={virtualAnchor(triggerRef)}>
         <Menu.Content>
           <Menu.Item onClick={() => console.log('[Click on dropdown menu item]')}>Hello</Menu.Item>
-          <Menu.Arrow />
         </Menu.Content>
       </Menu.Root>
 
@@ -86,8 +84,8 @@ const GridStory = ({ initialCells, ...props }: GridStoryArgs) => {
         onOpenChange={setPopoverOpen}
         value={multiSelectValue}
         onValueChange={setMultiselectValue}
+        positioning={virtualAnchor(triggerRef)}
       >
-        <Combobox.VirtualTrigger virtualRef={triggerRef} />
         <ComboboxContentWithFiltering />
       </Combobox.Root>
     </div>

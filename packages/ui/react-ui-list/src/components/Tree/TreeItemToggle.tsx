@@ -4,7 +4,7 @@
 
 import React, { memo } from 'react';
 
-import { IconButton, type IconButtonProps, composable } from '@dxos/react-ui';
+import { Button, type IconButtonProps, composable } from '@dxos/react-ui';
 
 export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label'> & {
   open?: boolean;
@@ -22,14 +22,14 @@ export const TreeItemToggle = memo(
   composable<HTMLButtonElement, TreeItemToggleProps>(
     ({ classNames, open, isBranch, hidden, density = 'md', ...props }, forwardedRef) => {
       return (
-        <IconButton
+        <Button
           ref={forwardedRef}
           data-testid='treeItem.toggle'
           aria-expanded={open}
           variant='ghost'
           // Sets the `--dx-control` the square below is measured against, so a denser tree gets a
           // smaller toggle rather than an `md` square in an `sm` grid.
-          density={density}
+          size={density}
           classNames={[
             // One control tall, not `h-full`: a row with a description is taller than its title
             // line, and stretching the toggle centred the chevron against the whole row instead of
@@ -44,10 +44,10 @@ export const TreeItemToggle = memo(
             hidden ? 'hidden' : !isBranch && 'invisible',
             classNames,
           ]}
-          size={3}
+          iconSize='xs'
           icon='ph--caret-right--bold'
           iconOnly
-          noTooltip
+          showTooltip={false}
           label={open ? 'Click to close' : 'Click to open'}
           tabIndex={-1}
           {...props}

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { Button, Field } from '@dxos/react-ui';
+import { Button, Field, PasswordInput } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -139,8 +139,7 @@ const ProviderHarness = () => {
     <div className='dx-expand flex flex-col gap-4 p-4 max-w-[40rem]'>
       <Field.Root>
         <Field.Label>HeyGen API key</Field.Label>
-        <Field.Input
-          type='password'
+        <PasswordInput
           noAutoFill
           placeholder='Paste API key'
           value={apiKey}
@@ -169,15 +168,14 @@ const ProviderHarness = () => {
             </div>
             {outcome.ok ? (
               <Listbox.Root>
-                <Listbox.Viewport>
-                  <Listbox.Content aria-label={outcome.kind}>
-                    {outcome.options.map((option) => (
-                      <Listbox.Item key={option.id} id={option.id}>
-                        <Listbox.ItemContent title={option.name} description={option.id} />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Viewport>
+                <Listbox.Content aria-label={outcome.kind}>
+                  {outcome.options.map((option) => (
+                    <Listbox.Item key={option.id} id={option.id}>
+                      <Listbox.ItemText>{option.name}</Listbox.ItemText>
+                      <Listbox.ItemDescription>{option.id}</Listbox.ItemDescription>
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
               </Listbox.Root>
             ) : (
               <div className='text-error-text'>{outcome.error}</div>

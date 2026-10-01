@@ -12,8 +12,8 @@ import { Obj } from '@dxos/echo';
 import { useActions, useNode } from '@dxos/plugin-graph/hooks';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
+  Button,
   Icon,
-  IconButton,
   type IconButtonProps,
   Toolbar as NaturalToolbar,
   type ThemedClassName,
@@ -135,7 +135,7 @@ export const Toolbar = ({
             {actions
               .filter((action): action is AppGraphNode.Action => AppGraphNode.isAction(action))
               .map((action) => (
-                <IconButton
+                <Button
                   key={action.id}
                   {...defaultButtonProps}
                   icon={action.properties.icon}
@@ -163,14 +163,9 @@ export const Toolbar = ({
           </>
         )}
         {inRoom ? (
-          <IconButton
-            variant='destructive'
-            icon='ph--phone-x--regular'
-            label={t('leave-call.button')}
-            onClick={onLeave}
-          />
+          <Button variant='destructive' icon='ph--phone-x--regular' label={t('leave-call.button')} onClick={onLeave} />
         ) : (
-          <IconButton
+          <Button
             variant='primary'
             icon='ph--phone-incoming--regular'
             label={t('join-call.button')}
@@ -199,7 +194,7 @@ const defaultButtonProps: Partial<IconButtonProps> = {
 };
 
 const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
-  <IconButton
+  <Button
     {...defaultButtonProps}
     classNames={[active ? (state.on.classNames ?? 'bg-accent-bg') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}

@@ -34,7 +34,7 @@ export const useDescriptionComponents = (): MarkdownViewProps['components'] => {
         return (
           <DxAnchor eid={href} className='dx-tag--anchor'>
             {icon && (
-              <Icon icon={icon.icon} size={4} classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
+              <Icon icon={icon.icon} size='md' classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
             )}
             {/* A URL written bare autolinks with itself as its text; the resolver's short name reads better in a chip. */}
             {children === href ? (PreviewCapabilities.linkLabel(all, href) ?? children) : children}

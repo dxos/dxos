@@ -55,21 +55,19 @@ export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProp
 
   return (
     <Listbox.Root value={selected ?? undefined} onValueChange={handleCurrentChange}>
-      <Listbox.Viewport classNames={classNames} thin>
-        <Listbox.Content aria-label={t('tools.label')}>
-          {entries.map(([name, tool]) => (
-            <Listbox.Item key={name} id={name}>
-              <div className='flex flex-col grow overflow-hidden'>
-                <div className='font-mono text-xs text-info-text'>{name}</div>
-                <div className='font-medium'>{tool.title}</div>
-                {tool.description && (
-                  <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
-                )}
-              </div>
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
-      </Listbox.Viewport>
+      <Listbox.Content aria-label={t('tools.label')}>
+        {entries.map(([name, tool]) => (
+          <Listbox.Item key={name} id={name}>
+            <div className='flex flex-col grow overflow-hidden'>
+              <div className='font-mono text-xs text-info-text'>{name}</div>
+              <div className='font-medium'>{tool.title}</div>
+              {tool.description && (
+                <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
+              )}
+            </div>
+          </Listbox.Item>
+        ))}
+      </Listbox.Content>
     </Listbox.Root>
   );
 };

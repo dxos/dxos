@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useOptionalAtomCapability } from '@dxos/app-framework/ui';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
-import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, Popover, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -28,7 +28,7 @@ export const BeaconStatusIndicator = () => {
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton
+          <Button
             variant='ghost'
             icon='ph--broadcast--regular'
             iconOnly
@@ -37,12 +37,9 @@ export const BeaconStatusIndicator = () => {
           />
         </StatusBar.Item>
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content side='left' classNames=''>
-          <BeaconPopover />
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content side='left' classNames=''>
+        <BeaconPopover />
+      </Popover.Content>
     </Popover.Root>
   );
 };
@@ -102,7 +99,7 @@ const PeerRow = ({ peer }: { peer: BeaconPeer }) => {
       <Icon
         icon={peer.online ? 'ph--circle-bg' : 'ph--circle--regular'}
         classNames={mx('shrink-0', peer.online ? 'text-green-500' : 'text-description')}
-        size={3}
+        size='xs'
       />
       <span className='truncate flex-1'>{peer.displayName ?? peer.peerId.slice(0, 8)}</span>
       <span className='font-mono text-xs text-description'>#{peer.counter}</span>

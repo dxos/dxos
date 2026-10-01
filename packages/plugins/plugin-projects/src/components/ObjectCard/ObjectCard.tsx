@@ -9,7 +9,7 @@ import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useArchiveMenuItem } from '@dxos/plugin-space/hooks';
-import { Card, Icon, Tag, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Icon, Tag, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -63,11 +63,11 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
       tabIndex={onClick ? 0 : undefined}
     >
       <Card.Header>
-        <Card.Block>
+        <Block>
           <CardIconSlot subject={object}>
             <Icon icon={icon} />
           </CardIconSlot>
-        </Card.Block>
+        </Block>
         <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
         {menuItems.length > 0 && <Card.Menu items={menuItems} />}
       </Card.Header>

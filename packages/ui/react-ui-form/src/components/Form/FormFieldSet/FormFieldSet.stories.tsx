@@ -8,7 +8,8 @@ import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
-import { Button, Field } from '@dxos/react-ui';
+import { Button } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -50,7 +51,7 @@ const DefaultStory = ({ variant }: StoryArgs) => {
           </Form.FieldSet>
           <Form.FieldSet label='Options' description='Layout switches.' descriptionPlacement='tooltip'>
             <Form.Field label='Wireframe' description='Outline every surface.'>
-              <Field.Switch checked={wireframe} onCheckedChange={setWireframe} />
+              <Next.Switch checked={wireframe} onCheckedChange={setWireframe} />
             </Form.Field>
             <Form.Field standalone label='Reset' description='Forget the layout.'>
               <Button>Reset</Button>

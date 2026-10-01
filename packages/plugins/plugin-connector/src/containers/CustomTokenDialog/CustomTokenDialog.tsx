@@ -10,7 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, type Key, type Obj, type Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { Column, Dialog, useTranslation } from '@dxos/react-ui';
+import { Column, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -93,9 +93,9 @@ export const CustomTokenDialog = ({
       <Dialog.Content>
         <Dialog.Header>
           <Dialog.Title>{connectorLabel ?? connectorId}</Dialog.Title>
-          <Dialog.Close asChild>
-            <Dialog.ActionIconButton action='close' />
-          </Dialog.Close>
+          <Dialog.CloseTrigger asChild>
+            <SystemButton.Close />
+          </Dialog.CloseTrigger>
         </Dialog.Header>
         <Dialog.Body>
           <p className='text-error-text'>{t('provider-form-dialog.no-form.message')}</p>
@@ -112,9 +112,9 @@ export const CustomTokenDialog = ({
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{title}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <Form.Root

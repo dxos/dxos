@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Banner, Button, Flex, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { Button, Empty, Flex, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
 
 import { meta } from '#meta';
@@ -48,7 +48,7 @@ export const WalkthroughPlaceholder = ({ generating, onGenerate }: WalkthroughPl
   const { t } = useTranslation(meta.profile.key);
   return (
     <Flex column center gap='md' classNames='dx-expand'>
-      <Banner.Empty label={t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')} />
+      <Empty>{t(generating ? 'walkthrough-generating.message' : 'no-walkthrough.message')}</Empty>
       {!generating && (
         <Button variant='primary' onClick={onGenerate}>
           {t('generate-walkthrough.label')}

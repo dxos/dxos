@@ -11,8 +11,9 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Banner, Button, Dialog, Field, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Empty, Field, Flex, ScrollArea, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import { Next } from '@dxos/react-ui/next';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -106,9 +107,9 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('sync-targets-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
@@ -125,7 +126,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         )}
 
         {availableTargets.length === 0 ? (
-          <Banner.Empty label={t('no-available-targets.message')} />
+          <Empty>{t('no-available-targets.message')}</Empty>
         ) : (
           <ScrollArea.Root padding>
             <ScrollArea.Viewport>
@@ -139,7 +140,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
                         <Field.Root>
                           <Listbox.ItemContent
                             icon={
-                              <Field.Checkbox
+                              <Next.Checkbox
                                 id={checkboxId}
                                 checked={selected.has(target.id)}
                                 onCheckedChange={() => handleToggle(target.id)}
@@ -166,14 +167,14 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
 
         {error && <p className='mt-form-gap text-error-text'>{error}</p>}
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
           <Button disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button>
-        </Dialog.Close>
+        </Dialog.CloseTrigger>
         <Button variant='primary' onClick={handleSubmit} disabled={submitting}>
           {submitting ? t('saving.label', { ns: osTranslations }) : t('save.label', { ns: osTranslations })}
         </Button>
-      </Dialog.ActionBar>
+      </Dialog.Footer>
     </Dialog.Content>
   );
 };

@@ -221,9 +221,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
               {/* If readonly is set, then the callout is not needed. */}
               {schemaReadonly && !readonly && (
                 <Banner.Root valence='info'>
-                  <Banner.Content classNames='my-form-padding'>
-                    <Banner.Title>{t('system-schema.description')}</Banner.Title>
-                  </Banner.Content>
+                  <Banner.Title>{t('system-schema.description')}</Banner.Title>
                 </Banner.Root>
               )}
               <Form.Fields />

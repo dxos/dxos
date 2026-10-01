@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Card, Icon } from '@dxos/react-ui';
+import { Block, Card, Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -36,9 +36,9 @@ const values = { name: 'Ada Lovelace', email: 'ada@example.com', role: 'Engineer
 const ReferenceCard = () => (
   <Card.Root fullWidth>
     <Card.Header>
-      <Card.Block>
+      <Block>
         <Icon icon='ph--user--regular' />
-      </Card.Block>
+      </Block>
       <Card.Title>Reference card</Card.Title>
     </Card.Header>
     <Card.Body>
@@ -55,9 +55,9 @@ const ReferenceCard = () => (
 const FormCard = () => (
   <Card.Root fullWidth>
     <Card.Header>
-      <Card.Block>
+      <Block>
         <Icon icon='ph--pencil--regular' />
-      </Card.Block>
+      </Block>
       <Card.Title>Form card</Card.Title>
     </Card.Header>
     <Card.Body>

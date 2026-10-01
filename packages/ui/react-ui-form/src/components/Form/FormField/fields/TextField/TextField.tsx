@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import { Format } from '@dxos/echo';
-import { Field, type InputProps } from '@dxos/react-ui';
+import { Input, type InputProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -34,7 +34,7 @@ export const TextField = ({
   // An opaque identifier is not prose: no spellcheck squiggles, no autocorrect, no capitalisation.
   const key = format === Format.TypeFormat.Key;
   return (
-    <Field.Input
+    <Input
       noAutoFill
       disabled={!!readonly}
       placeholder={placeholder}

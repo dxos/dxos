@@ -105,9 +105,9 @@ const PipelineStory = () => {
   }
   return (
     <Panel.Root>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ObjectProperties object={object} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -127,9 +127,9 @@ const ArticleStory = () => {
   }
   return (
     <Panel.Root>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ObjectProperties object={object} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -188,9 +188,9 @@ const NotebookStory = () => {
   }
   return (
     <Panel.Root>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ObjectProperties object={object} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

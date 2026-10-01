@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Field, type InputProps } from '@dxos/react-ui';
+import { type InputProps, NumberInput } from '@dxos/react-ui';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
@@ -92,8 +92,7 @@ export const NumberField = ({
   }
 
   return (
-    <Field.Input
-      type='number'
+    <NumberInput
       disabled={!!readonly}
       placeholder={placeholder}
       value={raw}

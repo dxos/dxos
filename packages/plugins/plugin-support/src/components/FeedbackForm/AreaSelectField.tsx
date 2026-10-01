@@ -59,26 +59,22 @@ export const AreaSelectField = ({
         <p>{resolved ? `${resolved.name} (${resolved.id})` : String(value)}</p>
       ) : (
         <Select.Root value={value ?? ''} onValueChange={handleValueChange}>
-          <Select.TriggerButton classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {value != null && (
-                  <Select.Option value={CLEAR_VALUE}>
-                    <span className='text-description italic'>(none)</span>
-                  </Select.Option>
-                )}
-                {plugins.map((plugin) => (
-                  <Select.Option key={plugin.id} value={plugin.id} classNames='flex'>
-                    <div className='flex flex-col w-full text-left'>
-                      <div>{plugin.name}</div>
-                      <div className='text-xs text-description font-mono py-1'>{plugin.id}</div>
-                    </div>
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
+          <Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
+          <Select.Content>
+            {value != null && (
+              <Select.Item value={CLEAR_VALUE}>
+                <span className='text-description italic'>(none)</span>
+              </Select.Item>
+            )}
+            {plugins.map((plugin) => (
+              <Select.Item key={plugin.id} value={plugin.id} classNames='flex'>
+                <div className='flex flex-col w-full text-left'>
+                  <div>{plugin.name}</div>
+                  <div className='text-xs text-description font-mono py-1'>{plugin.id}</div>
+                </div>
+              </Select.Item>
+            ))}
+          </Select.Content>
         </Select.Root>
       )}
     </Form.Field>

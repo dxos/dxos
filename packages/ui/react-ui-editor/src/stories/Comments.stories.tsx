@@ -12,7 +12,7 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { IconButton, useThemeContext } from '@dxos/react-ui';
+import { Button, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Listbox } from '@dxos/react-ui-list';
@@ -197,7 +197,7 @@ const CommentsList = ({
                 title={(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
                 description={range ? `${range.from}–${range.to}` : comment.cursor}
               />
-              <IconButton
+              <Button
                 variant='ghost'
                 iconOnly
                 icon='ph--x--regular'

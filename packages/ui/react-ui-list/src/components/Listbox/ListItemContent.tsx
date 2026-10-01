@@ -40,7 +40,7 @@ export const ListItemContent = composable<HTMLDivElement, ListItemContentProps>(
       <div {...composableProps<HTMLDivElement>(props, { classNames: styles.itemContentRoot() })} ref={forwardedRef}>
         {hasIcon && (
           <div className={styles.itemContentIcon()}>
-            {typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon}
+            {typeof icon === 'string' ? <Icon icon={icon} size='lg' /> : icon}
           </div>
         )}
         <span className={styles.itemContentTitle()}>{title}</span>

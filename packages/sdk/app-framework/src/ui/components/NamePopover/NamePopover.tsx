@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { Button, Field, Popover } from '@dxos/react-ui';
+import { Button, Field, Input, Popover } from '@dxos/react-ui';
 
 export type NamePopoverProps = PropsWithChildren<{
   open: boolean;
@@ -35,34 +35,31 @@ export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit
   return (
     <Popover.Root open={open} onOpenChange={(next) => !next && cancel()}>
       <Popover.Trigger asChild>{children}</Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content>
-          <div className='flex items-center gap-1 p-2'>
-            <Field.Root>
-              <Field.Label srOnly>{placeholder}</Field.Label>
-              <Field.Input
-                autoFocus
-                placeholder={placeholder}
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    submit();
-                  } else if (event.key === 'Escape') {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    cancel();
-                  }
-                }}
-              />
-            </Field.Root>
-            <Button variant='primary' onClick={submit}>
-              {submitLabel}
-            </Button>
-          </div>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content>
+        <div className='flex items-center gap-1 p-2'>
+          <Field.Root>
+            <Field.Label srOnly>{placeholder}</Field.Label>
+            <Input
+              autoFocus
+              placeholder={placeholder}
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  submit();
+                } else if (event.key === 'Escape') {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  cancel();
+                }
+              }}
+            />
+          </Field.Root>
+          <Button variant='primary' onClick={submit}>
+            {submitLabel}
+          </Button>
+        </div>
+      </Popover.Content>
     </Popover.Root>
   );
 };

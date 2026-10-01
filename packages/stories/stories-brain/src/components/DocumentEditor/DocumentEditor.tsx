@@ -5,8 +5,9 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import { Field, IconButton, Panel, type ThemedClassName, Toolbar, useThemeContext } from '@dxos/react-ui';
+import { Button, Field, Panel, type ThemedClassName, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -49,18 +50,18 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {parse && (
             <Field.Root>
               <div className='flex items-center gap-2'>
-                <Field.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
+                <Next.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
                 <Field.Label classNames='text-sm text-description'>POS</Field.Label>
               </div>
             </Field.Root>
           )}
           <div className='grow' />
-          <IconButton
+          <Button
             icon={busy ? 'ph--spinner-gap--regular' : 'ph--play--regular'}
             iconOnly
             label='Run pipeline'
@@ -68,12 +69,12 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
             onClick={() => onRun?.(text)}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <Editor.Root>
           <Editor.View value={text} onChange={setText} extensions={extensions} />
         </Editor.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

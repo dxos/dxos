@@ -64,7 +64,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
           <span className='grow text-subdued text-sm'>{result.note ?? ''}</span>
           {result.artifacts && result.artifacts.length > 0 && (
             <span className='flex items-center gap-1 text-subdued text-sm'>
-              <Icon icon='ph--paperclip--regular' size={4} />
+              <Icon icon='ph--paperclip--regular' size='md' />
               {result.artifacts.length}
             </span>
           )}
@@ -77,7 +77,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
           {/* `skipped` is a terminal outcome, and a case can still report while the run is open. */}
           {snapshot.status === 'running' ? (
             <span className='flex items-center gap-1 text-subdued'>
-              <Icon icon='ph--circle-dashed--regular' size={4} />
+              <Icon icon='ph--circle-dashed--regular' size='md' />
               <span className='text-sm'>pending</span>
             </span>
           ) : (
@@ -100,7 +100,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
       {snapshot.status === 'running' && (
         <div className='flex justify-end pt-1'>
           <button className='dx-button' disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
-            <Icon icon='ph--flag-checkered--regular' size={4} />
+            <Icon icon='ph--flag-checkered--regular' size='md' />
             <span>Finish run</span>
           </button>
         </div>

@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Field, type TextareaProps } from '@dxos/react-ui';
+import { Textarea, type TextareaProps } from '@dxos/react-ui';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -31,7 +31,7 @@ export const TextAreaField = ({
   }
 
   return (
-    <Field.Textarea
+    <Textarea
       rows={5}
       disabled={!!readonly}
       placeholder={placeholder}

@@ -382,15 +382,15 @@ export const Streaming: Story = {
 
     return (
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <Button onClick={() => setRunning(true)}>Start</Button>
             <Button onClick={() => setRunning(false)}>Stop</Button>
             <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
             <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
           <ScrollContainer.Root pin ref={scrollerRef}>
             <ScrollContainer.Content thin>
               <ScrollContainer.Viewport ref={setViewport}>
@@ -399,7 +399,7 @@ export const Streaming: Story = {
               <ScrollContainer.ScrollDownButton />
             </ScrollContainer.Content>
           </ScrollContainer.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },

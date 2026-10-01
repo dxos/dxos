@@ -38,7 +38,7 @@ import { translations as observabilityTranslations } from '@dxos/plugin-observab
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
-import { ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -697,20 +697,18 @@ const main = async () => {
           tx={defaultTx}
           resourceExtensions={[...reactUiTranslations, ...translations, ...observabilityTranslations]}
         >
-          <Tooltip.Provider>
-            {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
+          {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
                 fatal-dialog boundary above, which shows the original error via ErrorFallback. */}
-            <Suspense fallback={null}>
-              <ResetDialog
-                error={error}
-                logStore={logStore}
-                onSubmitReport={submitReport}
-                needRefresh={needRefresh}
-                onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-                onReset={import.meta.env.DEV ? handleReset : undefined}
-              />
-            </Suspense>
-          </Tooltip.Provider>
+          <Suspense fallback={null}>
+            <ResetDialog
+              error={error}
+              logStore={logStore}
+              onSubmitReport={submitReport}
+              needRefresh={needRefresh}
+              onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+              onReset={import.meta.env.DEV ? handleReset : undefined}
+            />
+          </Suspense>
         </ThemeProvider>
       </ErrorBoundary>
     );

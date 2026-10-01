@@ -23,8 +23,8 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { addEventListener } from '@dxos/async';
 import { useNode } from '@dxos/plugin-graph/hooks';
 import {
+  Button,
   Flex,
-  IconButton,
   Main,
   type MainContentProps,
   ScrollArea,
@@ -414,7 +414,7 @@ const PlankSplit = ({
       <Splitter.Panel position='start'>
         <DeckPlank id={id} part='main' active={active} classNames='size-full' />
       </Splitter.Panel>
-      <Splitter.Handle />
+      <Splitter.ResizeTrigger />
       <Splitter.Panel position='end'>
         {companion && <CompanionPlank id={companionId ?? id} classNames='size-full' />}
       </Splitter.Panel>
@@ -1862,7 +1862,7 @@ const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
         'transition-opacity opacity-(--controls-opacity)',
       )}
     >
-      <IconButton
+      <Button
         label={t('exit-fullscreen.label')}
         icon='ph--corners-in--regular'
         iconOnly

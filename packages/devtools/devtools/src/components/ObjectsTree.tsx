@@ -19,7 +19,7 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Icon, IconButton, Menu, ScrollArea } from '@dxos/react-ui';
+import { Button, Icon, Menu, ScrollArea } from '@dxos/react-ui';
 import {
   type ColumnRenderer,
   type IconRenderer,
@@ -154,7 +154,7 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
       {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
       <Menu.Root>
         <Menu.Trigger asChild>
-          <IconButton
+          <Button
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon='ph--dots-three-vertical--regular'

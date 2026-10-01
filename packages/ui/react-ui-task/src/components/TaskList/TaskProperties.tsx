@@ -243,7 +243,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
           pane on hover. */}
       <Button
         variant='ghost'
-        density='sm'
+        size='sm'
         // `items-center`, overriding the shared grid's `items-start`: a property is one line, and the
         // button's box is taller than it — top-aligned, its glyph and label sat against the top of
         // the hover surface rather than in it. The wrapping rows (history, a question) keep

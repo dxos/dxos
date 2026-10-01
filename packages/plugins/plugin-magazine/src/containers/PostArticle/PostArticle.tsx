@@ -133,9 +133,9 @@ export const PostArticle = ({ role, subject, attendableId }: PostArticleProps) =
         onOpenOriginal={handleOpenOriginal}
         onRefresh={() => void handleRefresh()}
       />
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <PostContent post={subject} metadata={feedName ? [feedName] : undefined} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

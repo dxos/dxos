@@ -9,7 +9,7 @@ import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
-import { Card, Flex, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Flex, Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionMenu } from '@dxos/react-ui-menu';
 
@@ -52,13 +52,9 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.IconButton
-            icon='ph--arrows-clockwise--regular'
-            label={t('sync-games.button')}
-            onClick={handleSync}
-          />
+          <Button icon='ph--arrows-clockwise--regular' label={t('sync-games.button')} onClick={handleSync} />
           {account?.username && (
             <span className='text-subdued text-sm px-2'>
               {account.username}
@@ -67,8 +63,8 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
           )}
           <div className='grow' />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         {empty ? (
           <Flex center classNames='h-full text-subdued text-sm'>
             {t('empty-games.message')}
@@ -81,7 +77,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -96,20 +92,15 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
   return (
     <Card.Root ref={cardRef} fullWidth>
       <Card.Header>
-        <Card.Block>
+        <Block>
           <Icon icon={icon} />
-        </Card.Block>
+        </Block>
         <Card.Title>{Obj.getLabel(game, { fallback: 'typename' })}</Card.Title>
-        <Card.Block end>
+        <Block end>
           <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
-            <IconButton
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label={t('game-actions.label')}
-            />
+            <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('game-actions.label')} />
           </ActionMenu>
-        </Card.Block>
+        </Block>
       </Card.Header>
       <Card.Body>
         <Surface.Surface

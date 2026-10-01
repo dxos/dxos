@@ -19,9 +19,10 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import {
+  Button,
   Field,
   Flex,
-  IconButton,
+  NumberInput,
   Panel,
   ScrollArea,
   ThemedClassName,
@@ -183,11 +184,10 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       // is not an attendable surface, so without it every action renders disabled.
 
       <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar>
+        <Panel.Header>
           <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
             <Field.Root>
-              <Field.Input
-                type='number'
+              <NumberInput
                 placeholder='Count'
                 classNames='w-[4rem] text-right'
                 min={1}
@@ -198,8 +198,8 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
               />
             </Field.Root>
           </ActionToolbar>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <ScrollArea.Root thin orientation='vertical'>
             <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
               <SchemaTable
@@ -235,7 +235,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
               <ProgressGenerator classNames='py-1' />
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },
@@ -345,13 +345,13 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
       <Flex gap='sm' align='center'>
         <span className='grow'>Progress Monitor</span>
         {running ? (
-          <IconButton
+          <Button
             icon='ph--x--regular'
             label='Cancel test progress'
             onClick={() => registry?.cancel(TEST_PROGRESS_NAME)}
           />
         ) : (
-          <IconButton icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
+          <Button icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
         )}
       </Flex>
       {monitor && (monitor.status === 'running' || monitor.status === 'error') && (

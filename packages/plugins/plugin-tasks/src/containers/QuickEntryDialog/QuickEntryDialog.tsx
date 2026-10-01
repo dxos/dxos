@@ -8,7 +8,7 @@ import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } f
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Format } from '@dxos/echo';
-import { Column, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Column, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -53,28 +53,25 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
   return (
     <div className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
       {onCancel && (
-        <IconButton
-          icon='ph--x--regular'
-          iconEnd
+        <Button
+          iconEnd='ph--x--regular'
           label={t('quick-entry-cancel.label')}
           onClick={onCancel}
           data-testid='cancel-button'
         />
       )}
-      <IconButton
+      <Button
         disabled={!canSave}
-        icon='ph--plus--regular'
-        iconEnd
+        iconEnd='ph--plus--regular'
         label={t('quick-entry-save-and-continue.label')}
         onClick={handleSaveAndContinue}
         data-testid='save-and-continue-button'
       />
-      <IconButton
+      <Button
         type='submit'
         variant='primary'
         disabled={!canSave}
-        icon='ph--check--regular'
-        iconEnd
+        iconEnd='ph--check--regular'
         label={t('quick-entry-save.label')}
         onClick={onSave}
         data-testid='save-button'
@@ -134,9 +131,9 @@ export const QuickEntryDialog = () => {
     <Dialog.Content ref={contentRef} onKeyDownCapture={handleKeyDownCapture}>
       <Dialog.Header>
         <Dialog.Title>{t('quick-entry-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <Form.Root

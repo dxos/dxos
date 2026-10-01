@@ -9,7 +9,7 @@ import { Model, Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { EffectEx } from '@dxos/effect';
 import { List, ListItem } from '@dxos/react-list';
-import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Combobox } from '@dxos/react-ui-list';
 
@@ -120,7 +120,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 >
                   <Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium'>{model.name}</span>
-                    <IconButton
+                    <Button
                       icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
                       iconOnly
                       label={running ? t('settings.ollama.unload.label') : t('settings.ollama.load.label')}
@@ -131,7 +131,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                         )()
                       }
                     />
-                    <IconButton
+                    <Button
                       icon='ph--trash--regular'
                       iconOnly
                       label={t('settings.ollama.remove.label')}
@@ -163,7 +163,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                 >
                   <Flex gap='sm' align='center'>
                     <span className='grow truncate font-medium text-description'>{name}</span>
-                    <IconButton
+                    <Button
                       icon='ph--x--regular'
                       iconOnly
                       label={t('settings.ollama.cancel.label')}

@@ -202,10 +202,10 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <Flex column gap='md' classNames='p-3'>
@@ -215,50 +215,40 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 valence={statusMeta?.valence ?? 'neutral'}
                 icon={statusMeta?.icon ?? 'ph--circle-notch--regular'}
               >
-                <Banner.Content>
-                  <Banner.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Banner.Title>
-                </Banner.Content>
+                <Banner.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Banner.Title>
               </Banner.Root>
 
               {/* Reasons publishing is unavailable. */}
               {!connection && (
                 <Banner.Root valence='info'>
-                  <Banner.Content>
-                    <Banner.Body>{t('no-connection.label')}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{t('no-connection.label')}</Banner.Body>
                 </Banner.Root>
               )}
               {ineligibleReason && (
                 <Banner.Root valence={reasonValence}>
-                  <Banner.Content>
-                    <Banner.Body>{ineligibleReason}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{ineligibleReason}</Banner.Body>
                 </Banner.Root>
               )}
               {error && (
                 <Banner.Root valence='error'>
-                  <Banner.Content>
-                    <Banner.Body>{error}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{error}</Banner.Body>
                 </Banner.Root>
               )}
 
               {/* First-publish confirmation. */}
               {confirming && (
                 <Banner.Root valence='warning'>
-                  <Banner.Content>
-                    <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
-                    <Banner.Body asChild>
-                      <Flex gap='sm' classNames='pt-2'>
-                        <Button variant='primary' disabled={busy} onClick={handlePublish}>
-                          {t('confirm-publish.label')}
-                        </Button>
-                        <Button disabled={busy} onClick={() => setConfirming(false)}>
-                          {t('cancel.label')}
-                        </Button>
-                      </Flex>
-                    </Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
+                  <Banner.Body asChild>
+                    <Flex gap='sm' classNames='pt-2'>
+                      <Button variant='primary' disabled={busy} onClick={handlePublish}>
+                        {t('confirm-publish.label')}
+                      </Button>
+                      <Button disabled={busy} onClick={() => setConfirming(false)}>
+                        {t('cancel.label')}
+                      </Button>
+                    </Flex>
+                  </Banner.Body>
                 </Banner.Root>
               )}
 
@@ -269,9 +259,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Banner.Root valence='warning'>
-                    <Banner.Content>
-                      <Banner.Body>{t('mirror-unresolved.label')}</Banner.Body>
-                    </Banner.Content>
+                    <Banner.Body>{t('mirror-unresolved.label')}</Banner.Body>
                   </Banner.Root>
                 )}
                 {/* A read-only field listing: three columns, no disclosure and nothing focusable, so it
@@ -341,7 +329,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
             </Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

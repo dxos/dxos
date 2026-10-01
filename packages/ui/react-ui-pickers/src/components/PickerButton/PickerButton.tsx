@@ -55,37 +55,32 @@ export const PickerButton = ({
           <TriggerRoot classNames={['gap-2 py-1', classNames]} disabled={disabled}>
             <span className='sr-only'>{label}</span>
             {(value && <Component value={value} size={iconSize} />) || <Icon icon={icon} size={iconSize} />}
-            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
+            <Icon icon='ph--caret-down--bold' size='xs' classNames='mx-0.5' />
           </TriggerRoot>
         </Tooltip.Trigger>
       </Menu.Trigger>
-      <Menu.Portal>
-        <Menu.Content side='bottom' classNames='!w-min'>
-          <Menu.Viewport classNames='grid grid-cols-[repeat(6,min-content)]'>
-            {values.map((_value) => {
-              return (
-                <Menu.CheckboxItem
-                  key={_value}
-                  checked={_value === value}
-                  onCheckedChange={() => setValue(_value)}
-                  classNames={'p-1 items-center justify-center aspect-square'}
-                >
-                  <Component value={_value} size={iconSize} />
-                </Menu.CheckboxItem>
-              );
-            })}
-            {onReset && (
-              <Menu.CheckboxItem
-                onCheckedChange={() => onReset()}
-                classNames={'p-1 items-center justify-center aspect-square'}
-              >
-                <Icon icon='ph--x--regular' size={iconSize} />
-              </Menu.CheckboxItem>
-            )}
-          </Menu.Viewport>
-          <Menu.Arrow />
-        </Menu.Content>
-      </Menu.Portal>
+      <Menu.Content side='bottom' classNames='!w-min'>
+        {values.map((_value) => {
+          return (
+            <Menu.CheckboxItem
+              key={_value}
+              checked={_value === value}
+              onCheckedChange={() => setValue(_value)}
+              classNames={'p-1 items-center justify-center aspect-square'}
+            >
+              <Component value={_value} size={iconSize} />
+            </Menu.CheckboxItem>
+          );
+        })}
+        {onReset && (
+          <Menu.CheckboxItem
+            onCheckedChange={() => onReset()}
+            classNames={'p-1 items-center justify-center aspect-square'}
+          >
+            <Icon icon='ph--x--regular' size={iconSize} />
+          </Menu.CheckboxItem>
+        )}
+      </Menu.Content>
     </Menu.Root>
   );
 };

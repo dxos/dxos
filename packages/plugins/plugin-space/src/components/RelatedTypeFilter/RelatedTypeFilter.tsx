@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
+import { ToggleGroup, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type RelatedType } from '#hooks';
@@ -39,7 +39,7 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
       value={types.filter(({ visible }) => visible).map(({ typename }) => typename)}
     >
       {types.map(({ typename, label, icon, count }) => (
-        <ToggleGroupIconItem
+        <ToggleGroup.Item
           key={typename}
           iconOnly
           value={typename}

@@ -9,7 +9,7 @@ import { createRoot } from 'react-dom/client';
 import { DEFAULT_CLIENT_CHANNEL, DEFAULT_SHELL_CHANNEL } from '@dxos/client-protocol';
 import { AppContextRequestSchema } from '@dxos/protocols/buf/dxos/iframe_pb';
 import { AgentHostingProvider, ClientProvider, ClientServicesProxy, Config, ShellDisplay } from '@dxos/react-client';
-import { Button, Dialog, ThemeProvider, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, ThemeProvider, useTranslation } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { createIFramePort } from '@dxos/rpc-tunnel';
 
@@ -35,11 +35,9 @@ export const runShell = async (config: Config = new Config()) => {
       <StrictMode>
         <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
           <ClientProvider config={config} services={services} noBanner>
-            <Tooltip.Provider>
-              <AgentHostingProvider>
-                <Shell runtime={runtime} />
-              </AgentHostingProvider>
-            </Tooltip.Provider>
+            <AgentHostingProvider>
+              <Shell runtime={runtime} />
+            </AgentHostingProvider>
           </ClientProvider>
         </ThemeProvider>
       </StrictMode>,
@@ -63,18 +61,16 @@ const Fallback = ({ onClose }: { onClose?: () => void }) => {
 
   return (
     <Dialog.Root modal open onOpenChange={() => onClose?.()}>
-      <Dialog.Overlay>
-        <Dialog.Content>
-          <Dialog.Title>{t('shell-fallback.title')}</Dialog.Title>
-          <Dialog.ActionBar>
-            <Dialog.Close asChild onClick={() => onClose?.()}>
-              <Button variant='primary' classNames='w-full'>
-                {t('close.label')}
-              </Button>
-            </Dialog.Close>
-          </Dialog.ActionBar>
-        </Dialog.Content>
-      </Dialog.Overlay>
+      <Dialog.Content>
+        <Dialog.Title>{t('shell-fallback.title')}</Dialog.Title>
+        <Dialog.Footer>
+          <Dialog.CloseTrigger asChild onClick={() => onClose?.()}>
+            <Button variant='primary' classNames='w-full'>
+              {t('close.label')}
+            </Button>
+          </Dialog.CloseTrigger>
+        </Dialog.Footer>
+      </Dialog.Content>
     </Dialog.Root>
   );
 };

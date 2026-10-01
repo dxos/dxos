@@ -5,7 +5,7 @@
 import React, { type ChangeEvent, useState } from 'react';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
-import { Field, useTranslation } from '@dxos/react-ui';
+import { Field, PinInput, useTranslation } from '@dxos/react-ui';
 import { hexToEmoji } from '@dxos/util';
 
 import { Action, ActionBar, Emoji, InputLabel, Label } from '../../../components/index.ts';
@@ -67,7 +67,7 @@ export const InvitationAuthenticator = ({
             </>
           )}
           {authMethod === Invitation_AuthMethod.SHARED_SECRET && (
-            <Field.PinInput
+            <PinInput
               {...{
                 disabled,
                 'density': 'lg',

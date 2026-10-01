@@ -18,8 +18,8 @@ import React, {
 
 import { createContext } from '@dxos/react-hooks';
 import {
+  Button,
   HoverCard,
-  IconButton,
   ScrollArea,
   type ThemedClassName,
   composable,
@@ -412,10 +412,10 @@ const GanttAxisToggle = (_: GanttAxisToggleProps) => {
 
   // The icon names the axis in use; the label names the one a click switches to.
   return (
-    <IconButton
+    <Button
       variant='ghost'
-      density='sm'
-      size={3}
+      size='sm'
+      iconSize='xs'
       iconOnly
       icon={axis === 'time' ? 'ph--clock--regular' : 'ph--dots-three-outline--regular'}
       label={t(axis === 'time' ? 'gantt-axis-unit.label' : 'gantt-axis-time.label')}
@@ -1017,26 +1017,23 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       onClick={() => onMarkerSelect?.(marker)}
                     />
                   </HoverCard.Trigger>
-                  <HoverCard.Portal>
-                    <HoverCard.Content classNames='p-2 max-w-72 text-xs'>
-                      <div className='font-medium truncate'>{marker.label}</div>
-                      <div className='text-description tabular-nums'>
-                        {marker.kind && `${marker.kind} · `}
-                        {format(marker.timestamp, 'HH:mm:ss')}
-                        {/* Elapsed on the axis's own terms, so it reads against the tick labels. */}
-                        {` · +${formatElapsed(marker.timestamp - range.start, { span: marker.timestamp - range.start, step: 1_000 })}`}
-                        {marker.level && marker.level !== 'info' && (
-                          <span
-                            className={mx('ms-2', marker.level === 'error' ? 'text-error-text' : 'text-warning-text')}
-                          >
-                            {marker.level}
-                          </span>
-                        )}
-                      </div>
-                      <div className='text-description truncate'>{row.lane.label}</div>
-                      <HoverCard.Arrow />
-                    </HoverCard.Content>
-                  </HoverCard.Portal>
+                  <HoverCard.Content classNames='p-2 max-w-72 text-xs'>
+                    <div className='font-medium truncate'>{marker.label}</div>
+                    <div className='text-description tabular-nums'>
+                      {marker.kind && `${marker.kind} · `}
+                      {format(marker.timestamp, 'HH:mm:ss')}
+                      {/* Elapsed on the axis's own terms, so it reads against the tick labels. */}
+                      {` · +${formatElapsed(marker.timestamp - range.start, { span: marker.timestamp - range.start, step: 1_000 })}`}
+                      {marker.level && marker.level !== 'info' && (
+                        <span
+                          className={mx('ms-2', marker.level === 'error' ? 'text-error-text' : 'text-warning-text')}
+                        >
+                          {marker.level}
+                        </span>
+                      )}
+                    </div>
+                    <div className='text-description truncate'>{row.lane.label}</div>
+                  </HoverCard.Content>
                 </HoverCard.Root>
               </Fragment>
             ) : null;

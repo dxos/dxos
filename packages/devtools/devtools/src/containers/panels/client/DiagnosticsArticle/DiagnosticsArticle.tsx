@@ -6,7 +6,8 @@ import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Field, Panel, SystemIconButton, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { Button, Panel, SystemButton, Toolbar, useFileDownload } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { JsonView } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -55,28 +56,30 @@ export const DiagnosticsArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Field.Checkbox checked={recording} onCheckedChange={(recording) => handleSetRecording(!!recording)}>
-            Record metrics
-          </Field.Checkbox>
+          <Next.Checkbox
+            checked={recording}
+            onCheckedChange={(recording) => handleSetRecording(!!recording)}
+            label='Record metrics'
+          />
           <div className='grow' />
-          <Toolbar.Button onClick={handleRefresh}>Run Diagnostics</Toolbar.Button>
-          <Toolbar.IconButton icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
-          <Toolbar.Button onClick={handleResetMetrics}>Reset metrics</Toolbar.Button>
+          <Button onClick={handleRefresh}>Run Diagnostics</Button>
+          <Button icon='ph--download--regular' label='Download diagnostics' onClick={handleDownload} />
+          <Button onClick={handleResetMetrics}>Reset metrics</Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <JsonView data={data} />
-      </Panel.Content>
+      </Panel.Body>
       {info && (
-        <Panel.Statusbar asChild>
+        <Panel.Footer>
           <div className='flex p-2 items-center text-sm font-mono gap-2'>
             {info.map((text) => (
-              <SystemIconButton.Clipboard key={text} variant='ghost' label={text} value={text} />
+              <SystemButton.Clipboard key={text} variant='ghost' label={text} value={text} />
             ))}
           </div>
-        </Panel.Statusbar>
+        </Panel.Footer>
       )}
     </Panel.Root>
   );

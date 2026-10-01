@@ -91,11 +91,11 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menu} attendableId={attendableId} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content>
+      <Panel.Body>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
           <Flex center classNames='h-full text-subdued text-sm'>
@@ -109,10 +109,10 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Panel.Content>
-      <Panel.Statusbar classNames='border-t border-subdued-separator' asChild>
+      </Panel.Body>
+      <Panel.Footer classNames='border-t border-subdued-separator'>
         <ProgressMeter state={curateProgress} />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

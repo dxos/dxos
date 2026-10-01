@@ -15,7 +15,7 @@ import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import { Avatar, Field, SystemIconButton, Toolbar, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, Field, Input, SystemButton, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
@@ -116,7 +116,7 @@ const IdentityHeading = ({
 
         <Field.Root>
           <Field.Label srOnly>{t('display-name-input.label')}</Field.Label>
-          <Field.Input
+          <Input
             variant='subdued'
             data-testid='display-name-input'
             placeholder={t('display-name-input.placeholder')}
@@ -130,16 +130,16 @@ const IdentityHeading = ({
           <Toolbar.Root classNames='w-fit'>
             <EmojiPickerToolbarButton size={5} emoji={emoji} onChangeEmoji={setEmoji} />
             <HuePicker value={hue} onChange={setHue} onReset={() => setHue(undefined)} rootVariant='toolbar-button' />
-            <SystemIconButton.Clipboard
-              size={5}
+            <SystemButton.Clipboard
+              iconSize='lg'
               iconOnly
               label={t('copy-self-did.label')}
               data-testid='update-profile-form-copy-key'
               value={identity.did}
             />
             {onManageCredentials && (
-              <Toolbar.IconButton
-                size={5}
+              <Button
+                iconSize='lg'
                 icon='ph--identification-card--regular'
                 iconOnly
                 label={t('manage-credentials.label')}
@@ -147,8 +147,8 @@ const IdentityHeading = ({
                 onClick={onManageCredentials}
               />
             )}
-            <Toolbar.IconButton
-              size={5}
+            <Button
+              iconSize='lg'
               icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
               iconOnly
               label={t(isConnected ? 'disconnect.label' : 'connect.label')}

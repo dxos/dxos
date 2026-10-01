@@ -29,16 +29,16 @@ export const RelatedArticle = ({ role, companionTo }: RelatedArticleProps) => {
       <Panel.Root role={role}>
         {/* TODO(burdon): Build this out into a real toolbar: text filter, and a table/card view
             toggle as TypeArticle has. */}
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <RelatedTypeFilter types={types} onToggle={toggle} />
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Masonry.Content centered>
             <Masonry.Viewport items={items} />
           </Masonry.Content>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Masonry.Root>
   );

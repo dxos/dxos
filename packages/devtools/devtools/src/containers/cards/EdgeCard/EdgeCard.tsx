@@ -10,7 +10,7 @@ import {
   type QueryEdgeStatusResponse,
   type EdgeStatus as SocketStatus,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { Flex, SystemIconButton, Tooltip } from '@dxos/react-ui';
+import { Flex, SystemButton, Tooltip } from '@dxos/react-ui';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { Unit } from '../util.tsx';
@@ -123,8 +123,8 @@ const SpaceRows = ({ rows }: { rows: SpaceRow[] }) => (
         iconClassNames={row.ok ? 'text-success-text' : 'text-error-text'}
       >
         <Tooltip.Trigger asChild content={<SpaceDetail row={row} />}>
-          <SystemIconButton.Clipboard
-            density='sm'
+          <SystemButton.Clipboard
+            size='sm'
             variant='ghost'
             compact
             iconEnd

@@ -12,7 +12,7 @@ import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 /** Cap on retained events so a long-running story does not grow the list unbounded. */
@@ -83,20 +83,20 @@ const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Swarm Trace</Toolbar.Text>
           <Toolbar.Separator />
           <Toolbar.Text>{events.length} events</Toolbar.Text>
           <Toolbar.Separator />
-          <Toolbar.Button onClick={() => setEvents([])} disabled={events.length === 0}>
+          <Button onClick={() => setEvents([])} disabled={events.length === 0}>
             Clear
-          </Toolbar.Button>
+          </Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='overflow-hidden'>
+      </Panel.Header>
+      <Panel.Body classNames='overflow-hidden'>
         {monitor ? <EventList events={events} /> : <div className='p-2 text-description'>No swarm trace source.</div>}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

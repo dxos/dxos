@@ -33,14 +33,14 @@ const ExamplePanel = ({ label }: { label: string }) => {
   const space = useActiveSpace();
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>{label}</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='p-2'>
+      </Panel.Header>
+      <Panel.Body classNames='p-2'>
         <p className='text-sm text-description'>space: {space?.id ?? '…'}</p>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

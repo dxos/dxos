@@ -66,10 +66,10 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col gap-2 p-3'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col gap-2 p-3'>
         <span className='text-sm text-description'>{t('search-fields.label')}</span>
         {searchFields.length > 0 ? (
           <dl className='flex flex-col gap-1'>
@@ -83,7 +83,7 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
         ) : (
           <span className='text-sm text-subdued'>{t('search-fields.message')}</span>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

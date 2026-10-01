@@ -18,12 +18,12 @@ export const SkillArticle = ({ role, attendableId, subject }: SkillArticleProps)
 
   return (
     <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root disabled={!hasAttention} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <TemplateEditor id={subject.id} source={subject.instructions.source} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

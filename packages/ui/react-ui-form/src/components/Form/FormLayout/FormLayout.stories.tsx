@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Annotation, DXN, Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Card, Tooltip, useThemeContext } from '@dxos/react-ui';
+import { Card, useThemeContext, DragHandle } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -138,17 +138,15 @@ const DefaultStory = ({ schema, template }: StoryArgs) => {
   }, []);
 
   return (
-    <Tooltip.Provider>
-      <TestLayout json={{ values }}>
-        <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
-          <Form.Viewport>
-            <Form.Content>
-              {template !== undefined ? <Form.Layout schema={schema} template={template} /> : <Form.Fields />}
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
-      </TestLayout>
-    </Tooltip.Provider>
+    <TestLayout json={{ values }}>
+      <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
+        <Form.Viewport>
+          <Form.Content>
+            {template !== undefined ? <Form.Layout schema={schema} template={template} /> : <Form.Fields />}
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    </TestLayout>
   );
 };
 
@@ -206,27 +204,25 @@ const NamedAnnotationStory = () => {
   }, []);
 
   return (
-    <Tooltip.Provider>
-      <TestLayout json={{ layoutName, values }}>
-        <div className='flex flex-col gap-2'>
-          <div className='flex gap-2 text-sm'>
-            {(['default', 'compact'] as const).map((name) => (
-              <label key={name} className='flex items-center gap-1'>
-                <input type='radio' name='layout' checked={layoutName === name} onChange={() => setLayoutName(name)} />
-                {name}
-              </label>
-            ))}
-          </div>
-          <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
-            <Form.Viewport>
-              <Form.Content>
-                <Form.Fields layoutName={layoutName} />
-              </Form.Content>
-            </Form.Viewport>
-          </Form.Root>
+    <TestLayout json={{ layoutName, values }}>
+      <div className='flex flex-col gap-2'>
+        <div className='flex gap-2 text-sm'>
+          {(['default', 'compact'] as const).map((name) => (
+            <label key={name} className='flex items-center gap-1'>
+              <input type='radio' name='layout' checked={layoutName === name} onChange={() => setLayoutName(name)} />
+              {name}
+            </label>
+          ))}
         </div>
-      </TestLayout>
-    </Tooltip.Provider>
+        <Form.Root schema={schema} defaultValues={values} onSave={handleSave} autoSave>
+          <Form.Viewport>
+            <Form.Content>
+              <Form.Fields layoutName={layoutName} />
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </div>
+    </TestLayout>
   );
 };
 
@@ -248,24 +244,22 @@ const NestedLabelStory = ({ readonly = false }: { readonly?: boolean }) => {
   }, []);
 
   return (
-    <Tooltip.Provider>
-      <TestLayout json={{ values }}>
-        <Form.Root
-          schema={schema}
-          defaultValues={values}
-          layout={readonly ? 'static' : 'full'}
-          readonly={readonly}
-          onSave={handleSave}
-          autoSave
-        >
-          <Form.Viewport>
-            <Form.Content>
-              <Form.Layout schema={schema} template={JOURNEY_LAYOUT} />
-            </Form.Content>
-          </Form.Viewport>
-        </Form.Root>
-      </TestLayout>
-    </Tooltip.Provider>
+    <TestLayout json={{ values }}>
+      <Form.Root
+        schema={schema}
+        defaultValues={values}
+        layout={readonly ? 'static' : 'full'}
+        readonly={readonly}
+        onSave={handleSave}
+        autoSave
+      >
+        <Form.Viewport>
+          <Form.Content>
+            <Form.Layout schema={schema} template={JOURNEY_LAYOUT} />
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    </TestLayout>
   );
 };
 
@@ -339,78 +333,76 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryArgs) => {
   );
 
   return (
-    <Tooltip.Provider>
-      <div
-        className={mx(
-          'dx-expand grid grid-rows-1 p-4 gap-4',
-          card ? 'grid-cols-[var(--spacing-card-min-width)_var(--spacing-card-min-width)_1fr]' : 'grid-cols-2',
-        )}
-      >
-        {card ? (
-          <>
-            <div>
-              <Card.Root fullWidth>
-                <Card.Header>
-                  <Card.DragHandle />
-                  <Card.Title>Read-only</Card.Title>
-                  <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
-                </Card.Header>
-                <Card.Body>{renderForm(true)}</Card.Body>
-              </Card.Root>
-            </div>
-            <div>
-              <Card.Root fullWidth>
-                <Card.Header>
-                  <Card.DragHandle />
-                  <Card.Title>Editable</Card.Title>
-                  <Card.ActionIconButton action='close' onClick={() => console.log('close')} />
-                </Card.Header>
-                <Card.Body>{renderForm(false)}</Card.Body>
-              </Card.Root>
-            </div>
-          </>
-        ) : (
-          <TestPanel>{renderForm(false)}</TestPanel>
-        )}
-        <div className='grid grid-rows-3 gap-4 overflow-hidden'>
-          <TestPanel>
-            <div className='flex flex-col h-full overflow-hidden'>
-              <Editor.Root>
-                <Editor.View
-                  classNames='flex-1 overflow-auto font-mono text-sm p-2'
-                  extensions={extensions}
-                  value={template}
-                  onChange={setTemplate}
-                />
-              </Editor.Root>
-              {error && (
-                <div className='border-t border-input-separator p-2 text-sm text-error-text font-mono'>{error}</div>
-              )}
-            </div>
-          </TestPanel>
-          <TestPanel>
-            <Syntax.Root data={schema.ast}>
-              <Syntax.Content>
-                <Syntax.Filter />
-                <Syntax.Viewport>
-                  <Syntax.Code testId='schema' classNames='text-sm' />
-                </Syntax.Viewport>
-              </Syntax.Content>
-            </Syntax.Root>
-          </TestPanel>
-          <TestPanel>
-            <Syntax.Root data={values}>
-              <Syntax.Content>
-                <Syntax.Filter />
-                <Syntax.Viewport>
-                  <Syntax.Code testId='data' classNames='text-sm' />
-                </Syntax.Viewport>
-              </Syntax.Content>
-            </Syntax.Root>
-          </TestPanel>
-        </div>
+    <div
+      className={mx(
+        'dx-expand grid grid-rows-1 p-4 gap-4',
+        card ? 'grid-cols-[var(--spacing-card-min-width)_var(--spacing-card-min-width)_1fr]' : 'grid-cols-2',
+      )}
+    >
+      {card ? (
+        <>
+          <div>
+            <Card.Root fullWidth>
+              <Card.Header>
+                <DragHandle />
+                <Card.Title>Read-only</Card.Title>
+                <Card.Action system='close' onClick={() => console.log('close')} />
+              </Card.Header>
+              <Card.Body>{renderForm(true)}</Card.Body>
+            </Card.Root>
+          </div>
+          <div>
+            <Card.Root fullWidth>
+              <Card.Header>
+                <DragHandle />
+                <Card.Title>Editable</Card.Title>
+                <Card.Action system='close' onClick={() => console.log('close')} />
+              </Card.Header>
+              <Card.Body>{renderForm(false)}</Card.Body>
+            </Card.Root>
+          </div>
+        </>
+      ) : (
+        <TestPanel>{renderForm(false)}</TestPanel>
+      )}
+      <div className='grid grid-rows-3 gap-4 overflow-hidden'>
+        <TestPanel>
+          <div className='flex flex-col h-full overflow-hidden'>
+            <Editor.Root>
+              <Editor.View
+                classNames='flex-1 overflow-auto font-mono text-sm p-2'
+                extensions={extensions}
+                value={template}
+                onChange={setTemplate}
+              />
+            </Editor.Root>
+            {error && (
+              <div className='border-t border-input-separator p-2 text-sm text-error-text font-mono'>{error}</div>
+            )}
+          </div>
+        </TestPanel>
+        <TestPanel>
+          <Syntax.Root data={schema.ast}>
+            <Syntax.Content>
+              <Syntax.Filter />
+              <Syntax.Viewport>
+                <Syntax.Code testId='schema' classNames='text-sm' />
+              </Syntax.Viewport>
+            </Syntax.Content>
+          </Syntax.Root>
+        </TestPanel>
+        <TestPanel>
+          <Syntax.Root data={values}>
+            <Syntax.Content>
+              <Syntax.Filter />
+              <Syntax.Viewport>
+                <Syntax.Code testId='data' classNames='text-sm' />
+              </Syntax.Viewport>
+            </Syntax.Content>
+          </Syntax.Root>
+        </TestPanel>
       </div>
-    </Tooltip.Provider>
+    </div>
   );
 };
 

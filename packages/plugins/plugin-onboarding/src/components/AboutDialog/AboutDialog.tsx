@@ -6,7 +6,7 @@ import { formatDistance } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Button, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Link, SystemButton, Trans, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '../../meta.ts';
 
@@ -63,9 +63,9 @@ export const AboutDialog = () => {
             composer
           </h1>
         </Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <div className='flex items-center text-description'>
@@ -95,11 +95,11 @@ export const AboutDialog = () => {
           </p>
         </div>
       </Dialog.Body>
-      <Dialog.ActionBar>
-        <Dialog.Close asChild>
+      <Dialog.Footer>
+        <Dialog.CloseTrigger asChild>
           <Button variant='primary'>{t('close.label')}</Button>
-        </Dialog.Close>
-      </Dialog.ActionBar>
+        </Dialog.CloseTrigger>
+      </Dialog.Footer>
     </Dialog.Content>
   );
 };

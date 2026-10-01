@@ -78,7 +78,7 @@ const ProgressPips = ({ word }: { word: Word.Word }) => {
         <Icon
           key={index}
           icon={index < box ? 'ph--circle--fill' : 'ph--circle--regular'}
-          size={2}
+          size='xs'
           classNames={index < box ? 'text-accent-text' : 'text-subdued'}
         />
       ))}

@@ -9,7 +9,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
-import { Banner, useTranslation } from '@dxos/react-ui';
+import { Empty, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Task } from '@dxos/types';
 
@@ -44,7 +44,7 @@ export const ProjectTaskCompanion = ({ companionTo: project, role, attendableId 
   const task = tasks.find(({ id }) => id === selected);
 
   if (!task) {
-    return <Banner.Empty label={t('no-task-selected.message')} />;
+    return <Empty>{t('no-task-selected.message')}</Empty>;
   }
 
   // The article shows the task's artifacts itself, so the companion adds nothing beside it.

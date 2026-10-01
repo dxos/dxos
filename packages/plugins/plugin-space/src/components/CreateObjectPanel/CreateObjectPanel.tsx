@@ -248,7 +248,7 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
           >
             <Icon
               icon={option.icon ?? 'ph--circle-dashed--regular'}
-              size={8}
+              size='xl'
               classNames={getIconHueStyles(option.iconHue)}
             />
             <div className='flex flex-col min-w-0 grow gap-0.5'>

@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import {
+  Block,
   Card,
   Icon,
   ScrollArea,
@@ -59,9 +60,9 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Header>
-            <Card.Block>
+            <Block>
               <Icon icon='ph--airplane--regular' />
-            </Card.Block>
+            </Block>
             <div className='flex items-baseline justify-between gap-2 min-w-0'>
               <Card.Title classNames='truncate'>{offer.operator.name}</Card.Title>
               <Card.Text classNames='font-mono shrink-0'>
@@ -79,9 +80,9 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
             )}
             {departAt && (
               <Card.Row>
-                <Card.Block>
+                <Block>
                   <Icon icon='ph--calendar--regular' />
-                </Card.Block>
+                </Block>
                 <Card.Text variant='description'>{format(new Date(departAt), 'PPp')}</Card.Text>
               </Card.Row>
             )}

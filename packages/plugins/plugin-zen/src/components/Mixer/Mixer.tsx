@@ -6,7 +6,16 @@ import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } 
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Icon, Panel, Splitter, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Icon,
+  Panel,
+  Splitter,
+  SystemButton,
+  type ThemedClassName,
+  Toolbar,
+  useTranslation,
+} from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 
 import { useCountdown } from '#hooks';
@@ -148,20 +157,20 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
     <Splitter.Root orientation='vertical' mode={selectedLayer ? 'split' : 'start'} classNames={classNames}>
       <Splitter.Panel asChild position='start'>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              <Toolbar.IconButton icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
+              <Button icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
               {playing && timed && <span className='tabular-nums text-description p-1'>{formattedTime}</span>}
-              <Toolbar.IconButton
+              <Button
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly
                 label={playing ? 'Stop' : 'Play'}
                 onClick={handlePlay}
               />
             </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content>
+          </Panel.Header>
+          <Panel.Body>
             <OrderedList.Root<Sequence.Sequence>
               items={layers}
               getId={(item) => item.id}
@@ -183,7 +192,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
                 </OrderedList.Content>
               )}
             </OrderedList.Root>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </Splitter.Panel>
 
@@ -228,7 +237,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
       {/* Plain title row — there's no disclosure panel here, so we don't want
           `OrderedList.Title`'s aria-expanded / trigger semantics. */}
       <div className='flex grow items-center truncate'>{item.name ?? Sequence.getSourceLabel(item.source)}</div>
-      <OrderedList.IconButton
+      <Button
         icon={item.muted ? 'ph--speaker-slash--regular' : 'ph--speaker-high--regular'}
         label={t(item.muted ? 'unmute-button.label' : 'mute-button.label')}
         onClick={(event) => {
@@ -236,7 +245,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
           onLayerUpdate({ ...item, muted: !item.muted });
         }}
       />
-      <OrderedList.DeleteButton
+      <SystemButton.Remove
         onClick={(event: MouseEvent) => {
           event.stopPropagation();
           onLayerDelete(item.id);

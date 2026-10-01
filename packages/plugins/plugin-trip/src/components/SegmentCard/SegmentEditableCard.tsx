@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Field, Icon, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Field, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Segment } from '#types';
@@ -76,11 +76,11 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
     return (
       <Card.Root fullWidth ref={forwardedRef}>
         <Card.Header>
-          <Card.Block>
+          <Block>
             <Icon icon={icon} />
-          </Card.Block>
+          </Block>
           <Card.Title>{title}</Card.Title>
-          <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
+          <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
         </Card.Header>
         <Card.Body>
           {route && (
@@ -89,9 +89,9 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
             </Card.Row>
           )}
           <Card.Row>
-            <Card.Block>
+            <Block>
               <Icon icon='ph--calendar--regular' />
-            </Card.Block>
+            </Block>
             <Field.Root>
               <Field.DateTime
                 aria-label={t('segment.depart.placeholder')}

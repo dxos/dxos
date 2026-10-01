@@ -58,12 +58,12 @@ export const Column: Story = {
   render: () => (
     <Calendar.Root>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Calendar.Toolbar />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Calendar.Grid />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Calendar.Root>
   ),
@@ -91,9 +91,9 @@ export const Week: StoryObj<typeof Calendar.Week> = {
     return (
       <Calendar.Root>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Calendar.Toolbar />
-          </Panel.Toolbar>
+          </Panel.Header>
           <Calendar.Week
             events={events}
             onEventCreate={({ start, end }) =>

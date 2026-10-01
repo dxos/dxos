@@ -68,20 +68,14 @@ export const createSelectField = ({
           onBlur();
         }}
       >
-        <Select.TriggerButton classNames='w-full' disabled={!!readonly} />
+        <Select.Trigger classNames='w-full' disabled={!!readonly} />
         {normalized.length > 0 && (
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {hasDefault && <Select.Option value={sentinel}>{defaultLabel}</Select.Option>}
-                {normalized.map((option) => (
-                  <Select.Option key={option.value} value={option.value}>
-                    {option.label ?? option.value}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
+          <Select.Content>
+            {hasDefault && <Select.Item item={{ value: sentinel, label: defaultLabel }} />}
+            {normalized.map((option) => (
+              <Select.Item key={option.value} item={{ value: option.value, label: option.label ?? option.value }} />
+            ))}
+          </Select.Content>
         )}
       </Select.Root>
     );

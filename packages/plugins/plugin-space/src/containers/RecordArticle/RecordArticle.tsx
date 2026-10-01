@@ -9,7 +9,7 @@ import { AppSurface, CardIconSlot, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Card, Field, Flex, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Field, Flex, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
@@ -55,19 +55,19 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
             <Card.Root fullWidth>
               <Card.Header>
-                <Card.Block>
+                <Block>
                   <CardIconSlot subject={subject}>
                     <Icon icon={icon} />
                   </CardIconSlot>
-                </Card.Block>
+                </Block>
                 <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
               </Card.Header>
               <Card.Body>
@@ -108,7 +108,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

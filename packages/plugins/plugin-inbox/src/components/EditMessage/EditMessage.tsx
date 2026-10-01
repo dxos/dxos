@@ -11,7 +11,7 @@ import {
   Column,
   Field,
   Icon,
-  IconButton,
+  Input,
   ScrollArea,
   composable,
   composableProps,
@@ -227,7 +227,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               <Column.Center classNames='flex items-center justify-between pt-form-gap'>
                 <h2 className='text-lg'>{title}</h2>
                 {onDelete && (
-                  <IconButton
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--trash--regular'
@@ -299,7 +299,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
               <Field.Root>
                 <Field.Label srOnly>{t('draft-subject.label')}</Field.Label>
-                <Field.Input
+                <Input
                   ref={subjectRef}
                   classNames='col-span-3'
                   placeholder={t('draft-subject.placeholder')}
@@ -329,7 +329,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
             <Column.Center classNames='pb-form-padding'>
               <Button variant='primary' onClick={handleSend} data-testid='send-email-button'>
-                <Icon icon='ph--paper-plane-right--regular' size={5} />
+                <Icon icon='ph--paper-plane-right--regular' size='lg' />
                 <span className='ms-2'>{t('send-email-button.label')}</span>
               </Button>
             </Column.Center>

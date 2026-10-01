@@ -13,7 +13,7 @@ import React, { Fragment, type PropsWithChildren, useEffect, useMemo, useRef, us
 import { createPortal } from 'react-dom';
 
 import { random } from '@dxos/random';
-import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
+import { Block, Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   type ObjectLinkProps,
@@ -75,34 +75,31 @@ const PreviewCard = () => {
     return null;
   }
   return (
-    <Popover.Portal>
-      <Popover.Content
-        onOpenAutoFocus={(event) => event.preventDefault()}
-        classNames={[
-          'origin-(--transform-origin)',
-          'data-[state=open]:animate-popover-in',
-          'data-[state=closed]:animate-popover-out',
-        ]}
-      >
-        <Popover.Viewport>
-          <Card.Root border={false} classNames='dx-card-popover'>
-            <Card.Header>
-              <Card.Block>
-                <Icon icon='ph--file-text--regular' />
-              </Card.Block>
-              <Card.Title>{target.label}</Card.Title>
-              <Popover.Close asChild>
-                <Card.ActionIconButton action='close' />
-              </Popover.Close>
-            </Card.Header>
-            <Card.Row>
-              <Card.Text variant='description'>{target.label}</Card.Text>
-            </Card.Row>
-          </Card.Root>
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
+    <Popover.Content
+      onOpenAutoFocus={(event) => event.preventDefault()}
+      classNames={[
+        'origin-(--transform-origin)',
+        'data-[state=open]:animate-popover-in',
+        'data-[state=closed]:animate-popover-out',
+      ]}
+    >
+      <Popover.Body>
+        <Card.Root border={false} classNames='dx-card-popover'>
+          <Card.Header>
+            <Block>
+              <Icon icon='ph--file-text--regular' />
+            </Block>
+            <Card.Title>{target.label}</Card.Title>
+            <Popover.CloseTrigger asChild>
+              <Card.Action system='close' />
+            </Popover.CloseTrigger>
+          </Card.Header>
+          <Card.Row>
+            <Card.Text variant='description'>{target.label}</Card.Text>
+          </Card.Row>
+        </Card.Root>
+      </Popover.Body>
+    </Popover.Content>
   );
 };
 
@@ -129,9 +126,9 @@ const PreviewBlockCard = ({ eid, label }: ObjectLinkProps) => {
   return (
     <Card.Root>
       <Card.Header>
-        <Card.Block>
+        <Block>
           <Icon icon='ph--arrow-square-up--regular' />
-        </Card.Block>
+        </Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
       {text && (

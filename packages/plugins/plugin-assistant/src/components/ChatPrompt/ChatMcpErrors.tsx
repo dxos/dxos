@@ -34,26 +34,24 @@ export const ChatMcpErrors = ({ classNames, processor }: ChatMcpErrorsProps) => 
 
   return (
     <Banner.Root valence='warning'>
-      <Banner.Content classNames={['m-1', classNames]}>
-        <Banner.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Banner.Title>
-        <Banner.Body>
-          <Listbox.Root>
-            <Listbox.Content aria-label={t('mcp-server-error.label')} classNames='gap-0.5 text-sm'>
-              {errors.map((error) => (
-                <Listbox.Item key={`${error.url}::${error.protocol}`} id={`${error.url}::${error.protocol}`}>
-                  {/* `min-w-0`: the item is a flex child, so without it `truncate` never shrinks below
+      <Banner.Title onClose={handleDismiss}>{t('mcp-server-error.label')}</Banner.Title>
+      <Banner.Body>
+        <Listbox.Root>
+          <Listbox.Content aria-label={t('mcp-server-error.label')} classNames='gap-0.5 text-sm'>
+            {errors.map((error) => (
+              <Listbox.Item key={`${error.url}::${error.protocol}`} id={`${error.url}::${error.protocol}`}>
+                {/* `min-w-0`: the item is a flex child, so without it `truncate` never shrinks below
                       the content's intrinsic width. */}
-                  <span className='truncate min-w-0'>
-                    <span className='font-mono'>{error.url}</span>
-                    {' — '}
-                    <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
-                  </span>
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
-          </Listbox.Root>
-        </Banner.Body>
-      </Banner.Content>
+                <span className='truncate min-w-0'>
+                  <span className='font-mono'>{error.url}</span>
+                  {' — '}
+                  <span>{error.unauthorized ? t('mcp-server-error.unauthorized') : error.message}</span>
+                </span>
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Root>
+      </Banner.Body>
     </Banner.Root>
   );
 };

@@ -7,7 +7,7 @@ import { type SyntaxHighlighterProps as NaturalSyntaxHighlighterProps } from 're
 import NativeSyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-async-light';
 import { coldarkDark as dark, coldarkCold as light } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
-import { ScrollArea, SystemIconButton, composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { ScrollArea, SystemButton, composable, composableProps, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis } from '@dxos/ui-types';
 
@@ -99,11 +99,11 @@ const sourceOf = (children: ReactNode, fallback = zeroWidthSpace): string =>
 
 const CopyOverlay = ({ source }: { source: string }) => (
   <div className='pointer-events-none absolute top-1 right-1 z-10 opacity-0 group-hover:opacity-100 focus-within:opacity-100'>
-    <SystemIconButton.Clipboard
+    <SystemButton.Clipboard
       iconOnly
       value={source}
       variant='ghost'
-      size={4}
+      iconSize='md'
       classNames='pointer-events-auto aspect-square rounded-sm'
     />
   </div>

@@ -8,7 +8,8 @@ import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Button, Field } from '@dxos/react-ui';
+import { Button, Input } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type FormPresentation } from '#types';
@@ -28,7 +29,7 @@ type Profile = Schema.Schema.Type<typeof ProfileSchema>;
 /** A hand-written control inside a bound row reads the binding rather than taking props. */
 const HueControl = () => {
   const { value, setValue } = useFormField<string>();
-  return <Field.Input placeholder='A hue' value={value ?? ''} onChange={(event) => setValue(event.target.value)} />;
+  return <Input placeholder='A hue' value={value ?? ''} onChange={(event) => setValue(event.target.value)} />;
 };
 
 type StoryArgs = {
@@ -65,7 +66,7 @@ const DefaultStory = ({ variant, presentation, readonly }: StoryArgs) => {
           </Form.FieldSet>
           <Form.FieldSet label='Settings'>
             <Form.Field label='Notifications' description='Tell me when something changes.' labelPlacement='beside'>
-              <Field.Switch checked={notifications} onCheckedChange={setNotifications} />
+              <Next.Switch checked={notifications} onCheckedChange={setNotifications} />
             </Form.Field>
             <Form.Field standalone label='Danger zone' description='There is no undo.'>
               <Button>Delete everything</Button>

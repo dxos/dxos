@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Accordion, Icon, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Accordion, Icon, SystemButton, useTranslation } from '@dxos/react-ui';
 import { TogglePanel, type TogglePanelRootProps } from '@dxos/react-ui-components';
 import { JsonHighlighter, SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type ContentBlock } from '@dxos/types';
@@ -238,7 +238,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
         className='flex items-center gap-2 p-1 text-description min-h-(--dx-control)'
         data-testid={`assistant.tool-${single.kind}`}
       >
-        <Icon icon={icon} size={4} classNames='shrink-0' />
+        <Icon icon={icon} size='md' classNames='shrink-0' />
         <span className='truncate'>{header}</span>
       </div>
     );
@@ -268,7 +268,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
         <span className='flex min-w-0 items-center gap-2 text-description tabular-nums'>
           {/* The same glyph column as the rows the panel opens onto, so the run reads as one list
               whether it is collapsed or not. */}
-          <Icon icon={icon} size={4} classNames='shrink-0' />
+          <Icon icon={icon} size='md' classNames='shrink-0' />
           <span className={mx('truncate', single?.error !== undefined && 'text-error-text')}>{header}</span>
           {failed > 0 && (
             <span className='shrink-0 text-error-text'>· {t('tool-failed.label', { count: failed })}</span>
@@ -315,7 +315,7 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
           const detail = hasDetail(entry);
           return (
             <Accordion.Item key={entry.id} item={entry} disabled={!detail}>
-              <Accordion.ItemHeader
+              <Accordion.ItemTrigger
                 hover={detail}
                 icon={entry.icon}
                 data-testid={`assistant.tool-${entry.kind}`}
@@ -325,11 +325,11 @@ const ToolCallList = ({ entries, onOpen }: ToolCallListProps) => {
                 <span className='flex items-center h-(--dx-control-sm) min-w-0'>
                   <span className='truncate'>{label(entry)}</span>
                 </span>
-              </Accordion.ItemHeader>
+              </Accordion.ItemTrigger>
               {detail && (
-                <Accordion.ItemBody classNames='px-2'>
+                <Accordion.ItemContent classNames='px-2'>
                   <ToolCallDetail entry={entry} />
-                </Accordion.ItemBody>
+                </Accordion.ItemContent>
               )}
             </Accordion.Item>
           );
@@ -367,9 +367,9 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
       <span className='text-sm text-description'>{label}</span>
       {/* `-me-1` cancels the button's own trailing inset so its glyph centres on the same column as
         the disclosure caret rather than sitting a few pixels inside it. */}
-      <SystemIconButton.Clipboard
+      <SystemButton.Clipboard
         variant='ghost'
-        density='sm'
+        size='sm'
         iconOnly
         classNames='-me-1'
         onCopy={() => JSON.stringify(data)}

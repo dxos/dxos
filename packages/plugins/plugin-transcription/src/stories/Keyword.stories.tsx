@@ -52,25 +52,23 @@ const DefaultStory = ({ keywords }: StoryArgs) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Mic docId={DOC_ID} />
         </Toolbar.Root>
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content>
+      <Panel.Body>
         <Listbox.Root value={matched}>
-          <Listbox.Viewport thin padding>
-            <Listbox.Content aria-label='Keywords'>
-              {keywords.map((keyword) => (
-                <Listbox.Item key={keyword} id={keyword}>
-                  <Listbox.ItemLabel>{keyword}</Listbox.ItemLabel>
-                </Listbox.Item>
-              ))}
-            </Listbox.Content>
-          </Listbox.Viewport>
+          <Listbox.Content aria-label='Keywords'>
+            {keywords.map((keyword) => (
+              <Listbox.Item key={keyword} id={keyword}>
+                <Listbox.ItemText>{keyword}</Listbox.ItemText>
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
         </Listbox.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

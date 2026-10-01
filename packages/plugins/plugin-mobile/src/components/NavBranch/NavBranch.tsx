@@ -12,7 +12,7 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { useConnections } from '@dxos/plugin-graph/hooks';
-import { Avatar, Banner, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Avatar, Block, Empty, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
@@ -116,7 +116,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
             {results.length === 0 ? (
               // A branch with no openable children is a legitimate state (an unpopulated section, or a
               // search that matched nothing); rendering nothing at all reads as a broken screen.
-              <Banner.Empty label={t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')} />
+              <Empty>{t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')}</Empty>
             ) : (
               <Mosaic.Stack
                 classNames='py-2 gap-1'
@@ -180,7 +180,7 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
         <Avatar.Root>
           {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
               `Card.Title` are what keep the icon, label, and caret on one row. */}
-          <Card.Block>
+          <Block>
             <Avatar.Content
               hue={data.properties.hue}
               icon={data.properties.icon}
@@ -189,13 +189,13 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
               size={8}
               fallback={name}
             />
-          </Card.Block>
+          </Block>
           <Avatar.Label asChild>
             <Card.Title>{name}</Card.Title>
           </Avatar.Label>
-          <Card.Block end>
+          <Block end>
             <Icon icon='ph--caret-right--regular' />
-          </Card.Block>
+          </Block>
         </Avatar.Root>
       </Card.Header>
     </Card.Root>

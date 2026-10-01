@@ -11,7 +11,7 @@ import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationVal
 import { SchemaEx } from '@dxos/effect';
 import { DXN, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { Button, Field, Icon, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Icon, Input, useTranslation } from '@dxos/react-ui';
 import { ParentLabelAnnotationId } from '@dxos/schema';
 
 import { translationKey } from '#translations';
@@ -187,7 +187,7 @@ export const RefField = (props: RefFieldProps) => {
           // and a `flex` here only competes with it.
           <div className='w-full'>
             <Field.Root key={item.id}>
-              <Field.Input value={item.label} readOnly classNames='w-full' />
+              <Input value={item.label} readOnly classNames='w-full' />
             </Field.Root>
           </div>
         ) : (
@@ -195,7 +195,7 @@ export const RefField = (props: RefFieldProps) => {
             <div className='grow overflow-hidden'>
               <span className='truncate text-description'>{placeholder || label || t('ref-field.placeholder')}</span>
             </div>
-            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
+            <Icon icon='ph--caret-down--bold' size='xs' classNames='mx-0.5' />
           </Button>
         )}
       </ObjectPicker.Trigger>

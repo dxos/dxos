@@ -12,7 +12,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Icon, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
@@ -320,7 +320,7 @@ export const PreviewComponent = ({
   if (unresolved) {
     return (
       <span className='dx-tag dx-tag--red inline-flex items-center gap-1 align-baseline'>
-        <Icon icon='ph--warning--regular' size={4} />
+        <Icon icon='ph--warning--regular' size='md' />
         {t('object-not-found.label')}
       </span>
     );
@@ -358,14 +358,14 @@ export const PreviewComponent = ({
 
           <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
             <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
-              {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
+              {objectIcon && <Icon icon={objectIcon.icon} size='md' />}
               {objectLabel}
             </span>
           </div>
 
           <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
-            <IconButton
-              density='sm'
+            <Button
+              size='sm'
               icon='ph--arrow-square-out--regular'
               iconOnly
               label='Open'
@@ -393,7 +393,7 @@ export const PreviewComponent = ({
           <div inert={hasAttention ? undefined : true}>
             <Card.Root classNames={hasAttention && 'border-focus-ring-subtle'}>
               <Card.Header>
-                <Card.Block />
+                <Block />
                 <Card.Title>{objectLabel}</Card.Title>
               </Card.Header>
               <Card.Body>

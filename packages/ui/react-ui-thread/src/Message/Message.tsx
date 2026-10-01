@@ -17,14 +17,7 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import {
-  Avatar,
-  IconButton,
-  type ThemedClassName,
-  useOnTransition,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Avatar, Button, type ThemedClassName, useOnTransition, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
@@ -407,7 +400,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     showEdit || showAccept || showAcceptChange || showRejectChange || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <IconButton
+          <Button
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -418,7 +411,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAccept && (
-          <IconButton
+          <Button
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -429,7 +422,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAcceptChange && (
-          <IconButton
+          <Button
             data-testid='thread.message.accept-change'
             variant='ghost'
             icon='ph--check--regular'
@@ -440,7 +433,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showRejectChange && (
-          <IconButton
+          <Button
             data-testid='thread.message.reject-change'
             variant='ghost'
             icon='ph--x--regular'
@@ -451,7 +444,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showDelete && (
-          <IconButton
+          <Button
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'
@@ -541,7 +534,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
     showEdit || showAccept || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <IconButton
+          <Button
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -552,7 +545,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showAccept && (
-          <IconButton
+          <Button
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -563,7 +556,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showDelete && (
-          <IconButton
+          <Button
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'

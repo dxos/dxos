@@ -137,12 +137,12 @@ export const OutlineArticle = ({
   if (task) {
     return (
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
           <TaskForm task={task} classNames='dx-document' />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   }
@@ -162,13 +162,13 @@ export const OutlineArticle = ({
         >
           <Panel.Root role={role}>
             <Show when={toolbar}>
-              <Panel.Toolbar asChild>
+              <Panel.Header>
                 <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
-              </Panel.Toolbar>
+              </Panel.Header>
             </Show>
-            <Panel.Content asChild>
+            <Panel.Body asChild>
               <Outline.Content classNames='dx-document' />
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         </Outline.Root>
       )}

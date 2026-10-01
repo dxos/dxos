@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Banner, Icon, useTranslation } from '@dxos/react-ui';
+import { Empty, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -54,7 +54,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
   const summary = useCheckSummary(runs);
 
   if (!sorted || sorted.length === 0) {
-    return <Banner.Empty label={t(sorted ? 'no-checks.message' : 'checks-loading.message')} />;
+    return <Empty>{t(sorted ? 'no-checks.message' : 'checks-loading.message')}</Empty>;
   }
 
   return (
@@ -81,11 +81,9 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
               data-testid='pull-request.check'
               onClick={url ? () => window.open(url, '_blank', 'noopener,noreferrer') : undefined}
             >
-              <Listbox.ItemContent
-                icon={<Icon icon={icon} size={5} classNames={classNames} />}
-                title={run.name}
-                description={[detail, outcome].filter(Boolean).join(' · ')}
-              />
+              <Listbox.ItemIcon icon={icon} size='lg' classNames={classNames} />
+              <Listbox.ItemText>{run.name}</Listbox.ItemText>
+              <Listbox.ItemDescription>{[detail, outcome].filter(Boolean).join(' · ')}</Listbox.ItemDescription>
             </Listbox.Item>
           );
         })}

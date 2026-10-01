@@ -151,29 +151,26 @@ export const FullPresence = (props: MemberPresenceProps) => {
               />
             </Avatar.Root>
           </Popover.Trigger>
-          <Popover.Portal>
-            <Popover.Content side='bottom'>
-              <Popover.Arrow />
-              <Popover.Viewport classNames='max-h-56'>
-                <Listbox.Root>
-                  <Listbox.Content aria-label='members'>
-                    {members.map((member) => (
-                      <Listbox.Item
-                        key={member.identityKey}
-                        id={member.identityKey ?? ''}
-                        classNames='flex gap-2 items-center cursor-pointer mb-2'
-                        onClick={() => onMemberClick?.(member)}
-                        data-testid='identity-list-item'
-                      >
-                        {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
-                        <PresenceAvatar member={member} size={size} showName match={member.currentlyAttended} />
-                      </Listbox.Item>
-                    ))}
-                  </Listbox.Content>
-                </Listbox.Root>
-              </Popover.Viewport>
-            </Popover.Content>
-          </Popover.Portal>
+          <Popover.Content side='bottom'>
+            <Popover.Body classNames='max-h-56'>
+              <Listbox.Root>
+                <Listbox.Content aria-label='members'>
+                  {members.map((member) => (
+                    <Listbox.Item
+                      key={member.identityKey}
+                      id={member.identityKey ?? ''}
+                      classNames='flex gap-2 items-center cursor-pointer mb-2'
+                      onClick={() => onMemberClick?.(member)}
+                      data-testid='identity-list-item'
+                    >
+                      {/* TODO(Zan): Match always true now we're showing 'members viewing current object'. */}
+                      <PresenceAvatar member={member} size={size} showName match={member.currentlyAttended} />
+                    </Listbox.Item>
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
+            </Popover.Body>
+          </Popover.Content>
         </Popover.Root>
       )}
     </div>

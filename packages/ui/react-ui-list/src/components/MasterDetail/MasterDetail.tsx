@@ -6,17 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
-import {
-  Banner,
-  Column,
-  Icon,
-  IconBlock,
-  IconButton,
-  Panel,
-  ScrollArea,
-  type ThemedClassName,
-  Tooltip,
-} from '@dxos/react-ui';
+import { Block, Button, Column, Empty, Icon, Panel, ScrollArea, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu';
 import { getStyles, mx } from '@dxos/ui-theme';
 
@@ -82,7 +72,7 @@ export const MasterDetail = <T extends MasterDetailRecord>({
   orientation = 'vertical',
   detail,
 }: MasterDetailProps<T>) => {
-  const list = (items.length === 0 && <Banner.Empty label={emptyLabel} />) || (
+  const list = (items.length === 0 && <Empty>{emptyLabel}</Empty>) || (
     // The list carries a selection, so a reader arrows between entries rather than their menus.
     <OrderedList.Root<T> items={items} navigationMode='listbox'>
       {({ items }) => (
@@ -115,14 +105,14 @@ export const MasterDetail = <T extends MasterDetailRecord>({
     return (
       <div className={mx('flex dx-grow gap-2 overflow-hidden', classNames)}>
         <Panel.Root classNames='shrink-0 w-max max-w-xs'>
-          <Panel.Content asChild>
+          <Panel.Body asChild>
             <ScrollArea.Root orientation='vertical'>
               <ScrollArea.Viewport>{list}</ScrollArea.Viewport>
             </ScrollArea.Root>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
         <Panel.Root classNames='flex-1 min-w-0'>
-          <Panel.Content classNames='flex flex-col dx-grow'>{detail}</Panel.Content>
+          <Panel.Body classNames='flex flex-col dx-grow'>{detail}</Panel.Body>
         </Panel.Root>
       </div>
     );
@@ -176,24 +166,22 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
       onClick={() => onSelect?.(selected ? undefined : item.id)}
     >
       {icon && (
-        <IconBlock>
+        <Block>
           <Icon icon={icon.icon} classNames={icon.hue ? getStyles(icon.hue).text : undefined} />
-        </IconBlock>
+        </Block>
       )}
       <span className='grow truncate'>{label}</span>
       {adornment && (
-        <Tooltip.Provider>
-          <Tooltip.Trigger asChild side='bottom' content={adornment.label}>
-            <Icon icon={adornment.icon} />
-          </Tooltip.Trigger>
-        </Tooltip.Provider>
+        <Tooltip.Trigger asChild side='bottom' content={adornment.label}>
+          <Icon icon={adornment.icon} />
+        </Tooltip.Trigger>
       )}
       {getMenu && (
         <ActionMenu {...menu}>
-          <IconButton
+          <Button
             iconOnly
             variant='ghost'
-            density='sm'
+            size='sm'
             icon='ph--dots-three-vertical--regular'
             label='Actions'
             onClick={(event) => event.stopPropagation()}

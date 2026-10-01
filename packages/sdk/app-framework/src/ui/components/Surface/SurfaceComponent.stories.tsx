@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Field, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Field, Panel, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import { Next } from '@dxos/react-ui/next';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ColorStyles, getHashStyles, mx } from '@dxos/ui-theme';
 
@@ -118,19 +119,19 @@ const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.Button onClick={handleAdd}>Add</Toolbar.Button>
-          <Toolbar.Button onClick={handleSelect}>Pick</Toolbar.Button>
-          <Toolbar.Button onClick={handleError}>Error</Toolbar.Button>
+          <Button onClick={handleAdd}>Add</Button>
+          <Button onClick={handleSelect}>Pick</Button>
+          <Button onClick={handleError}>Error</Button>
           <Toolbar.Separator />
           <Field.Root>
             <Field.Label classNames='pr-1'>Debug</Field.Label>
-            <Field.Switch checked={debug} onCheckedChange={handleToggleDebug} />
+            <Next.Switch checked={debug} onCheckedChange={handleToggleDebug} />
           </Field.Root>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-cols-2 h-full gap-4 overflow-hidden'>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-cols-2 h-full gap-4 overflow-hidden'>
         <SurfaceComponent
           key={debug ? 'debug' : 'prod'}
           type={ItemRole}
@@ -142,13 +143,13 @@ const DefaultStory = ({ debug: debugProp }: StoryArgs) => {
             <Listbox.Content aria-label='Surfaces'>
               {surfaces.map((surface) => (
                 <Listbox.Item key={surface.id} id={surface.id}>
-                  <Listbox.ItemLabel classNames='flex items-center'>{surface.id}</Listbox.ItemLabel>
+                  <Listbox.ItemText classNames='flex items-center'>{surface.id}</Listbox.ItemText>
                 </Listbox.Item>
               ))}
             </Listbox.Content>
           </Listbox.Root>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

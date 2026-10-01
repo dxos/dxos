@@ -8,7 +8,7 @@ import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { type EdgeStatus, EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
-import { Flex, Grid, Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Grid, Icon, Popover, useTranslation } from '@dxos/react-ui';
 import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
@@ -58,15 +58,12 @@ export const SyncStatusIndicator = ({
       <Popover.Trigger asChild>
         <StatusBar.Item>
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
-          <IconButton variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
+          <Button variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
         </StatusBar.Item>
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content side='left'>
-          <EdgeConnectionPopover status={edgeStatus} />
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content side='left'>
+        <EdgeConnectionPopover status={edgeStatus} />
+      </Popover.Content>
     </Popover.Root>
   );
 };

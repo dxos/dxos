@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Card, Icon } from '@dxos/react-ui';
+import { Block, Card, Icon } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type GalleryImageProps = {
@@ -37,9 +37,9 @@ export const GalleryImage = ({ src, contentType, alt, classNames }: GalleryImage
       </div>
       {alt ? (
         <Card.Header>
-          <Card.Block>
-            <Icon icon={isVideo ? 'ph--video--regular' : 'ph--image--regular'} size={5} />
-          </Card.Block>
+          <Block>
+            <Icon icon={isVideo ? 'ph--video--regular' : 'ph--image--regular'} size='lg' />
+          </Block>
           <Card.Title classNames='text-description'>{alt}</Card.Title>
         </Card.Header>
       ) : null}

@@ -196,7 +196,7 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
       return (
         <Form.Field standalone label={label} description={description}>
           {typeof percent === 'number' ? (
-            <Progress progress={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
+            <Progress value={percent / 100} aria-label={t('usage-percent-used.label', { percent })} />
           ) : (
             t('usage-unlimited.label')
           )}
@@ -213,10 +213,8 @@ export const UsageView = ({ state, data, lastUpdated, onRefresh }: UsageViewProp
           <Form.FieldSet label={t('usage-section.title')} description={t('usage-section.description')}>
             {message ? (
               <Banner.Root valence={message.valence}>
-                <Banner.Content>
-                  <Banner.Title icon={message.icon}>{t(message.title)}</Banner.Title>
-                  <Banner.Body>{t(message.description)}</Banner.Body>
-                </Banner.Content>
+                <Banner.Title icon={message.icon}>{t(message.title)}</Banner.Title>
+                <Banner.Body>{t(message.description)}</Banner.Body>
               </Banner.Root>
             ) : (
               <Form.Fields fieldProvider={meterFieldProvider} />

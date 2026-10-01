@@ -20,9 +20,9 @@ import React, {
 
 import { Obj } from '@dxos/echo';
 import {
+  Button,
   type ComposableProps,
   Icon,
-  IconButton,
   ScrollArea,
   type ThemedClassName,
   composable,
@@ -182,10 +182,10 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
         ref={forwardedRef}
       >
         <div className='flex items-center justify-center'>
-          <IconButton
+          <Button
             iconOnly
             variant='ghost'
-            density='sm'
+            size='sm'
             icon='ph--caret-double-right--regular'
             label={t('select-thread.label')}
             classNames='text-description'

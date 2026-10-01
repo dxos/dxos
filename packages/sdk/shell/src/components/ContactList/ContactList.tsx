@@ -8,7 +8,7 @@ import { generateName } from '@dxos/display-name';
 import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { type Contact } from '@dxos/react-client/halo';
-import { Avatar, SystemIconButton, Tag, ThemedClassName, Tooltip, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, SystemButton, Tag, ThemedClassName, Tooltip, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { getHashStyles } from '@dxos/ui-theme';
 import { keyToFallback } from '@dxos/util';
@@ -91,13 +91,12 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
     <Listbox.Item classNames='p-2 rounded-sm' id={identityKey.toHex()} data-testid='contact-list.item'>
       <Listbox.ItemContent
         icon={
-          <Avatar.Root labelId={labelId}>
-            <Avatar.Content
-              size={8}
-              hue={profileString(contact, 'hue') ?? fallback.hue}
-              fallback={profileString(contact, 'emoji') ?? fallback.emoji}
-            />
-          </Avatar.Root>
+          <Avatar.Root
+            aria-labelledby={labelId}
+            size={8}
+            hue={profileString(contact, 'hue') ?? fallback.hue}
+            fallback={profileString(contact, 'emoji') ?? fallback.emoji}
+          />
         }
         title={
           <div className='flex items-center justify-between gap-1'>
@@ -108,9 +107,9 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
               <Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
                 <span className='font-mono truncate max-w-48'>{contact.did ?? identityKey.truncate()}</span>
               </Tooltip.Trigger>
-              <SystemIconButton.Clipboard
+              <SystemButton.Clipboard
                 iconOnly
-                density='sm'
+                size='sm'
                 variant='ghost'
                 value={contact.did ?? identityKey.toHex()}
                 label={t(contact.did ? 'copy-did.label' : 'copy-key.label')}

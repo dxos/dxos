@@ -174,20 +174,20 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
       <div {...composableProps(props, { classNames: ['h-full'] })} ref={forwardedRef}>
         <Panel.Root role={role}>
           {showSpaceSelector && (
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <Toolbar.Root classNames='border-b border-subdued-separator'>
                 <DataSpaceSelector />
               </Toolbar.Root>
-            </Panel.Toolbar>
+            </Panel.Header>
           )}
-          <Panel.Content>
+          <Panel.Body>
             <div className='relative dx-grow'>
               <div className={mx('dx-fullscreen overflow-hidden', gridLayout)}>
                 <DynamicTable properties={properties} rows={rows} features={features} onRowClick={handleRowClick} />
                 {selectedInvocation && <Selected span={selectedInvocation} />}
               </div>
             </div>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </div>
     );
@@ -215,41 +215,41 @@ const Selected: FC<{ span: InvocationSpan }> = ({ span }) => {
   return (
     <Tabs.Root asChild orientation='horizontal' value={activeTab} onValueChange={setActiveTab}>
       <div className='grid grid-cols-1 grid-rows-[min-content_1fr] overflow-hidden border-separator [&>[role="tabpanel"]]:min-h-0 [&>[role="tabpanel"][data-state="active"]]:grid border-t border-separator'>
-        <Tabs.Tablist classNames='border-b border-separator'>
-          <Tabs.Button value='input'>Input</Tabs.Button>
-          {isLogQueue && <Tabs.Button value='logs'>Logs</Tabs.Button>}
-          {isLogQueue && <Tabs.Button value='errors'>Error logs</Tabs.Button>}
-          {isLogQueue && <Tabs.Button value='raw'>Raw</Tabs.Button>}
-          {span.error && <Tabs.Button value='failure'>Failure</Tabs.Button>}
-          {contents === 'execution-graph' && <Tabs.Button value='execution-graph'>Execution Graph</Tabs.Button>}
-        </Tabs.Tablist>
-        <Tabs.Panel value='input' classNames='w-full overflow-auto'>
+        <Tabs.List classNames='border-b border-separator'>
+          <Tabs.Trigger value='input'>Input</Tabs.Trigger>
+          {isLogQueue && <Tabs.Trigger value='logs'>Logs</Tabs.Trigger>}
+          {isLogQueue && <Tabs.Trigger value='errors'>Error logs</Tabs.Trigger>}
+          {isLogQueue && <Tabs.Trigger value='raw'>Raw</Tabs.Trigger>}
+          {span.error && <Tabs.Trigger value='failure'>Failure</Tabs.Trigger>}
+          {contents === 'execution-graph' && <Tabs.Trigger value='execution-graph'>Execution Graph</Tabs.Trigger>}
+        </Tabs.List>
+        <Tabs.Content value='input' classNames='w-full overflow-auto'>
           <JsonHighlighter data={span.input} />
-        </Tabs.Panel>
+        </Tabs.Content>
         {isLogQueue && (
-          <Tabs.Panel value='logs'>
+          <Tabs.Content value='logs'>
             <LogPanel objects={objects} />
-          </Tabs.Panel>
+          </Tabs.Content>
         )}
         {isLogQueue && (
-          <Tabs.Panel value='errors'>
+          <Tabs.Content value='errors'>
             <ExceptionPanel objects={objects} />
-          </Tabs.Panel>
+          </Tabs.Content>
         )}
         {isLogQueue && (
-          <Tabs.Panel value='raw' classNames='w-full overflow-auto'>
+          <Tabs.Content value='raw' classNames='w-full overflow-auto'>
             <RawDataPanel classNames='text-xs' span={span} objects={objects} />
-          </Tabs.Panel>
+          </Tabs.Content>
         )}
         {span.error && (
-          <Tabs.Panel value='failure'>
+          <Tabs.Content value='failure'>
             <SpanErrorPanel exception={span.error} />
-          </Tabs.Panel>
+          </Tabs.Content>
         )}
         {contents === 'execution-graph' && (
-          <Tabs.Panel value='execution-graph'>
+          <Tabs.Content value='execution-graph'>
             <ExecutionGraphPanel objects={objects} />
-          </Tabs.Panel>
+          </Tabs.Content>
         )}
       </div>
     </Tabs.Root>

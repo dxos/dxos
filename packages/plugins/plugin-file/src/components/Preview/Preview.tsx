@@ -5,7 +5,17 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useHotkeys } from '@dxos/react-focus';
-import { Field, Icon, MediaPlayer, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Field,
+  Icon,
+  Input,
+  MediaPlayer,
+  Toolbar,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -105,13 +115,13 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
       {children}
       {paged && (
         <>
-          <Toolbar.IconButton
+          <Button
             iconOnly
             icon={paged.fit === 'width' ? 'ph--arrows-out-line-horizontal--regular' : 'ph--corners-out--regular'}
             label={paged.fit === 'width' ? t('fit-page.label') : t('fit-width.label')}
             onClick={() => paged.setFit(paged.fit === 'width' ? 'page' : 'width')}
           />
-          <Toolbar.IconButton
+          <Button
             compact
             iconOnly
             icon='ph--caret-line-left--regular'
@@ -120,7 +130,7 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
             disabled={paged.currentPage <= 1}
             onClick={() => paged.api?.goToPage(1, 'instant')}
           />
-          <Toolbar.IconButton
+          <Button
             iconOnly
             icon='ph--caret-left--regular'
             label={t('previous-page.label')}
@@ -139,14 +149,14 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
               {t('page-of.label', { page: paged.currentPage, count: paged.pageCount })}
             </span>
           </Toolbar.Text>
-          <Toolbar.IconButton
+          <Button
             iconOnly
             icon='ph--caret-right--regular'
             label={t('next-page.label')}
             disabled={paged.currentPage >= paged.pageCount}
             onClick={() => paged.api?.stepPage(1)}
           />
-          <Toolbar.IconButton
+          <Button
             compact
             iconOnly
             icon='ph--caret-line-right--regular'
@@ -157,7 +167,7 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
           />
           <Toolbar.Separator />
           <Field.Root>
-            <Field.Input
+            <Input
               ref={searchRef}
               placeholder={t('search.placeholder')}
               value={query}
@@ -165,7 +175,7 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
               spellCheck={false}
               autoCorrect='off'
               autoCapitalize='off'
-              end={<Icon icon='ph--magnifying-glass--regular' size={4} />}
+              end={<Icon icon='ph--magnifying-glass--regular' size='md' />}
               onChange={(event) => handleSearch(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
@@ -181,14 +191,14 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
                   ? t('no-matches.label')
                   : t('match-of.label', { match: paged.activeMatch, count: paged.matches })}
               </Toolbar.Text>
-              <Toolbar.IconButton
+              <Button
                 iconOnly
                 icon='ph--caret-up--regular'
                 label={t('previous-match.label')}
                 disabled={paged.matches === 0}
                 onClick={() => paged.api?.goToMatch(paged.activeMatch - 1)}
               />
-              <Toolbar.IconButton
+              <Button
                 iconOnly
                 icon='ph--caret-down--regular'
                 label={t('next-match.label')}
@@ -203,7 +213,7 @@ const PreviewToolbar = composable<HTMLDivElement>(({ children, ...props }, forwa
       {/* An anchor rather than a button: `download` is what makes the browser save instead of
           navigate, and it works for the `data:`/`blob:`/presigned URLs every backend produces. */}
       <Toolbar.Link href={url} download={name ?? true} aria-label={t('download.label')} title={t('download.label')}>
-        <Icon icon='ph--download-simple--regular' size={5} />
+        <Icon icon='ph--download-simple--regular' size='lg' />
       </Toolbar.Link>
     </Toolbar.Root>
   );
@@ -274,7 +284,7 @@ const PreviewContent = composable<HTMLDivElement>((props, forwardedRef) => {
   return (
     <div {...composableProps(props, { classNames: 'grid place-items-center dx-fill p-8' })} ref={forwardedRef}>
       <div className='flex flex-col items-center gap-2 text-center'>
-        <Icon icon='ph--file--regular' size={8} classNames='text-subdued' />
+        <Icon icon='ph--file--regular' size='xl' classNames='text-subdued' />
         {name && <span className='text-sm'>{name}</span>}
         <span className='text-xs text-subdued'>
           {size === undefined ? type : t('file-details.label', { type, size: formatBytes(size) })}

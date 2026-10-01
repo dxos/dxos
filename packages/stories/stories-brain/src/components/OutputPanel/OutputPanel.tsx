@@ -5,7 +5,7 @@
 import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
-import { Banner, Button, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Button, Empty, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 
 import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList/index.ts';
 import { FactPanel } from '../FactPanel/index.ts';
@@ -38,7 +38,7 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Button variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
             Facts
@@ -59,13 +59,13 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
             </Button>
           ))}
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         {active === 'facts' && <FactPanel facts={facts} classNames='h-full' />}
         {active === 'objects' && <EchoObjectsList objects={objects} classNames='h-full' />}
         {active === 'stats' && <StatsView stats={stats} />}
         {details.map((detail) => (active === detail.id ? <Fragment key={detail.id}>{detail.content}</Fragment> : null))}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -73,7 +73,7 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
 const StatsView = ({ stats }: { stats: StatItem[] }) => (
   <ScrollArea.Root padding classNames='h-full'>
     <ScrollArea.Viewport classNames='flex flex-col gap-1 py-1'>
-      {stats.length === 0 && <Banner.Empty label='No stats.' />}
+      {stats.length === 0 && <Empty>No stats.</Empty>}
       {stats.map((stat) => (
         <div
           key={stat.label}

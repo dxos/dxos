@@ -206,7 +206,7 @@ const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
     return (
       <Picker.Input
         {...props}
-        density={density}
+        size={density}
         elevation={elevation}
         variant={variant}
         escapeBehavior={escapeBehavior}

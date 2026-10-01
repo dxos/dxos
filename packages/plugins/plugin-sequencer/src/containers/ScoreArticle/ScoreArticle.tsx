@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, Field, Flex, Icon, Panel } from '@dxos/react-ui';
+import { Button, Field, Flex, Icon, NumberInput, Panel } from '@dxos/react-ui';
 import { Oscilloscope, OscilloscopeMode } from '@dxos/react-ui-audio';
 import { type ToggleMode } from '@dxos/react-ui-canvas';
 import { ActionToolbar, MenuBuilder, type ToolbarMenuActionGroupProperties, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -438,12 +438,11 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId}>
           <Field.Root>
             <Field.Label classNames='text-xs mr-1'>BPM</Field.Label>
-            <Field.Input
-              type='number'
+            <NumberInput
               min={1}
               value={score.tempo}
               onChange={(event) => handleTempoChange(Number(event.target.value))}
@@ -451,9 +450,9 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
             />
           </Field.Root>
         </ActionToolbar>
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content>
+      <Panel.Body>
         <Flex classNames='h-full min-h-0'>
           <div className='h-full grid grid-rows-[1fr_auto] w-48 shrink-0 border-r border-separator'>
             <TrackList
@@ -507,7 +506,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
             ) : (
               <div className={mx('dx-fullscreen flex items-center justify-center text-neutral-500 text-sm')}>
                 <Flex column gap='sm' align='center'>
-                  <Icon icon='ph--music-notes--regular' size={6} />
+                  <Icon icon='ph--music-notes--regular' size='xl' />
                   <span>Add a track to begin.</span>
                   <Button onClick={handleAddTrack}>Add track</Button>
                 </Flex>
@@ -515,7 +514,7 @@ export const ScoreArticle = ({ role, subject, attendableId }: ScoreArticleProps)
             )}
           </div>
         </Flex>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

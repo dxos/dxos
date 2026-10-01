@@ -179,13 +179,13 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <Searchbar placeholder='Filter...' onChange={setFilter} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <div className='h-full grid grid-cols-[4fr_3fr] overflow-hidden'>
           <div className='flex flex-col w-full overflow-hidden'>
             <DynamicTable
@@ -226,7 +226,7 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
             </div>
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

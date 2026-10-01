@@ -6,7 +6,7 @@ import React, { useCallback, useState } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
 import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
-import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -65,7 +65,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
 
           <Form.FieldSet label={t('test.title')}>
             <Flex gap='sm'>
-              <IconButton
+              <Button
                 disabled={test.kind === 'pending'}
                 icon='ph--plug--regular'
                 label={t('test.button.label')}

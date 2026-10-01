@@ -21,12 +21,14 @@ import {
   type DxAnchorActivate,
   Field,
   Icon,
+  Input,
   Popover,
   ScrollArea,
   toLocalizedString,
   useDynamicRef,
   useThemeContext,
   useTranslation,
+  virtualAnchor,
 } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
@@ -182,55 +184,50 @@ export const EditorMenuProvider = ({
   );
 
   return (
-    <Popover.Root modal={false} open={open} onOpenChange={setOpen}>
-      <Popover.VirtualTrigger virtualRef={triggerRef} />
-
+    <Popover.Root modal={false} open={open} onOpenChange={setOpen} positioning={virtualAnchor(triggerRef)}>
       {/* Menu. */}
-      <Popover.Portal>
-        <Popover.Content
-          align='start'
-          classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']}
-          style={{
-            // The search input shares the box, so `numItems` keeps meaning "items visible".
-            maxBlockSize: 36 * numItems + 10 + (search ? 36 : 0),
-          }}
-          // Focus stays in the editor; the menu machine still routes Escape here.
-          onEscapeKeyDown={() => {
-            const currentView = getViewRef.current?.();
-            if (currentView) {
-              onCancel?.({ view: currentView });
-            }
-          }}
-          // In search mode the query is typed into the popover's own input, so it must take focus.
-          onOpenAutoFocus={search ? undefined : (event) => event.preventDefault()}
-        >
-          {search && (
-            <Field.Root>
-              <Field.Input
-                ref={searchInputRef}
-                density='sm'
-                variant='subdued'
-                classNames='shrink-0 mb-1'
-                value={query}
-                placeholder={searchPlaceholder}
-                // Placeholder text is not a persistent accessible name, and it is optional — fall
-                // back to the generic label so the input is never anonymous.
-                aria-label={searchPlaceholder ?? t('search.label')}
-                onChange={(event) => onQueryChange?.(event.target.value)}
-                onKeyDown={handleSearchKeyDown}
-              />
-            </Field.Root>
-          )}
-          <Popover.Viewport asChild classNames='dx-expand'>
-            <ScrollArea.Root thin>
-              <ScrollArea.Viewport>
-                <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content
+        align='start'
+        classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']}
+        style={{
+          // The search input shares the box, so `numItems` keeps meaning "items visible".
+          maxBlockSize: 36 * numItems + 10 + (search ? 36 : 0),
+        }}
+        // Focus stays in the editor; the menu machine still routes Escape here.
+        onEscapeKeyDown={() => {
+          const currentView = getViewRef.current?.();
+          if (currentView) {
+            onCancel?.({ view: currentView });
+          }
+        }}
+        // In search mode the query is typed into the popover's own input, so it must take focus.
+        onOpenAutoFocus={search ? undefined : (event) => event.preventDefault()}
+      >
+        {search && (
+          <Field.Root>
+            <Input
+              ref={searchInputRef}
+              size='sm'
+              variant='subdued'
+              classNames='shrink-0 mb-1'
+              value={query}
+              placeholder={searchPlaceholder}
+              // Placeholder text is not a persistent accessible name, and it is optional — fall
+              // back to the generic label so the input is never anonymous.
+              aria-label={searchPlaceholder ?? t('search.label')}
+              onChange={(event) => onQueryChange?.(event.target.value)}
+              onKeyDown={handleSearchKeyDown}
+            />
+          </Field.Root>
+        )}
+        <Popover.Body asChild classNames='dx-expand'>
+          <ScrollArea.Root thin>
+            <ScrollArea.Viewport>
+              <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Popover.Body>
+      </Popover.Content>
 
       {/* Content */}
       <div className='contents' ref={setRoot}>

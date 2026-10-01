@@ -23,6 +23,7 @@ import {
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import { Next } from '@dxos/react-ui/next';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -185,12 +186,12 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 {failure && <PluginFailureBadge failure={failure} size={5} />}
               </div>
               {onInstall ? (
-                <Button density='md' variant='primary' disabled={installing} onClick={onInstall}>
+                <Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
                   {installing ? t('installing.label') : t('install.label')}
                 </Button>
               ) : (
                 <Field.Root>
-                  <Field.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
+                  <Next.Switch classNames='self-center' checked={enabled} onCheckedChange={onEnabledChange} />
                 </Field.Root>
               )}
               <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
@@ -220,14 +221,12 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Heading title={t('preview.label')} />
                 <Section.Body>
                   <Carousel.Root count={resolvedScreenshots.length}>
-                    <Carousel.Content classNames='contents'>
-                      <Carousel.Viewport>
-                        {resolvedScreenshots.map((src, index) => (
-                          <Carousel.Slide key={src} index={index} src={src} alt={name} />
-                        ))}
-                      </Carousel.Viewport>
-                      <Carousel.Indicators />
-                    </Carousel.Content>
+                    <Carousel.ItemGroup>
+                      {resolvedScreenshots.map((src, index) => (
+                        <Carousel.Item key={src} index={index} src={src} alt={name} />
+                      ))}
+                    </Carousel.ItemGroup>
+                    <Carousel.IndicatorGroup />
                   </Carousel.Root>
                 </Section.Body>
               </Section.Root>
@@ -240,14 +239,14 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   {homePage && (
                     <Link href={homePage} classNames='text-sm text-description'>
                       {t('home-page.label')}
-                      <Icon icon='ph--arrow-square-out--regular' size={3} classNames='ml-1 dx-icon-inline' />
+                      <Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
                     </Link>
                   )}
 
                   {source && (
                     <Link href={source} classNames='text-sm text-description'>
                       {t('source.label')}
-                      <Icon icon='ph--arrow-square-out--regular' size={3} classNames='ml-1 dx-icon-inline' />
+                      <Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
                     </Link>
                   )}
 
@@ -298,23 +297,19 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 <Section.Body>
                   <div className='flex gap-2 items-center'>
                     <Select.Root value={selectedVersionTag} onValueChange={onVersionChange}>
-                      <Select.TriggerButton classNames='min-w-32' />
-                      <Select.Portal>
-                        <Select.Content>
-                          <Select.Viewport>
-                            {versions.map((versionEntry) => (
-                              <Select.Option key={versionEntry.version} value={versionEntry.version}>
-                                {versionEntry.version}
-                                {installedVersionTag === versionEntry.version ? ` (${t('installed.label')})` : ''}
-                              </Select.Option>
-                            ))}
-                          </Select.Viewport>
-                        </Select.Content>
-                      </Select.Portal>
+                      <Select.Trigger classNames='min-w-32' />
+                      <Select.Content>
+                        {versions.map((versionEntry) => (
+                          <Select.Item key={versionEntry.version} value={versionEntry.version}>
+                            {versionEntry.version}
+                            {installedVersionTag === versionEntry.version ? ` (${t('installed.label')})` : ''}
+                          </Select.Item>
+                        ))}
+                      </Select.Content>
                     </Select.Root>
                     {onInstallVersion && (
                       <Button
-                        density='md'
+                        size='md'
                         variant='primary'
                         disabled={installing || selectedVersionTag === installedVersionTag}
                         onClick={onInstallVersion}

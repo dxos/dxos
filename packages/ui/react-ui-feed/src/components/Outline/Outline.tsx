@@ -367,15 +367,14 @@ export const Outline = ({
           avoidCollisions={false}
           onOpenAutoFocus={(event) => event.preventDefault()}
         >
-          <Popover.Viewport>
+          <Popover.Body>
             <div className='px-2 py-1 max-w-[24rem] w-[24rem]'>
               <p className='truncate font-medium'>{hoveredMarker.title}</p>
               {hoveredMarker.description && (
                 <p className='mt-1 text-sm text-description line-clamp-3'>{hoveredMarker.description}</p>
               )}
             </div>
-          </Popover.Viewport>
-          <Popover.Arrow />
+          </Popover.Body>
         </Popover.Content>
       )}
     </Popover.Root>

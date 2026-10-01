@@ -197,10 +197,10 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   return (
     <>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...menuActions} onAction={runAction} attendableId={attendableId} classNames='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
           <div className='grid h-full grid-rows-[auto_1fr] gap-3 overflow-hidden'>
             <ObjectForm object={subject} type={Blog.Publication} showTags={false} />
             <div className='dx-expand'>
@@ -215,28 +215,26 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
               )}
             </div>
           </div>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
 
       <AlertDialog.Root open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
-        <AlertDialog.Overlay>
-          <AlertDialog.Content>
-            <AlertDialog.Body>
-              <AlertDialog.Title>{t('delete-publication-dialog.title')}</AlertDialog.Title>
-              <AlertDialog.Description>{t('delete-publication-dialog.description')}</AlertDialog.Description>
-            </AlertDialog.Body>
-            <AlertDialog.ActionBar>
-              <AlertDialog.Cancel asChild>
-                <Button>{t('cancel.label')}</Button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <Button variant='destructive' onClick={handleDelete}>
-                  {t('delete-publication-dialog.confirm.label')}
-                </Button>
-              </AlertDialog.Action>
-            </AlertDialog.ActionBar>
-          </AlertDialog.Content>
-        </AlertDialog.Overlay>
+        <AlertDialog.Content>
+          <AlertDialog.Body>
+            <AlertDialog.Title>{t('delete-publication-dialog.title')}</AlertDialog.Title>
+            <AlertDialog.Description>{t('delete-publication-dialog.description')}</AlertDialog.Description>
+          </AlertDialog.Body>
+          <AlertDialog.Footer>
+            <AlertDialog.Cancel asChild>
+              <Button>{t('cancel.label')}</Button>
+            </AlertDialog.Cancel>
+            <AlertDialog.Action asChild>
+              <Button variant='destructive' onClick={handleDelete}>
+                {t('delete-publication-dialog.confirm.label')}
+              </Button>
+            </AlertDialog.Action>
+          </AlertDialog.Footer>
+        </AlertDialog.Content>
       </AlertDialog.Root>
     </>
   );

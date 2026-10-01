@@ -76,7 +76,7 @@ export const TrackList = ({
                   onClick={() => onMute?.(track.id, !track.muted)}
                   aria-label={track.muted ? 'Unmute' : 'Mute'}
                 >
-                  <Icon icon={track.muted ? 'ph--speaker-x--regular' : 'ph--speaker-high--regular'} size={4} />
+                  <Icon icon={track.muted ? 'ph--speaker-x--regular' : 'ph--speaker-high--regular'} size='md' />
                 </button>
                 {onRemove && (
                   <button
@@ -85,7 +85,7 @@ export const TrackList = ({
                     onClick={() => onRemove(track.id)}
                     aria-label='Remove track'
                   >
-                    <Icon icon='ph--trash--regular' size={4} />
+                    <Icon icon='ph--trash--regular' size='md' />
                   </button>
                 )}
               </Listbox.Item>
@@ -94,7 +94,7 @@ export const TrackList = ({
         </Listbox.Content>
         {onAdd && (
           <Button onClick={onAdd} classNames='mt-1 justify-start gap-2'>
-            <Icon icon='ph--plus--regular' size={4} />
+            <Icon icon='ph--plus--regular' size='md' />
             Add track
           </Button>
         )}

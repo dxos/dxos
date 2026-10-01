@@ -6,7 +6,7 @@ import React, { type MouseEvent as ReactMouseEvent, useCallback, useMemo } from 
 
 import { Obj, Ref, Relation } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { IconButton, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
+import { Button, Tag, Tooltip, useTranslation } from '@dxos/react-ui';
 import {
   Message as MessageComponent,
   type MessageMetadata,
@@ -143,7 +143,7 @@ export const CommentThread = ({
     <div className='flex flex-row items-center gap-0.5 pe-2'>
       {status === 'staged' && <Tag hue='neutral'>{t('draft.button')}</Tag>}
       {onAcceptChange && !detached && status !== 'resolved' && (
-        <IconButton
+        <Button
           data-testid='thread.accept-change'
           variant='ghost'
           icon='ph--check-circle--regular'
@@ -154,7 +154,7 @@ export const CommentThread = ({
         />
       )}
       {onResolve && !(status === 'staged') && (
-        <IconButton
+        <Button
           data-testid='thread.resolve'
           variant='ghost'
           icon={status === 'resolved' ? 'ph--check--fill' : 'ph--check--regular'}
@@ -165,7 +165,7 @@ export const CommentThread = ({
         />
       )}
       {onThreadDelete && (
-        <IconButton
+        <Button
           data-testid='thread.delete'
           variant='ghost'
           icon='ph--x--regular'

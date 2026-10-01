@@ -13,7 +13,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Panel, SystemIconButton, Toolbar, useThemeContext } from '@dxos/react-ui';
+import { Panel, SystemButton, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   PROMPT_ELEMENT,
@@ -78,9 +78,9 @@ const DefaultStory = ({ text }: StoryArgs) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar>
+      <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
-          <SystemIconButton.Disclosure
+          <SystemButton.Disclosure
             active={!collapsed}
             label={collapsed ? 'Expand all' : 'Collapse all'}
             onClick={() => {
@@ -97,10 +97,10 @@ const DefaultStory = ({ text }: StoryArgs) => {
             }}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid overflow-hidden'>
+      </Panel.Header>
+      <Panel.Body classNames='grid overflow-hidden'>
         <div ref={parentRef} className='dx-expand' />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

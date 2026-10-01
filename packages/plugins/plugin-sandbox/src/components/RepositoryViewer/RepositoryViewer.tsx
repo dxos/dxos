@@ -68,7 +68,7 @@ export const RepositoryViewer = ({
 
   return (
     <Panel.Root role={role} classNames='dx-expand'>
-      <Panel.Toolbar>
+      <Panel.Header>
         <RepositoryToolbar
           branches={branches}
           currentRef={currentRef}
@@ -77,8 +77,8 @@ export const RepositoryViewer = ({
           onViewChange={onViewChange}
           onRefresh={onRefresh}
         />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         {error ? (
           <Message testId='repository.error'>{error}</Message>
         ) : empty ? (
@@ -118,7 +118,7 @@ export const RepositoryViewer = ({
             </div>
           </Grid>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

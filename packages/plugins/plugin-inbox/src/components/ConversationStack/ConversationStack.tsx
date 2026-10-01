@@ -14,6 +14,7 @@ import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
 import { createContext } from '@dxos/react-hooks';
 import {
+  Block,
   Card,
   Collapsible,
   Icon,
@@ -431,7 +432,7 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
     >
       <div className='p-2'>
         <div className={mx('flex items-center justify-center', MESSAGE_AVATAR_GUTTER)}>
-          <Icon icon='ph--text-align-left--regular' size={5} classNames='text-subdued' />
+          <Icon icon='ph--text-align-left--regular' size='lg' classNames='text-subdued' />
         </div>
       </div>
       <div className='col-start-2 col-span-2 flex flex-col gap-1 min-w-0 py-2 pe-3'>
@@ -748,7 +749,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
             tile's own heading, so `"NAME" <addr>` would just repeat it. */}
         {recipients.length > 0 && (
           <Card.Row>
-            <Card.Block>
+            <Block>
               {/* One recipient reads as a person, so it gets the same avatar treatment as every other
                   person row; several are a group, which an avatar would misrepresent. */}
               {recipients.length === 1 ? (
@@ -756,7 +757,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
               ) : (
                 <Icon icon='ph--users--regular' />
               )}
-            </Card.Block>
+            </Block>
             <Card.Text classNames='text-sm text-description'>{recipients.join(', ')}</Card.Text>
           </Card.Row>
         )}

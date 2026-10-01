@@ -603,7 +603,6 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
       {/* TODO(burdon): Why is this required? */}
       <Toast.Root
         data-testid='assistant.error'
-        type='foreground'
         open={!!toastError}
         duration={20_000}
         onOpenChange={(open) => !open && setToastError(undefined)}
@@ -613,8 +612,8 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
         </Toast.Title>
         <Toast.Description>{toastError?.message}</Toast.Description>
         {toastAction && onViewUsage && (
-          <Toast.Actions>
-            <Toast.Action altText={t(toastAction.labelKey)} asChild>
+          <Toast.Footer>
+            <Toast.ActionTrigger asChild>
               <Button
                 onClick={() => {
                   setToastError(undefined);
@@ -623,8 +622,8 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
               >
                 {t(toastAction.labelKey)}
               </Button>
-            </Toast.Action>
-          </Toast.Actions>
+            </Toast.ActionTrigger>
+          </Toast.Footer>
         )}
       </Toast.Root>
     </>

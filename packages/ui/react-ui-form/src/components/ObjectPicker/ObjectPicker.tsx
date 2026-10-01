@@ -99,7 +99,7 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
           {/* `Form.Content` trims only its bottom (`pb-form-padding`) because a host normally supplies
               the top — a dialog header, a card title. A popover has nothing above the first field, so
               the top trim is added here. */}
-          <Popover.Viewport classNames='pt-form-padding'>
+          <Popover.Body classNames='pt-form-padding'>
             <FormRoot
               testId='create-referenced-object-form'
               schema={createSchema}
@@ -115,7 +115,7 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
                 </FormContent>
               </FormViewport>
             </FormRoot>
-          </Popover.Viewport>
+          </Popover.Body>
         </Combobox.Content>
       );
     }

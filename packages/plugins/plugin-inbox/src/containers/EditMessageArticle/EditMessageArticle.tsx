@@ -92,12 +92,12 @@ export const EditMessageArticle = ({ role, subject, attendableId }: EditMessageA
 
   return (
     <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <EditMessage key={generation} message={subject} extensions={extensions} onSend={onSend} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

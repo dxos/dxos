@@ -11,7 +11,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import { Avatar, Card, Icon } from '@dxos/react-ui';
+import { Avatar, Block, Card, Icon } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type Person } from '@dxos/types';
 
@@ -44,16 +44,14 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
     <Card.Body ref={cardRef}>
       {image && (
         <Card.Row>
-          <Avatar.Root>
-            <Avatar.Content
-              imgSrc={image}
-              icon='ph--user--regular'
-              size={20}
-              classNames={[!image && 'opacity-50']}
-              hue='neutral'
-              variant='square'
-            />
-          </Avatar.Root>
+          <Avatar.Root
+            src={image}
+            icon='ph--user--regular'
+            size={20}
+            classNames={[!image && 'opacity-50']}
+            hue='neutral'
+            variant='square'
+          />
         </Card.Row>
       )}
       {organization?.name && (
@@ -61,9 +59,9 @@ export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person
       )}
       {emails.length > 0 && (
         <Card.Row>
-          <Card.Block>
+          <Block>
             <Icon icon='ph--at--regular' />
-          </Card.Block>
+          </Block>
           <Card.Text truncate classNames='text-sky-text text-sm'>
             {emails.map(({ value }) => (
               <div key={value}>{value}</div>

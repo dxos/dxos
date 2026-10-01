@@ -8,7 +8,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import * as Process from '@dxos/compute/Process';
-import { Icon, IconButton, ScrollArea, Tooltip, composable, composableProps } from '@dxos/react-ui';
+import { Button, Icon, ScrollArea, Tooltip, composable, composableProps } from '@dxos/react-ui';
 import { type ColumnRenderer, type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
 import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
@@ -131,7 +131,7 @@ export const ProcessTree = React.memo(
               id={ROOT_ID}
               model={model}
               virtualize
-              density='sm'
+              size='sm'
               selectionMode='multiple'
               classNames='text-sm tabular-nums font-thin'
               gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content min-content [tree-row-end]'
@@ -154,7 +154,7 @@ const makeIconRenderer =
     process === undefined ? null : (
       <Tooltip.Trigger content={process.state.toString()}>
         <Icon
-          size={4}
+          size='md'
           synchronized
           classNames={mx(
             'shrink-0',
@@ -189,11 +189,11 @@ const makeColumnRenderer =
         </div>
         <div className='flex items-center mx-1'>
           {onProcessTerminate && process.state !== Process.State.TERMINATED && (
-            <IconButton
+            <Button
               classNames='min-h-0 p-1'
               icon='ph--x--regular'
               iconOnly
-              density='sm'
+              size='sm'
               variant='ghost'
               label='Actions'
               onClick={(event) => {

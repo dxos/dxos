@@ -11,7 +11,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
-import { Button, ButtonGroup, Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, ButtonGroup, Field, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '#hooks';
@@ -53,12 +53,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
                   : t('enable-background-sync.label')}
             </Button>
             {syncTrigger && (
-              <IconButton
-                iconOnly
-                icon='ph--gear--regular'
-                label={t('view-trigger.label')}
-                onClick={handleViewTrigger}
-              />
+              <Button iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
             )}
           </ButtonGroup>
         </Flex>

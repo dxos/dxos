@@ -5,7 +5,7 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Type } from '@dxos/echo';
-import { Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Icon, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
@@ -103,24 +103,24 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root ref={forwardedRef} fullWidth>
           <Card.Header>
-            <Card.Block>
+            <Block>
               <Icon icon='ph--rss-simple--regular' />
-            </Card.Block>
+            </Block>
             <Card.Text classNames='truncate'>{post.title ?? t('post-title.placeholder')}</Card.Text>
             {post.link && (
-              <Card.Block end>
+              <Block end>
                 <a href={post.link} target='_blank' rel='noreferrer' className='shrink-0'>
-                  <Icon icon='ph--arrow-square-out--regular' size={4} />
+                  <Icon icon='ph--arrow-square-out--regular' size='md' />
                 </a>
-              </Card.Block>
+              </Block>
             )}
           </Card.Header>
           <Card.Body>
             {post.author && (
               <Card.Row>
-                <Card.Block>
+                <Block>
                   <Icon icon='ph--user--regular' />
-                </Card.Block>
+                </Block>
                 <Card.Text variant='description'>{post.author}</Card.Text>
               </Card.Row>
             )}
@@ -134,9 +134,9 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
             )}
             {published && (
               <Card.Row>
-                <Card.Block>
+                <Block>
                   <Icon icon='ph--calendar--regular' />
-                </Card.Block>
+                </Block>
                 <Card.Text variant='description' classNames='text-info-text'>
                   {published}
                 </Card.Text>

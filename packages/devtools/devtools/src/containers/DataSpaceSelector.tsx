@@ -54,21 +54,17 @@ export const DataSpaceSelector = () => {
         id && handleSelect?.(id as SpaceId);
       }}
     >
-      <Select.TriggerButton placeholder='Select space' />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {spaces.map((space) => (
-              <Select.Option key={space.id} value={space.id}>
-                <div className='flex items-center gap-2'>
-                  <span className='font-mono text-neutral-250'>{space.id.slice(0, 6)}</span>
-                  {getLabel(space)}
-                </div>
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+      <Select.Trigger placeholder='Select space' />
+      <Select.Content>
+        {spaces.map((space) => (
+          <Select.Item key={space.id} value={space.id}>
+            <div className='flex items-center gap-2'>
+              <span className='font-mono text-neutral-250'>{space.id.slice(0, 6)}</span>
+              {getLabel(space)}
+            </div>
+          </Select.Item>
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

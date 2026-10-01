@@ -18,7 +18,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Field, Icon, IconButton, Select } from '@dxos/react-ui';
+import { Button, Field, Icon, Input, Select } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
@@ -207,14 +207,14 @@ const Controls = ({ children }: PropsWithChildren) => {
   return (
     <>
       <div className='flex shrink-0 p-2 space-x-2'>
-        <IconButton
+        <Button
           icon={generating ? 'ph--pause--regular' : 'ph--play--regular'}
           label={generating ? 'Pause' : 'Play'}
           onClick={() => setGenerating((generating) => !generating)}
         />
         <div className='relative' title='mutation period'>
           <Field.Root>
-            <Field.Input
+            <Input
               autoComplete='off'
               classNames='w-[100px] text-right pe-[22px]'
               placeholder='Interval'
@@ -224,20 +224,14 @@ const Controls = ({ children }: PropsWithChildren) => {
           </Field.Root>
           <Icon icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
         </div>
-        <IconButton icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
+        <Button icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
         <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
-          <Select.TriggerButton placeholder='Select value' />
-          <Select.Portal>
-            <Select.Content>
-              <Select.Viewport>
-                {Object.keys(actionWeights).map((action) => (
-                  <Select.Option key={action} value={action}>
-                    {action}
-                  </Select.Option>
-                ))}
-              </Select.Viewport>
-            </Select.Content>
-          </Select.Portal>
+          <Select.Trigger placeholder='Select value' />
+          <Select.Content>
+            {Object.keys(actionWeights).map((action) => (
+              <Select.Item key={action} item={{ value: action, label: action }} />
+            ))}
+          </Select.Content>
         </Select.Root>
       </div>
       {children}
@@ -319,10 +313,10 @@ const GraphTreeItem = ({
         onClick={() => onSelect(id)}
       >
         {expandable ? (
-          <IconButton
+          <Button
             iconOnly
             variant='ghost'
-            density='sm'
+            size='sm'
             icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
             label={open ? 'Collapse' : 'Expand'}
             onClick={(event) => {

@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom';
 
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Card, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, DragHandle, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DndTileData, useDndRootContext } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
@@ -275,11 +275,11 @@ export const BoardCell = ({
         onClick={selectable ? (event) => toggleSelection(item.id, event.shiftKey) : undefined}
       >
         <Card.Header>
-          <Card.DragHandle ref={dragHandleRef} />
+          <DragHandle ref={dragHandleRef} />
           {title}
           {onDelete && (
-            <Card.Block end>
-              <IconButton
+            <Block end>
+              <Button
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly
@@ -289,7 +289,7 @@ export const BoardCell = ({
                   onDelete(item.id);
                 }}
               />
-            </Card.Block>
+            </Block>
           )}
         </Card.Header>
         {/* Body spans all of the card's column tracks (it has gutter columns) so content — e.g. a
@@ -334,7 +334,7 @@ export const BoardCell = ({
             style={{ width: preview.width, height: preview.height, ...sizeOverride }}
           >
             <Card.Header>
-              <Card.DragHandle />
+              <DragHandle />
               {title}
             </Card.Header>
             {children && <div className='relative col-[1/-1] overflow-hidden'>{children}</div>}

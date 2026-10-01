@@ -54,7 +54,7 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {!result ? (
@@ -107,7 +107,7 @@ export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

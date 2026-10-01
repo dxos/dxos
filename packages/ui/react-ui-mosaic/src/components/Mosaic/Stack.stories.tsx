@@ -73,12 +73,12 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
   return (
     <Dnd.Root>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <Toolbar.Text>Items: {items.length}</Toolbar.Text>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Focus.Group asChild>
             <Mosaic.Container
               asChild
@@ -95,11 +95,11 @@ const DefaultStackStory = (props: MosaicStackProps<Obj.Any>) => {
               </ScrollArea.Root>
             </Mosaic.Container>
           </Focus.Group>
-        </Panel.Content>
+        </Panel.Body>
         {props.debug && (
-          <Panel.Statusbar classNames='h-[40dvh]'>
+          <Panel.Footer classNames='h-[40dvh]'>
             <DebugInfo />
-          </Panel.Statusbar>
+          </Panel.Footer>
         )}
       </Panel.Root>
     </Dnd.Root>
@@ -114,12 +114,12 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
   return (
     <Dnd.Root>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <div className='flex grow justify-center'>{JSON.stringify(info)}</div>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Mosaic.Container
             asChild
             orientation='vertical'
@@ -142,11 +142,11 @@ const VirtualStackStory = (props: MosaicStackProps<Obj.Any>) => {
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Mosaic.Container>
-        </Panel.Content>
+        </Panel.Body>
         {props.debug && (
-          <Panel.Statusbar classNames='h-[40dvh]'>
+          <Panel.Footer classNames='h-[40dvh]'>
             <DebugInfo />
-          </Panel.Statusbar>
+          </Panel.Footer>
         )}
       </Panel.Root>
     </Dnd.Root>

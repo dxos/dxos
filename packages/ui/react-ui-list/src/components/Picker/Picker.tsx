@@ -29,6 +29,7 @@ import {
   type Density,
   type Elevation,
   Field,
+  Input,
   type ThemedClassName,
   composableProps,
   slottable,
@@ -320,7 +321,7 @@ const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
     // input uncontrolled so it accepts keystrokes without `onValueChange`.
     return (
       <Field.Root>
-        <Field.Input
+        <Input
           {...props}
           autoFocus={shouldAutoFocus}
           {...(value !== undefined && { value })}

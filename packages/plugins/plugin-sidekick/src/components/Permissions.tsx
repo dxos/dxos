@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Field, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -46,21 +47,21 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
             <tr key={entry.profileId} className='border-t border-separator'>
               <td className='py-1'>{entry.name}</td>
               <td className='py-1 text-center'>
-                <Field.Checkbox
+                <Next.Checkbox
                   checked={entry.autoRespond}
                   onCheckedChange={(checked) => onUpdate?.(entry.profileId, 'autoRespond', checked === true)}
                   aria-label={`Auto-respond for ${entry.name}`}
                 />
               </td>
               <td className='py-1 text-center'>
-                <Field.Checkbox
+                <Next.Checkbox
                   checked={entry.createDraft}
                   onCheckedChange={(checked) => onUpdate?.(entry.profileId, 'createDraft', checked === true)}
                   aria-label={`Draft for ${entry.name}`}
                 />
               </td>
               <td className='py-1 text-center'>
-                <Field.Checkbox
+                <Next.Checkbox
                   checked={entry.researchEnabled}
                   onCheckedChange={(checked) => onUpdate?.(entry.profileId, 'researchEnabled', checked === true)}
                   aria-label={`Research for ${entry.name}`}

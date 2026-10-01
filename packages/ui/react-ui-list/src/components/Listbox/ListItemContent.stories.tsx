@@ -18,7 +18,7 @@ const meta = {
       <ListItemContent {...args} classNames='p-2' />
       <ListItemContent icon='ph--clock--regular' title='Title only, no description' classNames='p-2' />
       <ListItemContent
-        icon={<Icon icon='ph--x-circle--regular' size={5} classNames='text-error-text' />}
+        icon={<Icon icon='ph--x-circle--regular' size='lg' classNames='text-error-text' />}
         title='Failed run'
         description='Failed · 2.6s'
         classNames='p-2'
@@ -37,7 +37,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    icon: <Icon icon='ph--check-circle--regular' size={5} classNames='text-success-text' />,
+    icon: <Icon icon='ph--check-circle--regular' size='lg' classNames='text-success-text' />,
     title: '6/26/2026, 5:00:00 AM',
     description: 'Success · 2.5s',
   },

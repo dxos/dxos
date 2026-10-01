@@ -4,7 +4,7 @@
 
 import React, { type Dispatch, type PropsWithChildren, type SetStateAction, useEffect, useState } from 'react';
 
-import { Dialog, Icon, IconButton, type ThemedClassName, createContext, useControlledState } from '@dxos/react-ui';
+import { Button, Dialog, Icon, type ThemedClassName, createContext, useControlledState } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
 import { mx } from '@dxos/ui-theme';
 
@@ -106,9 +106,9 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
       className={mx('grid grid-cols-[var(--dx-rail-action)_1fr_min-content] items-center overflow-hidden', classNames)}
     >
       <Endcap>
-        <Dialog.Close>
+        <Dialog.CloseTrigger>
           <Icon icon='ph--x--regular' />
-        </Dialog.Close>
+        </Dialog.CloseTrigger>
       </Endcap>
       <Dialog.Title
         classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
@@ -117,7 +117,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
         {title}
       </Dialog.Title>
       <Endcap>
-        <IconButton
+        <Button
           variant='ghost'
           icon='ph--caret-up--regular'
           iconOnly

@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { getStyles } from '@dxos/ui-theme';
@@ -97,11 +97,11 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
       <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Header>
-            <Card.Block>
+            <Block>
               <Icon icon={icon} classNames={iconStyles?.text} />
-            </Card.Block>
+            </Block>
             <Card.Title>{title}</Card.Title>
-            <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
+            <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
           </Card.Header>
           {flightDetails ? (
             <Card.Body>
@@ -123,9 +123,9 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
                 )}
                 {date && (
                   <Card.Row>
-                    <Card.Block>
+                    <Block>
                       <Icon icon='ph--calendar--regular' />
-                    </Card.Block>
+                    </Block>
                     <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
                   </Card.Row>
                 )}

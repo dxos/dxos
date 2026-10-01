@@ -22,7 +22,7 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
-import { Button, Icon, QrCode, SystemIconButton, useId, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, QrCode, SystemButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import {
   type ActionMenuItem,
@@ -273,7 +273,7 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         <span id={qrLabel} className='sr-only'>
           {t('qr.label')}
         </span>
-        <SystemIconButton.Clipboard value={url ?? 'never'} />
+        <SystemButton.Clipboard value={url ?? 'never'} />
       </div>
       <Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
@@ -301,9 +301,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
 const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
   return statusValue > 0 ? (
-    <Icon icon='ph--check--regular' size={6} classNames='m-trim-xs' />
+    <Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size={6} classNames='m-trim-xs' />
+    <Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
   );
 };
 

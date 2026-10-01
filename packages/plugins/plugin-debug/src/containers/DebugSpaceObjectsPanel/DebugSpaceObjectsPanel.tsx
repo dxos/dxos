@@ -9,7 +9,7 @@ import { ObjectsTree } from '@dxos/devtools';
 import { type Entity, Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';
-import { Field, Grid, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import { Field, Grid, Input, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
@@ -27,14 +27,14 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Field.Root>
-            <Field.Input disabled placeholder='Search...' />
+            <Input disabled placeholder='Search...' />
           </Field.Root>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Grid rows={2} classNames='divide-y divide-subdued-separator'>
           <ScrollArea.Root>
             <ScrollArea.Viewport>
@@ -48,7 +48,7 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
           </ScrollArea.Root>
           {selectedObject && <JsonHighlighter classNames='p-1' data={selectedObject} />}
         </Grid>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

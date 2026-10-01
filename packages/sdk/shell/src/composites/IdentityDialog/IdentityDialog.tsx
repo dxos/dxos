@@ -17,21 +17,17 @@ export const IdentityDialog = (props: IdentityDialogProps) => {
   const titleId = useId('identityDialog__title', props.title);
   return (
     <Dialog.Root defaultOpen onOpenChange={(open) => open || props.onDone?.()}>
-      <Dialog.Portal>
-        <Dialog.Overlay>
-          <Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(ev) => ev.preventDefault()}>
-            <Dialog.Body>
-              <IdentityPanel
-                {...{
-                  ...props,
-                  titleId,
-                  doneActionParent: <Dialog.Close asChild />,
-                }}
-              />
-            </Dialog.Body>
-          </Dialog.Content>
-        </Dialog.Overlay>
-      </Dialog.Portal>
+      <Dialog.Content aria-labelledby={titleId} onOpenAutoFocus={(ev) => ev.preventDefault()}>
+        <Dialog.Body>
+          <IdentityPanel
+            {...{
+              ...props,
+              titleId,
+              doneActionParent: <Dialog.CloseTrigger asChild />,
+            }}
+          />
+        </Dialog.Body>
+      </Dialog.Content>
     </Dialog.Root>
   );
 };

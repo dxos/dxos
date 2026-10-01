@@ -13,7 +13,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board as BoardComponent,
@@ -171,23 +171,23 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
       >
         <Panel.Root role={role}>
           {/* TODO(burdon): Migrate to Menu.Root + useMenuActions (threading attendableId). */}
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              <Toolbar.IconButton
+              <Button
                 icon='ph--crosshair--regular'
                 iconOnly
                 label={t('move-to-center.button')}
                 disabled={!hasAttention}
                 onClick={() => controller.current?.center()}
               />
-              <Toolbar.IconButton
+              <Button
                 icon={zoom < 1 ? 'ph--arrows-in--regular' : 'ph--arrows-out--regular'}
                 iconOnly
                 label={t('toggle-zoom.button')}
                 disabled={!hasAttention}
                 onClick={() => setZoom((value) => (value < 1 ? 1 : 0.5))}
               />
-              <Toolbar.IconButton
+              <Button
                 icon='ph--plus--regular'
                 iconOnly
                 label={t('add-object.button')}
@@ -198,8 +198,8 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
                 }}
               />
             </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <BoardComponent.Container classNames='dx-fullscreen'>
               <BoardComponent.Viewport>
                 <BoardComponent.Backdrop />
@@ -221,7 +221,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
               {/* Overview map (outlines the visible region), pinned to the corner over the board. */}
               <BoardComponent.Map classNames='absolute bottom-2 right-2 z-10 w-40' />
             </BoardComponent.Container>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </BoardComponent.Root>
       <ObjectPicker.Content options={options} onSelect={handleSelect} classNames='dx-card-popover-width' />

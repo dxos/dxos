@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Field, Icon, Panel, Toolbar } from '@dxos/react-ui';
+import { Field, Icon, Input, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -116,15 +116,15 @@ const WithToolbarStory = () => {
   return (
     <Listbox.Root value={selected} onValueChange={setSelected}>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <Field.Root>
               <Field.Label srOnly>Filter items</Field.Label>
-              <Field.Input placeholder='Filter…' value={filter} onChange={(event) => setFilter(event.target.value)} />
+              <Input placeholder='Filter…' value={filter} onChange={(event) => setFilter(event.target.value)} />
             </Field.Root>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Listbox.Viewport>
             <Listbox.Content aria-label='Items'>
               {filtered.map((item) => (
@@ -134,7 +134,7 @@ const WithToolbarStory = () => {
               ))}
             </Listbox.Content>
           </Listbox.Viewport>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Listbox.Root>
   );
@@ -217,11 +217,11 @@ const DisclosureStory = () => {
                   type='button'
                   className='flex items-center gap-2 px-3 py-2 text-start dx-hover dx-focus-ring-inset'
                 >
-                  <Icon icon='ph--package--regular' size={5} classNames='shrink-0' />
+                  <Icon icon='ph--package--regular' size='lg' classNames='shrink-0' />
                   <span className='flex-1 min-w-0 truncate'>{item.name}</span>
                   <Icon
                     icon='ph--caret-right--regular'
-                    size={4}
+                    size='md'
                     classNames={mx('shrink-0 transition-transform', expanded && 'rotate-90')}
                   />
                 </button>

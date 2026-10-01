@@ -4,7 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Field, type SwitchProps } from '@dxos/react-ui';
+import { Block, type SwitchProps } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -34,9 +35,9 @@ export const BooleanField = ({
   }
 
   return (
-    <Field.Block>
-      <Field.Switch disabled={!!readonly} checked={value} onCheckedChange={handleChange} />
-    </Field.Block>
+    <Block>
+      <Next.Switch disabled={!!readonly} checked={value} onCheckedChange={handleChange} />
+    </Block>
   );
 };
 

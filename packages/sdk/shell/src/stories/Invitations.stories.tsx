@@ -15,7 +15,7 @@ import { useIdentity } from '@dxos/react-client/halo';
 import { type Invitation, Invitation_State, InvitationEncoder } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { ButtonGroup, IconButton } from '@dxos/react-ui';
+import { Button, ButtonGroup } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -69,7 +69,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
       const controls = (
         <ButtonGroup classNames='mb-4'>
           {/* <Tooltip content='Create Space'> */}
-          <IconButton
+          <Button
             icon='ph--plus-circle--regular'
             label='Create Space'
             iconOnly
@@ -78,7 +78,7 @@ const Panel = ({ id, panel, setPanel }: { id: number; panel?: PanelType; setPane
           />
           {/* </Tooltip>
           <Tooltip content='Join Space'> */}
-          <IconButton
+          <Button
             icon='ph--sign-in--fill'
             label='Join Space'
             iconOnly
@@ -141,7 +141,7 @@ const Invitations = () => {
   const controls = (
     <ButtonGroup classNames='mb-4'>
       {/* <Tooltip content='Create Identity'> */}
-      <IconButton
+      <Button
         icon='ph--plus--regular'
         label='Create Identity'
         iconOnly
@@ -153,7 +153,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='Join Existing Identity'> */}
-      <IconButton
+      <Button
         icon='ph--qr-code--fill'
         label='Join Existing Identity'
         iconOnly
@@ -163,7 +163,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='Devices'> */}
-      <IconButton
+      <Button
         icon='ph--laptop--fill'
         label='Devices'
         iconOnly
@@ -173,7 +173,7 @@ const Invitations = () => {
       />
       {/* </Tooltip>
       <Tooltip content='List Spaces'> */}
-      <IconButton
+      <Button
         icon='ph--planet--fill'
         label='List Spaces'
         iconOnly
@@ -183,7 +183,7 @@ const Invitations = () => {
       />
       {/* </Tooltip> */}
       {/* <ToolTip content='Toggle Network'> */}
-      <IconButton
+      <Button
         icon={networkStatus === ConnectionState.ONLINE ? 'ph--wifi-high--fill' : 'ph--wifi-slash--fill'}
         label='Toggle Network'
         iconOnly

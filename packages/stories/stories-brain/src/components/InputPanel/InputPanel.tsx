@@ -6,9 +6,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
 import {
-  Banner,
   Button,
+  Empty,
   Field,
+  NumberInput,
   Panel,
   ScrollArea,
   Select,
@@ -17,6 +18,7 @@ import {
   useThemeContext,
 } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import { Next } from '@dxos/react-ui/next';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -134,7 +136,7 @@ export const InputPanel = ({
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Button variant={mode === 'document' ? 'primary' : 'ghost'} onClick={() => onModeChange('document')}>
             Document
@@ -149,14 +151,14 @@ export const InputPanel = ({
           {mode === 'document' && parse && (
             <Field.Root>
               <div className='flex items-center gap-2 px-2'>
-                <Field.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
+                <Next.Switch checked={underline} onCheckedChange={(checked) => setUnderline(checked === true)} />
                 <Field.Label classNames='text-sm text-description'>POS</Field.Label>
               </div>
             </Field.Root>
           )}
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         {mode === 'document' && (
           <Editor.Root>
             <Editor.View classNames='p-2' value={text} onChange={setText} extensions={extensions} />
@@ -165,28 +167,21 @@ export const InputPanel = ({
 
         {mode === 'dataset' && (
           <Panel.Root>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <Toolbar.Root>
                 <Select.Root value={dataset?.id ?? ''} onValueChange={setDatasetId}>
-                  <Select.TriggerButton placeholder='Dataset' />
-                  <Select.Portal>
-                    <Select.Content>
-                      <Select.Viewport>
-                        {datasets.map((item) => (
-                          <Select.Option key={item.id} value={item.id}>
-                            {item.label}
-                          </Select.Option>
-                        ))}
-                      </Select.Viewport>
-                    </Select.Content>
-                  </Select.Portal>
+                  <Select.Trigger placeholder='Dataset' />
+                  <Select.Content>
+                    {datasets.map((item) => (
+                      <Select.Item key={item.id} item={{ value: item.id, label: item.label }} />
+                    ))}
+                  </Select.Content>
                 </Select.Root>
                 {onLoadDataset && (
                   <>
                     <Toolbar.Separator />
                     <Field.Root>
-                      <Field.Input
-                        type='number'
+                      <NumberInput
                         min={1}
                         value={String(count)}
                         onChange={(event) => setCount(Math.max(1, Number(event.target.value) || 1))}
@@ -199,12 +194,12 @@ export const InputPanel = ({
                   </>
                 )}
               </Toolbar.Root>
-            </Panel.Toolbar>
-            <Panel.Content asChild>
+            </Panel.Header>
+            <Panel.Body asChild>
               <ScrollArea.Root padding>
                 <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
                   {!dataset || dataset.messages.length === 0 ? (
-                    <Banner.Empty label='No messages.' />
+                    <Empty>No messages.</Empty>
                   ) : (
                     dataset.messages.map((message) => (
                       <div
@@ -219,31 +214,31 @@ export const InputPanel = ({
                   )}
                 </ScrollArea.Viewport>
               </ScrollArea.Root>
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         )}
 
         {mode === 'record' && (
           <Panel.Root>
-            <Panel.Toolbar asChild>
+            <Panel.Header>
               <Toolbar.Root>
-                <Toolbar.IconButton
+                <Button
                   icon={transcript ? 'ph--microphone-slash--regular' : 'ph--microphone--regular'}
                   label={transcript ? 'Clear recording' : 'Record'}
                   onClick={() => setTranscript((current) => (current ? '' : sampleTranscript))}
                 />
               </Toolbar.Root>
-            </Panel.Toolbar>
-            <Panel.Content>
+            </Panel.Header>
+            <Panel.Body>
               {transcript && (
                 <Editor.Root>
                   <Editor.View classNames='p-2' value={transcript} extensions={extensions} />
                 </Editor.Root>
               )}
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

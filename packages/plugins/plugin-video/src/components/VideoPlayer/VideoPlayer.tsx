@@ -34,7 +34,7 @@ export const VideoPlayer = composable<HTMLDivElement, VideoPlayerProps>(
           })}
           ref={forwardedRef}
         >
-          <Icon icon='ph--video-camera-slash--regular' size={8} />
+          <Icon icon='ph--video-camera-slash--regular' size='xl' />
           <span>{t('player.empty.label')}</span>
         </div>
       );

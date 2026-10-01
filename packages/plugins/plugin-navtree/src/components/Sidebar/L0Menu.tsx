@@ -28,8 +28,8 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
 import {
+  Button,
   Icon,
-  IconButton,
   ScrollArea,
   Tabs,
   type ThemedClassName,
@@ -266,7 +266,7 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
     const hueFgStyle = hue && { style: { color: `var(--color-${hue}-fg)` } };
-    return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
+    return <Icon icon={item.properties.icon} size='xl' {...hueFgStyle} />;
   }
 
   const type = l0ItemType(item);
@@ -335,7 +335,7 @@ export const L0Menu = ({
   const hasRearrangeableItems = topLevelItems.some((item) => item.properties.onRearrange);
 
   return (
-    <Tabs.Tablist
+    <Tabs.List
       data-tauri-drag-region
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',
@@ -349,13 +349,12 @@ export const L0Menu = ({
       <ActionMenu onAction={handleAction} group={parent} actions={menuActions}>
         {/* The trigger clones this child, so the testid belongs here rather than on `ActionMenu`. */}
         <div className='grid place-items-center' data-testid='spacePlugin.addSpace'>
-          <IconButton
-            density='lg'
+          <Button
+            size='lg'
             variant='ghost'
-            size={5}
+            iconSize='lg'
             icon='ph--list--regular'
             iconOnly
-            square
             label={t('app-menu.label')}
           />
         </div>
@@ -402,6 +401,6 @@ export const L0Menu = ({
           </div>
         )}
       </div>
-    </Tabs.Tablist>
+    </Tabs.List>
   );
 };

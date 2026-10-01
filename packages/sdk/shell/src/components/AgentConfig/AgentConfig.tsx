@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Avatar, Button, Icon, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, Icon, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
 import { getSize, mx, textValence } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -58,7 +58,7 @@ export const AgentConfig = ({
             </Avatar.Root>
             {agentStatus === 'created' && (
               <Tooltip.Trigger asChild content={t('destroy-agent.label')} side='bottom'>
-                <IconButton
+                <Button
                   variant='ghost'
                   classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid='agent.destroy'
@@ -87,9 +87,9 @@ export const AgentConfig = ({
           >
             <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-input-surface grid place-items-center')}>
               {agentStatus === 'creatable' ? (
-                <Icon icon='ph--plus--light' size={6} />
+                <Icon icon='ph--plus--light' size='xl' />
               ) : (
-                <Icon icon='ph--arrows-clockwise--light' size={6} />
+                <Icon icon='ph--arrows-clockwise--light' size='xl' />
               )}
             </div>
             <span className='grow font-medium text-start'>

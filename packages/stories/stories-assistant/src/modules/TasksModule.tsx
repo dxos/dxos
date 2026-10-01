@@ -37,12 +37,12 @@ const TasksModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root classNames='border-b border-subdued-separator'>
           <Toolbar.Text>{Obj.getLabel(document)}</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <Editor.Root>
           <Editor.View
             id={document.id}
@@ -56,7 +56,7 @@ const TasksModuleContainer = ({ space }: { space: Space }) => {
             ]}
           />
         </Editor.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

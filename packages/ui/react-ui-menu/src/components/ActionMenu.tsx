@@ -102,18 +102,14 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
   const { icon, testId } = group.properties;
   return (
     <Menu.Sub>
-      <Menu.SubTrigger classNames='gap-2' {...(testId && { 'data-testid': testId })}>
+      <Menu.TriggerItem classNames='gap-2' {...(testId && { 'data-testid': testId })}>
         {icon && <Icon icon={icon} size={iconSize} />}
         <ActionLabel action={group} />
         <Icon icon='ph--caret-right--regular' size={iconSize} classNames='ms-auto' />
-      </Menu.SubTrigger>
-      <Menu.Portal>
-        <Menu.SubContent>
-          <Menu.Viewport>
-            <ActionMenuItems menu={menu} group={group} />
-          </Menu.Viewport>
-        </Menu.SubContent>
-      </Menu.Portal>
+      </Menu.TriggerItem>
+      <Menu.Content>
+        <ActionMenuItems menu={menu} group={group} />
+      </Menu.Content>
     </Menu.Sub>
   );
 };
@@ -262,14 +258,9 @@ export const ActionMenu = ({
           {children}
         </Menu.Trigger>
       )}
-      <Menu.Portal container={container}>
-        <Menu.Content>
-          <Menu.Viewport>
-            <ActionMenuItems menu={menu} group={group} actions={typeof actions === 'function' ? actions() : actions} />
-          </Menu.Viewport>
-          <Menu.Arrow />
-        </Menu.Content>
-      </Menu.Portal>
+      <Menu.Content>
+        <ActionMenuItems menu={menu} group={group} actions={typeof actions === 'function' ? actions() : actions} />
+      </Menu.Content>
     </Menu.Root>
   );
 };

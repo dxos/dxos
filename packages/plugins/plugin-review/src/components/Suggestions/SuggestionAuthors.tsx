@@ -52,7 +52,7 @@ export const SuggestionAuthors = ({ authors, onToggle }: SuggestionAuthorsProps)
             onClick={() => onToggle(author)}
           >
             {label}
-            <Icon icon={hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'} size={3} />
+            <Icon icon={hidden ? 'ph--eye-slash--regular' : 'ph--eye--regular'} size='xs' />
           </button>
         </Tag>
       ))}

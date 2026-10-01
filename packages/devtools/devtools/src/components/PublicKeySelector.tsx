@@ -30,21 +30,17 @@ export const PublicKeySelector = ({
         id && onChange?.(PublicKey.fromHex(id));
       }}
     >
-      <Select.TriggerButton placeholder={placeholder} />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {removeDuplicates(keys).map((key) => (
-              <Select.Option key={key.toHex()} value={key.toHex()}>
-                <div className='flex items-center gap-2'>
-                  <span className='font-mono text-neutral-250'>{key.truncate()}</span>
-                  {getLabel(key)}
-                </div>
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+      <Select.Trigger placeholder={placeholder} />
+      <Select.Content>
+        {removeDuplicates(keys).map((key) => (
+          <Select.Item key={key.toHex()} value={key.toHex()}>
+            <div className='flex items-center gap-2'>
+              <span className='font-mono text-neutral-250'>{key.truncate()}</span>
+              {getLabel(key)}
+            </div>
+          </Select.Item>
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

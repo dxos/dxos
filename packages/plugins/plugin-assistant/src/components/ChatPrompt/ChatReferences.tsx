@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type AiContext } from '@dxos/assistant';
 import { type Database, Obj } from '@dxos/echo';
-import { Icon, IconButton, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, type Label, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { useContextObjects } from '#hooks';
@@ -31,15 +31,15 @@ export const ChatReferences = ({ classNames, context, db }: ChatReferencesProps)
         const styles = hue ? getStyles(hue) : undefined;
         return (
           <li key={uri.toString()} className='dx-tag py-0 flex items-center gap-1' data-hue='neutral'>
-            <Icon icon={icon} size={4} />
+            <Icon icon={icon} size='md' />
             {toLocalizedString(label, t)}
-            <IconButton
+            <Button
               icon='ph--x--bold'
               iconOnly
               variant='ghost'
               label={t('remove-object.label')}
               classNames='p-0 hover:bg-transparent'
-              size={3}
+              iconSize='xs'
               onClick={() => onUpdateObject?.(uri, false)}
             />
           </li>

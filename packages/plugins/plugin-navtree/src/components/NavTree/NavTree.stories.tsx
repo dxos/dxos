@@ -20,7 +20,7 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { Field, Focus, IconButton, Main, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Field, Focus, Main, Panel, Textarea, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withLayout } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
@@ -43,16 +43,16 @@ const container = 'flex flex-col grow gap-2 p-4 rounded-md';
 const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   return (
-    <Panel.Toolbar classNames='border-b border-separator'>
-      <IconButton
-        density='lg'
+    <Panel.Header classNames='border-b border-separator'>
+      <Button
+        size='lg'
         icon='ph--circle--regular'
         label='Test'
         iconOnly
         variant={hasAttention ? 'primary' : 'ghost'}
         classNames='w-(--dx-rail-action) h-(--dx-rail-action)'
       />
-    </Panel.Toolbar>
+    </Panel.Header>
   );
 };
 
@@ -87,9 +87,9 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
         classNames='w-[30rem] shrink-0 h-full dx-base-surface border-e border-separator'
       >
         <StoryPlankHeading attendableId={attendableId} />
-        <Panel.Content classNames='grid'>
+        <Panel.Body classNames='grid'>
           <Toolbar.Root classNames='border-b border-subdued-separator'>
-            <Toolbar.Button>Test</Toolbar.Button>
+            <Button>Test</Button>
           </Toolbar.Root>
 
           <div className={mx(container, 'm-2 bg-current-surface')}>
@@ -99,11 +99,11 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
             <div className={mx(container, 'dx-base-surface')}>
               <Field.Root>
                 <Field.Label>Level 2 (base)</Field.Label>
-                <Field.Textarea placeholder='Enter text' />
+                <Textarea placeholder='Enter text' />
               </Field.Root>
             </div>
           </div>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Focus.Item>
   );

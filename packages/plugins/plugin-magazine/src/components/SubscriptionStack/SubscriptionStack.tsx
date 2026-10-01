@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, Icon, ScrollArea } from '@dxos/react-ui';
+import { Block, Card, Icon, ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
@@ -130,9 +130,9 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Card.Root ref={forwardedRef}>
             <Card.Header>
-              <Card.Block>
+              <Block>
                 <Icon icon={icon} classNames={iconClassName} />
-              </Card.Block>
+              </Block>
               <Card.Title>{feed.name ?? 'Untitled feed'}</Card.Title>
               <Card.Menu items={menuItems} />
             </Card.Header>

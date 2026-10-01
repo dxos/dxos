@@ -8,8 +8,9 @@ import { Surface } from '@dxos/app-framework/ui';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Button, Field, Flex, Icon, Panel, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Icon, Panel, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { Next } from '@dxos/react-ui/next';
 
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
@@ -137,7 +138,7 @@ export const MediaArtifactVariants = ({
                   onClick={() => setSelected(index)}
                 >
                   {variant.jobId ? (
-                    <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' />
+                    <Icon icon='ph--spinner-gap--regular' size='md' classNames='animate-spin' />
                   ) : (
                     index + 1
                   )}
@@ -156,9 +157,11 @@ export const MediaArtifactVariants = ({
             variant: 'custom',
             label: ['cover.label', { ns: meta.profile.key }],
             render: () => (
-              <Field.Checkbox checked={isCover} onCheckedChange={(checked) => handleCoverChange(checked === true)}>
-                {t('cover.label')}
-              </Field.Checkbox>
+              <Next.Checkbox
+                checked={isCover}
+                onCheckedChange={(checked) => handleCoverChange(checked === true)}
+                label={t('cover.label')}
+              />
             ),
           },
           () => {},
@@ -174,10 +177,10 @@ export const MediaArtifactVariants = ({
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='bg-scrim-surface'>
+      </Panel.Header>
+      <Panel.Body classNames='bg-scrim-surface'>
         {selected === 'all' ? (
           <VariantGallery
             variants={galleryItems}
@@ -211,7 +214,7 @@ export const MediaArtifactVariants = ({
             />
           ))
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

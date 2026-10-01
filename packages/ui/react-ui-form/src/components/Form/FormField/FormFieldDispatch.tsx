@@ -10,7 +10,7 @@ import React, { type ReactNode, useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
 import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { Field, IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
+import { Block, Button, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
@@ -426,9 +426,9 @@ const renderSelectStatic =
 // trailing icon (a select's caret, a date field's calendar) and its hover fill never touches the row's edges.
 export const CompactIconButton = (props: IconButtonProps) => {
   return (
-    <Field.Block>
-      <IconButton variant='ghost' iconOnly density='sm' size={3} {...props} />
-    </Field.Block>
+    <Block>
+      <Button variant='ghost' iconOnly size='sm' iconSize='xs' {...props} />
+    </Block>
   );
 };
 

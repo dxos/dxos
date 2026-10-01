@@ -448,7 +448,7 @@ const CommitIcon = memo(({ commit }: { commit: Commit }) => {
   return (
     <Icon
       icon={commit.icon}
-      size={4}
+      size='md'
       synchronized
       classNames={mx(
         commit.icon === 'ph--spinner-gap--regular' && 'animate-spin',

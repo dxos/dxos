@@ -11,6 +11,7 @@ import { useQuery } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
 import { Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import { Next } from '@dxos/react-ui/next';
 import { isFeedOwnerSchema } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -89,15 +90,14 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
       </Field.Root>
 
       {subscribedObjects.map((object) => (
-        <Field.Checkbox
+        <Next.Checkbox
           key={object.id}
           checked={subscribedUris.has(Obj.getURI(object))}
           onCheckedChange={(checked) => {
             handleSubscriptionChange(object, checked === true);
           }}
-        >
-          {Obj.getLabel(object) ?? object.id}
-        </Field.Checkbox>
+          label={Obj.getLabel(object) ?? object.id}
+        />
       ))}
     </Form.FieldSet>
   );

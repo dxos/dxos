@@ -11,7 +11,8 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import { truncateKey } from '@dxos/debug';
 import { JsonView, STAT_CARD_HUES, StatCard } from '@dxos/devtools';
 import { log } from '@dxos/log';
-import { Field, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
@@ -83,11 +84,11 @@ export const CallDebugPanel = ({ state: stateOverride }: CallDebugPanelProps) =>
       ))}
       <StatCard.Row
         label={t('show-webrtc-stats.title')}
-        action={<Field.Switch checked={showDetailedWebRTCStats} onCheckedChange={setShowDetailedWebRTCStats} />}
+        action={<Next.Switch checked={showDetailedWebRTCStats} onCheckedChange={setShowDetailedWebRTCStats} />}
       />
       <StatCard.Row
         label={t('show-calls-history.title')}
-        action={<Field.Switch checked={showServiceHistory} onCheckedChange={setShowServiceHistory} />}
+        action={<Next.Switch checked={showServiceHistory} onCheckedChange={setShowServiceHistory} />}
       />
       {showDetailedWebRTCStats && (
         <StatCard.Content>

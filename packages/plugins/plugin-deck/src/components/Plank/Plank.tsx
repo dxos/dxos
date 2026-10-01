@@ -168,7 +168,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                 <Breadcrumb.List classNames='gap-1'>
                   {breadcrumbs.map((crumb) => (
                     <Fragment key={crumb.id}>
-                      <Breadcrumb.ListItem asChild>
+                      <Breadcrumb.Item asChild>
                         <button
                           type='button'
                           className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
@@ -176,11 +176,11 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                         >
                           {crumb.label}
                         </button>
-                      </Breadcrumb.ListItem>
+                      </Breadcrumb.Item>
                       <Breadcrumb.Separator />
                     </Fragment>
                   ))}
-                  <Breadcrumb.ListItem>
+                  <Breadcrumb.Item>
                     <Pane.Title
                       attendableId={attendableId}
                       related={related}
@@ -188,7 +188,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                     >
                       {label}
                     </Pane.Title>
-                  </Breadcrumb.ListItem>
+                  </Breadcrumb.Item>
                 </Breadcrumb.List>
               </Breadcrumb.Root>
             ) : (

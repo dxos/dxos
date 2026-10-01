@@ -12,11 +12,9 @@ import {
   ButtonGroup,
   type ButtonProps,
   Icon,
-  IconButton,
   IconButtonProps,
   Popover,
   type ThemedClassName,
-  Toolbar,
   useMediaQuery,
   useThemeContext,
   useTranslation,
@@ -68,7 +66,7 @@ export const EmojiPickerToolbarButton = ({
       }}
     >
       <Popover.Trigger asChild>
-        <Toolbar.IconButton
+        <Button
           size={size}
           label={t('select-emoji.label')}
           icon='ph--smiley--regular'
@@ -77,30 +75,27 @@ export const EmojiPickerToolbarButton = ({
           disabled={disabled}
         />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content
-          side='bottom'
-          onKeyDownCapture={(event) => {
-            if (event.key === 'Escape') {
-              event.stopPropagation();
-              setEmojiPickerOpen(false);
-            }
-          }}
-        >
-          <Suspense fallback={null}>
-            <EmojiMartPanel
-              onEmojiSelect={({ native }: { native?: string }) => {
-                if (native) {
-                  setEmojiValue(native);
-                  setEmojiPickerOpen(false);
-                }
-              }}
-              themeMode={themeMode}
-            />
-          </Suspense>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content
+        side='bottom'
+        onKeyDownCapture={(event) => {
+          if (event.key === 'Escape') {
+            event.stopPropagation();
+            setEmojiPickerOpen(false);
+          }
+        }}
+      >
+        <Suspense fallback={null}>
+          <EmojiMartPanel
+            onEmojiSelect={({ native }: { native?: string }) => {
+              if (native) {
+                setEmojiValue(native);
+                setEmojiPickerOpen(false);
+              }
+            }}
+            themeMode={themeMode}
+          />
+        </Suspense>
+      </Popover.Content>
     </Popover.Root>
   );
 };
@@ -135,39 +130,36 @@ export const EmojiPickerBlock = ({
           <Button variant={triggerVariant} classNames='grow gap-2 text-2xl' disabled={disabled}>
             <span className='sr-only'>{t('select-emoji.label')}</span>
             <span>{emojiValue}</span>
-            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
+            <Icon icon='ph--caret-down--bold' size='xs' classNames='mx-0.5' />
           </Button>
         </Popover.Trigger>
         {/* Portalled, like `EmojiPickerToolbarButton` above and `PickerButton` (which is why the hue
             picker never had this problem): rendered in place, a 300px panel is clipped by the first
             scrolling ancestor — in the profile page, the settings panel's own overflow. */}
-        <Popover.Portal>
-          <Popover.Content
-            side='right'
-            sideOffset={isMd ? 0 : -310}
-            collisionPadding={8}
-            onKeyDownCapture={(event) => {
-              if (event.key === 'Escape') {
-                event.stopPropagation();
-                setEmojiPickerOpen(false);
-              }
-            }}
-          >
-            <Suspense fallback={null}>
-              <EmojiMartPanel
-                onEmojiSelect={({ native }: { native?: string }) => {
-                  if (native) {
-                    setEmojiValue(native);
-                    setEmojiPickerOpen(false);
-                  }
-                }}
-              />
-            </Suspense>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content
+          side='right'
+          sideOffset={isMd ? 0 : -310}
+          collisionPadding={8}
+          onKeyDownCapture={(event) => {
+            if (event.key === 'Escape') {
+              event.stopPropagation();
+              setEmojiPickerOpen(false);
+            }
+          }}
+        >
+          <Suspense fallback={null}>
+            <EmojiMartPanel
+              onEmojiSelect={({ native }: { native?: string }) => {
+                if (native) {
+                  setEmojiValue(native);
+                  setEmojiPickerOpen(false);
+                }
+              }}
+            />
+          </Suspense>
+        </Popover.Content>
       </Popover.Root>
-      <IconButton
+      <Button
         icon='ph--arrow-counter-clockwise--regular'
         iconOnly
         label={t('clear.label')}

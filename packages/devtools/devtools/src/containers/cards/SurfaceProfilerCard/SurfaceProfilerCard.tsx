@@ -5,8 +5,9 @@
 import React from 'react';
 
 import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
-import { Field, Flex, Grid, IconButton, SystemIconButton, Tooltip } from '@dxos/react-ui';
+import { Button, Flex, Grid, SystemButton, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -138,14 +139,14 @@ export const SurfaceProfilerCard = ({
         title='Surfaces'
         action={
           onClear && (
-            <IconButton iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
+            <Button iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
           )
         }
       />
       {onDebugChange && (
         <StatCard.Row
           label='Highlight surfaces'
-          action={<Field.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
+          action={<Next.Switch checked={!!debug} onCheckedChange={(checked) => onDebugChange(checked)} />}
         />
       )}
       {groups.length === 0 && <StatCard.Row span label='No surfaces mounted.' />}
@@ -190,7 +191,7 @@ export const SurfaceProfilerCard = ({
             <StatCard.Row
               key={surface.id ?? index}
               label={selectedGroup.role}
-              control={<SystemIconButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
+              control={<SystemButton.Clipboard iconOnly onCopy={() => JSON.stringify(surface, null, 2)} />}
             >
               <JsonHighlighter
                 classNames='text-sm'

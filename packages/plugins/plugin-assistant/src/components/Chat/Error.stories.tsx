@@ -36,19 +36,19 @@ const FailureToast = ({ rawError }: FailureToastProps) => {
 
   return (
     <Toast.Provider>
-      <Toast.Viewport />
+      <Toast.Toaster />
       {/* Long, 32-bit-safe duration keeps the toast up for review; larger values overflow setTimeout and fire immediately. */}
-      <Toast.Root type='foreground' open={open} duration={24 * 60 * 60 * 1000} onOpenChange={setOpen}>
+      <Toast.Root open={open} duration={24 * 60 * 60 * 1000} onOpenChange={setOpen}>
         <Toast.Title icon='ph--warning--regular' onClose={() => setOpen(false)}>
           {t('ai-service-error.label')}
         </Toast.Title>
         <Toast.Description>{error.message}</Toast.Description>
         {action && (
-          <Toast.Actions>
-            <Toast.Action altText={t(action.labelKey)} asChild>
+          <Toast.Footer>
+            <Toast.ActionTrigger asChild>
               <Button onClick={() => setOpen(false)}>{t(action.labelKey)}</Button>
-            </Toast.Action>
-          </Toast.Actions>
+            </Toast.ActionTrigger>
+          </Toast.Footer>
         )}
       </Toast.Root>
     </Toast.Provider>

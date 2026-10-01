@@ -11,7 +11,7 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
 import { CardAnnotation } from '@dxos/schema';
 import { getStyles, osTranslations } from '@dxos/ui-theme';
 
@@ -107,11 +107,11 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
     <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
       <Card.Root fullWidth classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
         <Card.Header>
-          <Card.Block>
+          <Block>
             <CardIconSlot subject={live}>
               <Icon icon={icon} classNames={iconStyles?.text} />
             </CardIconSlot>
-          </Card.Block>
+          </Block>
           <Card.Title>{label}</Card.Title>
           {menuItems.length > 0 && <Card.Menu items={menuItems} />}
         </Card.Header>

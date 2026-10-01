@@ -181,7 +181,7 @@ export const SpaceListArticle = ({
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content classNames='flex-1'>
+      <Panel.Body classNames='flex-1'>
         {/* TODO(burdon): This should not be a dialog. */}
         <DialogRestoreSpace
           {...(importTargetSpaceId !== null
@@ -209,7 +209,7 @@ export const SpaceListArticle = ({
           onRowClick={handleRowClicked}
           onRowAction={handleRowAction}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

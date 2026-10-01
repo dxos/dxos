@@ -12,7 +12,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, DXN, Entity, Filter, Obj, Query, Ref, Scope, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
-import { ToggleGroup, ToggleGroupItem, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { ToggleGroup, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta, RefField, useFormValues } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -315,8 +315,8 @@ const ActionKindToggle = ({ value, onChange }: { value: Routine.Kind; onChange: 
         }
       }}
     >
-      <ToggleGroupItem value='instructions'>{t('action-kind.instructions.label')}</ToggleGroupItem>
-      <ToggleGroupItem value='runnable'>{t('action-kind.operation.label')}</ToggleGroupItem>
+      <ToggleGroup.Item value='instructions'>{t('action-kind.instructions.label')}</ToggleGroup.Item>
+      <ToggleGroup.Item value='runnable'>{t('action-kind.operation.label')}</ToggleGroup.Item>
     </ToggleGroup>
   );
 };

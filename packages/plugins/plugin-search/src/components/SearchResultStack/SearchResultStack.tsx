@@ -7,7 +7,7 @@ import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState }
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Entity } from '@dxos/echo';
-import { Card, IconButton } from '@dxos/react-ui';
+import { Block, Button, Card } from '@dxos/react-ui';
 import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
@@ -91,15 +91,15 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Card.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
             <Card.Header ref={cardRef}>
-              <Card.Block />
+              <Block />
               <Card.Title>
                 <Highlighted text={label} query={query} />
               </Card.Title>
-              <Card.Block end>
+              <Block end>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                  <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             <Surface.Surface type={AppSurface.CardContent} data={{ subject: result.object }} limit={1} />
           </Card.Root>

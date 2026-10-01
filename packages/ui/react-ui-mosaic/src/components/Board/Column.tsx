@@ -14,7 +14,7 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { IconButton, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, DragHandle, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { mx } from '@dxos/ui-theme';
@@ -119,18 +119,13 @@ const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
           data-testid='board-column-header'
           ref={forwardedRef}
         >
-          <Toolbar.DragHandle ref={dragHandleRef} testId='mosaicBoard.columnDragHandle' />
+          <DragHandle ref={dragHandleRef} testId='mosaicBoard.columnDragHandle' />
           <Toolbar.Text classNames='grow px-0' data-testid='mosaicBoard.columnTitle'>
             {label}
           </Toolbar.Text>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <ActionMenu disabled={!columnMenuItems?.length} actions={columnMenuItems}>
-            <Toolbar.IconButton
-              iconOnly
-              variant='ghost'
-              icon='ph--dots-three-vertical--regular'
-              label={t('action-menu.label')}
-            />
+            <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('action-menu.label')} />
           </ActionMenu>
         </Toolbar.Root>
       </>
@@ -201,7 +196,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
     return (
       <Toolbar.Root classNames={mx('rounded-b-sm border-t border-separator', classNames)} ref={forwardedRef}>
         {handleAdd && (
-          <IconButton
+          <Button
             data-testid='board-column-add-item'
             classNames='group-hover/column:opacity-100 md:opacity-0 transition transition-opacity duration-500'
             variant='ghost'

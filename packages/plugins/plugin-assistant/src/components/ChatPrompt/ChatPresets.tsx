@@ -11,12 +11,10 @@ import { AssistantPreset } from '#types';
 export const ChatPresets = ({ presets, preset, onPresetChange }: AssistantPreset.ChatPresetProps) => {
   return (
     <Select.Root value={preset} onValueChange={onPresetChange}>
-      <Select.TriggerButton classNames='text-sm' />
+      <Select.Trigger classNames='text-sm' />
       <Select.Content>
         {presets?.map(({ id, label }) => (
-          <Select.Option key={id} value={id} classNames='text-sm'>
-            {label}
-          </Select.Option>
+          <Select.Item key={id} classNames='text-sm' item={{ value: id, label: label }} />
         ))}
       </Select.Content>
     </Select.Root>

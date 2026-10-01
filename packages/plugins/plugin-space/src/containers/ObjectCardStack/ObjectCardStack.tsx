@@ -43,15 +43,13 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
 
     return (
       <Panel.Root ref={forwardedRef}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root />
-        </Panel.Toolbar>
-        <Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
           {selectedObjects.length === 0 ? (
             <Banner.Root>
-              <Banner.Content classNames='m-trim-md'>
-                <Banner.Title>{t('row-details-no-selection.label')}</Banner.Title>
-              </Banner.Content>
+              <Banner.Title>{t('row-details-no-selection.label')}</Banner.Title>
             </Banner.Root>
           ) : (
             <Mosaic.Container asChild orientation='vertical' autoScroll={viewport} eventHandler={eventHandler}>
@@ -74,7 +72,7 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
               </ScrollArea.Root>
             </Mosaic.Container>
           )}
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },

@@ -74,13 +74,13 @@ export const SpecArticle = forwardRef<HTMLDivElement, SpecArticleProps>(
       <Editor.Root extensions={extensions}>
         <Panel.Root role={role} ref={forwardedRef}>
           {!readOnly && (
-            <Panel.Toolbar>
+            <Panel.Header>
               <Editor.Toolbar role={role} attendableId={attendableId} />
-            </Panel.Toolbar>
+            </Panel.Header>
           )}
-          <Panel.Content>
+          <Panel.Body>
             <Editor.View classNames={editorClassNames(role)} value={spec ? undefined : content} />
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </Editor.Root>
     );

@@ -11,7 +11,6 @@ import {
   type SlottableProps,
   type ThemedClassName,
   ToggleGroup,
-  ToggleGroupItem,
   type ToggleGroupItemProps,
   composable,
   composableProps,
@@ -229,7 +228,7 @@ type DashboardRangeProps = ToggleGroupItemProps;
  */
 const DashboardRange = forwardRef<HTMLButtonElement, DashboardRangeProps>(
   ({ variant = 'ghost', density = 'sm', ...props }, forwardedRef) => (
-    <ToggleGroupItem {...props} variant={variant} density={density} ref={forwardedRef} />
+    <ToggleGroup.Item {...props} variant={variant} size={density} ref={forwardedRef} />
   ),
 );
 

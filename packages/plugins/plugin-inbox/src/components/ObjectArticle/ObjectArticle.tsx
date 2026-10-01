@@ -22,10 +22,10 @@ export type ObjectArticleProps = {
  */
 export const ObjectArticle = ({ role, toolbar, header, children }: ObjectArticleProps) => (
   <Panel.Root role={role} classNames='dx-document'>
-    <Panel.Toolbar asChild>{toolbar}</Panel.Toolbar>
-    <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
+    <Panel.Header>{toolbar}</Panel.Header>
+    <Panel.Body classNames='grid grid-rows-[auto_1fr]'>
       {header}
       {children}
-    </Panel.Content>
+    </Panel.Body>
   </Panel.Root>
 );

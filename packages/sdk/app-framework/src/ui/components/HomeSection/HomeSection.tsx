@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import { Field, SystemIconButton, type ThemedClassName } from '@dxos/react-ui';
+import { Block, SystemButton, type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 //
@@ -52,9 +52,9 @@ const HomeSectionHeader = forwardRef<HTMLDivElement, HomeSectionHeaderProps>(
       {!title && <span className='grow' />}
       {children}
       {onClose && (
-        <Field.Block>
-          <SystemIconButton.Close variant='ghost' density='sm' iconOnly onClick={onClose} />
-        </Field.Block>
+        <Block>
+          <SystemButton.Close variant='ghost' size='sm' iconOnly onClick={onClose} />
+        </Block>
       )}
     </div>
   ),

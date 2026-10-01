@@ -144,18 +144,14 @@ const DefaultStory = ({
         <Container id='sidebar' classNames='flex flex-col h-full overflow-hidden'>
           <Toolbar.Root>
             <Select.Root value={sidebar} onValueChange={(value) => setSidebar(value as RenderProps['sidebar'])}>
-              <Select.TriggerButton classNames='w-full'>{sidebar}</Select.TriggerButton>
-              <Select.Portal>
-                <Select.Content>
-                  <Select.Viewport>
-                    {sidebarTypes.map((type) => (
-                      <Select.Item key={type} value={type}>
-                        {type}
-                      </Select.Item>
-                    ))}
-                  </Select.Viewport>
-                </Select.Content>
-              </Select.Portal>
+              <Select.Trigger classNames='w-full'>{sidebar}</Select.Trigger>
+              <Select.Content>
+                {sidebarTypes.map((type) => (
+                  <Select.Item key={type} value={type}>
+                    {type}
+                  </Select.Item>
+                ))}
+              </Select.Content>
             </Select.Root>
           </Toolbar.Root>
 

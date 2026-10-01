@@ -206,42 +206,37 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
               <Icon icon={icon} classNames='transition-opacity' />
             </AttentionSigilButton>
           </Menu.Trigger>
-          <Menu.Portal>
-            <Menu.Content>
-              <Menu.Viewport>
-                {isCollapsed ? (
-                  <Menu.Item onClick={() => onCollapse(id, false)} data-testid='section.expand'>
-                    <Icon icon='ph--arrows-out-line-vertical--regular' />
-                    <span className='ms-2 grow'>{t('expand.label')}</span>
-                  </Menu.Item>
-                ) : (
-                  <Menu.Item onClick={() => onCollapse(id, true)} data-testid='section.collapse'>
-                    <Icon icon='ph--arrows-in-line-vertical--regular' />
-                    <span className='ms-2 grow'>{t('collapse.label')}</span>
-                  </Menu.Item>
-                )}
-                <Menu.Separator />
-                <Menu.Item onClick={() => onAdd(id)} data-testid='section.add'>
-                  <Icon icon='ph--plus--regular' />
-                  <span className='ms-2 grow'>{t('add-section.label')}</span>
-                </Menu.Item>
-                <Menu.Item onClick={() => onMoveUp(id)} data-testid='section.move-up'>
-                  <Icon icon='ph--arrow-line-up--regular' />
-                  <span className='ms-2 grow'>{t('move-up.label')}</span>
-                </Menu.Item>
-                <Menu.Item onClick={() => onMoveDown(id)} data-testid='section.move-down'>
-                  <Icon icon='ph--arrow-line-down--regular' />
-                  <span className='ms-2 grow'>{t('move-down.label')}</span>
-                </Menu.Item>
-                <Menu.Separator />
-                <Menu.Item onClick={() => onDelete(id)} data-testid='section.remove'>
-                  <Icon icon='ph--trash--regular' />
-                  <span className='ms-2 grow'>{t('remove-section.label')}</span>
-                </Menu.Item>
-              </Menu.Viewport>
-              <Menu.Arrow />
-            </Menu.Content>
-          </Menu.Portal>
+          <Menu.Content>
+            {isCollapsed ? (
+              <Menu.Item onClick={() => onCollapse(id, false)} data-testid='section.expand'>
+                <Icon icon='ph--arrows-out-line-vertical--regular' />
+                <span className='ms-2 grow'>{t('expand.label')}</span>
+              </Menu.Item>
+            ) : (
+              <Menu.Item onClick={() => onCollapse(id, true)} data-testid='section.collapse'>
+                <Icon icon='ph--arrows-in-line-vertical--regular' />
+                <span className='ms-2 grow'>{t('collapse.label')}</span>
+              </Menu.Item>
+            )}
+            <Menu.Separator />
+            <Menu.Item onClick={() => onAdd(id)} data-testid='section.add'>
+              <Icon icon='ph--plus--regular' />
+              <span className='ms-2 grow'>{t('add-section.label')}</span>
+            </Menu.Item>
+            <Menu.Item onClick={() => onMoveUp(id)} data-testid='section.move-up'>
+              <Icon icon='ph--arrow-line-up--regular' />
+              <span className='ms-2 grow'>{t('move-up.label')}</span>
+            </Menu.Item>
+            <Menu.Item onClick={() => onMoveDown(id)} data-testid='section.move-down'>
+              <Icon icon='ph--arrow-line-down--regular' />
+              <span className='ms-2 grow'>{t('move-down.label')}</span>
+            </Menu.Item>
+            <Menu.Separator />
+            <Menu.Item onClick={() => onDelete(id)} data-testid='section.remove'>
+              <Icon icon='ph--trash--regular' />
+              <span className='ms-2 grow'>{t('remove-section.label')}</span>
+            </Menu.Item>
+          </Menu.Content>
         </Menu.Root>
       </div>
       <div className='p-1'>

@@ -465,7 +465,7 @@ const TaskGroupHeading = ({
       )}
       data-testid='taskList.group.header'
     >
-      {group.icon && <Icon icon={group.icon} size={4} classNames={group.iconClassNames} />}
+      {group.icon && <Icon icon={group.icon} size='md' classNames={group.iconClassNames} />}
       <span className='truncate font-medium'>{toLocalizedString(group.label, t)}</span>
       <span className='text-sm text-description' data-testid='taskList.group.count'>
         {group.count}

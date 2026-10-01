@@ -5,7 +5,7 @@
 import React, { type ReactNode, forwardRef } from 'react';
 
 import { composeRefs } from '@dxos/react-hooks';
-import { Button, IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 
 import { useMosaicTileContext } from './MosaicTileContext.ts';
 
@@ -57,10 +57,10 @@ export const MosaicDragHandle = forwardRef<HTMLButtonElement, MosaicDragHandlePr
     }
 
     return (
-      <IconButton
+      <Button
         ref={ref}
         iconOnly
-        noTooltip
+        showTooltip={false}
         tabIndex={-1}
         variant={variant}
         icon={icon}

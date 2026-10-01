@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useLayoutEffect, useRef, useState } from 'react';
 
-import { Toolbar } from '@dxos/react-ui';
+import { Button, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { useViewport, useWheel } from '../../hooks/index.ts';
@@ -90,25 +90,25 @@ const DefaultStory = ({ size, showAxes }: GridProps) => {
         offset={{ x: camera.x * camera.zoom, y: camera.y * camera.zoom }}
       />
       <Toolbar.Root
-        density='sm'
+        size='sm'
         classNames='absolute top-2 left-2 w-fit gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator'
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <Toolbar.IconButton
+        <Button
           variant='ghost'
           iconOnly
           icon='ph--magnifying-glass-plus--regular'
           label='Zoom in'
           onClick={() => zoomBy(ZOOM_STEP)}
         />
-        <Toolbar.IconButton
+        <Button
           variant='ghost'
           iconOnly
           icon='ph--magnifying-glass-minus--regular'
           label='Zoom out'
           onClick={() => zoomBy(1 / ZOOM_STEP)}
         />
-        <Toolbar.IconButton variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
+        <Button variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
         <Toolbar.Separator variant='line' />
         <Toolbar.Text classNames='text-description font-mono text-sm whitespace-nowrap'>
           {Math.round(camera.zoom * 100)}% · [{format(topLeft.x)}, {format(topLeft.y)}] – [{format(bottomRight.x)},{' '}

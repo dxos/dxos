@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type IconButtonProps, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, type IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -26,9 +26,9 @@ export const DebugPanelHeader = ({ mode, onModeChange, onClose, density }: Debug
   const floating = mode === 'floating';
   return (
     <>
-      <Toolbar.IconButton
+      <Button
         variant='ghost'
-        density={density}
+        size={density}
         iconOnly
         icon={floating ? 'ph--arrow-square-in--regular' : 'ph--arrow-square-out--regular'}
         label={floating ? t('dock-panel.label') : t('float-panel.label')}
@@ -36,9 +36,9 @@ export const DebugPanelHeader = ({ mode, onModeChange, onClose, density }: Debug
         onClick={() => onModeChange(floating ? 'docked' : 'floating')}
       />
       {onClose && (
-        <Toolbar.IconButton
+        <Button
           variant='ghost'
-          density={density}
+          size={density}
           iconOnly
           icon='ph--x--regular'
           label={t('close-panel.label')}

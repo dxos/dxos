@@ -34,21 +34,19 @@ const DefaultStory = () => {
 
   return (
     <Dialog.Root open>
-      <Dialog.Overlay>
-        <Dialog.Content>
-          <Dialog.Body>
-            <CreateObjectPanel
-              options={mockOptions}
-              spaces={mockSpaces}
-              typename={typename}
-              target={{} as Database.Database}
-              resolve={() => mockMetadata}
-              onTypenameChange={setTypename}
-              onCreateObject={async () => {}}
-            />
-          </Dialog.Body>
-        </Dialog.Content>
-      </Dialog.Overlay>
+      <Dialog.Content>
+        <Dialog.Body>
+          <CreateObjectPanel
+            options={mockOptions}
+            spaces={mockSpaces}
+            typename={typename}
+            target={{} as Database.Database}
+            resolve={() => mockMetadata}
+            onTypenameChange={setTypename}
+            onCreateObject={async () => {}}
+          />
+        </Dialog.Body>
+      </Dialog.Content>
     </Dialog.Root>
   );
 };

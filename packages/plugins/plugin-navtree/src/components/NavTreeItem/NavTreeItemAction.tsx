@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
+import { Button, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
@@ -46,7 +46,7 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
 
     return (
       <ActionMenu caller={caller} onAction={handleAction} group={parent} actions={menuActions as MenuItem[]}>
-        <IconButton
+        <Button
           {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
           {...composableProps(props)}
           classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
@@ -84,7 +84,7 @@ export const NavTreeItemMonolithicAction = (
   const density = useDensityContext();
   const runAction = useActionRunner();
   return (
-    <IconButton
+    <Button
       {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
       variant={variant}
       classNames={[

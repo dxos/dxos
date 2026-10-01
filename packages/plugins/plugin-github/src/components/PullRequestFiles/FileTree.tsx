@@ -4,8 +4,9 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Field, Icon, useTranslation } from '@dxos/react-ui';
+import { Icon, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -70,7 +71,7 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
     () =>
       ({ item }) =>
         item.file ? (
-          <Field.Checkbox
+          <Next.Checkbox
             size={4}
             checked={reviewed.has(item.path)}
             onCheckedChange={(checked) => onReviewedChange(item.path, checked === true)}
@@ -80,7 +81,7 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
             data-testid='pull-request.files.reviewed'
           />
         ) : (
-          <Icon icon='ph--folder--regular' size={4} />
+          <Icon icon='ph--folder--regular' size='md' />
         ),
     [reviewed, onReviewedChange, t],
   );
@@ -97,7 +98,7 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
       model={model}
       ariaLabel={t('files-tree.label')}
       classNames='text-sm'
-      density='sm'
+      size='sm'
       renderIcon={renderIcon}
       renderColumns={renderColumns}
       onOpenChange={handleOpenChange}

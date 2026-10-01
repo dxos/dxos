@@ -7,13 +7,15 @@ import React, { type PropsWithChildren, createContext, forwardRef, useCallback, 
 import { invariant } from '@dxos/invariant';
 import {
   Field,
+  Input,
+  NumberInput,
   ThemedClassName,
   ToggleGroup,
-  ToggleGroupItem,
   composable,
   composableProps,
   useTranslation,
 } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -274,9 +276,9 @@ const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNa
       onValueChange={handleKindChange}
     >
       {kinds.map((kind) => (
-        <ToggleGroupItem key={kind} value={kind}>
+        <ToggleGroup.Item key={kind} value={kind}>
           {t(KIND_LABEL_KEYS[kind])}
-        </ToggleGroupItem>
+        </ToggleGroup.Item>
       ))}
     </ToggleGroup>
   );
@@ -346,8 +348,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.minute.label')}>
           <Field.Root>
-            <Field.Input
-              type='number'
+            <NumberInput
               min={0}
               max={59}
               step={1}
@@ -387,7 +388,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
                 return (
                   <div key={day} className='flex shrink-0 items-center gap-1'>
                     <Field.Root>
-                      <Field.Checkbox
+                      <Next.Checkbox
                         checked={checked}
                         onCheckedChange={(next) => {
                           // Preserve the canonical `Days` order so the summary reads naturally.
@@ -415,8 +416,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
         <div className='flex items-center gap-3'>
           <LabelledRow label={t('schedule.day.label')}>
             <Field.Root>
-              <Field.Input
-                type='number'
+              <NumberInput
                 min={1}
                 max={31}
                 step={1}
@@ -441,7 +441,7 @@ const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (
       return (
         <LabelledRow label={t('schedule.cron.label')}>
           <Field.Root>
-            <Field.Input
+            <Input
               classNames='w-50 tabular-nums'
               placeholder='0 9 * * MON-FRI'
               value={value.cron}

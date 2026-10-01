@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Icon, IconButton } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -29,8 +29,8 @@ const MainPane = ({ id, label }: { id: string; label: string }) => {
           <Icon icon='ph--circle-dashed--regular' />
         </Pane.Sigil>
         <Pane.Title attendableId={id}>{label}</Pane.Title>
-        <IconButton iconOnly variant='ghost' icon='ph--arrows-out--regular' label='Fullscreen' />
-        <IconButton iconOnly variant='ghost' icon='ph--x--regular' label='Close' />
+        <Button iconOnly variant='ghost' icon='ph--arrows-out--regular' label='Fullscreen' />
+        <Button iconOnly variant='ghost' icon='ph--x--regular' label='Close' />
       </Pane.Toolbar>
       <Pane.Content classNames='grid place-items-center text-description'>
         <span>{label} content</span>
@@ -49,7 +49,7 @@ const SplitStory = () => {
       <Pane.Root>
         <Pane.Toolbar>
           <Pane.Tabs tabs={TABS} value={tab} onValueChange={setTab} attendableId='plank-main' related />
-          <IconButton iconOnly variant='ghost' icon='ph--x--regular' label='Close companion' />
+          <Button iconOnly variant='ghost' icon='ph--x--regular' label='Close companion' />
         </Pane.Toolbar>
         <Pane.Content classNames='grid place-items-center text-description'>
           <span className='flex items-center gap-1'>

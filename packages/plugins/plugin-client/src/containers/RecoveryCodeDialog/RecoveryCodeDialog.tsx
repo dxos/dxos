@@ -4,7 +4,8 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { AlertDialog, Button, Field, Flex, Grid, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, Button, Flex, Grid, SystemButton, useTranslation } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui/next';
 
 import { meta } from '#meta';
 
@@ -30,22 +31,21 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
           <p>{t('recovery-code-dialog-warning-2.message')}</p>
         </Flex>
         <Flex gap='sm' align='center' classNames='pb-4'>
-          <Field.Checkbox
+          <Next.Checkbox
             data-testid='recoveryCode.confirm'
             checked={confirmation}
             onCheckedChange={handleConfirmation}
-          >
-            {t('recovery-code-confirmation.label')}
-          </Field.Checkbox>
+            label={t('recovery-code-confirmation.label')}
+          />
         </Flex>
       </AlertDialog.Body>
-      <AlertDialog.ActionBar>
+      <AlertDialog.Footer>
         <AlertDialog.Action asChild>
           <Button data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
             {t('continue.label')}
           </Button>
         </AlertDialog.Action>
-      </AlertDialog.ActionBar>
+      </AlertDialog.Footer>
     </AlertDialog.Content>
   );
 };
@@ -54,11 +54,7 @@ const Code = ({ code }: { code: string }) => {
   const words = code.split(' ');
   return (
     <div className='relative p-2 border border-separator rounded-sm group'>
-      <SystemIconButton.Clipboard
-        iconOnly
-        value={code}
-        classNames='absolute top-2 right-2 invisible group-hover:visible'
-      />
+      <SystemButton.Clipboard iconOnly value={code} classNames='absolute top-2 right-2 invisible group-hover:visible' />
       <Grid cols={4} grow={false} data-testid='recoveryCode.code' data-code={code}>
         {words.map((word, i) => (
           <Flex key={i} gap='sm' align='center' classNames='p-2'>

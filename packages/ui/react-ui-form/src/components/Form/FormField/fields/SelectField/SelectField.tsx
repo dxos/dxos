@@ -45,24 +45,20 @@ export const SelectField = ({
 
   return (
     <Select.Root value={value} onValueChange={handleValueChange} disabled={!!readonly}>
-      <Select.TriggerButton classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
+      <Select.Trigger classNames='w-full' disabled={!!readonly} placeholder={placeholder} />
       {options?.length !== 0 && (
-        <Select.Portal>
-          <Select.Content>
-            <Select.Viewport>
-              {options?.map(({ value, label, secondaryLabel, icon, iconHue }) => (
-                // NOTE: Numeric values are converted to and from strings.
-                <Select.Option key={String(value)} value={String(value)}>
-                  <span className='flex items-center flex-row gap-2'>
-                    {icon && <Icon icon={icon} classNames={getIconHueStyles(iconHue)} />}
-                    {label ?? String(value)}
-                    {secondaryLabel && <span className='text-subdued text-xs'>{secondaryLabel}</span>}
-                  </span>
-                </Select.Option>
-              ))}
-            </Select.Viewport>
-          </Select.Content>
-        </Select.Portal>
+        <Select.Content>
+          {options?.map(({ value, label, secondaryLabel, icon, iconHue }) => (
+            // NOTE: Numeric values are converted to and from strings.
+            <Select.Item key={String(value)} value={String(value)}>
+              <span className='flex items-center flex-row gap-2'>
+                {icon && <Icon icon={icon} classNames={getIconHueStyles(iconHue)} />}
+                {label ?? String(value)}
+                {secondaryLabel && <span className='text-subdued text-xs'>{secondaryLabel}</span>}
+              </span>
+            </Select.Item>
+          ))}
+        </Select.Content>
       )}
     </Select.Root>
   );

@@ -106,11 +106,11 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
 
     return (
       <Panel.Root {...composableProps(props, { classNames: ['h-full', classNames] })} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...menu} alwaysActive classNames='justify-end' />
-        </Panel.Toolbar>
+        </Panel.Header>
 
-        <Panel.Content>
+        <Panel.Body>
           <Accordion.Root<TraceSection>
             items={SECTIONS}
             value={openSections}
@@ -125,10 +125,10 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                   case 'processes':
                     return (
                       <Accordion.Item key={section.id} item={section}>
-                        <Accordion.ItemHeader hover>
+                        <Accordion.ItemTrigger hover>
                           <span className='text-sm text-description'>{t('trace-processes.label')}</span>
-                        </Accordion.ItemHeader>
-                        <Accordion.ItemBody classNames='p-0'>
+                        </Accordion.ItemTrigger>
+                        <Accordion.ItemContent classNames='p-0'>
                           <ProcessTreeContainer
                             classNames='max-h-[8lh]'
                             processes={processes}
@@ -138,7 +138,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                             onSelectedChange={onSelectedChange}
                             onProcessTerminate={onProcessTerminate}
                           />
-                        </Accordion.ItemBody>
+                        </Accordion.ItemContent>
                       </Accordion.Item>
                     );
                   case 'trace':
@@ -156,10 +156,10 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                           '[&>[data-part=item-content]]:dx-grow [&>[data-part=item-content]]:flex [&>[data-part=item-content]]:flex-col [&>[data-part=item-content]]:animate-none',
                         )}
                       >
-                        <Accordion.ItemHeader hover>
+                        <Accordion.ItemTrigger hover>
                           <span className='text-sm text-description'>{t('trace.label')}</span>
-                        </Accordion.ItemHeader>
-                        <Accordion.ItemBody classNames='dx-grow grid grid-rows-[minmax(0,1fr)]'>
+                        </Accordion.ItemTrigger>
+                        <Accordion.ItemContent classNames='dx-grow grid grid-rows-[minmax(0,1fr)]'>
                           {/* Opens at the tail and follows new entries while pinned; scrolling up unpins. */}
                           <ScrollContainer.Root pin>
                             <ScrollContainer.Content thin>
@@ -181,7 +181,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                               <ScrollContainer.ScrollDownButton />
                             </ScrollContainer.Content>
                           </ScrollContainer.Root>
-                        </Accordion.ItemBody>
+                        </Accordion.ItemContent>
                       </Accordion.Item>
                     );
                   case 'details': {
@@ -189,18 +189,18 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                     return (
                       // With nothing selected the section stays as a plain, closed row.
                       <Accordion.Item key={section.id} item={section} disabled={!commit}>
-                        <Accordion.ItemHeader hover>
+                        <Accordion.ItemTrigger hover>
                           <span className='flex items-center truncate text-sm text-description'>
                             {t('trace-details.label')}
                           </span>
-                        </Accordion.ItemHeader>
+                        </Accordion.ItemTrigger>
                         {commit && (
-                          <Accordion.ItemBody classNames='p-0'>
+                          <Accordion.ItemContent classNames='p-0'>
                             <JsonHighlighter
                               data={details[commit.id] ?? commit}
                               classNames='max-h-[20lh] text-xs p-1.5'
                             />
-                          </Accordion.ItemBody>
+                          </Accordion.ItemContent>
                         )}
                       </Accordion.Item>
                     );
@@ -209,7 +209,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
               })
             }
           </Accordion.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },

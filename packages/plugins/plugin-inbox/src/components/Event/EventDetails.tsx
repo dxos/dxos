@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Database, DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Card, IconButton, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, useTranslation } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
@@ -80,29 +80,29 @@ export const EventDetails = ({
     <>
       {title === 'heading' && (
         <Card.Row>
-          <Card.Block>
+          <Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Card.Block>
+          </Block>
           <Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
-            <Card.Block end>
-              <IconButton
+            <Block end>
+              <Button
                 iconOnly
                 variant='ghost'
                 icon='ph--handshake--regular'
                 label={Obj.getLabel(meeting) ?? 'Meeting'}
                 onClick={onOpenObject ? () => onOpenObject(meeting) : undefined}
               />
-            </Card.Block>
+            </Block>
           )}
         </Card.Row>
       )}
 
       {title === 'text' && (
         <Card.Row>
-          <Card.Block>
+          <Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Card.Block>
+          </Block>
           <Card.Text>{data.title ?? t('event-untitled.label')}</Card.Text>
         </Card.Row>
       )}
