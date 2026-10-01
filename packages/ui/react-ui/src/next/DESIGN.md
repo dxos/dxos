@@ -655,3 +655,17 @@ audit" (points 25–39, all accepted as recommended except where these rules say
     `Field.RequiredIndicator` is exported only for custom placement or a different mark.
 13. **Wrappers keep the base names.** A sibling package's wrapper (`@dxos/react-ui-list/next` `Listbox`) uses the
     wrapped composite's part names, so one vocabulary spans packages.
+
+## Text emphasis
+
+Decided 2026-10-01. Text colours rank content above interface: a field's value and secondary user data outrank the
+label that names the field.
+
+1. **Ranking now, on today's tokens.** Values and primary text use the base text colour; secondary content (subtitles,
+   URLs, counts, units) uses `--color-description`; interface text (field labels, help text, legends, placeholders)
+   uses `--color-subdued`, with help text one size below its label so the two stay distinct at the same colour.
+2. **Emphasis names, applied last.** When the current components are deleted, the text colours are renamed across the
+   whole codebase in one change to an emphasis scale: `--nx-text` (default), `--nx-text-muted` (today's description),
+   `--nx-text-subtle` (today's subdued). Names state emphasis, not use, so components pick a step and a new use needs
+   no new token; `primary`/`secondary` are avoided because `primary` already means the accent. Renaming earlier would
+   leave two schemes in use until the old components go.

@@ -30,7 +30,8 @@ layout) is deferred to M7.
 4. **Settings layout (M7)**, then **arrays and layout templates (M8)**, **ref and lookup fields (M9)**,
    **higher-level form components (M10)**.
 5. **Tree port (M11):** move the prototype to a real `Tree`; pilot plugin-navtree; then MasterDetail.
-6. **Migrate and delete:** move importers package by package, add the mixing lint rule (point 11), delete the old
+6. **Migrate and delete:** move importers package by package, add the mixing lint rule (point 11), rename the text
+   colours to the emphasis scale (DESIGN.md "Text emphasis"), delete the old
    components and make `next` each package's root entry.
 
 ### Decisions still needed
