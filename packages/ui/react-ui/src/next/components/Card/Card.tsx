@@ -231,6 +231,8 @@ CardSection.displayName = 'Next.Card.Section';
 type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   /** Leading icon, in a Block in the card's start rail, so row text starts at the content edge with or without one. */
   icon?: string;
+  /** Leading content in place of the icon (e.g. a person's avatar), in the same Block. */
+  leading?: ReactNode;
   /**
    * Trailing content (a Tag, a count, an action), kept whole while the text truncates; it ends in the card's end rail,
    * which an icon-only action fills, and a wider one extends back into the content track.
@@ -246,7 +248,7 @@ type CardRowProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * it), as the current `Card.Action` row was.
  */
 const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
-  ({ classNames, icon, trailing, current, onClick, onKeyDown, children, ...props }, forwardedRef) => (
+  ({ classNames, icon, leading, trailing, current, onClick, onKeyDown, children, ...props }, forwardedRef) => (
     <div
       {...props}
       {...clickableProps(onClick, onKeyDown)}
@@ -257,11 +259,7 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
       className={mx(recipes.cardRow(), onClick && recipes.cardClickable(), classNames)}
       ref={forwardedRef}
     >
-      {icon && (
-        <Block rail='start'>
-          <Icon icon={icon} />
-        </Block>
-      )}
+      {(leading != null || icon) && <Block rail='start'>{leading ?? (icon && <Icon icon={icon} />)}</Block>}
       <div data-scope='card' data-part='row-main' className={recipes.cardRowMain()}>
         <div data-scope='card' data-part='row-content' className={recipes.cardRowContent()}>
           {children}

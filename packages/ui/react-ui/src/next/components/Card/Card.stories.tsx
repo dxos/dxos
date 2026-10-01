@@ -215,6 +215,34 @@ export const Sized: Story = {
   },
 };
 
+/** A Row's `leading` content (here an avatar) takes the icon's Block in the start rail. */
+export const LeadingRow: Story = {
+  render: () => (
+    <Next.Card.Root grid>
+      <Next.Card.Row
+        leading={<Next.Avatar.Root fallback='Ada Lovelace' label='Ada Lovelace' data-testid='leading-avatar' />}
+        trailing={<Next.Icon icon='ph--arrow-right--regular' />}
+        onClick={() => {}}
+      >
+        <Next.Card.Text>Ada Lovelace</Next.Card.Text>
+      </Next.Card.Row>
+      <Next.Card.Row icon='ph--calendar--regular'>
+        <Next.Card.Text>Standup</Next.Card.Text>
+      </Next.Card.Row>
+    </Next.Card.Root>
+  ),
+  play: async ({ canvasElement }) => {
+    const avatar = byTestId(canvasElement, 'leading-avatar');
+    const icon = canvasElement.querySelectorAll('[data-part="row"]')[1]?.querySelector('svg');
+    // Both sit in the start rail's Block, so the row texts start at the same edge.
+    await expect(avatar.closest('[data-part="row"] > *')).not.toBeNull();
+    await expect(centreX(avatar.getBoundingClientRect())).toBeCloseTo(
+      icon ? centreX(icon.getBoundingClientRect()) : 0,
+      0,
+    );
+  },
+};
+
 /**
  * The card lifts one level above its host, and title, body and footer share the content edge; the poster spans the
  * card's full width at its aspect ratio, flush with the top edge, and a poster that fails to load keeps its frame and
