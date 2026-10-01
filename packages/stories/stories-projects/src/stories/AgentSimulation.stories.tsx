@@ -17,10 +17,10 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { type Space } from '@dxos/react-client/echo';
 import { Text } from '@dxos/schema';
-import { Cell, UpdateCompanionStubPlugin, createStoryDecorators } from '@dxos/storybook-testing';
+import { Cell, createStoryDecorators } from '@dxos/storybook-testing';
 import { Task, TaskSet } from '@dxos/types';
 
-import { ModuleContainer, storyParameters } from '../testing/index.ts';
+import { ModuleContainer, TaskDetail, storyParameters } from '../testing/index.ts';
 
 //
 // Delegation end to end with a simulated agent: the real plugin stack, the real delegation
@@ -94,7 +94,7 @@ let seeded: { generation: number; space: Space; roots: Task.Task[] } | undefined
 /** The task the agent holds: resolved lazily, since the model is built before the graph is seeded. */
 const delegatedTask = () => seeded?.roots.find((task) => task.title === DELEGATED_TASK);
 
-/** Seeds the project and lays it out as the deck would: the project, and its task companion beside it. */
+/** Seeds the project and lays it out as the deck would: the project, and its selected task beside it. */
 const seedProject = async ({ space }: { space: Space }) => {
   const storyGeneration = generation;
   const project = space.db.add(Project.make({ name: PROJECT_NAME }));
@@ -122,7 +122,7 @@ const seedProject = async ({ space }: { space: Space }) => {
   if (storyGeneration === generation) {
     seeded = { generation: storyGeneration, space, roots };
   }
-  return [[Cell.article(project)], [Cell.companion(project, 'task')]];
+  return [[Cell.article(project)], [Cell.article(project, { component: TaskDetail })]];
 };
 
 /** The plugin stack, with the assistant's language model replaced by the simulator. */
@@ -139,8 +139,6 @@ const createDecorators = (options: Omit<AgentSimulator.AgentSimulatorOptions, 'r
       }),
       // Provides `RemoteProcessManager`, which the assistant's agent service requires.
       RoutinePlugin.make(),
-      // Selecting a row asks the deck to show its companion; the layout here already does.
-      UpdateCompanionStubPlugin(),
     ],
   });
 
@@ -165,7 +163,7 @@ const assignToAgent = async (canvas: ReturnType<typeof within>, title: string) =
   await userEvent.click(await screen.findByText('Assign to agent', undefined, { timeout: 10_000 }));
 };
 
-/** Opens the task's detail in the companion, so its history is on screen while the agent works it. */
+/** Opens the task's detail beside the project, so its history is on screen while the agent works it. */
 const selectTask = async (canvas: ReturnType<typeof within>, title: string) => {
   const labels = await canvas.findAllByText(title, undefined, { timeout: 10_000 });
   const label = labels.find((candidate: HTMLElement) => candidate.closest('[data-testid="taskList.item"]'));
