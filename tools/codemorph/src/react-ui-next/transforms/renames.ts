@@ -302,6 +302,28 @@ const RULES: Record<PackageName, Record<string, Rule>> = {
     'Menu.CheckboxItem': { apply: menuItem },
     // Card, ScrollArea.
     'Card.Root': { drop: ['fullWidth'] },
+    'Card.Poster': {
+      props: { image: 'src' },
+      review: {
+        icon: 'Card.Poster icon has no Next part: render an Image fallback or an Icon in a Block by hand',
+      },
+      apply: ({ file, element }) => {
+        const aspect = getAttr(element, 'aspect');
+        const value = aspect ? attrValue(aspect) : undefined;
+        if (!aspect || !value) {
+          return;
+        }
+        if (value.kind === 'string' && value.value === 'video') {
+          removeAttr(file, aspect);
+        } else if (value.kind === 'string' && value.value === 'auto') {
+          file.replace(aspect, "aspectRatio='auto'");
+        } else {
+          file.report(aspect, 'Card.Poster aspect → Image aspectRatio (16 / 9 by default)');
+          return;
+        }
+        file.count('Card.Poster aspect → aspectRatio');
+      },
+    },
     'ScrollArea.Root': {
       drop: ['thin', 'centered'],
       review: { padding: 'ScrollArea padding dropped: compose Viewport asChild > Container gutter by hand' },

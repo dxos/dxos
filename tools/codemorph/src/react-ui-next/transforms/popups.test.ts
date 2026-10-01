@@ -80,4 +80,20 @@ describe('popups', () => {
       export const Scope = () => <Next.ToggleGroup.Root type='single' />;
     `);
   });
+
+  test('Card.Poster image → src', () => {
+    const { output } = transformFixture(
+      renames,
+      code`
+        import { Next } from '@dxos/react-ui/next';
+
+        export const Poster = () => <Next.Card.Poster alt='a' image='b.png' />;
+      `,
+    );
+    expect(output).toBe(code`
+      import { Next } from '@dxos/react-ui/next';
+
+      export const Poster = () => <Next.Card.Poster alt='a' src='b.png' />;
+    `);
+  });
 });
