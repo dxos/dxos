@@ -2,39 +2,49 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Cause from 'effect/Cause';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
 
-/** A failure the script itself raised, reported back to the caller as output rather than failing the call. */
-export class ScriptError extends Schema.TaggedError<ScriptError>('McpScriptError')('McpScriptError', {
-  message: Schema.String,
-}) {}
+import { type ToolFailure } from './failure.ts';
+import * as isolateInternal from './script-isolate.ts';
 
-/** One evaluation: an async function body, the names in its scope, and its budget. */
-export type EvaluateParams = {
+/** One call a script made to its host: the verb, and the arguments exactly as the script passed them. */
+export const ScriptCall = Schema.Struct({
+  binding: Schema.Literals(['invoke', 'queryOperations', 'loadSkill']),
+  args: Schema.Array(Schema.Unknown),
+});
+export type ScriptCall = Schema.Schema.Type<typeof ScriptCall>;
+
+/** A {@link ScriptCall}'s answer as it crosses back into an isolate: the value, or the tool failure. */
+export type ScriptOutcome =
+  | { readonly _tag: 'Ok'; readonly value: unknown }
+  | { readonly _tag: 'Failure'; readonly code: ToolFailure['code']; readonly message: string };
+
+/** Answers one call the program makes, through the same governance as the tools. */
+export type ScriptDispatch = (call: ScriptCall) => Effect.Effect<unknown, ToolFailure>;
+
+export type ScriptRequest = {
+  /** The body of an `Effect.gen` generator. */
   readonly code: string;
-  readonly bindings: Readonly<Record<string, unknown>>;
-  readonly timeout?: Duration.Input;
+  /** The `runScript` call's space, which `spaceId` in the program names. */
+  readonly spaceId?: string;
+  readonly timeout: Duration.Duration;
+  readonly maxOutput: number;
 };
 
-/** Runs a script's code; injected so a host chooses how contained that code is. */
+/** What the program printed, and why it failed when it did. */
+export type ScriptResult = { readonly output: string; readonly error?: string };
+
+/**
+ * Runs one script. `dispatch` answers its calls in this process; a sandbox in another runtime routes
+ * them back to its host instead, which answers them with the same governance (`scriptCallOutcome`).
+ */
 export type Sandbox = {
-  readonly evaluate: (params: EvaluateParams) => Effect.Effect<unknown, ScriptError>;
+  readonly run: (request: ScriptRequest, dispatch: ScriptDispatch) => Effect.Effect<ScriptResult>;
 };
-
-/**
- * Wraps a script body into the async function body the sandbox evaluates: the script is the body
- * of an `Effect.gen`, so `yield*` works without the model having to remember the wrapper.
- */
-export const wrap = (code: string): string => `return await runEffect(Effect.gen(function* () {\n${code}\n}));`;
-
-/**
- * Whether a value the script produced is a program `runEffect` can run. Narrowed to no requirements
- * because every binding in scope is already closed over its services, so nothing the script can
- * build needs one.
- */
-export const isProgram = (value: unknown): value is Effect.Effect<unknown, unknown> => Effect.isEffect(value);
 
 /** `AsyncFunction` is not a global binding, so it is reached through an async function's prototype. */
 const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
@@ -47,27 +57,91 @@ const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
  * timeout abandons the evaluation rather than stopping it, since nothing in-process can cancel it.
  */
 export const inProcess: Sandbox = {
-  evaluate: ({ code, bindings, timeout }) =>
-    Effect.tryPromise({
-      try: () => {
-        const names = Object.keys(bindings);
-        // eslint-disable-next-line @typescript-eslint/no-implied-eval
-        const fn = new AsyncFunction(...names, `'use strict';\n${code}`);
-        const evaluation: Promise<unknown> = fn(...names.map((name) => bindings[name]));
-        if (timeout === undefined) {
-          return evaluation;
-        }
-        // Raced rather than interrupted: an uninterruptible `tryPromise` would hang `Effect.timeout`
-        // for as long as the evaluation it was meant to bound.
-        const deadline = rejectAfter(timeout);
-        return Promise.race([evaluation, deadline.promise]).finally(deadline.cancel);
-      },
-      catch: (error) => new ScriptError({ message: describeFailure(error) }),
+  run: ({ code, spaceId, timeout, maxOutput }, dispatch) =>
+    Effect.gen(function* () {
+      const services = yield* Effect.context<never>();
+      const printer = makePrinter(maxOutput);
+      const bindings = {
+        Effect,
+        spaceId,
+        print: (...values: unknown[]) => Effect.sync(() => printer.print(...values)),
+        invoke: (...args: unknown[]) => dispatch({ binding: 'invoke', args }),
+        queryOperations: (...args: unknown[]) => dispatch({ binding: 'queryOperations', args }),
+        loadSkill: (...args: unknown[]) => dispatch({ binding: 'loadSkill', args }),
+        /** Supplied by the wrapper, not by the script: runs its program and reports how it failed. */
+        runEffect: (program: unknown): Promise<unknown> =>
+          isProgram(program)
+            ? Effect.runPromiseWith(services)(Effect.exit(program)).then((exit) =>
+                Exit.isSuccess(exit)
+                  ? exit.value
+                  : Promise.reject(new Error(describeFailure(Cause.squash(exit.cause)))),
+              )
+            : Promise.reject(
+                new Error(
+                  `The script produced a ${typeof program}, not an Effect: write the Effect.gen body only, not the wrapper.`,
+                ),
+              ),
+      };
+
+      const result = yield* Effect.tryPromise({
+        try: () => evaluate(wrap(code), bindings, timeout),
+        catch: describeFailure,
+      }).pipe(Effect.result);
+      if (result._tag === 'Failure') {
+        return { output: printer.output(), error: result.failure };
+      }
+      // A program that printed nothing but returned a value would otherwise answer with nothing.
+      if (result.success !== undefined && printer.isEmpty()) {
+        printer.print(result.success);
+      }
+      return { output: printer.output() };
     }),
 };
 
-const rejectAfter = (timeout: Duration.Input): { promise: Promise<never>; cancel: () => void } => {
-  const duration = Duration.fromInputUnsafe(timeout);
+/**
+ * A sandbox over a runtime that takes a whole module, such as a Worker Loader isolate. `evaluate`
+ * runs {@link isolateInternal.module}'s output and returns what its `fetch` answered; a failure to run
+ * it at all is reported as the script's error, since the caller can do nothing but retry.
+ */
+export const isolate = ({
+  evaluate,
+}: {
+  readonly evaluate: (params: {
+    readonly mainModule: string;
+    readonly timeout: Duration.Duration;
+  }) => Effect.Effect<ScriptResult, { readonly message: string }>;
+}): Sandbox => ({
+  run: ({ code, spaceId, timeout, maxOutput }) =>
+    evaluate({ mainModule: isolateInternal.module({ code, spaceId, maxOutput }), timeout }).pipe(
+      Effect.catch((error) => Effect.succeed({ output: '', error: `The script could not run: ${error.message}` })),
+    ),
+});
+
+/**
+ * Wraps a script body into the async function body the sandbox evaluates: the script is the body
+ * of an `Effect.gen`, so `yield*` works without the model having to remember the wrapper.
+ */
+const wrap = (code: string): string => `return await runEffect(Effect.gen(function* () {\n${code}\n}));`;
+
+/**
+ * Whether a value the script produced is a program `runEffect` can run. Narrowed to no requirements
+ * because every binding in scope is already closed over its services, so nothing the script can
+ * build needs one.
+ */
+const isProgram = (value: unknown): value is Effect.Effect<unknown, unknown> => Effect.isEffect(value);
+
+const evaluate = (body: string, bindings: Record<string, unknown>, timeout: Duration.Duration): Promise<unknown> => {
+  const names = Object.keys(bindings);
+  // eslint-disable-next-line @typescript-eslint/no-implied-eval
+  const fn = new AsyncFunction(...names, `'use strict';\n${body}`);
+  const evaluation: Promise<unknown> = fn(...names.map((name) => bindings[name]));
+  // Raced rather than interrupted: an uninterruptible `tryPromise` would hang `Effect.timeout` for as
+  // long as the evaluation it was meant to bound.
+  const deadline = rejectAfter(timeout);
+  return Promise.race([evaluation, deadline.promise]).finally(deadline.cancel);
+};
+
+const rejectAfter = (duration: Duration.Duration): { promise: Promise<never>; cancel: () => void } => {
   let handle: ReturnType<typeof setTimeout> | undefined;
   const promise = new Promise<never>((_, reject) => {
     handle = setTimeout(
@@ -81,7 +155,7 @@ const rejectAfter = (timeout: Duration.Input): { promise: Promise<never>; cancel
 };
 
 /** What the caller is told a failure was; a tagged error's detail lives in its fields, not `message`. */
-export const describeFailure = (error: unknown): string => {
+const describeFailure = (error: unknown): string => {
   if (error instanceof Error) {
     return error.message.length > 0 ? error.message : [String(error), fields(error)].filter(Boolean).join(' ');
   }
@@ -101,8 +175,11 @@ const fields = (error: unknown): string | undefined => {
   }
 };
 
-/** Collects the lines a script printed, truncating once the budget is spent. */
-export const makePrinter = (maxOutput: number) => {
+/**
+ * Collects the lines a script printed, truncating once the budget is spent. The isolate module
+ * carries the same logic as source (`script-isolate.ts`), so a change here belongs there too.
+ */
+const makePrinter = (maxOutput: number) => {
   const lines: string[] = [];
   let printed = 0;
   let truncated = false;

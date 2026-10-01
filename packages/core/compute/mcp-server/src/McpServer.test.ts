@@ -3,6 +3,7 @@
 //
 
 import type * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Result from 'effect/Result';
@@ -10,6 +11,10 @@ import * as Schema from 'effect/Schema';
 import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
 import * as McpServer$ from 'effect/unstable/ai/McpServer';
 import * as HttpRouter from 'effect/unstable/http/HttpRouter';
+import { mkdtemp, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { describe, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
@@ -147,6 +152,60 @@ const runInvoke = (
     ),
   };
 };
+
+/**
+ * The isolate module run in Node as a Worker Loader would run it: written to disk beside an
+ * `effect.js` that re-exports the real library, imported, and fetched with an `env.HOST` that
+ * answers through `scriptCallOutcome` — the same seam EDGE's host serves.
+ */
+const nodeIsolate = ({
+  registry,
+  host,
+  ledger,
+  spaceId,
+}: {
+  registry: Registry.Registry;
+  host: McpServer.HostShape;
+  ledger: McpServer.SkillLedger;
+  spaceId?: SpaceId;
+}): McpServer.ScriptSandbox =>
+  McpServer.isolateScriptSandbox({
+    evaluate: ({ mainModule, timeout }) =>
+      Effect.promise(async () => {
+        const dir = await mkdtemp(join(tmpdir(), 'mcp-script-'));
+        const effectModule = ['Cause', 'Data', 'Effect', 'Exit']
+          .map((name) => `export * as ${name} from '${import.meta.resolve(`effect/${name}`)}';`)
+          .join('\n');
+        await writeFile(join(dir, McpServer.SCRIPT_EFFECT_MODULE), effectModule);
+        await writeFile(join(dir, 'main.js'), mainModule);
+        const isolate: { default: { fetch: (request: Request, env: unknown) => Promise<Response> } } = await import(
+          pathToFileURL(join(dir, 'main.js')).href
+        );
+        const env = {
+          HOST: {
+            call: (binding: unknown, args: unknown) =>
+              EffectEx.runPromise(McpServer.scriptCallOutcome(registry, host, ledger, { binding, args }, { spaceId })),
+          },
+        };
+        // The runner, not the module, bounds the program, as compute-service does by abandoning its fetch.
+        const answer = isolate.default.fetch(new Request('http://script/'), env).then((response) => response.json());
+        const abandoned = new Promise<McpServer.ScriptResult>((resolve) => {
+          setTimeout(
+            () => resolve({ output: '', error: 'Script did not finish in time; it was abandoned.' }),
+            Duration.toMillis(timeout),
+          ).unref();
+        });
+        return Promise.race([answer, abandoned]);
+      }),
+  });
+
+const SANDBOXES: {
+  name: string;
+  make: (context: Parameters<typeof nodeIsolate>[0]) => McpServer.ScriptSandbox;
+}[] = [
+  { name: 'in-process', make: () => McpServer.inProcessScriptSandbox },
+  { name: 'isolate module', make: nodeIsolate },
+];
 
 describe('McpServer', () => {
   describe('invokeOperation', () => {
@@ -571,7 +630,7 @@ describe('McpServer', () => {
     });
   });
 
-  describe('runScript', () => {
+  describe.each(SANDBOXES)('runScript ($name)', ({ make }) => {
     const run = (
       code: string,
       options: {
@@ -581,17 +640,21 @@ describe('McpServer', () => {
         timeout?: number;
       } = {},
     ) => {
+      const registry = testRegistry();
       const host = options.host ?? testHost();
       const ledger = options.ledger ?? McpServer.memorySkillLedger();
       return {
         invocations: host.invocations,
         result: EffectEx.runPromise(
           McpServer.runScript(
-            testRegistry(),
+            registry,
             host.host,
             ledger,
             { code, spaceId: options.spaceId },
-            { sandbox: McpServer.inProcessScriptSandbox, timeout: options.timeout },
+            {
+              sandbox: make({ registry, host: host.host, ledger, spaceId: options.spaceId }),
+              timeout: options.timeout,
+            },
           ),
         ),
       };

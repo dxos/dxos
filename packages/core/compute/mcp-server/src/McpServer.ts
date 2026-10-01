@@ -4,13 +4,10 @@
 
 // @import-as-namespace
 
-import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
-import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
@@ -31,6 +28,7 @@ import { ToolFailure, failure } from './internal/failure.ts';
 import * as iconInternal from './internal/icon.ts';
 import * as identityInternal from './internal/identity.ts';
 import * as inputInternal from './internal/input.ts';
+import * as scriptIsolateInternal from './internal/script-isolate.ts';
 import * as scriptInternal from './internal/script.ts';
 import * as snapshotInternal from './internal/snapshot.ts';
 import * as spaceInternal from './internal/space.ts';
@@ -551,13 +549,28 @@ export const invokeHosted = (
 // rules, and only what it prints comes back.
 //
 
-export { ScriptError } from './internal/script.ts';
-
 /** Runs a script's code; the host chooses the implementation, which decides how contained the code is. */
 export type ScriptSandbox = scriptInternal.Sandbox;
+export type ScriptRequest = scriptInternal.ScriptRequest;
+export type ScriptResult = scriptInternal.ScriptResult;
+export type ScriptDispatch = scriptInternal.ScriptDispatch;
+export { ScriptCall, type ScriptOutcome } from './internal/script.ts';
 
 /** In-process evaluation — NOT a security boundary; only for a host whose caller already holds its authority. */
 export const inProcessScriptSandbox: ScriptSandbox = scriptInternal.inProcess;
+
+/**
+ * A sandbox whose program runs in another runtime (a Worker Loader isolate): `evaluate` is handed the
+ * isolate's whole main module, and the isolate reaches back through its host's `env.HOST.call`, which
+ * the host answers with {@link scriptCallOutcome}. See {@link scriptIsolateModule} for the contract.
+ */
+export const isolateScriptSandbox = scriptInternal.isolate;
+
+/** The isolate main module for one script; the module it imports Effect from is {@link SCRIPT_EFFECT_MODULE}. */
+export const scriptIsolateModule = scriptIsolateInternal.module;
+
+/** Name the isolate main module imports `Cause`, `Data`, `Effect` and `Exit` from; the runner supplies it. */
+export const SCRIPT_EFFECT_MODULE = scriptIsolateInternal.EFFECT_MODULE;
 
 export type ScriptOptions = {
   readonly sandbox: ScriptSandbox;
@@ -610,13 +623,65 @@ export const RunScript = Tool.make('runScript', {
 export const ScriptServerToolkit = Toolkit.make(QueryOperations, InvokeOperation, LoadSkill, RunScript);
 
 /**
- * Answers one `runScript` call: the program's verbs dispatch through {@link invokeWithLedger},
- * {@link queryOperations} and {@link loadSkill}, so a script can do nothing a sequence of tool
- * calls could not.
- *
- * The script is written in Effect, the dialect `@dxos/agent-code-mode` calls `effect`: the body of
- * an `Effect.gen`, with each verb an effect failing with the same `ToolFailure` the tool would
- * return, so recovery is typed (`Effect.result`, `Effect.catchTag`) rather than try/catch on a string.
+ * Answers one call a script made, wherever it ran: the program's verbs dispatch through
+ * {@link invokeWithLedger}, {@link queryOperations} and {@link loadSkill}, so a script can do
+ * nothing a sequence of tool calls could not. `spaceId` is the `runScript` call's own, used by an
+ * `invoke` that names none.
+ */
+export const scriptDispatch = (
+  registry: Registry.Registry,
+  host: HostShape,
+  ledger: SkillLedger,
+  { binding, args }: scriptInternal.ScriptCall,
+  { spaceId }: { spaceId?: SpaceId } = {},
+): Effect.Effect<unknown, ToolFailure> => {
+  switch (binding) {
+    case 'invoke':
+      return scriptRequest(args[0], args[1], args[2]).pipe(
+        Effect.flatMap((request) =>
+          invokeWithLedger(registry, host, ledger, { ...request, spaceId: request.spaceId ?? spaceId }),
+        ),
+      );
+    case 'queryOperations':
+      return Schema.decodeUnknownEffect(QueryOperations.parametersSchema)(withoutUndefined(args[0] ?? {})).pipe(
+        Effect.mapError((error) => failure('invalid_request', `queryOperations: ${String(error)}`)),
+        Effect.flatMap((params) => queryOperations(registry, params)),
+        Effect.map(({ operations }) => operations),
+      );
+    case 'loadSkill': {
+      const [skill] = args;
+      return skill == null || typeof skill === 'string'
+        ? loadSkill(registry, ledger, skill ?? undefined)
+        : Effect.fail(failure('invalid_request', `loadSkill takes a skill name, not a ${typeof skill}.`));
+    }
+  }
+};
+
+/**
+ * {@link scriptDispatch} for a call that arrived over a wire, settled into the outcome the isolate
+ * reads: a malformed call is refused here rather than trusted, since it was built by script code.
+ */
+export const scriptCallOutcome = (
+  registry: Registry.Registry,
+  host: HostShape,
+  ledger: SkillLedger,
+  call: unknown,
+  options: { spaceId?: SpaceId } = {},
+): Effect.Effect<scriptInternal.ScriptOutcome> =>
+  Schema.decodeUnknownEffect(scriptInternal.ScriptCall)(call).pipe(
+    Effect.mapError((error) => failure('invalid_request', `Malformed script call: ${String(error)}`)),
+    Effect.flatMap((decoded) => scriptDispatch(registry, host, ledger, decoded, options)),
+    Effect.match({
+      onSuccess: (value): scriptInternal.ScriptOutcome => ({ _tag: 'Ok', value }),
+      onFailure: ({ code, message }): scriptInternal.ScriptOutcome => ({ _tag: 'Failure', code, message }),
+    }),
+  );
+
+/**
+ * Answers one `runScript` call. The script is written in Effect, the dialect `@dxos/agent-code-mode`
+ * calls `effect`: the body of an `Effect.gen`, with each verb an effect failing with the same
+ * `ToolFailure` the tool would return, so recovery is typed (`Effect.result`, `Effect.catchTag`)
+ * rather than try/catch on a string.
  */
 export const runScript = (
   registry: Registry.Registry,
@@ -624,56 +689,16 @@ export const runScript = (
   ledger: SkillLedger,
   { code, spaceId }: { code: string; spaceId?: SpaceId },
   { sandbox, timeout = DEFAULT_SCRIPT_TIMEOUT, maxOutput = DEFAULT_SCRIPT_MAX_OUTPUT }: ScriptOptions,
-): Effect.Effect<{ output: string; error?: string }> =>
-  Effect.gen(function* () {
-    const services = yield* Effect.context<never>();
-    const printer = scriptInternal.makePrinter(maxOutput);
-    const bindings = {
-      Effect,
-      spaceId,
-      print: (...values: unknown[]) => Effect.sync(() => printer.print(...values)),
-      invoke: (key: unknown, input?: unknown, options?: unknown) =>
-        scriptRequest(key, input, options).pipe(
-          Effect.flatMap((request) =>
-            invokeWithLedger(registry, host, ledger, { ...request, spaceId: request.spaceId ?? spaceId }),
-          ),
-        ),
-      queryOperations: (query?: unknown) =>
-        Schema.decodeUnknownEffect(QueryOperations.parametersSchema)(query ?? {}).pipe(
-          Effect.mapError((error) => failure('invalid_request', `queryOperations: ${String(error)}`)),
-          Effect.flatMap((params) => queryOperations(registry, params)),
-          Effect.map(({ operations }) => operations),
-        ),
-      loadSkill: (skill?: unknown) =>
-        skill === undefined || typeof skill === 'string'
-          ? loadSkill(registry, ledger, skill)
-          : Effect.fail(failure('invalid_request', `loadSkill takes a skill name, not a ${typeof skill}.`)),
-      /** Supplied by the wrapper, not by the script: runs its program and reports how it failed. */
-      runEffect: (program: unknown): Promise<unknown> =>
-        scriptInternal.isProgram(program)
-          ? Effect.runPromiseWith(services)(Effect.exit(program)).then((exit) =>
-              Exit.isSuccess(exit)
-                ? exit.value
-                : Promise.reject(new Error(scriptInternal.describeFailure(Cause.squash(exit.cause)))),
-            )
-          : Promise.reject(
-              new Error(
-                `The script produced a ${typeof program}, not an Effect: write the Effect.gen body only, not the wrapper.`,
-              ),
-            ),
-    };
-
-    const result = yield* sandbox.evaluate({ code: scriptInternal.wrap(code), bindings, timeout }).pipe(Effect.result);
-    if (Result.isFailure(result)) {
-      log.info('mcp script failed', { message: result.failure.message });
-      return { output: printer.output(), error: result.failure.message };
-    }
-    // A program that printed nothing but returned a value would otherwise answer with nothing.
-    if (result.success !== undefined && printer.isEmpty()) {
-      printer.print(result.success);
-    }
-    return { output: printer.output() };
-  });
+): Effect.Effect<ScriptResult> =>
+  sandbox
+    .run({ code, spaceId, timeout: Duration.fromInputUnsafe(timeout), maxOutput }, (call) =>
+      scriptDispatch(registry, host, ledger, call, { spaceId }),
+    )
+    .pipe(
+      Effect.tap(({ error }) =>
+        error === undefined ? Effect.void : Effect.sync(() => log.info('mcp script failed', { message: error })),
+      ),
+    );
 
 const ScriptInvokeArguments = Schema.Struct({
   key: Schema.String,
@@ -696,7 +721,11 @@ const scriptRequest = (
   input: unknown,
   options: unknown,
 ): Effect.Effect<{ key: string; input?: Record<string, unknown>; spaceId?: SpaceId }, ToolFailure> =>
-  Schema.decodeUnknownEffect(ScriptInvokeArguments)({ key, input: withoutUndefined(input), options }).pipe(
+  Schema.decodeUnknownEffect(ScriptInvokeArguments)({
+    key,
+    input: input === null ? undefined : withoutUndefined(input),
+    options: options === null ? undefined : withoutUndefined(options),
+  }).pipe(
     Effect.map((decoded) => ({ key: decoded.key, input: decoded.input, spaceId: decoded.options?.spaceId })),
     Effect.mapError((error) =>
       failure(
