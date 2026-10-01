@@ -223,7 +223,7 @@ const FactViewerGroup = forwardRef<HTMLDivElement, FactViewerGroupProps>(({ clas
         </Next.Tag>
       )}
     </div>
-    <Listbox.Root>
+    <Listbox.Root items={group.facts.map((fact) => ({ value: fact.id, label: fact.assertion.predicate }))}>
       <Listbox.Content aria-label={group.subject}>
         {group.facts.map((fact) => (
           <FactViewerRow key={fact.id} fact={fact} conflicting={group.conflictedIds.has(fact.id)} />
@@ -241,7 +241,7 @@ FactViewerGroup.displayName = 'FactViewer.Group';
 
 type FactViewerRowProps = ThemedClassName<{ fact: RDF.Fact; conflicting?: boolean }>;
 
-const FactViewerRow = forwardRef<HTMLLIElement, FactViewerRowProps>(
+const FactViewerRow = forwardRef<HTMLDivElement, FactViewerRowProps>(
   ({ classNames, fact, conflicting }, forwardedRef) => {
     const { assertion, factuality, attribution } = fact;
     return (
