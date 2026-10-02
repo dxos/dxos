@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { rmSync, writeFileSync } from 'node:fs';
 import v8 from 'node:v8';
 import vm from 'node:vm';
-import { afterAll, bench, describe } from 'vitest';
+import { afterAll, type BenchFn, type BenchRunOptions, describe, test } from 'vitest';
 
 import { Filter, Obj, Order, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
@@ -16,6 +16,12 @@ import { TestSchema } from '@dxos/echo/testing';
 import { DXN } from '@dxos/keys';
 
 import { blackhole, parseBenchCount } from './testing/bench-util.ts';
+
+/** Registers a benchmark as a test: vitest 5 exposes `bench` only as a test-context fixture. */
+const benchmark = (name: string, fn: BenchFn, options?: BenchRunOptions) =>
+  test(name, async ({ bench }) => {
+    await bench(name, fn).run(options);
+  });
 
 //
 // A query workload under one of the host's two query executors, selected by `DX_ECHO_QUERY_EXECUTOR`
@@ -506,7 +512,7 @@ describe(
   { tags: ['manual'], timeout: 1_200_000 },
   () => {
     for (const shape of SHAPES) {
-      bench(
+      benchmark(
         `run: ${shape.label}`,
         async () => {
           const results = await runExpecting(warm.db, shape);
@@ -516,7 +522,7 @@ describe(
       );
     }
 
-    bench(
+    benchmark(
       'reactive first result (type + property)',
       async () => {
         const { value: count, unsubscribe } = await awaitFirstResult(
@@ -533,7 +539,7 @@ describe(
       WARM_OPTIONS,
     );
 
-    bench(
+    benchmark(
       'cold: reload + open + run type + property',
       async () => {
         const reloadStart = performance.now();

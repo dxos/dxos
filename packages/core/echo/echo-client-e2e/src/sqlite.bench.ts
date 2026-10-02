@@ -9,11 +9,17 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { bench, describe } from 'vitest';
+import { type BenchFn, type BenchRunOptions, describe, test } from 'vitest';
 
 import { layerFile } from '@dxos/sql-sqlite/platform';
 
 import { parseBenchCount } from './testing/bench-util.ts';
+
+/** Registers a benchmark as a test: vitest 5 exposes `bench` only as a test-context fixture. */
+const benchmark = (name: string, fn: BenchFn, options?: BenchRunOptions) =>
+  test(name, async ({ bench }) => {
+    await bench(name, fn).run(options);
+  });
 
 // Raw-SQLite baseline for the ECHO benchmarks in `echo.bench.ts`, run through the same driver
 // (`@dxos/sql-sqlite`'s node layer) so the delta between the two isolates ECHO's overhead.
@@ -73,7 +79,7 @@ describe('sqlite benchmarks (raw)', { tags: ['manual'], timeout: 120_000 }, () =
     return statePromise;
   };
 
-  bench(
+  benchmark(
     'insert',
     async () => {
       const { runtime } = await ensureState();
@@ -88,7 +94,7 @@ describe('sqlite benchmarks (raw)', { tags: ['manual'], timeout: 120_000 }, () =
     BENCH_OPTIONS,
   );
 
-  bench(
+  benchmark(
     'select (point, by primary key)',
     async () => {
       const { runtime, seededIds } = await ensureState();
@@ -103,7 +109,7 @@ describe('sqlite benchmarks (raw)', { tags: ['manual'], timeout: 120_000 }, () =
     BENCH_OPTIONS,
   );
 
-  bench(
+  benchmark(
     'select (filtered range scan)',
     async () => {
       const { runtime } = await ensureState();
@@ -118,7 +124,7 @@ describe('sqlite benchmarks (raw)', { tags: ['manual'], timeout: 120_000 }, () =
     BENCH_OPTIONS,
   );
 
-  bench(
+  benchmark(
     'update (point, by primary key)',
     async () => {
       const { runtime, seededIds } = await ensureState();
@@ -133,7 +139,7 @@ describe('sqlite benchmarks (raw)', { tags: ['manual'], timeout: 120_000 }, () =
     BENCH_OPTIONS,
   );
 
-  bench(
+  benchmark(
     'delete (point, by primary key)',
     async () => {
       const { runtime } = await ensureState();

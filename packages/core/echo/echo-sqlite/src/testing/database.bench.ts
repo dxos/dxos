@@ -12,13 +12,19 @@ import type * as SqlClient from 'effect/sql/SqlClient';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { bench, describe } from 'vitest';
+import { type BenchFn, type BenchRunOptions, describe, test } from 'vitest';
 
 import { Filter, Obj, Order, Query, Ref } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { SqliteDatabase } from '../database.ts';
+
+/** Registers a benchmark as a test: vitest 5 exposes `bench` only as a test-context fixture. */
+const benchmark = (name: string, fn: BenchFn, options?: BenchRunOptions) =>
+  test(name, async ({ bench }) => {
+    await bench(name, fn).run(options);
+  });
 
 // Run with: DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run (from this package).
 const OBJECTS = Number(process.env.ECHO_SQLITE_BENCH_OBJECTS ?? 10_000);
@@ -81,7 +87,7 @@ describe(
   `echo-sqlite (${OBJECTS.toLocaleString()} people, ${ORGANIZATIONS} organizations)`,
   { tags: ['manual'], timeout: 600_000 },
   () => {
-    bench(
+    benchmark(
       'open space + first page (limit 10)',
       async () => {
         const { runtime, spaceId } = await ensureState();
@@ -97,7 +103,7 @@ describe(
       OPTIONS,
     );
 
-    bench(
+    benchmark(
       'query: type, limit 10',
       async () => {
         const { db } = await ensureState();
@@ -106,7 +112,7 @@ describe(
       OPTIONS,
     );
 
-    bench(
+    benchmark(
       'query: property eq (1 match)',
       async () => {
         const { db } = await ensureState();
@@ -115,7 +121,7 @@ describe(
       OPTIONS,
     );
 
-    bench(
+    benchmark(
       'query: range + orderBy property, limit 20',
       async () => {
         const { db } = await ensureState();
@@ -130,7 +136,7 @@ describe(
       OPTIONS,
     );
 
-    bench(
+    benchmark(
       'query: full-text (trigram), limit 10',
       async () => {
         const { db } = await ensureState();
@@ -139,7 +145,7 @@ describe(
       OPTIONS,
     );
 
-    bench(
+    benchmark(
       'query: reference traversal (10 people → employers)',
       async () => {
         const { db } = await ensureState();
@@ -148,7 +154,7 @@ describe(
       OPTIONS,
     );
 
-    bench(
+    benchmark(
       'query: incoming references (org ← its people)',
       async () => {
         const { db, orgIds } = await ensureState();
@@ -157,7 +163,7 @@ describe(
       OPTIONS,
     );
 
-    bench(
+    benchmark(
       `query: hydrate all ${OBJECTS.toLocaleString()} people`,
       async () => {
         const { db } = await ensureState();
@@ -167,7 +173,7 @@ describe(
     );
 
     let coldIndex = 0;
-    bench(
+    benchmark(
       'ref load, cold (reads + hydrates 1 row)',
       async () => {
         const { cold, personIds } = await ensureState();
@@ -177,7 +183,7 @@ describe(
       { time: 500 },
     );
 
-    bench(
+    benchmark(
       'ref load, resident (working-set hit)',
       async () => {
         const { db, orgIds } = await ensureState();
@@ -186,7 +192,7 @@ describe(
       OPTIONS,
     );
 
-    bench(
+    benchmark(
       'insert 1 object + flush',
       async () => {
         const { db } = await ensureState();
@@ -196,7 +202,7 @@ describe(
       OPTIONS,
     );
 
-    bench(
+    benchmark(
       'update 1 resident object + flush',
       async () => {
         const { db, orgIds } = await ensureState();
