@@ -400,11 +400,14 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
 );
 
 /**
- * The entries of a record whose fields are all strings, when one spans lines or runs long — a
- * code-mode `eval`'s `code` and `output`. JSON would escape every newline onto one line and cut the
- * string short, so these render as the text they are.
+ * A string, or the entries of a record whose fields are all strings, when one spans lines or runs
+ * long — a code-mode `eval`'s `code` and its printed output. JSON would escape every newline onto
+ * one line and cut the string short, so these render as the text they are.
  */
 const multilineFields = (data: unknown): [string, string][] | undefined => {
+  if (typeof data === 'string') {
+    return isMultiline(data) ? [['', data]] : undefined;
+  }
   if (typeof data !== 'object' || data === null || Array.isArray(data)) {
     return undefined;
   }
@@ -412,9 +415,9 @@ const multilineFields = (data: unknown): [string, string][] | undefined => {
   const strings = entries.flatMap(([key, value]): [string, string][] =>
     typeof value === 'string' ? [[key, value]] : [],
   );
-  return strings.length > 0 &&
-    strings.length === entries.length &&
-    strings.some(([, value]) => value.includes('\n') || value.length > MAX_JSON_STRING_LENGTH)
+  return strings.length > 0 && strings.length === entries.length && strings.some(([, value]) => isMultiline(value))
     ? strings
     : undefined;
 };
+
+const isMultiline = (value: string): boolean => value.includes('\n') || value.length > MAX_JSON_STRING_LENGTH;
