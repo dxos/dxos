@@ -1,5 +1,0 @@
----
-'@dxos/worker-framework': minor
----
-
-Worker connections recover from hostile callers and browsers instead of wedging or churning: a leader session that finishes opening after its lock was stolen (or the connection closed) is closed rather than left holding the storage lock; a stale handle is closed before the reconnect starts and a handle that opens after its attempt was abandoned is closed rather than installed; a throwing `onReconnect` callback no longer fails or loops the reconnection; failing connect handles retry with backoff and escalate through `onPersistentFailure`; a `provide-port` for an abandoned attempt is ignored; the worker reports `session-failed` so a tab holding ports nobody serves retries at once; a tab never steals its own leader lock or a leader it cannot hear because its coordinator link died (`WorkerCoordinator.onError`); `open()` rejects at the escalation threshold and tears down what it holds. `Worker.run` accepts a `signal` to terminate an in-process worker, and shuts down when its storage lock is stolen.
