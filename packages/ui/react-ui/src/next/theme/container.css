@@ -167,13 +167,14 @@
 
   /* Responsive: collapse against the nearest query container (the pane), never the viewport. */
   @container (width < 24rem) {
-    .nx-grid.nx-grid[data-gutter='rail'] {
+    /* A card's rails are its icon column, not page margins, so they keep their width in a narrow pane. */
+    .nx-grid.nx-grid[data-gutter='rail']:not(.nx-card) {
       --nx-gutter: var(--nx-gap-size);
     }
     .nx-grid[data-columns] {
       --nx-columns: minmax(0, 1fr);
     }
-    .nx-grid > [data-rail] {
+    .nx-grid:not(.nx-card) > [data-rail] {
       display: none;
     }
     .nx-grid[data-layout='row'] > :not([data-rail]),
