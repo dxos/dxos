@@ -113,9 +113,10 @@ export class FeedStore {
   }
 
   /**
-   * Emits after successful block append operations, with the space the blocks were written to.
+   * Emits after successful block append operations, with the space the blocks were written to and,
+   * when the change was confined to one namespace, that namespace.
    */
-  readonly onNewBlocks = new Event<{ spaceId: string }>();
+  readonly onNewBlocks = new Event<{ spaceId: string; feedNamespace?: string }>();
 
   /**
    * Emits when a space's sync backlog may have changed: blocks appended, positions assigned or
@@ -152,19 +153,27 @@ export class FeedStore {
       Effect.gen({ self: this }, function* () {
         const sql = yield* SqlClient.SqlClient;
 
-        const rows = yield* sql<{ feedPrivateId: number }>`
-              SELECT feedPrivateId FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}
+        const rows = yield* sql<{ feedPrivateId: number; feedNamespace: string | null }>`
+              SELECT feedPrivateId, feedNamespace FROM feeds WHERE spaceId = ${spaceId} AND feedId = ${feedId}
           `;
         if (rows.length > 0) {
+          this.#feedNamespaces.set(rows[0].feedPrivateId, rows[0].feedNamespace);
           return rows[0].feedPrivateId;
         }
 
         const newRows = yield* sql<{ feedPrivateId: number }>`
               INSERT INTO feeds (spaceId, feedId, feedNamespace) VALUES (${spaceId}, ${feedId}, ${namespace}) RETURNING feedPrivateId
           `;
+        this.#feedNamespaces.set(newRows[0].feedPrivateId, namespace ?? null);
         return newRows[0].feedPrivateId;
       }).pipe(Effect.withSpan('FeedStore.ensureFeed'), SpanAttributes.annotateSpace(spaceId)),
   );
+
+  /**
+   * The namespace each feed row was created with, which a block inherits whatever namespace its append
+   * named; safe to hold unbounded because a feed row's namespace is never rewritten.
+   */
+  readonly #feedNamespaces = new Map<number, string | null>();
 
   /** Keyed by space; safe to hold unbounded and never invalidate because a space's token is written once. */
   readonly #cursorTokens = new Map<string, string>();
@@ -197,6 +206,40 @@ export class FeedStore {
    */
   getServerToken = (spaceId: string): Effect.Effect<string, SqlError.SqlError, SqlClient.SqlClient> =>
     this.#ensureCursorToken(spaceId);
+
+  /**
+   * Highest insertion id per `spaceId|feedNamespace`, so a reader polling a caught-up cursor is
+   * answered without touching the database. It may only ever run ahead of the table (a rolled-back
+   * append, a deleted block), which costs a query that finds nothing; it can never fall behind,
+   * because every block is inserted by {@link #insertSealed}, which raises it.
+   */
+  readonly #heads = new Map<string, number>();
+
+  #noteHead(spaceId: string, feedNamespace: string, insertionId: number): void {
+    const key = `${spaceId}|${feedNamespace}`;
+    this.#heads.set(key, Math.max(this.#heads.get(key) ?? -1, insertionId));
+  }
+
+  /**
+   * Highest insertion id held in a space/namespace, or -1 when it holds no blocks.
+   */
+  #head = (spaceId: string, feedNamespace: string): Effect.Effect<number, SqlError.SqlError, SqlClient.SqlClient> =>
+    Effect.gen({ self: this }, function* () {
+      const cached = this.#heads.get(`${spaceId}|${feedNamespace}`);
+      if (cached !== undefined) {
+        return cached;
+      }
+      const sql = yield* SqlClient.SqlClient;
+      const rows = yield* sql<{ head: number | null }>`
+        SELECT MAX(blocks.insertionId) as head
+        FROM blocks
+        JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+        WHERE feeds.spaceId = ${spaceId} AND feeds.feedNamespace = ${feedNamespace}
+      `;
+      // Merged rather than set: an append landing while this read was in flight has already raised it.
+      this.#noteHead(spaceId, feedNamespace, rows[0]?.head ?? -1);
+      return this.#heads.get(`${spaceId}|${feedNamespace}`) ?? -1;
+    });
 
   /**
    * Highest position held in a space/namespace, or -1 when none of its blocks is positioned.
@@ -441,6 +484,23 @@ export class FeedStore {
           return yield* Effect.die(new Error(`Cursor token mismatch`));
         }
 
+        // The indexer polls every space/namespace on each pass, and almost all of them are caught up;
+        // answering those from the in-memory head keeps an idle pass off the database entirely.
+        if (!request.query && request.position === undefined) {
+          const head = yield* this.#head(request.spaceId, request.feedNamespace);
+          if (head <= cursorInsertionId) {
+            return {
+              requestId: request.requestId,
+              blocks: [],
+              nextCursor: request.cursor ?? FeedCursor.make(`${validCursorToken}|-1`),
+              hasMore: false,
+              serverToken,
+              maxPosition,
+              cursorBlock: undefined,
+            } satisfies QueryResponse;
+          }
+        }
+
         // If cursor is provided, we must validate it against the space token.
         // If spaceId is not provided in request (e.g. feedIds query), we can't easily validate token unless we look up spaceId for feedIds.
         // Ideally spaceId should be required for token validation.
@@ -675,7 +735,7 @@ export class FeedStore {
           `;
         }),
       );
-      this.#emitBlocksChanged(opts.spaceId);
+      this.#emitBlocksChanged(opts.spaceId, opts.feedNamespace);
     }).pipe(Effect.withSpan('FeedStore.resetSyncState'), SpanAttributes.annotateSpace(opts.spaceId));
 
   /**
@@ -843,7 +903,7 @@ export class FeedStore {
       // Wrap in transaction to ensure atomicity when assigning positions.
       const { positions, displaced, moved } = yield* sql.withTransaction(this.#insertSealed(request, sealed));
       // Notify on the committed blocks, before the cursor token, which is a separate write.
-      this.#emitBlocksChanged(request.spaceId!);
+      this.#emitBlocksChanged(request.spaceId!, request.feedNamespace);
 
       const serverToken = this.#options.assignPositions ? yield* this.#ensureCursorToken(request.spaceId!) : undefined;
       return { requestId: request.requestId, positions, serverToken, displaced, moved };
@@ -952,7 +1012,7 @@ export class FeedStore {
           moved += evicted.moved;
         }
 
-        const inserted = yield* sql<{ position: number | null }>`
+        const inserted = yield* sql<{ position: number | null; insertionId: number }>`
           INSERT INTO blocks (
             feedPrivateId, position, sequence, actorId,
             prevSequence, prevActorId, timestamp, data, encryptionKeyId, iv
@@ -961,8 +1021,12 @@ export class FeedStore {
             ${block.prevSequence}, ${block.prevActorId}, ${block.timestamp}, ${data}, ${encryptionKeyId}, ${iv}
           )
           ${onConflict}
-          RETURNING position
+          RETURNING position, insertionId
         `;
+        const feedNamespace = this.#feedNamespaces.get(feedPrivateId);
+        if (inserted.length > 0 && feedNamespace != null) {
+          this.#noteHead(request.spaceId, feedNamespace, inserted[0].insertionId);
+        }
 
         if (!this.#options.assignPositions) {
           continue;
@@ -1026,8 +1090,8 @@ export class FeedStore {
    * Announces a change to a space's block rows. Positions are part of what `subscribeFeed` serves,
    * so assigning or clearing them is a block change, not only a sync-state change.
    */
-  #emitBlocksChanged(spaceId: string): void {
-    this.onNewBlocks.emit({ spaceId });
+  #emitBlocksChanged(spaceId: string, feedNamespace?: string): void {
+    this.onNewBlocks.emit({ spaceId, feedNamespace });
     this.onSyncStateChanged.emit({ spaceId });
   }
 
@@ -1204,7 +1268,8 @@ export class FeedStore {
       );
 
       if (request.blocks.length > 0) {
-        this.#emitBlocksChanged(request.spaceId);
+        const namespaces = new Set(request.blocks.map((block) => block.feedNamespace));
+        this.#emitBlocksChanged(request.spaceId, namespaces.size === 1 ? request.blocks[0].feedNamespace : undefined);
       }
       return result;
     }).pipe(Effect.withSpan('FeedStore.setPosition'));

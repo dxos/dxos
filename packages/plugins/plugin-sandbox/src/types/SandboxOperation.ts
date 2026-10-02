@@ -172,7 +172,9 @@ export const DownloadFile = Operation.make({
       description: 'The ECHO object ID of the File containing the downloaded content.',
     }),
   }),
-  services: [Database.Service, SandboxService.Service],
+  // The capability manager carries the `DefaultParent` rule that files a new File into the root
+  // collection; an undeclared service is not provided, so without it the file is never filed.
+  services: [Capability.Service, Database.Service, SandboxService.Service],
 });
 
 export const PublishFiles = Operation.make({

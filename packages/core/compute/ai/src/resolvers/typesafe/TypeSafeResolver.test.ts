@@ -174,6 +174,49 @@ describe('TypeSafe resolver', () => {
     expect(exit._tag).toBe('Failure');
   });
 
+  test('clef and the default alias go to Workers AI with their own back-end name', async ({ expect }) => {
+    const sent: { url: string; model: unknown }[] = [];
+    const recording = Layer.succeed(
+      HttpClient.HttpClient,
+      HttpClient.make((request) =>
+        Effect.sync(() => {
+          const body =
+            request.body._tag === 'Uint8Array' ? JSON.parse(new TextDecoder().decode(request.body.body)) : {};
+          sent.push({ url: request.url, model: body.model });
+          return HttpClientResponse.fromWeb(
+            request,
+            Response.json({ model: body.model, answers: { urgent: { type: 'noul', noul: 0.9 } } }),
+          );
+        }),
+      ),
+    );
+    let configured = Model.cloudflareClefFlash.id;
+    const routed = AiModelResolver.buildAiService.pipe(
+      Layer.provide(
+        TypeSafeResolver.make({
+          workersAi: { apiKey: Effect.succeed(undefined), endpoint: () => 'http://workers-ai.test/v1/systemone' },
+          defaultModel: () => configured,
+        }),
+      ),
+      Layer.provide(recording),
+    );
+    const ask = (id: Model.Model['id']) =>
+      DecisionModel.decide(Urgency, { input: OUTAGE }).pipe(
+        Effect.provide(AiService.decisionModel(id).pipe(Layer.provide(routed))),
+      );
+
+    await EffectEx.runPromise(ask(Model.cloudflareClef.id));
+    await EffectEx.runPromise(ask(Model.defaultDecisionModel));
+    configured = Model.cloudflareJev.id;
+    await EffectEx.runPromise(ask(Model.defaultDecisionModel));
+
+    expect(sent).toEqual([
+      { url: 'http://workers-ai.test/v1/systemone', model: 'clef' },
+      { url: 'http://workers-ai.test/v1/systemone', model: 'clef-flash' },
+      { url: 'http://workers-ai.test/v1/systemone', model: 'jev-latest' },
+    ]);
+  });
+
   test('a model whose provider has no route does not resolve', async ({ expect }) => {
     const exit = await Effect.runPromiseExit(
       Effect.void.pipe(
