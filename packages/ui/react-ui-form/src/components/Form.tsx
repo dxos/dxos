@@ -86,12 +86,15 @@ export const FormContent = forwardRef<HTMLDivElement, FormContentProps>(({ child
   const localRef = useRef<HTMLDivElement>(null);
   const ref = useComposedRefs(forwardedRef, localRef);
   useKeyHandler(localRef, form);
+  const settings = variant === 'settings';
+  // A settings form is a reading-width column of its own tracks (the current Form's `dx-document` settings content).
   return (
     <Next.Container
       role='form'
-      gutter='inherit'
-      gap='md'
-      columns={variant === 'settings' ? SETTINGS_COLUMNS : undefined}
+      gutter={settings ? 'none' : 'inherit'}
+      width={settings ? 'document' : undefined}
+      gap={settings ? 'lg' : 'md'}
+      columns={settings ? SETTINGS_COLUMNS : undefined}
       data-testid={testId}
       ref={ref}
     >
