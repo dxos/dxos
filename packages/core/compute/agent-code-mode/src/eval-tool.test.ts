@@ -25,9 +25,9 @@ const makeOperation = (name: string, key: string, title: string, icon?: string):
 });
 
 const OPERATIONS = [
-  makeOperation('create-task', 'com.example.operation.create-task', 'Create task', 'ph--plus--regular'),
-  makeOperation('create-task-list', 'com.example.operation.create-task-list', 'Create task list'),
-  makeOperation('update-task', 'com.example.operation.update-task', 'Update task'),
+  makeOperation('create-task', 'com.example.operation.createTask', 'Create task', 'ph--plus--regular'),
+  makeOperation('create-task-list', 'com.example.operation.createTaskList', 'Create task list'),
+  makeOperation('update-task', 'com.example.operation.updateTask', 'Update task'),
 ];
 
 const evalCall = (code: string): ContentBlock.ToolCall => ({
@@ -45,12 +45,12 @@ describe('describeEvalCall', () => {
     const block = describeCall(evalCall(`await ops["create-task"]({ title: 'x' })`));
     expect(block.operationName).toBe('Create task');
     expect(block.operationIcon).toBe('ph--plus--regular');
-    expect(block.operationKey).toBe(String(DXN.make('com.example.operation.create-task')));
+    expect(block.operationKey).toBe(String(DXN.make('com.example.operation.createTask')));
   });
 
   test('matches the camelCase binding and the key', ({ expect }) => {
     expect(describeCall(evalCall('await ops.updateTask({})')).operationName).toBe('Update task');
-    const key = String(DXN.make('com.example.operation.update-task'));
+    const key = String(DXN.make('com.example.operation.updateTask'));
     expect(describeCall(evalCall(`yield* Database.resolve('${key}')`)).operationName).toBe('Update task');
   });
 
