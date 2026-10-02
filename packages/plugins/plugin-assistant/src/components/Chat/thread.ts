@@ -136,11 +136,24 @@ export const collapseToolRuns = (messages: readonly Message.Message[]): Message.
       end++;
     }
 
-    if (end === index) {
-      collapsed.push(message);
+    const folded =
+      end === index
+        ? message
+        : ({ ...message, blocks: messages.slice(index, end + 1).flatMap((entry) => entry.blocks) } as Message.Message);
+
+    // A result held apart from its call by the request card that asked about it joins the call's panel; on its
+    // own it renders as an empty row.
+    const callIds = new Set(folded.blocks.map((block) => (block._tag === 'toolResult' ? block.toolCallId : undefined)));
+    const caller = folded.blocks.every((block) => block._tag === 'toolResult')
+      ? collapsed.findLastIndex((earlier) =>
+          earlier.blocks.some((block) => block._tag === 'toolCall' && callIds.has(block.toolCallId)),
+        )
+      : -1;
+    if (caller >= 0) {
+      const { blocks } = collapsed[caller];
+      collapsed[caller] = { ...collapsed[caller], blocks: [...blocks, ...folded.blocks] } as Message.Message;
     } else {
-      const run = messages.slice(index, end + 1);
-      collapsed.push({ ...message, blocks: run.flatMap((entry) => entry.blocks) } as Message.Message);
+      collapsed.push(folded);
     }
 
     index = end;
