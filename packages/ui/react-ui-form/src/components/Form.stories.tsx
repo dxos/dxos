@@ -7,10 +7,9 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Next } from '@dxos/react-ui';
-import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
+import { NextJsonLayout, type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { createSelectField } from './fields/index.ts';
 import { Form } from './Form.tsx';
 import { SCALAR_VALUES, ScalarSchema, type ScalarValues } from './testing.ts';
@@ -27,8 +26,8 @@ const DefaultStory = ({ size = 'md' }: StoryArgs) => {
   const [values, setValues] = useState<ScalarValues>(SCALAR_VALUES);
   const [saved, setSaved] = useState(false);
   return (
-    <div className='grid grid-cols-2 gap-4 h-full min-h-0'>
-      <Next.Panel.Root size={size} classNames='dx-card-surface rounded-sm overflow-hidden'>
+    <NextJsonLayout data={values}>
+      <Next.Panel.Root size={size}>
         <Next.Panel.Body asChild>
           <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport asChild>
@@ -53,8 +52,7 @@ const DefaultStory = ({ size = 'md' }: StoryArgs) => {
           </Next.ScrollArea.Root>
         </Next.Panel.Body>
       </Next.Panel.Root>
-      <JsonHighlighter data={values} testId='values' classNames='dx-card-surface rounded-sm text-sm min-h-0' />
-    </div>
+    </NextJsonLayout>
   );
 };
 

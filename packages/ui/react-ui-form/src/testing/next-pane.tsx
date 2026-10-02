@@ -3,9 +3,10 @@
 //
 
 import { type Decorator } from '@storybook/react-vite';
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import '@dxos/react-ui/theme.css';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { translations as uiTranslations } from '@dxos/react-ui/translations';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -46,3 +47,14 @@ export const nextTranslations = [
   ...uiTranslations,
   { 'en-US': { [osTranslations]: { 'drag-handle.label': 'Drag to rearrange' } } },
 ];
+
+/**
+ * A story's form beside its values as highlighted JSON (the `TestLayout` pattern of the current Form stories); the
+ * JSON's test id is `values`. Kept here because `src/components` files may carry no class names.
+ */
+export const NextJsonLayout = ({ data, children }: PropsWithChildren<{ data: unknown }>) => (
+  <div className='grid grid-cols-2 gap-4 h-full min-h-0'>
+    <div className='grid min-h-0 dx-card-surface rounded-sm overflow-hidden'>{children}</div>
+    <JsonHighlighter data={data} testId='values' classNames='dx-card-surface rounded-sm text-sm min-h-0' />
+  </div>
+);
