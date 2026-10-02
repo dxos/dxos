@@ -135,34 +135,41 @@ const StatCardRow = ({
   current,
   children,
 }: StatCardRowProps) => {
-  const trailing = action ?? (unit && <span className='text-xs text-description'>{unit}</span>);
+  // Units sit in a fixed-width cell (empty when there is none), so values end on one edge across rows.
+  const trailing =
+    action ??
+    (span && !unit ? undefined : (
+      <span className='inline-block w-8 ps-1 whitespace-nowrap text-xs text-description'>{unit}</span>
+    ));
+  // The leading rail is kept even when empty, so labels align across rows.
+  const leading =
+    control ??
+    (onToggle ? (
+      <Next.Button
+        variant='ghost'
+        icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
+        iconOnly
+        size='sm'
+        label={open ? 'Collapse' : 'Expand'}
+        onClick={() => onToggle(!open)}
+      />
+    ) : (
+      (icon && <Next.Icon icon={icon} classNames={iconClassNames} />) || <span />
+    ));
   return (
     <Next.Card.Row
-      classNames={[classNames, onClick && 'cursor-pointer hover:bg-hover-surface', current && 'bg-hover-surface']}
+      classNames={[
+        classNames,
+        onClick && 'cursor-pointer hover:bg-hover-surface',
+        current && 'bg-hover-surface',
+        span && !trailing && SPAN_TRAILING,
+      ]}
       onClick={onClick}
       current={current}
+      leading={leading}
+      trailing={trailing}
     >
-      <Next.Block compact>
-        {control ??
-          (onToggle ? (
-            <Next.Button
-              variant='ghost'
-              icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
-              iconOnly
-              size='sm'
-              label={open ? 'Collapse' : 'Expand'}
-              onClick={() => onToggle(!open)}
-            />
-          ) : (
-            icon && <Next.Icon icon={icon} classNames={iconClassNames} />
-          ))}
-      </Next.Block>
-      <Flex
-        align='center'
-        justify='between'
-        gap='sm'
-        classNames={['min-w-0 text-xs', span && !trailing && '[grid-column-end:span_2]']}
-      >
+      <Flex align='center' justify='between' gap='sm' classNames='min-w-0 text-xs'>
         {children ?? (
           <>
             {tooltip ? (
@@ -178,15 +185,12 @@ const StatCardRow = ({
           </>
         )}
       </Flex>
-      {trailing && (
-        // A unit reads on from its value, so it sits at the gutter's start; a control stays centred.
-        <Next.Block rail='end' compact classNames={!action && 'justify-items-start'}>
-          {trailing}
-        </Next.Block>
-      )}
     </Next.Card.Row>
   );
 };
+
+/** Runs a row's content through the end rail when it has no trailing cell of its own. */
+const SPAN_TRAILING = '[&>[data-part=row-main]]:[grid-column:content-start/full-end]';
 
 StatCardRow.displayName = 'StatCard.Row';
 
@@ -211,8 +215,8 @@ type StatCardContentProps = PropsWithChildren<ThemedClassName>;
 
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, children }: StatCardContentProps) => (
-  <Next.Card.Row>
-    <Flex column grow={false} classNames={['min-w-0 text-xs [grid-column-end:span_2]', classNames]}>
+  <Next.Card.Row leading={<span />} classNames={SPAN_TRAILING}>
+    <Flex column grow={false} classNames={['min-w-0 text-xs', classNames]}>
       {children}
     </Flex>
   </Next.Card.Row>

@@ -40,26 +40,41 @@
     overflow: auto;
     overscroll-behavior: auto;
   }
-  /* An inset outline, not a shadow: outlines paint over descendants, so a toolbar or panel background cannot hide it. */
+  /*
+   * The content's box runs under the fixed sidebars (it pads around them), so its ring is a fixed overlay over the
+   * visible area between them rather than an outline on the box, whose sides the sidebars would cover.
+   */
   .nx-main-content[data-handles-focus]:focus-visible {
-    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
-    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+    outline: none;
+  }
+  .nx-main-content[data-handles-focus]:focus-visible::after {
+    content: '';
+    position: fixed;
+    inset-block: 0 calc(var(--nx-main-drawer-height, 0rem) + env(safe-area-inset-bottom));
+    inset-inline: var(--nx-main-pad-start, 0) var(--nx-main-pad-end, 0);
+    z-index: 6;
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+    pointer-events: none;
   }
 
   @media (width >= 64rem) {
     .nx-main-content[data-sidebar-left-state='collapsed'] {
+      --nx-main-pad-start: var(--nx-main-start-rail);
       padding-inline-start: var(--nx-main-start-rail);
       scroll-padding-inline-start: var(--nx-main-start-rail);
     }
     .nx-main-content[data-sidebar-left-state='expanded'] {
+      --nx-main-pad-start: var(--nx-main-start-size);
       padding-inline-start: var(--nx-main-start-size);
       scroll-padding-inline-start: var(--nx-main-start-size);
     }
     .nx-main-content[data-sidebar-right-state='collapsed'] {
+      --nx-main-pad-end: var(--nx-main-end-rail);
       padding-inline-end: var(--nx-main-end-rail);
       scroll-padding-inline-end: var(--nx-main-end-rail);
     }
     .nx-main-content[data-sidebar-right-state='expanded'] {
+      --nx-main-pad-end: var(--nx-main-end-size);
       padding-inline-end: var(--nx-main-end-size);
       scroll-padding-inline-end: var(--nx-main-end-size);
     }

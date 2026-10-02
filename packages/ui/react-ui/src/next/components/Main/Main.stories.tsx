@@ -168,7 +168,7 @@ export const Drawer: Story = {
 
 /**
  * The sidebars and the main area are focus areas: Tab moves between them, and the focused one draws an inset ring that
- * paints over its children, so a toolbar's background cannot hide it.
+ * paints over its children, so a toolbar's background cannot hide it; the main area's spans only its visible part.
  */
 export const FocusAreas: Story = {
   play: async ({ canvasElement }) => {
@@ -183,9 +183,20 @@ export const FocusAreas: Story = {
       const area = areas.find((candidate) => candidate === document.activeElement);
       if (area) {
         reached.add(area);
-        const style = getComputedStyle(area);
-        await expect(style.outlineStyle).toBe('solid');
-        await expect(parseFloat(style.outlineOffset)).toBeLessThan(0);
+        if (area === areas[1]) {
+          // The content's ring is a fixed overlay over the visible area between the sidebars.
+          const ring = getComputedStyle(area, '::after');
+          await expect(ring.boxShadow).not.toBe('none');
+          await expect(parseFloat(ring.left)).toBeCloseTo(areas[0].getBoundingClientRect().right, 0);
+          await expect(parseFloat(ring.right)).toBeCloseTo(
+            window.innerWidth - areas[2].getBoundingClientRect().left,
+            0,
+          );
+        } else {
+          const style = getComputedStyle(area);
+          await expect(style.outlineStyle).toBe('solid');
+          await expect(parseFloat(style.outlineOffset)).toBeLessThan(0);
+        }
       }
     }
     await expect(reached.size).toBe(areas.length);
