@@ -6,7 +6,8 @@ import React, { useEffect, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useNode } from '@dxos/plugin-graph/Hooks';
 
 import { useNodeActionExpander } from '#hooks';

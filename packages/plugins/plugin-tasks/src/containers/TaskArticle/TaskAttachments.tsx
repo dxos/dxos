@@ -16,7 +16,7 @@ import React, {
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useCapabilities, useOperation, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';

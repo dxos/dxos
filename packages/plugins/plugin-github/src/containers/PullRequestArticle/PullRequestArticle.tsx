@@ -7,8 +7,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useProgressMonitor } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';

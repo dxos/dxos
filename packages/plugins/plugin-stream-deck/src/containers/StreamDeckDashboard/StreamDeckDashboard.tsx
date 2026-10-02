@@ -6,7 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import { useOptionalAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
-import { type AppSurface, useProgressMonitors } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useProgressMonitors } from '@dxos/app-toolkit/Hooks';
 import { useQuery } from '@dxos/echo-react';
 import { SPACE_STATS_QUERY, toMetrics, toSpaceStats } from '@dxos/plugin-space/Dashboard';
 import { Panel } from '@dxos/react-ui';

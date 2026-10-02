@@ -6,9 +6,9 @@ import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, use
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Surface, useOptionalCapability } from '@dxos/app-framework/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';

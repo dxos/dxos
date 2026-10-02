@@ -8,7 +8,7 @@ import React, { memo, useCallback, useMemo } from 'react';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/Hooks';
 import {
   Banner,

@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { Filter, Ref } from '@dxos/echo';
 import { Cursor } from '@dxos/link';
 import * as Binding from '@dxos/plugin-connector/Binding';

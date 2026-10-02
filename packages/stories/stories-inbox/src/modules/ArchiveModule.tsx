@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Order, Query, Tag } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import { type EntityId } from '@dxos/keys';

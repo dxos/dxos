@@ -5,7 +5,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { ElevationProvider } from '@dxos/react-ui';
 import {
   type ActionGraphProps,

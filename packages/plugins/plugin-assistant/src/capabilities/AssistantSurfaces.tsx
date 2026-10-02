@@ -8,7 +8,8 @@ import React, { useEffect } from 'react';
 
 import { useSettingsState } from '@dxos/app-framework/ui';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { SettingsScope, useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/ui';
+import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/Hooks';
+import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import { getSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
 import { InvocationTraceContainer } from '@dxos/devtools';

@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';

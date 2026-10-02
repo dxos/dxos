@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Option from 'effect/Option';
 import { useContext, useEffect, useState } from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

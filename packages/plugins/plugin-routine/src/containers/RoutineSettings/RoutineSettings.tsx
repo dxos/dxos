@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import { Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';

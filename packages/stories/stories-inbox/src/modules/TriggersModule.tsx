@@ -7,7 +7,7 @@ import * as Exit from 'effect/Exit';
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useSpaceCallback } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query } from '@dxos/echo';
 import * as Binding from '@dxos/plugin-connector/Binding';

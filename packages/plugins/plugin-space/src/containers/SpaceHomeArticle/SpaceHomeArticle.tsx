@@ -5,7 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useAppGraph, useLayout } from '@dxos/app-toolkit/Hooks';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import { Column, Flex, Panel, ScrollArea } from '@dxos/react-ui';
 import {

@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useNode } from '@dxos/plugin-graph/Hooks';
 import { Banner, useTranslation } from '@dxos/react-ui';
 

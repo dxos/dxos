@@ -5,7 +5,8 @@
 import React, { type KeyboardEventHandler, useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useArchiveMenuItem } from '@dxos/plugin-space/Hooks';

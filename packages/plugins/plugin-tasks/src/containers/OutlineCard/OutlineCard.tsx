@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useResolveRef } from '@dxos/echo-react';
 import { Card, Show } from '@dxos/react-ui';
 import { type Outline as OutlineType } from '@dxos/types';

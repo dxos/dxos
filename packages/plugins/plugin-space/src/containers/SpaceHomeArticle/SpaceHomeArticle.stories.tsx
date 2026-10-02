@@ -12,7 +12,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useHomeVisibility } from '@dxos/app-toolkit/ui';
+import { useHomeVisibility } from '@dxos/app-toolkit/Hooks';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';

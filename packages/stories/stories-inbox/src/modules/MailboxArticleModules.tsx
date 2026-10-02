@@ -7,8 +7,9 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { type Database, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { MessageArticle } from '@dxos/plugin-inbox/Containers';

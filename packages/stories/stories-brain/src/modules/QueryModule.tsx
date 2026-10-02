@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { EffectEx } from '@dxos/effect';
 import { buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';

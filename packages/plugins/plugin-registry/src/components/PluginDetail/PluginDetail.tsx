@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { useLayout } from '@dxos/app-toolkit/ui';
+import { useLayout } from '@dxos/app-toolkit/Hooks';
 import {
   Button,
   Carousel,

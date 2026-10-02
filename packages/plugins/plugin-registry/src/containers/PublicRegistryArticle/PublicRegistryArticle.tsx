@@ -10,7 +10,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { useSettingsDivergedKeys } from '@dxos/app-toolkit/ui';
+import { useSettingsDivergedKeys } from '@dxos/app-toolkit/Hooks';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';

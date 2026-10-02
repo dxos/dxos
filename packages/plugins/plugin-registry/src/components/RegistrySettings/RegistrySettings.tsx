@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { log } from '@dxos/log';
 import { AlertDialog, Banner, Button, Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';

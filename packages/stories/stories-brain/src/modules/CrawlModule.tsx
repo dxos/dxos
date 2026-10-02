@@ -8,7 +8,7 @@ import React, { useCallback, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { useCapability } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { AgentRegistry, type ChannelInfo, Source } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
 import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';

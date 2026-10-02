@@ -5,8 +5,9 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { type AppSurface, useAppGraph, useShowItem } from '@dxos/app-toolkit/ui';
+import { useAppGraph, useShowItem } from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';

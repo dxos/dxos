@@ -9,7 +9,7 @@ import React, { useCallback, useRef, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { log } from '@dxos/log';
 import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { type FormFieldRendererProps, FormFieldRow, TextField } from '@dxos/react-ui-form';

@@ -7,8 +7,8 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'reac
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import type * as ChatType from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';

@@ -6,7 +6,7 @@ import { useEffect } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 
 /**
  * Expands a root node in the app graph.

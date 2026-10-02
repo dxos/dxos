@@ -7,10 +7,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import { type AttentionSigilAction } from '@dxos/app-toolkit/AttentionSigil';
+import { useAppGraph, useNavigationPresence } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
-import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
-import { useAppGraph, useNavigationPresence } from '@dxos/app-toolkit/ui';
 import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/Hooks';
 
 import { useBreakpoints, useCompanions, useDeckSettings, useDeckState } from '#hooks';

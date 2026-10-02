@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { type Database } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';

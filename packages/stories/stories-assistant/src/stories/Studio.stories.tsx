@@ -10,7 +10,7 @@ import { within } from 'storybook/test';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';

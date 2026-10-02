@@ -8,8 +8,8 @@ import React, { useCallback, useMemo } from 'react';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
+import { useSettingsKeyScope } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useSettingsKeyScope } from '@dxos/app-toolkit/ui';
 
 import { PluginDetail, PluginScope } from '#components';
 

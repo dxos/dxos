@@ -5,7 +5,10 @@
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot, CardMenuSlot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
+import { CardMenuSlot } from '@dxos/app-toolkit/CardMenuSlot';
+import { useObjectMenuItems } from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import {

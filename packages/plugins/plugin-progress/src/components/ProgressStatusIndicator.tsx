@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useProgressMonitors } from '@dxos/app-toolkit/ui';
+import { useProgressMonitors } from '@dxos/app-toolkit/Hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
 import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';

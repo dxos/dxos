@@ -6,14 +6,14 @@ import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
-import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import {
-  AppSurface,
   OBJECT_ACTIONS_CONTRIBUTION_ID,
   OBJECT_ACTIONS_CONTRIBUTION_PRIORITY,
   useCardPivot,
   useObjectMenuItems,
-} from '@dxos/app-toolkit/ui';
+} from '@dxos/app-toolkit/Hooks';
+import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Panel } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { useAttention } from '@dxos/react-ui-attention';

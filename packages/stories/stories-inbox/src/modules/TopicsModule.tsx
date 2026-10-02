@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';

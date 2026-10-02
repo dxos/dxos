@@ -6,6 +6,15 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'AppSurface': 'src/ui/components/app-surface.ts',
+    'AttentionSigil': 'src/ui/components/AttentionSigil.tsx',
+    'CardIconSlot': 'src/ui/components/CardIconSlot.tsx',
+    'CardMenuSlot': 'src/ui/components/CardMenuSlot.tsx',
+    'Hooks': 'src/ui/hooks/index.ts',
+    'NotFoundArticle': 'src/ui/components/NotFoundArticle.tsx',
+    'PluginRegistryButton': 'src/ui/components/PluginRegistryButton.tsx',
+    'SettingsScope': 'src/ui/components/SettingsScope.tsx',
+    'UpdateRow': 'src/ui/components/UpdateRow.tsx',
     'index': 'src/index.ts',
     'account/Account': 'src/account/Account.ts',
     'app-framework/AppCapabilities': 'src/app-framework/AppCapabilities.ts',
@@ -43,7 +52,6 @@ export default defineConfig({
     'sample/SampleSpace': 'src/sample/SampleSpace.ts',
     'types': 'src/types/index.ts',
     'testing': 'src/testing/index.ts',
-    'ui': 'src/ui/index.ts',
   },
   jsx: 'react',
   test: { node: true },

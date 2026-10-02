@@ -15,7 +15,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
 import { Surface, useCapabilities, useOptionalCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/ui';
+import { useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/Hooks';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
 import { EffectEx, createKvsStore } from '@dxos/effect';

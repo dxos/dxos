@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { ExecutionGraph } from '@dxos/assistant/ExecutionGraph';
 import { InvocationTraceStartEvent } from '@dxos/compute-runtime';
 import { Filter, Query } from '@dxos/echo';

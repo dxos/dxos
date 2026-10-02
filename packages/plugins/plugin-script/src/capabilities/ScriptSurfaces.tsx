@@ -8,7 +8,7 @@ import React from 'react';
 
 import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { SettingsScope } from '@dxos/app-toolkit/ui';
+import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import type * as Script from '@dxos/compute/Script';
 import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';

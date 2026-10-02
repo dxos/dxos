@@ -4,7 +4,7 @@
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useLayout } from '@dxos/app-toolkit/ui';
+import { useLayout } from '@dxos/app-toolkit/Hooks';
 
 import { FileSystemCapabilities } from '#types';
 

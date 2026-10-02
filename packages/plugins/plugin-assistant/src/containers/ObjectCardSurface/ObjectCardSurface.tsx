@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { EID } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 

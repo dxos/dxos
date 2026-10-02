@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useProgressMonitor } from '@dxos/app-toolkit/ui';
+import { useProgressMonitor } from '@dxos/app-toolkit/Hooks';
 
 import { PipelinePanel } from '../components/index.ts';
 import { PIPELINE_RUN, usePipelineStory } from './pipeline-context.ts';

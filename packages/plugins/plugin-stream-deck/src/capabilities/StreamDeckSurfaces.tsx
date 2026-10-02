@@ -7,7 +7,8 @@
 import React from 'react';
 
 import { useOptionalAtomCapability } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 
 import { StreamDeckStatus } from '#components';
 import { StreamDeckDashboard } from '#containers';

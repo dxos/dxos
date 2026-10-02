@@ -6,7 +6,8 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
 import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';

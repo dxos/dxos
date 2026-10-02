@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { Attention } from '@dxos/react-ui-attention';
 
 /**

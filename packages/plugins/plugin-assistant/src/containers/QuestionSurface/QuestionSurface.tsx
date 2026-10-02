@@ -4,7 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { CardIconSlot, useActiveSpace, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
+import { useActiveSpace, useObjectMenuItems } from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EntityId } from '@dxos/keys';

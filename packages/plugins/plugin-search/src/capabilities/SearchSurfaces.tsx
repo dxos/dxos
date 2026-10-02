@@ -4,7 +4,7 @@
 
 import React, { type ComponentProps } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { type Space } from '@dxos/react-client/echo';
 
 import { SearchArticle, SearchDialog } from '#containers';

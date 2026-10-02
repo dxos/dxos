@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { type Database, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';

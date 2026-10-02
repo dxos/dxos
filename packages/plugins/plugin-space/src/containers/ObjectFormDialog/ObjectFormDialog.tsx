@@ -10,10 +10,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as Capability from '@dxos/app-framework/Capability';
 import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { usePluginRegistryAvailable } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
+import { PluginRegistryButton } from '@dxos/app-toolkit/PluginRegistryButton';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
-import { PluginRegistryButton, usePluginRegistryAvailable } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';

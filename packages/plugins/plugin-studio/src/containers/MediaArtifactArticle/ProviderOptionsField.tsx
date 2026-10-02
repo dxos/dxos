@@ -7,7 +7,7 @@ import * as Redacted from 'effect/Redacted';
 import type * as Schema from 'effect/Schema';
 import React, { useMemo } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';

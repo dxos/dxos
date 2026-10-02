@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Card, Icon, SystemIconButton } from '@dxos/react-ui';
 import { RemoteSession } from '@dxos/types';
 

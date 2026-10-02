@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useContext, useMemo } from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { type CompleteCellRange } from '@dxos/compute-hyperformula';
 import { composable, composableProps } from '@dxos/react-ui';
 import {

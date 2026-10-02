@@ -13,12 +13,12 @@ import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import {
-  SettingsScope,
   useActiveSpace,
   useHomeVisibility,
   useSettingsSpace,
   useSettingsSpaceProperties,
-} from '@dxos/app-toolkit/ui';
+} from '@dxos/app-toolkit/Hooks';
+import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import { Annotation, Obj, Type } from '@dxos/echo';
 import { useResolveRef, useType } from '@dxos/echo-react';
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';

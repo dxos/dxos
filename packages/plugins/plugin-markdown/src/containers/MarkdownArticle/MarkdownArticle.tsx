@@ -9,8 +9,9 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 're
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';

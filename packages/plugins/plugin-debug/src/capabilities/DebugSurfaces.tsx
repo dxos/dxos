@@ -12,9 +12,10 @@ import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
+import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
-import { SettingsScope, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Annotation, Collection, Entity, Filter, Obj, Type } from '@dxos/echo';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';

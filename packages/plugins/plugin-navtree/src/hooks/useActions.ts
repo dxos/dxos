@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useActions as useGraphActions } from '@dxos/plugin-graph/Hooks';
 import { applyPresentation } from '@dxos/react-ui-menu';
 

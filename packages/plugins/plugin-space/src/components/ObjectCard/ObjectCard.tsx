@@ -5,14 +5,10 @@
 import React, { type ComponentType, type KeyboardEvent, type SyntheticEvent, useCallback, useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import {
-  AppSurface,
-  CardIconSlot,
-  CardMenuSlot,
-  useCardPivot,
-  useObjectMenuItems,
-  useObjectNavigate,
-} from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
+import { CardMenuSlot } from '@dxos/app-toolkit/CardMenuSlot';
+import { useCardPivot, useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/Hooks';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';

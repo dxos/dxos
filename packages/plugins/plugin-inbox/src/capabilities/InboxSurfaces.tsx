@@ -7,7 +7,7 @@
 
 import React from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { parentId } from '@dxos/graph/GraphNode';
 import { useNode } from '@dxos/plugin-graph/Hooks';
 import { type Event, type Message } from '@dxos/types';

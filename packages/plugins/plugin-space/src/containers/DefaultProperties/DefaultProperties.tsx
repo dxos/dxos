@@ -13,7 +13,7 @@ import {
   useOperationInvoker,
   usePluginManager,
 } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';

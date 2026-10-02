@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useCapability } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 

@@ -16,7 +16,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';

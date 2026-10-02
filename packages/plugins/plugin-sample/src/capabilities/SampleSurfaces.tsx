@@ -9,7 +9,8 @@
 import React from 'react';
 
 import { useAtomCapability } from '@dxos/app-framework/ui';
-import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 
 import { SampleStatusIndicator } from '#components';
 import { SampleDeckCompanion } from '#containers';

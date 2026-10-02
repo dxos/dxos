@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type InvocationsState } from '@dxos/compute-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/Hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';

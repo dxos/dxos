@@ -7,8 +7,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { useProgressMonitor } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

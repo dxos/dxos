@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { ObjectsTree } from '@dxos/devtools';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';

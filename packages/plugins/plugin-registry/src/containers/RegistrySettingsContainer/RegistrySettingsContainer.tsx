@@ -9,7 +9,8 @@ import React, { useCallback } from 'react';
 import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { SettingsScope, useSettingsScope } from '@dxos/app-toolkit/ui';
+import { useSettingsScope } from '@dxos/app-toolkit/Hooks';
+import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import { EffectEx } from '@dxos/effect';
 
 import { RegistrySettings } from '#components';

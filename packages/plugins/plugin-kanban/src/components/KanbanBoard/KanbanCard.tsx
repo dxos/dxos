@@ -5,7 +5,8 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { Card, IconButton, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';

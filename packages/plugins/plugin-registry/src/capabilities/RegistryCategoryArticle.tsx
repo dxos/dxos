@@ -6,7 +6,7 @@ import React, { useMemo } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/ui';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { useSettingsDivergedKeys } from '@dxos/app-toolkit/ui';
+import { useSettingsDivergedKeys } from '@dxos/app-toolkit/Hooks';
 
 import { RegistryArticle } from '#containers';
 

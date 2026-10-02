@@ -8,8 +8,8 @@ import React, { type ComponentType, useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { InvocationTraceContainer, SpaceInfoArticle, SpaceListArticle, TestingArticle } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';

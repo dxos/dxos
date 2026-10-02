@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useGraphTreeModel } from '@dxos/plugin-graph/Hooks';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { useManager } from '@dxos/react-ui-attention';

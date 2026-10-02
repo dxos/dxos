@@ -8,8 +8,8 @@ import { useMemo } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import * as Tour from '@dxos/app-toolkit/Tour';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 
 const NO_STEPS: Tour.Step[] = [];

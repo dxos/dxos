@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { AppSurface, useLayout } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useLayout } from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Panel } from '@dxos/react-ui';

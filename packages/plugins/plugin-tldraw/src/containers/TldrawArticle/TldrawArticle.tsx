@@ -5,7 +5,8 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { useActions } from '@dxos/plugin-graph/Hooks';

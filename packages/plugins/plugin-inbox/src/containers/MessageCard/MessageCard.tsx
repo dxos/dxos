@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Card, Flex } from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
 import { type Message } from '@dxos/types';

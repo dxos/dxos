@@ -6,9 +6,10 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
-import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Card, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';

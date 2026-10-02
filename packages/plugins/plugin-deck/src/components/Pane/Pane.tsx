@@ -5,7 +5,7 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { AttentionSigilButton } from '@dxos/app-toolkit/ui';
+import { AttentionSigilButton } from '@dxos/app-toolkit/AttentionSigil';
 import { DensityProvider, IconButton, type ThemedClassName, composableProps, slottable } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import { iconSize, mx } from '@dxos/ui-theme';

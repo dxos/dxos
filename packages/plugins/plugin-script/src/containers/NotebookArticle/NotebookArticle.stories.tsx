@@ -8,7 +8,7 @@ import React from 'react';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import { Filter } from '@dxos/echo';

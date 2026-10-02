@@ -9,7 +9,7 @@
 
 import React from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
 import { ActiveSpacePanel } from '#components';

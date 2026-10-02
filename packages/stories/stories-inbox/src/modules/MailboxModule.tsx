@@ -6,8 +6,9 @@ import React, { useEffect } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { AppSurface, useActiveSpace, useAppGraph } from '@dxos/app-toolkit/ui';
+import { useActiveSpace, useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { Filter } from '@dxos/echo';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';

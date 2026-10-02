@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { type Database, type Entity, Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';

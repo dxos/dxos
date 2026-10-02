@@ -5,7 +5,8 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/Hooks';
 import { useNode } from '@dxos/plugin-graph/Hooks';
 import { Banner, ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';

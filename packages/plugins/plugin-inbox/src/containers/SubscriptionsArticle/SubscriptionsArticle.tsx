@@ -5,7 +5,7 @@
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { Banner, Card, Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';

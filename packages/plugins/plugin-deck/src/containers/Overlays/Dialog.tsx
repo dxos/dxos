@@ -5,8 +5,8 @@
 import React, { useCallback } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { AlertDialog, Dialog as NaturalDialog } from '@dxos/react-ui';
 
 import { useDeckState } from '#hooks';
