@@ -11,10 +11,10 @@
 // keep their own (profiler, long tasks, the boot loader, `dxos.spaces`) in composer-app, so neither
 // package declares a hook it does not use.
 
-// `globalThis.composer` itself is declared by `@dxos/app-framework`; a second `var composer` here
+// `globalThis.composer` itself is declared by `@dxos/app-framework/Devtools`; a second `var composer` here
 // would collide with it and resolve every member to `{}`. Merge the app-only hooks onto its
 // interface instead.
-declare module '@dxos/app-framework' {
+declare module '@dxos/app-framework/Devtools' {
   interface ComposerDevtools {
     changeStorageVersionInMetadata?: (version: number) => void;
     /** The focused markdown editor, exposed so specs can drive selection the way a user would. */

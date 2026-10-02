@@ -8,8 +8,8 @@ import * as Stream from 'effect/Stream';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { type CancelTarget, createProgressTraceSink, resolveTriggerId } from '@dxos/app-toolkit';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import { RemoteProcessManager } from '@dxos/compute-runtime';
 import * as Trace from '@dxos/compute/Trace';
 import { log } from '@dxos/log';
@@ -49,13 +49,13 @@ export default Capability.makeModule(
 
     // Resolved per message, never up front: an activation-time existence check races the registry's
     // own activation, and losing it would leave the subscription permanently unstarted.
-    const progressSink = createProgressTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
+    const progressSink = Progress.makeTraceSink(() => capabilityManager.getAll(AppCapabilities.ProgressRegistry)[0], {
       // An edge run is a chain of bounded invocations, each with a fresh pid, so a pid tombstone
       // would only mask one chain link and the next would resurrect the meter — suppress the key
       // until the run's terminal status, matching the local (single-pid) cancel behaviour.
       cancelScope: 'run',
-      cancelProcess: (target: CancelTarget) => {
-        const triggerId = resolveTriggerId(target);
+      cancelProcess: (target: Progress.CancelTarget) => {
+        const triggerId = Progress.resolveTriggerId(target);
         if (target.space && triggerId) {
           cancelRemote(target.space, triggerId, target.pid);
         } else {

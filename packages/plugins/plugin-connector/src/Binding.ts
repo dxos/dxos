@@ -7,7 +7,6 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
-import { CapabilityNotFoundError } from '@dxos/app-framework';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -280,7 +279,7 @@ export const triggerMonitorLayer = (
   spaceId: Key.SpaceId,
 ): Layer.Layer<
   Trigger.TriggerMonitorService,
-  CapabilityNotFoundError | ServiceResolver.ServiceNotAvailableError,
+  Capability.NotFoundError | ServiceResolver.ServiceNotAvailableError,
   Capability.Service
 > =>
   Layer.unwrap(

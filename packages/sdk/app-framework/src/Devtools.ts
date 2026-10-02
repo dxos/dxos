@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Result from 'effect/Result';
 import * as Schema from 'effect/Schema';
 import * as SchemaIssue from 'effect/SchemaIssue';
@@ -109,7 +111,7 @@ const fieldsOf = (schema: Schema.Top | undefined): OperationField[] | undefined 
  * does not depend on which plugins happen to be enabled — inspecting a broken plugin set is
  * exactly when this is wanted.
  */
-export const setupDevtools = (manager: PluginManager.PluginManager): void => {
+export const setup = (manager: PluginManager.PluginManager): void => {
   const listOperations = (pluginId?: string): OperationInfo[] => {
     const byModule = manager.registry.get(manager.capabilities.atomByModule(Capabilities.OperationHandler));
     return Object.entries(byModule).flatMap(([moduleId, sets]) => {

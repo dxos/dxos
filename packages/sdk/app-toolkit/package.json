@@ -61,6 +61,11 @@
       "types": "./dist/types/src/app-framework/ObservabilityMapping.d.ts",
       "import": "./dist/lib/app-framework/ObservabilityMapping.mjs"
     },
+    "./Progress": {
+      "source": "./src/app-framework/Progress.ts",
+      "types": "./dist/types/src/app-framework/Progress.d.ts",
+      "import": "./dist/lib/app-framework/Progress.mjs"
+    },
     "./AppNode": {
       "source": "./src/app-graph/AppNode.ts",
       "types": "./dist/types/src/app-graph/AppNode.d.ts",

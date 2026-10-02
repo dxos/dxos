@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
@@ -204,7 +204,7 @@ describe('generateWalkthrough', () => {
     await run();
 
     expect(phases.map((phase) => phase.current)).to.deep.eq([3, 4, GENERATE_PHASES]);
-    expect(phases.at(-1)?.message).to.eq(PROGRESS_STATUS_COMPLETE);
+    expect(phases.at(-1)?.message).to.eq(Progress.STATUS_COMPLETE);
   });
 
   test('reports completion even when nothing was regenerated', async () => {
@@ -214,6 +214,6 @@ describe('generateWalkthrough', () => {
     await run();
 
     // A meter with no terminal stays open forever and leaves the action disabled.
-    expect(phases).to.deep.eq([{ message: PROGRESS_STATUS_COMPLETE, current: GENERATE_PHASES }]);
+    expect(phases).to.deep.eq([{ message: Progress.STATUS_COMPLETE, current: GENERATE_PHASES }]);
   });
 });

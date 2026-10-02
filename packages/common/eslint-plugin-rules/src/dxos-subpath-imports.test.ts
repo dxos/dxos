@@ -67,4 +67,49 @@ describe('dxos-subpath-imports', () => {
       ],
     });
   });
+
+  it('reports every root import of a package with no root import', () => {
+    const message = (source: string) => `${source} has no root import; import the subpath that holds each name.`;
+    ruleTester.run('dxos-subpath-imports', rule, {
+      valid: [
+        { code: "import * as Plugin from '@dxos/app-framework/Plugin';", filename },
+        { code: "export * from '@dxos/app-toolkit/AppNode';", filename },
+        { code: "const m = import('@dxos/app-framework/PluginManager');", filename },
+        // Other subpath packages keep their root.
+        { code: "export * from '@dxos/plugin-chess';", filename },
+      ],
+      invalid: [
+        {
+          code: "import { SomeFlatExport } from '@dxos/app-framework';",
+          filename,
+          errors: [{ message: message('@dxos/app-framework') }],
+        },
+        {
+          code: "import * as AppFramework from '@dxos/app-framework';",
+          filename,
+          errors: [{ message: message('@dxos/app-framework') }],
+        },
+        {
+          code: "import '@dxos/app-toolkit';",
+          filename,
+          errors: [{ message: message('@dxos/app-toolkit') }],
+        },
+        {
+          code: "export * from '@dxos/app-framework';",
+          filename,
+          errors: [{ message: message('@dxos/app-framework') }],
+        },
+        {
+          code: "export { Label } from '@dxos/app-framework';",
+          filename,
+          errors: [{ message: message('@dxos/app-framework') }],
+        },
+        {
+          code: "const m = import('@dxos/app-toolkit');",
+          filename,
+          errors: [{ message: message('@dxos/app-toolkit') }],
+        },
+      ],
+    });
+  });
 });

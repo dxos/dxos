@@ -9,6 +9,7 @@ import { Capability, Plugin } from '../core/index.ts';
 import { meta } from './meta.ts';
 
 export { meta };
+export { layerIdb as storageLayer } from './idb-key-value-store.ts';
 
 const ProcessManagerCapability = Capability.lazyModule(
   'ProcessManager',

@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
-import { PROGRESS_STATUS_CANCELLED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
@@ -336,7 +336,7 @@ describe('runGoogleSync against a mock Gmail API', () => {
     );
 
     expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true);
-    expect(statusUpdates.at(-1)?.message).toBe(PROGRESS_STATUS_CANCELLED);
+    expect(statusUpdates.at(-1)?.message).toBe(Progress.STATUS_CANCELLED);
     expect(statusUpdates.at(-1)?.progress?.key).toBe(MailSync.createSyncProgressKey(mailbox));
   });
 

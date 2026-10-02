@@ -10,7 +10,7 @@ import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { OperationInvoker } from '@dxos/operation';
 
-import { type Label } from '../../common/index.ts';
+import { type Label } from '../../common/translations.ts';
 import { EmptyHistoryError } from './errors.ts';
 import type { HistoryEntry } from './types.ts';
 import { resolveMessage } from './undo-mapping.ts';
@@ -142,3 +142,6 @@ export const make = (
     undoable,
   };
 };
+
+export { EmptyHistoryError } from './errors.ts';
+export type { HistoryEntry } from './types.ts';

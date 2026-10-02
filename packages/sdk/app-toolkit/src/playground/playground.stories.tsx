@@ -6,7 +6,6 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import {} from '@dxos/app-framework';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { withTheme } from '@dxos/react-ui/testing';
 

@@ -14,6 +14,8 @@ export default defineConfig({
     'ns/HomeSection': 'src/HomeSection.ts',
     'ns/Cli': 'src/Cli.ts',
     'ns/App': 'src/App.ts',
+    'ns/Devtools': 'src/Devtools.ts',
+    'ns/Translations': 'src/Translations.ts',
     'App': 'src/ui/components/App/index.ts',
     'HomeSection': 'src/ui/components/HomeSection/index.ts',
     'Hooks': 'src/ui/hooks/index.ts',

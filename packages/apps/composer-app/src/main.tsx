@@ -16,6 +16,7 @@ import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import * as AppApp from '@dxos/app-framework/App';
+import type * as Devtools from '@dxos/app-framework/Devtools';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
@@ -101,10 +102,10 @@ declare const __DX_DEV_SERVER_BOOT_ID__: string;
 // Always '' in production builds, so the port cannot be auto-started on a deployed origin.
 declare const __DX_DEBUG_PORT_SESSION__: string;
 
-// Merged onto `@dxos/app-framework`'s `ComposerDevtools` (the type behind `globalThis.composer`)
+// Merged onto `@dxos/app-framework/Devtools`'s `ComposerDevtools` (the type behind `globalThis.composer`)
 // rather than declared fresh — a second `declare global { var composer }` here would collide with
 // its declaration and resolve every member to `{}` (see `playwright/globals.d.ts`).
-declare module '@dxos/app-framework' {
+declare module '@dxos/app-framework/Devtools' {
   interface ComposerDevtools {
     profiler?: Profiler;
     otel?: {
@@ -293,7 +294,8 @@ const main = async () => {
       return level;
     },
   };
-  globalThis.composer = { profiler, otel };
+  const composer: Devtools.ComposerDevtools = { profiler, otel };
+  globalThis.composer = composer;
 
   AppMigrations.define();
 

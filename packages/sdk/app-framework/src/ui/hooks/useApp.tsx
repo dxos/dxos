@@ -19,7 +19,7 @@ import { ContextProtocolProvider } from '@dxos/web-context-react';
 import { ActivationEvents, Capabilities } from '../../common/index.ts';
 import { PluginManagerContext } from '../../context.ts';
 import { type ActivationEvent, type Plugin, PluginManager } from '../../core/index.ts';
-import { setupDevtools } from '../../devtools.ts';
+import * as Devtools from '../../Devtools.ts';
 import { bootLoader } from '../components/App/loader.ts';
 import { App, PluginManagerProvider, SurfaceManager, SurfaceManagerProvider } from '../components/index.ts';
 import { createStartupWatchdog } from './startup-watchdog.ts';
@@ -238,7 +238,7 @@ export const useApp = ({
   }, [cacheEnabled, manager]);
 
   useEffect(() => {
-    setupDevtools(manager);
+    Devtools.setup(manager);
   }, [manager]);
 
   // Hand the boot loader the enabled plugins' icons from their own meta. This registers, it does
