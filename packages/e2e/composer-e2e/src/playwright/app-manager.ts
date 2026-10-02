@@ -750,7 +750,8 @@ export class AppManager {
   }
 
   async togglePlugin(plugin: string): Promise<void> {
-    await this.getPluginToggle(plugin).click();
+    // The switch's input is visually hidden, so the press lands on its root.
+    await this.page.getByTestId(`pluginList.${plugin}`).locator('[data-scope="switch"][data-part="root"]').click();
   }
 
   async changeStorageVersionInMetadata(version: number): Promise<void> {
