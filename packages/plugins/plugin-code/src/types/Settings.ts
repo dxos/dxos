@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
@@ -27,7 +28,7 @@ export const Settings = Schema.Struct({
       description:
         'How freely coding agents act without asking: auto (the default) lets the agent decide and asks only for risky actions, acceptEdits allows file edits but asks before commands, default asks before edits and commands.',
     }),
-  ),
+  ).pipe(Schema.withConstructorDefault(Effect.succeed(DEFAULT_AGENT_PERMISSION_MODE))),
 }).mapFields(Struct.map(Schema.mutableKey));
 
 export interface Settings extends Schema.Schema.Type<typeof Settings> {}
