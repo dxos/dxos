@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
 import { Next } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -83,17 +84,18 @@ export const Test: Story = {
     // 3. The body scrolls; the header and the footer's actions stay in the pane.
     // The toolbar is a scroll viewport too; the body's is the one that is a Container.
     const viewport = panel.querySelector<HTMLElement>('.nx-scroll-viewport[data-scope="container"]');
-    await expect(viewport && viewport.scrollHeight > viewport.clientHeight).toBe(true);
-    const bodyBox = viewport!.getBoundingClientRect();
-    await expect(
-      canvasElement.querySelector('[role="form"] label')!.getBoundingClientRect().top,
-    ).toBeGreaterThanOrEqual(bodyBox.top - 0.5);
-    viewport!.scrollTop = viewport!.scrollHeight;
+    invariant(viewport);
+    await expect(viewport.scrollHeight > viewport.clientHeight).toBe(true);
+    const bodyBox = viewport.getBoundingClientRect();
+    const firstLabel = canvasElement.querySelector('[role="form"] label');
+    invariant(firstLabel);
+    await expect(firstLabel.getBoundingClientRect().top).toBeGreaterThanOrEqual(bodyBox.top - 0.5);
+    viewport.scrollTop = viewport.scrollHeight;
     await waitFor(async () => {
-      const inputs = within(viewport!).getAllByRole('textbox');
+      const inputs = within(viewport).getAllByRole('textbox');
       await expect(inputs[inputs.length - 1].getBoundingClientRect().bottom).toBeLessThanOrEqual(bodyBox.bottom + 0.5);
     });
-    viewport!.scrollTop = 0;
+    viewport.scrollTop = 0;
     const footer = canvas.getByTestId('save-button').getBoundingClientRect();
     await expect(footer.bottom).toBeLessThanOrEqual(panel.getBoundingClientRect().bottom + 0.5);
 

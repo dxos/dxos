@@ -9,7 +9,18 @@ export type DominantColorOptions = {
   contrast?: number;
 };
 
+/** Images a long-lived page shows are unbounded, so the oldest sample is dropped past this many. */
+const CACHE_LIMIT = 256;
+
 const cache = new Map<string, string | undefined>();
+
+const remember = (key: string, color: string | undefined) => {
+  cache.set(key, color);
+  if (cache.size > CACHE_LIMIT) {
+    const [oldest] = cache.keys();
+    cache.delete(oldest);
+  }
+};
 
 /**
  * The dominant colour of a loaded image's corners as `rgb(r, g, b)`, weighted towards saturated pixels, for a letterbox
@@ -39,14 +50,14 @@ export const sampleDominantColor = (
     pixels = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
   } catch (err) {
     if (err instanceof DOMException && err.name === 'SecurityError') {
-      cache.set(key, undefined);
+      remember(key, undefined);
       return undefined;
     }
     throw err;
   }
 
   const color = isTransparent(pixels, sampleSize) ? undefined : cornerColor(pixels, sampleSize, contrast);
-  cache.set(key, color);
+  remember(key, color);
   return color;
 };
 

@@ -6,6 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
 import { Next } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -96,7 +97,8 @@ export const Test: Story = {
 
     // 6. The header row: label at the start, the add Button's block cell ending the row, on the rows' remove column.
     const add = canvas.getByTestId('tags.add');
-    const header = add.parentElement!.getBoundingClientRect();
+    invariant(add.parentElement);
+    const header = add.parentElement.getBoundingClientRect();
     const label = canvas.getByText('Tags').getBoundingClientRect();
     await expect(label.left).toBeCloseTo(header.left, 0);
     await expect(add.getBoundingClientRect().right + parseFloat(getComputedStyle(add).marginRight)).toBeCloseTo(
@@ -114,6 +116,8 @@ export const Test: Story = {
     // 7. An object item renders its fields as a nested, bordered set.
     const value = canvas.getByRole('textbox', { name: 'Value' });
     await expect(value).toHaveValue('ada@example.com');
-    await expect(getComputedStyle(value.closest('[role="group"][data-inset]')!).borderTopWidth).toBe('1px');
+    const group = value.closest('[role="group"][data-inset]');
+    invariant(group);
+    await expect(getComputedStyle(group).borderTopWidth).toBe('1px');
   },
 };

@@ -227,7 +227,7 @@ const Controls = ({ children }: PropsWithChildren) => {
         <Next.Button icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
         <Next.Select.Root
           value={action ? [action.toString()] : []}
-          onValueChange={({ value: [action] }) => setAction(action as unknown as Action)}
+          onValueChange={({ value: [value] }) => setAction(Object.values(Action).find((action) => action === value))}
           items={Object.keys(actionWeights).map((action) => ({ value: action, label: action }))}
         >
           <Next.Select.Trigger placeholder='Select value' />
