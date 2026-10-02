@@ -76,6 +76,9 @@
       "path": "tools/codemorph/tsconfig.json"
     },
     {
+      "path": "packages/experimental/collection-sync/tsconfig.json"
+    },
+    {
       "path": "packages/apps/composer-app/tsconfig.json"
     },
     {
