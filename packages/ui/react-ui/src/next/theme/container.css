@@ -60,7 +60,13 @@
     grid-template-columns: [full-start content-start] var(--nx-columns) [content-end full-end];
   }
 
-  .nx-grid > * {
+  /*
+   * A plugin surface (`<dx-surface>`, `display: contents`) adds no box, so its children are this grid's items: they
+   * take the content track too, rather than auto-placing into the first (gutter) track.
+   */
+  .nx-grid > *,
+  .nx-grid > dx-surface > *,
+  .nx-grid > dx-surface > dx-surface > * {
     grid-column: content;
   }
   .nx-grid > [data-place='full'] {
