@@ -74,9 +74,9 @@ export const TypenameField = ({ data, ...inputProps }: SpaceFormFieldProps) => {
 
   // A provided field owns its row, so it carries its own label as the other fields here do.
   return (
-    <Field.Root>
-      <Field.Label>{inputProps.label}</Field.Label>
+    <Next.Field.Root>
+      <Next.Field.Label>{inputProps.label}</Next.Field.Label>
       <SelectField {...props} options={options} />
-    </Field.Root>
+    </Next.Field.Root>
   );
 };
