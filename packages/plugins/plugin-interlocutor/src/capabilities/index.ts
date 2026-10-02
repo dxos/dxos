@@ -13,6 +13,8 @@ export const OperationHandler = AppCapability.operationHandler(() => import('./o
 });
 // The Discord bot operations call EDGE with the user's identity, which only the app's client provides.
 export const DiscordOperationHandler = AppCapability.operationHandler(() => import('./discord-operation-handler.ts'), {
+  // Module ids derive from the name, and a second module with the default name is dropped.
+  name: 'DiscordOperationHandler',
   activatesOn: ActivationEvents.Idle,
   environments: ['browser', 'tauri'],
 });
