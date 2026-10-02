@@ -428,7 +428,13 @@ const cut = async () => {
   // The banner is page DOM, so it would outlive the timeline entry it belongs to; the page is repainted
   // before the cut so the frame the recorder keeps does not carry it either.
   await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID).catch(() => {});
-  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  // Bounded: a hidden native window renders no frames.
+  await page.evaluate(() =>
+    Promise.race([
+      new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+      new Promise((resolve) => setTimeout(resolve, 200)),
+    ]),
+  );
   // The repainted frame reaches the recorder over CDP a beat after the paint itself.
   await page.waitForTimeout(150);
   started = recorder.cut();

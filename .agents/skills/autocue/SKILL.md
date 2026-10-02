@@ -326,7 +326,10 @@ node .agents/skills/autocue/scripts/driver.mjs --target tauri --fresh on --out /
   `~/Library/Application Support/org.dxos.composer.test` (window state, last URL) and
   `~/Library/Caches/org.dxos.composer.test`. Without it, identity, spaces and plugin toggles carry over.
 - **The window is real and on screen.** It opens wherever macOS puts it and is resized to `--width`x`--height`.
-  It does not need focus, so keep working; just don't click into it mid-take.
+  It needs neither focus nor to be uncovered: the `webdriver` build turns WKWebView's occlusion detection
+  off, so a window behind others, or on another Space, still renders and reports itself `visible`. Without
+  that, rendering stopped and every wait on `requestAnimationFrame` hung. Keep working; just don't click into it
+  mid-take or minimize it.
 - **The recorder takes webview snapshots** (`takeSnapshot` through WebDriver, about 50 ms each at the
   display's 2x), held and repeated to a steady `--fps`, then transcoded like the Linux capture. A screen grab
   would need the Screen Recording permission, which an agent cannot grant itself. No window chrome is in

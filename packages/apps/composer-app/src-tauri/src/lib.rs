@@ -354,6 +354,26 @@ pub fn run() {
                     .devtools(true)
                     .build()?;
 
+                // A covered window otherwise stops rendering and reports itself hidden, which stalls a driven
+                // take whenever another window is in front. WKWebView SPI; skipped where WebKit lacks it.
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                main_window.with_webview(|webview| unsafe {
+                    use std::ffi::{c_char, c_void};
+                    extern "C" {
+                        fn sel_registerName(name: *const c_char) -> *const c_void;
+                        fn objc_msgSend();
+                    }
+                    let view = webview.inner();
+                    let responds: unsafe extern "C" fn(*mut c_void, *const c_void, *const c_void) -> bool =
+                        std::mem::transmute(objc_msgSend as *const ());
+                    let set: unsafe extern "C" fn(*mut c_void, *const c_void, bool) =
+                        std::mem::transmute(objc_msgSend as *const ());
+                    let selector = sel_registerName(c"_setWindowOcclusionDetectionEnabled:".as_ptr());
+                    if responds(view, sel_registerName(c"respondsToSelector:".as_ptr()), selector) {
+                        set(view, selector, false);
+                    }
+                })?;
+
                 // Before anything runs in the page: the client opens its storage during boot.
                 #[cfg(target_os = "linux")]
                 main_window.with_webview(|webview| {

@@ -366,7 +366,11 @@ export const createTauriPage = ({ session, input = 'webdriver' }) => {
           if (point) {
             // Stable, as Playwright requires: a list still animating in moves the target between aim and click.
             const before = resolve(arg.steps)[0]?.getBoundingClientRect();
-            await new Promise((next) => requestAnimationFrame(() => requestAnimationFrame(next)));
+            // Two frames, or 100 ms where none come: a hidden page renders none and must not hang the check.
+            await Promise.race([
+              new Promise((next) => requestAnimationFrame(() => requestAnimationFrame(next))),
+              new Promise((next) => setTimeout(next, 100)),
+            ]);
             const after = resolve(arg.steps)[0]?.getBoundingClientRect();
             if (!before || !after || before.x !== after.x || before.y !== after.y || before.width !== after.width) {
               return { reason: 'not stable' };
