@@ -231,6 +231,12 @@ const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.network'];
 const BUNDLE_ID = 'org.dxos.composer';
 
 /**
+ * Prerelease desktop channels signed under their own App ID (`src-tauri/provisioning/`). They share the
+ * released app's passkeys but not its universal links, which stay with the released app.
+ */
+const CHANNEL_BUNDLE_IDS = ['org.dxos.composer.dev', 'org.dxos.composer.preview'];
+
+/**
  * The well-known documents that verify this domain, keyed by path.
  *
  * These are Worker routes rather than static assets because both must be served as
@@ -249,9 +255,10 @@ const WELL_KNOWN_DOCUMENTS: Record<string, (env: Env) => object | undefined> = {
     }
 
     const appId = `${env.APPLE_TEAM_ID}.${BUNDLE_ID}`;
+    const channelAppIds = CHANNEL_BUNDLE_IDS.map((bundleId) => `${env.APPLE_TEAM_ID}.${bundleId}`);
     return {
       applinks: { details: [{ appIDs: [appId], components: [{ '/': '/*' }] }] },
-      webcredentials: { apps: [appId] },
+      webcredentials: { apps: [appId, ...channelAppIds] },
     };
   },
   // WebAuthn Related Origin Requests: origins permitted to assert the `composer.space` relying party.
