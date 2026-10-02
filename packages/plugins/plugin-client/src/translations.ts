@@ -147,6 +147,8 @@ const pluginTranslations = [
         //   Something like https://www.tomsguide.com/news/what-are-passkeys.
         'create-passkey.description':
           'A passkey is a secure and easy to use credential that can be used to recover your account.',
+        'create-passkey-failed.message':
+          'The passkey could not be created. Try again, or create a recovery code instead.',
         'create-recovery-code.label': 'Create Recovery Code',
         'create-recovery-code.description': 'A recovery code is 12 word phrase representing a private key.',
         'recovery-code-dialog.title': 'Recovery Code',

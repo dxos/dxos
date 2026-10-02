@@ -62,12 +62,25 @@ export const decodeUrlSafeBase64 = (encoded: string): Uint8Array => {
 /** Custom URL scheme for the Composer native app. */
 export const APP_SCHEME = 'composer://';
 
-/** Whether native passkeys are available (Tauri on macOS). */
-export const supportsNativePasskeys = (): boolean => {
-  if (!isTauri()) {
-    return false;
+/** How this host obtains a passkey: the native macOS bridge, the WebAuthn API, or not at all. */
+export type PasskeySupport = 'native' | 'web' | 'none';
+
+/**
+ * Set by the macOS desktop shell in every webview before page script runs (`src-tauri/src/passkey.rs` in
+ * composer-app): `true` only when its signed identity can complete a native request.
+ */
+const NATIVE_PASSKEYS_GLOBAL = '__DX_NATIVE_PASSKEYS__';
+
+/**
+ * The macOS shell never falls back to WebAuthn, whose `localhost` origin cannot reach a `composer.space`
+ * passkey, so a shell that does not vouch for native passkeys has none.
+ */
+export const getPasskeySupport = (): PasskeySupport => {
+  if (isTauri() && getHostPlatform() === 'macos') {
+    return Reflect.get(globalThis, NATIVE_PASSKEYS_GLOBAL) === true ? 'native' : 'none';
   }
-  return getHostPlatform() === 'macos';
+
+  return globalThis.navigator?.credentials && 'create' in globalThis.navigator.credentials ? 'web' : 'none';
 };
 
 /**
