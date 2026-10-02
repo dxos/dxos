@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { type ChangeEvent, useState } from 'react';
+import React, { useState } from 'react';
 
 import { Invitation_AuthMethod } from '@dxos/react-client/invitations';
 import { Next, useTranslation } from '@dxos/react-ui';
@@ -39,7 +39,8 @@ export const InvitationAuthenticator = ({
   const invitationType = Kind.toLowerCase() as 'space' | 'halo';
   const [authCode, setAuthCode] = useState('');
 
-  const onChange = ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
+  // The pin input reports the whole code; a DOM change event would carry only the digit just typed.
+  const handleValueChange = (value: string) => {
     setAuthCode(value);
     if (value.length === pinLength) {
       (document.querySelector(`[data-autofocus-pinlength="${invitationType}"]`) as HTMLElement | null)?.focus();
@@ -75,7 +76,7 @@ export const InvitationAuthenticator = ({
                 'inputMode': 'numeric',
                 'autoComplete': 'off',
                 'pattern': '\\d*',
-                onChange,
+                'onValueChange': handleValueChange,
                 'data-autofocus': `connecting${Kind}Invitation inputting${Kind}VerificationCode authenticationFailing${Kind}VerificationCode authenticating${Kind}VerificationCode`,
                 'data-prevent-ios-autofocus': true,
                 'data-testid': `${invitationType}-auth-code-input`,
