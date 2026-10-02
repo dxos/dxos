@@ -8,6 +8,7 @@ import * as Fiber from 'effect/Fiber';
 import type * as Layer from 'effect/Layer';
 import React, { type Ref, useCallback } from 'react';
 
+import { EffectEx } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { XtermBridge, XtermContext, runShell } from '../../cli/index.ts';
@@ -73,7 +74,8 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
 
       // The bridge is disposed only after the interrupt: the shell's finalizers still write their
       // last output through it, and the view disposes xterm once this settles.
-      return () => Effect.runPromise(Fiber.interrupt(fiber).pipe(Effect.andThen(Effect.sync(() => bridge.dispose()))));
+      return () =>
+        EffectEx.runPromise(Fiber.interrupt(fiber).pipe(Effect.andThen(Effect.sync(() => bridge.dispose()))));
     },
     [command, layer, name, version, prompt, banner],
   );

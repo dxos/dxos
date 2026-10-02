@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import React, { type Ref, useCallback } from 'react';
 
+import { EffectEx } from '@dxos/effect';
 import { type ThemedClassName } from '@dxos/react-ui';
 
 import { type TerminalBridge, XtermBridge, runRepl } from '../../cli/index.ts';
@@ -33,7 +34,8 @@ export const LineTerminal = ({ ref, classNames, evaluate, prompt = '$ ', banner,
     (xterm) => {
       const bridge = new XtermBridge(xterm);
       const fiber = Effect.runFork(runRepl(bridge, { prompt, banner, evaluate: (line) => evaluate(line, bridge) }));
-      return () => Effect.runPromise(Fiber.interrupt(fiber).pipe(Effect.andThen(Effect.sync(() => bridge.dispose()))));
+      return () =>
+        EffectEx.runPromise(Fiber.interrupt(fiber).pipe(Effect.andThen(Effect.sync(() => bridge.dispose()))));
     },
     [evaluate, prompt, banner],
   );
