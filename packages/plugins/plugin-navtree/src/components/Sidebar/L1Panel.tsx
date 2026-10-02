@@ -191,8 +191,8 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
   return (
     <div
       data-tauri-drag-region
-      className='grid w-full items-center dx-app-drag dx-density-lg'
-      // Same late item-end surface as the tree rows below, so the header holds the slot too.
+      className='grid w-full items-center px-2 dx-app-drag dx-density-lg'
+      // Same late item-end surface and inline inset as the tree rows below, so its actions and status line up with theirs.
       style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (

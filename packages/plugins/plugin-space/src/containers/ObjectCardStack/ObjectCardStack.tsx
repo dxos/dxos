@@ -62,7 +62,8 @@ export const ObjectCardStack = forwardRef<HTMLDivElement, ObjectCardStackProps>(
                     getId={(obj) => obj.id}
                     Tile={({ ...props }) => (
                       <Mosaic.Tile {...props}>
-                        <Next.Card.Root>
+                        {/* A grid card, so the form's rows (which inherit their parent's tracks) take its content track. */}
+                        <Next.Card.Root grid>
                           <ObjectForm object={props.data} type={type} />
                         </Next.Card.Root>
                       </Mosaic.Tile>
