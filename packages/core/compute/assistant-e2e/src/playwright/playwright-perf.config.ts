@@ -26,7 +26,7 @@ export default defineConfig({
   // Two flows measured at once would contend for the same cores and measure each other.
   fullyParallel: false,
   webServer: {
-    command: 'pnpm --dir ../../../../../tools/storybook-react exec storybook dev --port 9009 --no-open --ci',
+    command: 'pnpm --dir ../../../../../../tools/storybook-react exec storybook dev --port 9009 --no-open --ci',
     port: 9009,
     reuseExistingServer: true,
     timeout: 300_000,

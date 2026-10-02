@@ -156,7 +156,7 @@ const chatMessage = (index: number): Message.Message => {
 
 /** The blank counterpart: nothing written, so the two flows differ only in the data. */
 export const seedBlankSpace = async (): Promise<void> => {
-  globalThis.__dxosPerfSeed = { done: true, elapsedMs: 0 };
+  globalThis.__dxosPerfSeed = { done: true, elapsedMs: 0, phases: {} };
 };
 
 /** Writes the busy shape into `space` and a handful of sibling spaces on the same profile. */
@@ -171,6 +171,15 @@ export const seedBusySpace = async ({
 }): Promise<void> => {
   const db = space.db;
   const started = Date.now();
+  // Per-phase wall time, read back by the perf flow so a slow seed says which writes cost it.
+  const phases: Record<string, number> = {};
+  let phaseStarted = started;
+  const endPhase = (name: string) => {
+    const now = Date.now();
+    phases[name] = now - phaseStarted;
+    phaseStarted = now;
+    globalThis.__dxosPerfSeed = { done: false, elapsedMs: now - started, phases };
+  };
 
   const taskSets = Array.from({ length: scale.emptyTaskSets }, () => db.add(TaskSet.make({})));
   const tasks = Array.from({ length: scale.tasks }, (_, index) =>
@@ -189,11 +198,14 @@ export const seedBusySpace = async ({
     db.add(Markdown.make({ name: `Notes ${index + 1}`, content: filler(index % 13 === 0 ? 40_000 : 1_300, index) }));
   }
   await db.flush();
+  endPhase('objects');
 
   await seedTraceFeed(db, space.id, scale.traceMessages);
+  endPhase('traceFeed');
   for (let index = 0; index < scale.strayTraceFeeds; index++) {
     await seedTraceFeed(db, space.id, 2 + (index % 11));
   }
+  endPhase('strayTraceFeeds');
 
   // The same binding appended again and again: what a companion chat that kept re-binding left.
   for (let index = 0; index < scale.bindingFeeds; index++) {
@@ -208,6 +220,7 @@ export const seedBusySpace = async ({
     );
     await appendInBlocks(db, feed, bindings);
   }
+  endPhase('bindingFeeds');
 
   for (const [chatIndex, count] of scale.chatHistories.entries()) {
     const feed = db.add(Feed.make({}));
@@ -218,7 +231,9 @@ export const seedBusySpace = async ({
       Array.from({ length: count }, (_, index) => chatMessage(chatIndex * 1_000 + index)),
     );
   }
+  endPhase('chatHistories');
   await db.flush({ indexes: true });
+  endPhase('indexFlush');
 
   for (let index = 0; index < scale.extraSpaces; index++) {
     const sibling = await client.spaces.create({ name: `Sibling ${index + 1}` });
@@ -229,12 +244,13 @@ export const seedBusySpace = async ({
     }
     await sibling.db.flush({ indexes: true });
   }
+  endPhase('extraSpaces');
 
-  globalThis.__dxosPerfSeed = { done: true, elapsedMs: Date.now() - started };
+  globalThis.__dxosPerfSeed = { done: true, elapsedMs: Date.now() - started, phases };
 };
 
 declare global {
-  /** Set once {@link seedBusySpace} has written everything, so a perf flow knows when to reload. */
+  /** Seed progress per phase; `done` tells a perf flow the writes are finished and it can reload. */
   // eslint-disable-next-line no-var
-  var __dxosPerfSeed: { done: boolean; elapsedMs: number } | undefined;
+  var __dxosPerfSeed: { done: boolean; elapsedMs: number; phases: Record<string, number> } | undefined;
 }

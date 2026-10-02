@@ -116,6 +116,11 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
         timeout: SEED_BUDGET_MS,
         polling: 1_000,
       });
+      log.info('seeded', {
+        scale,
+        iteration,
+        seed: await page.evaluate(() => Reflect.get(globalThis, '__dxosPerfSeed')),
+      });
       await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
     });
 
