@@ -5,10 +5,12 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
+import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
+import { FeedProtocol } from '@dxos/protocols';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
 import { EchoHost } from './echo-host.ts';
@@ -56,6 +58,54 @@ describe('EchoHost.updateIndexes', () => {
       host.indexEngine.queryObjectIds({ spaceIds: [spaceId], objectIds: [written] }),
     );
     expect(rows.map((row) => row.objectId)).toEqual([written]);
+  });
+});
+
+describe('EchoHost trace indexing', () => {
+  // An agent turn appends trace messages continuously; a pass per append kept the worker saturated.
+  test('coalesces a burst of trace appends into one background pass, but not data appends', async () => {
+    const { host, runtime, spaceId } = await setup();
+    await host.updateIndexes();
+    const update = vi.spyOn(host.indexEngine, 'update');
+    const append = (feedNamespace: string) =>
+      RuntimeProvider.runPromise(runtime)(
+        host.feedStore.appendLocal([
+          { spaceId, feedId: EntityId.random(), feedNamespace, data: new Uint8Array([123, 125]) },
+        ]),
+      );
+
+    for (let i = 0; i < 5; i++) {
+      await append(FeedProtocol.WellKnownNamespaces.trace);
+    }
+    await sleep(100);
+    expect(update).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 3_000 });
+    await host.updateIndexes();
+    const passes = update.mock.calls.length;
+    await sleep(1_200);
+    expect(update.mock.calls.length).toBe(passes);
+
+    update.mockClear();
+    await append(FeedProtocol.WellKnownNamespaces.data);
+    await vi.waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 500 });
+  });
+
+  test('updateIndexes does not wait out the trace throttle', async () => {
+    const { host, runtime, spaceId } = await setup();
+    await host.updateIndexes();
+    const update = vi.spyOn(host.indexEngine, 'update');
+    await RuntimeProvider.runPromise(runtime)(
+      host.feedStore.appendLocal([
+        {
+          spaceId,
+          feedId: EntityId.random(),
+          feedNamespace: FeedProtocol.WellKnownNamespaces.trace,
+          data: new Uint8Array([123, 125]),
+        },
+      ]),
+    );
+    await host.updateIndexes();
+    expect(update).toHaveBeenCalled();
   });
 });
 

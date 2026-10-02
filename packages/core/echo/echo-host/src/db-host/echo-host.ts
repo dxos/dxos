@@ -32,7 +32,7 @@ import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
 import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type FeedProtocol } from '@dxos/protocols';
+import { FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
 
@@ -77,6 +77,13 @@ const FTS_FLUSH_IDLE_MS = 1_000;
 const FTS_FLUSH_MAX_DELAY_MS = 10_000;
 
 /**
+ * Longest a trace append waits for the background pass that indexes it. An agent turn appends trace
+ * messages continuously, and starting a pass per append kept the worker saturated for the whole turn;
+ * a reader that needs them sooner (a feed-scoped query, `flush`) drives the pass itself.
+ */
+const TRACE_INDEX_DELAY_MS = 1_000;
+
+/**
  * Every path that can start an indexing run. Logged on each run so an idle-churn loop is
  * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
  * data-driven pass and a self-sustaining invalidation cycle.
@@ -84,6 +91,7 @@ const FTS_FLUSH_MAX_DELAY_MS = 10_000;
 export type IndexRunReason =
   | 'open'
   | 'feed-blocks'
+  | 'trace-blocks'
   | 'documents-saved'
   | 'batch-continuation'
   | 'rpc-update-indexes'
@@ -212,6 +220,9 @@ export class EchoHost extends Resource {
 
   /** Whether the last pass found nothing to index. */
   #lastPassIdle = false;
+
+  /** Whether a throttled trace-triggered run is already waiting to start. */
+  #traceIndexRunPending = false;
 
   /** Invalidates a pending full-text flush that a later write has superseded. */
   #ftsFlushGeneration = 0;
@@ -418,8 +429,12 @@ export class EchoHost extends Resource {
     log('echo-host: opening space state manager...');
     await this._spaceStateManager.open(ctx);
     log('echo-host: space state manager opened');
-    this._feedStore.onNewBlocks.on(this._ctx, () => {
-      this.#scheduleIndexRun('feed-blocks');
+    this._feedStore.onNewBlocks.on(this._ctx, ({ feedNamespace }) => {
+      if (feedNamespace === FeedProtocol.WellKnownNamespaces.trace) {
+        this.#scheduleTraceIndexRun();
+      } else {
+        this.#scheduleIndexRun('feed-blocks');
+      }
     });
 
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
@@ -1221,6 +1236,28 @@ export class EchoHost extends Resource {
     }
     this.#noteIndexRunReason(reason);
     this._updateIndexes.schedule();
+  }
+
+  /**
+   * Starts at most one trace-triggered run per {@link TRACE_INDEX_DELAY_MS}. The input generation is
+   * bumped at once, so `updateIndexes` callers still wait for these blocks; only the background
+   * trigger is coalesced.
+   */
+  #scheduleTraceIndexRun(): void {
+    this.#inputGeneration++;
+    this.#noteIndexRunReason('trace-blocks');
+    if (this.#traceIndexRunPending) {
+      return;
+    }
+    this.#traceIndexRunPending = true;
+    scheduleTask(
+      this._ctx,
+      () => {
+        this.#traceIndexRunPending = false;
+        this._updateIndexes.schedule();
+      },
+      TRACE_INDEX_DELAY_MS,
+    );
   }
 
   /**
