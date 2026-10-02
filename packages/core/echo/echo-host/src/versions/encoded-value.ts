@@ -8,13 +8,13 @@ import { next as A } from '@automerge/automerge';
 // Comparing encoded (Automerge-primitive) values, so a translation never writes a value a document already holds.
 //
 
+/** Whether `value` is a plain object, not an array or null. */
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
 /**
- * Structural equality between two ENCODED (automerge-primitive) values: `A.RawString`, `Uint8Array`,
- * `EncodedReference` (`{ '/': uri }`), plain arrays/objects. Guards every migration/fold write so a
- * value that already matches the document produces no automerge op.
+ * Structural equality between two encoded (Automerge-primitive) values: `A.RawString`, `Uint8Array`,
+ * `EncodedReference` (`{ '/': uri }`), plain arrays and objects.
  */
 export const encodedValuesEqual = (a: unknown, b: unknown): boolean => {
   if (a === b) {

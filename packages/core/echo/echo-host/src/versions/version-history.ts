@@ -47,6 +47,7 @@ export const frontierOf = (graph: ChangeGraph, hashes: Iterable<string>): Heads 
 /** The message a translation of `original` (an edit made in version `source`) is stamped with. */
 export const translationMessage = (original: string, source: string): string => `translate: ${original} from ${source}`;
 
+/** The original edit and source version a translation's change message names, if it is one. */
 export const parseTranslation = (message: string | null): { original: string; source: string } | undefined => {
   const match = message?.match(/^translate: (\S+) from (\S+)$/);
   return match ? { original: match[1], source: match[2] } : undefined;

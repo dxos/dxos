@@ -13,12 +13,8 @@ import { readSource } from './mapping.ts';
 import { type AnyLens, type Coverage, LensTypeId, type Plan, type ResolvedEntry } from './types.ts';
 
 //
-// Composing two lenses end to end, `first.source -> first.target (= second.source) -> second.target`,
-// by chaining their COMPILED ENTRIES rather than nesting `get`/`put` calls. The intermediate value is
-// never a real ECHO object — nothing persists it — and every existing reader (`Obj.getValue`, the
-// overlay dictionary) needs one. Building a single plan whose entries read straight through to the
-// ORIGINAL base object's own properties sidesteps that (see `chainedEntry`), and gets the composed
-// lens the same `Lens.of` fast path, and the same overlay id, as a hand-written lens would have.
+// Lenses compose by chaining their compiled entries, since the intermediate value is never an ECHO object a
+// nested `get`/`put` could read.
 //
 
 /** The `first`-stage entry that produces one property of the intermediate shape, if there is a plain one. */
@@ -54,8 +50,7 @@ const chainedEntry = (first: AnyLens, second: AnyLens, entry: ResolvedEntry): Re
     return mid;
   };
 
-  // Captured, not re-read from `entry` in the closure: the guard proves it exists here, which a
-  // later `entry.put` access cannot (mirrors `mapping.ts`'s `entryFor`).
+  // Captured so the closure sees the narrowed value.
   const put = entry.put;
   return {
     property: entry.property,

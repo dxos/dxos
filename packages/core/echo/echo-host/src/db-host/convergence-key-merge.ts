@@ -347,11 +347,8 @@ export class ConvergenceKeyMerger {
       return false;
     }
 
-    // Creation-heads replay (M0-REPORT.md item 4): the flat write above is a no-op for every field
-    // the winner already defines — trivially true when a migration's fan-out wrote every field on
-    // every duplicate — so a loser's unconflicted edit would otherwise vanish without this. Skipped
-    // group-wide, falling back to the flat result above, when the winner's own creation heads can't
-    // be derived; skipped per-loser when that loser's can't. Skipped for an extracted object, as above.
+    // The flat write above skips every field the winner already defines, so a loser's own edits are replayed;
+    // not for an extracted object, whose duplicates translation already keeps in step.
     const winnerCreationHeads = isLinkConvergenceKey(convergenceKey)
       ? []
       : deriveCreationHeads(winner.handle.doc(), winner.objectId);
@@ -439,24 +436,11 @@ export class ConvergenceKeyMerger {
   }
 
   /**
-   * Replay `loser`'s edits since ITS OWN creation onto `winner`'s document at `winner`'s creation
-   * heads (M0-REPORT.md "the final design" item 4, prototyped in `fan-out-engine.test.ts` /
-   * `text.test.ts`).
-   *
-   * Each duplicate lives in its own document (confirmed empirically in E5a), so its creation heads
-   * are a real baseline: diffing the loser from them (`deriveCreationHeads`) names exactly its
-   * post-creation edits. Replaying those at the winner's own creation heads lands them concurrent
-   * with whatever the winner itself wrote since its own creation — a clean fast-forward when the
-   * winner never touched the field, a real Automerge register conflict (`A.getConflicts`) when it
-   * did, on every peer identically. Every field, text included, replays as a whole-value copy: hosts
-   * merge independently, and two identical value writes converge where two identical splices would
-   * insert the text twice.
-   *
-   * The change `message` doubles as the idempotence marker (no new persisted field): a loser already
-   * tagged `merge-replay: <loserId>` in the winner's own history has nothing left to do, so a retried
-   * pass — the crash window between this write's flush and the loser's tombstone, the only way
-   * `#mergeCandidates` can see the same live candidate twice — is a genuine no-op rather than a
-   * duplicated conflict alternative.
+   * Replays `loser`'s edits since its own creation onto `winner` at the winner's creation heads, so each lands
+   * concurrent with the winner's own edits: a fast-forward where the winner never touched the field, a conflict
+   * where it did. Fields replay as whole values, since hosts merge independently and identical splices would
+   * insert text twice. The change message `merge-replay: <loserId>` marks a loser as replayed, so a retried pass
+   * writes nothing.
    */
   #replayLoserEdits(
     winner: GroupMember,
@@ -775,18 +759,8 @@ const _hasReplayMarker = (doc: A.Doc<DatabaseDirectory>, loserId: EntityId): boo
 };
 
 /**
- * Derives an entity's creation heads from its OWN document history: the frontier right after the
- * earliest change whose diff touches `objects.<objectId>` — the change that created its entry.
- *
- * No new persisted field: an ECHO object's document keeps its full change history (no compaction
- * that would discard it — epochs, the one mechanism that would, are out of scope per M0-REPORT.md
- * item 8), so this is always derivable from what the document already carries. The scan is the same
- * frontier-accumulation idiom `getObjectChanges` (`echo-client/src/echo-handler/edit-history.ts`)
- * uses to walk a document's history in topological order. It is robust to both layouts a candidate's
- * document can have: for the common case (confirmed empirically in `fan-out-engine.test.ts` E5a) of
- * one object per document, the object's entry is created in the document's very first change, so the
- * loop returns after one iteration; a multi-object document (or one that held a different object
- * first) is handled identically, by walking forward until this object's id first appears.
+ * An entity's creation heads, from its own document's history: the frontier right after the earliest change
+ * that creates `objects.<objectId>`, or `undefined` when no change does.
  */
 export const deriveCreationHeads = (doc: A.Doc<DatabaseDirectory>, objectId: EntityId): string[] | undefined => {
   let frontier: string[] = [];

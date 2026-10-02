@@ -130,13 +130,16 @@ export const compatible = (source: SchemaEx.SchemaProperty, target: SchemaEx.Sch
 };
 
 const isDerived = (entry: object): entry is Derived => 'from' in entry && 'get' in entry;
-const isNested = (entry: object): entry is Nested => 'kind' in entry && (entry as Nested).kind === 'nested';
-const isOneWay = (entry: object): entry is OneWay => 'kind' in entry && (entry as OneWay).kind === 'oneWay';
+const isNested = (entry: object): entry is Nested => 'kind' in entry && entry.kind === 'nested';
+const isOneWay = (entry: object): entry is OneWay => 'kind' in entry && entry.kind === 'oneWay';
 const isExtract = (entry: object): entry is Extract => 'kind' in entry && entry.kind === 'extract';
 const isAbsorb = (entry: object): entry is Absorb => 'kind' in entry && entry.kind === 'absorb';
-const isConverted = (entry: object): entry is Converted => 'kind' in entry && (entry as Converted).kind === 'converted';
+const isConverted = (entry: object): entry is Converted => 'kind' in entry && entry.kind === 'converted';
 const isReadOnly = (entry: object): entry is { kind: 'readOnly'; property: string } =>
-  'kind' in entry && (entry as { kind: string }).kind === 'readOnly';
+  'kind' in entry && entry.kind === 'readOnly';
+
+const isPlainRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const resolveCodec = (codec: Codec | string): Codec => (typeof codec === 'string' ? getCodec(codec) : codec);
 
@@ -159,9 +162,7 @@ export const mapShape = (
   previous?: unknown,
 ): unknown => {
   const record = (candidate: unknown): Record<string, unknown> | undefined =>
-    typeof candidate === 'object' && candidate !== null && !Array.isArray(candidate)
-      ? (candidate as Record<string, unknown>)
-      : undefined;
+    isPlainRecord(candidate) ? candidate : undefined;
   switch (shape) {
     case 'struct': {
       const inner = record(value);

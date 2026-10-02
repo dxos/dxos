@@ -73,17 +73,14 @@ export class TestReplicationNetwork extends Resource {
         replicator,
         otherReplicator,
       );
-      // `addConnection` (not a bare `onConnectionOpen` call) so the connection is registered on
-      // both replicators — `_disconnectReplicator` and `TestReplicationNetwork._close` walk this
-      // same `connections` set to tear connections down, and silently no-op without it.
+      // Registered on both replicators, since teardown walks their `connections`.
       await replicator.addConnection(connection1);
       await otherReplicator.addConnection(connection2);
     }
   }
 
   private async _disconnectReplicator(replicator: TestReplicator): Promise<void> {
-    // Only this side's end: notifying a still-open peer host stalls its subduction repo shutdown, so
-    // a partition removes the replicator on each side. Set tolerates deleting mid-iteration.
+    // Only this side's end, since notifying a still-open peer stalls its repo shutdown.
     for (const connection of replicator.connections) {
       await replicator.removeConnection(connection);
     }

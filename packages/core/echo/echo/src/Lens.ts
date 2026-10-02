@@ -81,6 +81,8 @@ export const isLens = (value: unknown): value is Any =>
 
 /** A lens binding a source ECHO type to a declared target type. */
 export type Lens<S = any, T = any> = LensShape<S, T>;
+
+/** A lens of any source and target. */
 export type Any = AnyLens;
 
 /** `Lens.from(property, codec)` — rename plus a total value conversion. */
@@ -120,10 +122,10 @@ export const values = <P extends string>(
   defaults?: Readonly<Record<string, unknown>>,
 ): Nested<Record<P, unknown>> => ({ kind: 'nested', property, shape: 'values', mapping, defaults });
 
-/**
- * One-way built-ins: a target property computed from source properties, stored as data so every device runs
- * it. Read-only in a view; in version documents, edits flow from the older version only.
- */
+//
+// One-way built-ins: a target property computed from source properties, stored as data so every device runs
+// it. Read-only in a view; in version documents, edits flow from the older version only.
+//
 
 /** `Lens.concat(properties, separator)` — the present source strings joined. */
 export const concat = (properties: readonly string[], separator: string): OneWay => ({

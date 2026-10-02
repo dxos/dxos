@@ -1052,9 +1052,6 @@ const initCore = (core: ObjectCore, target: ProxyTarget) => {
 };
 
 /**
- * @internal
- */
-/**
  * The type URI, version included, that the schema declares for the target of the ref at `dataPath`, so
  * the ref resolves to its target at that version.
  */
@@ -1078,6 +1075,9 @@ const referenceTargetType = (target: ProxyTarget, namespace: string, dataPath: D
   return reference && DXN.make(reference.typename, reference.version);
 };
 
+/**
+ * @internal
+ */
 export const initEchoReactiveObjectRootProxy = (core: ObjectCore, database?: EchoDatabase): Entity.Unknown => {
   // Each core owns exactly one root proxy; callers must not call this twice on the same core.
   invariant(!core.rootProxy, 'ObjectCore already has a root proxy; bind to a fresh core instead.');

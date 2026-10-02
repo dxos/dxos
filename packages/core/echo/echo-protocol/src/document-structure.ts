@@ -204,10 +204,6 @@ export const DatabaseDirectory = Object.freeze({
   isReservedBranchName: (name: string): boolean => name.startsWith(RESERVED_BRANCH_PREFIX),
 
   /**
-   * @returns The object's version documents recorded in the registry, by schema version. The document
-   * `links` points at is not among them.
-   */
-  /**
    * @returns The object's version documents recorded in the registry, by schema version, with the type
    * URI each holds.
    */
@@ -220,6 +216,7 @@ export const DatabaseDirectory = Object.freeze({
         : [];
     }),
 
+  /** @returns The urls of the object's version documents recorded in the registry, by schema version. */
   getVersionDocUrls: (doc: DatabaseDirectory, objectId: string): Record<string, string> => {
     const urls: Record<string, string> = {};
     for (const [name, record] of Object.entries(doc.branches?.[objectId] ?? {})) {

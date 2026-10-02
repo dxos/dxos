@@ -239,6 +239,10 @@ export type Plan = {
   readonly required: { readonly source: readonly string[]; readonly target: readonly string[] };
 };
 
+/** Marks a lens made in code, as distinct from a stored one (both have the lens kind). */
+export const LensTypeId = '~@dxos/echo/Lens' as const;
+export type LensTypeId = typeof LensTypeId;
+
 /**
  * A lens binding a source ECHO type to a declared target type.
  *
@@ -246,10 +250,6 @@ export type Plan = {
  * and so resolves the interfaces already written for it. A plain schema is allowed for shapes no
  * object is ever stored as (the rich-text block tree), and forfeits typename dispatch.
  */
-/** Marks a lens made in code, as distinct from a stored one (both have the lens kind). */
-export const LensTypeId = '~@dxos/echo/Lens' as const;
-export type LensTypeId = typeof LensTypeId;
-
 export type Lens<S = any, T = any> = {
   readonly [LensTypeId]: LensTypeId;
   /** Entity-kind brand: a lens is an edge between two types, as a relation is between two objects. */
