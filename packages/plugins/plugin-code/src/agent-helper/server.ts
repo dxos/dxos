@@ -180,6 +180,18 @@ const handleRequest = async ({
   worktrees,
   bridge,
 }: RequestContext): Promise<void> => {
+  if (!isLoopbackHost(request)) {
+    send(response, 403, { error: 'forbidden host' });
+    return;
+  }
+  const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+  // Agents, not pages, call MCP, so it answers no cross-origin request; each server checks its own
+  // token, since an agent must not hold the helper's, which would let it start agents.
+  if (url.pathname.startsWith(`${Protocol.MCP_PATH}/`)) {
+    await bridge.relay(request, response, url.pathname.slice(Protocol.MCP_PATH.length + 1));
+    return;
+  }
+
   // Any origin may ask; only a holder of the token gets an answer.
   response.setHeader('Access-Control-Allow-Origin', request.headers.origin ?? '*');
   response.setHeader(
@@ -190,16 +202,6 @@ const handleRequest = async ({
   response.setHeader('Vary', 'Origin, Access-Control-Request-Headers');
   if (request.method === 'OPTIONS') {
     send(response, 204);
-    return;
-  }
-  if (!isLoopbackHost(request)) {
-    send(response, 403, { error: 'forbidden host' });
-    return;
-  }
-  const url = new URL(request.url ?? '/', 'http://127.0.0.1');
-  // An agent holds a server id the page registered, not the token, which would let it start agents.
-  if (url.pathname.startsWith(`${Protocol.MCP_PATH}/`)) {
-    await bridge.relay(request, response, url.pathname.slice(Protocol.MCP_PATH.length + 1));
     return;
   }
   if (!matches(request.headers.authorization ?? '', `Bearer ${token}`)) {
@@ -286,6 +288,8 @@ const MCP_HOST = 'mcp-host';
 type UpgradeTarget = {
   spec: AgentSpec.AgentSpec;
   cwd: string;
+  /** The token the agent presents to Composer's MCP server, through its environment. */
+  mcpToken?: string;
   /** The agent's command-line tool on this machine, when the agent names one. */
   executable?: string;
 };
@@ -315,7 +319,11 @@ const authorizeUpgrade = async ({
   }
   const spec = agents.find((agent) => agent.id === url.searchParams.get('agent'));
   const cwd = url.searchParams.get('cwd') ?? '';
+  const mcpToken = url.searchParams.get('mcpToken') ?? undefined;
   if (url.pathname !== Protocol.ACP_PATH || !spec || !isAbsolute(cwd)) {
+    return 403;
+  }
+  if (mcpToken !== undefined && !Protocol.MCP_TOKEN.test(mcpToken)) {
     return 403;
   }
   const isDirectory = await stat(cwd).then(
@@ -326,7 +334,7 @@ const authorizeUpgrade = async ({
     return 403;
   }
   const executable = spec.executable ? await which(spec.executable.name, path) : undefined;
-  return { spec, cwd, executable };
+  return { spec, cwd, executable, mcpToken };
 };
 
 /** Starts the agent and pipes it to the socket; whichever side closes first takes the other down. */
@@ -335,12 +343,16 @@ const relay = ({
   spec,
   cwd,
   executable,
+  mcpToken,
   path,
   launch,
 }: UpgradeTarget & { ws: WebSocket; path: readonly string[]; launch: Launch }): ChildProcessWithoutNullStreams => {
   const env: NodeJS.ProcessEnv = { ...process.env, PATH: path.join(':') };
   if (spec.executable?.env && executable) {
     env[spec.executable.env] = executable;
+  }
+  if (mcpToken) {
+    env[Protocol.MCP_TOKEN_ENV] = mcpToken;
   }
   const { command, args } = launch(spec.entry);
   const child = spawn(command, args, { cwd, env, stdio: ['pipe', 'pipe', 'pipe'] });

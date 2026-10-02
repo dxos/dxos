@@ -27,4 +27,14 @@ describe('Workspace', () => {
     const unnamed = Chat.make({ feed: Ref.make(Feed.make()) });
     expect(Workspace.branchName(unnamed)).toBe(`composer/${unnamed.id.slice(-8).toLowerCase()}`);
   });
+
+  test('a recorded branch outlives a rename', ({ expect }) => {
+    const chat = Chat.make({ feed: Ref.make(Feed.make()) });
+    const first = Workspace.branchName(chat);
+    Workspace.recordBranch(chat, first);
+    Obj.update(chat, (chat) => {
+      chat.name = 'Titled later';
+    });
+    expect(Workspace.branchName(chat)).toBe(first);
+  });
 });

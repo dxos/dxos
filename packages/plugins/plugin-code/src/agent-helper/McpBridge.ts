@@ -6,7 +6,7 @@
 
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { type IncomingMessage, type ServerResponse } from 'node:http';
 import { type WebSocket } from 'ws';
 
@@ -24,19 +24,26 @@ const HOP_HEADERS = new Set(['connection', 'content-length', 'host', 'keep-alive
 
 /**
  * Relays agents' MCP requests to the page, which serves Composer's tools but cannot listen. The page
- * holds one connection; a server id it registered is the only way to reach it, and every id goes
- * with the connection that registered it.
+ * holds one connection and registers each server with the token an agent must present for it; every
+ * registration goes with the connection that made it.
  */
 export class Bridge {
   #host: WebSocket | undefined;
-  readonly #servers = new Set<string>();
+  /** Server id to the token it accepts. */
+  readonly #servers = new Map<string, string>();
   readonly #pending = new Map<string, { response: ServerResponse; timer: NodeJS.Timeout }>();
 
   /** Takes the page's connection, replacing any earlier one. */
   attach(ws: WebSocket): void {
+    const previous = this.#host;
     this.#detach();
+    previous?.close();
     this.#host = ws;
-    ws.on('message', (data) => this.#receive(data.toString()));
+    ws.on('message', (data) => {
+      if (this.#host === ws) {
+        this.#receive(data.toString());
+      }
+    });
     ws.on('close', () => {
       if (this.#host === ws) {
         this.#detach();
@@ -48,8 +55,13 @@ export class Bridge {
   /** Relays one request an agent made of `server`, answering it once the page does. */
   async relay(request: IncomingMessage, response: ServerResponse, server: string): Promise<void> {
     const host = this.#host;
-    if (!host || host.readyState !== host.OPEN || !this.#servers.has(server)) {
+    const token = this.#servers.get(server);
+    if (!host || host.readyState !== host.OPEN || token === undefined) {
       reply(response, 404, 'unknown MCP server');
+      return;
+    }
+    if (!matches(request.headers.authorization ?? '', `Bearer ${token}`)) {
+      reply(response, 401, 'unauthorized');
       return;
     }
     const body = await readBody(request);
@@ -89,7 +101,11 @@ export class Bridge {
     }
     switch (frame.value._tag) {
       case 'register':
-        this.#servers.add(frame.value.server);
+        if (Protocol.MCP_TOKEN.test(frame.value.token)) {
+          this.#servers.set(frame.value.server, frame.value.token);
+        } else {
+          log.warn('mcp host registered a server with a malformed token');
+        }
         return;
       case 'unregister':
         this.#servers.delete(frame.value.server);
@@ -133,6 +149,12 @@ export class Bridge {
     }
   }
 }
+
+const matches = (actual: string, expected: string): boolean => {
+  const left = Buffer.from(actual);
+  const right = Buffer.from(expected);
+  return left.length === right.length && timingSafeEqual(left, right);
+};
 
 const reply = (response: ServerResponse, status: number, message: string): void => {
   response.statusCode = status;

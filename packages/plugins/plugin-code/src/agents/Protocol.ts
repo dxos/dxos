@@ -47,11 +47,18 @@ export type WorktreeOutcome = Schema.Schema.Type<typeof WorktreeOutcome>;
 
 /**
  * Composer's MCP tools for an agent, at `/mcp/<server>`. The page cannot listen, so it opens a
- * WebSocket at {@link MCP_HOST_PATH} and the helper relays each request to it as a frame. A server id
- * is unguessable and registered by the page, which is what an agent holds instead of the token.
+ * WebSocket at {@link MCP_HOST_PATH} and the helper relays each request to it as a frame.
+ *
+ * An agent presents the server's token as a bearer. The token reaches the agent only through its
+ * environment ({@link MCP_TOKEN_ENV}), which its MCP config names rather than holds: the config is
+ * passed to `claude` on its command line, which any user on the machine can read.
  */
 export const MCP_PATH = '/mcp';
 export const MCP_HOST_PATH = '/mcp-host';
+export const MCP_TOKEN_ENV = 'DX_COMPOSER_MCP_TOKEN';
+
+/** 256 bits as hex: the shape of every MCP token. */
+export const MCP_TOKEN = /^[0-9a-f]{64}$/;
 
 const HeaderList = Schema.Array(Schema.Tuple([Schema.String, Schema.String]));
 
@@ -69,7 +76,7 @@ export type McpRequestFrame = Schema.Schema.Type<typeof McpRequestFrame>;
 
 /** Page to helper: starts or stops relaying a server id, or answers a request. */
 export const McpHostFrame = Schema.Union([
-  Schema.TaggedStruct('register', { server: Schema.String }),
+  Schema.TaggedStruct('register', { server: Schema.String, token: Schema.String }),
   Schema.TaggedStruct('unregister', { server: Schema.String }),
   Schema.TaggedStruct('response', {
     id: Schema.String,
@@ -91,9 +98,23 @@ export const AgentStatus = Schema.Struct({
 });
 export type AgentStatus = Schema.Schema.Type<typeof AgentStatus>;
 
-export const acpUrl = ({ port, agent, cwd }: { port: number; agent: string; cwd: string }): string => {
+export const acpUrl = ({
+  port,
+  agent,
+  cwd,
+  mcpToken,
+}: {
+  port: number;
+  agent: string;
+  cwd: string;
+  /** Set as {@link MCP_TOKEN_ENV} in the agent's environment. */
+  mcpToken?: string;
+}): string => {
   const url = new URL(`ws://localhost:${port}${ACP_PATH}`);
   url.searchParams.set('agent', agent);
   url.searchParams.set('cwd', cwd);
+  if (mcpToken) {
+    url.searchParams.set('mcpToken', mcpToken);
+  }
   return url.toString();
 };

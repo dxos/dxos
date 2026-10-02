@@ -95,18 +95,20 @@ export const make = (
         served.clear();
       }),
     );
-    const composerTools = (chat: Chat.Chat): Effect.Effect<acp.McpServer[], AgentError> =>
+    const composerTools = (
+      chat: Chat.Chat,
+    ): Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined, AgentError> =>
       Effect.gen(function* () {
         const agentHelper = helper();
         const client = manager.getAll(ClientCapabilities.Client).at(0);
         const invoker = manager.getAll(Capabilities.OperationInvoker).at(0);
         const spaceId = Obj.getDatabase(chat)?.spaceId;
         if (!agentHelper || !client || !invoker || !spaceId) {
-          return [];
+          return undefined;
         }
         let entry = served.get(chat.id);
         if (!entry) {
-          const server = randomServerId();
+          const server = randomToken();
           const mcp = ComposerMcp.handler({
             registry: client.graph.registry,
             host: ComposerMcp.host({
@@ -122,17 +124,30 @@ export const make = (
           entry = { server, ...mcp };
           served.set(chat.id, entry);
         }
-        const { url } = yield* agentHelper.mcp.serve(entry.server, entry.handle);
-        return [{ type: 'http', name: ComposerMcp.SERVER_NAME, url, headers: [] }];
+        // A fresh token per session: the previous agent's stops working once this one starts.
+        const token = randomToken();
+        const { url } = yield* agentHelper.mcp.serve(entry.server, entry.handle, token);
+        return {
+          token,
+          servers: [
+            {
+              type: 'http',
+              name: ComposerMcp.SERVER_NAME,
+              url,
+              // Named, not held: `claude` expands it from its environment, and its command line is public.
+              headers: [{ name: 'Authorization', value: `Bearer \${${Protocol.MCP_TOKEN_ENV}}` }],
+            },
+          ],
+        };
       });
 
     const options: AcpAgent.AgentOptions = {
       id: definition.id,
       sessions,
-      connect: (cwd) => {
+      connect: (cwd, toolsToken) => {
         const current = helper();
         return current
-          ? current.connect(definition.id, cwd)
+          ? current.connect(definition.id, cwd, toolsToken)
           : Effect.fail(new AgentError({ message: `${definition.label} needs the Composer desktop app.` }));
       },
       workspace: (chat) =>
@@ -168,16 +183,17 @@ export const make = (
             key,
             branch: Workspace.branchName(chat),
           });
+          Workspace.recordBranch(chat, worktree.branch);
           return worktree.path;
         }),
       mode: () => settings()?.agentPermissionMode ?? Settings.DEFAULT_AGENT_PERMISSION_MODE,
-      mcpServers: (chat) =>
+      tools: (chat) =>
         composerTools(chat).pipe(
           // Composer's tools add to a turn; a turn without them still runs.
           Effect.catch((error) =>
             Effect.sync(() => {
               log.warn('Composer tools not offered to the agent', { chat: chat.id, error });
-              return [];
+              return undefined;
             }),
           ),
         ),
@@ -203,9 +219,10 @@ export const make = (
   });
 
 /**
- * Removes the worktrees of this agent's delegated chats whose tasks are all finished, or whose chat
- * was deleted. The branch stays, and so does a worktree with uncommitted changes or a chat the agent
- * is still connected to.
+ * Removes the worktrees of this agent's delegated chats whose tasks are all finished. A worktree stays
+ * whenever that is not certain: its space is not open here, its chat or a task does not load (a
+ * deleted chat's worktree is left for the user to remove), its chat is in use, or it holds changes.
+ * The branch always stays.
  */
 const sweepWorktrees = ({
   agent,
@@ -225,32 +242,48 @@ const sweepWorktrees = ({
       return;
     }
     for (const { key } of yield* agentHelper.worktrees.list) {
-      const parsed = Workspace.parseWorktreeKey(key);
-      // A space this device has not opened says nothing about the chat, so its worktrees wait.
-      const space = parsed && spaces.get(parsed.spaceId);
-      if (!parsed || !space) {
-        continue;
-      }
-      const found = yield* Effect.promise(() =>
-        space.db.query(Query.select(Filter.id(parsed.chatId))).firstOrUndefined(),
+      // Each worktree on its own: one that cannot be judged or removed leaves the rest to the sweep.
+      yield* sweepOne({ key, agent, sessions, agentHelper, spaces }).pipe(
+        Effect.catchCause((cause) => Effect.sync(() => log.warn('worktree not swept', { key, cause }))),
       );
-      if (found && Obj.instanceOf(Chat.Chat, found)) {
-        if (found.session?.harness !== agent || sessions.has(found.id)) {
-          continue;
-        }
-        const tasks = yield* Effect.forEach(found.tasks, (ref) => Effect.promise(() => ref.tryLoad()));
-        // A task that no longer resolves was deleted, which ends it as surely as finishing it.
-        if (!tasks.every((task) => task === undefined || FINISHED.has(task.status ?? 'todo'))) {
-          continue;
-        }
-      }
-      const outcome = yield* agentHelper.worktrees.remove(key);
-      log.info('delegation worktree swept', { key, outcome });
     }
-  }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('worktree sweep failed', { error }))));
+  }).pipe(Effect.catchCause((cause) => Effect.sync(() => log.warn('worktree sweep failed', { cause }))));
 
-/** 256 random bits: an agent reaches Composer's tools by knowing this, so it must not be guessable. */
-const randomServerId = (): string =>
+const sweepOne = ({
+  key,
+  agent,
+  sessions,
+  agentHelper,
+  spaces,
+}: {
+  key: string;
+  agent: string;
+  sessions: AcpAgent.Sessions;
+  agentHelper: CodeCapabilities.AgentHelper;
+  spaces: Client['spaces'];
+}): Effect.Effect<void, unknown> =>
+  Effect.gen(function* () {
+    const parsed = Workspace.parseWorktreeKey(key);
+    const space = parsed && spaces.get(parsed.spaceId);
+    if (!parsed || !space?.isOpen || sessions.has(parsed.chatId)) {
+      return;
+    }
+    const chat = yield* Effect.tryPromise(() =>
+      space.db.query(Query.select(Filter.id(parsed.chatId))).firstOrUndefined(),
+    );
+    if (!chat || !Obj.instanceOf(Chat.Chat, chat) || chat.session?.harness !== agent) {
+      return;
+    }
+    const tasks = yield* Effect.forEach(chat.tasks, (ref) => Effect.tryPromise(() => ref.tryLoad()));
+    if (!tasks.every((task) => task !== undefined && FINISHED.has(task.status ?? 'todo'))) {
+      return;
+    }
+    const outcome = yield* agentHelper.worktrees.remove(key);
+    log.info('delegation worktree swept', { key, outcome });
+  });
+
+/** 256 random bits as hex, the shape the helper accepts for MCP server ids and tokens. */
+const randomToken = (): string =>
   Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
 const isAbsolutePath = (path: string): boolean => path.startsWith('/') || /^[A-Za-z]:[\\/]/.test(path);

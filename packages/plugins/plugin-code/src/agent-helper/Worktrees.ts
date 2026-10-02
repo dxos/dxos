@@ -5,8 +5,8 @@
 // @import-as-namespace
 
 import { execFile } from 'node:child_process';
-import { mkdir, readdir, stat } from 'node:fs/promises';
-import { isAbsolute, join, resolve } from 'node:path';
+import { mkdir, readdir, realpath, stat } from 'node:fs/promises';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 
 import type * as Protocol from '../agents/Protocol.ts';
 
@@ -50,8 +50,10 @@ const exists = (path: string): Promise<boolean> =>
 
 /**
  * The worktree `key` names, on `branch` of `repository`: the existing one if it is already there,
- * else a new one, branching from the repository's current HEAD unless the branch already exists. A
- * folder that is not a git repository cannot have worktrees, so it is its own workspace (no branch).
+ * else a new one, branching from the repository's current HEAD unless the branch already exists. The
+ * path returned is where `repository` sits within it, so a folder inside a repository maps to the
+ * same folder in the worktree. A folder that is not a git repository cannot have worktrees, so it is
+ * its own workspace (no branch).
  */
 export const ensure = async (
   context: Context,
@@ -61,17 +63,20 @@ export const ensure = async (
   if (!KEY.test(key)) {
     throw new WorktreeError(400, 'invalid worktree key');
   }
-  const path = join(context.root, key);
-  if (await exists(path)) {
-    return describe(context, key, path);
-  }
-
   if (!isAbsolute(repository) || !(await exists(repository))) {
     throw new WorktreeError(400, 'the repository folder does not exist');
   }
   const top = await git(['rev-parse', '--show-toplevel'], repository);
   if (!top.ok) {
     return { key, path: repository, branch: '' };
+  }
+  const subdir = relative(top.stdout, await realpath(repository));
+  const within = (path: string) => (subdir.startsWith('..') ? path : join(path, subdir));
+
+  const path = join(context.root, key);
+  if (await exists(path)) {
+    const existing = await describe(context, key, path);
+    return { ...existing, path: within(path) };
   }
   const checked = await git(['check-ref-format', '--branch', branch]);
   if (!checked.ok || checked.stdout !== branch) {
@@ -87,7 +92,7 @@ export const ensure = async (
   if (!added.ok) {
     throw new WorktreeError(409, added.stderr || 'git worktree add failed');
   }
-  return { key, path, branch };
+  return { key, path: within(path), branch };
 };
 
 /**
@@ -112,9 +117,12 @@ export const remove = async (context: Context, key: string): Promise<Protocol.Wo
   }
   // Run from the repository rather than from inside the worktree being removed.
   const common = await git(['rev-parse', '--path-format=absolute', '--git-common-dir'], path);
+  if (!common.ok) {
+    throw new WorktreeError(409, common.stderr || 'git rev-parse failed');
+  }
   const removed = await git(['--git-dir', common.stdout, 'worktree', 'remove', path]);
-  if (!common.ok || !removed.ok) {
-    throw new WorktreeError(409, removed.stderr || common.stderr || 'git worktree remove failed');
+  if (!removed.ok) {
+    throw new WorktreeError(409, removed.stderr || 'git worktree remove failed');
   }
   return 'removed';
 };

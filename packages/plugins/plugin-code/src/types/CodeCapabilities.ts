@@ -27,8 +27,8 @@ export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Se
 export type AgentHelper = {
   /** The agents the helper can launch, and whether each can run on this machine. */
   readonly agents: Effect.Effect<readonly Protocol.AgentStatus[], AgentError>;
-  /** Starts an agent working in `cwd` and returns its ACP connection. */
-  readonly connect: (agent: string, cwd: string) => Effect.Effect<acp.Stream, AgentError>;
+  /** Starts an agent working in `cwd`, with `mcpToken` in its environment, and returns its ACP connection. */
+  readonly connect: (agent: string, cwd: string, mcpToken?: string) => Effect.Effect<acp.Stream, AgentError>;
   /** Git worktrees in the app's data folder, which delegated chats work in. */
   readonly worktrees: {
     /** The worktree for `key`, created on first use; a folder that is not a repository is returned as is. */
@@ -39,8 +39,8 @@ export type AgentHelper = {
   };
   /** MCP servers the page serves to agents, through the helper. */
   readonly mcp: {
-    /** Serves `handle` under `server` and returns the URL an agent reaches it at. */
-    readonly serve: (server: string, handle: McpHandle) => Effect.Effect<{ url: string }, AgentError>;
+    /** Serves `handle` under `server` to an agent presenting `token`; returns the URL it reaches it at. */
+    readonly serve: (server: string, handle: McpHandle, token: string) => Effect.Effect<{ url: string }, AgentError>;
     readonly close: (server: string) => Effect.Effect<void>;
   };
 };

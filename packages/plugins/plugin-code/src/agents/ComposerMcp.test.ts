@@ -108,6 +108,16 @@ describe('ComposerMcp', () => {
     }
   });
 
+  test('declines a subscription, whose stream the relay could never finish', async ({ expect }) => {
+    const { handle, dispose } = setup();
+    try {
+      const declined = await call(handle, 'subscriptions/listen');
+      expect(declined.error.code).toBe(-32601);
+    } finally {
+      await dispose();
+    }
+  });
+
   test('refuses another space and an operation the app does not have', async ({ expect }) => {
     const { handle, dispose, invocations } = setup();
     try {

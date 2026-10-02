@@ -73,6 +73,21 @@ describe('Worktrees', () => {
     expect(git(again.path, 'rev-parse', '--abbrev-ref', 'HEAD')).toBe('composer/again');
   });
 
+  test('a folder inside the repository maps to the same folder in the worktree', async ({ expect }) => {
+    const nested = join(repository, 'packages', 'app');
+    await mkdir(nested, { recursive: true });
+    await writeFile(join(nested, 'index.ts'), '');
+    git(repository, 'add', '.');
+    git(repository, 'commit', '-q', '-m', 'app');
+
+    const worktree = await Worktrees.ensure(context, { repository: nested, key: 'nested', branch: 'composer/nested' });
+    expect(worktree.path).toBe(join(context.root, 'nested', 'packages', 'app'));
+    expect(await exists(join(worktree.path, 'index.ts'))).toBe(true);
+    expect((await Worktrees.ensure(context, { repository: nested, key: 'nested', branch: 'x' })).path).toBe(
+      worktree.path,
+    );
+  });
+
   test('works in a folder that is not a repository as it is', async ({ expect }) => {
     const plain = join(dir, 'plain');
     await mkdir(plain);

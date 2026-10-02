@@ -17,24 +17,29 @@ import * as Protocol from './Protocol.ts';
  * request for a server the page registered, answered by that server's handler.
  */
 export class Relay {
-  readonly #handles = new Map<string, CodeCapabilities.McpHandle>();
+  /** Server id to its handler and the token an agent presents for it. */
+  readonly #handles = new Map<string, { handle: CodeCapabilities.McpHandle; token: string }>();
   #socket: Promise<WebSocket> | undefined;
 
   constructor(private readonly _url: () => Promise<{ url: string; token: string }>) {}
 
-  /** Serves `handle` as `server`, connecting first if need be. */
-  async serve(server: string, handle: CodeCapabilities.McpHandle): Promise<void> {
-    this.#handles.set(server, handle);
+  /** Serves `handle` as `server` to an agent presenting `token`, connecting first if need be. */
+  async serve(server: string, handle: CodeCapabilities.McpHandle, token: string): Promise<void> {
+    this.#handles.set(server, { handle, token });
     const socket = await (this.#socket ??= this.#connect().catch((error) => {
       this.#socket = undefined;
       throw error;
     }));
-    send(socket, { _tag: 'register', server });
+    send(socket, { _tag: 'register', server, token });
   }
 
   async close(server: string): Promise<void> {
     this.#handles.delete(server);
-    const socket = await this.#socket?.catch(() => undefined);
+    // A connection that never opened registered nothing, so there is nothing to withdraw from it.
+    const socket = await this.#socket?.then(
+      (socket) => socket,
+      () => undefined,
+    );
     if (socket?.readyState === WebSocket.OPEN) {
       send(socket, { _tag: 'unregister', server });
     }
@@ -46,8 +51,8 @@ export class Relay {
       const socket = new WebSocket(url, [Protocol.SUBPROTOCOL, Protocol.tokenProtocol(token)]);
       socket.onopen = () => {
         // Everything served before a reconnect is served again.
-        for (const server of this.#handles.keys()) {
-          send(socket, { _tag: 'register', server });
+        for (const [server, { token }] of this.#handles) {
+          send(socket, { _tag: 'register', server, token });
         }
         resolve(socket);
       };
@@ -61,7 +66,9 @@ export class Relay {
           log.warn('agent helper sent an unreadable MCP frame');
           return;
         }
-        void answer(frame.value, this.#handles.get(frame.value.server)).then((response) => send(socket, response));
+        void answer(frame.value, this.#handles.get(frame.value.server)?.handle).then((response) =>
+          send(socket, response),
+        );
       };
     });
   }

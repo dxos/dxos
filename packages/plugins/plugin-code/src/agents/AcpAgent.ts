@@ -42,6 +42,8 @@ type Live = { session: AcpSession.Session; idle?: Fiber.Fiber<void> };
  */
 export class Sessions {
   readonly #live = new Map<string, Live>();
+  /** Chats whose session is starting: busy, though not yet live. */
+  readonly #opening = new Set<string>();
   readonly #locks = new Map<string, Semaphore.Semaphore>();
   readonly #scope: Scope.Scope;
   readonly #idleTimeout: Duration.Duration;
@@ -71,7 +73,12 @@ export class Sessions {
         if (existing?.idle) {
           yield* Fiber.interrupt(existing.idle);
         }
-        const live = existing ?? { session: yield* open() };
+        if (!existing) {
+          this.#opening.add(key);
+        }
+        const live = existing ?? {
+          session: yield* open().pipe(Effect.ensuring(Effect.sync(() => this.#opening.delete(key)))),
+        };
         if (!existing) {
           this.#live.set(key, live);
           void live.session.closed.then(() => {
@@ -105,8 +112,9 @@ export class Sessions {
     return this.#live.get(key)?.session.respond(requestId, optionId) ?? false;
   }
 
+  /** Whether the chat's session is live or starting. */
   has(key: string): boolean {
-    return this.#live.has(key);
+    return this.#live.has(key) || this.#opening.has(key);
   }
 
   #lockFor(key: string): Semaphore.Semaphore {
@@ -130,13 +138,14 @@ export type AgentOptions = {
   /** The harness id this agent registers under (`chat.session.harness`). */
   id: string;
   sessions: Sessions;
-  /** Starts the agent process in `cwd` and returns its ACP stream. */
-  connect: (cwd: string) => Effect.Effect<acp.Stream, AgentError>;
+  /** Starts the agent process in `cwd`, with Composer's tools token in its environment, and returns its ACP stream. */
+  connect: (cwd: string, toolsToken?: string) => Effect.Effect<acp.Stream, AgentError>;
   /** The directory the agent works in for this chat. */
   workspace: (chat: Chat.Chat) => Effect.Effect<string, AgentError>;
   /** Permission mode a new session starts in. */
   mode?: () => string | undefined;
-  mcpServers?: (chat: Chat.Chat) => Effect.Effect<acp.McpServer[]>;
+  /** Composer's MCP tools for the chat, and the token the agent presents for them; fresh for each session. */
+  tools?: (chat: Chat.Chat) => Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined>;
   /** This device's key: a chat runs only on the device that first ran it, since the agent's state lives there. */
   device?: () => string | undefined;
 };
@@ -156,7 +165,7 @@ export const makeTurnProducer =
   (options: AgentOptions): MakeTurnProducer =>
   ({ chat, feed }) =>
     Effect.succeed({
-      // The agent brings its own tools; none of Composer's are offered to it yet.
+      // The agent's tools are its own and those of Composer's MCP server; none run as the process's skills.
       getSkills: () => [],
       runTurn: (request: TurnRequest) =>
         runTurn(options, { chat, feed }, request).pipe(
@@ -209,9 +218,15 @@ export const runTurn = (
     return yield* Effect.gen(function* () {
       const session = yield* options.sessions.acquire(chat.id, () =>
         Effect.gen(function* () {
-          const stream = yield* options.connect(cwd);
-          const mcpServers = options.mcpServers ? yield* options.mcpServers(chat) : [];
-          return yield* AcpSession.open({ stream, cwd, resume, mcpServers, mode: options.mode?.() });
+          const tools = options.tools ? yield* options.tools(chat) : undefined;
+          const stream = yield* options.connect(cwd, tools?.token);
+          return yield* AcpSession.open({
+            stream,
+            cwd,
+            resume,
+            mcpServers: tools?.servers ?? [],
+            mode: options.mode?.(),
+          });
         }),
       );
       if (session.sessionId !== resume) {

@@ -31,8 +31,19 @@ export const parseWorktreeKey = (key: string): { spaceId: SpaceId; chatId: strin
     : undefined;
 };
 
-/** The branch a delegated chat works on: readable from its name, unique by its id. */
+/** Foreign-key source under which a chat records the branch its worktree is on. */
+const BRANCH_KEY = 'git-branch';
+
+/**
+ * The branch a delegated chat works on: the one it recorded, else a new name readable from the chat's
+ * name and unique by its id. Recorded because the chat's name changes (it is titled after its first
+ * turn) and the branch holding its work must not.
+ */
 export const branchName = (chat: Chat.Chat): string => {
+  const recorded = Obj.getKeys(chat, BRANCH_KEY).at(-1)?.id;
+  if (recorded) {
+    return recorded;
+  }
   const slug = (chat.name ?? '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -40,4 +51,13 @@ export const branchName = (chat: Chat.Chat): string => {
     .replace(/^-+|-+$/g, '');
   const suffix = chat.id.slice(-8).toLowerCase();
   return `composer/${slug ? `${slug}-` : ''}${suffix}`;
+};
+
+/** Remembers the branch the chat's worktree is on; a folder that is not a repository has none. */
+export const recordBranch = (chat: Chat.Chat, branch: string): void => {
+  if (branch && Obj.getKeys(chat, BRANCH_KEY).at(-1)?.id !== branch) {
+    Obj.update(chat, (chat) => {
+      Obj.getMeta(chat).keys.push({ source: BRANCH_KEY, id: branch });
+    });
+  }
 };

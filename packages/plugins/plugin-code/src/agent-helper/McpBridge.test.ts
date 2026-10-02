@@ -9,6 +9,7 @@ import * as Protocol from '../agents/Protocol.ts';
 import { type AgentServer, serve } from './server.ts';
 
 const TOKEN = 'c'.repeat(48);
+const MCP_TOKEN = 'f'.repeat(64);
 
 describe('McpBridge', () => {
   let server: AgentServer;
@@ -36,17 +37,17 @@ describe('McpBridge', () => {
       ws.send(JSON.stringify(answer(frame)));
     });
     for (const id of servers) {
-      ws.send(JSON.stringify({ _tag: 'register', server: id } satisfies Protocol.McpHostFrame));
+      ws.send(JSON.stringify({ _tag: 'register', server: id, token: MCP_TOKEN } satisfies Protocol.McpHostFrame));
     }
     // Registration is a frame like any other; give it a turn to land.
     await new Promise((resolve) => setTimeout(resolve, 50));
     return ws;
   };
 
-  const post = (server_: string, body: string) =>
+  const post = (server_: string, body: string, token = MCP_TOKEN) =>
     fetch(`http://127.0.0.1:${server.port}${Protocol.MCP_PATH}/${server_}?probe=1`, {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', 'authorization': `Bearer ${token}` },
       body,
     });
 
@@ -72,9 +73,11 @@ describe('McpBridge', () => {
     ws.close();
   });
 
-  test('refuses a server the page never registered, and a page without the token', async ({ expect }) => {
+  test('refuses an unregistered server, a wrong MCP token, and a page without the helper token', async ({ expect }) => {
     const ws = await host(['srv'], (frame) => ({ _tag: 'response', id: frame.id, status: 200, headers: [], body: '' }));
     expect((await post('other', '{}')).status).toBe(404);
+    // The server id alone is not enough: the agent must present the token registered with it.
+    expect((await post('srv', '{}', '0'.repeat(64))).status).toBe(401);
     ws.close();
 
     const intruder = new WebSocket(`ws://127.0.0.1:${server.port}${Protocol.MCP_HOST_PATH}`, [
@@ -93,7 +96,7 @@ describe('McpBridge', () => {
     let ws: WebSocket | undefined;
     ws = await host(['srv'], () => {
       ws?.close();
-      return { _tag: 'register', server: 'ignored' };
+      return { _tag: 'unregister', server: 'ignored' };
     });
     expect((await post('srv', '{}')).status).toBe(503);
   });

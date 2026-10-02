@@ -165,11 +165,11 @@ export default Capability.makeModule(
       })),
     );
     const mcp: CodeCapabilities.AgentHelper['mcp'] = {
-      serve: (server, handle) =>
+      serve: (server, handle, token) =>
         helper.pipe(
           Effect.flatMap(({ port }) =>
             Effect.tryPromise({
-              try: () => relay.serve(server, handle),
+              try: () => relay.serve(server, handle, token),
               catch: (cause) => new AgentError({ message: 'could not serve Composer tools to the agent', cause }),
             }).pipe(Effect.as({ url: `http://localhost:${port}${Protocol.MCP_PATH}/${server}` })),
           ),
@@ -177,10 +177,10 @@ export default Capability.makeModule(
       close: (server) => Effect.promise(() => relay.close(server)),
     };
 
-    const connect = (agent: string, cwd: string) =>
+    const connect = (agent: string, cwd: string, mcpToken?: string) =>
       helper.pipe(
         Effect.map(({ port, token }) =>
-          createWebSocketStream(Protocol.acpUrl({ port, agent, cwd }), {
+          createWebSocketStream(Protocol.acpUrl({ port, agent, cwd, mcpToken }), {
             protocols: [Protocol.SUBPROTOCOL, Protocol.tokenProtocol(token)],
           }),
         ),

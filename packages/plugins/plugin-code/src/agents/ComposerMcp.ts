@@ -6,6 +6,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
 import * as McpServer$ from 'effect/unstable/ai/McpServer';
@@ -81,9 +82,24 @@ export const handler = ({ registry, host, path }: HandlerOptions) => {
   );
   return {
     handle: async (request: Request): Promise<Response> =>
-      McpServer.normalizeResponse(await web.handler(request), { request }),
+      // The relay answers a request once, whole; a subscription's stream never ends, so it is declined.
+      request.headers.get('mcp-method') === 'subscriptions/listen'
+        ? declineSubscription(request)
+        : McpServer.normalizeResponse(await web.handler(request), { request }),
     dispose: web.dispose,
   };
+};
+
+const RequestId = Schema.fromJsonString(Schema.Struct({ id: Schema.Union([Schema.String, Schema.Number]) }));
+
+/** A JSON-RPC error rather than an HTTP one, which a client reads as its session being gone. */
+const declineSubscription = async (request: Request): Promise<Response> => {
+  const body = Schema.decodeUnknownOption(RequestId)(await request.text());
+  return Response.json({
+    jsonrpc: '2.0',
+    id: Option.isSome(body) ? body.value.id : null,
+    error: { code: -32601, message: 'Subscriptions are not supported by this server.' },
+  });
 };
 
 /** Operation keys travel with or without the `dxn:` prefix. */
