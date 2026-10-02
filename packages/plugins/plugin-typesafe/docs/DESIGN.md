@@ -44,6 +44,16 @@ model's provider, and this plugin gives each provider its EDGE route
 AI has no vendor key, so none is sent: a connected TypeSafe key would otherwise go to a route that
 never uses it.
 
+**Clef is another Workers AI model on the same wire.** Cloudflare's Clef and Clef Flash answer the
+System One request shape, so they are catalog entries (`Model.cloudflareClef`,
+`Model.cloudflareClefFlash`) on the Workers AI route, told apart on EDGE by the back-end name in the
+body (`clef`, `clef-flash`, `jev-*`). No new route, transport or setting per model.
+
+**The default is a setting; pinning stays in code.** `Model.defaultDecisionModel` is an alias, not a
+model: the resolver swaps it for the model the plugin settings select, read per resolution so a change
+applies to the next decision. A consumer that needs a specific model still names it; one that just
+needs "a decision model" (plugin-labeler) asks for the alias and follows the user's choice.
+
 **A direct endpoint needs a key, over HTTPS.** The `endpoint` setting bypasses EDGE, so there is no
 platform key behind it; a space with none connected fails with an `AuthenticationError`
 (`MissingKey`) the caller can turn into "connect TypeSafe". The key goes out as a bearer token, so the
