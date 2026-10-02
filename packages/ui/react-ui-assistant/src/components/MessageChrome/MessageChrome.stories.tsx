@@ -25,9 +25,11 @@ type StoryArgs = {
   selected?: boolean;
   /** Synthetic context riding on the prompt — the selection or event that started the turn. */
   context?: string;
+  /** Replaces the prompt's text, e.g. a pasted console log. */
+  text?: string;
 };
 
-const DefaultStory = ({ variant, rewind, debug, selected, context }: StoryArgs) => {
+const DefaultStory = ({ variant, rewind, debug, selected, context, text }: StoryArgs) => {
   // Made in a render so the story's `created` is now: the toolbar prints elapsed time.
   const message = useMemo(
     () =>
@@ -46,11 +48,11 @@ const DefaultStory = ({ variant, rewind, debug, selected, context }: StoryArgs) 
             text:
               variant === 'answer' || variant === 'assistant-toolbar'
                 ? 'Give every flex ancestor of the scroll viewport `min-h-0`, then put `overflow-y-auto` on the leaf.'
-                : 'How do I make a nested flex column scroll instead of growing?',
+                : (text ?? 'How do I make a nested flex column scroll instead of growing?'),
           },
         ],
       }),
-    [variant, context],
+    [variant, context, text],
   );
 
   return (
@@ -124,6 +126,21 @@ export const Prompt_WithContext: Story = {
     rewind: true,
     context: 'Selection from layout.md:\n\n.panel { display: flex; flex-direction: column; }',
   },
+};
+
+const consoleError = [
+  'The agent keeps failing on startup — here is the console:',
+  '',
+  ...Array.from(
+    { length: 40 },
+    (_, index) =>
+      `Uncaught (in promise) Error: Query execution failed (queryCount=${index + 1})\n    at QueryExecutor.run (query-executor.ts:${120 + index}:17)`,
+  ),
+].join('\n');
+
+/** A prompt taller than the collapsed height is clipped behind a show-more toggle. */
+export const Prompt_Long: Story = {
+  args: { variant: 'prompt', rewind: true, text: consoleError },
 };
 
 export const Answer: Story = {
