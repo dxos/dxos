@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 import { rmSync } from 'node:fs';
-import { afterAll, type BenchFn, type BenchRunOptions, describe, test } from 'vitest';
+import { type BenchFn, type BenchRunOptions, afterAll, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';

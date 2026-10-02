@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import { rmSync, writeFileSync } from 'node:fs';
 import v8 from 'node:v8';
 import vm from 'node:vm';
-import { afterAll, type BenchFn, type BenchRunOptions, describe, test } from 'vitest';
+import { type BenchFn, type BenchRunOptions, afterAll, describe, test } from 'vitest';
 
 import { Filter, Obj, Order, Query, type QueryResult, Ref, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
