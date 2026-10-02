@@ -71,7 +71,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     });
 
     return (
-      <Dialog.Content ref={forwardedRef}>
+      <Dialog.Content ref={forwardedRef} data-testid='navtree.commands'>
         <Dialog.Title srOnly>{t('commands-dialog.title', { ns: meta.profile.key })}</Dialog.Title>
         <Dialog.Body>
           <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
@@ -82,6 +82,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
               autoFocus
               placeholder={t('command-list-input.placeholder')}
               escapeBehavior='dismiss'
+              data-testid='navtree.commands.input'
               {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
             />
             <SearchList.Viewport>

@@ -3,6 +3,7 @@
 //
 
 export * from './assistant.ts';
+export * from './commands.ts';
 export * from './deck.ts';
 export * from './inbox.ts';
 export * from './markdown.ts';

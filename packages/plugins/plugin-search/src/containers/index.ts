@@ -4,5 +4,8 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const SearchDialog: ComponentType<any> = lazy(() => import('./SearchDialog/index.ts'));
+import { lazyWithPreload } from '@dxos/react-ui';
+
+// Preloadable: search must open on the first keystroke rather than after a chunk fetch.
+export const SearchDialog = lazyWithPreload(() => import('./SearchDialog/index.ts'));
 export const SearchArticle: ComponentType<any> = lazy(() => import('./SearchArticle/index.ts'));

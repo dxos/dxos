@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { Suspense, lazy, useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { invariant } from '@dxos/invariant';
@@ -339,5 +339,62 @@ export const TestNoDescriptionAutoFocus: StoryObj = {
       await expect(dialog.getAttribute('aria-describedby')).toBeNull();
     });
     await waitFor(async () => expect(document.activeElement?.textContent).toBe('Commit'));
+  },
+};
+
+/** How long the lazy content below holds back, past the machine's one-frame lookup for it. */
+const LAZY_CONTENT_DELAY = 200;
+
+const LazyContentStory = () => {
+  // A fresh `lazy` per mount, so a re-run of the story waits on the chunk again.
+  const Content = useMemo(
+    () =>
+      lazy(async () => {
+        await new Promise((resolve) => setTimeout(resolve, LAZY_CONTENT_DELAY));
+        return {
+          default: () => (
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>Lazy dialog</Dialog.Title>
+              </Dialog.Header>
+              <Dialog.Body>
+                <Field.Root>
+                  <Field.Input placeholder='Late field' {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }} />
+                </Field.Root>
+              </Dialog.Body>
+            </Dialog.Content>
+          ),
+        };
+      }),
+    [],
+  );
+
+  return (
+    <Dialog.Root>
+      <Dialog.Trigger asChild>
+        <Button>Open lazy dialog</Button>
+      </Dialog.Trigger>
+      <Dialog.Overlay>
+        <Suspense fallback={null}>
+          <Content />
+        </Suspense>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  );
+};
+
+/**
+ * Content that mounts after the machine looked for it — every lazily loaded dialog surface — still
+ * takes the initial focus and closes on Escape.
+ */
+export const TestLazyContent: StoryObj = {
+  render: () => <LazyContentStory />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: 'Open lazy dialog' }));
+    await waitFor(async () => expect(document.activeElement?.getAttribute('placeholder')).toBe('Late field'), {
+      timeout: 3_000,
+    });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () => expect(dialogElement()).toBeNull());
   },
 };

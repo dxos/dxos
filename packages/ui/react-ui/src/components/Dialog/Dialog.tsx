@@ -11,7 +11,18 @@
 import { Dialog as DialogPrimitive, useDialog } from '@ark-ui/react/dialog';
 import { ark } from '@ark-ui/react/factory';
 import { Portal } from '@ark-ui/react/portal';
-import React, { type ComponentPropsWithRef, type FC, type ReactNode, forwardRef, useMemo, useRef } from 'react';
+import React, {
+  type ComponentPropsWithRef,
+  type FC,
+  type ReactNode,
+  forwardRef,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
@@ -104,8 +115,34 @@ const DialogRootImpl = ({
     defaultProp: defaultOpen,
     onChange: onOpenChange,
   });
+  // Bumped to rebuild the machine when content mounted too late for it; see `DialogMachine`.
+  const [generation, setGeneration] = useState(0);
+  const handleRearm = useCallback(() => setGeneration((value) => value + 1), []);
+  return (
+    <DialogMachine key={generation} open={open} setOpen={setOpen} modal={modal} role={role} onRearm={handleRearm}>
+      {children}
+    </DialogMachine>
+  );
+};
+
+type DialogMachineProps = Pick<DialogRootImplProps, 'children' | 'role'> & {
+  open: boolean;
+  setOpen: (open: boolean) => void;
+  modal: boolean;
+  onRearm: () => void;
+};
+
+/**
+ * Owns the Ark machine. The machine looks for the content once, a microtask and a frame after it
+ * opens, to attach dismissal (Escape, outside clicks), the focus trap and the initial focus — and
+ * never looks again. Content behind a lazy boundary (every plugin dialog surface) arrives later than
+ * that, so the root mirrors the machine's look and, if the content was missing, rebuilds the machine
+ * once the content does mount; by then the content's code is loaded and it remounts in the same commit.
+ */
+const DialogMachine = ({ children, open, setOpen, modal, role, onRearm }: DialogMachineProps) => {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const handlersRef = useRef<DialogContentHandlers>({});
+  const missedRef = useRef(false);
 
   // The content vetoes its own auto focus with `preventDefault()`, asked at render so the machine
   // reads the answer when it opens.
@@ -129,9 +166,38 @@ const DialogRootImpl = ({
     onEscapeKeyDown: (event) => handlersRef.current.onEscapeKeyDown?.(event),
   });
 
+  useEffect(() => {
+    missedRef.current = false;
+    if (!open) {
+      return;
+    }
+    // Same schedule as the machine's own `whenNode` lookup.
+    let frame: number | undefined;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled || contentRef.current) {
+        return;
+      }
+      frame = requestAnimationFrame(() => {
+        missedRef.current = !contentRef.current;
+      });
+    });
+    return () => {
+      cancelled = true;
+      frame !== undefined && cancelAnimationFrame(frame);
+    };
+  }, [open]);
+
+  const handleContentMount = useCallback(() => {
+    if (missedRef.current) {
+      missedRef.current = false;
+      onRearm();
+    }
+  }, [onRearm]);
+
   const context = useMemo(
-    () => ({ open, modal, onOpenChange: setOpen, contentRef, handlersRef }),
-    [open, modal, setOpen],
+    () => ({ open, modal, onOpenChange: setOpen, contentRef, handlersRef, onContentMount: handleContentMount }),
+    [open, modal, setOpen, handleContentMount],
   );
 
   return (
@@ -239,7 +305,9 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   ) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
-    const { contentRef, handlersRef } = useDialogContext(DIALOG_CONTENT_NAME);
+    const { contentRef, handlersRef, onContentMount } = useDialogContext(DIALOG_CONTENT_NAME);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    useLayoutEffect(() => onContentMount(), []);
     // The handlers are read at event time; nothing re-renders on their account.
     handlersRef.current = {
       onOpenAutoFocus,
