@@ -326,6 +326,11 @@ jobs:
             echo "::warning::No measure batches were written; nothing to score."
             exit 0
           fi
+          # Budgets are calibrated from this job's own published rows, so the first nights run unscored.
+          if [ ! -f packages/core/compute/assistant-e2e/src/playwright/perf/budgets.json ]; then
+            echo "::warning::No chat budgets yet; stage rows were published, nothing scored."
+            exit 0
+          fi
           node packages/core/compute/assistant-e2e/scripts/score-perf.ts score --publish --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Upload artifacts
