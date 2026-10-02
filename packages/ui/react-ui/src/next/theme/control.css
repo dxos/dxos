@@ -759,6 +759,9 @@
     padding-block: var(--nx-gap-size);
     min-height: var(--nx-block-size);
   }
+  .nx-group[data-compact] {
+    gap: 0;
+  }
   /* A nested group is one cell of its parent's row, which already carries the padding. */
   .nx-group > .nx-group {
     padding-block: 0;

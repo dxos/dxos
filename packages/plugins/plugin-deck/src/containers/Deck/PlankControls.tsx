@@ -99,7 +99,7 @@ export const PlankControls = forwardRef<HTMLDivElement, PlankControlsProps>(
       variant === 'hide-disabled' ? `disabled:hidden ${plankControlSpacing}` : plankControlSpacing;
 
     return (
-      <Next.Group {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
+      <Next.Group compact {...props} classNames={['dx-app-no-drag opacity-100!', classNames]} ref={forwardedRef}>
         {capabilities.expandToggle && (
           <PlankControl
             label={t(expanded ? 'collapse-plank.label' : 'expand-plank.label')}
