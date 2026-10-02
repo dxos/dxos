@@ -57,6 +57,8 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
+  // The panel is a focus area of its own, after the rail.
+  const landmark = Next.useMainLandmark(0.5);
 
   return (
     <Next.Tabs.Content
@@ -69,6 +71,7 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
         isCurrent && 'grid',
       ]}
       tabIndex={-1}
+      {...(isCurrent && landmark)}
       aria-label={title}
       // An unavailable workspace has no tab in the rail, so the generated `aria-labelledby` would
       // reference a missing element.

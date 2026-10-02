@@ -28,6 +28,8 @@ export const Sidebar = () => {
 
   return (
     <Next.Main.NavigationSidebar
+      // The navigation surface declares its rail and panel as focus areas of their own.
+      landmark={false}
       data-testid='deck.sidebar'
       label={label}
       classNames={['grid', topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}

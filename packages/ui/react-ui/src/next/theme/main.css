@@ -80,6 +80,23 @@
     }
   }
 
+  /*
+   * A focus area an app declares inside a region (`useMainLandmark`): a ring on an overlay above its children, since a
+   * positioned child (a toolbar's scroll frame) paints over the element's own outline. These areas are positioned
+   * panes, so the overlay spans the element.
+   */
+  [data-main-landmark]:not(.nx-main-content, .nx-main-sidebar, .nx-main-drawer):focus-visible {
+    outline: none;
+  }
+  [data-main-landmark]:not(.nx-main-content, .nx-main-sidebar, .nx-main-drawer):focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+    pointer-events: none;
+  }
+
   /* Sidebars */
 
   .nx-main-sidebar {

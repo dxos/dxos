@@ -250,6 +250,7 @@ import {
   useInGrid as nextUseInGrid,
   useEditable as nextUseEditable,
   useFocus as nextUseFocus,
+  useMainLandmark as nextUseMainLandmark,
   useMainSidebars as nextUseMainSidebars,
   useTour as nextUseTour,
   useTourContext as nextUseTourContext,
@@ -403,6 +404,7 @@ export namespace Next {
   export const MAIN_DRAWER_DEFAULT_HEIGHT = NextMAIN_DRAWER_DEFAULT_HEIGHT;
   export const MAIN_DRAWER_MAX_HEIGHT = NextMAIN_DRAWER_MAX_HEIGHT;
   export const MAIN_DRAWER_MIN_HEIGHT = NextMAIN_DRAWER_MIN_HEIGHT;
+  export const useMainLandmark = nextUseMainLandmark;
   export const useMainSidebars = nextUseMainSidebars;
   export type MainRootProps = NextMainRootProps;
   export type MainContentProps = NextMainContentProps;

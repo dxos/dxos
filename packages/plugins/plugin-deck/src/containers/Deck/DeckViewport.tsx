@@ -173,7 +173,6 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
   return (
     <Next.Main.Content
       bounce
-      handlesFocus
       classNames={[
         'grid top-[env(safe-area-inset-top)]!',
         topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]!',

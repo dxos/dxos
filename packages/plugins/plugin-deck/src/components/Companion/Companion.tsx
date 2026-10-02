@@ -7,7 +7,7 @@ import React, { type ReactNode, useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/ui';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Next, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { mx } from '@dxos/ui-theme';
 
@@ -52,6 +52,8 @@ export const Companion = ({
 }: CompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
   const companions = companionsProp ?? [];
+  // A focus area of the shell after the plank it accompanies.
+  const landmark = Next.useMainLandmark(1.5);
 
   // Fall back to the first companion when uncontrolled so a panel is always visible.
   const selected = value ?? companions[0]?.id;
@@ -84,7 +86,7 @@ export const Companion = ({
   );
 
   return (
-    <Pane.Root classNames={classNames} data-testid='deck.companion'>
+    <Pane.Root {...landmark} classNames={classNames} data-testid='deck.companion'>
       {!headless && (
         <Pane.Toolbar>
           <Pane.Tabs tabs={tabs} value={selected} onValueChange={onValueChange} attendableId={attendableId} related />

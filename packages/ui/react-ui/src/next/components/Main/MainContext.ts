@@ -8,11 +8,13 @@ import {
   type KeyboardEvent,
   type SetStateAction,
   useCallback,
+  useEffect,
+  useState,
 } from 'react';
 
 import { log } from '@dxos/log';
 import { useFocusGroup } from '@dxos/react-focus';
-import { createContext } from '@dxos/react-hooks';
+import { createContext, useComposedRefs } from '@dxos/react-hooks';
 
 export const MAIN_NAME = 'Next.Main';
 
@@ -24,6 +26,17 @@ export const MAIN_NAME = 'Next.Main';
 //
 
 const landmarkAttr = 'data-main-landmark';
+
+/**
+ * The focusable landmarks in Tab order: by their order value, then by document order, so several areas may share one
+ * (e.g. a deck's planks); hidden and inert ones are skipped.
+ */
+const getLandmarks = (document: Document): HTMLElement[] =>
+  Array.from(document.querySelectorAll<HTMLElement>(`[${landmarkAttr}]`))
+    .filter((element) => !element.closest('[inert]') && element.checkVisibility())
+    .map((element, index) => ({ element, index, order: parseFloat(element.getAttribute(landmarkAttr) ?? '') }))
+    .sort((left, right) => left.order - right.order || left.index - right.index)
+    .map(({ element }) => element);
 
 /**
  * Facilitates moving focus between landmarks.
@@ -43,15 +56,25 @@ export const useLandmarkMover = (propsOnKeyDown: ComponentPropsWithoutRef<'div'>
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       const target = event.currentTarget;
-      if (event.target === target && event.key === 'Tab' && target.hasAttribute(landmarkAttr)) {
+      // On a focused landmark, ArrowLeft/ArrowRight move between landmarks as Shift+Tab/Tab do.
+      const step =
+        event.key === 'Tab'
+          ? event.getModifierState('Shift')
+            ? -1
+            : 1
+          : event.key === 'ArrowLeft'
+            ? -1
+            : event.key === 'ArrowRight'
+              ? 1
+              : 0;
+      if (event.target === target && step !== 0 && target.hasAttribute(landmarkAttr)) {
         event.preventDefault();
-        const landmarks = Array.from(document.querySelectorAll(`[${landmarkAttr}]:not([inert])`))
-          .map((el) => parseInt(el.getAttribute(landmarkAttr) ?? ''))
-          .sort();
+        event.stopPropagation();
+        const landmarks = getLandmarks(target.ownerDocument);
         const count = landmarks.length;
-        const cursor = landmarks.indexOf(parseInt(target.getAttribute(landmarkAttr) ?? ''));
-        const nextLandmark = landmarks[(cursor + count + (event.getModifierState('Shift') ? -1 : 1)) % count];
-        document.querySelector<HTMLElement>(`[${landmarkAttr}="${nextLandmark}"]`)?.focus();
+        const cursor = landmarks.indexOf(target);
+        landmarks[(cursor + count + step) % count]?.focus();
+        return;
       }
       onFocusGroupKeyDown(event);
       propsOnKeyDown?.(event);
@@ -157,4 +180,32 @@ export const useSidebars = (consumerName: string) => {
     collapseComplementarySidebar: useCallback(() => setComplementarySidebarState('collapsed'), []),
     closeComplementarySidebar: useCallback(() => setComplementarySidebarState('closed'), []),
   };
+};
+
+/**
+ * Makes an element a focus area of the shell, beside the sidebars (order 0 and 2) and the content (1): Tab moves between
+ * areas in `order` and the focused one draws the landmark ring. For a region that holds several areas, e.g. a
+ * navigation sidebar's rail and panel (0 and 0.5) or a plank and its companion (1 and 1.5), whose own landmark is then
+ * turned off.
+ */
+export const useMainLandmark = (order: number, onKeyDown?: ComponentPropsWithoutRef<'div'>['onKeyDown']) => {
+  const { ref: moverRef, ...props } = useLandmarkMover(onKeyDown, String(order));
+  const [element, setElement] = useState<HTMLElement | null>(null);
+  // A host machine may manage the element's tabindex (Ark's tab panel drops it once the panel holds focusables), and a
+  // landmark without one cannot take focus, so it is restored whenever it is removed.
+  useEffect(() => {
+    if (!element) {
+      return;
+    }
+    const restore = () => {
+      if (!element.hasAttribute('tabindex')) {
+        element.setAttribute('tabindex', '0');
+      }
+    };
+    restore();
+    const observer = new MutationObserver(restore);
+    observer.observe(element, { attributes: true, attributeFilter: ['tabindex'] });
+    return () => observer.disconnect();
+  }, [element]);
+  return { ...props, ref: useComposedRefs<HTMLElement>(moverRef, setElement) };
 };

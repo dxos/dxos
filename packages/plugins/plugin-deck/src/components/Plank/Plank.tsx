@@ -14,6 +14,7 @@ import React, {
 import { Surface } from '@dxos/app-framework/ui';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { AppSurface, AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/ui';
+import { useComposedRefs } from '@dxos/react-hooks';
 import { Next, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
@@ -103,6 +104,9 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
   ) => {
     const { t } = useTranslation(meta.profile.key);
     const attentionAttrs = useAttentionAttributes(attendableId);
+    // Each plank is a focus area of the shell; its companion follows it.
+    const landmark = Next.useMainLandmark(1, onKeyDown);
+    const ref = useComposedRefs<HTMLDivElement>(forwardedRef, landmark.ref);
     const icon = node.properties?.icon ?? 'ph--circle-dashed--regular';
     // A bare string is taken verbatim by `toLocalizedString`; only the tuple form is looked up.
     const label = toLocalizedString(
@@ -125,14 +129,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
     const ActionRoot = popoverAnchorId === `${meta.profile.key}:${node.id}` ? Next.Popover.Anchor : Fragment;
 
     return (
-      <Pane.Root
-        ref={forwardedRef}
-        classNames={classNames}
-        tabIndex={0}
-        onKeyDown={onKeyDown}
-        {...attentionAttrs}
-        data-testid='deck.plank'
-      >
+      <Pane.Root {...landmark} ref={ref} classNames={classNames} {...attentionAttrs} data-testid='deck.plank'>
         {!headless && (
           <Pane.Toolbar>
             <ActionRoot>

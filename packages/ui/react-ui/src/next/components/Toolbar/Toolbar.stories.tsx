@@ -247,8 +247,9 @@ export const Test: Story = {
     const settings = byTestId(canvasElement, 'settings-md');
     const done = byTestId(canvasElement, 'done-md');
     const doneStyle = getComputedStyle(done);
+    // The last item ends its margin plus the toolbar's inline padding short of the edge.
     await expect(settings.getBoundingClientRect().right - done.getBoundingClientRect().right).toBeCloseTo(
-      parseFloat(doneStyle.marginRight),
+      parseFloat(doneStyle.marginRight) + parseFloat(getComputedStyle(settings).paddingRight),
       0,
     );
     await expect(byTestId(canvasElement, 'gap-md').getBoundingClientRect().width).toBeGreaterThan(100);

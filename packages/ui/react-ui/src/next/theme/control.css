@@ -824,6 +824,8 @@
     gap: var(--nx-control-inset);
     width: 100%;
     min-height: var(--nx-block-size);
+    /* Half a gap of inline padding (px-1 at md), so the end items are not flush with a pane's edge. */
+    padding-inline: calc(var(--nx-gap-size) / 2);
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
   }

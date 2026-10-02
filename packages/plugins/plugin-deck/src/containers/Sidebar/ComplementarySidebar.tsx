@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type MouseEvent, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -65,14 +65,20 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     }
   }, [hasPersistedPanel, invokePromise]);
 
+  // R0 follows the R1 panel beside it.
+  const railLandmark = Next.useMainLandmark(2.5);
+
   return (
     <Next.Main.ComplementarySidebar
+      // The rail and the panel are focus areas of their own.
+      landmark={false}
       label={label}
       classNames={[topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
       {/* R0 Tabs */}
       <Next.Tabs.Root classNames='contents' orientation='vertical' value={selectedVariant} keepMounted>
         <div
+          {...railLandmark}
           data-tauri-drag-region
           style={iconSize(5)}
           className={mx(
@@ -118,14 +124,11 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
 
         {/* R1 Content. */}
         {companions.map((companion) => (
-          <Next.Tabs.Content
+          <ComplementarySidebarContent
             key={Attention.getLinkedVariant(companion.id)}
             value={Attention.getLinkedVariant(companion.id)}
-            classNames={[
-              'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-              'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
-            ]}
-            {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
+            selected={selectedVariant === Attention.getLinkedVariant(companion.id)}
+            inert={state.complementarySidebarState !== 'expanded'}
           >
             <ComplementarySidebarPanel
               companion={companion}
@@ -136,7 +139,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 sidebarState: state.fullscreen ? 'closed' : state.complementarySidebarState,
               })}
             />
-          </Next.Tabs.Content>
+          </ComplementarySidebarContent>
         ))}
       </Next.Tabs.Root>
     </Next.Main.ComplementarySidebar>
@@ -185,3 +188,23 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
 };
 
 ComplementarySidebar.displayName = 'ComplementarySidebar';
+
+type ComplementarySidebarContentProps = PropsWithChildren<{ value: string; selected: boolean; inert: boolean }>;
+
+/** An R1 panel; the selected one is a focus area of the shell (the hidden ones stay mounted beneath it). */
+const ComplementarySidebarContent = ({ value, selected, inert, children }: ComplementarySidebarContentProps) => {
+  const landmark = Next.useMainLandmark(2);
+  return (
+    <Next.Tabs.Content
+      {...(selected && !inert && landmark)}
+      value={value}
+      classNames={[
+        'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
+        'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
+      ]}
+      {...(inert && { inert: true })}
+    >
+      {children}
+    </Next.Tabs.Content>
+  );
+};

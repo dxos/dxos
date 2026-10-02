@@ -324,9 +324,12 @@ export const L0Menu = ({
 
   // Check if any items have onRearrange to enable drag-and-drop.
   const hasRearrangeableItems = topLevelItems.some((item) => item.properties.onRearrange);
+  // The rail is a focus area of its own, before the panel beside it.
+  const landmark = Next.useMainLandmark(0);
 
   return (
     <Next.Tabs.List
+      {...landmark}
       data-tauri-drag-region
       classNames={[
         'group/l0 absolute z-[1] inset-y-0 start-0 rounded-is',

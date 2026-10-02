@@ -114,7 +114,7 @@ const DefaultStory = () => {
 
   return (
     <Next.Main.Root navigationSidebarState='expanded'>
-      <Next.Main.NavigationSidebar label='Navigation' classNames='grid'>
+      <Next.Main.NavigationSidebar label='Navigation' landmark={false} classNames='grid'>
         <NavTreeContainer tab={state.tab} />
       </Next.Main.NavigationSidebar>
       <Next.Main.Content bounce handlesFocus>
@@ -208,8 +208,8 @@ export const Default: Story = {
     // Press Escape
     await userEvent.keyboard('{Escape}');
 
-    // Confirm that focus is on an element with attribute data-main-landmark="0"
-    await expect(document.activeElement).toHaveAttribute('data-main-landmark', '0');
+    // Confirm that focus is on the panel, the focus area beside the rail.
+    await expect(document.activeElement).toHaveAttribute('data-main-landmark', '0.5');
 
     // Press Tab
     await userEvent.keyboard('{Tab}');
@@ -220,7 +220,7 @@ export const Default: Story = {
     // Press Tab
     await userEvent.keyboard('{Tab}');
 
-    // Confirm that focus is now on an element with data-main-landmark="0"
+    // Confirm that focus has cycled to the rail.
     await expect(document.activeElement).toHaveAttribute('data-main-landmark', '0');
 
     // Press Shift-Tab

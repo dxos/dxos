@@ -38,6 +38,7 @@ import {
   type SidebarState,
   useLandmarkMover,
   useMainContext,
+  useMainLandmark,
   useSidebars,
 } from './MainContext.ts';
 
@@ -325,24 +326,29 @@ MainSidebar.displayName = 'Next.Main.Sidebar';
 // Navigation Sidebar
 //
 
-type MainNavigationSidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
+type MainNavigationSidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'> & {
+  /** Off when the sidebar's children are focus areas of their own (`useMainLandmark`). */
+  landmark?: boolean;
+};
 
-const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarProps>((props, forwardedRef) => {
-  const { navigationSidebarState, setNavigationSidebarState, resizing } = useMainContext(NAVIGATION_SIDEBAR_NAME);
-  const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '0');
+const MainNavigationSidebar = forwardRef<HTMLDivElement, MainNavigationSidebarProps>(
+  ({ landmark = true, ...props }, forwardedRef) => {
+    const { navigationSidebarState, setNavigationSidebarState, resizing } = useMainContext(NAVIGATION_SIDEBAR_NAME);
+    const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '0');
 
-  return (
-    <MainSidebar
-      {...mover}
-      {...props}
-      state={navigationSidebarState}
-      onStateChange={setNavigationSidebarState}
-      resizing={resizing}
-      side='w-start'
-      ref={useComposedRefs<HTMLDivElement>(forwardedRef, moverRef)}
-    />
-  );
-});
+    return (
+      <MainSidebar
+        {...(landmark && mover)}
+        {...props}
+        state={navigationSidebarState}
+        onStateChange={setNavigationSidebarState}
+        resizing={resizing}
+        side='w-start'
+        ref={useComposedRefs<HTMLDivElement>(forwardedRef, landmark ? moverRef : null)}
+      />
+    );
+  },
+);
 
 MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
 
@@ -350,25 +356,30 @@ MainNavigationSidebar.displayName = NAVIGATION_SIDEBAR_NAME;
 // Complementary Sidebar
 //
 
-type MainComplementarySidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'>;
+type MainComplementarySidebarProps = Omit<MainSidebarProps, 'expanded' | 'side'> & {
+  /** Off when the sidebar's children are focus areas of their own (`useMainLandmark`). */
+  landmark?: boolean;
+};
 
-const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySidebarProps>((props, forwardedRef) => {
-  const { complementarySidebarState, setComplementarySidebarState, resizing } =
-    useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
-  const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '2');
+const MainComplementarySidebar = forwardRef<HTMLDivElement, MainComplementarySidebarProps>(
+  ({ landmark = true, ...props }, forwardedRef) => {
+    const { complementarySidebarState, setComplementarySidebarState, resizing } =
+      useMainContext(COMPLEMENTARY_SIDEBAR_NAME);
+    const { ref: moverRef, ...mover } = useLandmarkMover(props.onKeyDown, '2');
 
-  return (
-    <MainSidebar
-      {...mover}
-      {...props}
-      state={complementarySidebarState}
-      onStateChange={setComplementarySidebarState}
-      resizing={resizing}
-      side='w-end'
-      ref={useComposedRefs<HTMLDivElement>(forwardedRef, moverRef)}
-    />
-  );
-});
+    return (
+      <MainSidebar
+        {...(landmark && mover)}
+        {...props}
+        state={complementarySidebarState}
+        onStateChange={setComplementarySidebarState}
+        resizing={resizing}
+        side='w-end'
+        ref={useComposedRefs<HTMLDivElement>(forwardedRef, landmark ? moverRef : null)}
+      />
+    );
+  },
+);
 
 MainComplementarySidebar.displayName = COMPLEMENTARY_SIDEBAR_NAME;
 
@@ -594,6 +605,7 @@ export {
   DRAWER_MAX_HEIGHT as MAIN_DRAWER_MAX_HEIGHT,
   DRAWER_MIN_HEIGHT as MAIN_DRAWER_MIN_HEIGHT,
   useSidebars as useMainSidebars,
+  useMainLandmark,
 };
 
 export type {

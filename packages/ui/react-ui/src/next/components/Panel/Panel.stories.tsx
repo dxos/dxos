@@ -187,7 +187,10 @@ export const Test: Story = {
       // Size flows to the toolbar's controls and the body's rails.
       const add = byTestId(canvasElement, `add-${size}`).getBoundingClientRect();
       await expect(add.height, `${size} control`).toBeCloseTo(controlSize(size), 0);
-      await expect(add.left - rect.left, `${size} control inset`).toBeCloseTo(inset, 0);
+      // The toolbar pads its inline edges by half a gap, then the control sits its inset into its cell.
+      const toolbar = byTestId(canvasElement, `add-${size}`).closest<HTMLElement>('.nx-toolbar');
+      const toolbarPadding = toolbar ? parseFloat(getComputedStyle(toolbar).paddingLeft) : 0;
+      await expect(add.left - rect.left, `${size} control inset`).toBeCloseTo(inset + toolbarPadding, 0);
       const rail = byTestId(canvasElement, `rail-${size}`).getBoundingClientRect();
       await expect(rail.width, `${size} rail block`).toBeCloseTo(block, 0);
       await expect(rail.left, `${size} rail start`).toBeCloseTo(rect.left, 0);
