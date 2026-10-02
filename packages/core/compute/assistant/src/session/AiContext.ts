@@ -84,7 +84,7 @@ export class Binder extends Resource {
    * Keys of the refs the feed already binds, whether or not their targets resolve here: a registry
    * skill bound by URI never matches its resolved target's URI, so the atoms alone cannot tell it is bound.
    */
-  #bound = { skills: new Set<string>(), objects: new Set<string>() };
+  #bound = { skills: new Set<URI.URI>(), objects: new Set<URI.URI>() };
 
   constructor(options: BinderOptions) {
     super();
@@ -326,7 +326,7 @@ export class Binder extends Resource {
   private _processBindings<T extends Obj.Unknown>(
     refs: Ref.Ref<T>[] | undefined,
     current: T[],
-    bound: ReadonlySet<string>,
+    bound: ReadonlySet<URI.URI>,
   ): { added: Ref.Ref<T>[]; next: T[] } {
     const next = [...current];
     const added: Ref.Ref<T>[] = [];
@@ -334,7 +334,7 @@ export class Binder extends Resource {
       return { added, next };
     }
 
-    const seen = new Set<string>([...bound, ...current.map((obj) => refKey(Obj.getURI(obj)))]);
+    const seen = new Set<URI.URI>([...bound, ...current.map((obj) => refKey(Obj.getURI(obj)))]);
     for (const ref of refs) {
       const key = refKey(ref.uri);
       if (seen.has(key)) {
@@ -430,11 +430,11 @@ export class Binder extends Resource {
 }
 
 /**
- * Identity of a bound ref: an ECHO URI compares by entity id, since some carry the space and some do not.
+ * Identity of a bound ref: an ECHO URI compares in its local form, since some carry the space and some do not.
  */
-const refKey = (uri: URI.URI): string => {
+const refKey = (uri: URI.URI): URI.URI => {
   const echoUri = EID.tryParse(uri);
-  return (echoUri && EID.getEntityId(echoUri)) || uri;
+  return echoUri ? EID.toLocal(echoUri) : uri;
 };
 
 /**
