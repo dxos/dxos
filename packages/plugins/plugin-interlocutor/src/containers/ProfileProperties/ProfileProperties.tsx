@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -19,22 +21,29 @@ export const ProfileProperties = ({ subject }: ProfilePropertiesProps) => {
   const db = Obj.getDatabase(subject);
   const subjectQuery = useMemo(() => Query.select(Filter.id(subject.id)).targetOf(HasSubject.HasSubject), [subject.id]);
   const relations = useQuery(db, subjectQuery);
-  // Queried by type too so a memory's status change (e.g. superseded) re-renders the list.
+  // All of each type, narrowed below to those about the subject.
   const allMemories = useQuery(db, Filter.type(Memory.Memory));
   const allGoals = useQuery(db, Filter.type(Goal.Goal));
 
-  const memories = useMemo(() => {
-    const ids = new Set(relations.map((relation) => Relation.getSource(relation).id));
-    return allMemories.filter((memory) => memory.status === 'active' && ids.has(memory.id)).sort(Profile.byNewest);
-  }, [relations, allMemories]);
-
-  const goals = useMemo(
+  // A query re-emits on membership only, so status changes (confirmed, superseded) need per-object subscriptions.
+  const profileAtom = useMemo(
     () =>
-      allGoals.filter(
-        (goal) => Profile.isLiveGoal(goal) && goal.owners.some((owner) => Profile.refersTo(owner, subject.id)),
-      ),
-    [allGoals, subject.id],
+      Atom.make((get) => {
+        allMemories.forEach((memory) => get(Obj.atom(memory)));
+        allGoals.forEach((goal) => get(Obj.atom(goal)));
+        const ids = new Set(relations.map((relation) => Relation.getSource(relation).id));
+        return {
+          memories: allMemories
+            .filter((memory) => memory.status === 'active' && ids.has(memory.id))
+            .sort(Profile.byNewest),
+          goals: allGoals.filter(
+            (goal) => Profile.isLiveGoal(goal) && goal.owners.some((owner) => Profile.refersTo(owner, subject.id)),
+          ),
+        };
+      }),
+    [relations, allMemories, allGoals, subject.id],
   );
+  const { goals, memories } = useAtomValue(profileAtom);
 
   return <ProfileGraph goals={goals} memories={memories} />;
 };

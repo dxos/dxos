@@ -69,6 +69,7 @@
     "@dxos/plugin-higgsfield": "workspace:*",
     "@dxos/plugin-illustrator": "workspace:*",
     "@dxos/plugin-inbox": "workspace:*",
+    "@dxos/plugin-interlocutor": "workspace:*",
     "@dxos/plugin-map": "workspace:*",
     "@dxos/plugin-pipeline": "workspace:*",
     "@dxos/plugin-preview": "workspace:*",
