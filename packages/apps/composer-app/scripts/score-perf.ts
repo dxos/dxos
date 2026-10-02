@@ -12,7 +12,7 @@
 // A low score never fails the job; only broken inputs do.
 
 import * as Schema from 'effect/Schema';
-import { appendFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
