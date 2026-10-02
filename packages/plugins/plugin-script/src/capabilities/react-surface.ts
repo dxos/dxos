@@ -26,13 +26,13 @@ import {
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ScriptSettingsSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'script.article',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -42,19 +42,19 @@ export default Capability.makeModule(() =>
         component: ScriptArticleSurface,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'notebook.article',
         filter: AppSurface.object(AppSurface.Article, Notebook.Notebook),
         component: NotebookArticleSurface,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Script.Script),
         component: ScriptProperties,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'companion.execute',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'execute'),
@@ -63,7 +63,7 @@ export default Capability.makeModule(() =>
         component: TestContainer,
         props: ({ role, data: { companionTo } }) => ({ role, script: companionTo }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'companion.logs',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'logs'),
@@ -72,7 +72,7 @@ export default Capability.makeModule(() =>
         component: ScriptLogsSurface,
         props: ({ role, data: { companionTo } }) => ({ role, script: companionTo }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: DEPLOYMENT_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof DeploymentDialog>>(AppSurface.Dialog, DEPLOYMENT_DIALOG),
         component: DeploymentDialog,

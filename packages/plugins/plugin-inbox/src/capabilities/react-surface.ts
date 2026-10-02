@@ -39,9 +39,9 @@ const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'subscriptions',
-        filter: Surface.Root.makeFilter(AppSurface.Article, (data) => {
+        filter: Surface.makeFilter(AppSurface.Article, (data) => {
           // A filter runs against every article candidate, including ones whose data carries no
           // `attendableId` despite the type — throwing here fails the whole surface match.
           const lastSegment = data.attendableId?.split('/').pop();
@@ -50,7 +50,7 @@ export default Capability.makeModule(() =>
         component: SubscriptionsArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'mailbox',
         filter: AppSurface.object(AppSurface.Article, Mailbox.Mailbox),
         component: MailboxArticle,
@@ -61,13 +61,13 @@ export default Capability.makeModule(() =>
           attendableId,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'draftMessage',
         filter: AppSurface.subject(AppSurface.Article, DraftMessage.instanceOf),
         component: EditMessageArticle,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'message',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -77,7 +77,7 @@ export default Capability.makeModule(() =>
         component: MessageArticleSurface,
         props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'attachment',
         // Matched by the node's own type rather than the subject: the subject is the MESSAGE, which
         // the message surface also claims, so only the attachment node distinguishes the two.
@@ -90,7 +90,7 @@ export default Capability.makeModule(() =>
           attendableId,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'event',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Event.Event),
@@ -99,25 +99,25 @@ export default Capability.makeModule(() =>
         component: EventArticleSurface,
         props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'calendar',
         filter: AppSurface.object(AppSurface.Article, Calendar.Calendar),
         component: CalendarArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'messageCard',
         filter: AppSurface.object(AppSurface.CardContent, Message.Message),
         component: MessageCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'eventCard',
         filter: AppSurface.object(AppSurface.CardContent, Event.Event),
         component: EventCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: POPOVER_SAVE_FILTER,
         filter: AppSurface.component<{ mailbox: Mailbox.Mailbox; filter: string }>(
           AppSurface.Popover,
@@ -126,13 +126,13 @@ export default Capability.makeModule(() =>
         component: SaveFilterPopover,
         props: ({ data: { props } }) => ({ mailbox: props.mailbox, filter: props.filter }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'mailboxProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Mailbox.Mailbox),
         component: MailboxProperties,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'calendarProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Calendar.Calendar),
         component: CalendarProperties,
@@ -140,13 +140,13 @@ export default Capability.makeModule(() =>
       }),
 
       // TODO(wittjosiah): Generalize the mess below.
-      Surface.Root.create({
+      Surface.create({
         id: 'contactRelated',
         filter: AppSurface.object(AppSurface.Related, Person.Person),
         component: RelatedToContact,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'organizationRelated',
         filter: AppSurface.object(AppSurface.Related, Organization.Organization),
         component: RelatedToOrganization,

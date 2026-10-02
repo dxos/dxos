@@ -18,24 +18,24 @@ import { meta } from '#meta';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'spaceSettingsAutomation',
         filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.space-settings-automation`),
         component: RoutineSettings,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'automation.article',
         filter: AppSurface.object(AppSurface.Article, Routine.Routine),
         component: RoutineArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'routine.card',
         filter: AppSurface.object(AppSurface.CardContent, Routine.Routine),
         component: RoutineCard,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'routine.runs',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'runs'),
@@ -44,7 +44,7 @@ export default Capability.makeModule(() =>
         component: RoutineTraceCompanion,
         props: ({ role, data: { companionTo } }) => ({ role, subject: companionTo }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'skill',
         filter: AppSurface.object(AppSurface.Article, Skill.Skill),
         component: SkillArticle,

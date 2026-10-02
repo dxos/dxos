@@ -36,66 +36,66 @@ type ReactSurfaceOptions = Pick<ClientOptions.ClientPluginOptions, 'identityTest
 export default Capability.makeModule(({ createInvitationUrl, identityTestActions }: ReactSurfaceOptions) =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: Account.Profile,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Profile)),
         component: ProfileContainer,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: Account.Devices,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Devices)),
         component: DevicesContainer,
         props: () => ({ createInvitationUrl, identityTestActions }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: Account.Contacts,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Contacts)),
         component: ContactsContainer,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'spaceInvitations',
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.SpaceInvitations)),
         component: SpaceInvitationsContainer,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: Account.Security,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Security)),
         component: RecoveryCredentialsContainer,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: Account.Account,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Account)),
         component: AccountContainer,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: Account.Invitations,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Invitations)),
         component: InvitationsContainer,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: Account.Usage,
         filter: AppSurface.literal(AppSurface.Article, Account.path(Account.Usage)),
         component: UsageContainer,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'contactPicker',
-        filter: Surface.Root.makeFilter(AppSurface.ContactPicker),
+        filter: Surface.makeFilter(AppSurface.ContactPicker),
         component: ContactPickerContainer,
         props: ({ data }) => data,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: CLI_LOGIN_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof CliLoginDialog>>(AppSurface.Dialog, CLI_LOGIN_DIALOG),
         component: CliLoginDialog,
         props: ({ data: { props } }) => ({ ...props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: JOIN_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof JoinDialog>>(AppSurface.Dialog, JOIN_DIALOG),
         component: JoinDialog,
         props: ({ data: { props } }) => ({ ...props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: RECOVERY_CODE_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof RecoveryCodeDialog>>(
           AppSurface.Dialog,
@@ -104,7 +104,7 @@ export default Capability.makeModule(({ createInvitationUrl, identityTestActions
         component: RecoveryCodeDialog,
         props: ({ data: { props } }) => ({ ...props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: RESET_DIALOG,
         filter: AppSurface.component<Pick<ComponentProps<typeof ResetDialog>, 'mode'>>(AppSurface.Dialog, RESET_DIALOG),
         component: ResetDialog,

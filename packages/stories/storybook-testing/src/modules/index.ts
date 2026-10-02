@@ -44,45 +44,45 @@ export const ModuleRole = {
  * spreads these into its own surface list so stories can reference them as bare `ModuleRole.X`
  * tokens in a layout without re-registering each component.
  */
-export const moduleSurfaces: Surface.Root.Definition[] = [
-  Surface.Root.create({
+export const moduleSurfaces: Surface.Definition[] = [
+  Surface.create({
     id: 'role.config',
-    filter: Surface.Root.makeFilter(ModuleRole.Config),
+    filter: Surface.makeFilter(ModuleRole.Config),
     component: ConfigModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.database',
-    filter: Surface.Root.makeFilter(ModuleRole.Database),
+    filter: Surface.makeFilter(ModuleRole.Database),
     component: DatabaseModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.executionGraph',
-    filter: Surface.Root.makeFilter(ModuleRole.ExecutionGraph),
+    filter: Surface.makeFilter(ModuleRole.ExecutionGraph),
     component: ExecutionGraphModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.invocations',
-    filter: Surface.Root.makeFilter(ModuleRole.Invocations),
+    filter: Surface.makeFilter(ModuleRole.Invocations),
     component: InvocationsModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.json',
-    filter: Surface.Root.makeFilter(ModuleRole.Json),
+    filter: Surface.makeFilter(ModuleRole.Json),
     component: JsonModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.logging',
-    filter: Surface.Root.makeFilter(ModuleRole.Logging),
+    filter: Surface.makeFilter(ModuleRole.Logging),
     component: LoggingModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.objects',
-    filter: Surface.Root.makeFilter(ModuleRole.Objects),
+    filter: Surface.makeFilter(ModuleRole.Objects),
     component: ObjectsModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.routine',
-    filter: Surface.Root.makeFilter(ModuleRole.Routine),
+    filter: Surface.makeFilter(ModuleRole.Routine),
     component: RoutineModule,
   }),
 ];

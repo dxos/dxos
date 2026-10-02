@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
       // registers this component for both full-article and inline-section roles.
       // The Article/Section tokens inherently require a string `attendableId` on
       // the data, matching the article data contract.
-      Surface.Root.create({
+      Surface.create({
         id: 'article',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, SampleItem.SampleItem),
@@ -47,7 +47,7 @@ export default Capability.makeModule(() =>
       // --- Object properties surface ---
       // Renders in the per-object properties panel (gear icon companion).
       // `AppSurface.object(AppSurface.ObjectProperties, Schema)` matches when viewing properties for this type.
-      Surface.Root.create({
+      Surface.create({
         id: 'objectProperties',
         position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, SampleItem.SampleItem),
@@ -57,9 +57,9 @@ export default Capability.makeModule(() =>
 
       // --- Status indicator surface ---
       // `AppSurface.StatusIndicator` renders in the application status bar.
-      Surface.Root.create({
+      Surface.create({
         id: 'sampleStatus',
-        filter: Surface.Root.makeFilter(AppSurface.StatusIndicator),
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: SampleStatusSurface,
       }),
 
@@ -68,7 +68,7 @@ export default Capability.makeModule(() =>
       // `AppSurface.allOf()` composes two filters: the data must be a literal article
       // with id 'related' AND the companionTo must be a SampleItem.
       // The `data.companionTo` prop contains the parent ECHO object.
-      Surface.Root.create({
+      Surface.create({
         id: 'relatedCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'related'),
@@ -82,9 +82,9 @@ export default Capability.makeModule(() =>
       // Renders the workspace-wide companion panel.
       // The variant id ('samplePanel') must match what AppNode.makeDeckCompanion passes
       // and what the deck consumer uses via AppSurface.deckCompanion('samplePanel').
-      Surface.Root.create({
+      Surface.create({
         id: 'deckCompanion',
-        filter: Surface.Root.makeFilter(AppSurface.deckCompanion('samplePanel')),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('samplePanel')),
         component: SampleDeckCompanionSurface,
       }),
     ]),

@@ -215,9 +215,9 @@ const StoryHostPlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.Root.create({
+          Surface.create({
             id: 'inbox.mailboxHost',
-            filter: Surface.Root.makeFilter(HostRole),
+            filter: Surface.makeFilter(HostRole),
             component: HostModule,
           }),
           ...moduleSurfaces,

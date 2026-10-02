@@ -112,7 +112,7 @@ export const DeckContent = ({ children }: DeckContentProps) => {
         minHeight={DeckSchema.DRAWER_MIN_HEIGHT}
         maxHeight={DeckSchema.DRAWER_MAX_HEIGHT}
       >
-        <Surface.Root.Surface type={AppSurface.Drawer} limit={1} />
+        <Surface.Surface type={AppSurface.Drawer} limit={1} />
       </Main.Drawer>
       <Main.Overlay />
       {children}

@@ -22,20 +22,20 @@ const isCallData = (data: unknown): data is CallRoomData => {
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'activeCallCompanion',
-        filter: Surface.Root.makeFilter(AppSurface.deckCompanion('activeCall')),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('activeCall')),
         component: CallSidebar,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'devtoolsOverview',
-        filter: Surface.Root.makeFilter(AppSurface.DevtoolsOverview),
+        filter: Surface.makeFilter(AppSurface.DevtoolsOverview),
         component: CallDebugPanel,
       }),
       // TODO(wittjosiah): Update to use a typed token exported from plugin-calls.
-      Surface.Root.create({
+      Surface.create({
         id: 'call',
-        filter: Surface.Root.makeFilter(AppSurface.Article, isCallData),
+        filter: Surface.makeFilter(AppSurface.Article, isCallData),
         component: CallArticle,
         props: ({ data: { subject, attendableId } }) => ({ roomId: subject.roomId, attendableId }),
       }),

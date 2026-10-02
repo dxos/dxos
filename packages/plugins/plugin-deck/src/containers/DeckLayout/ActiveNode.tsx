@@ -23,7 +23,7 @@ export const ActiveNode = () => {
     <div className='sr-only'>
       {/* TODO(wittjosiah): Weird that this is a surface, feel like it's not really render logic.
             Probably this lives in React-land currently in order to access translations? */}
-      <Surface.Root.Surface
+      <Surface.Surface
         type={AppSurface.DocumentTitle}
         data={{ subject: activeNode } satisfies AppSurface.DocumentTitleData}
         limit={1}

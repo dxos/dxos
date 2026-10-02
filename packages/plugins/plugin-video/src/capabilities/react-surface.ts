@@ -24,7 +24,7 @@ const isVideoPart = (data: unknown, part: string): boolean => {
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'article.video',
         // The Section arm must exclude data that has `part` set — those are the internal sub-surfaces
         // dispatched by VideoArticle itself (player/transcript/summary). Without this guard,
@@ -39,29 +39,29 @@ export default Capability.makeModule(() =>
       // The three parts of a video, each isolated in its own surface (roles 'section' + 'tabpanel') so
       // the cross-origin player iframe never shares a component/prop graph with the CodeMirror editors.
       // Discriminated by `data.part`; composed by VideoArticle.
-      Surface.Root.create({
+      Surface.create({
         id: 'video.player',
         filter: AppSurface.oneOf(
-          Surface.Root.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'player')),
-          Surface.Root.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'player')),
+          Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'player')),
+          Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'player')),
         ),
         component: VideoSection,
         props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'video.transcript',
         filter: AppSurface.oneOf(
-          Surface.Root.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'transcript')),
-          Surface.Root.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'transcript')),
+          Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'transcript')),
+          Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'transcript')),
         ),
         component: TranscriptSection,
         props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'video.summary',
         filter: AppSurface.oneOf(
-          Surface.Root.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'summary')),
-          Surface.Root.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'summary')),
+          Surface.makeFilter(AppSurface.Section, (data) => isVideoPart(data, 'summary')),
+          Surface.makeFilter(AppSurface.Tabpanel, (data) => isVideoPart(data, 'summary')),
         ),
         component: SummarySection,
         props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),

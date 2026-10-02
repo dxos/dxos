@@ -57,9 +57,9 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
-      Surface.Root.create({
+      Surface.create({
         id: 'org.dxos.test.generator.toolbar',
-        filter: Surface.Root.makeFilter(PlaygroundRoles.Toolbar),
+        filter: Surface.makeFilter(PlaygroundRoles.Toolbar),
         component: Toolbar,
       }),
     ),

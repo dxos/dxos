@@ -24,9 +24,9 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
-      Surface.Root.create({
+      Surface.create({
         id: 'org.dxos.test.logger.action',
-        filter: Surface.Root.makeFilter(PlaygroundRoles.Toolbar),
+        filter: Surface.makeFilter(PlaygroundRoles.Toolbar),
         component: Logger,
       }),
     ),

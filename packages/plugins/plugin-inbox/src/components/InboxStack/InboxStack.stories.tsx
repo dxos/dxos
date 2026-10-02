@@ -126,8 +126,8 @@ const CompanionStory = () => {
 
   return (
     <div {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
-      <Surface.Root.Surface type={AppSurface.Article} data={mailboxData} />
-      <Surface.Root.Surface type={AppSurface.Article} data={companionData} />
+      <Surface.Surface type={AppSurface.Article} data={mailboxData} />
+      <Surface.Surface type={AppSurface.Article} data={companionData} />
     </div>
   );
 };

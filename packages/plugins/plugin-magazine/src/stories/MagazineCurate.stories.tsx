@@ -116,7 +116,7 @@ const DefaultStory = () => {
             fallback — the deck disambiguates via the app-graph node, which a story has no equivalent of. */}
         <MagazineArticle role='article' subject={magazine} attendableId='story' />
         {/* The object-properties companion surface (plugin-space DefaultProperties); 'settings' is unambiguous. */}
-        <Surface.Root.Surface type={AppSurface.Article} data={{ subject: 'settings', companionTo: magazine }} />
+        <Surface.Surface type={AppSurface.Article} data={{ subject: 'settings', companionTo: magazine }} />
       </Panel.Content>
     </Panel.Root>
   );

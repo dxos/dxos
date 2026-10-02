@@ -114,7 +114,7 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
         </Card.Block>
       </Card.Header>
       <Card.Body>
-        <Surface.Root.Surface
+        <Surface.Surface
           type={AppSurface.CardContent}
           limit={1}
           data={{ subject: game } satisfies AppSurface.ObjectCardData}

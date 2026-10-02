@@ -81,9 +81,9 @@ const PlankTile = (props: MosaicTileProps<Obj.Any>) => {
 
 const TestExtension = Capability.contribute(
   Capabilities.ReactSurface,
-  Surface.Root.create({
+  Surface.create({
     id: 'storyArticle',
-    filter: Surface.Root.makeFilter(AppSurface.Article),
+    filter: Surface.makeFilter(AppSurface.Article),
     component: ({ data: { subject } }) => {
       if (!subject) {
         return <Loading />;

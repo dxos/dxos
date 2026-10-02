@@ -13,7 +13,7 @@ import { Field } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope; `type` comes from the field AST. */
-export type LocationFieldProps = Surface.Root.ComponentProps<AppSurface.FormInputData> &
+export type LocationFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &
   Omit<FormFieldRendererProps, 'type'>;
 
 /**

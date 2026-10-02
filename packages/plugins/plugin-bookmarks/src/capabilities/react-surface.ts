@@ -15,13 +15,13 @@ import { Bookmark } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'bookmarkArticle',
         filter: AppSurface.object(AppSurface.Article, Bookmark.Bookmark),
         component: BookmarkArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'bookmarkCard',
         filter: AppSurface.object(AppSurface.CardContent, Bookmark.Bookmark),
         component: BookmarkCard,

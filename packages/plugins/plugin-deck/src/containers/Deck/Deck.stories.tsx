@@ -309,18 +309,18 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
       Effect.succeed(
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.Root.create({
+          Surface.create({
             id: 'storyLauncher',
-            filter: Surface.Root.makeFilter(
+            filter: Surface.makeFilter(
               AppSurface.Article,
               (data) =>
                 data.companionTo == null && (data.subject as { launcher?: boolean } | undefined)?.launcher === true,
             ),
             component: ({ data }) => <TestLauncher launcherId={String(data.attendableId)} />,
           }),
-          Surface.Root.create({
+          Surface.create({
             id: 'storyArticle',
-            filter: Surface.Root.makeFilter(
+            filter: Surface.makeFilter(
               AppSurface.Article,
               (data) =>
                 data.companionTo == null && (data.subject as { launcher?: boolean } | undefined)?.launcher !== true,
@@ -331,9 +331,9 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
               return <TestArticle title={title} content={contentFor(title)} />;
             },
           }),
-          Surface.Root.create({
+          Surface.create({
             id: 'storyArticleCompanion',
-            filter: Surface.Root.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
+            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
             component: ({ data }) => {
               const companionTo = data.companionTo as StoryItem | undefined;
               return (

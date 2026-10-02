@@ -41,7 +41,7 @@ const MessageModuleContainer = ({ space, attendableId }: { space: Space; attenda
   // against the mailbox passed as `companionTo`. The article's surface filter matches a single non-draft
   // Message, so handing it a thread array resolves no surface at all.
   return selected ? (
-    <Surface.Root.Surface
+    <Surface.Surface
       type={AppSurface.Article}
       data={{ subject: selected, companionTo: mailbox, attendableId }}
       limit={1}

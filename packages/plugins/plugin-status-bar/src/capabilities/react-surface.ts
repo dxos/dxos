@@ -14,19 +14,19 @@ import { StatusBarActions, StatusBarPanel, VersionNumber } from '#containers';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'statusBar',
-        filter: Surface.Root.makeFilter(DeckRole.StatusBar),
+        filter: Surface.makeFilter(DeckRole.StatusBar),
         component: StatusBarPanel,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'statusBarFooter',
-        filter: Surface.Root.makeFilter(DeckRole.StatusBarFooter),
+        filter: Surface.makeFilter(DeckRole.StatusBarFooter),
         component: StatusBarActions,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'versionInfo',
-        filter: Surface.Root.makeFilter(DeckRole.VersionInfo),
+        filter: Surface.makeFilter(DeckRole.VersionInfo),
         component: VersionNumber,
       }),
     ]),

@@ -26,18 +26,18 @@ export const StoryRole = {
 };
 
 /** React surfaces for this package's panels, keyed by `StoryRole` tokens, plus the generic ones. */
-export const moduleSurfaces: Surface.Root.Definition[] = [
+export const moduleSurfaces: Surface.Definition[] = [
   ...commonSurfaces,
 
-  Surface.Root.create({
+  Surface.create({
     id: 'role.project',
-    filter: Surface.Root.makeFilter(StoryRole.Project),
+    filter: Surface.makeFilter(StoryRole.Project),
     component: ProjectModule,
   }),
 
-  Surface.Root.create({
+  Surface.create({
     id: 'role.mailbox',
-    filter: Surface.Root.makeFilter(StoryRole.Mailbox),
+    filter: Surface.makeFilter(StoryRole.Mailbox),
     component: MailboxModule,
   }),
 ];

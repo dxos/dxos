@@ -15,7 +15,7 @@ import { Voxel } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'world',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
         component: VoxelArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'worldCard',
         filter: AppSurface.object(AppSurface.CardContent, Voxel.World),
         component: VoxelCard,

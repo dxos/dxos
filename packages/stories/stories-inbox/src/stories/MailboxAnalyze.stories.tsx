@@ -565,9 +565,9 @@ const StoryProcessPlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.Root.create({
+          Surface.create({
             id: 'inbox.process',
-            filter: Surface.Root.makeFilter(ProcessRole),
+            filter: Surface.makeFilter(ProcessRole),
             component: ProcessModule,
           }),
           ...moduleSurfaces,

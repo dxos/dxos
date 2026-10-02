@@ -16,7 +16,7 @@ import { DIAGNOSTICS_DECK_COMPANION_ID } from './app-graph-builder.ts';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'doctorDiagnostics',
         filter: AppSurface.literal(
           AppSurface.deckCompanion(DIAGNOSTICS_DECK_COMPANION_ID),

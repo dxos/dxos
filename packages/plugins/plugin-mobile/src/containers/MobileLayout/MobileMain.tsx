@@ -45,7 +45,7 @@ const MainPanel = ({ id, popoverAnchorId }: MainPanelProps) => {
   }, [id, node, node?.data, node?.properties, popoverAnchorId]);
 
   return (
-    <Surface.Root.Surface
+    <Surface.Surface
       key={id}
       type={AppSurface.Article}
       data={data}

@@ -213,7 +213,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
                   </Masonry.Content>
                 </Masonry.Root>
               ) : (
-                instructionsData && <Surface.Root.Surface type={AppSurface.Article} data={instructionsData} limit={1} />
+                instructionsData && <Surface.Surface type={AppSurface.Article} data={instructionsData} limit={1} />
               )}
             </div>
           </div>

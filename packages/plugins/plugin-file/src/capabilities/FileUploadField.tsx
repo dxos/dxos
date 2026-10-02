@@ -11,7 +11,7 @@ import { type FormFieldRendererProps } from '@dxos/react-ui-form';
 import { FileInput } from '#components';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope. */
-export type FileUploadFieldProps = Surface.Root.ComponentProps<AppSurface.FormInputData> &
+export type FileUploadFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &
   Pick<FormFieldRendererProps<File>, 'onValueChange'>;
 
 /**

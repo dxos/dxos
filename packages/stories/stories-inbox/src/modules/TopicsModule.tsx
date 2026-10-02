@@ -33,7 +33,7 @@ const TopicsModuleContainer = ({ space, attendableId }: { space: Space; attendab
 
   const id = attendableId ?? Obj.getURI(mailbox).toString();
   return (
-    <Surface.Root.Surface
+    <Surface.Surface
       type={AppSurface.Article}
       data={{
         subject: mailbox,

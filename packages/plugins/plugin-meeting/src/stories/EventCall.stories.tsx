@@ -59,7 +59,7 @@ const DefaultStory = (_: StoryArgs) => {
   return (
     <div className='dx-expand grid grid-cols-2 gap-2'>
       <div className='dx-expand'>
-        <Surface.Root.Surface
+        <Surface.Surface
           type={AppSurface.Article}
           data={{ subject: event, attendableId: Obj.getURI(event), companionTo: calendar }}
           limit={1}
@@ -67,7 +67,7 @@ const DefaultStory = (_: StoryArgs) => {
       </div>
       {meeting && (
         <div className='dx-expand'>
-          <Surface.Root.Surface
+          <Surface.Surface
             type={AppSurface.Article}
             data={{ subject: meeting, attendableId: Obj.getURI(meeting) }}
             limit={1}

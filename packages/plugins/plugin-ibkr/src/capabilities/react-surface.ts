@@ -21,7 +21,7 @@ import { Ibkr } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'portfolioArticle',
         // Article view for the navigable Portfolio owner; `AppSurface.object` narrows
         // `data.subject` to a Portfolio, whose backing feed holds the stored reports.
@@ -29,14 +29,14 @@ export default Capability.makeModule(() =>
         component: PortfolioArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'portfolioProperties',
         // Companion properties panel for the Portfolio; carries the daily-sync trigger control.
         filter: AppSurface.object(AppSurface.ObjectProperties, Ibkr.Portfolio),
         component: PortfolioProperties,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'portfolioReportDetail',
         // Complementary plank opened when a PortfolioReport is selected in the PortfolioArticle list.
         // The app-graph-builder resolves the selected report as the companion node's subject.
@@ -47,13 +47,13 @@ export default Capability.makeModule(() =>
         component: PortfolioReportDetail,
         props: ({ role, data: { subject, companionTo } }) => ({ role, subject, companionTo }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'instrumentArticle',
         filter: AppSurface.object(AppSurface.Article, Ibkr.Instrument),
         component: InstrumentArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'instrumentCard',
         filter: AppSurface.object(AppSurface.CardContent, Ibkr.Instrument),
         component: InstrumentCard,

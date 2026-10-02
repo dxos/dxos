@@ -15,9 +15,9 @@ import { BrainSurface } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'brain.facts',
-        filter: Surface.Root.makeFilter(BrainSurface.Facts),
+        filter: Surface.makeFilter(BrainSurface.Facts),
         component: FactsCompanion,
       }),
     ]),

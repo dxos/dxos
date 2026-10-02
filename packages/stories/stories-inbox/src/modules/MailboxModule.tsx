@@ -40,7 +40,7 @@ const MailboxModuleContainer = ({ space, attendableId }: { space: Space; attenda
   }, [graph, mailbox]);
 
   const surface = (
-    <Surface.Root.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: selectionId }} limit={1} />
+    <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: selectionId }} limit={1} />
   );
 
   // `ModuleContainer` makes each cell attendable under its *positional* id, but the article advertises

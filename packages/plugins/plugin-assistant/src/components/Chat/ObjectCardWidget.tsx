@@ -47,7 +47,7 @@ export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
         </Card.Block>
         <Card.Title classNames='line-clamp-1'>{title}</Card.Title>
       </Card.Header>
-      <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
+      <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
     </Card.Root>
   );
 };

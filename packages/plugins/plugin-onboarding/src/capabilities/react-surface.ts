@@ -16,23 +16,23 @@ import { WelcomeContainer } from '../containers/index.ts';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'welcome',
         filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),
         component: WelcomeContainer,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'authorizingDevice',
         filter: AppSurface.component(AppSurface.Dialog, AUTHORIZING_DEVICE_DIALOG),
         component: AuthorizingDeviceDialog,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'nativeRedirect',
         filter: AppSurface.component<{ onOpenHere: () => void }>(AppSurface.Dialog, NATIVE_REDIRECT_DIALOG),
         component: NativeRedirectDialog,
         props: ({ data: { props } }) => ({ ...props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'aboutDialog',
         filter: AppSurface.component(AppSurface.Dialog, ABOUT_DIALOG),
         component: AboutDialog,

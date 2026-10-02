@@ -21,7 +21,7 @@ import { MarkdownContainer } from './MarkdownContainer.tsx';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.document',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
           ref,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.text',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         // TODO(burdon): Why is attendableId required? See EventArticle.tsx
@@ -56,13 +56,13 @@ export default Capability.makeModule(() =>
           ref,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: MarkdownSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.editable',
         position: Position.first,
         filter: AppSurface.object(
@@ -73,7 +73,7 @@ export default Capability.makeModule(() =>
         component: EditableMarkdownCard,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.preview',
         filter: AppSurface.object(
           AppSurface.CardContent,

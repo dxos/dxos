@@ -64,7 +64,7 @@ const PipelineItem = ({ item, projectionModel, menu }: ItemProps) => {
 
   return (
     <div ref={cardRef} className='contents'>
-      <Surface.Root.Surface
+      <Surface.Surface
         type={AppSurface.CardContent}
         data={{
           subject: item,

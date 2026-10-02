@@ -19,15 +19,15 @@ import { MeetingCompanion } from './MeetingCompanion.tsx';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'meeting',
         filter: AppSurface.object(AppSurface.Article, Meeting.Meeting),
         component: MeetingArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'meetingCompanion',
-        filter: Surface.Root.makeFilter(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data) =>
             (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&

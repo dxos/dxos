@@ -14,9 +14,9 @@ import { BeaconStatusIndicator } from '#components';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'beaconStatus',
-        filter: Surface.Root.makeFilter(AppSurface.StatusIndicator),
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: BeaconStatusIndicator,
       }),
     ]),

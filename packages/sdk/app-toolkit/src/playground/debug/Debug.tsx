@@ -37,9 +37,9 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
-      Surface.Root.create({
+      Surface.create({
         id: 'org.dxos.test.debug.main',
-        filter: Surface.Root.makeFilter(PlaygroundRoles.Secondary),
+        filter: Surface.makeFilter(PlaygroundRoles.Secondary),
         component: Debug,
       }),
     ),

@@ -53,90 +53,90 @@ export const StoryRole = {
 };
 
 /** React surfaces for the story columns, one per `StoryRole` token. */
-export const moduleSurfaces: Surface.Root.Definition[] = [
-  Surface.Root.create({
+export const moduleSurfaces: Surface.Definition[] = [
+  Surface.create({
     id: 'inbox.archive',
-    filter: Surface.Root.makeFilter(StoryRole.Archive),
+    filter: Surface.makeFilter(StoryRole.Archive),
     component: ArchiveModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.attachment',
-    filter: Surface.Root.makeFilter(StoryRole.Attachment),
+    filter: Surface.makeFilter(StoryRole.Attachment),
     component: AttachmentModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.connector',
-    filter: Surface.Root.makeFilter(StoryRole.Connector),
+    filter: Surface.makeFilter(StoryRole.Connector),
     component: ConnectorModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.facts',
-    filter: Surface.Root.makeFilter(StoryRole.Facts),
+    filter: Surface.makeFilter(StoryRole.Facts),
     component: FactsModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.mailbox',
-    filter: Surface.Root.makeFilter(StoryRole.Mailbox),
+    filter: Surface.makeFilter(StoryRole.Mailbox),
     component: MailboxModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.message',
-    filter: Surface.Root.makeFilter(StoryRole.Message),
+    filter: Surface.makeFilter(StoryRole.Message),
     component: MessageModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.selectedMessage',
-    filter: Surface.Root.makeFilter(StoryRole.SelectedMessage),
+    filter: Surface.makeFilter(StoryRole.SelectedMessage),
     component: SelectedMessageModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.selectedMessageBlocks',
-    filter: Surface.Root.makeFilter(StoryRole.SelectedMessageBlocks),
+    filter: Surface.makeFilter(StoryRole.SelectedMessageBlocks),
     component: SelectedMessageBlocksModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.selectedMessageJson',
-    filter: Surface.Root.makeFilter(StoryRole.SelectedMessageJson),
+    filter: Surface.makeFilter(StoryRole.SelectedMessageJson),
     component: SelectedMessageJsonModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.stats',
-    filter: Surface.Root.makeFilter(StoryRole.Stats),
+    filter: Surface.makeFilter(StoryRole.Stats),
     component: StatsModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.swarmTrace',
-    filter: Surface.Root.makeFilter(StoryRole.SwarmTrace),
+    filter: Surface.makeFilter(StoryRole.SwarmTrace),
     component: SwarmTraceModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.syncState',
-    filter: Surface.Root.makeFilter(StoryRole.SyncState),
+    filter: Surface.makeFilter(StoryRole.SyncState),
     component: SyncStateModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.thread',
-    filter: Surface.Root.makeFilter(StoryRole.Thread),
+    filter: Surface.makeFilter(StoryRole.Thread),
     component: ThreadModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.threadJson',
-    filter: Surface.Root.makeFilter(StoryRole.ThreadJson),
+    filter: Surface.makeFilter(StoryRole.ThreadJson),
     component: ThreadJsonModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.topics',
-    filter: Surface.Root.makeFilter(StoryRole.Topics),
+    filter: Surface.makeFilter(StoryRole.Topics),
     component: TopicsModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.trace',
-    filter: Surface.Root.makeFilter(StoryRole.Trace),
+    filter: Surface.makeFilter(StoryRole.Trace),
     component: TraceModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'inbox.triggers',
-    filter: Surface.Root.makeFilter(StoryRole.Triggers),
+    filter: Surface.makeFilter(StoryRole.Triggers),
     component: TriggersModule,
   }),
 ];

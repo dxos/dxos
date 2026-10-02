@@ -27,7 +27,7 @@ export const TaskDetail = ({ object, attendableId }: ResolvedCellProps) => {
   }
 
   return (
-    <Surface.Root.Surface
+    <Surface.Surface
       type={AppSurface.Article}
       data={{ subject: task, attendableId: `${attendableId}/${task.id}` }}
       limit={1}

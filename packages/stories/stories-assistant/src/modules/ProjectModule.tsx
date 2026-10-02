@@ -60,7 +60,7 @@ const ProjectModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <AttendableContainer id={attendableId} classNames='contents'>
-      <Surface.Root.Surface type={AppSurface.Article} data={{ subject: project, attendableId }} limit={1} />
+      <Surface.Surface type={AppSurface.Article} data={{ subject: project, attendableId }} limit={1} />
     </AttendableContainer>
   );
 };

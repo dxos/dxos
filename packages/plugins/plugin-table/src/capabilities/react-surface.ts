@@ -15,7 +15,7 @@ import { TableArticle, TableCard } from '#containers';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'table',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
         component: TableArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'tableCard',
         filter: AppSurface.object(AppSurface.CardContent, Table.Table),
         component: TableCard,

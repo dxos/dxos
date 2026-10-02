@@ -171,11 +171,11 @@ const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames
 
   const navbarEnd =
     part !== 'complementary' ? (
-      <Surface.Root.Surface type={AppSurface.NavbarEnd} data={shellData satisfies AppSurface.NavbarEndData} />
+      <Surface.Surface type={AppSurface.NavbarEnd} data={shellData satisfies AppSurface.NavbarEndData} />
     ) : undefined;
 
   const sigilFooter = (
-    <Surface.Root.Surface type={AppSurface.MenuFooter} data={shellData satisfies AppSurface.MenuFooterData} />
+    <Surface.Surface type={AppSurface.MenuFooter} data={shellData satisfies AppSurface.MenuFooterData} />
   );
 
   return (

@@ -15,7 +15,7 @@ import { type FormFieldProvider } from '@dxos/react-ui-form';
  */
 // TODO(burdon): Factor out?
 export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormFieldProvider => {
-  const isSurfaceAvailable = Surface.Root.useIsAvailable();
+  const isSurfaceAvailable = Surface.useIsAvailable();
   return useCallback<FormFieldProvider>(
     ({ schema, prop, fieldProps }) => {
       const data = {
@@ -28,7 +28,7 @@ export const useInputSurfaceLookup = (baseData?: Record<string, any>): FormField
 
       const { type: _fieldPropertyAstExcluded, ...surfaceFieldProps } = fieldProps as Record<string, any>;
       if (isSurfaceAvailable({ type: AppSurface.FormInput, data })) {
-        return <Surface.Root.Surface type={AppSurface.FormInput} data={data} {...surfaceFieldProps} />;
+        return <Surface.Surface type={AppSurface.FormInput} data={data} {...surfaceFieldProps} />;
       }
     },
     [isSurfaceAvailable, baseData],

@@ -64,9 +64,9 @@ const meta = {
       capabilities: [
         Capability.contribute(
           Capabilities.ReactSurface,
-          Surface.Root.create({
+          Surface.create({
             id: 'test',
-            filter: Surface.Root.makeFilter(AppSurface.CardContent),
+            filter: Surface.makeFilter(AppSurface.CardContent),
             component: ({ role }) => <span>{JSON.stringify({ role })}</span>,
           }),
         ),

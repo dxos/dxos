@@ -15,7 +15,7 @@ import { Scene } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'scene',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Scene.Scene),
@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
         component: SceneArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'sceneCard',
         filter: AppSurface.object(AppSurface.CardContent, Scene.Scene),
         component: SceneCard,

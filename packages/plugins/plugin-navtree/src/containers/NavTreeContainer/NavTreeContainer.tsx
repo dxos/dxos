@@ -41,7 +41,7 @@ const HOVER_SETTLE_DELAY = Duration.millis(150);
 // TODO(wittjosiah): Avoid using Surface within the navtree, prefer declarative data flow.
 const NavTreeItemEnd = ({ node, open }: { node: AppGraphNode.Node; open: boolean }) => {
   const data = useMemo(() => ({ id: node.id, subject: node.data, open }), [node.id, node.data, open]);
-  return <Surface.Root.Surface type={AppSurface.NavtreeItemEnd} data={data} limit={1} />;
+  return <Surface.Surface type={AppSurface.NavtreeItemEnd} data={data} limit={1} />;
 };
 
 const getItems = (graph: AppGraph.ReadableGraph, node?: AppGraphNode.Node, disposition?: string) => {

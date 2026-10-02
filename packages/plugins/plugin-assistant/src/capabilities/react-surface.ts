@@ -48,26 +48,26 @@ const isUnprovisionedAssistantCompanion = (data: { subject?: unknown; variant?: 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: AssistantSettingsSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'spaceHomePrompt',
-        filter: Surface.Root.makeFilter(SpaceSurface.SpaceHomePinBottom),
+        filter: Surface.makeFilter(SpaceSurface.SpaceHomePinBottom),
         component: SpaceHomePrompt,
         props: ({ data: { space } }) => ({ space }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'spaceHomeSuggestions',
-        filter: Surface.Root.makeFilter(SpaceSurface.SpaceHomeContent),
+        filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
         position: Position.last,
         component: SpaceHomeSuggestionsSurface,
         props: ({ data: { space } }) => ({ space }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'chat',
         filter: AppSurface.object(
           AppSurface.Article,
@@ -83,21 +83,21 @@ export default Capability.makeModule(() =>
           ref,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'agent',
         filter: AppSurface.object(AppSurface.Article, Agent.Agent),
         component: AgentArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Agent.Agent),
         component: AgentProperties,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'companionChat',
-        filter: Surface.Root.makeFilter(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data) =>
             Obj.isObject(data.companionTo) &&
@@ -113,7 +113,7 @@ export default Capability.makeModule(() =>
           ref,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'companionInvocations',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'invocations'),
@@ -125,20 +125,20 @@ export default Capability.makeModule(() =>
         component: InvocationsSurface,
         props: ({ role, data: { companionTo } }) => ({ role, companionTo }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: ASSISTANT_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof ChatDialog>>(AppSurface.Dialog, ASSISTANT_DIALOG),
         component: ChatDialog,
         props: ({ data: { props } }) => ({ ...props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'trace',
-        filter: Surface.Root.makeFilter(AppSurface.deckCompanion('trace')),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('trace')),
         component: TracePanelSurface,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'integrationPrompt',
-        filter: Surface.Root.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'integration-prompt'),
         component: IntegrationPrompt,
         // `data.data` is model-supplied JSON, so every field is narrowed and blanks dropped.
         props: ({ data }) => ({
@@ -149,40 +149,40 @@ export default Capability.makeModule(() =>
           reason: nonBlank(data.data?.reason),
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'pluginPrompt',
-        filter: Surface.Root.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-prompt'),
         component: PluginPrompt,
         // `data.data` is model-supplied JSON (untyped); narrow `plugin` before use.
         props: ({ data }) => ({ plugin: typeof data.data?.plugin === 'string' ? data.data.plugin : undefined }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'pluginUrlPrompt',
-        filter: Surface.Root.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-url-prompt'),
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'plugin-url-prompt'),
         component: PluginUrlPrompt,
         // `data.data` is model-supplied JSON (untyped); narrow before use.
         props: ({ data }) => ({ url: nonBlank(data.data?.url), name: nonBlank(data.data?.name) }),
       }),
       // `<surface role='card' data='{"id":"echo://…"}'>`: the object as its card.
-      Surface.Root.create({
+      Surface.create({
         id: 'objectCard',
-        filter: Surface.Root.makeFilter(
+        filter: Surface.makeFilter(
           ChatSurface.ChatSurface,
           (data) => data.role === 'card' && EID.tryParse(nonBlank(data.data?.id) ?? '') !== undefined,
         ),
         component: ObjectCardSurface,
         props: ({ data }) => ({ id: nonBlank(data.data?.id) }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'question',
-        filter: Surface.Root.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'question'),
+        filter: Surface.makeFilter(ChatSurface.ChatSurface, (data) => data.role === 'question'),
         component: QuestionSurface,
         // `data.data` is model-supplied JSON (untyped); narrow the ids before use.
         props: ({ data }) => ({ task: nonBlank(data.data?.task), question: nonBlank(data.data?.question) }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'triggerStatus',
-        filter: Surface.Root.makeFilter(AppSurface.StatusIndicator),
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: TriggerStatusSurface,
       }),
     ]),

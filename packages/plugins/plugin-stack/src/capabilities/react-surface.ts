@@ -16,7 +16,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
-      Surface.Root.create({
+      Surface.create({
         id: 'article',
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: StackArticle,

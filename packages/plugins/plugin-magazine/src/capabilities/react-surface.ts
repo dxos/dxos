@@ -16,32 +16,32 @@ import { Magazine, Subscription } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'magazineArticle',
         filter: AppSurface.object(AppSurface.Article, Magazine.Magazine),
         component: MagazineArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'feedArticle',
         filter: AppSurface.object(AppSurface.Article, Subscription.Subscription),
         component: FeedArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'postArticle',
         filter: AppSurface.object(AppSurface.Article, Subscription.Post),
         component: PostArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'postCard',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Subscription.Post),
         component: PostCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'feedProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Subscription.Subscription),
         component: FeedProperties,

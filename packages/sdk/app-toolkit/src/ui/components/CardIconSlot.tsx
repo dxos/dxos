@@ -28,11 +28,11 @@ export type CardIconSlotProps = PropsWithChildren<{
  * `ObjectAvatar`. Only the override is shared.
  */
 export const CardIconSlot = ({ subject, children }: CardIconSlotProps) => {
-  const isAvailable = Surface.Root.useIsAvailable();
+  const isAvailable = Surface.useIsAvailable();
   const data = { subject };
 
   return isAvailable({ type: AppSurface.CardIcon, data }) ? (
-    <Surface.Root.Surface type={AppSurface.CardIcon} data={data} limit={1} />
+    <Surface.Surface type={AppSurface.CardIcon} data={data} limit={1} />
   ) : (
     <>{children}</>
   );

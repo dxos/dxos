@@ -17,27 +17,27 @@ import { ProviderArticle, ResultCard, SearchArticle, SearchProperties } from '..
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'resultCard',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Result.Result),
         component: ResultCard,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'searchArticle',
         filter: AppSurface.object(AppSurface.Article, Search.Search),
         component: SearchArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'objectProperties',
         position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Search.Search),
         component: SearchProperties,
         props: ({ data: { subject } }) => ({ search: subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'providerArticle',
         filter: AppSurface.object(AppSurface.Article, Provider.Provider),
         component: ProviderArticle,

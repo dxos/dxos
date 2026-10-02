@@ -29,7 +29,7 @@ export const DetailCompanion = ({ role, attendableId, detail }: DetailCompanionP
     return null;
   }
 
-  return <Surface.Root.Surface key={detail} type={AppSurface.Article} role={role} data={data} limit={1} />;
+  return <Surface.Surface key={detail} type={AppSurface.Article} role={role} data={data} limit={1} />;
 };
 
 DetailCompanion.displayName = 'DetailCompanion';

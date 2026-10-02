@@ -20,7 +20,7 @@ import { PivotColumnField } from './PivotColumnField.tsx';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -30,14 +30,14 @@ export default Capability.makeModule(() =>
         component: KanbanArticle,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'objectProperties',
         position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
         component: KanbanProperties,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'createInitialSchemaForm',
         filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, PivotColumnAnnotationId)),
         component: PivotColumnField,

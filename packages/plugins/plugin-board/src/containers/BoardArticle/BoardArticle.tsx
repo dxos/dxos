@@ -208,7 +208,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
                     const itemLayout = layout.items[item.id];
                     return itemLayout ? (
                       <BoardComponent.Cell item={item} key={item.id} layout={itemLayout}>
-                        <Surface.Root.Surface
+                        <Surface.Surface
                           type={AppSurface.CardContent}
                           data={{ subject: item, editable: true }}
                           limit={1}

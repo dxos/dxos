@@ -15,13 +15,13 @@ import { PipelineArticle, PipelineProperties } from '#containers';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'root',
         filter: AppSurface.object(AppSurface.Article, Pipeline.Pipeline),
         component: PipelineArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Pipeline.Pipeline),
         component: PipelineProperties,

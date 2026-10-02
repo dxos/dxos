@@ -109,7 +109,7 @@ const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugP
 
   return (
     <div role='none' className='dx-expand' hidden={hidden}>
-      <Surface.Root.Surface type={DebugSurface.Page} data={data} limit={1} />
+      <Surface.Surface type={DebugSurface.Page} data={data} limit={1} />
     </div>
   );
 };

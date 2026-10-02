@@ -22,18 +22,18 @@ import { RegistryCategoryArticle } from './RegistryCategoryArticle.tsx';
 export default Capability.makeModule(({ externalPlugins = true }: RegistryPluginOptions = {}) => {
   const externalPluginSurfaces = externalPlugins
     ? [
-        Surface.Root.create({
+        Surface.create({
           id: 'registry',
           filter: AppSurface.literal(AppSurface.Article, 'registry'),
           component: PublicRegistryArticle,
           props: () => ({ id: 'registry' }),
         }),
-        Surface.Root.create({
+        Surface.create({
           id: LOAD_PLUGIN_DIALOG,
           filter: AppSurface.component(AppSurface.Dialog, LOAD_PLUGIN_DIALOG),
           component: LoadPluginDialog,
         }),
-        Surface.Root.create({
+        Surface.create({
           id: 'pluginSettings',
           filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
           component: RegistrySettingsContainer,
@@ -44,37 +44,37 @@ export default Capability.makeModule(({ externalPlugins = true }: RegistryPlugin
 
   return Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'bundled',
         filter: AppSurface.literal(AppSurface.Article, 'bundled'),
         component: RegistryCategoryArticle,
         props: () => ({ category: 'bundled' }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'installed',
         filter: AppSurface.literal(AppSurface.Article, 'installed'),
         component: RegistryCategoryArticle,
         props: () => ({ category: 'installed' }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'recommended',
         filter: AppSurface.literal(AppSurface.Article, 'recommended'),
         component: RegistryCategoryArticle,
         props: () => ({ category: 'recommended' }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'labs',
         filter: AppSurface.literal(AppSurface.Article, 'labs'),
         component: RegistryCategoryArticle,
         props: () => ({ category: 'labs' }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'pluginDetails',
         filter: AppSurface.subject(AppSurface.Article, Plugin.isPlugin),
         component: PluginArticle,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: DISABLE_DEPENDENTS_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof DisableDependentsAlert>>(
           AppSurface.Dialog,

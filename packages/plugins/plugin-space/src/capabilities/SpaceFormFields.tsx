@@ -19,7 +19,7 @@ import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 import { type TypeInputOptions, getTypeInputOptions } from '../types/SpaceForm.ts';
 
 /** The form renderer's own props ride alongside `data`; `type` comes from the field AST. */
-export type SpaceFormFieldProps = Surface.Root.ComponentProps<AppSurface.FormInputData> &
+export type SpaceFormFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &
   Omit<FormFieldRendererProps, 'type'>;
 
 export const HueField = ({ data, label, readonly, getValue, onValueChange }: SpaceFormFieldProps) => {

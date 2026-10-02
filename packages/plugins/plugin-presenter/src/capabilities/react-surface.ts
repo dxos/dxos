@@ -18,10 +18,10 @@ import { meta } from '#meta';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'document',
         position: Position.first,
-        filter: Surface.Root.makeFilter(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Markdown.Document }> =>
             !!data.subject &&
@@ -34,10 +34,10 @@ export default Capability.makeModule(() =>
         component: DocumentArticle,
         props: ({ role, data: { subject } }) => ({ role, subject: subject.object }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'collection',
         position: Position.first,
-        filter: Surface.Root.makeFilter(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data): data is AppSurface.ArticleData<{ type: typeof meta.profile.key; object: Collection.Collection }> =>
             !!data.subject &&
@@ -50,7 +50,7 @@ export default Capability.makeModule(() =>
         component: CollectionArticle,
         props: ({ role, data: { subject } }) => ({ role, subject: subject.object }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'slide',
         filter: AppSurface.object(AppSurface.Slide, Markdown.Document),
         component: SlideArticle,

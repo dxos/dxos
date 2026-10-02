@@ -17,7 +17,7 @@ const GENERAL_TYPE = `${meta.profile.key}.general`;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'workspaceSettings',
         filter: AppSurface.literal(AppSurface.Article, GENERAL_TYPE),
         component: WorkspaceSettingsContainer,

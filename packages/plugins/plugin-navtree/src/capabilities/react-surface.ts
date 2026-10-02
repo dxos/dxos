@@ -18,27 +18,27 @@ import { COMMANDS_DIALOG } from '#meta';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: COMMANDS_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof CommandsDialogContent>>(AppSurface.Dialog, COMMANDS_DIALOG),
         component: CommandsDialogContent,
         props: ({ data: { props }, ref }) => ({ ...props, ref }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'navigation',
-        filter: Surface.Root.makeFilter(AppSurface.Navigation),
+        filter: Surface.makeFilter(AppSurface.Navigation),
         component: NavTreeContainer,
         props: ({ data: { current, popoverAnchorId }, ref }) => ({ tab: current, popoverAnchorId, ref }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'documentTitle',
-        filter: Surface.Root.makeFilter(AppSurface.DocumentTitle),
+        filter: Surface.makeFilter(AppSurface.DocumentTitle),
         component: NavTreeDocumentTitle,
         props: ({ data: { subject } }) => ({ node: AppGraphNode.isGraphNode(subject) ? subject : undefined }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'searchInput',
-        filter: Surface.Root.makeFilter(AppSurface.SearchInput),
+        filter: Surface.makeFilter(AppSurface.SearchInput),
         position: Position.last,
         component: CommandsTrigger,
       }),

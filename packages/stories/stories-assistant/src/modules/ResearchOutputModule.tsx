@@ -42,7 +42,7 @@ const ResearchOutputModuleContainer = ({ space }: { space: Space }) => {
           <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
             {objects.map((object) => (
               <Card.Root key={object.id}>
-                <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
+                <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
               </Card.Root>
             ))}
           </ScrollArea.Viewport>

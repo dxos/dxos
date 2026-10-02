@@ -299,7 +299,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>
-              <Surface.Root.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
+              <Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>
         )}

@@ -37,5 +37,5 @@ export const SurfaceWidget = ({ role, children }: WidgetProps<{ role?: string }>
     return null;
   }
 
-  return <Surface.Root.Surface type={ChatSurface.ChatSurface} data={{ role, data }} limit={1} />;
+  return <Surface.Surface type={ChatSurface.ChatSurface} data={{ role, data }} limit={1} />;
 };

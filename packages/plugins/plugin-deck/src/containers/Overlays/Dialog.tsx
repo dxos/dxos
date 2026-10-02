@@ -35,7 +35,7 @@ export const Dialog = () => {
     <Root modal={dialogBlockAlign !== 'end'} open={dialogOpen} onOpenChange={handleOpenChange}>
       {dialogBlockAlign === 'end' ? (
         // TODO(burdon): Placeholder creates a suspense boundary; replace with defaults.
-        <Surface.Root.Surface
+        <Surface.Surface
           type={AppSurface.Dialog}
           data={dialogContent ?? undefined}
           limit={1}
@@ -48,7 +48,7 @@ export const Dialog = () => {
           classNames={['dx-main-dialog', dialogOverlayClasses]}
           style={dialogOverlayStyle}
         >
-          <Surface.Root.Surface
+          <Surface.Surface
             type={AppSurface.Dialog}
             data={dialogContent ?? undefined}
             limit={1}

@@ -152,7 +152,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                 onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
               >
                 {layout.dialogBlockAlign === 'end' ? (
-                  <Surface.Root.Surface
+                  <Surface.Surface
                     type={AppSurface.Dialog}
                     data={layout.dialogContent}
                     limit={1}
@@ -165,7 +165,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                     classNames={layout.dialogOverlayClasses}
                     style={layout.dialogOverlayStyle}
                   >
-                    <Surface.Root.Surface
+                    <Surface.Surface
                       type={AppSurface.Dialog}
                       data={layout.dialogContent}
                       limit={1}
@@ -200,7 +200,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                           <Card.ActionIconButton action='close' onClick={handleClose} />
                         </Card.Header>
                         {layout.popoverContent ? (
-                          <Surface.Root.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
+                          <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
                         ) : (
                           // Matches the deck's popover, which opens a card with no subject for a link that did not resolve.
                           <Card.Body classNames='min-h-8'>
@@ -212,7 +212,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                       </Card.Root>
                     )}
                     {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
-                      <Surface.Root.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
+                      <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
                     )}
                   </Popover.Viewport>
                   <Popover.Arrow />

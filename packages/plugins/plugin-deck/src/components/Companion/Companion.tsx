@@ -101,7 +101,7 @@ export const Companion = ({
           (support, assistant) keeps its state when the plank it is beside changes. */}
       {companions.map((node, index) => (
         <Pane.Content key={Attention.getLinkedVariant(node.id)} classNames={mx(node.id !== selected && 'hidden')}>
-          <Surface.Root.Surface type={AppSurface.Article} data={companionDataList[index]} limit={1} />
+          <Surface.Surface type={AppSurface.Article} data={companionDataList[index]} limit={1} />
         </Pane.Content>
       ))}
     </Pane.Root>

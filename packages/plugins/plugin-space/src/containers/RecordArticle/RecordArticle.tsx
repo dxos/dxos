@@ -73,7 +73,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                 <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
               </Card.Header>
               <Card.Body>
-                <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
+                <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
               </Card.Body>
             </Card.Root>
 
@@ -83,7 +83,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
               <Field.Root>
                 <Field.Label>{t('related-actions.label')}</Field.Label>
               </Field.Root>
-              <Surface.Root.Surface
+              <Surface.Surface
                 type={SpaceSurface.Prompts}
                 data={{ subject, attendableId: subject.id }}
                 limit={1}

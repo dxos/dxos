@@ -20,7 +20,7 @@ import { isArtifactsBranch, isChatsBranch } from '../capabilities/app-graph-buil
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'project.article',
         filter: AppSurface.object(AppSurface.Article, Project.Project),
         component: ProjectArticle,
@@ -28,19 +28,19 @@ export default Capability.makeModule(() =>
       }),
       // The virtual branches show what they contain, the way a database type node does: selecting
       // one is a request to see the set, not only to expand the tree.
-      Surface.Root.create({
+      Surface.create({
         id: 'project.chats',
         filter: AppSurface.subject(AppSurface.Article, isChatsBranch),
         component: ProjectChatsArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, project: subject.project, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'project.artifacts',
         filter: AppSurface.subject(AppSurface.Article, isArtifactsBranch),
         component: ProjectArtifactsArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, project: subject.project, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: MOVE_TASK_DIALOG,
         filter: AppSurface.component<{ task: Task.Task }>(AppSurface.Dialog, MOVE_TASK_DIALOG),
         component: MoveTaskDialog,

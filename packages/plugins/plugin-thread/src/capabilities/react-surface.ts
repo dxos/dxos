@@ -15,13 +15,13 @@ import { ChannelArticle, ThreadArticle } from '#containers';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'channel',
         filter: AppSurface.object(AppSurface.Article, Channel.Channel),
         component: ChannelArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'chatCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'chat'),
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
         props: ({ data: { companionTo } }) => ({ subject: companionTo, chatOnly: true }),
       }),
       // TODO(burdon): Disambiguate with Channel.
-      Surface.Root.create({
+      Surface.create({
         id: 'thread',
         filter: AppSurface.object(AppSurface.Article, Thread.Thread),
         component: ThreadArticle,

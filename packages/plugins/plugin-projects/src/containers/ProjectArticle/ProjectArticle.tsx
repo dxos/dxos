@@ -279,7 +279,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                       description={t('outline.description')}
                       descriptionPlacement='tooltip'
                     >
-                      <Surface.Root.Surface
+                      <Surface.Surface
                         type={AppSurface.Section}
                         data={{ subject: outline, attendableId, taskSet }}
                         limit={1}
@@ -315,7 +315,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             >
               <Splitter.Panel position='start'>
                 {/* TODO(burdon): Inline component for more control? */}
-                <Surface.Root.Surface
+                <Surface.Surface
                   type={AppSurface.Section}
                   data={{
                     subject: taskSet,

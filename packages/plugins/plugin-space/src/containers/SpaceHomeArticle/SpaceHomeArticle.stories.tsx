@@ -67,17 +67,17 @@ const meta = {
         // Home-content contributors normally wired by the plugin's react-surface capability,
         // including the per-section visibility gate + close affordance.
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.Root.create({
+          Surface.create({
             id: 'story.spaceHomeRecent',
-            filter: Surface.Root.makeFilter(SpaceSurface.SpaceHomeContent),
+            filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
             component: ({ data }) => {
               const { visible, hide } = Hooks.useHomeVisibility(data.space, 'spaceHomeRecent');
               return visible ? <SpaceHomeRecent space={data.space} onClose={hide} /> : null;
             },
           }),
-          Surface.Root.create({
+          Surface.create({
             id: 'story.spaceHomeDashboard',
-            filter: Surface.Root.makeFilter(SpaceSurface.SpaceHomeContent),
+            filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
             component: ({ data }) => {
               const { visible, hide } = Hooks.useHomeVisibility(data.space, 'spaceHomeDashboard');
               return visible ? <SpaceHomeDashboard space={data.space} onClose={hide} /> : null;
