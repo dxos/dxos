@@ -37,7 +37,11 @@
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
+    "@dxos/log": "workspace:*",
+    "@dxos/perf-harness": "workspace:*",
+    "@dxos/test-utils": "workspace:*",
     "@effect/vitest": "catalog:",
+    "@playwright/test": "catalog:",
     "effect": "catalog:",
     "vitest": "catalog:"
   },

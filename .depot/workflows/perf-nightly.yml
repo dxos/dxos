@@ -263,3 +263,86 @@ jobs:
         run: |
           echo "::error::The benchmark run did not complete; see the log and the echo-bench artifact."
           exit 1
+
+  # The chat flow (`packages/core/compute/assistant-e2e/src/playwright/perf-chat.spec.ts`) against the
+  # Storybook chat story, scored against `src/playwright/perf/budgets.json`. Its own runner of the same
+  # fixed size, for the reason `echo-bench` has one. Only the blank space runs: seeding the busy one
+  # costs minutes per iteration in the browser.
+  chat-bench:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      # Same guard as the flows job: only committed code is measured.
+      - name: Refuse a patched checkout
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::The checkout has uncommitted changes; this workflow only runs committed code."
+            git status --short
+            exit 1
+          fi
+          if [ "$(git rev-parse HEAD)" != "$EXPECTED_SHA" ]; then
+            echo "::error::HEAD $(git rev-parse HEAD) is not the event's commit $EXPECTED_SHA."
+            exit 1
+          fi
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium
+
+      - name: Run the flow
+        id: flow
+        continue-on-error: true
+        env:
+          # Fewer than the projects flow's ten: every iteration reloads the story from a dev server.
+          ITERATIONS: ${{ inputs.iterations || '5' }}
+          # Rows are published per iteration by the flow, as the projects flow does.
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          rm -rf test-results/perf
+          DX_PERF_SCALES=blank DX_PERF_ITERATIONS="$ITERATIONS" moon run assistant-e2e:e2e-perf
+
+      - name: Score the flow
+        if: always()
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          if ! ls test-results/perf/assistant-chat-measure-blank-*.events.ndjson >/dev/null 2>&1; then
+            echo "::warning::No measure batches were written; nothing to score."
+            exit 0
+          fi
+          # Budgets are calibrated from this job's own published rows, so the first nights run unscored.
+          if [ ! -f packages/core/compute/assistant-e2e/src/playwright/perf/budgets.json ]; then
+            echo "::warning::No chat budgets yet; stage rows were published, nothing scored."
+            exit 0
+          fi
+          node packages/core/compute/assistant-e2e/scripts/score-perf.ts score --publish --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: chat-bench
+          path: test-results/perf
+          retention-days: 14
+
+      - name: Fail on an incomplete run
+        if: always() && steps.flow.outcome != 'success'
+        run: |
+          echo "::error::The chat flow did not complete; see the log and the chat-bench artifact."
+          exit 1
