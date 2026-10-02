@@ -210,10 +210,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             <Form.Field standalone label={t('backup-space.title')} description={t('backup-space.description')}>
               <Next.Menu.Root>
                 <Next.Menu.Trigger asChild>
-                  <Next.Button>
-                    {t('download-backup.label')}
-                    <Next.Icon icon='ph--caret-down--regular' size='md' classNames='ms-2' />
-                  </Next.Button>
+                  <Next.Button caretDown>{t('download-backup.label')}</Next.Button>
                 </Next.Menu.Trigger>
                 <Next.Menu.Content>
                   <Next.Menu.Item

@@ -4,13 +4,14 @@
  */
 
 @layer dx-components {
-  .nx-tabs {
+  /* A Tabs root merged onto a Panel (`asChild`) only supplies context; the Panel keeps its own grid. */
+  .nx-tabs:not(.nx-panel) {
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
   }
-  .nx-tabs[data-orientation='vertical'] {
+  .nx-tabs:not(.nx-panel)[data-orientation='vertical'] {
     flex-direction: row;
   }
 
