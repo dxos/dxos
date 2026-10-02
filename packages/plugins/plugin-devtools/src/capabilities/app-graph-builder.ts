@@ -266,6 +266,15 @@ export const createDevtoolsExtension = (appGraphAtom: Atom.Atom<AppCapabilities.
                     },
                   }),
                   AppGraphNode.make({
+                    id: Devtools.nodeId(Devtools.Echo.Queries),
+                    data: Devtools.Echo.Queries,
+                    type: Devtools.id,
+                    properties: {
+                      label: ['queries.label', { ns: meta.profile.key }],
+                      icon: 'ph--tree-view--regular',
+                    },
+                  }),
+                  AppGraphNode.make({
                     id: Devtools.nodeId(Devtools.Echo.Schema),
                     data: Devtools.Echo.Schema,
                     type: Devtools.id,
