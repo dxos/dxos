@@ -118,7 +118,16 @@ if (command === 'score') {
   if (!(headroom > 0 && Number.isFinite(headroom)) || !(band > 1 && Number.isFinite(band))) {
     throw new Error(`--headroom must be positive and --band greater than 1; got ${values.headroom}, ${values.band}`);
   }
-  const proposed = proposeBudgets(readJson(BenchJsonReport, values.results), { headroom, band });
+  // A weight is a judgement about a row (e.g. a plain-object reference), not a measurement, so it survives recalibration.
+  const current = readBudgets();
+  const proposed = Object.fromEntries(
+    Object.entries(proposeBudgets(readJson(BenchJsonReport, values.results), { headroom, band })).map(
+      ([id, budget]) => {
+        const weight = current[id]?.weight;
+        return [id, weight === undefined ? budget : { ...budget, weight }];
+      },
+    ),
+  );
   // The scorer rejects an invalid budget, so a proposal it would reject must never reach budgets.json.
   for (const [id, budget] of Object.entries(proposed)) {
     validateBudget(id, budget);
