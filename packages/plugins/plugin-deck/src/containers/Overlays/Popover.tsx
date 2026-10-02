@@ -129,6 +129,8 @@ export const PopoverContent = () => {
       classNames={[
         roundedClassNames,
         !isComponentPopover && 'p-0',
+        // A rename popover holds an object's properties form, which a popover's grid body would not grow to fit.
+        isRename && 'w-[22rem]',
         !isRename && [
           'origin-(--transform-origin)',
           'data-[state=open]:animate-popover-in',

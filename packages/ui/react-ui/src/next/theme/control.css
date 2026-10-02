@@ -709,6 +709,10 @@
     /* The viewport's focus ring is inset at the frame's edge, so the overlay thumb sits inside it. */
     --scroll-thumb-inset: var(--nx-focus-ring-width);
   }
+  /* A menu grows to the space available on its side (the viewport less the safe area) before it scrolls. */
+  .nx-scroll-root.nx-popup.nx-menu {
+    max-height: var(--available-height, 20rem);
+  }
   /* Only while it overflows, a popup reserves the thumb's strip (the thumb, one ring inset either side) at its end. */
   .nx-scroll-root.nx-popup[data-overflow-y] > .nx-scroll-viewport {
     padding-inline-end: calc(var(--nx-scroll-width) + 2 * var(--scroll-thumb-inset));
