@@ -48,6 +48,12 @@ const DefaultGutterContext = createContext<Gutter | undefined>(undefined);
 /** The gutter an unnamed Container here would take, or `undefined` where it would inherit. */
 export const useDefaultGutter = () => useContext(DefaultGutterContext);
 
+/** True under a Container, whose content and gutter lines a subgrid (`gutter='inherit'`) can join. */
+const InGridContext = createContext(false);
+
+/** Whether this subtree sits inside a Container, so a nested scroll viewport can inherit its gutters. */
+export const useInGrid = () => useContext(InGridContext);
+
 /** Provides the gutter an unnamed Container under it takes (`undefined` restores `inherit`). */
 export const DefaultGutterProvider = ({ gutter, children }: PropsWithChildren<{ gutter: Gutter | undefined }>) => (
   <DefaultGutterContext.Provider value={gutter}>{children}</DefaultGutterContext.Provider>
@@ -177,18 +183,20 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
     });
     return (
       <DefaultGutterProvider gutter={undefined}>
-        <ark.div
-          asChild={asChild}
-          {...rest}
-          data-scope='container'
-          data-part='root'
-          {...attributes}
-          style={{ ...columnsStyle, ...style }}
-          className={className}
-          ref={ref}
-        >
-          {children}
-        </ark.div>
+        <InGridContext.Provider value>
+          <ark.div
+            asChild={asChild}
+            {...rest}
+            data-scope='container'
+            data-part='root'
+            {...attributes}
+            style={{ ...columnsStyle, ...style }}
+            className={className}
+            ref={ref}
+          >
+            {children}
+          </ark.div>
+        </InGridContext.Provider>
       </DefaultGutterProvider>
     );
   },

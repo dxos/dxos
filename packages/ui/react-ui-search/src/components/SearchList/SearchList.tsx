@@ -227,11 +227,22 @@ type SearchListViewportProps = {
 };
 
 const SearchListViewport = composable<HTMLDivElement, SearchListViewportProps>(
-  ({ padding = true, children, ...props }, forwardedRef) => (
-    <Next.ScrollArea.Root {...composableProps<HTMLDivElement>(props)} role='listbox' ref={forwardedRef}>
-      <Next.ScrollArea.Viewport classNames={padding ? 'px-1' : undefined}>{children}</Next.ScrollArea.Viewport>
-    </Next.ScrollArea.Root>
-  ),
+  ({ padding = true, children, ...props }, forwardedRef) => {
+    // Inside a grid (a dialog or panel body) the list joins its host's gutters, so its rows share the content track
+    // and the thumb lands in the host's end gutter; standalone it keeps its own inset.
+    const inGrid = Next.useInGrid();
+    return (
+      <Next.ScrollArea.Root {...composableProps<HTMLDivElement>(props)} role='listbox' ref={forwardedRef}>
+        {inGrid ? (
+          <Next.ScrollArea.Viewport asChild>
+            <Next.Container gutter='inherit'>{children}</Next.Container>
+          </Next.ScrollArea.Viewport>
+        ) : (
+          <Next.ScrollArea.Viewport classNames={padding ? 'px-1' : undefined}>{children}</Next.ScrollArea.Viewport>
+        )}
+      </Next.ScrollArea.Root>
+    );
+  },
 );
 
 SearchListViewport.displayName = 'SearchList.Viewport';

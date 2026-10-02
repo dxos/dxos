@@ -41,6 +41,10 @@
   .nx-scroll-viewport.nx-grid[data-layout='row'] {
     grid-auto-rows: auto;
   }
+  /* In a height-bound scrolling grid, `auto` rows shrink toward their items' minimum to fit; rows keep their content. */
+  .nx-scroll-viewport.nx-grid:not([data-layout='row']) {
+    grid-auto-rows: max-content;
+  }
   .nx-scroll-viewport:not([data-native]) {
     scrollbar-width: none;
   }

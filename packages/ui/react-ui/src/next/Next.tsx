@@ -247,6 +247,7 @@ import {
   parseCaptureOwnerStack as nextParseCaptureOwnerStack,
   toAvatarHue as nextToAvatarHue,
   useDefaultGutter as nextUseDefaultGutter,
+  useInGrid as nextUseInGrid,
   useEditable as nextUseEditable,
   useFocus as nextUseFocus,
   useMainSidebars as nextUseMainSidebars,
@@ -268,6 +269,7 @@ export namespace Next {
   export type Size = NextSizeType;
   export const Container = NextContainer;
   export const useDefaultGutter = nextUseDefaultGutter;
+  export const useInGrid = nextUseInGrid;
   export type ContainerProps = NextContainerProps;
   export type Gutter = NextGutter;
   export type ContainerGap = NextContainerGap;
