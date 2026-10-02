@@ -92,10 +92,11 @@ Grouped by screen or component; IDs are global and never reused.
 
 ### Dialogs (all)
 
-| ID   | Bug                                                                               | Screenshot                          | Repro                                                                                          | Status | Fix |
-| ---- | --------------------------------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------- | ------ | --- |
-| V022 | Footer (action bar) needs more padding below it, roughly equal to the side gutter | `V022-create-repository-dialog.png` | app: Create Repository dialog; Next Dialog story geometry (footer bottom inset == side gutter) | open   |     |
-| V023 | Esc must cancel (close) dialogs                                                   | `V022-create-repository-dialog.png` | Next Dialog story play: open, press Escape, assert closed; app: any dialog                     | open   |     |
+| ID   | Bug                                                                                                                                                   | Screenshot                          | Repro                                                                                          | Status | Fix |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------------- | ------ | --- |
+| V022 | Footer (action bar) needs more padding below it, roughly equal to the side gutter                                                                     | `V022-create-repository-dialog.png` | app: Create Repository dialog; Next Dialog story geometry (footer bottom inset == side gutter) | open   |     |
+| V023 | Esc must cancel (close) dialogs                                                                                                                       | `V022-create-repository-dialog.png` | Next Dialog story play: open, press Escape, assert closed; app: any dialog                     | open   |     |
+| V039 | About dialog: the Close button is undersized and sits in the corner; it should be a regular-size button in a proper bottom action bar (Dialog.Footer) | `V039-about-dialog.png`             | app: L0 menu → About Composer                                                                  | open   |     |
 
 ### Create Object dialog
 
