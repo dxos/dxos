@@ -36,6 +36,7 @@ const MAX_ERROR_LINE_LENGTH = 300;
 export const EvalTool = Tool.make(EVAL_TOOL_NAME, {
   description:
     'Runs code against the workspace and returns whatever that code printed. ' +
+    'If the code throws, the call fails with what it printed before the throw, followed by the error. ' +
     'This is the only tool: every read, every write and every operation happens inside it. ' +
     `Printed output is capped (at ${DEFAULT_MAX_OUTPUT} characters by default) and cut off beyond that, ` +
     'so print the values you need rather than whole objects or long lists.',
@@ -44,12 +45,9 @@ export const EvalTool = Tool.make(EVAL_TOOL_NAME, {
       description: 'The program, in the dialect the system prompt describes. Print anything you need to see.',
     }),
   }),
-  success: Schema.Struct({
-    output: Schema.String,
-    /** False when the code failed; the failure is the last line of `output`. */
-    ok: Schema.Boolean,
-  }),
-  failure: Schema.Never,
+  success: Schema.String,
+  /** What the code printed before it failed, with the failure as the last line. */
+  failure: Schema.String,
 });
 
 /** The toolkit shape, separate from the handler so callers can describe the turn without building one. */
@@ -93,16 +91,19 @@ export const makeEvalToolkit = ({
           .pipe(Effect.result);
 
         if (Result.isFailure(result)) {
-          // Reported as output, not as a tool failure: the model's next move is to read the message
-          // and write different code, which a failed turn would deny it.
+          // A tool failure reaches the model as a failed result, not a failed turn, so it can still
+          // read the message and write different code.
           log.info('code-mode evaluation failed', { dialect: dialect.name, message: result.failure.message });
           printer.fail(`Error: ${conciseError(result.failure.message)}${hintFor(result.failure.message)}`);
-        } else if (result.success !== undefined && printer.isEmpty()) {
+          return yield* Effect.fail(printer.output());
+        }
+
+        if (result.success !== undefined && printer.isEmpty()) {
           // A program that printed nothing but produced a value: show the value rather than nothing.
           printer.print(result.success);
         }
 
-        return { output: printer.output(), ok: Result.isSuccess(result) };
+        return printer.output();
       }),
     }),
   );

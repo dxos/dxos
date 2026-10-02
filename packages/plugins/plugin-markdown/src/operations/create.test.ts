@@ -4,10 +4,13 @@
 
 import { describe, expect, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 
+import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import { WithProperties } from '@dxos/app-toolkit/testing';
+import { SpaceProperties } from '@dxos/client-protocol';
 import * as Operation from '@dxos/compute/Operation';
-import { Database, EID } from '@dxos/echo';
+import { Annotation, type Collection, Database, EID, Filter } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
@@ -33,6 +36,11 @@ describe('Create', () => {
         expect(doc.name).toBe(name);
         const text = yield* Database.load(doc.content);
         expect(text.content).toBe(content);
+
+        const [properties] = yield* Database.query(Filter.type(SpaceProperties)).run;
+        const rootRef = Annotation.get(properties, AppAnnotation.RootCollectionAnnotation).pipe(Option.getOrThrow);
+        const root = yield* Database.load<Collection.Collection>(rootRef);
+        expect(root.objects.map((ref) => ref.target?.id)).toContain(doc.id);
       },
       WithProperties,
       Effect.provide(OperationTestLayer),

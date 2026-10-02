@@ -72,8 +72,6 @@ const TestLayer = AssistantTestLayer({
   operationHandlers: [handlers],
 });
 
-const EvalResult = Schema.Struct({ output: Schema.String, ok: Schema.Boolean });
-
 /** Runs `code` through the eval tool as a turn would, failing the test if the code failed. */
 const run = Effect.fnUntraced(function* (code: string) {
   const runtime = yield* Effect.context<Database.Service | Operation.Service>();
@@ -90,10 +88,8 @@ const run = Effect.fnUntraced(function* (code: string) {
     input: JSON.stringify({ code }),
     providerExecuted: false,
   });
-  const { output, ok } = Schema.decodeUnknownSync(EvalResult)(JSON.parse(String(result.result)));
-  expect(ok ? 'ok' : output).toEqual('ok');
-  expect(ok).toBe(true);
-  return output;
+  expect(result.error).toBeUndefined();
+  return Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result)));
 });
 
 /** The objects every snippet below is written against, under the names the docs give them. */

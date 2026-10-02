@@ -4,57 +4,79 @@
 
 import React, { Fragment, useState } from 'react';
 
-import { Grid, Tooltip } from '@dxos/react-ui';
+import { type QueryMetrics } from '@dxos/echo-client';
+import { Grid, IconButton, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
-import { type QueryInfo } from '../../../hooks/index.ts';
-import { SLOW_TIME, Unit, groupQueriesByFilter } from '../util.tsx';
+import { Unit, averageQueryTime, queryFiredCount, queryTimeClassName, shortQueryText } from '../util.tsx';
 
 export type QueriesCardProps = {
-  /** Most recent first. */
-  queries?: QueryInfo[];
+  queries?: QueryMetrics[];
+  /** Rows shown; the rest are in the devtools page `onOpen` navigates to. */
+  limit?: number;
+  /** Opens the full queries page. */
+  onOpen?: () => void;
 };
 
-/** Shape takes the slack; fixed count and duration tracks line the figures up across rows. */
-const ROW_TRACKS = ['1fr', '2.5rem', '4rem'];
+/** Query takes the slack; fixed fired, active, items and duration tracks line the figures up across rows. */
+const ROW_TRACKS = ['minmax(0,1fr)', '2rem', '1.5rem', '2.5rem', '3rem'];
 
-/** One row per filter shape: how many queries share it and the slowest of them, disclosing each query. */
-export const QueriesCard = ({ queries = [] }: QueriesCardProps) => {
+/** The slowest queries, one row per query text: how often it fired, how many run reactively, what it returns. */
+export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardProps) => {
   const [expanded, setExpanded] = useState<string>();
-  const shapes = [...groupQueriesByFilter(queries).entries()].sort(([a], [b]) => a.localeCompare(b));
+  const slowest = [...queries].sort((a, b) => b.maxTime - a.maxTime || a.query.localeCompare(b.query)).slice(0, limit);
+  const active = queries.reduce((sum, query) => sum + query.active, 0);
   return (
     <StatCard.Root>
       <StatCard.Header
         icon='ph--tree-view--regular'
         hue={STAT_CARD_HUES.database}
         title='Queries'
-        info={queries.length.toLocaleString()}
+        info={`${active.toLocaleString()} active · ${queries.length.toLocaleString()}`}
+        action={
+          onOpen && (
+            <IconButton
+              iconOnly
+              variant='ghost'
+              icon='ph--arrow-square-out--regular'
+              label='Open in devtools'
+              onClick={onOpen}
+            />
+          )
+        }
       />
-      {shapes.length === 0 && <StatCard.Row span label='No queries.' />}
-      {shapes.map(([shape, group]) => {
-        const slowest = Math.max(...group.map((query) => query.metrics.executionTime ?? 0));
-        const open = expanded === shape;
+      {slowest.length === 0 && <StatCard.Row span label='No queries.' />}
+      {slowest.length > 0 && (
+        <StatCard.Row unit='ms'>
+          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>
+            <span className='text-start'>query</span>
+            <span>fired</span>
+            <span>live</span>
+            <span>items</span>
+            <span>max</span>
+          </Grid>
+        </StatCard.Row>
+      )}
+      {slowest.map((query) => {
+        const open = expanded === query.query;
         return (
-          <Fragment key={shape}>
-            <StatCard.Row open={open} onToggle={(open) => setExpanded(open ? shape : undefined)} unit='ms'>
-              <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end'>
-                <Tooltip.Trigger asChild content={shape}>
-                  <span className='truncate text-start'>{shape}</span>
+          <Fragment key={query.query}>
+            <StatCard.Row open={open} onToggle={(open) => setExpanded(open ? query.query : undefined)} unit='ms'>
+              <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end tabular-nums'>
+                <Tooltip.Trigger asChild content={query.query}>
+                  <span className='truncate text-start'>{shortQueryText(query.query)}</span>
                 </Tooltip.Trigger>
-                <span className='text-description'>×{group.length}</span>
-                <span className={mx('tabular-nums', slowest > SLOW_TIME && 'text-error-text')}>{Unit.ms(slowest)}</span>
+                <span className='text-description'>{queryFiredCount(query).toLocaleString()}</span>
+                <span className={mx(query.active > 0 ? 'text-success-text' : 'text-description')}>{query.active}</span>
+                <span>{query.lastCount.toLocaleString()}</span>
+                <span className={queryTimeClassName(query.maxTime)}>{Unit.ms(query.maxTime)}</span>
               </Grid>
             </StatCard.Row>
             {open && (
               <StatCard.Content>
-                <JsonHighlighter
-                  data={{
-                    filter: JSON.parse(shape),
-                    queries: group.map((query) => ({ active: query.active, ...query.metrics })),
-                  }}
-                />
+                <JsonHighlighter data={{ ...query, avgTime: averageQueryTime(query) }} />
               </StatCard.Content>
             )}
           </Fragment>
