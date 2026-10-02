@@ -99,6 +99,8 @@ export type ClaudeHarnessOptions = {
    * same operation adopts from EDGE instead.
    */
   localUploads?: boolean;
+  /** Serve `runScript` from the in-process host, as `dx mcp serve --code-mode` does. Ignored for a deployed target. */
+  codeMode?: boolean;
   /** Fills the space before the agent starts. */
   seed?: (context: {
     spaceId: SpaceId;
@@ -575,6 +577,7 @@ export const runClaudeEval = async <T>(
                 context: () => context,
                 registry: () => registry,
                 uploads,
+                codeMode: options.codeMode,
               }).pipe(Scope.provide(scope)),
             );
 

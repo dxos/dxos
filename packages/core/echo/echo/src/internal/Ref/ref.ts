@@ -191,11 +191,15 @@ export type LoadOptions = {
 export interface Ref<T> extends Pipeable.Pipeable {
   /**
    * Target URI (either an `echo:` EID for an object reference or a `dxn:` DXN for a type reference).
+   *
+   * @performance O(1) field read.
    */
   get uri(): URI.URI;
 
   /**
    * Returns true if the reference has a target available (inlined or resolver set).
+   *
+   * @performance O(1) field read.
    */
   get isAvailable(): boolean;
 
@@ -206,6 +210,8 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * @deprecated A read with side effects (triggers loading, registers a resolution callback) that
    * can also throw. Use {@link peek} for a side-effect-free synchronous read, {@link load} to
    * resolve asynchronously, or the ref's atom for reactive access.
+   *
+   * @performance O(1) working-set lookup, but on a miss it schedules a load and registers a resolution callback.
    */
   get target(): T | undefined;
 
@@ -214,6 +220,8 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * working-set lookup. Never throws and never triggers loading — the synchronous counterpart of
    * {@link tryLoad}. A just-added object can resolve here before it has settled into its own
    * document; callers that need a settled document must load instead.
+   *
+   * @performance O(1) working-set lookup; never loads and never throws.
    */
   peek(): T | undefined;
 
@@ -228,11 +236,15 @@ export interface Ref<T> extends Pipeable.Pipeable {
    *   instead-of: `ref.target` — not guaranteed to be defined in async contexts; use `await ref.load()` (or `yield* Database.load(ref)` in Effect) to ensure the target is present
    *   uses: {@link load}
    *   related: org.dxos.echo-react.useObjectReactive
+   *
+   * @performance Async; resolves immediately for an inlined or loaded target, otherwise loads from disk or the network.
    */
   load(options?: LoadOptions): Promise<T>;
 
   /**
    * @returns Promise that will resolves with the target object or undefined if the object is not loaded locally.
+   *
+   * @performance Async; resolves immediately for an inlined or loaded target, otherwise loads from disk or the network.
    */
 
   tryLoad(options?: LoadOptions): Promise<T | undefined>;
@@ -244,6 +256,8 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * Note: the resolver only schedules a notification when the target is requested
    * via {@link target} while it is not yet loaded.
    * @returns Function that unsubscribes the callback.
+   *
+   * @performance O(1) listener registration.
    */
   onResolved(callback: () => void): () => void;
 
@@ -257,6 +271,8 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * `{ "/": "dxn:...", "target": { ... } }`
    *
    * Clones the reference object.
+   *
+   * @performance O(1); allocates a new ref sharing the resolver.
    */
   noInline(): Ref<T>;
 
@@ -264,6 +280,8 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * Read-only atom for the ref target.
    * Resolves once when the target loads; does NOT subscribe to target object mutations.
    * Use `Obj.atom(ref)` if you need reactive snapshots that update on every object mutation.
+   *
+   * @performance O(1) memoized atom-family lookup keyed by the ref URI.
    */
   get atom(): Atom.Atom<T | undefined>;
 
@@ -276,6 +294,8 @@ export interface Ref<T> extends Pipeable.Pipeable {
    * Examples:
    * `{ "/": "dxn:..." }`
    * `{ "/": "dxn:...", "target": { ... } }`
+   *
+   * @performance O(1); allocates the encoded object, inlining the saved target by reference.
    */
   encode(): EncodedReference;
 

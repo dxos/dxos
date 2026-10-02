@@ -14,7 +14,8 @@
   "sideEffects": false,
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./score": "./src/score/index.ts"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

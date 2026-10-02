@@ -36,6 +36,9 @@
       "path": "../../../common/util"
     },
     {
+      "path": "../../../e2e/perf-harness"
+    },
+    {
       "path": "../../../sdk/types"
     },
     {

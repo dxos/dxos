@@ -1,0 +1,196 @@
+{
+  "wall > boot": {
+    "target": 3300,
+    "limit": 4120,
+    "unit": "ms"
+  },
+  "wall > await-replication": {
+    "target": 2000,
+    "limit": 4000,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "wall > open-space": {
+    "target": 35,
+    "limit": 56,
+    "unit": "ms"
+  },
+  "wall > open-project": {
+    "target": 640,
+    "limit": 864,
+    "unit": "ms"
+  },
+  "wall > open-tasks": {
+    "target": 450,
+    "limit": 675,
+    "unit": "ms"
+  },
+  "wall > toggle-task": {
+    "target": 600,
+    "limit": 900,
+    "unit": "ms"
+  },
+  "wall > scroll-tasks": {
+    "target": 1620,
+    "limit": 1860,
+    "unit": "ms"
+  },
+  "wall > open-document": {
+    "target": 650,
+    "limit": 878,
+    "unit": "ms"
+  },
+  "wall > scroll-document": {
+    "target": 1740,
+    "limit": 2000,
+    "unit": "ms"
+  },
+  "wall > edit-document": {
+    "target": 1350,
+    "limit": 1620,
+    "unit": "ms"
+  },
+  "wall > reopen-project": {
+    "target": 450,
+    "limit": 675,
+    "unit": "ms"
+  },
+  "wall > open-assistant": {
+    "target": 80,
+    "limit": 128,
+    "unit": "ms"
+  },
+  "wall > assistant-turns": {
+    "target": 24000,
+    "limit": 30000,
+    "unit": "ms"
+  },
+  "cpu > boot": {
+    "target": 8000,
+    "limit": 10000,
+    "unit": "ms"
+  },
+  "cpu > await-replication": {
+    "target": 1300,
+    "limit": 2600,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "cpu > open-space": {
+    "target": 60,
+    "limit": 96,
+    "unit": "ms"
+  },
+  "cpu > open-project": {
+    "target": 1800,
+    "limit": 2430,
+    "unit": "ms"
+  },
+  "cpu > open-tasks": {
+    "target": 400,
+    "limit": 600,
+    "unit": "ms"
+  },
+  "cpu > toggle-task": {
+    "target": 300,
+    "limit": 450,
+    "unit": "ms"
+  },
+  "cpu > scroll-tasks": {
+    "target": 1000,
+    "limit": 1500,
+    "unit": "ms"
+  },
+  "cpu > open-document": {
+    "target": 1500,
+    "limit": 2030,
+    "unit": "ms"
+  },
+  "cpu > scroll-document": {
+    "target": 400,
+    "limit": 600,
+    "unit": "ms"
+  },
+  "cpu > edit-document": {
+    "target": 2400,
+    "limit": 3360,
+    "unit": "ms"
+  },
+  "cpu > reopen-project": {
+    "target": 1200,
+    "limit": 1800,
+    "unit": "ms"
+  },
+  "cpu > open-assistant": {
+    "target": 160,
+    "limit": 256,
+    "unit": "ms"
+  },
+  "cpu > assistant-turns": {
+    "target": 37500,
+    "limit": 48800,
+    "unit": "ms"
+  },
+  "run > total tab CPU": {
+    "target": 14500,
+    "limit": 19600,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "run > total worker CPU": {
+    "target": 20000,
+    "limit": 30000,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "run > SQLite read bytes": {
+    "target": 13000000,
+    "limit": 19500000,
+    "unit": "bytes"
+  },
+  "run > SQLite write bytes": {
+    "target": 75000000,
+    "limit": 93800000,
+    "unit": "bytes"
+  },
+  "run > app code transferred": {
+    "target": 25500000,
+    "limit": 28100000,
+    "unit": "bytes"
+  },
+  "run > edge traffic": {
+    "target": 1400000,
+    "limit": 1820000,
+    "unit": "bytes"
+  },
+  "run > worst tab lag p95": {
+    "target": 600,
+    "limit": 900,
+    "unit": "ms"
+  },
+  "run > worst worker lag p95": {
+    "target": 250,
+    "limit": 500,
+    "unit": "ms"
+  },
+  "run > peak tab realm memory": {
+    "target": 230686720,
+    "limit": 288000000,
+    "unit": "bytes"
+  },
+  "run > peak worker realm memory": {
+    "target": 161480704,
+    "limit": 194000000,
+    "unit": "bytes"
+  },
+  "run > peak app footprint": {
+    "target": 1000000000,
+    "limit": 1250000000,
+    "unit": "bytes"
+  },
+  "run > total blocking time": {
+    "target": 1300,
+    "limit": 1950,
+    "unit": "ms"
+  }
+}

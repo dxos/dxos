@@ -139,10 +139,7 @@ const ScoreOperation: SandboxOperation = {
 /** The DXN the effect dialect resolves the operation by, not its derived tool name. */
 const SCORE_KEY = String(Score.meta.key);
 
-/** What one eval call returns to the model. */
-const EvalResult = Schema.Struct({ output: Schema.String, ok: Schema.Boolean });
-
-/** Runs `code` through the eval tool exactly as a turn would, returning its whole result. */
+/** Runs `code` through the eval tool exactly as a turn would: what the model is shown, and whether the call failed. */
 const runEvalResult = Effect.fnUntraced(function* (code: string, dialect: Dialect = PlainDialect) {
   const runtime = yield* Effect.context<Database.Service | Operation.Service>();
   const toolkit = makeEvalToolkit({
@@ -158,8 +155,11 @@ const runEvalResult = Effect.fnUntraced(function* (code: string, dialect: Dialec
     input: JSON.stringify({ code }),
     providerExecuted: false,
   });
-  expect(result.error).toBeUndefined();
-  return Schema.decodeUnknownSync(EvalResult)(JSON.parse(String(result.result)));
+  if (result.error !== undefined) {
+    expect(result.result).toBeUndefined();
+    return { output: result.error, ok: false };
+  }
+  return { output: Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result))), ok: true };
 });
 
 /** Runs `code` through the eval tool exactly as a turn would, returning what it printed. */
@@ -203,11 +203,51 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   it.effect(
-    'the sandbox reports a throw as output rather than failing the turn',
+    'the sandbox returns printed output as plain text',
     Effect.fnUntraced(
       function* (_) {
-        const output = yield* runEval("throw new Error('boom');");
+        const { output, ok } = yield* runEvalResult("print('one'); print('two', { three: 3 });");
+        expect(ok).toBe(true);
+        expect(output).toEqual('one\ntwo {\n  "three": 3\n}');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'the sandbox reports a throw as a failed tool call rather than failing the turn',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult("throw new Error('boom');");
+        expect(ok).toBe(false);
         expect(output).toEqual('Error: boom');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a failed tool call carries everything printed before the throw',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult("print('first'); print('second'); throw new Error('boom');");
+        expect(ok).toBe(false);
+        expect(output).toEqual('first\nsecond\nError: boom');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a thrown string fails the tool call with that string',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult("print('before'); throw 'oops';");
+        expect(ok).toBe(false);
+        expect(output).toEqual('before\nError: oops');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -327,11 +367,15 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   it.effect(
-    'a failing effect in the effect dialect is reported as output',
+    'a failing effect in the effect dialect fails the tool call after its output',
     Effect.fnUntraced(
       function* (_) {
-        const output = yield* runEval("yield* Effect.fail(new ProbeError({ detail: 'nope' }));", EffectDialect);
-        expect(output).toContain('Error:');
+        const { output, ok } = yield* runEvalResult(
+          "yield* print('before'); yield* Effect.fail(new ProbeError({ detail: 'nope' }));",
+          EffectDialect,
+        );
+        expect(ok).toBe(false);
+        expect(output.startsWith('before\nError:')).toBe(true);
         expect(output).toContain('nope');
       },
       Effect.provide(TestLayer),
