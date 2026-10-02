@@ -4,7 +4,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Ref } from '@dxos/echo';
 import { Connection } from '@dxos/link';

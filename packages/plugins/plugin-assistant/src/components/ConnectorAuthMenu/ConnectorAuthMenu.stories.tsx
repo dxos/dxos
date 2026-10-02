@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import React, { useContext, useMemo } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';

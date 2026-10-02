@@ -4,7 +4,7 @@
 
 import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import { type Channel, type Message } from '@dxos/types';
 
 import { ChannelBackend, ThreadCapabilities } from '#types';

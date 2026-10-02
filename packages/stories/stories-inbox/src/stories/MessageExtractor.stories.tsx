@@ -13,7 +13,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as LayerSpec from '@dxos/compute/LayerSpec';

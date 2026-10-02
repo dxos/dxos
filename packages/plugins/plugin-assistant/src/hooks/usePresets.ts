@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import type * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';

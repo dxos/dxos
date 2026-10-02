@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useTranslation } from '@dxos/react-ui';

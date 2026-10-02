@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback } from 'react';
 
-import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapability } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AttentionCapabilities } from '@dxos/plugin-attention';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';

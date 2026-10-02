@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useSpaces } from '@dxos/react-client/echo';

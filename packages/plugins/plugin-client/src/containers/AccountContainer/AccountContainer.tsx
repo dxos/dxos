@@ -5,7 +5,7 @@
 import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { type FormEvent, useCallback, useState } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';

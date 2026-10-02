@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as ChatType from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';

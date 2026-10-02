@@ -9,8 +9,8 @@ import React, { useContext, useEffect } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
+import { useAtomCapability } from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability } from '@dxos/app-framework/ui';
 import { Alarm, SessionStore } from '@dxos/assistant';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as ChatType from '@dxos/assistant/Chat';

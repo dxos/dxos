@@ -6,7 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { Surface as SurfaceInternals } from '@dxos/app-framework/ui';
+import { Surface as SurfaceInternals } from '@dxos/app-framework/Surface';
 import { DXN, Obj, Type } from '@dxos/echo';
 
 import * as AppSurface from './app-surface.ts';

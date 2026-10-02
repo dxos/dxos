@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { PluginRegistryButton } from '@dxos/app-toolkit/PluginRegistryButton';
 import { Obj, Ref } from '@dxos/echo';
 import { Banner, Flex, Select, Separator, useTranslation } from '@dxos/react-ui';

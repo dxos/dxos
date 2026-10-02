@@ -12,7 +12,7 @@ import React, {
   useState,
 } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AttentionSigilButton } from '@dxos/app-toolkit/AttentionSigil';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';

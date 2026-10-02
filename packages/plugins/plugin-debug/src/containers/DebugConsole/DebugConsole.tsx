@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { IconButton, Panel, SystemIconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Terminal, type TerminalApi } from '@dxos/react-ui-terminal';
 

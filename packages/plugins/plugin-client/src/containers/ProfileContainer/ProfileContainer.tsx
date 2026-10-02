@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, type Dispatch, type SetStateAction, useCallback, useMemo, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';

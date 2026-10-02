@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useProgressMonitor } from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';

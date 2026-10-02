@@ -5,7 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
-import { HomeSection, usePluginManager } from '@dxos/app-framework/ui';
+import { HomeSection } from '@dxos/app-framework/HomeSection';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { Collection, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space, useMembers } from '@dxos/react-client/echo';

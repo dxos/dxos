@@ -7,7 +7,7 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 
 import { PlaygroundRoles } from '../roles.ts';
 

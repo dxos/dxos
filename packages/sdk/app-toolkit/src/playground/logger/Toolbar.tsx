@@ -7,7 +7,8 @@ import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import { Button } from '@dxos/react-ui';
 
 import { PlaygroundRoles } from '../roles.ts';

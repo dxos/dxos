@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Identity, type Space } from '@dxos/halo';
 import { Card, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';

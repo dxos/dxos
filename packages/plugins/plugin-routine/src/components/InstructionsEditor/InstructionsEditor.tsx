@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useActivationSignal } from '@dxos/app-framework/ui';
+import { useActivationSignal } from '@dxos/app-framework/Hooks';
 import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as Instructions from '@dxos/compute/Instructions';

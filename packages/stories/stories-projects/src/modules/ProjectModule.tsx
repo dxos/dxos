@@ -4,7 +4,8 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import { Filter, type Obj } from '@dxos/echo';

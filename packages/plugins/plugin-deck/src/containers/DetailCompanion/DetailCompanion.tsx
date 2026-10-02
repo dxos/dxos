@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';

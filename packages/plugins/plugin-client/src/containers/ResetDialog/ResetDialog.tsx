@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { EffectEx } from '@dxos/effect';
 import { useClient } from '@dxos/react-client';

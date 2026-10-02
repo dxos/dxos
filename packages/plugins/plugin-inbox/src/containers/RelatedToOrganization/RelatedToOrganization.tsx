@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useCardPivot } from '@dxos/app-toolkit/Hooks';

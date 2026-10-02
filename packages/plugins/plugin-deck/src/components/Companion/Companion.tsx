@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';

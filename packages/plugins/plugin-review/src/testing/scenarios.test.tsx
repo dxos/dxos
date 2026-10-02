@@ -7,8 +7,8 @@ import * as Context from 'effect/Context';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
+import { PluginManagerProvider } from '@dxos/app-framework/PluginManagerProvider';
 import { setupPluginManager } from '@dxos/app-framework/testing';
-import { PluginManagerProvider } from '@dxos/app-framework/ui';
 import { fromHost } from '@dxos/client/local';
 import { Space as HaloSpace, Identity } from '@dxos/halo';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';

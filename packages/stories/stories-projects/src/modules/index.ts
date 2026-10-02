@@ -3,7 +3,7 @@
 //
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
 
 import { MailboxModule } from './MailboxModule.tsx';

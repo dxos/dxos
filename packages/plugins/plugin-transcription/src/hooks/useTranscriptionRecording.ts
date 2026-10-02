@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { EdgeServiceName } from '@dxos/config';
 import { Database, Feed, Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

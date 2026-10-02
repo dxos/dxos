@@ -8,7 +8,7 @@
 import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
-import { type Surface } from '@dxos/app-framework/ui';
+import { type Surface } from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useTypeOptions } from '@dxos/app-toolkit/Hooks';
 import { Database, Obj } from '@dxos/echo';

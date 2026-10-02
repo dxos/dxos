@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { EffectEx } from '@dxos/effect';
 import { type Identity, type Invitation } from '@dxos/halo';
 import { useDevices, useInvitationFlow } from '@dxos/halo-react';

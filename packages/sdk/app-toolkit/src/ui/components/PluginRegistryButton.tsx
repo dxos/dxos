@@ -4,7 +4,7 @@
 
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 

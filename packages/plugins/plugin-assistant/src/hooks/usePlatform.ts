@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 
 /**

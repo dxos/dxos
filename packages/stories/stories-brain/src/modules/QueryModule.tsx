@@ -7,7 +7,7 @@ import * as Layer from 'effect/Layer';
 import React, { useCallback, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { EffectEx } from '@dxos/effect';
 import { buildSparql, generateQuery, parseSparqlToQuery } from '@dxos/pipeline-rdf';

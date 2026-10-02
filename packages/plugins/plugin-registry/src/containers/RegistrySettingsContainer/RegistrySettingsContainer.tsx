@@ -6,7 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { usePluginManager, useSettingsState } from '@dxos/app-framework/ui';
+import { useSettingsState } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import { useSettingsScope } from '@dxos/app-toolkit/Hooks';

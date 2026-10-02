@@ -7,7 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import { RootAttentionProvider, ViewStateProvider } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';

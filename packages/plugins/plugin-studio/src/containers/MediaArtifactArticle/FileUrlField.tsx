@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { log } from '@dxos/log';

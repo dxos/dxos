@@ -4,7 +4,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as Script from '@dxos/compute/Script';
 import { type Database, Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';

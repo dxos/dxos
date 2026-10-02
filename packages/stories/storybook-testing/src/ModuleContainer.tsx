@@ -7,8 +7,9 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { type FC, useEffect, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
+import { useCapabilities, useCapability } from '@dxos/app-framework/Hooks';
 import type * as Role from '@dxos/app-framework/Role';
-import { Surface, useCapabilities, useCapability, useSurfaceManager } from '@dxos/app-framework/ui';
+import { Surface, useSurfaceManager } from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';

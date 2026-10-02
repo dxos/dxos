@@ -7,7 +7,7 @@ import React from 'react';
 
 import { Filter, Ref } from '@dxos/echo';
 import * as AssistantSkill from '@dxos/plugin-assistant/AssistantSkill';
-import { UmlSkill } from '@dxos/plugin-illustrator';
+import * as UmlSkill from '@dxos/plugin-illustrator/UmlSkill';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownSkill from '@dxos/plugin-markdown/MarkdownSkill';
 import { type Space } from '@dxos/react-client/echo';

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

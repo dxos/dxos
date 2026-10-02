@@ -7,7 +7,7 @@ import { WebRTCStats, type WebRTCStatsEvent } from '@peermetrics/webrtc-stats';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import { truncateKey } from '@dxos/debug';
 import { JsonView, STAT_CARD_HUES, StatCard } from '@dxos/devtools';
 import { log } from '@dxos/log';

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

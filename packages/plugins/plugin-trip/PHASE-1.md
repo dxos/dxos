@@ -1217,7 +1217,7 @@ git commit -m "feat(plugin-trip): add TripBuilder test helper"
 import { isSameDay } from 'date-fns';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { LayoutOperation, getObjectPathFromObject } from '@dxos/app-toolkit';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useShowItem } from '@dxos/app-toolkit/Hooks';
@@ -1465,7 +1465,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import { Capabilities, Capability } from '@dxos/app-framework';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { TripArticle } from '#containers';
@@ -2311,7 +2311,7 @@ git commit -m "feat(plugin-inbox): add ExtractMessage operation handler"
 
 import { useMemo } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import { getSpace } from '@dxos/react-client/echo';
 import type * as Message from '@dxos/types/Message';

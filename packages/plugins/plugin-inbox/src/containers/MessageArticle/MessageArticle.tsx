@@ -5,7 +5,12 @@
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import {
+  useCapabilities,
+  useCapability,
+  useOperationInvoker,
+  useProcessManagerRuntime,
+} from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

@@ -10,7 +10,8 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useDetailNavigation } from '@dxos/app-toolkit/Hooks';

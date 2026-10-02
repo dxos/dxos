@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type FormFieldProvider } from '@dxos/react-ui-form';
 

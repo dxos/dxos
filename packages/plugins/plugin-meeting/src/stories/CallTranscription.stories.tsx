@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import { useCapabilities } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useCapabilities } from '@dxos/app-framework/ui';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';

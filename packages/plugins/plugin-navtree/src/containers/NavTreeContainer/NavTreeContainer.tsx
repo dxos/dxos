@@ -10,7 +10,8 @@ import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import React, { forwardRef, memo, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';

@@ -4,7 +4,7 @@
 
 import React, { useContext, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useLayout } from '@dxos/app-toolkit/Hooks';
 import { type Collection, Obj } from '@dxos/echo';

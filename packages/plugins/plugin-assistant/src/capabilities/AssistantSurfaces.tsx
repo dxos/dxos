@@ -6,7 +6,7 @@
 
 import React, { useEffect } from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/ui';
+import { useSettingsState } from '@dxos/app-framework/Hooks';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useActiveSpace, useHomeVisibility } from '@dxos/app-toolkit/Hooks';
 import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';

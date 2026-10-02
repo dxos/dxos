@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import { EffectEx } from '@dxos/effect';
 import { List, ListItem } from '@dxos/react-list';
 import { Flex, IconButton, useTranslation } from '@dxos/react-ui';

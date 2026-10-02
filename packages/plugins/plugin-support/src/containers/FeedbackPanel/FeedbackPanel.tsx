@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { useConfig } from '@dxos/react-client';
 import { Panel } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';

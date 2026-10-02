@@ -8,8 +8,10 @@ import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface, useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import { Surface } from '@dxos/app-framework/Surface';
 import { EffectEx } from '@dxos/effect';
 import { Button } from '@dxos/react-ui';
 

@@ -5,7 +5,8 @@
 import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useShowItem } from '@dxos/app-toolkit/Hooks';

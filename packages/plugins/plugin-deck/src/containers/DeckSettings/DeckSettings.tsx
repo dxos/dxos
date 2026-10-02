@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/ui';
+import { useSettingsState } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import { useTranslation } from '@dxos/react-ui';

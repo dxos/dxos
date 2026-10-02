@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';

@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { Banner, Icon, useTranslation } from '@dxos/react-ui';

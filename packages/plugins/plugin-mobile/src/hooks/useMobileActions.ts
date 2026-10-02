@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';

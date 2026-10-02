@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useCapability, usePluginManager } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import {
   Banner,

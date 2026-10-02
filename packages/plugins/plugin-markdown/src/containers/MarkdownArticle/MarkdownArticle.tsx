@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';

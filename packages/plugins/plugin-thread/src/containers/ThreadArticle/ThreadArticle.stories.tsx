@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { Surface } from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';

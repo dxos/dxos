@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
+import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/Surface';
 import { Field, Flex, Grid, IconButton, SystemIconButton, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';

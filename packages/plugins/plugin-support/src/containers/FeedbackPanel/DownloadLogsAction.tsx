@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 
 import { FeedbackForm } from '#components';

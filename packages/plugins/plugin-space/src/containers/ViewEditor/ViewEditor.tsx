@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { useTypeOptions } from '@dxos/app-toolkit/Hooks';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { EID, Filter, Obj, Query, type QueryAST, Ref, Scope, Tag, Type, type View } from '@dxos/echo';

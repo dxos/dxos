@@ -5,9 +5,9 @@
 import * as Effect from 'effect/Effect';
 import { useCallback, useState } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

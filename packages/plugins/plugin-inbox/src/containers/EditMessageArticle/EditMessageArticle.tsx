@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';

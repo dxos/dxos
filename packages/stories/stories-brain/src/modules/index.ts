@@ -3,7 +3,7 @@
 //
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 
 import { CrawlModule } from './CrawlModule.tsx';
 import { EntitiesModule } from './EntitiesModule.tsx';

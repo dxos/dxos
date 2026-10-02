@@ -6,7 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import {

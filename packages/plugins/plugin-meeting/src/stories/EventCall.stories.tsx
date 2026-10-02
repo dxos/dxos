@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, screen, userEvent, within } from 'storybook/test';
 
+import { Surface } from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';

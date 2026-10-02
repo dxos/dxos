@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { STAT_CARD_HUES, StatCard } from '@dxos/devtools';
 import { Flex } from '@dxos/react-ui';

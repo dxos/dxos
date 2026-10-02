@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
+import { useSpaceCallback } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Agent from '@dxos/assistant/Agent';
 import { Database, Obj } from '@dxos/echo';

@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useContext, useMemo } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
+import { Surface } from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, type QueryAST, Type, View } from '@dxos/echo';
 import { useQuery, useType } from '@dxos/echo-react';

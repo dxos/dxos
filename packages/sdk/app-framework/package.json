@@ -122,12 +122,37 @@
       "types": "./dist/types/src/testing/react.d.ts",
       "import": "./dist/lib/testing/react.mjs"
     },
-    "./ui": {
-      "source": "./src/ui/index.ts",
-      "types": "./dist/types/src/ui/index.d.ts",
-      "import": "./dist/lib/ui.mjs"
+    "./package.json": "./package.json",
+    "./App": {
+      "source": "./src/ui/components/App/index.ts",
+      "types": "./dist/types/src/ui/components/App/index.d.ts",
+      "import": "./dist/lib/App.mjs"
     },
-    "./package.json": "./package.json"
+    "./HomeSection": {
+      "source": "./src/ui/components/HomeSection/index.ts",
+      "types": "./dist/types/src/ui/components/HomeSection/index.d.ts",
+      "import": "./dist/lib/HomeSection.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/ui/hooks/index.ts",
+      "types": "./dist/types/src/ui/hooks/index.d.ts",
+      "import": "./dist/lib/Hooks.mjs"
+    },
+    "./NamePopover": {
+      "source": "./src/ui/components/NamePopover/index.ts",
+      "types": "./dist/types/src/ui/components/NamePopover/index.d.ts",
+      "import": "./dist/lib/NamePopover.mjs"
+    },
+    "./PluginManagerProvider": {
+      "source": "./src/ui/components/PluginManager/index.ts",
+      "types": "./dist/types/src/ui/components/PluginManager/index.d.ts",
+      "import": "./dist/lib/PluginManagerProvider.mjs"
+    },
+    "./Surface": {
+      "source": "./src/ui/components/Surface/index.ts",
+      "types": "./dist/types/src/ui/components/Surface/index.d.ts",
+      "import": "./dist/lib/Surface.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "bin": {

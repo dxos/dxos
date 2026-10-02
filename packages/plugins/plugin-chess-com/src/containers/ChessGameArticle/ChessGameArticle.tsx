@@ -4,7 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';

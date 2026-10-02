@@ -5,7 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { RegistryOperation, describeLoadError } from '@dxos/plugin-registry/Operations';
 import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';

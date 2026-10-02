@@ -4,7 +4,7 @@
 
 import { useCallback, useState } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { Obj, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';

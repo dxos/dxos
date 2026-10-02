@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import { QuestionStore } from '@dxos/pipeline-discord';
 
 import { QuestionsPanel } from '../components/index.ts';

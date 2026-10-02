@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { Surface } from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Feed, Query } from '@dxos/echo';

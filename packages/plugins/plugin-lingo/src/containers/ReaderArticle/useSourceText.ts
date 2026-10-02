@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj, type Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';

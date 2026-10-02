@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import { useUpdateRow } from '@dxos/app-toolkit/UpdateRow';

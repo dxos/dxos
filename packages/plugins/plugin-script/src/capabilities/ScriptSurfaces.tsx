@@ -6,7 +6,7 @@
 
 import React from 'react';
 
-import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/Hooks';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import type * as Script from '@dxos/compute/Script';

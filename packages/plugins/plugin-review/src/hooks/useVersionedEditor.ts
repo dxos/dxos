@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { useOptionalCapabilities } from '@dxos/app-framework/ui';
+import { useOptionalCapabilities } from '@dxos/app-framework/Hooks';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';

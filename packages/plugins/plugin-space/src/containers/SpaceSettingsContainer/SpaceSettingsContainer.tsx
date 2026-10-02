@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';

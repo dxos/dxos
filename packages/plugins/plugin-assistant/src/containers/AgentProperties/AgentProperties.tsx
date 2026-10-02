@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
+import { useSpaceCallback } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AgentSkillOperations } from '@dxos/assistant-toolkit';
 import * as Agent from '@dxos/assistant/Agent';

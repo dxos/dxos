@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useDetailNavigation } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

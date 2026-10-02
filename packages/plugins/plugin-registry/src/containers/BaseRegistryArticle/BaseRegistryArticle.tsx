@@ -6,8 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
+import { useCapabilities, useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/Hooks';
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';

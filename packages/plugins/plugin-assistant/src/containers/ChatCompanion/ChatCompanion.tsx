@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';

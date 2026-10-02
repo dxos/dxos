@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { useCapability } from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapability } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { withTheme } from '@dxos/react-ui/testing';
 

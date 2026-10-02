@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
+import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
 import { Button } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 

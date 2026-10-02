@@ -37,7 +37,7 @@ const isConventional = (key, packageName) =>
  * TODO(wittjosiah): Whittle this down to nothing. `echo/internal` should become actually internal;
  *  `app-framework/config` only re-exports `Config2` from `@dxos/protocols`.
  */
-const PENDING_ENTRYPOINTS = new Set(['@dxos/app-framework/config', '@dxos/app-framework/ui', '@dxos/echo/internal']);
+const PENDING_ENTRYPOINTS = new Set(['@dxos/app-framework/config', '@dxos/echo/internal']);
 
 /**
  * ESLint rule rejecting entry points that are not namespaces in a package that has migrated to

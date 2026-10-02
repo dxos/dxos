@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { useOperation } from '@dxos/app-framework/ui';
+import { useOperation } from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';

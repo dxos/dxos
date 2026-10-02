@@ -4,7 +4,7 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';

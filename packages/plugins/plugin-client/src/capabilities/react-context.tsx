@@ -8,7 +8,7 @@ import React, { type ReactNode, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import { Identity, Space } from '@dxos/halo';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { HaloProvider } from '@dxos/halo-react';

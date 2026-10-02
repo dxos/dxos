@@ -16,15 +16,15 @@ import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
 import { EdgeRegistryPluginProvider } from '@dxos/app-framework';
-import type * as Plugin from '@dxos/app-framework/Plugin';
-import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
+import { bootLoader } from '@dxos/app-framework/App';
 import {
   FIRST_INTERACTIVE_EVENT,
   STARTUP_ACTIVATED_EVENT,
   STARTUP_FAILED_EVENT,
-  bootLoader,
   useApp,
-} from '@dxos/app-framework/ui';
+} from '@dxos/app-framework/Hooks';
+import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
 // boot path uses.

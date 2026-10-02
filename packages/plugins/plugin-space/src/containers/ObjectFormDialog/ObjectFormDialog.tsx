@@ -8,7 +8,8 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useActivationSignal, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useActivationSignal, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { usePluginRegistryAvailable } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

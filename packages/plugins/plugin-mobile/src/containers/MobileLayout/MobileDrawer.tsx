@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/Hooks';

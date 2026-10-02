@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { useLayout } from '@dxos/app-toolkit/Hooks';
 import type * as Tour from '@dxos/app-toolkit/Tour';
 import { log } from '@dxos/log';

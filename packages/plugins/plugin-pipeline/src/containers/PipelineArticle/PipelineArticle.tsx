@@ -5,7 +5,8 @@
 import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import {
   OBJECT_ACTIONS_CONTRIBUTION_ID,

@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { useCapabilities, useCapability } from '@dxos/app-framework/Hooks';
 import { Blob, type Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';

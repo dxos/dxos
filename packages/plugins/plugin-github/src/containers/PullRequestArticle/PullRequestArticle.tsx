@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/ui';
+import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useProgressMonitor } from '@dxos/app-toolkit/Hooks';

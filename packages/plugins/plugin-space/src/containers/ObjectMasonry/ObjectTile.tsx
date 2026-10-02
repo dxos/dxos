@@ -5,7 +5,8 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';

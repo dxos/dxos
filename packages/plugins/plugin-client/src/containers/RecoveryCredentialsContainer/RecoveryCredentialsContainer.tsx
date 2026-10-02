@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
 import { log } from '@dxos/log';

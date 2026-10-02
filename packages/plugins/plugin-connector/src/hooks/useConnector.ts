@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 
 import { ConnectorSpec } from '#types';
 

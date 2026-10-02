@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';

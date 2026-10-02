@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
+import { useSpaceCallback } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';

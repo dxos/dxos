@@ -5,7 +5,7 @@
 import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { useCallback, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import { Context } from '@dxos/context';
 import { Flex, Icon, IconButton, SystemIconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';

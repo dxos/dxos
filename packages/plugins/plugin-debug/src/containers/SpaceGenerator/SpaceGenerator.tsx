@@ -5,7 +5,8 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useProgressMonitor } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

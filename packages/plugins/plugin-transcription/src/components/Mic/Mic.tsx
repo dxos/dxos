@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useAtomCapabilityState } from '@dxos/app-framework/ui';
+import { useAtomCapabilityState } from '@dxos/app-framework/Hooks';
 import { SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 import {

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import { useAtomCapability } from '@dxos/app-framework/Hooks';
 
 import { AppCapabilities } from '../../app-framework/index.ts';
 

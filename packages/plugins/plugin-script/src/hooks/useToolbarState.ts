@@ -6,7 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 
 import { type DeployState } from './deploy.ts';
 

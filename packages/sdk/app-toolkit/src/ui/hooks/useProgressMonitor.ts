@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import { type Progress } from '@dxos/progress';
 
 import { AppCapabilities } from '../../app-framework/index.ts';

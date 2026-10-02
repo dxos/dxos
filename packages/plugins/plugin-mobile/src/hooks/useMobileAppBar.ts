@@ -5,7 +5,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';

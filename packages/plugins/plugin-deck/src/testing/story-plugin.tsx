@@ -9,8 +9,9 @@ import React, { forwardRef, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';

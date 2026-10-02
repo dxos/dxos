@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import { useAtomCapability } from '@dxos/app-framework/Hooks';
 import type * as ChatTypes from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';

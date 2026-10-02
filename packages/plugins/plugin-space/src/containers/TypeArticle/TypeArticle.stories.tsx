@@ -10,8 +10,8 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { useAtomCapability } from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability } from '@dxos/app-framework/ui';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';

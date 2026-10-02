@@ -16,10 +16,10 @@ import React, { type FC, type PropsWithChildren, type ReactNode, useEffect, useM
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
+import { useApp } from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { type WithPluginManagerOptions, activateDemandGatedModules } from '@dxos/app-framework/testing';
-import { useApp } from '@dxos/app-framework/ui';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import { persistentClientServices } from '@dxos/client/testing';

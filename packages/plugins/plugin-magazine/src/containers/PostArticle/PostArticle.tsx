@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';

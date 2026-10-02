@@ -6,7 +6,7 @@ import './spotlight.css';
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
 import { Dialog, ErrorFallback, useAsyncEffect } from '@dxos/react-ui';

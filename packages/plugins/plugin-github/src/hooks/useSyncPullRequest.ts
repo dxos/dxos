@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type PullRequest } from '@dxos/types';

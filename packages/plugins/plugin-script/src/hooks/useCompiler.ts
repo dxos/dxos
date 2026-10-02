@@ -2,7 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useCapabilities, usePluginManager } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { EffectEx } from '@dxos/effect';
 import { useAsyncEffect } from '@dxos/react-ui';
 

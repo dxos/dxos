@@ -6,7 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import type * as ChatType from '@dxos/assistant/Chat';

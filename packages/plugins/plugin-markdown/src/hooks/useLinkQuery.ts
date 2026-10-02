@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Annotation, Database, Filter, Obj, Query, Type } from '@dxos/echo';

@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Main, useTranslation } from '@dxos/react-ui';

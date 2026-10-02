@@ -8,7 +8,7 @@ import React, { Fragment, useCallback, useEffect, useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';

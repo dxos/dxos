@@ -4,7 +4,8 @@
 
 import React, { memo, useMemo } from 'react';
 
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { Carousel, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

@@ -4,7 +4,8 @@
 
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { NamePopover, useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
+import { NamePopover } from '@dxos/app-framework/NamePopover';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';

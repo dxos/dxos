@@ -6,7 +6,7 @@ import { type Extension } from '@codemirror/state';
 import { useCallback, useMemo, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
 import { Obj } from '@dxos/echo';
 import { toCursorRange } from '@dxos/echo-client';

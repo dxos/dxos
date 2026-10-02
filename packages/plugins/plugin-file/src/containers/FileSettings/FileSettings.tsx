@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
+import { useCapabilities, useSettingsState } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import { useClient } from '@dxos/react-client';

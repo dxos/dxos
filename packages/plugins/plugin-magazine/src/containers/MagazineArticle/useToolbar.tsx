@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useContext, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';

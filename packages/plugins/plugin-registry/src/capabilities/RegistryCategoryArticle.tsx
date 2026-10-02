@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import { useSettingsDivergedKeys } from '@dxos/app-toolkit/Hooks';
 

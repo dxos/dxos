@@ -4,7 +4,8 @@
 
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import { Surface, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';

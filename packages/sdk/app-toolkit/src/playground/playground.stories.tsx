@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import {} from '@dxos/app-framework';
-import { useApp } from '@dxos/app-framework/ui';
+import { useApp } from '@dxos/app-framework/Hooks';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { DebugPlugin } from './debug/index.ts';

@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import { log } from '@dxos/log';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 

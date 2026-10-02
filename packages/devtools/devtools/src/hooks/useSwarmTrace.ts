@@ -8,7 +8,7 @@ import * as Stream from 'effect/Stream';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import type * as Trace from '@dxos/compute/Trace';
 import { useSpaces } from '@dxos/react-client/echo';
 

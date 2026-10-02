@@ -8,7 +8,7 @@
 
 import React from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import { useAtomCapability } from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 

@@ -5,7 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';

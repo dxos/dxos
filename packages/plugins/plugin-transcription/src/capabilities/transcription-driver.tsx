@@ -7,7 +7,7 @@ import React, { Fragment, useCallback, useEffect, useMemo, useRef, useState } fr
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/ui';
+import { useAtomCapability, useAtomCapabilityState, useCapabilities } from '@dxos/app-framework/Hooks';
 import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 import { linkEntities } from '@dxos/pipeline-transcription';

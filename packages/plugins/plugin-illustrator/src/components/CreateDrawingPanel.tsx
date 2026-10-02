@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Column, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';

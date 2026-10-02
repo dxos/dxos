@@ -5,7 +5,7 @@
 import { formatDistance, isValid } from 'date-fns';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { getEnvString } from '@dxos/config';
 import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';

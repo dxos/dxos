@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { useProcessManagerRuntime } from '@dxos/app-framework/Hooks';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import * as ChatSchema from '@dxos/assistant/Chat';
 import { Filter } from '@dxos/echo';

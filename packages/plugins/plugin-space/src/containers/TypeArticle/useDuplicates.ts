@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import { type IdentitySpec, planMerge } from '@dxos/extractor';
 import { type Space } from '@dxos/react-client/echo';

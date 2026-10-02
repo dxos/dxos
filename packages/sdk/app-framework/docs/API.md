@@ -14,7 +14,8 @@ import {
   Plugin, // Plugin definition + builder
   PluginManager, // Manager type (usually obtained, not constructed)
 } from '@dxos/app-framework';
-import { Surface, useApp, useCapabilities, useCapability } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
+import { useApp, useCapabilities, useCapability } from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 ```
 

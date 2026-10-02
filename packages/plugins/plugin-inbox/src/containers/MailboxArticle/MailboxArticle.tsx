@@ -13,7 +13,7 @@ import {
   useCapabilities,
   useOperationInvoker,
   useOptionalCapability,
-} from '@dxos/app-framework/ui';
+} from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useAppGraph, useDetailNavigation, useProgressMonitor, useShowItem } from '@dxos/app-toolkit/Hooks';

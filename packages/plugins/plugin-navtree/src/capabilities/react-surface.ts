@@ -7,7 +7,7 @@ import { type ComponentProps } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Position } from '@dxos/util';

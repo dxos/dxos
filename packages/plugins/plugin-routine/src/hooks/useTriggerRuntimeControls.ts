@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import { useEffect, useState } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
+import { useSpaceCallback } from '@dxos/app-framework/Hooks';
 import { TriggerDispatcher, type TriggerDispatcherState } from '@dxos/compute-runtime';
 import * as Trigger from '@dxos/compute/Trigger';
 import { type Database, Filter, Query } from '@dxos/echo';

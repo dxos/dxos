@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { DEFAULT_INPUT } from '@dxos/conductor';
 import { Card } from '@dxos/react-ui';

@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import { type ComponentType, type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import { Entity, Obj, type Ref, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';

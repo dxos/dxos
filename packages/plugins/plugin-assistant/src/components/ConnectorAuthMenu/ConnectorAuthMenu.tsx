@@ -5,7 +5,7 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { type Database, Filter, type Obj, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';

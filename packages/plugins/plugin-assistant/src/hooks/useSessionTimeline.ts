@@ -8,7 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import * as Chat from '@dxos/assistant/Chat';
 import type * as Process from '@dxos/compute/Process';
 import { Obj } from '@dxos/echo';

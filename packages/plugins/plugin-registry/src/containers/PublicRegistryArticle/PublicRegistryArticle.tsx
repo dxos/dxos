@@ -6,8 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import { useSettingsDivergedKeys } from '@dxos/app-toolkit/Hooks';

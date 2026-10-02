@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { useAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
+import { useAtomCapability } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { Dnd } from '@dxos/react-ui-dnd';
 
 import { useDeckState } from '#hooks';

@@ -8,7 +8,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker, useSettingsState } from '@dxos/app-framework/Hooks';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';

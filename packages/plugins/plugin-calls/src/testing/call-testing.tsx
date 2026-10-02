@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import { useLayoutEffect } from 'react';
 
+import { useCapability } from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useCapability } from '@dxos/app-framework/ui';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';

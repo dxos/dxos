@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';

@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
+import { PluginManagerProvider } from '@dxos/app-framework/PluginManagerProvider';
 import { setupPluginManager } from '@dxos/app-framework/testing';
-import { PluginManagerProvider } from '@dxos/app-framework/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import { Database, Feed, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';

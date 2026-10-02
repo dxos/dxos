@@ -32,7 +32,7 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

@@ -9,7 +9,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Option from 'effect/Option';
 import { useCallback, useState } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
+import { useSpaceCallback } from '@dxos/app-framework/Hooks';
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';

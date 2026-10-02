@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import { useEffect } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import { type HubHttpClient } from '@dxos/edge-client';
 import { useIdentity } from '@dxos/halo-react';
 

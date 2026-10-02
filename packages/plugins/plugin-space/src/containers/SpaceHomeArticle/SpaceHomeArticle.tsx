@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useAppGraph, useLayout } from '@dxos/app-toolkit/Hooks';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';

@@ -4,7 +4,8 @@
 
 import { useCallback } from 'react';
 
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 
 import { runAction } from '../action.ts';

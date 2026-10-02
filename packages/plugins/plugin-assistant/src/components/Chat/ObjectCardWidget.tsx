@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
 import { type Database, Obj } from '@dxos/echo';

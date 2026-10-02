@@ -5,8 +5,9 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import { useSettingsKeyScope } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

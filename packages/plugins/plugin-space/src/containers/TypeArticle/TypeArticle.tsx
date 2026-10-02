@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
-import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

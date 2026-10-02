@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { useProcessManagerRuntime } from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { addEventListener } from '@dxos/async';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { FeedTraceSink } from '@dxos/compute-runtime';

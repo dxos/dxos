@@ -6,13 +6,9 @@ import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import {
-  Surface,
-  useActivationSignal,
-  useCapabilities,
-  useOperationInvoker,
-  usePluginManager,
-} from '@dxos/app-framework/ui';
+import { useActivationSignal, useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';

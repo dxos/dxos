@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Annotation, Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ArchivedAnnotation, isArchivable } from '@dxos/schema';

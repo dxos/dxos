@@ -4,7 +4,7 @@
 
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useOptionalAtomCapabilityState } from '@dxos/app-framework/ui';
+import { useOptionalAtomCapabilityState } from '@dxos/app-framework/Hooks';
 import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';

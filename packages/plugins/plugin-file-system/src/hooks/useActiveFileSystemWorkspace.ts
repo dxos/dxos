@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useAtomCapabilityState } from '@dxos/app-framework/ui';
+import { useAtomCapabilityState } from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { useLayout } from '@dxos/app-toolkit/Hooks';
 

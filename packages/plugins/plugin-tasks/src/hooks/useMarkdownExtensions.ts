@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import { type Obj } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/ui';
+import { useCapabilities } from '@dxos/app-framework/Hooks';
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';

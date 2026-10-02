@@ -8,7 +8,8 @@ import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface, usePluginManager } from '@dxos/app-framework/ui';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import { Surface } from '@dxos/app-framework/Surface';
 import { EffectEx } from '@dxos/effect';
 import { IconButton } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';

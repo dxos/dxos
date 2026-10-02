@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useAtomCapabilityState } from '@dxos/app-framework/ui';
+import { useAtomCapabilityState } from '@dxos/app-framework/Hooks';
 
 import { GuidedTour } from '#components';
 import { useTourSteps } from '#hooks';

@@ -6,7 +6,8 @@ import * as Effect from 'effect/Effect';
 import { useCallback, useState } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

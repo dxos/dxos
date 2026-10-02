@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';

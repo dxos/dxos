@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { DeckStoryPlugin, storyItemId } from '@dxos/plugin-deck/testing';
 import { translations as deckTranslations } from '@dxos/plugin-deck/translations';

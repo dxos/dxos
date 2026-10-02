@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useActivationSignal, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useActivationSignal, useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Routine from '@dxos/compute/Routine';
 import { Database, Obj } from '@dxos/echo';

@@ -14,7 +14,7 @@ import React, {
   useState,
 } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';

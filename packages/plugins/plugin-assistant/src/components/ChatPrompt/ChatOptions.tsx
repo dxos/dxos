@@ -5,7 +5,7 @@
 import React, { type JSX, useCallback, useMemo, useState } from 'react';
 
 import { Provider } from '@dxos/ai';
-import { useAtomCapabilityState, useOptionalCapability } from '@dxos/app-framework/ui';
+import { useAtomCapabilityState, useOptionalCapability } from '@dxos/app-framework/Hooks';
 import { type AiContext } from '@dxos/assistant';
 import type * as ChatModule from '@dxos/assistant/Chat';
 import * as McpServer from '@dxos/compute/McpServer';

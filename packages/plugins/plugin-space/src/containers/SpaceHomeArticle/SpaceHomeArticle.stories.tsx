@@ -9,8 +9,8 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import { Surface } from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useHomeVisibility } from '@dxos/app-toolkit/Hooks';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';

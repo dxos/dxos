@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

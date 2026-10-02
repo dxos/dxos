@@ -24,9 +24,10 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { useAtomCapability, useCapabilities } from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import { Surface } from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useAtomCapability, useCapabilities } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';

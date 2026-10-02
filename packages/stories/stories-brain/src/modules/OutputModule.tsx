@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import { useCapability } from '@dxos/app-framework/Hooks';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';

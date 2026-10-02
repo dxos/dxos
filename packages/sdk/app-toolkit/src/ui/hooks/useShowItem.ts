@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 
 import { LayoutOperation } from '../../operations/index.ts';
 import { useLayout } from './useLayout.ts';

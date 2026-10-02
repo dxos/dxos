@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { useAppGraph, useProgressMonitor } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';

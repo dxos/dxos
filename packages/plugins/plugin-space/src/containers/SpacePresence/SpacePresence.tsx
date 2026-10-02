@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import { useAtomCapability } from '@dxos/app-framework/Hooks';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/halo';

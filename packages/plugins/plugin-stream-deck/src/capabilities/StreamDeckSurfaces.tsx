@@ -6,7 +6,7 @@
 
 import React from 'react';
 
-import { useOptionalAtomCapability } from '@dxos/app-framework/ui';
+import { useOptionalAtomCapability } from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 
