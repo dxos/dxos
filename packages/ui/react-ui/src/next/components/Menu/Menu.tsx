@@ -12,6 +12,7 @@ import React, {
   forwardRef,
   useContext,
   useId,
+  useState,
 } from 'react';
 
 import { invariant } from '@dxos/invariant';
@@ -37,7 +38,15 @@ type MenuRootProps = MenuPrimitive.RootProps;
  * The enclosing menu: its `onSelect`, so a nested menu reports its selections to the root by default, and whether it
  * is a `Menu.Sub`, whose Content lines its first item up with the TriggerItem row.
  */
-const MenuContext = createContext<{ onSelect?: MenuRootProps['onSelect']; sub: boolean }>({ sub: false });
+type MenuContextValue = {
+  onSelect?: MenuRootProps['onSelect'];
+  sub: boolean;
+  /** Whether the menu was last opened at the pointer (ContextTrigger), where an arrow has no trigger to point at. */
+  atPointer: boolean;
+  setAtPointer?: (atPointer: boolean) => void;
+};
+
+const MenuContext = createContext<MenuContextValue>({ sub: false, atPointer: false });
 
 const MenuRootBase = ({
   lazyMount = true,
@@ -46,18 +55,21 @@ const MenuRootBase = ({
   onSelect,
   sub,
   ...props
-}: MenuRootProps & { sub: boolean }) => (
-  <MenuContext.Provider value={{ onSelect, sub }}>
-    <MenuPrimitive.Root
-      {...props}
-      onSelect={onSelect}
-      lazyMount={lazyMount}
-      unmountOnExit={unmountOnExit}
-      // Ark's 8px default reads as detached from the trigger.
-      positioning={popupPositioning(POPUP_GUTTER, positioning)}
-    />
-  </MenuContext.Provider>
-);
+}: MenuRootProps & { sub: boolean }) => {
+  const [atPointer, setAtPointer] = useState(false);
+  return (
+    <MenuContext.Provider value={{ onSelect, sub, atPointer, setAtPointer }}>
+      <MenuPrimitive.Root
+        {...props}
+        onSelect={onSelect}
+        lazyMount={lazyMount}
+        unmountOnExit={unmountOnExit}
+        // Ark's 8px default reads as detached from the trigger.
+        positioning={popupPositioning(POPUP_GUTTER, positioning)}
+      />
+    </MenuContext.Provider>
+  );
+};
 
 /**
  * Ark menu; content mounts on open and unmounts on close unless the caller opts out. With no Trigger (a virtual
@@ -74,9 +86,25 @@ MenuRoot.displayName = 'Next.Menu.Root';
 type MenuTriggerProps = MenuPrimitive.TriggerProps;
 
 /** Use `asChild` to open the menu from a `Next.Button`. */
-const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>((props, forwardedRef) => (
-  <MenuPrimitive.Trigger {...props} ref={forwardedRef} />
-));
+const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>(
+  ({ onPointerDown, onKeyDown, ...props }, forwardedRef) => {
+    const { setAtPointer } = useContext(MenuContext);
+    return (
+      <MenuPrimitive.Trigger
+        {...props}
+        onPointerDown={(event) => {
+          setAtPointer?.(false);
+          onPointerDown?.(event);
+        }}
+        onKeyDown={(event) => {
+          setAtPointer?.(false);
+          onKeyDown?.(event);
+        }}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 MenuTrigger.displayName = 'Next.Menu.Trigger';
 
@@ -87,9 +115,21 @@ MenuTrigger.displayName = 'Next.Menu.Trigger';
 type MenuContextTriggerProps = MenuPrimitive.ContextTriggerProps;
 
 /** Opens the menu at the pointer on right-click (or long-press); use `asChild` to make a region the target. */
-const MenuContextTrigger = forwardRef<HTMLButtonElement, MenuContextTriggerProps>((props, forwardedRef) => (
-  <MenuPrimitive.ContextTrigger {...props} ref={forwardedRef} />
-));
+const MenuContextTrigger = forwardRef<HTMLButtonElement, MenuContextTriggerProps>(
+  ({ onContextMenu, ...props }, forwardedRef) => {
+    const { setAtPointer } = useContext(MenuContext);
+    return (
+      <MenuPrimitive.ContextTrigger
+        {...props}
+        onContextMenu={(event) => {
+          setAtPointer?.(true);
+          onContextMenu?.(event);
+        }}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 MenuContextTrigger.displayName = 'Next.Menu.ContextTrigger';
 
@@ -100,7 +140,7 @@ MenuContextTrigger.displayName = 'Next.Menu.ContextTrigger';
 type MenuContentProps = ThemedClassName<MenuPrimitive.ContentProps> & {
   /** Overrides the size inherited from the trigger's nearest sized ancestor (Phase 4 decision 2); `md` without one. */
   size?: Size;
-  /** Point at the trigger with an arrow in the popup's surface colour, like Popover's; off by default for menus. */
+  /** Point at the trigger with an arrow in the popup's surface colour, like Popover's; on by default, off for submenus. */
   arrow?: boolean;
   /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
   container?: RefObject<HTMLElement | null>;
@@ -119,8 +159,10 @@ const MenuViewport = composable<HTMLDivElement, MenuPrimitive.ContentProps>((pro
  * Content is the same part inside a `Menu.Sub`.
  */
 const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
-  ({ classNames, size, arrow = false, container, children, ...props }, forwardedRef) => {
-    const { sub } = useContext(MenuContext);
+  ({ classNames, size, arrow: arrowProp, container, children, ...props }, forwardedRef) => {
+    const { sub, atPointer } = useContext(MenuContext);
+    // A submenu opens beside its row and a context menu at the pointer: neither has a trigger to point at.
+    const arrow = arrowProp ?? (!sub && !atPointer);
     const menu = useMenuContext();
     // A Sub's trigger is its item in the parent menu, so it inherits the parent popup's size.
     const popupSize = usePopupSize(

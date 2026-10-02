@@ -46,6 +46,9 @@
     padding-block-start: var(--nx-gap-size);
     overflow: hidden;
     border-radius: var(--radius-md, 0.375rem);
+    /* Set off from the page it covers: a hairline edge and a deep shadow, as the current dialog. */
+    border: 1px solid var(--color-separator);
+    box-shadow: var(--shadow-2xl, 0 25px 50px -12px rgb(0 0 0 / 0.5));
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
     /* The dialog is the pane (decision 5): its header, body and footer collapse at the same width. */
@@ -87,8 +90,10 @@
     min-height: 0;
   }
 
+  /* The actions sit as far from the bottom edge as from the sides. */
   .nx-dialog-footer {
     flex-shrink: 0;
     padding-inline: var(--nx-dialog-gutter);
+    padding-block-end: var(--nx-dialog-gutter);
   }
 }

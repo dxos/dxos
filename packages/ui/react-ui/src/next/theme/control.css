@@ -422,8 +422,8 @@
     margin-block-end: var(--spacing-trim-sm);
   }
   .nx-field[data-layout='row'] > .nx-field-helper {
-    font-size: var(--text-sm);
-    line-height: var(--text-sm--line-height);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
     color: var(--color-description);
     margin-block-end: var(--nx-gap-size);
   }
