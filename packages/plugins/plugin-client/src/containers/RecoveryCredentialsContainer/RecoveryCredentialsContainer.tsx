@@ -88,11 +88,9 @@ export const RecoveryCredentialsContainer = () => {
               </Form.Field>
             )}
             {createError && (
-              <Banner.Root valence='error'>
-                <Banner.Content>
-                  <Banner.Body>{createError}</Banner.Body>
-                </Banner.Content>
-              </Banner.Root>
+              <Next.Banner.Root valence='error'>
+                <Next.Banner.Body>{createError}</Next.Banner.Body>
+              </Next.Banner.Root>
             )}
             <Form.Field
               standalone
