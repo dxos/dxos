@@ -219,7 +219,7 @@ jobs:
             exit 1
           fi
 
-      # A channel with its own App ID has its profile in src-tauri/provisioning/; any other build embeds
+      # A channel with its own App ID has its profile in its own secret; any other build embeds
       # production's. The app is signed under whichever App ID the embedded profile grants, so the two
       # cannot disagree.
       - name: Install macOS Provisioning Profile
@@ -228,17 +228,19 @@ jobs:
         env:
           ENVIRONMENT: ${{ inputs.environment }}
           MACOS_PROVISION_PROFILE: ${{ secrets.MACOS_PROVISION_PROFILE }}
+          MACOS_PROVISION_PROFILE_DEV: ${{ secrets.MACOS_PROVISION_PROFILE_DEV }}
+          MACOS_PROVISION_PROFILE_PREVIEW: ${{ secrets.MACOS_PROVISION_PROFILE_PREVIEW }}
         run: |
-          channel_profile="provisioning/$ENVIRONMENT.provisionprofile"
-          if [ -f "$channel_profile" ]; then
-            cp "$channel_profile" embedded.provisionprofile
-          else
-            if [ -z "$MACOS_PROVISION_PROFILE" ]; then
-              echo "Error: MACOS_PROVISION_PROFILE secret is not set"
-              exit 1
-            fi
-            echo "$MACOS_PROVISION_PROFILE" | base64 --decode > embedded.provisionprofile
+          case "$ENVIRONMENT" in
+            dev) profile_secret=MACOS_PROVISION_PROFILE_DEV ;;
+            preview) profile_secret=MACOS_PROVISION_PROFILE_PREVIEW ;;
+            *) profile_secret=MACOS_PROVISION_PROFILE ;;
+          esac
+          if [ -z "${!profile_secret}" ]; then
+            echo "Error: $profile_secret secret is not set"
+            exit 1
           fi
+          echo "${!profile_secret}" | base64 --decode > embedded.provisionprofile
           if [ ! -s embedded.provisionprofile ]; then
             echo "Error: Provisioning profile is empty"
             exit 1
@@ -250,7 +252,7 @@ jobs:
           # the build so a missing channel profile fails in seconds; staging has no App ID of its own yet.
           bundle=$(jq -r .identifier tauri.conf.json)
           if [ "$ENVIRONMENT" != staging ] && [ "${app_id#*.}" != "$bundle" ]; then
-            echo "::error::$bundle would be signed as $app_id; add provisioning/$ENVIRONMENT.provisionprofile" && exit 1
+            echo "::error::$bundle would be signed as $app_id; check $profile_secret" && exit 1
           fi
 
       - name: Set environment variables from secrets and env files
@@ -371,8 +373,8 @@ jobs:
           done
 
       # macOS kills an app at launch when its signed application identifier is not the one its embedded
-      # profile grants, or when the profile does not list the certificate it was signed with. Committed
-      # channel profiles outlive the certificate, so rotating MACOS_CERTIFICATE means regenerating them.
+      # profile grants, or when the profile does not list the certificate it was signed with. The channel
+      # profiles outlive the certificate, so rotating MACOS_CERTIFICATE means regenerating them.
       - name: Verify app signature matches its provisioning profile
         if: matrix.os == 'depot-macos-latest'
         run: |

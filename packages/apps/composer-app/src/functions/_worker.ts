@@ -231,7 +231,7 @@ const WEBAUTHN_RELATED_ORIGINS = ['https://auth.dxos.network'];
 const BUNDLE_ID = 'org.dxos.composer';
 
 /**
- * Prerelease desktop channels signed under their own App ID (`src-tauri/provisioning/`). They share the
+ * Prerelease desktop channels signed under their own App ID (`MACOS_PROVISION_PROFILE_<CHANNEL>`). They share the
  * released app's passkeys but not its universal links, which stay with the released app.
  */
 const CHANNEL_BUNDLE_IDS = ['org.dxos.composer.dev', 'org.dxos.composer.preview'];
