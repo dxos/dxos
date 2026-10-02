@@ -37,7 +37,7 @@ export const HuePicker = ({ label, ...props }: ThemedClassName<HuePickerProps>) 
 /** Next icon sizes as the Tailwind steps the preview's square is drawn at. */
 const PREVIEW_SIZES: Record<Next.Size, 3 | 3.5 | 4 | 5 | 6> = { xs: 3, sm: 3.5, md: 4, lg: 5, xl: 6 };
 
-const HuePreview = ({ value, size: iconSize = 'lg' }: { value: string; size?: Next.Size }) => {
+const HuePreview = ({ value, size: iconSize = 'md' }: { value: string; size?: Next.Size }) => {
   const size = PREVIEW_SIZES[iconSize];
   return (
     <div className='flex justify-center items-center'>

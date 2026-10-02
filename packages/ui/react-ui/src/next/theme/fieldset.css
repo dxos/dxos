@@ -78,6 +78,12 @@
     line-height: var(--text-lg--line-height);
     color: var(--color-base-fg);
   }
+  /* The section's subtitle reads at the body size in the description colour, as a settings row's description does. */
+  .nx-fieldset-legend[data-variant='section'] + .nx-field-helper {
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    color: var(--color-description);
+  }
   .nx-fieldset[data-disabled] {
     opacity: 0.5;
   }

@@ -50,8 +50,9 @@
     white-space: nowrap;
     font-weight: 500;
   }
+  /* The title's icon takes the banner's text colour, so it reads as part of the title. */
   .nx-banner-title .nx-icon {
-    color: var(--dx-valence-text);
+    color: var(--nx-banner-fg);
   }
   /* The body's last line keeps a gap's distance from the banner's edge, as the title row's block gives its first. */
   .nx-banner-body {

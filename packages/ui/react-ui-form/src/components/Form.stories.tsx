@@ -8,6 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Next } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { createSelectField } from './fields/index.ts';
@@ -18,48 +19,49 @@ const fieldMap = { model: createSelectField({ options: ['opus', 'sonnet', 'haiku
 
 type StoryArgs = PaneArgs & { size?: Next.PanelRootProps['size'] };
 
-/** Same contract as the current Form: schema, values, onValuesChanged, onSave/onCancel, fieldMap, test ids. */
+/**
+ * Same contract as the current Form: schema, values, onValuesChanged, onSave/onCancel, fieldMap, test ids. The values
+ * show beside the form, as the current Form stories' `TestLayout` does.
+ */
 const DefaultStory = ({ size = 'md' }: StoryArgs) => {
   const [values, setValues] = useState<ScalarValues>(SCALAR_VALUES);
   const [saved, setSaved] = useState(false);
   return (
-    <Next.Panel.Root size={size}>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root>
-          <Next.ScrollArea.Viewport asChild>
-            <Next.Container>
-              <Form.Root
-                schema={ScalarSchema}
-                values={values}
-                fieldMap={fieldMap}
-                testId='scalars'
-                onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
-                onSave={() => setSaved(true)}
-                onCancel={() => setValues(SCALAR_VALUES)}
-              >
-                <Form.Content>
-                  <Form.Fields />
-                  <Form.ErrorText>{saved ? undefined : 'Not saved yet.'}</Form.ErrorText>
-                  <Form.Actions />
-                </Form.Content>
-              </Form.Root>
-            </Next.Container>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-      <Next.Panel.Footer>
-        <Next.Typography truncate data-testid='values'>
-          {JSON.stringify(values)}
-        </Next.Typography>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+    <div className='grid grid-cols-2 gap-4 h-full min-h-0'>
+      <Next.Panel.Root size={size} classNames='dx-card-surface rounded-sm overflow-hidden'>
+        <Next.Panel.Body asChild>
+          <Next.ScrollArea.Root>
+            <Next.ScrollArea.Viewport asChild>
+              <Next.Container>
+                <Form.Root
+                  schema={ScalarSchema}
+                  values={values}
+                  fieldMap={fieldMap}
+                  testId='scalars'
+                  onValuesChanged={(next) => setValues((previous) => ({ ...previous, ...next }))}
+                  onSave={() => setSaved(true)}
+                  onCancel={() => setValues(SCALAR_VALUES)}
+                >
+                  <Form.Content>
+                    <Form.Fields />
+                    <Form.ErrorText>{saved ? undefined : 'Not saved yet.'}</Form.ErrorText>
+                    <Form.Actions />
+                  </Form.Content>
+                </Form.Root>
+              </Next.Container>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
+      <JsonHighlighter data={values} testId='values' classNames='dx-card-surface rounded-sm text-sm min-h-0' />
+    </div>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-form/Form',
   render: DefaultStory,
-  decorators: [withTheme(), withNextPane({ height: '48rem' })],
+  decorators: [withTheme(), withNextPane({ width: '64rem', height: '48rem' })],
   parameters: { layout: 'fullscreen', translations: nextTranslations },
 } satisfies Meta<StoryArgs>;
 

@@ -3,12 +3,15 @@
 //
 
 import { Field as FieldPrimitive } from '@ark-ui/react/field';
-import React, { type InputHTMLAttributes, type ReactNode } from 'react';
+import React, { type InputHTMLAttributes, type ReactNode, useRef } from 'react';
+
+import { useComposedRefs } from '@dxos/react-hooks';
 
 import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { ControlFrame, type ControlFrameVariant } from '../ControlFrame/index.ts';
 import { useFieldsetDisabled } from '../Fieldset/index.ts';
+import { SystemButton } from '../SystemButton/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -21,6 +24,8 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
   'start'?: ReactNode;
   /** Trailing content inside the control row (an Icon, a unit, or an icon-only Button). */
   'end'?: ReactNode;
+  /** Trails the input with a copy button for its current value (e.g. a read-only id); replaces `end`. */
+  'copyable'?: boolean;
 };
 
 /**
@@ -30,9 +35,28 @@ export type InputProps = InputHTMLAttributes<HTMLInputElement> & {
  */
 export const Input = composable<HTMLInputElement, InputProps>(
   (
-    { type = 'text', variant = 'default', noAutoFill, start, end, disabled, onFocus, 'data-testid': testId, ...props },
+    {
+      type = 'text',
+      variant = 'default',
+      noAutoFill,
+      start,
+      end: endProp,
+      copyable,
+      disabled,
+      onFocus,
+      'data-testid': testId,
+      ...props
+    },
     forwardedRef,
   ) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const ref = useComposedRefs(forwardedRef, inputRef);
+    // Reads the element rather than `value`, so an uncontrolled input copies what it shows.
+    const end = copyable ? (
+      <SystemButton.Clipboard iconOnly variant='ghost' onCopy={() => inputRef.current?.value ?? ''} />
+    ) : (
+      endProp
+    );
     const fieldsetDisabled = useFieldsetDisabled(disabled);
     const toolbarItem = useToolbarItem(fieldsetDisabled);
     const adorned = start != null || end != null;
@@ -56,7 +80,7 @@ export const Input = composable<HTMLInputElement, InputProps>(
         data-part={adorned ? 'input' : 'root'}
         data-variant={adorned ? undefined : variant}
         className={adorned ? recipes.inputField() : className}
-        ref={forwardedRef}
+        ref={ref}
       />
     );
     if (!adorned) {

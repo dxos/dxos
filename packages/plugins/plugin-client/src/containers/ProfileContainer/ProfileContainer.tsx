@@ -175,16 +175,10 @@ export const ProfileContainer = () => {
           </Form.Field>
         );
       },
-      // TODO(wittjosiah): We need text input annotations for disabled and copyable.
       did: ({ label, getValue }) => {
         return (
           <Form.Field label={label} description={t('did.description')}>
-            <Next.Group classNames='w-full'>
-              {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
-                    stays inside the row at phone widths; a fixed `min-w-*` would push it past the panel edge. */}
-              <Next.Input value={getValue()} disabled classNames='w-full min-w-0' />
-              <Next.SystemButton.Clipboard iconOnly value={getValue() ?? ''} />
-            </Next.Group>
+            <Next.Input variant='mono' value={getValue() ?? ''} readOnly copyable />
           </Form.Field>
         );
       },

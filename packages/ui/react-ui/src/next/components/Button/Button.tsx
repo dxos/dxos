@@ -137,7 +137,8 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
         ref={forwardedRef}
       >
         {icon && <Icon icon={icon} spin={spin} size={iconSize} classNames={iconClassNames} />}
-        {!iconOnly && (children ?? label)}
+        {/* Icon-only children stand in for the icon (e.g. a swatch), so they keep the square's padding. */}
+        {iconOnly ? !icon && children : (children ?? label)}
         {iconEnd && <Icon icon={iconEnd} size={iconSize} />}
         {caretDown && <Icon icon='ph--caret-down--bold' />}
       </button>

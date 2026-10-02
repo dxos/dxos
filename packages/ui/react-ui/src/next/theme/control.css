@@ -339,9 +339,13 @@
     width: calc(var(--nx-control-icon) * 0.75);
     height: calc(var(--nx-control-icon) * 0.75);
   }
-  /* With no label the caret belongs to the icon, so it sits an inset from it rather than a gap. */
-  .nx-button[data-square][data-caret] > .nx-icon:last-child {
-    margin-inline-start: calc(var(--nx-control-inset) - var(--nx-gap-size));
+  /* With no label the icon keeps its square's padding and the caret takes a half-block cell beside it (a menu button). */
+  .nx-button[data-square][data-caret]:not([data-compact]) {
+    gap: 0;
+    padding-inline: calc((var(--nx-control-size) - var(--nx-control-icon)) / 2) 0;
+  }
+  .nx-button[data-square][data-caret]:not([data-compact]) > .nx-icon:last-child {
+    margin-inline: calc((var(--nx-half-block-size) - var(--nx-control-icon) * 0.75) / 2);
   }
   .nx-button:disabled {
     opacity: 0.5;

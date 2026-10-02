@@ -36,7 +36,8 @@ const DefaultStory = ({ size }: SizeArgs) => (
     <Next.Input variant='mono' defaultValue='sk-0001' aria-label='Key' data-testid={`mono-${size}`} />
     <Next.Input
       variant='mono'
-      end={<Next.Button icon='ph--copy--regular' label='Copy' iconOnly variant='ghost' />}
+      copyable
+      readOnly
       defaultValue='did:key:z6Mk'
       aria-label='Identity'
       data-testid={`mono-end-${size}`}

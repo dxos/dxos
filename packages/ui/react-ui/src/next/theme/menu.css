@@ -18,6 +18,18 @@
     margin-block-end: calc(-1 * var(--nx-control-inset));
   }
 
+  /* A palette: square cells, `columns` to a row; the frame shrinks to the grid rather than a menu's minimum width. */
+  .nx-menu:has([data-columns]) {
+    min-width: 0;
+  }
+  [data-scope='menu'][data-part='content'][data-columns] {
+    display: grid;
+  }
+  [data-columns] > .nx-menu-item {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
   .nx-menu-item {
     display: flex;
     align-items: center;

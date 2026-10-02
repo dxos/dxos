@@ -23,6 +23,8 @@ export type TreeNode<T extends { id: string } = any> = {
   item?: T;
   props: TreeItemDataProps;
   branch: boolean;
+  /** A node that can parent (`parentOf` is set) but has no children: its disclosure shows disabled. */
+  empty: boolean;
   open: boolean;
   current: boolean;
   /** A section header (`disposition: 'group'`): rendered as a row, skipped by the keyboard, never selected. */
@@ -94,6 +96,7 @@ export const createTreeWalkAtom = <T extends { id: string }>(
             item,
             props,
             branch: false,
+            empty: false,
             open: true,
             current: false,
             group: true,
@@ -122,6 +125,7 @@ export const createTreeWalkAtom = <T extends { id: string }>(
           item,
           props,
           branch,
+          empty: !branch && props.parentOf !== undefined,
           open,
           current: get(model.itemCurrent(path)),
           group: false,
@@ -159,6 +163,7 @@ export const createTreeWalkAtom = <T extends { id: string }>(
       depth: 0,
       props: { id: rootId ?? '', label: '' },
       branch: true,
+      empty: false,
       open: true,
       current: false,
       group: false,

@@ -30,7 +30,7 @@ type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string }>>;
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
 const StatCardRoot = ({ id, classNames, children }: StatCardRootProps) => (
-  <Next.Card.Root id={id} size='sm' classNames={classNames}>
+  <Next.Card.Root id={id} size='sm' grid classNames={classNames}>
     {children}
   </Next.Card.Root>
 );

@@ -36,7 +36,7 @@ export const PickerButton = ({
   onChange,
   onReset,
   rootVariant = 'button',
-  iconSize = 'lg',
+  iconSize,
 }: PickerButtonProps) => {
   const [value, setValue] = useControllableState<string>({
     prop: valueProp,
@@ -56,16 +56,18 @@ export const PickerButton = ({
         <Next.Tooltip.Trigger asChild content={label} side='bottom'>
           <Next.Button
             variant={rootVariant === 'toolbar-button' ? 'ghost' : 'default'}
+            iconOnly
+            showTooltip={false}
+            label={label}
             caretDown
-            classNames={['gap-2 py-1', classNames]}
+            classNames={classNames}
             disabled={disabled}
           >
-            <span className='sr-only'>{label}</span>
             {(value && <Component value={value} size={iconSize} />) || <Next.Icon icon={icon} size={iconSize} />}
           </Next.Button>
         </Next.Tooltip.Trigger>
       </Next.Menu.Trigger>
-      <Next.Menu.Content classNames='!w-min'>
+      <Next.Menu.Content columns={6}>
         {values.map((_value) => {
           return (
             <Next.Menu.CheckboxItem
@@ -73,7 +75,6 @@ export const PickerButton = ({
               item={{ value: _value, label: _value }}
               checked={_value === value}
               onCheckedChange={() => setValue(_value)}
-              classNames={'p-1 items-center justify-center aspect-square'}
             >
               <Component value={_value} size={iconSize} />
             </Next.Menu.CheckboxItem>
@@ -83,7 +84,6 @@ export const PickerButton = ({
           <Next.Menu.Item
             item={{ value: RESET, label: 'Reset' }}
             onClick={() => onReset()}
-            classNames={'p-1 items-center justify-center aspect-square'}
           >
             <Next.Icon icon='ph--x--regular' size={iconSize} />
           </Next.Menu.Item>

@@ -19,6 +19,7 @@ export type DebugSpaceObjectsPanelProps = AppSurface.SpaceArticleProps & {
 
 export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObjectsPanelProps) => {
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
+  const [filter, setFilter] = useState('');
   // TODO(burdon): Guard.
   const [selectedObject] = useQuery(
     space.db,
@@ -29,9 +30,14 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
     <Next.Panel.Root>
       <Next.Panel.Header>
         <Next.Toolbar.Root>
-          <Next.Field.Root>
-            <Next.Input disabled placeholder='Search...' />
-          </Next.Field.Root>
+          <Next.Input
+            placeholder='Search...'
+            aria-label='Search'
+            noAutoFill
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            end={<Next.Icon icon='ph--magnifying-glass--regular' />}
+          />
         </Next.Toolbar.Root>
       </Next.Panel.Header>
       <Next.Panel.Body asChild>
@@ -40,6 +46,7 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
             <Next.ScrollArea.Viewport>
               <ObjectsTree
                 db={space.db}
+                filter={filter}
                 onSelect={(entity) => setSelectedId(entity.id)}
                 onOpen={onOpen}
                 canOpen={canOpen}

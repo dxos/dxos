@@ -1184,7 +1184,8 @@ type TreeItemIndicatorProps = {
 };
 
 /**
- * The disclosure cell: half a block wide and one block tall, holding the caret-only branch trigger on a branch and nothing on a leaf, so labels
+ * The disclosure cell: half a block wide and one block tall, holding the caret-only branch trigger on a branch, a disabled caret on
+ * a childless branch and nothing on a leaf, so labels
  * align at every level.
  */
 const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
@@ -1197,6 +1198,11 @@ const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndica
             <Next.Icon icon={icon} />
           </TreeView.BranchIndicator>
         </TreeView.BranchTrigger>
+      )}
+      {node.empty && (
+        <span className='nx-tree-branch-trigger' data-disabled=''>
+          <Next.Icon icon={icon} />
+        </span>
       )}
     </Next.Block>
   );

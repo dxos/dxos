@@ -144,6 +144,8 @@ type MenuContentProps = ThemedClassName<MenuPrimitive.ContentProps> & {
   arrow?: boolean;
   /** Portals into this element instead of the body (e.g. a sized scope, AUDIT 2.2). */
   container?: RefObject<HTMLElement | null>;
+  /** Lays the items out as a grid of square cells, this many to a row (e.g. a palette of swatches). */
+  columns?: number;
 };
 
 /**
@@ -159,7 +161,7 @@ const MenuViewport = composable<HTMLDivElement, MenuPrimitive.ContentProps>((pro
  * Content is the same part inside a `Menu.Sub`.
  */
 const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
-  ({ classNames, size, arrow: arrowProp, container, children, ...props }, forwardedRef) => {
+  ({ classNames, size, arrow: arrowProp, container, columns, style, children, ...props }, forwardedRef) => {
     const { sub, atPointer } = useContext(MenuContext);
     // A submenu opens beside its row and a context menu at the pointer: neither has a trigger to point at.
     const arrow = arrowProp ?? (!sub && !atPointer);
@@ -185,7 +187,12 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
               )
             }
           >
-            <MenuViewport {...props} ref={forwardedRef}>
+            <MenuViewport
+              {...props}
+              data-columns={columns}
+              style={columns ? { ...style, gridTemplateColumns: `repeat(${columns}, var(--nx-block-size))` } : style}
+              ref={forwardedRef}
+            >
               {children}
             </MenuViewport>
           </PopupScroll>

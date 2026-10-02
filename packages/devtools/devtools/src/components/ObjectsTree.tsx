@@ -29,6 +29,8 @@ export interface ObjectsTreeProps {
   onSelect?: (entity: Entity.Snapshot) => void;
   onOpen?: (object: Obj.Unknown) => void;
   canOpen?: (entity: Entity.Snapshot) => boolean;
+  /** Narrows the top-level rows to those whose label contains this text (case-insensitive). */
+  filter?: string;
 }
 
 /**
@@ -36,7 +38,7 @@ export interface ObjectsTreeProps {
  * reachable from it, walked one level ahead of what is open so an unbounded graph is never queried
  * whole. Renders through `Tree`, so disclosure, roving focus and the APG keymap are the machine's.
  */
-export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTreeProps) => {
+export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen, filter }: ObjectsTreeProps) => {
   const [model, setModel] = useState(() => new ObjectsTreeModel(db, root ?? null, onSelect ?? (() => {})));
   useEffect(() => {
     setModel((prev) =>
@@ -47,6 +49,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
   }, [db, root]);
 
   const registry = useContext(RegistryContext);
+  useEffect(() => registry.set(model.filter, filter ?? ''), [registry, model, filter]);
   const contextValue = useMemo(() => ({ model, onOpen, canOpen }), [model, onOpen, canOpen]);
 
   // The walk is gated by id while rows are addressed by path, so a toggle writes both.
@@ -236,6 +239,8 @@ class ObjectsTreeModel {
   #root: Entity.Unknown | null;
   #atoms = Atom.family((anchor: string | null) => this.#makeNodeAtom(anchor));
   #expandedState = Atom.family((_key: string) => Atom.make(false));
+  /** Top-level label filter, set by the component's `filter` prop. */
+  readonly filter = Atom.make('');
 
   constructor(database: Database.Database, root: Entity.Unknown | null, onSelect: (entity: Entity.Snapshot) => void) {
     this.#database = database;
@@ -296,7 +301,10 @@ class ObjectsTreeModel {
         return [];
       }
       const children = get(this.#atoms(anchor === ROOT_ANCHOR ? null : anchor));
-      return children.map((child) => child.id);
+      const filter = anchor === ROOT_ANCHOR ? get(this.filter).trim().toLowerCase() : '';
+      return children
+        .filter((child) => !filter || child.label.toLowerCase().includes(filter))
+        .map((child) => child.id);
     }),
   );
 
