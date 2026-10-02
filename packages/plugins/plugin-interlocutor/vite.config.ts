@@ -17,6 +17,7 @@ export default defineConfig({
     skills: 'src/skills/index.ts',
     translations: 'src/translations.ts',
     DiscordBinding: 'src/types/DiscordBinding.ts',
+    DiscordOperation: 'src/types/DiscordOperation.ts',
     Goal: 'src/types/Goal.ts',
     InterlocutorOperation: 'src/types/InterlocutorOperation.ts',
     Memory: 'src/types/Memory.ts',

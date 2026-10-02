@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { InterlocutorOperation, MemoryOperation } from '#types';
+import { DiscordOperation, InterlocutorOperation, MemoryOperation } from '#types';
 
 export const InterlocutorOperationHandlerSet = OperationHandlerSet.lazy([
   InterlocutorOperation.CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent.ts'))),
@@ -17,4 +17,11 @@ export const InterlocutorOperationHandlerSet = OperationHandlerSet.lazy([
   MemoryOperation.ProposeGoal.pipe(Operation.lazyHandler(() => import('./propose-goal.ts'))),
   MemoryOperation.ConfirmGoal.pipe(Operation.lazyHandler(() => import('./confirm-goal.ts'))),
   MemoryOperation.UpdateProfile.pipe(Operation.lazyHandler(() => import('./update-profile.ts'))),
+]);
+
+/** Calls EDGE as the user, so only hosts that provide `EdgeHttpClientService` (the app) contribute it. */
+export const DiscordOperationHandlerSet = OperationHandlerSet.lazy([
+  DiscordOperation.StartBot.pipe(Operation.lazyHandler(() => import('./start-discord-bot.ts'))),
+  DiscordOperation.StopBot.pipe(Operation.lazyHandler(() => import('./stop-discord-bot.ts'))),
+  DiscordOperation.GetBotStatus.pipe(Operation.lazyHandler(() => import('./get-discord-bot-status.ts'))),
 ]);

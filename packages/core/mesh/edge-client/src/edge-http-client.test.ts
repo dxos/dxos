@@ -61,6 +61,38 @@ describe('EdgeHttpClient.aiRequest', () => {
   });
 });
 
+describe('EdgeHttpClient.request', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test('sends method and JSON body to the path and unwraps the envelope', async ({ expect }) => {
+    const fetchMock = vi.fn(async (input: any, _init?: RequestInit) => {
+      const url = String(input instanceof URL ? input : (input.url ?? input));
+      if (url.endsWith('/auth')) {
+        return new Response(null, { status: 200 });
+      }
+      return new Response(JSON.stringify({ success: true, data: { running: true } }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com');
+    const data = await client.request(Context.default(), '/compute/discord/bots/app-1', {
+      method: 'PUT',
+      body: { spaceId: 'space' },
+    });
+
+    expect(data).toEqual({ running: true });
+    const targetCall = fetchMock.mock.calls.find((call) => !String(call[0]).endsWith('/auth'));
+    expect(String(targetCall?.[0])).toBe('https://edge.example.com/compute/discord/bots/app-1');
+    expect(targetCall?.[1]?.method).toBe('PUT');
+    expect(targetCall?.[1]?.body).toBe(JSON.stringify({ spaceId: 'space' }));
+  });
+});
+
 describe('EdgeHttpClient auth refresh', () => {
   afterEach(() => {
     vi.unstubAllGlobals();

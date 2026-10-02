@@ -60,6 +60,13 @@ import { HttpConfig, withLogging, withRetryConfig } from './http-client.ts';
 
 export type { EdgeHttpCallArgs, RetryConfig } from './base-http-client.ts';
 
+/** Arguments for {@link EdgeHttpClient.request}; authenticates unless `auth` is `false`. */
+export type EdgeRequestArgs = EdgeHttpCallArgs & {
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  /** JSON-serializable request body. */
+  body?: unknown;
+};
+
 /**
  * HTTP wire shape returned by `/queue/.../query`.
  */
@@ -202,6 +209,20 @@ export class EdgeHttpClient extends BaseHttpClient {
 
   public async getStatus(ctx: Context, args?: EdgeHttpCallArgs): Promise<EdgeStatus> {
     return this._call(ctx, new URL('/status', this.baseUrl), { ...args, method: 'GET', auth: true });
+  }
+
+  //
+  // Generic
+  //
+
+  /**
+   * Authenticated JSON call to an EDGE route that has no dedicated method here (e.g. a service a
+   * plugin owns end to end). Resolves to the response envelope's unwrapped `data`, left `unknown`
+   * so the caller decodes it against its own schema.
+   */
+  public async request(ctx: Context, path: string, args: EdgeRequestArgs): Promise<unknown> {
+    const { method, body, ...rest } = args;
+    return this._call<unknown>(ctx, new URL(path, this.baseUrl), { auth: true, ...rest, method, body });
   }
 
   //

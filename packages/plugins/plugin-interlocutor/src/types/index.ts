@@ -3,6 +3,7 @@
 //
 
 export * as DiscordBinding from './DiscordBinding.ts';
+export * as DiscordOperation from './DiscordOperation.ts';
 export * as Goal from './Goal.ts';
 export * as InterlocutorOperation from './InterlocutorOperation.ts';
 export * as Memory from './Memory.ts';
