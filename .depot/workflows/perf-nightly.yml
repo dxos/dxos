@@ -159,6 +159,22 @@ jobs:
       # not filtered — every row carries `ciBranch`, so a branch run is stored and filtered at read
       # time, and refusing to record it made the numbers from a dispatch unreachable.
 
+      # One score per night, so it runs once after every iteration has written its batch — unlike the
+      # stage rows it cannot be published per iteration, since the night's value is the median across
+      # them. A run that died partway still scores the iterations it finished; a stage that failed in
+      # all of them scores the floor. Never fails the job: a low score is a measurement, not a verdict.
+      - name: Score the flows
+        if: always()
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          if ! ls test-results/perf/projects-tasks-measure-*.events.ndjson >/dev/null 2>&1; then
+            echo "::warning::No measure batches were written; nothing to score."
+            exit 0
+          fi
+          node packages/apps/composer-app/scripts/score-perf.ts score --publish --summary "$GITHUB_STEP_SUMMARY" \
+            || echo "::warning::Scoring failed; the stage rows are unaffected."
+
       # The artifacts — a `.cpuprofile` per stage per realm, one screenshot per stage, and the
       # screencast's first/last frames in `diagnose` — are what a regression is read with. Not
       # committed anywhere; a run comes to ~19MB.
@@ -174,4 +190,76 @@ jobs:
         if: always() && steps.flows.outcome != 'success'
         run: |
           echo "::error::A flow did not complete; see the summary and the perf-nightly artifact."
+          exit 1
+
+  # The ECHO benchmarks (`packages/core/echo/echo-client-e2e/src/*.bench.ts`), scored against
+  # `src/bench-score/budgets.json`. A job of its own on its own runner of the same fixed size, so the
+  # benches and the browser flows never share cores: each measures the other when they do.
+  echo-bench:
+    runs-on: depot-ubuntu-24.04-8
+    container:
+      image: ghcr.io/dxos/gh-actions:24.11.1
+      credentials:
+        username: dxos-bot
+        password: ${{ secrets.GITHUB_TOKEN }}
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+
+      # Same guard as the flows job: only committed code is measured.
+      - name: Refuse a patched checkout
+        env:
+          EXPECTED_SHA: ${{ github.sha }}
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::The checkout has uncommitted changes; this workflow only runs committed code."
+            git status --short
+            exit 1
+          fi
+          if [ "$(git rev-parse HEAD)" != "$EXPECTED_SHA" ]; then
+            echo "::error::HEAD $(git rev-parse HEAD) is not the event's commit $EXPECTED_SHA."
+            exit 1
+          fi
+
+      - name: Setup
+        uses: ./.depot/actions/setup
+
+      - name: Run the benchmarks
+        id: bench
+        continue-on-error: true
+        run: |
+          rm -rf test-results/echo-bench
+          moon run echo-client-e2e:bench
+
+      - name: Score the benchmarks
+        if: always()
+        env:
+          DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
+        run: |
+          if [ ! -f test-results/echo-bench/results.json ]; then
+            echo "::warning::The bench run wrote no results; nothing to score."
+            exit 0
+          fi
+          node packages/core/echo/echo-client-e2e/src/bench-score/cli.ts score \
+            --results test-results/echo-bench/results.json --publish --summary "$GITHUB_STEP_SUMMARY"
+
+      # The raw results, so a budget can be recalibrated from the runner it is scored on:
+      # `node src/bench-score/cli.ts calibrate --results <downloaded results.json>`.
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: echo-bench
+          path: test-results/echo-bench
+          retention-days: 30
+
+      - name: Fail on an incomplete run
+        if: always() && steps.bench.outcome != 'success'
+        run: |
+          echo "::error::The benchmark run did not complete; see the log and the echo-bench artifact."
           exit 1

@@ -1,0 +1,479 @@
+{
+  "echo > echo benchmarks (feed objects vs automerge objects) > automerge object > insert": {
+    "target": 58.3,
+    "limit": 87.4,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > automerge object > insert (batched x20, single flush)": {
+    "target": 330,
+    "limit": 495,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > automerge object > select (point, by id)": {
+    "target": 3.6,
+    "limit": 5.4,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > automerge object > select (filtered scan)": {
+    "target": 19.7,
+    "limit": 29.5,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > automerge object > update (point, by id)": {
+    "target": 90.1,
+    "limit": 135,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > automerge object > delete (point, by id)": {
+    "target": 112,
+    "limit": 168,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > feed object > insert": {
+    "target": 81.6,
+    "limit": 122,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > feed object > insert (batched x20, single flush)": {
+    "target": 152,
+    "limit": 237,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > feed object > select (point, by id)": {
+    "target": 3.24,
+    "limit": 4.86,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > feed object > select (filtered scan)": {
+    "target": 9.41,
+    "limit": 14.1,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > feed object > update (point, by id)": {
+    "target": 66.6,
+    "limit": 99.9,
+    "unit": "ms"
+  },
+  "echo > echo benchmarks (feed objects vs automerge objects) > feed object > delete (point, by id)": {
+    "target": 63.4,
+    "limit": 95.1,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > plain object > read x1": {
+    "target": 0.0000638,
+    "limit": 0.0000957,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) > plain object > read x10": {
+    "target": 0.0000913,
+    "limit": 0.000137,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) > plain object > write x1": {
+    "target": 0.0000649,
+    "limit": 0.0000974,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) > plain object > write x10": {
+    "target": 0.0000836,
+    "limit": 0.000125,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) > plain object > make x1": {
+    "target": 0.0000682,
+    "limit": 0.000102,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) > plain object > make x10": {
+    "target": 0.000132,
+    "limit": 0.000198,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) > echo object (unpersisted) > read x1": {
+    "target": 0.0000825,
+    "limit": 0.000124,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (unpersisted) > read x10": {
+    "target": 0.000224,
+    "limit": 0.000336,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (unpersisted) > write x1": {
+    "target": 0.00617,
+    "limit": 0.00925,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (unpersisted) > write x10": {
+    "target": 0.0672,
+    "limit": 0.102,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (unpersisted) > write x10 (batched in one Obj.update)": {
+    "target": 0.0446,
+    "limit": 0.0669,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (unpersisted) > make x1": {
+    "target": 0.0482,
+    "limit": 0.0723,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (unpersisted) > make x10": {
+    "target": 0.539,
+    "limit": 0.808,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (automerge) > read x1": {
+    "target": 0.000099,
+    "limit": 0.000148,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (automerge) > read x10": {
+    "target": 0.000305,
+    "limit": 0.000458,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (automerge) > write x1": {
+    "target": 0.355,
+    "limit": 0.532,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (automerge) > write x10": {
+    "target": 3.44,
+    "limit": 5.16,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (automerge) > write x10 (batched in one Obj.update)": {
+    "target": 2.7,
+    "limit": 4.05,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (automerge) > make x1 (Obj.make + db.add)": {
+    "target": 4.16,
+    "limit": 6.24,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (automerge) > make x10 (Obj.make + db.add)": {
+    "target": 40.9,
+    "limit": 61.3,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (feed) > read x1": {
+    "target": 0.0000946,
+    "limit": 0.000142,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (feed) > read x10": {
+    "target": 0.000296,
+    "limit": 0.000444,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (feed) > write x1": {
+    "target": 0.00647,
+    "limit": 0.00971,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (feed) > write x10": {
+    "target": 0.0779,
+    "limit": 0.117,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (feed) > write x10 (batched in one Obj.update)": {
+    "target": 0.0476,
+    "limit": 0.0714,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (feed) > make x1 (Obj.make + db.add to feed)": {
+    "target": 0.0907,
+    "limit": 0.136,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) > echo object (feed) > make x10 (Obj.make + db.add to feed)": {
+    "target": 1.12,
+    "limit": 1.68,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > plain object > read x1": {
+    "target": 0.0000737,
+    "limit": 0.000111,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > plain object > read x10": {
+    "target": 0.000144,
+    "limit": 0.000216,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > plain object > write x1": {
+    "target": 0.0000649,
+    "limit": 0.0000974,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > plain object > write x10": {
+    "target": 0.000088,
+    "limit": 0.000132,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > plain object > make x1": {
+    "target": 0.000799,
+    "limit": 0.0012,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > plain object > make x10": {
+    "target": 0.00925,
+    "limit": 0.0139,
+    "unit": "ms",
+    "weight": 0.1
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > read x1": {
+    "target": 0.0000957,
+    "limit": 0.000144,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > read x10": {
+    "target": 0.000327,
+    "limit": 0.00049,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > write x1": {
+    "target": 0.00634,
+    "limit": 0.00951,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > write x10": {
+    "target": 0.0665,
+    "limit": 0.0998,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > write x10 (batched in one Obj.update)": {
+    "target": 0.0467,
+    "limit": 0.0701,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > make x1": {
+    "target": 0.614,
+    "limit": 0.921,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > make x10": {
+    "target": 6.28,
+    "limit": 9.42,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > read x1": {
+    "target": 0.000106,
+    "limit": 0.000159,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > read x10": {
+    "target": 0.000335,
+    "limit": 0.000503,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > write x1": {
+    "target": 0.402,
+    "limit": 0.603,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > write x10": {
+    "target": 4.26,
+    "limit": 6.39,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > write x10 (batched in one Obj.update)": {
+    "target": 4.1,
+    "limit": 6.15,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > make x1 (Obj.make + db.add)": {
+    "target": 19.9,
+    "limit": 29.8,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > make x10 (Obj.make + db.add)": {
+    "target": 344,
+    "limit": 516,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (feed) > read x1": {
+    "target": 0.0000979,
+    "limit": 0.000147,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (feed) > read x10": {
+    "target": 0.000319,
+    "limit": 0.000478,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (feed) > write x1": {
+    "target": 0.00646,
+    "limit": 0.00969,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (feed) > write x10": {
+    "target": 0.0734,
+    "limit": 0.11,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (feed) > write x10 (batched in one Obj.update)": {
+    "target": 0.0488,
+    "limit": 0.0732,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (feed) > make x1 (Obj.make + db.add to feed)": {
+    "target": 0.953,
+    "limit": 1.43,
+    "unit": "ms"
+  },
+  "property-access > property access (plain vs echo) — wide object, 250 fields > echo object (feed) > make x10 (Obj.make + db.add to feed)": {
+    "target": 9.6,
+    "limit": 14.4,
+    "unit": "ms"
+  },
+  "query-executor > query executor (N=2000) > run: type": {
+    "target": 165,
+    "limit": 248,
+    "unit": "ms"
+  },
+  "query-executor > query executor (N=2000) > run: type + property": {
+    "target": 43.2,
+    "limit": 64.8,
+    "unit": "ms"
+  },
+  "query-executor > query executor (N=2000) > run: reference traversal": {
+    "target": 37.3,
+    "limit": 55.9,
+    "unit": "ms"
+  },
+  "query-executor > query executor (N=2000) > run: order + limit": {
+    "target": 14.6,
+    "limit": 21.9,
+    "unit": "ms"
+  },
+  "query-executor > query executor (N=2000) > run: type + string property": {
+    "target": 40.2,
+    "limit": 60.3,
+    "unit": "ms"
+  },
+  "query-executor > query executor (N=2000) > run: union of two types": {
+    "target": 135,
+    "limit": 203,
+    "unit": "ms"
+  },
+  "query-executor > query executor (N=2000) > reactive first result (type + property)": {
+    "target": 43.5,
+    "limit": 65.3,
+    "unit": "ms"
+  },
+  "query-executor > query executor (N=2000) > cold: reload + open + run type + property": {
+    "target": 2200,
+    "limit": 3300,
+    "unit": "ms"
+  },
+  "query-materialization > query materialization > narrow object (2 fields) × 1000 > reload + open": {
+    "target": 137,
+    "limit": 206,
+    "unit": "ms"
+  },
+  "query-materialization > query materialization > narrow object (2 fields) × 1000 > reload + open + query": {
+    "target": 6140,
+    "limit": 14900,
+    "unit": "ms"
+  },
+  "query-materialization > query materialization > narrow object (2 fields) × 1000 > reload + open + query + read one field per result": {
+    "target": 5040,
+    "limit": 8000,
+    "unit": "ms"
+  },
+  "query-materialization > query materialization > narrow object (2 fields) × 1000 > query (warm)": {
+    "target": 73.2,
+    "limit": 110,
+    "unit": "ms"
+  },
+  "query-materialization > query materialization > narrow object (2 fields) × 1000 > query + read one field per result (warm)": {
+    "target": 68.2,
+    "limit": 102,
+    "unit": "ms"
+  },
+  "query-materialization > query materialization > wide object (250 fields) × 100 > reload + open": {
+    "target": 42.1,
+    "limit": 72.5,
+    "unit": "ms"
+  },
+  "query-materialization > query materialization > wide object (250 fields) × 100 > reload + open + query": {
+    "target": 2820,
+    "limit": 5320,
+    "unit": "ms"
+  },
+  "query-materialization > query materialization > wide object (250 fields) × 100 > reload + open + query + read one field per result": {
+    "target": 2930,
+    "limit": 4400,
+    "unit": "ms"
+  },
+  "query-materialization > query materialization > wide object (250 fields) × 100 > query (warm)": {
+    "target": 11.2,
+    "limit": 16.8,
+    "unit": "ms"
+  },
+  "query-materialization > query materialization > wide object (250 fields) × 100 > query + read one field per result (warm)": {
+    "target": 11.4,
+    "limit": 17.1,
+    "unit": "ms"
+  },
+  "sqlite > sqlite benchmarks (raw) > insert": {
+    "target": 0.204,
+    "limit": 0.306,
+    "unit": "ms"
+  },
+  "sqlite > sqlite benchmarks (raw) > select (point, by primary key)": {
+    "target": 0.0155,
+    "limit": 0.0232,
+    "unit": "ms"
+  },
+  "sqlite > sqlite benchmarks (raw) > select (filtered range scan)": {
+    "target": 0.141,
+    "limit": 0.211,
+    "unit": "ms"
+  },
+  "sqlite > sqlite benchmarks (raw) > update (point, by primary key)": {
+    "target": 0.169,
+    "limit": 0.254,
+    "unit": "ms"
+  },
+  "sqlite > sqlite benchmarks (raw) > delete (point, by primary key)": {
+    "target": 0.166,
+    "limit": 0.249,
+    "unit": "ms"
+  },
+  "parent > parent edges > Obj.getParent x10 (sub-task → task)": {
+    "target": 0.0146,
+    "limit": 0.0219,
+    "unit": "ms"
+  },
+  "parent > parent edges > Obj.getParent x10 (root task → set)": {
+    "target": 0.013,
+    "limit": 0.0195,
+    "unit": "ms"
+  },
+  "parent > parent edges > Task.orderTree (200 tasks)": {
+    "target": 2.6,
+    "limit": 3.9,
+    "unit": "ms"
+  },
+  "parent > parent edges > Task.childIndex walk (200 tasks)": {
+    "target": 1.29,
+    "limit": 1.94,
+    "unit": "ms"
+  }
+}
