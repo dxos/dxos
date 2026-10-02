@@ -2,20 +2,36 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Schema from 'effect/Schema';
+import { type Measurement } from './score.ts';
 
-import { type Measurement } from '@dxos/perf-harness/score';
+type Properties = Record<string, string | number | boolean>;
 
 /**
  * One line of a `*.events.ndjson` batch the perf spec writes per iteration: only `measure` rows of
  * stages that completed, with the flat scalar properties `toPosthogEvent` emits (not yet `ci`-prefixed).
  */
-export const StageEvent = Schema.Struct({
-  properties: Schema.Record(Schema.String, Schema.Union([Schema.String, Schema.Number, Schema.Boolean])),
-});
-export type StageEvent = Schema.Schema.Type<typeof StageEvent>;
+export type StageEvent = { properties: Properties };
 
-type Properties = StageEvent['properties'];
+const isScalar = (value: unknown): value is string | number | boolean =>
+  typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean';
+
+/** Validates one parsed batch line; a malformed batch throws, since scoring it would lose the night silently. */
+export const parseStageEvent = (json: unknown): StageEvent => {
+  const properties: unknown = typeof json === 'object' && json !== null ? Reflect.get(json, 'properties') : undefined;
+  if (typeof properties !== 'object' || properties === null || Array.isArray(properties)) {
+    throw new Error('stage event has no properties object');
+  }
+  const entries = Object.entries(properties);
+  const invalid = entries.find(([, value]) => !isScalar(value));
+  if (invalid) {
+    throw new Error(`stage event property "${invalid[0]}" is not a scalar`);
+  }
+  return {
+    properties: Object.fromEntries(
+      entries.filter((entry): entry is [string, string | number | boolean] => isScalar(entry[1])),
+    ),
+  };
+};
 
 const numberOf = (properties: Properties, key: string): number | undefined => {
   const value = properties[key];

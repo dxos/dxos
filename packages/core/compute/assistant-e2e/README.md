@@ -73,3 +73,14 @@ responsiveness metrics under `test-results/perf/`.
 ```bash
 moon run assistant-e2e:e2e-perf
 ```
+
+`DX_PERF_SCALES` picks the spaces (`blank`, `busy`; both by default) and `DX_PERF_ITERATIONS` repeats
+the flow. With `DX_POSTHOG_API_KEY` set, each iteration publishes its rows as `ci.perf-stage`.
+
+The `chat-bench` job in `.depot/workflows/perf-nightly.yml` runs the blank space nightly and scores
+the median of its iterations against `src/playwright/perf/budgets.json`, publishing `ci.perf-score`
+with `ciSuite = 'chat'`:
+
+```bash
+node scripts/score-perf.ts score [--dir test-results/perf] [--publish]
+```

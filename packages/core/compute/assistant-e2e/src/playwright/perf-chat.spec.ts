@@ -14,10 +14,12 @@ import {
   attachAll,
   installProbes,
   launchInstrumentedBrowser,
+  publishPosthogBatch,
   readProcessFootprint,
   startProfiling,
   sumAppFootprint,
   trackNetwork,
+  writePosthogBatch,
   writeRunReport,
 } from '@dxos/perf-harness';
 
@@ -34,6 +36,14 @@ const FIXTURES = [
   { scale: 'blank', storyId: 'stories-stories-assistant-chat--perf-scripted' },
   { scale: 'busy', storyId: 'stories-stories-assistant-chat--perf-scripted-busy' },
 ] as const;
+
+type Fixture = (typeof FIXTURES)[number];
+
+/** Which fixtures run (`DX_PERF_SCALES`, comma-separated); the nightly runs `blank` alone. */
+const SCALES = new Set((process.env.DX_PERF_SCALES ?? FIXTURES.map(({ scale }) => scale).join(',')).split(','));
+
+/** Repeats of the whole flow per fixture (`DX_PERF_ITERATIONS`); the nightly scores their median. */
+const ITERATIONS = Math.max(1, Number.parseInt(process.env.DX_PERF_ITERATIONS ?? '1', 10) || 1);
 
 const storyUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
 
@@ -60,7 +70,7 @@ const chatPrompt = (page: Page): Locator =>
  * Seeds the space, then reloads and measures the reopened profile: a busy space is one somebody
  * returns to, and seeding inside the measured boot would charge the writes to it.
  */
-const runFlow = async ({ scale, storyId }: (typeof FIXTURES)[number]) => {
+const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
   const runId = Date.now().toString(36);
   const artifactDir = path.join(WORKSPACE_ROOT, 'test-results', 'perf', 'artifacts', `${FLOW}-${scale}-${runId}`);
 
@@ -84,7 +94,7 @@ const runFlow = async ({ scale, storyId }: (typeof FIXTURES)[number]) => {
       flow: FLOW,
       mode: 'measure',
       scale,
-      iteration: 0,
+      iteration,
       page,
       browserCdp,
       debugPort,
@@ -170,6 +180,13 @@ const runFlow = async ({ scale, storyId }: (typeof FIXTURES)[number]) => {
     appendRows(WORKSPACE_ROOT, `${FLOW}-measure`, rows);
     const report = writeRunReport(WORKSPACE_ROOT, `${FLOW}-measure-${scale}-${runId}`, rows);
     log.info('perf report', { report, artifactDir });
+    // Published per iteration, as `perf-projects.spec.ts` does, so a job that dies partway keeps the iterations it finished.
+    const batch = writePosthogBatch(WORKSPACE_ROOT, `${FLOW}-measure-${scale}-${iteration}`, rows);
+    if (publishPosthogBatch(WORKSPACE_ROOT, batch)) {
+      log.info('published perf batch', { batch, iteration });
+    } else {
+      log.warn('perf batch NOT published', { batch, iteration, keyPresent: !!process.env.DX_POSTHOG_API_KEY });
+    }
     for (const row of rows) {
       log.info('stage', summarize(row));
     }
@@ -183,11 +200,13 @@ const runFlow = async ({ scale, storyId }: (typeof FIXTURES)[number]) => {
 };
 
 test.describe('Assistant chat performance', () => {
-  for (const fixture of FIXTURES) {
-    test(fixture.scale, async () => {
-      test.setTimeout(SEED_BUDGET_MS + 600_000);
-      await runFlow(fixture);
-    });
+  for (const fixture of FIXTURES.filter(({ scale }) => SCALES.has(scale))) {
+    for (let iteration = 0; iteration < ITERATIONS; ++iteration) {
+      test(ITERATIONS > 1 ? `${fixture.scale} ${iteration + 1}/${ITERATIONS}` : fixture.scale, async () => {
+        test.setTimeout(SEED_BUDGET_MS + 600_000);
+        await runFlow(fixture, iteration);
+      });
+    }
   }
 });
 

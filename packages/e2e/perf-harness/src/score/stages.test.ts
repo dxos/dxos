@@ -2,13 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { describe, test } from 'vitest';
 
-import { parseBudgets } from '@dxos/perf-harness/score';
-
-import { RUN_GROUP, STAGE_WALL_GROUP, type StageEvent, groupOfId, toMeasurements } from './score.ts';
+import { RUN_GROUP, STAGE_WALL_GROUP, type StageEvent, parseStageEvent, toMeasurements } from './stages.ts';
 
 const row = (iteration: number, stage: string, properties: Record<string, number> = {}): StageEvent => ({
   properties: { stage, iteration, wallMs: 100, cpuMsTotal: 200, ...properties },
@@ -42,9 +38,11 @@ describe('perf score measurements', () => {
     expect(measurements).toContainEqual({ id: 'run > peak app footprint', group: RUN_GROUP, value: 50 });
   });
 
-  test('every committed budget is a valid range in a known group', ({ expect }) => {
-    const budgets = parseBudgets(JSON.parse(readFileSync(path.join(import.meta.dirname, 'budgets.json'), 'utf8')));
-    const groups = new Set(Object.keys(budgets).map(groupOfId));
-    expect([...groups].sort()).toEqual(['run', 'stage CPU', 'stage wall time']);
+  test('rejects a batch line that is not flat scalar properties', ({ expect }) => {
+    expect(parseStageEvent({ properties: { stage: 'boot', wallMs: 1 } })).toEqual({
+      properties: { stage: 'boot', wallMs: 1 },
+    });
+    expect(() => parseStageEvent({})).toThrow();
+    expect(() => parseStageEvent({ properties: { nested: { wallMs: 1 } } })).toThrow();
   });
 });
