@@ -76,7 +76,7 @@ const toSections = (items: MenuButtonItem[]): Section[] => {
 
 export type MenuButtonProps = Omit<ButtonProps, 'onSelect'> & {
   items: MenuButtonItem[];
-  /** The menu's size; the trigger row's size by default. */
+  /** The menu's size; `md` by default. */
   menuSize?: Size;
 };
 

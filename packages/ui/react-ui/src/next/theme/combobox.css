@@ -31,6 +31,10 @@
     padding-block: var(--nx-control-inset);
     gap: var(--nx-control-inset) var(--nx-gap-size);
   }
+  /* Text in the row (a placeholder) is one tag tall, not a block, so an empty control is as tall as an Input. */
+  .nx-combobox-control > .nx-typography {
+    padding-block: 0;
+  }
   .nx-combobox-control[data-wrap] > .nx-combobox-trigger {
     height: calc(var(--nx-control-size) - 2 * var(--nx-control-inset));
     margin-inline-start: auto;

@@ -99,7 +99,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /**
- * The icon-only button is named by its label and opens a menu below it at the trigger row's size. Each heading names
+ * The icon-only button is named by its label and opens an `md` menu below it. Each heading names
  * its run of options as a radio group whose checked option follows `selected`; choosing one calls its `onSelect` and
  * closes the menu; the checkbox reports `onCheckedChange`; separators split the runs. The story ends open.
  */
@@ -151,8 +151,8 @@ export const Test: Story = {
     await waitFor(() => expect(state).toHaveTextContent('hold · USB headset · true'));
     await waitFor(() => expect(body.queryByRole('menu')).toBeNull());
 
-    // The menu takes its trigger row's size.
+    // The menu is `md` whatever its trigger row's size, so menus read at one density.
     await userEvent.click(byTestId(canvasElement, 'options-sm'));
-    await expectPopupSize(await body.findByRole('menu'), 'sm');
+    await expectPopupSize(await body.findByRole('menu'), 'md');
   },
 };

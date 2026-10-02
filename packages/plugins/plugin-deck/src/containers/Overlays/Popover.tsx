@@ -128,7 +128,7 @@ export const PopoverContent = () => {
     <Next.Popover.Content
       classNames={[
         roundedClassNames,
-        !isComponentPopover && 'p-0',
+        (!isComponentPopover || isRename) && 'p-0',
         // A rename popover holds an object's properties form, which a popover's grid body would not grow to fit.
         isRename && 'w-[22rem]',
         !isRename && [

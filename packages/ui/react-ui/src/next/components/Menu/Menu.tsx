@@ -138,7 +138,7 @@ MenuContextTrigger.displayName = 'Next.Menu.ContextTrigger';
 //
 
 type MenuContentProps = ThemedClassName<MenuPrimitive.ContentProps> & {
-  /** Overrides the size inherited from the trigger's nearest sized ancestor (Phase 4 decision 2); `md` without one. */
+  /** The menu's size; `md` by default (a submenu inherits its parent's). */
   size?: Size;
   /** Point at the trigger with an arrow in the popup's surface colour, like Popover's; on by default, off for submenus. */
   arrow?: boolean;
@@ -166,9 +166,10 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
     // A submenu opens beside its row and a context menu at the pointer: neither has a trigger to point at.
     const arrow = arrowProp ?? (!sub && !atPointer);
     const menu = useMenuContext();
-    // A Sub's trigger is its item in the parent menu, so it inherits the parent popup's size.
+    // A menu reads at one density wherever it opens (a navtree row or a plank's larger header), so a top-level menu is
+    // `md` unless sized; a Sub's trigger is its item in the parent menu, so it inherits the parent popup's size.
     const popupSize = usePopupSize(
-      size,
+      size ?? (sub ? undefined : 'md'),
       menu.open,
       [menu.getTriggerProps().id, menu.getContextTriggerProps().id],
       'md',

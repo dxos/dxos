@@ -94,7 +94,11 @@
   :is(.nx-card-body, .nx-card-section) > * {
     grid-column: content;
   }
-  :is(.nx-card, .nx-card-body, .nx-card-section) > :is(.nx-card-header, .nx-card-body, .nx-card-section, .nx-card-row) {
+  /* Also through a plugin surface (`<dx-surface>`, box-less), e.g. the Body a `CardContent` surface renders. */
+  :is(.nx-card, .nx-card-body, .nx-card-section) > :is(.nx-card-header, .nx-card-body, .nx-card-section, .nx-card-row),
+  :is(.nx-card, .nx-card-body, .nx-card-section)
+    > dx-surface
+    > :is(.nx-card-header, .nx-card-body, .nx-card-section, .nx-card-row) {
     grid-column: full;
   }
 

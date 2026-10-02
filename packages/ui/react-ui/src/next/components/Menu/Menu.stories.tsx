@@ -267,12 +267,12 @@ export const Test: Story = {
       await waitFor(() => expect(newMenu && highlighted(newMenu)).toBe('Diagram'));
       await userEvent.keyboard('{ArrowRight}');
       const diagramMenu = await beside('Diagram', 'Flowchart');
-      // Every level takes the File trigger's row size: a Sub's trigger is its item in the parent popup.
+      // Every level is `md` whatever the trigger row's size: a menu has one density, and a Sub inherits its parent's.
       for (const level of [fileMenu, newMenu, diagramMenu]) {
         if (!level) {
           throw new Error('missing menu level');
         }
-        await expectPopupSize(level, size);
+        await expectPopupSize(level, 'md');
       }
       await waitFor(() => expect(diagramMenu && highlighted(diagramMenu)).toBe('Flowchart'));
       await userEvent.keyboard('{Enter}');

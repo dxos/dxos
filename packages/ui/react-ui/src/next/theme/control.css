@@ -420,6 +420,10 @@
     line-height: var(--text-lg--line-height);
     color: var(--color-base-fg);
   }
+  /* A standalone title is text, not a label; it drops Typography's block padding so both kinds sit alike. */
+  .nx-field[data-layout='row'] > .nx-field-header > .nx-typography {
+    padding-block: 0;
+  }
   /* A control (also one under a box-less Select or Combobox root) tops its line rather than centring on a taller description. */
   .nx-field[data-layout='row'] > .nx-control,
   .nx-field[data-layout='row'] > :is(.nx-select, .nx-combobox) > .nx-control {

@@ -43,8 +43,7 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
   return (
     <Next.Card.Body>
       {snippet && (
-        // The container the snippet's cap is measured against, so it scales with the card.
-        <Next.Card.Section classNames='dx-container-type-inline-size'>
+        <Next.Card.Section>
           {/* The clipped snippet dissolves into whatever the card sits on: a mask on the content,
               not a colour painted over it, since the card surface differs per host (grid, popover,
               board) and a fade to the wrong surface reads as a grey band across the last line. */}
@@ -54,8 +53,10 @@ export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
             <MarkdownEditorProvider key={snippet} id={subject.id} viewMode='readonly' extensions={extensions}>
               {(editorRootProps) => (
                 <Editor.Root {...editorRootProps}>
+                  {/* The editor is the container the snippet's cap is measured against, so it scales with the card; not the
+                      Section, whose inline-size containment would stop it being a subgrid of the card's tracks. */}
                   <MarkdownEditor.Content
-                    classNames='bg-transparent'
+                    classNames='bg-transparent dx-container-type-inline-size'
                     initialValue={snippet}
                     slots={compactSlots}
                     compact
