@@ -98,10 +98,15 @@ export const loadInstructions = (
 export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
   Effect.gen(function* () {
     const children = yield* Database.query(Query.select(Filter.id(agent.id)).children()).run;
-    return children
-      .filter(Obj.instanceOf(Chat.Chat))
-      .sort((left, right) => left.id.localeCompare(right.id))
-      .at(-1);
+    return (
+      children
+        .filter(Obj.instanceOf(Chat.Chat))
+        // Chats bridged from an external conversation (a Discord thread) carry its foreign key; they are
+        // the agent's too, but never its own primary chat.
+        .filter((chat) => Obj.getMeta(chat).keys.length === 0)
+        .sort((left, right) => left.id.localeCompare(right.id))
+        .at(-1)
+    );
   }).pipe(Effect.orDie);
 
 /**

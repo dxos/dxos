@@ -25,7 +25,7 @@ import {
 } from '../constants.ts';
 import { discordErrorStatus, formatDiscordSyncFailure, isDiscordErrorResponse } from '../errors.ts';
 import { DiscordSyncError } from '../operations/errors.ts';
-import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken } from '../services/index.ts';
+import { makeDiscordLayerFromToken, makeDiscordUserLayerFromToken, resolveDiscordToken } from '../services/index.ts';
 
 /**
  * Manual-credential form for the Discord Bot connector.
@@ -120,10 +120,11 @@ const makeOnTokenCreated =
       if (accessToken.account) {
         return;
       }
+      const token = yield* resolveDiscordToken(accessToken);
       const self = yield* Effect.gen(function* () {
         const rest = yield* DiscordREST;
         return yield* rest.getMyUser();
-      }).pipe(Effect.provide(makeLayer(accessToken.token)));
+      }).pipe(Effect.provide(makeLayer(token)));
       Obj.update(accessToken, (accessToken) => {
         accessToken.account = self.global_name && self.global_name.length > 0 ? self.global_name : self.username;
       });
@@ -138,11 +139,12 @@ const userOnTokenCreated = makeOnTokenCreated(makeDiscordUserLayerFromToken);
  * connection UI can offer to reauthenticate.
  */
 const userTestConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
-  Effect.gen(function* () {
-    const rest = yield* DiscordREST;
-    yield* rest.getMyUser();
-  }).pipe(
-    Effect.provide(makeDiscordUserLayerFromToken(accessToken.token)),
+  Effect.flatMap(resolveDiscordToken(accessToken), (token) =>
+    Effect.gen(function* () {
+      const rest = yield* DiscordREST;
+      yield* rest.getMyUser();
+    }).pipe(Effect.provide(makeDiscordUserLayerFromToken(token))),
+  ).pipe(
     Effect.asVoid,
     Effect.mapError(
       () =>
