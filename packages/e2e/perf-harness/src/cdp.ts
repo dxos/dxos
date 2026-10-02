@@ -78,12 +78,31 @@ export class Cdp {
     });
   }
 
-  /** Send and swallow — for domains a given target type does not implement. */
-  async trySend<T = any>(method: string, params: Record<string, unknown> = {}): Promise<T | undefined> {
+  /**
+   * Send and swallow — for domains a given target type does not implement.
+   *
+   * `timeoutMs` also gives up on a command the target accepts but never answers (a shared worker
+   * leaves `HeapProfiler.collectGarbage` pending forever), resolving `undefined` as a failure does.
+   */
+  async trySend<T = any>(
+    method: string,
+    params: Record<string, unknown> = {},
+    { timeoutMs }: { timeoutMs?: number } = {},
+  ): Promise<T | undefined> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      return await this.send<T>(method, params);
+      const sent = this.send<T>(method, params);
+      if (timeoutMs === undefined) {
+        return await sent;
+      }
+      const expired = new Promise<undefined>((resolve) => {
+        timer = setTimeout(() => resolve(undefined), timeoutMs);
+      });
+      return await Promise.race([sent, expired]);
     } catch {
       return undefined;
+    } finally {
+      clearTimeout(timer);
     }
   }
 
