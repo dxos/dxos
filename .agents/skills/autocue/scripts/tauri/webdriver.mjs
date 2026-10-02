@@ -21,12 +21,12 @@ export class WebDriverError extends Error {
  * @param {object} capabilities `alwaysMatch` capabilities of the new session.
  */
 export const createSession = async (server, capabilities) => {
-  const call = async (method, path, body) => {
+  const call = async (method, path, body, signal) => {
     const response = await fetch(
       `${server}${path}`,
       body === undefined
-        ? { method }
-        : { method, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) },
+        ? { method, signal }
+        : { method, signal, headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) },
     );
     const text = await response.text();
     let payload;
@@ -62,7 +62,8 @@ export const createSession = async (server, capabilities) => {
     url: () => session('GET', '/url'),
     screenshot: () => session('GET', '/screenshot'),
     /** A screenshot outside the command queue, for a recorder that must not wait behind a long script. */
-    frame: () => call('GET', `${base}/screenshot`),
+    // Bounded, so a webview that stops answering cannot hold the recorder's shutdown.
+    frame: () => call('GET', `${base}/screenshot`, undefined, AbortSignal.timeout(5_000)),
     setTimeouts: (timeouts) => session('POST', '/timeouts', timeouts),
     windowRect: () => session('GET', '/window/rect'),
     setWindowRect: (rect) => session('POST', '/window/rect', rect),

@@ -128,9 +128,11 @@ const launchEmbedded = async ({ app, width, height, theme, port, log, fresh, onE
     }
   }
   const server = `http://127.0.0.1:${port}`;
+  // Bounded: a listener that accepts the connection but never answers would otherwise stall the launch.
+  const probe = () => fetch(`${server}/status`, { signal: AbortSignal.timeout(2_000) });
   // Another app's server on the port would take the session, and drive that app instead.
   if (
-    await fetch(`${server}/status`).then(
+    await probe().then(
       () => true,
       () => false,
     )
@@ -191,7 +193,7 @@ const launchEmbedded = async ({ app, width, height, theme, port, log, fresh, onE
       if (exited) {
         throw new Error(`${exited} before its WebDriver server was ready${log ? `; see ${log}` : ''}`);
       }
-      const status = await fetch(`${server}/status`)
+      const status = await probe()
         .then((response) => response.json())
         .catch(() => undefined);
       if (status?.value?.ready) {

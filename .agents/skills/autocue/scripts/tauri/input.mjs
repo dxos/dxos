@@ -40,6 +40,8 @@ export const installInput = (version) => {
     // A canceled `pointerdown` suppresses the compatibility mouse events of that press, as in a browser.
     mouseSuppressed: false,
     captured: null,
+    // A key whose keydown was canceled has no default on release either (Space on a button).
+    canceled: new Set(),
     modifiers: { shiftKey: false, ctrlKey: false, altKey: false, metaKey: false },
   };
 
@@ -432,14 +434,18 @@ export const installInput = (version) => {
     }
     const target = focused();
     if (keyboard(target, 'keydown', info)) {
+      state.canceled.delete(info.key);
       keyDefault(info, target);
+    } else {
+      state.canceled.add(info.key);
     }
   };
 
   const keyUp = (name) => {
     const info = describe(name);
     const target = focused();
-    const proceed = keyboard(target, 'keyup', info);
+    const proceed = keyboard(target, 'keyup', info) && !state.canceled.has(info.key);
+    state.canceled.delete(info.key);
     if (MODIFIER[name]) {
       state.modifiers[MODIFIER[name]] = false;
     }

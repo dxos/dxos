@@ -308,7 +308,7 @@ Restart the driver after editing `scripts/tauri/*`: the adapter loads once. Flow
 
 macOS has no WebDriver for WKWebView, so the app serves one itself. A build with the `webdriver` cargo feature
 embeds `tauri-plugin-wdio-webdriver`, which listens on loopback at `TAURI_WEBDRIVER_PORT` (the driver passes
-`--driver-port`, 4444). Release builds never enable the feature.
+`--driver-port`, 4444). Shipped release builds never enable the feature.
 
 ```bash
 export DX_TAURI=true DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true   # plus DX_EDGE_BASE_URL for EDGE preview
