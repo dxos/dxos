@@ -771,6 +771,7 @@ patchedDependencies:
   '@vitest/browser@4.1.10': patches/@vitest__browser@4.1.10.patch
   '@zag-js/presence@1.43.3': patches/@zag-js__presence@1.43.3.patch
   dfx@1.0.15: patches/dfx@1.0.15.patch
+  effect@4.0.0: patches/effect@4.0.0.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch

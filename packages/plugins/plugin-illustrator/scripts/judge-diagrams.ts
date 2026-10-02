@@ -5,24 +5,20 @@
 //
 // Grades `.mmd` diagrams on one 0–1 scale: the layout objective's constraints and cost terms, plus the
 // architecture rules (`Architecture.RULES`) judged by System One in one batched decision call per
-// diagram. Needs `TYPESAFE_API_KEY`; without it the architecture rows report an error and the rest
-// still print.
+// diagram, by Jev (`TYPESAFE_API_KEY`) or, with `--judge clef|clef-flash`, Clef on Workers AI
+// (`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN`); without credentials the architecture rows report an
+// error and the rest still print.
 // Flags: `--layout` adds the drawn page (`View.ascii` + `View.rows`) to the judge's input and grades the
-// `Aesthetics` rules from it, `--no-title` drops
+// `Aesthetics` rules from it, `--image` shows Clef the rendered PNG instead, `--no-title` drops
 // the caption so only the diagram is judged, `--runs N` averages the architecture scores over N calls, and
 // `--json out.json` writes the scores, and `--layering down` restricts the layerings the engine chooses among.
 // Run: `moon run plugin-illustrator:judge-diagrams -- /abs/path/x.mmd …` (vite-node; bun cannot load elkjs).
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/http/FetchHttpClient';
-import * as Layer from 'effect/Layer';
-import * as Redacted from 'effect/Redacted';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 
-import { AiModelResolver, AiService } from '@dxos/ai';
-import { TypeSafeResolver } from '@dxos/ai/resolvers';
 import {
   Aesthetics,
   Architecture,
@@ -36,7 +32,8 @@ import {
 } from '@dxos/diagram';
 import { EffectEx } from '@dxos/effect';
 
-const MODEL = 'ai.typesafe.model.jev.latest';
+import { IMAGE_NOTE, decisionModel, isJudge, seesImages } from './judges.ts';
+import { toPngs, toSvg } from './render.tsx';
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
@@ -48,23 +45,19 @@ const titleOf = (source: string) =>
     .find((line) => line.trim().startsWith('%%') && !line.includes('%% ref '))
     ?.replace(/^\s*%%\s*/, '');
 
-const decisionModel = AiService.decisionModel(MODEL).pipe(
-  Layer.provide(AiModelResolver.buildAiService),
-  Layer.provide(
-    TypeSafeResolver.make({
-      apiKey: Effect.sync(() => Redacted.make(process.env.TYPESAFE_API_KEY ?? '')),
-    }),
-  ),
-  Layer.provide(FetchHttpClient.layer),
-);
-
 const argument = (flag: string) => {
   const index = process.argv.indexOf(flag);
   return index > 0 ? process.argv[index + 1] : undefined;
 };
 
+const judge = argument('--judge') ?? 'jev';
+if (!isJudge(judge)) {
+  throw new Error(`Unknown judge ${judge}: expected jev, clef or clef-flash.`);
+}
+
 const OPTIONS = {
   layout: process.argv.includes('--layout'),
+  image: process.argv.includes('--image'),
   title: !process.argv.includes('--no-title'),
   runs: Math.max(1, Number(argument('--runs') ?? 1)),
   json: argument('--json'),
@@ -95,9 +88,18 @@ const judgeFile = (path: string) =>
         MermaidEngine.compile(source, OPTIONS.layering ? { layering: OPTIONS.layering } : {}),
       ),
     );
-    const layout = OPTIONS.layout ? `${View.ascii(objects)}\n\n${View.rows(objects)}` : undefined;
+    if (OPTIONS.image && !seesImages(judge)) {
+      return yield* Effect.die(new Error(`${judge} reads no images; pass --judge clef or clef-flash with --image.`));
+    }
+    const layout = OPTIONS.image
+      ? IMAGE_NOTE
+      : OPTIONS.layout
+        ? `${View.ascii(objects)}\n\n${View.rows(objects)}`
+        : undefined;
+    const images = OPTIONS.image ? yield* Effect.promise(() => toPngs([toSvg(objects)])) : undefined;
     const subject = {
       objects,
+      images,
       report: Diagnostics.analyze(objects),
       content: Architecture.contentOf(graph, { title: OPTIONS.title ? titleOf(source) : undefined, layout }),
     };
@@ -105,7 +107,12 @@ const judgeFile = (path: string) =>
       [
         Score.evaluate(Score.fromObjective(Objective.DEFAULT), subject),
         ...Array.from({ length: OPTIONS.runs }, () =>
-          Score.evaluate(OPTIONS.layout ? [Architecture.judge(), Aesthetics.judge()] : [Architecture.judge()], subject),
+          Score.evaluate(
+            layout
+              ? [Architecture.judge(), Aesthetics.judge(OPTIONS.image ? Aesthetics.IMAGE_RULES : undefined)]
+              : [Architecture.judge()],
+            subject,
+          ).pipe(Effect.provide(decisionModel(judge))),
         ),
       ],
       { concurrency: 'unbounded' },
@@ -141,4 +148,4 @@ const program = Effect.gen(function* () {
   }
 });
 
-void EffectEx.runPromise(program.pipe(Effect.provide(decisionModel)));
+void EffectEx.runPromise(program);
