@@ -12,9 +12,8 @@
  *
  * - BYTES catches leaks. A boot-reachable module importing a barrel instead of a subpath pulls
  *   its package in wholesale; the classes we have actually hit are 200-550 KB each (the
- *   HyperFormula engine at 548 KB, config yaml at 210 KB). The margin was originally sized under
- *   the smallest of them so a single leak would trip this; after the 2026-08-04 re-baseline it no
- *   longer is — see the NOTE on MAX_PRELOAD_BYTES for what that gave up and what wins it back.
+ *   HyperFormula engine at 548 KB, config yaml at 210 KB). The ceiling keeps about 200 KB of
+ *   headroom, under the smallest of them, so a single leak trips this.
  *
  * - COUNT catches the chunk partition collapsing. Boot chunks are built by a cycle-safe
  *   topological partition (see `bootChunkingPlugin` in vite.config.ts) that took preload
@@ -28,77 +27,27 @@
  * emits no `useFocusRing`), so presence there is not evidence that code ships. Attributing
  * bytes through the sourcemap mappings is the way to do that, and it needs real tooling.
  *
- * Raise a budget only for growth you have looked at and accepted — that is the review point
- * this check exists to create.
+ * A failure here is the review point this check exists to create; see MAX_PRELOAD_BYTES before
+ * touching either budget.
  */
 
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-/** Entry + modulepreload links. 20 today; sized to survive a partition reshuffle, not to track it. */
+/** Entry + modulepreload links. 21 today; sized to survive a partition reshuffle, not to track it. */
 const MAX_PRELOAD_ENTRIES = 25;
 
 /**
- * Total on-disk size of those chunks. 3.79 MB today.
+ * Total on-disk size of those chunks.
  *
- * Re-baselined 2026-08-13 (was 6.00 MB) after two independent cuts: the Effect 3 -> 4 migration
- * (5.73 -> 4.97 MB) and the `./plugin` -> `XPlugin` namespace split, which evicted the operation
- * handler sets five plugins re-exported from their boot-loaded registration entrypoint
- * (4.97 -> 4.05 MB). That put the ceiling at 4.25 MB against a 4.05 MB graph.
+ * Do not raise this to get a build passing. Every user pays for these bytes before the app starts,
+ * so moving the ceiling is a team decision, not a fix. An agent that hits this limit must stop and
+ * hand it to the developer; the developer should raise it with the team before editing this line,
+ * which is code-owned for that reason.
  *
- * Re-baselined 2026-08-26 (was 4.25 MB). `main` had spent the whole 200 KB margin and crossed the
- * line unaided: measured at 4,457,401 bytes against the 4,456,448-byte ceiling — 953 bytes over —
- * while the branch that raised this contributed 124 of the 1,077 it was over by. What is being
- * accepted is ~400 KB accumulated across many changes, not one leak.
- *
- * The ~200 KB margin is deliberately at the low end of the 200-550 KB leak classes above, which
- * preserves the property the 6.00 MB ceiling had given up: a single leak of any known class trips
- * this. Expect it to catch accepted growth too — that is the review point, not a false positive.
- *
- * Re-baselined 2026-08-31 (was 4.45 MB) after `@fluentui/react-tabster` was replaced by
- * `useFocusGroup` in `@dxos/react-ui`, which evicted `tabster` (59,820 bytes), `keyborg` (6,298)
- * and the fluentui wrapper (2,138) from the eager graph — 68,256 bytes attributed through the boot
- * chunks' sourcemaps (`.agents/projects/ark/TASKS.md` Phase 5). Measured at 4,360,490 bytes; the
- * ceiling is set to keep the same ~200 KB margin rather than to bank the whole win, since a budget
- * left where it was would silently absorb it.
- *
- * Re-baselined 2026-09-05 (was 4.35 MB) at Phase 3 of the Radix → Ark migration
- * (`packages/ui/react-ui/docs/MIGRATION.md`), which put Tooltip, Popover and Menu on Zag machines.
- * Measured at 4,565,469 bytes, 4,164 over the ceiling. Attributed through the boot chunks'
- * sourcemaps, the Zag floating stack now in the eager graph is ~78 KB: `menu` 25,704, `focus-trap`
- * 12,810, `tooltip` 9,740, `popover` 7,734, `popper` 6,911, `dismissable` 5,562, `presence` 3,681,
- * `interact-outside` 3,187, `aria-hidden` 1,895, `remove-scroll` 1,143 — which is the whole delta
- * from the Phase 2 measurement (4.28 MB). The Radix floating stack it replaces (`react-popper`
- * 3,915, `-dismissable-layer` 3,312, `-focus-scope` 3,113, `-presence` 1,931, `react-remove-scroll`
- * 5,506, `aria-hidden` 1,466) is still in the graph because `react-select`, `react-dialog` and
- * `react-toast` import it; Phase 4 evicts those, and this ceiling should come back down then. The
- * ~200 KB margin is kept. Phase 4a (Dialog, Main, Select on Ark) measured 4,547,849 — 17,620 back —
- * with `react-toast` still holding the Radix layer. Phase 4b (Toast) measured 4,546,844 with no
- * `@radix-ui` bytes left in the graph: the Zag machines are the new floor, ~186 KB above the
- * 2026-08-31 figure, so the ceiling stays where the Phase 3 re-baseline put it.
- *
- * Re-baselined 2026-10-02 (was 4.60 MB, a same-day stopgap over 4.55 MB). `main` crossed 4.55 MB at
- * 4,771,466 bytes, 446 over, on 735 bytes of accepted growth from the observability metric batching
- * (#13595). Attributed through the boot chunks' sourcemaps, the real leak was older:
- * `@dxos/index-core`'s migration modules imported `SqlMigrations` from the `@dxos/sql-sqlite`
- * barrel, whose `OpfsWorker` re-export put wa-sqlite in the eager graph via echo-client's query
- * planner. Moving every migration module to the `@dxos/sql-sqlite/SqlMigrations` subpath evicted
- * `@dxos/wa-sqlite` (81,894 bytes), the `sql-sqlite` dist (16,461) and the effect
- * `SynchronizedRef`/`ScopedRef` modules only it used (2,576). Measured at 4,670,093 bytes. The
- * ceiling banks half the win: the remaining ~48 KB is under the ~98 KB that leak cost, so a
- * regression of it trips this.
- *
- * Re-baselined 2026-10-02 (was 4.50 MB) after two cuts that leave every module where its importers
- * need it and only stop code that never runs at boot from being preloaded. The `react` chunk group
- * matched every react-dom file in the graph, and the import map's wrappers put react-dom's
- * `server`, `static`, `profiling` and `test-utils` subpaths there, so ~580 KB that never runs rode
- * the eager `react` chunk; the group now matches what the page renders with. The boot partition's
- * new `exclude` list keeps Zag/Ark components no startup path executes (accordion, carousel,
- * floating-panel, hover-card, qr-code, slider, toc) out of the boot chunks: ~114 KB. Measured at
- * 3,976,474 bytes; the ceiling keeps the ~200 KB margin.
- *
- * This constant is code-owned: raising it needs a strong, written motivation for the growth being
- * accepted, not a passing build.
+ * Growth is not forbidden, but it has to earn its place: show that the new code runs before the
+ * app is ready, and that it cannot load lazily, be reached through a subpath instead of a
+ * barrel, or go on the boot partition's `exclude` list in vite.config.ts.
  */
 const MAX_PRELOAD_BYTES = 4 * 1024 * 1024;
 
@@ -164,8 +113,11 @@ if (overBytes) {
   console.error(
     `\nERROR: ${asMb(bytes)} MB of eager boot graph exceeds ${asMb(MAX_PRELOAD_BYTES)} MB.\n` +
       'Something boot-reachable statically imports code that should be lazy. Usual causes: a new\n' +
-      'import reaching a package barrel instead of a light subpath (see the dxos-subpath-imports\n' +
-      'lint), or a plugin stub pulling its implementation instead of staying a `Plugin.lazy` stub.',
+      'import reaching a package barrel instead of a subpath (see the dxos-subpath-imports\n' +
+      'lint), a plugin stub pulling its implementation instead of staying a `Plugin.lazy` stub, or\n' +
+      "code boot never runs that belongs on the boot partition's `exclude` list in vite.config.ts.\n" +
+      'Do not raise MAX_PRELOAD_BYTES to make this pass: stop and take it to the developer, who\n' +
+      'should discuss it with the team first.',
   );
 }
 process.exit(1);
