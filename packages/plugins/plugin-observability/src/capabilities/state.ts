@@ -15,7 +15,7 @@ import { ObservabilityCapabilities } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ namespace }: { namespace: string }) {
     const stateAtom = createKvsStore({
-      key: meta.profile.key,
+      key: `${meta.profile.key}.state`,
       schema: ObservabilityCapabilities.StateSchema,
       defaultValue: () => ({}),
     });
