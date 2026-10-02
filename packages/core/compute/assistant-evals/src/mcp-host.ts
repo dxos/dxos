@@ -15,7 +15,7 @@ import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { type Registry } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
-import type { SpaceId } from '@dxos/keys';
+import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
 import * as LocalUpload from '@dxos/mcp-server/LocalUpload';
 
@@ -64,6 +64,8 @@ export type StartMcpHostOptions = {
   readonly uploads?: LocalUpload.Stage;
   /** Secret the skill tokens derive from; omitted, a random one for this host's lifetime. */
   readonly skillSecret?: string;
+  /** Serves `runScript` too, evaluated in process, as `dx mcp serve --code-mode` does. */
+  readonly codeMode?: boolean;
 };
 
 /**
@@ -90,6 +92,7 @@ export const startMcpHost = ({
   registry,
   uploads,
   skillSecret = crypto.randomUUID(),
+  codeMode = false,
 }: StartMcpHostOptions): Effect.Effect<McpHost, never, Scope.Scope> =>
   Effect.gen(function* () {
     // Host-wide rather than per `connect`, which runs per request: a token one request hands out must
@@ -98,7 +101,7 @@ export const startMcpHost = ({
     const connect = async () => {
       const server = new Server({ name: McpServer.identity.name, version: VERSION }, { capabilities: { tools: {} } });
       server.setRequestHandler(ListToolsRequestSchema, async () => ({
-        tools: uploads ? [...TOOLS, CREATE_UPLOAD_TOOL] : TOOLS,
+        tools: [...TOOLS, ...(uploads ? [CREATE_UPLOAD_TOOL] : []), ...(codeMode ? [RUN_SCRIPT_TOOL] : [])],
       }));
       server.setRequestHandler(CallToolRequestSchema, async (request) =>
         dispatch(
@@ -108,6 +111,7 @@ export const startMcpHost = ({
           spaceIds,
           context,
           uploads,
+          codeMode,
           request.params.name,
           request.params.arguments ?? {},
         ),
@@ -210,6 +214,28 @@ const CREATE_UPLOAD_TOOL = {
   },
 };
 
+/** `runScript`, written out for the same reason as {@link TOOLS}; offered only in code mode. */
+const RUN_SCRIPT_TOOL = {
+  name: McpServer.RunScript.name,
+  description: McpServer.RunScript.description,
+  inputSchema: {
+    type: 'object' as const,
+    properties: {
+      code: {
+        type: 'string',
+        description: 'The body of an Effect.gen generator, without the wrapper. Print anything you need to see.',
+      },
+      spaceId: { type: 'string', description: 'The space invoke uses when a call names none.' },
+      skillTokens: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'skillTokens loadSkill returned earlier, for the skills whose operations the script invokes.',
+      },
+    },
+    required: ['code'],
+  },
+};
+
 type ToolResponse = {
   content: { type: 'text'; text: string }[];
   structuredContent?: Record<string, unknown>;
@@ -224,6 +250,7 @@ const dispatch = async (
   spaceIds: readonly SpaceId[] | undefined,
   context: () => Context.Context<Operation.Service>,
   uploads: LocalUpload.Stage | undefined,
+  codeMode: boolean,
   name: string,
   args: Record<string, unknown>,
 ): Promise<ToolResponse> => {
@@ -256,6 +283,25 @@ const dispatch = async (
         // once the eval's harness has booted.
         const host = yield* McpServer.host({ skills, spaceIds });
         return yield* McpServer.invoke(registry, host, args as Parameters<typeof McpServer.invoke>[2], gate);
+      }
+      case RUN_SCRIPT_TOOL.name: {
+        if (!codeMode || typeof args.code !== 'string') {
+          return yield* Effect.fail(McpServer.failure('invalid_request', `${name} takes a code string.`));
+        }
+        const host = yield* McpServer.host({ skills, spaceIds });
+        return yield* McpServer.runScript(
+          registry,
+          host,
+          gate,
+          {
+            code: args.code,
+            spaceId: SpaceId.isValid(args.spaceId) ? args.spaceId : undefined,
+            skillTokens: Array.isArray(args.skillTokens)
+              ? args.skillTokens.filter((token): token is string => typeof token === 'string')
+              : [],
+          },
+          { sandbox: McpServer.inProcessScriptSandbox },
+        );
       }
       default:
         return yield* Effect.fail(McpServer.failure('invalid_request', `Unknown tool: ${name}`));
