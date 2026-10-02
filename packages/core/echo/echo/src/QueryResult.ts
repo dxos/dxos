@@ -85,14 +85,16 @@ export interface QueryResult<T> {
   /**
    * Returns all known results.
    *
-   * @performance Async; executes the full query (index plus working set) on every call, O(n) in results, not cached.
+   * @performance Async; executes the full query (index plus working set) on every call, not cached; O(n) in the data
+   * the executor examines, not in the result count.
    */
   run(opts?: RunOptions): Promise<T[]>;
 
   /**
    * Returns all known results along with their match metadata.
    *
-   * @performance Async; executes the full query (index plus working set) on every call, O(n) in results, not cached.
+   * @performance Async; executes the full query (index plus working set) on every call, not cached; O(n) in the data
+   * the executor examines, not in the result count.
    */
   runEntries(opts?: RunOptions): Promise<Entry<T>[]>;
 
@@ -113,14 +115,16 @@ export interface QueryResult<T> {
   /**
    * Returns first result.
    *
-   * @performance O(n): runs the full query and takes the first result; add `.limit(1)` to the query to bound it.
+   * @performance O(n) in the data examined: runs the full query and takes the first result; `.limit(1)` bounds the
+   * work only where the executor applies the limit before scanning.
    */
   first(opts?: RunOptions): Promise<T>;
 
   /**
    * Returns first result if there is one.
    *
-   * @performance O(n): runs the full query and takes the first result; add `.limit(1)` to the query to bound it.
+   * @performance O(n) in the data examined: runs the full query and takes the first result; `.limit(1)` bounds the
+   * work only where the executor applies the limit before scanning.
    */
   firstOrUndefined(opts?: RunOptions): Promise<T | undefined>;
 
@@ -153,13 +157,14 @@ export interface QueryResultEffect<T, E, R> extends Effect.Effect<QueryResult<T>
   /**
    * Runs the query once.
    *
-   * @performance Executes the full query once, O(n) in results.
+   * @performance Executes the full query once, O(n) in the data the executor examines.
    */
   run: Effect.Effect<T[], E, R>;
   /**
    * Runs the query once and returns the first result.
    *
-   * @performance O(n): runs the full query and takes the first result; add `.limit(1)` to the query to bound it.
+   * @performance O(n) in the data examined: runs the full query and takes the first result; `.limit(1)` bounds the
+   * work only where the executor applies the limit before scanning.
    */
   first: Effect.Effect<Option.Option<T>, E, R>;
 

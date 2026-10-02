@@ -279,8 +279,8 @@ export interface Database extends Queryable {
    * Wait for all pending changes to be saved to disk.
    * Optionaly waits for changes to be propagated to indexes and event handlers.
    *
-   * @performance Async; waits for every pending document, index and feed write, so it is as slow as the outstanding
-   * backlog.
+   * @performance Async; always waits for pending document creation, then only for the disk, index and update work
+   * that `opts` selects, so it is as slow as that selected backlog.
    */
   flush(opts?: FlushOptions): Promise<void>;
 

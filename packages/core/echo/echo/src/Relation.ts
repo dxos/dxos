@@ -431,7 +431,8 @@ export const setValue: (rel: Mutable<Unknown>, path: readonly (string | number)[
  *
  * @param options.prefer - Controls the URI form (see {@link internal.GetURIOptions}).
  *
- * @performance O(1); derives the URI from the id or self-URI slot, allocating a new string.
+ * @performance O(1); returns the stored URI, constructing (and allocating) one only when `options.prefer` asks for
+ * another form.
  */
 export const getURI = (entity: Unknown | Snapshot, options?: internal.GetURIOptions): URI.URI =>
   internal.getUri(entity, options);

@@ -72,7 +72,8 @@ export const splice = (
  *
  * Must be called inside `Obj.update(obj, () => { ... })`.
  *
- * @performance O(edits · text length): re-reads the whole string after every splice, including each `replaceAll` match.
+ * @performance O(N) per edit plus O(M · N) for `replaceAll` (N = text length, M = matches): it re-reads and searches the
+ * whole string after every splice, so one `replaceAll` edit can be O(N²).
  */
 export const apply = (obj: Obj.Unknown, path: KeyPath | string | number, edits: readonly Edit[]): string => {
   const keyPath = normalizePath(path);

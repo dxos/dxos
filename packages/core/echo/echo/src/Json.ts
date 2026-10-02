@@ -47,7 +47,8 @@ const toJson = (obj: Obj.Any): unknown => (typeof (obj as any).toJSON === 'funct
  * Note: ECHO objects' `toJSON` runs before the replacer is invoked, so by the time we see a
  * value refs are already encoded as `{ "/": "dxn:..." }`.
  *
- * @performance O(1) per replacer call, plus an O(target size) `toJSON` for each ref resolved within `depth`.
+ * @performance O(k) per object value (`isEncodedRef` counts its keys), plus a URI parse and an O(target size) `toJSON`
+ * for each ref resolved within `depth`.
  */
 // TODO(dmaretskyi): is this used anywhere?
 export const createRefReplacer = ({ db, depth = 1 }: CreateRefReplacerOptions): JsonReplacer => {
