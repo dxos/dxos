@@ -4,8 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { Next } from '@dxos/react-ui';
+import { Next, useTranslation } from '@dxos/react-ui';
 
+import { translationKey } from '#translations';
 import { type FormFieldRendererProps } from '#types';
 
 import { presentationFor } from '../presentation.tsx';
@@ -34,6 +35,7 @@ export const SelectField = ({
     () => options.map(({ value, label, icon }) => ({ value: String(value), label: label ?? String(value), icon })),
     [options],
   );
+  const { t } = useTranslation(translationKey);
   const value = getValue();
   if (presentationFor(presentation).isStatic) {
     return (
@@ -47,7 +49,7 @@ export const SelectField = ({
     <SelectControl
       items={items}
       value={value == null ? undefined : String(value)}
-      placeholder={placeholder}
+      placeholder={placeholder ?? t('select.placeholder')}
       readonly={readonly}
       onValueChange={(next) => {
         // A choice is a commit: the select never blurs, so it commits itself.

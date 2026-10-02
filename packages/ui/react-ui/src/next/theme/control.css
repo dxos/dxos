@@ -392,7 +392,9 @@
     grid-template-columns: subgrid;
     align-items: start;
   }
-  .nx-field[data-layout='row'] > * {
+  /* A box-less control root (Select, Combobox, NumberInput) is `display: contents`; its children are the grid items. */
+  .nx-field[data-layout='row'] > *,
+  .nx-field[data-layout='row'] > :is(.nx-select, .nx-combobox, .nx-control-root) > * {
     grid-column: content;
   }
   /* The current Form's settings card: a trim-md inset and a trim-xl gap between the description and the control. */
@@ -413,9 +415,11 @@
   .nx-field[data-layout='row'] > :is(.nx-select, .nx-combobox) > .nx-control {
     align-self: start;
   }
-  /* A toggle keeps its own width at the end of the control track, as the current Form's settings rows place it. */
-  .nx-field[data-layout='row'] > :is(.nx-switch, .nx-checkbox) {
+  /* Controls keep their own width at the end of the control track (the current Form's settings `justify-end`). */
+  .nx-field[data-layout='row'] > :not(.nx-field-header, .nx-field-helper, .nx-field-error),
+  .nx-field[data-layout='row'] > :is(.nx-select, .nx-combobox, .nx-control-root) > * {
     justify-self: end;
+    max-width: 100%;
   }
   /* The space under the title is the header's own, so the description and control below it still share a top. */
   .nx-field[data-layout='row'] > .nx-field-header {
@@ -428,7 +432,8 @@
     margin-block-end: var(--nx-gap-size);
   }
   @container (width >= 24rem) {
-    .nx-field[data-layout='row'] > * {
+    .nx-field[data-layout='row'] > *,
+    .nx-field[data-layout='row'] > :is(.nx-select, .nx-combobox, .nx-control-root) > * {
       grid-column: control / content-end;
       grid-row: 2;
     }

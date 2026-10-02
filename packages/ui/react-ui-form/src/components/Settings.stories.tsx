@@ -103,9 +103,9 @@ export const Test: Story = {
     // 2. Seven rows across the two sections.
     await expect(geometry).toHaveLength(7);
 
-    // 3. Every control starts on the same line, in both sections; every title too.
+    // 3. Every control ends on the same line (right-aligned in the control track), in both sections; every title starts on one.
     for (const row of geometry) {
-      await expect(row.control.left).toBeCloseTo(geometry[0].control.left, 0);
+      await expect(row.control.right).toBeCloseTo(geometry[0].control.right, 0);
       await expect(row.label.left).toBeCloseTo(geometry[0].label.left, 0);
       // 4. The title spans both tracks on the first line.
       await expect(row.label.right).toBeGreaterThanOrEqual(row.control.right - 0.5);
@@ -113,10 +113,10 @@ export const Test: Story = {
       await expect(row.description!.top - row.label.bottom).toBeGreaterThanOrEqual(7.5);
       // 5. The description is left of the control, both starting on the next line.
       await expect(row.description!.left).toBeCloseTo(row.label.left, 0);
-      await expect(row.description!.right).toBeLessThanOrEqual(row.control.left + 0.5);
+      await expect(row.description!.right).toBeLessThanOrEqual(row.control.right);
       await expect(row.description!.top).toBeCloseTo(row.controlTop, 0);
     }
-    await expect(geometry[0].control.left - geometry[0].label.left).toBeGreaterThan(100);
+    await expect(geometry[0].control.right - geometry[0].label.left).toBeGreaterThan(100);
 
     // 6. Rows are bordered cards one level above the pane; the switch is labelled by its row.
     const row = canvasElement.querySelector<HTMLElement>('[data-layout="row"]')!;
@@ -130,8 +130,8 @@ export const Test: Story = {
     const description = getComputedStyle(row.querySelector('[data-part="helper-text"]')!);
     await expect(title.color).not.toBe(description.color);
     await expect(parseFloat(title.fontSize)).toBeGreaterThan(parseFloat(description.fontSize));
-    // A row's description is text-sm (14px), larger than a stacked field's help text.
-    await expect(description.fontSize).toBe('14px');
+    // A row's description is text-base (16px), as the current settings rows.
+    await expect(description.fontSize).toBe('16px');
   },
 };
 
@@ -142,7 +142,8 @@ export const TestNarrow: Story = {
     for (const row of rows(canvasElement)) {
       await expect(row.description!.top - row.label.bottom).toBeGreaterThanOrEqual(7.5);
       await expect(row.controlTop).toBeGreaterThan(row.description!.bottom + 0.5);
-      await expect(row.control.left).toBeCloseTo(row.label.left, 0);
+      // The control stays at the end of the row when stacked.
+      await expect(row.control.right).toBeCloseTo(row.label.right, 0);
     }
   },
 };

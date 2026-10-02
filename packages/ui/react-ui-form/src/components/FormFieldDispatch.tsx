@@ -111,9 +111,16 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     () => labelProp ?? title ?? (name == null ? '' : String.capitalize(name)),
     [labelProp, title, name],
   );
+  const { variant } = useFormContext(FormFieldDispatch.displayName);
+  // A settings row shows its description beside the control, so the description never doubles as the placeholder.
   const placeholder = useMemo(
-    () => (examples?.length ? `${t('example.placeholder')}: ${examples[0]}` : (description ?? label)),
-    [examples, description, label, t],
+    () =>
+      examples?.length
+        ? `${t('example.placeholder')}: ${examples[0]}`
+        : variant === 'settings'
+          ? undefined
+          : (description ?? label),
+    [examples, description, label, variant, t],
   );
 
   const fieldState = useFormFieldState(FormFieldDispatch.displayName, path);
