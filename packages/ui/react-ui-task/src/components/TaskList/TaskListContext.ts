@@ -13,6 +13,7 @@ import { type Task } from '@dxos/types';
 import { type TaskPlacement } from './hierarchy.ts';
 import { type TaskDescriptionProps } from './TaskDescription.tsx';
 import { type TaskCreateHandler } from './TaskList.tsx';
+import { type TaskMnemonicVariant } from './TaskRowCells.tsx';
 import { type TaskSelectModifiers } from './TaskTreeNode.tsx';
 import { type TaskGroup } from './tree-model.ts';
 
@@ -30,6 +31,8 @@ export type TaskListContextValue = {
   showGroupLabels: boolean;
   showOrdinals: boolean;
   showDescription: boolean;
+  /** How each row draws its mnemonic. */
+  mnemonicVariant: TaskMnemonicVariant;
   /** Renderers for a row's description beyond its own — a host's link anchor, say. */
   descriptionComponents?: TaskDescriptionProps['components'];
   /** Render each task's estimate beside the priority control. */
