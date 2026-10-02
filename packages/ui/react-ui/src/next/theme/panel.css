@@ -26,6 +26,10 @@
     flex-direction: column;
     min-width: 0;
   }
+  /* An article's toolbar is the app's toolbar height (ui-theme `--dx-toolbar-size`), its controls centred in it. */
+  .nx-panel-header .nx-toolbar {
+    min-height: var(--dx-toolbar-size, 2.5rem);
+  }
 
   /*
    * A plain slot; it is no query container even when it is a ScrollArea frame (`asChild`), so the content collapses

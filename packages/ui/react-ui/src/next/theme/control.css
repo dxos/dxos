@@ -759,8 +759,17 @@
     padding-block: var(--nx-gap-size);
     min-height: var(--nx-block-size);
   }
+  /* A compact group is one joined run: no gap, no block padding, and adjacent buttons drop the inset between them. */
   .nx-group[data-compact] {
+    flex-wrap: nowrap;
     gap: 0;
+    padding-block: 0;
+  }
+  .nx-group[data-compact] > .nx-button:not(:last-child) {
+    margin-inline-end: 0;
+  }
+  .nx-group[data-compact] > .nx-button:not(:first-child) {
+    margin-inline-start: 0;
   }
   /* A nested group is one cell of its parent's row, which already carries the padding. */
   .nx-group > .nx-group {

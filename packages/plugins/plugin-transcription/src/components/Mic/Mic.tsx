@@ -157,7 +157,7 @@ export const Mic = ({ docId }: MicProps) => {
         : t('start-recording.label');
 
   return (
-    <div className='flex items-center'>
+    <Next.Group compact>
       <Next.SystemButton.Mic
         iconOnly
         variant='ghost'
@@ -179,6 +179,6 @@ export const Mic = ({ docId }: MicProps) => {
         onEntityExtractionChange={handleEntityExtractionChange}
         onSelectDevice={handleSelectDevice}
       />
-    </div>
+    </Next.Group>
   );
 };
