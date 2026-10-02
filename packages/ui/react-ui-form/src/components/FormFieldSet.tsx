@@ -46,7 +46,7 @@ export const FormFieldSet = ({
   const canCollapse = !!collapsible && showLabel && Children.toArray(children).length > 0;
   const helper = description && <Next.Fieldset.HelperText>{description}</Next.Fieldset.HelperText>;
   const legend = showLabel && (
-    <Next.Fieldset.Legend size={nested ? undefined : 'md'}>
+    <Next.Fieldset.Legend size={nested ? undefined : 'md'} variant={nested ? undefined : 'section'}>
       {label}
       {actions}
       {canCollapse && <Next.SystemButton.Disclosure label={label} expanded={open} onExpandedChange={setOpen} />}

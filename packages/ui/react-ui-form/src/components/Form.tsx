@@ -56,7 +56,8 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
         <Next.Panel.Body asChild>
           <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport asChild>
-              <Next.Container>{children}</Next.Container>
+              {/* The block inset keeps the last section off the pane's bottom edge when scrolled to the end. */}
+              <Next.Container padBlock>{children}</Next.Container>
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Next.Panel.Body>

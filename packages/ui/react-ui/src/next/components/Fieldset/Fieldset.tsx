@@ -76,12 +76,20 @@ FieldsetRoot.displayName = 'Next.Fieldset.Root';
 type FieldsetLegendProps = ThemedClassName<FieldsetPrimitive.LegendProps> & {
   /** A size of its own makes the legend a heading row; by default it takes the set's size, in its label step. */
   size?: Size;
+  /** `section` is a top-level section's title: content-coloured, at text-lg. */
+  variant?: 'section';
 };
 
 /** The set's label row, like `Field.Header`: legend text followed by optional trailing Blocks or icon-only Buttons. */
 const FieldsetLegend = forwardRef<HTMLDivElement, FieldsetLegendProps>(
-  ({ classNames, size, children, ...props }, forwardedRef) => (
-    <FieldsetPrimitive.Legend {...props} asChild data-size={size} className={mx(recipes.fieldsetLegend(), classNames)}>
+  ({ classNames, size, variant, children, ...props }, forwardedRef) => (
+    <FieldsetPrimitive.Legend
+      {...props}
+      asChild
+      data-size={size}
+      data-variant={variant}
+      className={mx(recipes.fieldsetLegend(), classNames)}
+    >
       <div ref={forwardedRef}>{children}</div>
     </FieldsetPrimitive.Legend>
   ),

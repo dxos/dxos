@@ -138,11 +138,14 @@
     height: var(--nx-control-icon);
   }
 
-  /* Controls fill with the host-derived well (a small step off whatever surface hosts them), not a fixed raised fill. */
+  /*
+   * Controls fill with ui-theme's input fill, tuned to contrast whatever surface hosts them (the current controls'
+   * `bg-input-bg`): the host-derived well resolves at the root, so on a raised host (card, dialog) it matched the host.
+   */
   .nx-input {
     width: 100%;
     min-width: 0;
-    background: var(--color-input-surface);
+    background: var(--color-input-bg);
   }
   .nx-input[data-variant='subdued'] {
     background: transparent;
@@ -245,11 +248,11 @@
        flex minimum of its content, so without `flex-shrink: 0` a crowded row would squeeze the label out of it. */
     white-space: nowrap;
     flex-shrink: 0;
-    background: var(--color-input-surface);
+    background: var(--color-input-bg);
     cursor: pointer;
   }
   .nx-button:hover:not(:disabled) {
-    background: var(--color-hover-surface);
+    background: var(--color-input-bg-hover, var(--color-hover-surface));
   }
   /* Variants map the current Button's (ui-theme `button.css`) onto the same color tokens. */
   .nx-button[data-variant='primary'] {
@@ -568,7 +571,7 @@
     /* Centred in a block-sized cell, so a checkbox takes the same space as an icon-only Button and labels align. */
     margin-inline: calc((var(--nx-block-size) - var(--nx-icon-size)) / 2);
     border-radius: var(--radius-sm, 0.25rem);
-    background: var(--color-input-surface);
+    background: var(--color-input-bg);
   }
   /* Absolute, not a percentage: the Ark indicator wrapper has no definite height, so 75% fell back to 150px. */
   .nx-checkbox-control .nx-icon {
@@ -604,7 +607,7 @@
     padding-inline-end: calc((var(--nx-block-size) - var(--nx-control-icon)) / 2);
     width: 100%;
     min-width: 0;
-    background: var(--color-input-surface);
+    background: var(--color-input-bg);
     cursor: pointer;
     text-align: start;
   }
