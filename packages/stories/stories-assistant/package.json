@@ -22,7 +22,6 @@
     "@dxos/client": "workspace:*",
     "@dxos/client-services": "workspace:*",
     "@dxos/compute": "workspace:*",
-    "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-doc": "workspace:*",
     "@dxos/echo-query": "workspace:*",
@@ -55,6 +54,7 @@
   "devDependencies": {
     "@dxos/agent-claude": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",
