@@ -41,7 +41,7 @@ const meta: Meta<typeof ModuleContainer> = {
   parameters: storyParameters,
 };
 
-const { text, toolCall, promptIncludes } = ScriptedLanguageModel;
+const { text, reasoning, toolCall, promptIncludes } = ScriptedLanguageModel;
 
 /** Shared by the delegation script and its assertions. */
 const TASK_TITLE = 'Compute 10 factorial';
@@ -882,5 +882,69 @@ export const TestProjectTaskDelegationScripted: Story = {
     const tasks = await storySpace.db.query(Filter.type(Task.Task)).run();
     const worked = tasks.find(({ title }) => title === POEM_TASK_TITLE);
     await expect(worked?.status).toEqual('review');
+  },
+};
+
+//
+// Performance — driven by `assistant-e2e`'s `perf-chat.spec.ts`, which types the prompt itself.
+//
+
+/** Calculator calls per user prompt before the closing answer; the spec waits for that line. */
+const PERF_TOOL_TURNS = 20;
+
+const PERF_CALCULATE = Operation.toolName(Calculate);
+
+/** Tool calls since the latest user prompt, which is how far through the loop the session is. */
+const countToolCallsSincePrompt = ({ prompt }: ScriptedLanguageModel.ScriptedRequest): number => {
+  let count = 0;
+  for (let index = prompt.content.length - 1; index >= 0; index--) {
+    const message = prompt.content[index];
+    // A user message right after a tool result is a mid-loop reminder, not a new prompt.
+    if (message.role === 'user' && prompt.content[index - 1]?.role !== 'tool') {
+      break;
+    }
+    if (message.role === 'assistant') {
+      count += message.content.filter((part) => part.type === 'tool-call' && part.name === PERF_CALCULATE).length;
+    }
+  }
+  return count;
+};
+
+/**
+ * A fixed agent loop for measuring the chat stack offline: reasoning, streamed status text and a
+ * real tool round trip per turn, with a delay so each turn renders rather than landing in one frame.
+ */
+const perfScript: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
+  // Side calls (chat naming) offer no tools; a tool call there could not be dispatched.
+  if (!request.tools.includes(PERF_CALCULATE)) {
+    return { parts: [text('Perf run')] };
+  }
+  const turn = countToolCallsSincePrompt(request);
+  if (turn >= PERF_TOOL_TURNS) {
+    return {
+      delay: '250 millis',
+      parts: [
+        reasoning(`All ${PERF_TOOL_TURNS} calculations returned; summarizing.`),
+        text(`Done — ran ${PERF_TOOL_TURNS} calculations.`),
+      ],
+    };
+  }
+  return {
+    delay: '250 millis',
+    parts: [
+      reasoning(`Turn ${turn + 1} of ${PERF_TOOL_TURNS}: computing ${turn + 1}!.`),
+      text(`Computing ${turn + 1}! (${turn + 1}/${PERF_TOOL_TURNS}).`),
+      toolCall(PERF_CALCULATE, { expression: `${turn + 1}!` }),
+    ],
+  };
+};
+
+export const PerfScripted: Story = {
+  decorators: createDecorators({
+    skills: [CalculatorSkill.key],
+    scripted: perfScript,
+  }),
+  args: {
+    layout: [[StoryRole.Chat]],
   },
 };
