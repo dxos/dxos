@@ -105,7 +105,7 @@ are listed under "Deliberate" and do not count toward the verdict.
 | `NumberInput`   | `Field.Input type=number`                                                 |                                                                                            | Ark `number-input`: locale parsing/formatting, `step`, clamping, stepper buttons (54)                                                                                                                                         | parity  |                                                                                                                                                                                         |
 | `PasswordInput` | `Field.Input type=password`                                               |                                                                                            | Ark `password-input`: visibility toggle, `ignorePasswordManagers` (54)                                                                                                                                                        | parity  |                                                                                                                                                                                         |
 | `Select`        | `Select.*` (15 parts)                                                     |                                                                                            | option icons in item and trigger, `items` collection; `ItemGroup`/`ItemGroupLabel`, `Separator`, `iconHue`, Item children, `multiple`, Trigger `loading` (42); portal `container` (45)                                        | parity  | explicit `size` on Content (follow-up 2); number values: options stay strings and SelectField maps them back (2.14, 42)                                                                 |
-| `Combobox`      | `react-ui-list` `Combobox.*` and `Picker.*`                               | `multiple` shows joined labels, no chips; `displayValue` is the option label (milestone 5) | input-in-trigger, `filter`, `empty` row, autohighlight Enter; portal `container` (45)                                                                                                                                         | minor   |                                                                                                                                                                                         |
+| `Combobox`      | `react-ui-list` `Combobox.*` and `Picker.*`                               | `multiple` shows joined labels, no chips; `displayValue` is the option label (milestone 5) | input-in-trigger, `filter`, autohighlight Enter, portal `container` (45); trigger mode, `ItemDescription`, `CreateItem`, `Empty`/`List` parts, `loading`, `getAnchorRect`                                                     | minor   |                                                                                                                                                                                         |
 | `Tag`           | `Tag`                                                                     | `asChild`                                                                                  | pill sized to fit a control                                                                                                                                                                                                   | parity  |                                                                                                                                                                                         |
 
 ### Overlays and toolbars
@@ -689,17 +689,7 @@ children (rule 7); `Field.Label` shows the required indicator automatically (rul
 
 ### Open from the plugin-sheet pilot
 
-40. **Typography cannot carry an `id`**, so a heading cannot label a list (`aria-labelledby`). Options: (1) Typography
-    passes `id` through, (2) a heading/label part. Recommendation: 1.
-41. **No Next empty state.** Next has no Banner, so an empty list falls back to a description Typography.
-    Recommendation: an `Empty` part on Listbox and OrderedList, like Ark's Combobox.
-42. **Next sections inside current hosts.** A section rendered in the current `ObjectProperties`/Panel has no Next
-    scope, so it renders at md beside react-ui-form's current fields. Decide with milestone 10.
-43. **Row identity for plain-struct arrays.** `getId` needs a stable id and `Sheet.Range` has none, so the pilot
-    derives one from its fields. Options: (1) an index fallback in `OrderedList`, (2) ids on such schemas.
-    Recommendation: 2.
-44. **Per-row Remove names.** `SystemButton.Remove` says "Remove"; a per-row name ("Remove A1:B2") needs a
-    translation with the row's text. Decide with point 21.
+Points 40–44 are settled in the decision reviews below.
 
 ### Decision review 2026-10-01 (group A: foundations)
 

@@ -247,10 +247,14 @@ const TreeRoot = <T extends { id: string }>({
     };
   }, []);
 
+  // A close commits after its animation (or on unmount), so it reads the latest callback rather than the one from the
+  // render that started it.
+  const onOpenChangeRef = useRef(onOpenChange);
+  onOpenChangeRef.current = onOpenChange;
   const setOpen = useCallback(
     (node: TreeNode<T>, open: boolean) => {
       const { item } = node;
-      const commit = () => item && onOpenChange?.({ item, path: node.path, open });
+      const commit = () => item && onOpenChangeRef.current?.({ item, path: node.path, open });
       const pending = pendingRef.current;
       const previous = pending.get(node.value);
       if (previous) {
@@ -290,7 +294,7 @@ const TreeRoot = <T extends { id: string }>({
         close: open ? undefined : commit,
       });
     },
-    [animate, onOpenChange],
+    [animate],
   );
 
   // A concealing branch is still open in the model, so a toggle mid-close reopens it.
@@ -504,8 +508,6 @@ const TreeRoot = <T extends { id: string }>({
   // re-rendering on the collapse cannot resubscribe the monitor mid-drag.
   const onDropRef = useRef(onDrop);
   onDropRef.current = onDrop;
-  const onOpenChangeRef = useRef(onOpenChange);
-  onOpenChangeRef.current = onOpenChange;
   useEffect(() => {
     if (!draggable) {
       return;

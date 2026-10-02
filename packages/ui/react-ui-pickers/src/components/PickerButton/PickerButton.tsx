@@ -81,10 +81,7 @@ export const PickerButton = ({
           );
         })}
         {onReset && (
-          <Next.Menu.Item
-            item={{ value: RESET, label: 'Reset' }}
-            onClick={() => onReset()}
-          >
+          <Next.Menu.Item item={{ value: RESET, label: 'Reset' }} onClick={() => onReset()}>
             <Next.Icon icon='ph--x--regular' size={iconSize} />
           </Next.Menu.Item>
         )}

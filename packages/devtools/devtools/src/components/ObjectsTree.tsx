@@ -302,9 +302,7 @@ class ObjectsTreeModel {
       }
       const children = get(this.#atoms(anchor === ROOT_ANCHOR ? null : anchor));
       const filter = anchor === ROOT_ANCHOR ? get(this.filter).trim().toLowerCase() : '';
-      return children
-        .filter((child) => !filter || child.label.toLowerCase().includes(filter))
-        .map((child) => child.id);
+      return children.filter((child) => !filter || child.label.toLowerCase().includes(filter)).map((child) => child.id);
     }),
   );
 

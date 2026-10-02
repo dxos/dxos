@@ -63,7 +63,9 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
 
   return (
-    <Next.Card.Root grid ref={cardRef}
+    <Next.Card.Root
+      grid
+      ref={cardRef}
       classNames={[classNames, handleOpen && 'dx-hover']}
       onClick={handleOpen}
       onKeyDown={handleOpen ? handleKeyDown : undefined}
