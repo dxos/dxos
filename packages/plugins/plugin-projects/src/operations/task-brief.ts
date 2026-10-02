@@ -93,6 +93,12 @@ export const renderDelegationBrief = ({ tasks, project, context }: BriefInput): 
       the tasks asks you to in this conversation. When you finish, say what you did and what is left:
       they review the work here.
     `,
+    '',
+    concat`
+      Composer's own tools, when you have them, come from the \`composer\` MCP server: list its skills
+      with loadSkill, and use the one for tasks to mark each task above as you start and finish it,
+      addressing it by its Task URI.
+    `,
   );
 
   return lines.join('\n');

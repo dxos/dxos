@@ -9,9 +9,11 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';
 import { isTauri } from '@dxos/util';
 
+import * as McpRelay from '../agents/McpRelay.ts';
 import * as Protocol from '../agents/Protocol.ts';
 import { AgentError } from '../errors.ts';
 import * as CodeCapabilities from '../types/CodeCapabilities.ts';
@@ -155,6 +157,26 @@ export default Capability.makeModule(
       list: call('could not list worktrees', Protocol.WORKTREES_PATH, Schema.Array(Protocol.Worktree)),
     };
 
+    // The page's one connection for MCP: the helper relays every agent's requests over it.
+    const relay = new McpRelay.Relay(() =>
+      EffectEx.runPromise(helper).then(({ port, token }) => ({
+        url: `ws://localhost:${port}${Protocol.MCP_HOST_PATH}`,
+        token,
+      })),
+    );
+    const mcp: CodeCapabilities.AgentHelper['mcp'] = {
+      serve: (server, handle) =>
+        helper.pipe(
+          Effect.flatMap(({ port }) =>
+            Effect.tryPromise({
+              try: () => relay.serve(server, handle),
+              catch: (cause) => new AgentError({ message: 'could not serve Composer tools to the agent', cause }),
+            }).pipe(Effect.as({ url: `http://localhost:${port}${Protocol.MCP_PATH}/${server}` })),
+          ),
+        ),
+      close: (server) => Effect.promise(() => relay.close(server)),
+    };
+
     const connect = (agent: string, cwd: string) =>
       helper.pipe(
         Effect.map(({ port, token }) =>
@@ -172,7 +194,7 @@ export default Capability.makeModule(
       }),
     );
 
-    return Capability.contribute(CodeCapabilities.AgentHelper, { agents, connect, worktrees });
+    return Capability.contribute(CodeCapabilities.AgentHelper, { agents, connect, worktrees, mcp });
   }),
 );
 

@@ -182,6 +182,7 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/mcp-server": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-space": "workspace:*",

@@ -4,6 +4,7 @@
 
 // @import-as-namespace
 
+import type * as acp from '@agentclientprotocol/sdk';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
@@ -15,6 +16,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Chat } from '@dxos/assistant';
 import { type Client } from '@dxos/client';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
@@ -26,6 +28,8 @@ import { AgentError } from '../errors.ts';
 import * as CodeCapabilities from '../types/CodeCapabilities.ts';
 import * as Settings from '../types/Settings.ts';
 import * as AcpAgent from './AcpAgent.ts';
+import * as ComposerMcp from './ComposerMcp.ts';
+import * as Protocol from './Protocol.ts';
 import * as Workspace from './Workspace.ts';
 
 /** How long to wait for the agent helper to appear before reporting the agent unavailable. */
@@ -80,6 +84,48 @@ export const make = (
       }).pipe(Effect.repeat(Schedule.spaced(SWEEP_INTERVAL)), Effect.forkScoped);
     }
 
+    // One MCP server per chat, scoped to the chat's space, built on first use and kept while the app runs.
+    const served = new Map<
+      string,
+      { server: string; handle: CodeCapabilities.McpHandle; dispose: () => Promise<void> }
+    >();
+    yield* Effect.addFinalizer(() =>
+      Effect.promise(async () => {
+        await Promise.all([...served.values()].map(({ dispose }) => dispose()));
+        served.clear();
+      }),
+    );
+    const composerTools = (chat: Chat.Chat): Effect.Effect<acp.McpServer[], AgentError> =>
+      Effect.gen(function* () {
+        const agentHelper = helper();
+        const client = manager.getAll(ClientCapabilities.Client).at(0);
+        const invoker = manager.getAll(Capabilities.OperationInvoker).at(0);
+        const spaceId = Obj.getDatabase(chat)?.spaceId;
+        if (!agentHelper || !client || !invoker || !spaceId) {
+          return [];
+        }
+        let entry = served.get(chat.id);
+        if (!entry) {
+          const server = randomServerId();
+          const mcp = ComposerMcp.handler({
+            registry: client.graph.registry,
+            host: ComposerMcp.host({
+              handlers: Effect.suspend(
+                () => OperationHandlerSet.merge(...manager.getAll(Capabilities.OperationHandler)).handlers,
+              ),
+              invoke: (operation, input, target) =>
+                invoker.invoke(operation, input, target ? { spaceId: target } : undefined).pipe(Effect.orDie),
+              spaceIds: [spaceId],
+            }),
+            path: `${Protocol.MCP_PATH}/${server}`,
+          });
+          entry = { server, ...mcp };
+          served.set(chat.id, entry);
+        }
+        const { url } = yield* agentHelper.mcp.serve(entry.server, entry.handle);
+        return [{ type: 'http', name: ComposerMcp.SERVER_NAME, url, headers: [] }];
+      });
+
     const options: AcpAgent.AgentOptions = {
       id: definition.id,
       sessions,
@@ -125,6 +171,16 @@ export const make = (
           return worktree.path;
         }),
       mode: () => settings()?.agentPermissionMode ?? Settings.DEFAULT_AGENT_PERMISSION_MODE,
+      mcpServers: (chat) =>
+        composerTools(chat).pipe(
+          // Composer's tools add to a turn; a turn without them still runs.
+          Effect.catch((error) =>
+            Effect.sync(() => {
+              log.warn('Composer tools not offered to the agent', { chat: chat.id, error });
+              return [];
+            }),
+          ),
+        ),
       device: () => toPublicKey(manager.getAll(ClientCapabilities.Client).at(0)?.halo.device?.deviceKey)?.toHex(),
     };
 
@@ -192,6 +248,10 @@ const sweepWorktrees = ({
       log.info('delegation worktree swept', { key, outcome });
     }
   }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('worktree sweep failed', { error }))));
+
+/** 256 random bits: an agent reaches Composer's tools by knowing this, so it must not be guessable. */
+const randomServerId = (): string =>
+  Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) => byte.toString(16).padStart(2, '0')).join('');
 
 const isAbsolutePath = (path: string): boolean => path.startsWith('/') || /^[A-Za-z]:[\\/]/.test(path);
 

@@ -52,6 +52,9 @@
       "path": "../../core/compute/link"
     },
     {
+      "path": "../../core/compute/mcp-server"
+    },
+    {
       "path": "../../core/echo/echo"
     },
     {

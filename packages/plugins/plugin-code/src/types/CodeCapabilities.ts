@@ -37,7 +37,16 @@ export type AgentHelper = {
     readonly remove: (key: string) => Effect.Effect<Protocol.WorktreeOutcome, AgentError>;
     readonly list: Effect.Effect<readonly Protocol.Worktree[], AgentError>;
   };
+  /** MCP servers the page serves to agents, through the helper. */
+  readonly mcp: {
+    /** Serves `handle` under `server` and returns the URL an agent reaches it at. */
+    readonly serve: (server: string, handle: McpHandle) => Effect.Effect<{ url: string }, AgentError>;
+    readonly close: (server: string) => Effect.Effect<void>;
+  };
 };
+
+/** Answers one HTTP request an agent made of an MCP server the page serves. */
+export type McpHandle = (request: Request) => Promise<Response>;
 
 export const AgentHelper = Capability.makeSingleton<AgentHelper>()(`${meta.profile.key}.capability.agentHelper`);
 

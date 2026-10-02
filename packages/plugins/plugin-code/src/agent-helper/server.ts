@@ -17,6 +17,7 @@ import { log } from '@dxos/log';
 
 import * as Protocol from '../agents/Protocol.ts';
 import type * as AgentSpec from './AgentSpec.ts';
+import * as McpBridge from './McpBridge.ts';
 import * as Worktrees from './Worktrees.ts';
 
 const PROBE_TIMEOUT_MS = 10_000;
@@ -62,13 +63,14 @@ export const serve = async ({
   worktrees,
 }: ServeOptions): Promise<AgentServer> => {
   const children = new Set<ChildProcessWithoutNullStreams>();
+  const bridge = new McpBridge.Bridge();
   const sockets = new WebSocketServer({
     noServer: true,
     handleProtocols: (protocols) => (protocols.has(Protocol.SUBPROTOCOL) ? Protocol.SUBPROTOCOL : false),
   });
 
   const server = createServer((request, response) => {
-    void handleRequest({ request, response, token, agents, path, worktrees }).catch((error) => {
+    void handleRequest({ request, response, token, agents, path, worktrees, bridge }).catch((error) => {
       log.catch(error);
       send(response, 500, { error: 'internal error' });
     });
@@ -82,6 +84,10 @@ export const serve = async ({
           return;
         }
         sockets.handleUpgrade(request, socket, head, (ws) => {
+          if (target === MCP_HOST) {
+            bridge.attach(ws);
+            return;
+          }
           const child = relay({ ws, path, launch, ...target });
           children.add(child);
           child.once('exit', () => children.delete(child));
@@ -109,6 +115,7 @@ export const serve = async ({
       for (const child of children) {
         child.kill();
       }
+      bridge.close();
       sockets.close();
       await new Promise<void>((resolve) => server.close(() => resolve()));
     },
@@ -158,12 +165,21 @@ type RequestContext = {
   agents: readonly AgentSpec.AgentSpec[];
   path: readonly string[];
   worktrees?: string;
+  bridge: McpBridge.Bridge;
 };
 
 /** Largest request body the helper reads; a worktree request is a few hundred bytes. */
 const MAX_BODY_BYTES = 64 * 1024;
 
-const handleRequest = async ({ request, response, token, agents, path, worktrees }: RequestContext): Promise<void> => {
+const handleRequest = async ({
+  request,
+  response,
+  token,
+  agents,
+  path,
+  worktrees,
+  bridge,
+}: RequestContext): Promise<void> => {
   // Any origin may ask; only a holder of the token gets an answer.
   response.setHeader('Access-Control-Allow-Origin', request.headers.origin ?? '*');
   response.setHeader(
@@ -180,11 +196,16 @@ const handleRequest = async ({ request, response, token, agents, path, worktrees
     send(response, 403, { error: 'forbidden host' });
     return;
   }
+  const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+  // An agent holds a server id the page registered, not the token, which would let it start agents.
+  if (url.pathname.startsWith(`${Protocol.MCP_PATH}/`)) {
+    await bridge.relay(request, response, url.pathname.slice(Protocol.MCP_PATH.length + 1));
+    return;
+  }
   if (!matches(request.headers.authorization ?? '', `Bearer ${token}`)) {
     send(response, 401, { error: 'unauthorized' });
     return;
   }
-  const url = new URL(request.url ?? '/', 'http://127.0.0.1');
   if (request.method === 'GET' && url.pathname === Protocol.AGENTS_PATH) {
     send(response, 200, await Promise.all(agents.map((spec) => probe(spec, path))));
     return;
@@ -259,6 +280,9 @@ const readJson = async (request: IncomingMessage): Promise<unknown> => {
   }
 };
 
+/** The page's connection for serving Composer's MCP tools. */
+const MCP_HOST = 'mcp-host';
+
 type UpgradeTarget = {
   spec: AgentSpec.AgentSpec;
   cwd: string;
@@ -277,7 +301,7 @@ const authorizeUpgrade = async ({
   token: string;
   agents: readonly AgentSpec.AgentSpec[];
   path: readonly string[];
-}): Promise<UpgradeTarget | number> => {
+}): Promise<UpgradeTarget | typeof MCP_HOST | number> => {
   if (!isLoopbackHost(request) || !isLocalOrigin(request.headers.origin)) {
     return 403;
   }
@@ -286,6 +310,9 @@ const authorizeUpgrade = async ({
     return 401;
   }
   const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+  if (url.pathname === Protocol.MCP_HOST_PATH) {
+    return MCP_HOST;
+  }
   const spec = agents.find((agent) => agent.id === url.searchParams.get('agent'));
   const cwd = url.searchParams.get('cwd') ?? '';
   if (url.pathname !== Protocol.ACP_PATH || !spec || !isAbsolute(cwd)) {

@@ -18,3 +18,5 @@ An agent's permission requests arrive as a `request` content block (`ContentBloc
 `ProjectOperation.DelegateTaskToChat` takes an optional `harness`. Without one, it uses the new `defaultAgent` assistant setting while that agent is available, and Composer otherwise. A task's menu lists an "Assign to" entry per registered agent and disables those that cannot run on this device. To support this, `ObjectAction` gains `group` and `unavailable`.
 
 A project overview has a settings slot, `ProjectView.Settings`, where other plugins add settings. `plugin-code` uses it for the project's repository folder on this device, and a delegated chat works in its own git worktree of that folder.
+
+A coding agent gets Composer's operations as the `composer` MCP server, scoped to its chat's space. The page serves the same surface as `dx mcp serve`, and the agent helper relays the agent's requests to it.

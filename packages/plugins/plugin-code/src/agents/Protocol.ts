@@ -45,6 +45,41 @@ export type Worktree = Schema.Schema.Type<typeof Worktree>;
 export const WorktreeOutcome = Schema.Literals(['removed', 'dirty', 'missing']);
 export type WorktreeOutcome = Schema.Schema.Type<typeof WorktreeOutcome>;
 
+/**
+ * Composer's MCP tools for an agent, at `/mcp/<server>`. The page cannot listen, so it opens a
+ * WebSocket at {@link MCP_HOST_PATH} and the helper relays each request to it as a frame. A server id
+ * is unguessable and registered by the page, which is what an agent holds instead of the token.
+ */
+export const MCP_PATH = '/mcp';
+export const MCP_HOST_PATH = '/mcp-host';
+
+const HeaderList = Schema.Array(Schema.Tuple([Schema.String, Schema.String]));
+
+/** Helper to page: one HTTP request an agent made of a registered server. */
+export const McpRequestFrame = Schema.TaggedStruct('request', {
+  id: Schema.String,
+  server: Schema.String,
+  method: Schema.String,
+  /** Path and query, as the agent requested them. */
+  path: Schema.String,
+  headers: HeaderList,
+  body: Schema.String,
+});
+export type McpRequestFrame = Schema.Schema.Type<typeof McpRequestFrame>;
+
+/** Page to helper: starts or stops relaying a server id, or answers a request. */
+export const McpHostFrame = Schema.Union([
+  Schema.TaggedStruct('register', { server: Schema.String }),
+  Schema.TaggedStruct('unregister', { server: Schema.String }),
+  Schema.TaggedStruct('response', {
+    id: Schema.String,
+    status: Schema.Number,
+    headers: HeaderList,
+    body: Schema.String,
+  }),
+]);
+export type McpHostFrame = Schema.Schema.Type<typeof McpHostFrame>;
+
 /** An agent the helper knows, as the page sees it. */
 export const AgentStatus = Schema.Struct({
   id: Schema.String,
