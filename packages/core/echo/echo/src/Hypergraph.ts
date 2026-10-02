@@ -55,6 +55,9 @@ export interface Hypergraph extends Database.Queryable {
 
   /**
    * Query objects.
+   *
+   * @performance O(AST size) to key the result cache; returns a shared, lazily executed result, so nothing runs until
+   * read.
    */
   query: Database.QueryFn;
 
@@ -65,18 +68,24 @@ export interface Hypergraph extends Database.Queryable {
    * NOTE: Difference from `Ref.fromURI`
    * `Ref.fromURI(dxn)` returns an unhydrated reference. The `.load` and `.target` APIs will not work.
    * `db.makeRef(dxn)` is preferable in cases with access to the database.
+   *
+   * @performance O(1); allocates a resolver-bound ref without looking the target up.
    */
   makeRef<T extends Entity.Unknown = Entity.Unknown>(uri: URI.URI): Ref.Ref<T>;
 
   /**
    * Create a resolver that dereferences `Ref`s against this graph. Persisted schema objects are
    * surfaced as their registered `Type.Type` entity.
+   *
+   * @performance O(1); allocates a resolver closure.
    */
   createRefResolver(options: RefResolverOptions): Ref.Resolver;
 
   /**
    * Get a database by space ID.
    * @returns The database for the given space ID, or undefined if not found.
+   *
+   * @performance O(1) map lookup.
    */
   getDatabase(spaceId: Key.SpaceId): Database.Database | undefined;
 
@@ -87,6 +96,8 @@ export interface Hypergraph extends Database.Queryable {
    * @param options.default - When true, `name` becomes the storage used when
    *   `Blob.fromBytes`'s `storage` option is omitted.
    * @returns A cleanup function that unregisters the backend.
+   *
+   * @performance O(s) in the backend URI schemes.
    */
   registerBlobBackend(name: string, backend: BlobBackend, options?: { default?: boolean }): CleanupFn;
 
@@ -124,14 +135,22 @@ export const notAvailable = Layer.succeed(Service, {
   },
 });
 
-/** Creates a Hypergraph service instance from a graph. */
+/**
+ * Creates a Hypergraph service instance from a graph.
+ *
+ * @performance O(1).
+ */
 export const makeService = (graph: Hypergraph): Service['Service'] => ({
   get graph() {
     return graph;
   },
 });
 
-/** Creates a Layer that provides the Hypergraph service. */
+/**
+ * Creates a Layer that provides the Hypergraph service.
+ *
+ * @performance O(1).
+ */
 export const layer = (graph: Hypergraph): Layer.Layer<Service> => Layer.succeed(Service, makeService(graph));
 
 /** The graph holds no database for the requested space — it is not open, or does not exist. */
@@ -144,6 +163,8 @@ export class SpaceNotFoundError extends BaseError.extend('SpaceNotFoundError', '
  * with the ordinary space-scoped API once it has one, and every caller doing that by hand would
  * otherwise reimplement the same lookup-and-fail. The space id is resolved when the layer is built,
  * so a missing space fails there rather than at the first query.
+ *
+ * @performance O(1) map lookup when the layer is built.
  */
 export const withDatabase = (spaceId: Key.SpaceId): Layer.Layer<Database.Service, SpaceNotFoundError, Service> =>
   Layer.effect(
