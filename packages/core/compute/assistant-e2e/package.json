@@ -1,6 +1,6 @@
 {
   "name": "@dxos/assistant-e2e",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "Assistant e2e tests. Deprecated: superseded by @dxos/assistant-evals; slated for removal.",
   "homepage": "https://dxos.org",
