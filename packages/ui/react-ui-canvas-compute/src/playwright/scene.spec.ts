@@ -13,7 +13,7 @@ const TEMPLATE_URL = storybookUrl('ui-react-ui-canvas-compute-scene--template', 
 
 /** The die a `random` shape draws; its icon name changes as it spins, so match the family. */
 const DICE = 'svg:has(use[href*="dice"])';
-const SWITCH = 'input.dx-checkbox--switch';
+const SWITCH = '[data-scope="switch"][data-part="root"]';
 const BEACON = 'svg:has(use[href*="sun"])';
 const RUN = 'button:has(use[href*="play"])';
 /** The Text output's icon; the engine's note draws none at all. Shared with the template shape. */
