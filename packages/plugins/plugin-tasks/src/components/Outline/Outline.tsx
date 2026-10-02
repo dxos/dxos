@@ -17,6 +17,8 @@ import React, {
 } from 'react';
 
 import { Doc } from '@dxos/echo-doc';
+// Registers `<dx-anchor>`, which the link chips render.
+import '@dxos/lit-ui';
 import { composeRefs, createContext } from '@dxos/react-hooks';
 import {
   type EditorMenuGroup,
