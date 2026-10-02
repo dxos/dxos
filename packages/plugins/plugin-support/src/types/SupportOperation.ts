@@ -8,7 +8,9 @@ import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Operation from '@dxos/compute/Operation';
+import * as Project from '@dxos/compute/Project';
 import { Annotation, Database, DXN, Format, Ref, Type } from '@dxos/echo';
+import { File, Task } from '@dxos/types';
 
 import * as Support from './Support.ts';
 import { SupportIssueResult, SupportReportResult } from './SupportService.ts';
@@ -104,6 +106,31 @@ export const SubmitIssue = Operation.make({
   }),
   output: SupportIssueResult,
 });
+
+export const SubmitToProject = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.support.submitToProject'),
+    name: 'Submit Report To Project',
+    description:
+      "Files a report as a task in a project's task set, attaching the given files (e.g. a screenshot and debug logs).",
+    icon: 'ph--kanban--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    project: Ref.Ref(Project.Project).annotate({
+      description: 'The project whose task set the report is filed in.',
+    }),
+    report: SupportRequest,
+    attachments: Schema.optional(
+      Schema.Array(Ref.Ref(File.File)).annotate({
+        description: 'Files the new task takes ownership of.',
+      }),
+    ),
+  }),
+  output: Schema.Struct({
+    task: Type.getSchema(Task.Task),
+  }),
+}).pipe(Operation.mutation('write'));
 
 export const CreateTicket = Operation.make({
   meta: {

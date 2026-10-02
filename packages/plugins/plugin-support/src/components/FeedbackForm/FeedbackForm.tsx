@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';
-import { IconButton, Select, useTranslation } from '@dxos/react-ui';
+import { Flex, IconButton, Select, useTranslation } from '@dxos/react-ui';
 import {
   Form,
   type FormFieldRenderer,
@@ -239,7 +239,7 @@ const FeedbackFormReportToProject = ({ projects, onReport }: FeedbackFormReportT
   }
 
   return (
-    <div className='flex flex-col w-full gap-form-gap pt-form-padding' data-testid='report-to-project'>
+    <Flex column gap='form' classNames='w-full pt-form-padding' data-testid='report-to-project'>
       <Select.Root value={projectId} onValueChange={setSelected}>
         <Select.TriggerButton classNames='w-full' disabled={pending} placeholder={t('report-project.placeholder')} />
         <Select.Portal>
@@ -264,7 +264,7 @@ const FeedbackFormReportToProject = ({ projects, onReport }: FeedbackFormReportT
         data-testid='report-to-project-button'
       />
       <p className={noteClassNames}>{t('report-to-project.description')}</p>
-    </div>
+    </Flex>
   );
 };
 

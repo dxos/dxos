@@ -46,6 +46,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
       "path": "../../core/echo/echo-react"
     },
     {
@@ -116,9 +119,6 @@
     },
     {
       "path": "../plugin-status-bar"
-    },
-    {
-      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"

@@ -184,7 +184,6 @@
     "@dxos/plugin-observability": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/plugin-status-bar": "workspace:*",
-    "@dxos/plugin-tasks": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-focus": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
@@ -200,6 +199,7 @@
     "html-to-image": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/observability": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/plugin-theme": "workspace:*",

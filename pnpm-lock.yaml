@@ -16756,9 +16756,6 @@ importers:
       '@dxos/plugin-status-bar':
         specifier: workspace:*
         version: link:../plugin-status-bar
-      '@dxos/plugin-tasks':
-        specifier: workspace:*
-        version: link:../plugin-tasks
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -16799,6 +16796,9 @@ importers:
         specifier: 'catalog:'
         version: 1.11.13
     devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability

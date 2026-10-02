@@ -87,7 +87,15 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Step 4 — The task carries the report, screenshot and logs', subtitle: SUBTITLE });
       await demo.click({ selector: 'button:has-text("Feedback & Support")', label: 'Close sidebar' });
-      await demo.click({ selector: ':text-is("Composer Bugs")', label: 'Composer Bugs' });
+      // The navtree group starts collapsed on a fresh profile.
+      const project = page.locator('[role="treeitem"]:has-text("Composer Bugs")');
+      if (!(await project.count())) {
+        await demo.click({
+          selector: '[role="treeitem"]:has-text("Projects") [data-testid="treeItem.toggle"]',
+          label: 'Projects',
+        });
+      }
+      await demo.click({ selector: '[role="treeitem"]:has-text("Composer Bugs") >> nth=-1', label: 'Composer Bugs' });
       await demo.click({ selector: 'button:text-is("Tasks")', label: 'Tasks' });
       await demo.click({ selector: ':text-is("Kanban card drag snaps back")', label: 'Task' });
       await page.getByText('Attachments').first().waitFor({ state: 'visible', timeout: 15_000 });

@@ -14,32 +14,14 @@ import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
-import * as TaskOperation from '@dxos/plugin-tasks/TaskOperation';
-import { Task } from '@dxos/types';
+import { type File as FileType } from '@dxos/types';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { FeedbackForm, type FeedbackProjectOption, type FeedbackReportToProjectHandler } from '#components';
 import { meta } from '#meta';
-import { type SupportOperation } from '#types';
+import { SupportOperation } from '#types';
 
 import { captureScreenshot } from './screenshot.ts';
-
-const PRIORITY: Record<SupportOperation.Severity, Task.Priority> = {
-  'High priority': 'high',
-  'Medium priority': 'medium',
-  'Low priority': 'low',
-};
-
-/** The report's metadata, appended to its body so the task carries what the support route sends as fields. */
-const taskDescription = (values: SupportOperation.SupportRequest): string => {
-  const details = [
-    values.type && `- Type: ${values.type}`,
-    values.severity && `- Severity: ${values.severity}`,
-    values.area && `- Area: ${values.area}`,
-    values.version && `- Version: ${values.version}`,
-  ].filter(Boolean);
-  return details.length > 0 ? `${values.body}\n\n${details.join('\n')}` : values.body;
-};
 
 const timestamp = () => new Date().toISOString().slice(0, 19).replace(/:/g, '-');
 
@@ -65,9 +47,9 @@ const useReportableProjects = (db: Database.Database | undefined): Project.Proje
 };
 
 /**
- * Files the report as a task in a local project, attaching the debug logs and a screenshot as files
- * owned by the task. Unlike the support route nothing leaves the space, so the screenshot is stored
- * rather than uploaded to the public image service.
+ * Gathers the screenshot and debug logs, which only the browser can produce, stores them and hands
+ * them to {@link SupportOperation.SubmitToProject}. Unlike the support route nothing leaves the
+ * space, so the screenshot is stored rather than uploaded to the public image service.
  */
 const useReportToProject = (
   db: Database.Database | undefined,
@@ -95,18 +77,23 @@ const useReportToProject = (
         return false;
       }
 
-      const { data, error } = await invokePromise(
-        TaskOperation.CreateTask,
-        {
-          taskSet: project.taskSet,
-          title: values.title,
-          description: taskDescription(values),
-          priority: values.severity && PRIORITY[values.severity],
-        },
+      // Stored before the task exists so the operation can take ownership of them in one write.
+      const files = canCreateFiles ? await collectAttachments(values, exportLogs) : [];
+      const stored = (await Promise.all(files.map((file) => storeFile(invokePromise, db, file)))).filter(
+        (object) => object !== undefined,
+      );
+
+      const { error } = await invokePromise(
+        SupportOperation.SubmitToProject,
+        { project: Ref.make(project), report: values, attachments: stored.map((object) => Ref.make(object)) },
         { spaceId: db.spaceId },
       );
-      if (error || !data) {
+      if (error) {
         log.error('report not filed in project', { error });
+        // Nothing owns the stored files once the task was not created.
+        for (const object of stored) {
+          db.remove(object);
+        }
         await showToast(
           'project-report-failed',
           'ph--warning--regular',
@@ -116,18 +103,7 @@ const useReportToProject = (
         return false;
       }
 
-      const files = canCreateFiles ? await collectAttachments(values, exportLogs) : [];
-      const [task] = db.query(Filter.and(Filter.type(Task.Task), Filter.id(data.task.id))).runSync();
-      let attached = 0;
-      if (task) {
-        for (const file of files) {
-          if (await attachFile(invokePromise, db, task, file)) {
-            attached++;
-          }
-        }
-      }
-
-      const incomplete = attached < files.length || (!canCreateFiles && wantsAttachments(values));
+      const incomplete = stored.length < files.length || (!canCreateFiles && wantsAttachments(values));
       await showToast(
         'project-report-success',
         'ph--kanban--regular',
@@ -166,33 +142,18 @@ const collectAttachments = async (
   return files;
 };
 
-/** Stores a browser file and attaches it to the task, removing the stored file if the attach fails. */
-const attachFile = async (
+/** Stores a browser file as a `File` object; undefined when the file plugin rejects it. */
+const storeFile = async (
   invokePromise: ReturnType<typeof useOperationInvoker>['invokePromise'],
   db: Database.Database,
-  task: Task.Task,
   file: globalThis.File,
-): Promise<boolean> => {
+): Promise<FileType.File | undefined> => {
   const { data, error } = await invokePromise(FileOperation.Create, { db, file });
   if (error || !data) {
     log.warn('report attachment rejected', { name: file.name, error });
-    return false;
+    return undefined;
   }
-
-  const object = db.add(data.object);
-  const { error: attachError } = await invokePromise(
-    TaskOperation.AddAttachment,
-    { task: Ref.make(task), file: Ref.make(object) },
-    { spaceId: db.spaceId },
-  );
-  if (attachError) {
-    if (!(task.attachments ?? []).some((ref) => Task.refEntityId(ref) === object.id)) {
-      db.remove(object);
-    }
-    log.warn('report attachment failed', { name: file.name, error: attachError });
-    return false;
-  }
-  return true;
+  return db.add(data.object);
 };
 
 /** Renders the project picker and "Report to project" button for the active space's projects. */
