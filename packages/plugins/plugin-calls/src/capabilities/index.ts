@@ -35,7 +35,7 @@ export const CallManager = Capability.lazyModule(
     requires: [ClientCapabilities.Client, Capabilities.AtomRegistry, ClientCapabilities.IdentityService],
     provides: [CallsCapabilities.Manager],
     activatesOn: ClientEvents.Initialized,
-    environments: [],
+    environments: ['browser', 'tauri'],
   },
   () => import('./call-manager.ts'),
 );
@@ -45,7 +45,7 @@ export const CallTransport = Capability.lazyModule(
     requires: [ClientCapabilities.Client],
     provides: [CallsCapabilities.CallTransportProvider],
     activatesOn: ClientEvents.Initialized,
-    environments: [],
+    environments: ['browser', 'tauri'],
   },
   () => import('./call-transport.ts'),
 );
@@ -55,7 +55,7 @@ export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.ts')
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article', 'org.dxos.role.deckCompanion.activeCall', 'org.dxos.role.devtoolsOverview'],
 });
-export const Translations = AppCapability.translations(translations, { environments: ['node'] });
+export const Translations = AppCapability.translations(translations, { environments: ['browser', 'node', 'tauri'] });
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',

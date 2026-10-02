@@ -38,14 +38,15 @@ export const CanvasArticle = ({ role, canvas }: CanvasArticleProps) => {
           // An unset preference leaves the engine's own default in place.
           <SceneView.Root key={bound.root} store={bound.store} root={bound.root}>
             <SceneView.Canvas liveDepth={settings.liveDepth} />
-            {settings.showToolbar && (
+            {/* Unset means shown: settings saved before the default existed hold neither key. */}
+            {(settings.showToolbar ?? true) && (
               <>
                 <SceneView.Navigation />
                 <SceneView.Actions />
                 <SceneView.Debug />
               </>
             )}
-            {settings.showPalette && <SceneView.Palette />}
+            {(settings.showPalette ?? true) && <SceneView.Palette />}
           </SceneView.Root>
         )}
       </Panel.Content>

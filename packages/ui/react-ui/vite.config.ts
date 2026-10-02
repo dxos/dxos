@@ -6,9 +6,11 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    index: 'src/index.ts',
-    testing: 'src/testing/index.ts',
-    translations: 'src/translations.ts',
+    'index': 'src/index.ts',
+    'next': 'src/next/index.ts',
+    'next-testing': 'src/next/testing/stories.tsx',
+    'testing': 'src/testing/index.ts',
+    'translations': 'src/translations.ts',
   },
   jsx: 'react',
   test: { node: { environment: 'happy-dom' }, storybook: true },

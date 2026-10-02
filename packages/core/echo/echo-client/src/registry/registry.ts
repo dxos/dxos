@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { Event, type ReadOnlyEvent } from '@dxos/async';
 import { type Database, Entity, type Filter, Lens, Query, type QueryResult, Registry, Type } from '@dxos/echo';

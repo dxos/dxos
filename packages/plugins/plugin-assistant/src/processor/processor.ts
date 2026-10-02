@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AiError from 'effect/ai/AiError';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Stream from 'effect/Stream';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiModelNotAvailableError, type AiService, Model, type OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -513,14 +513,14 @@ export class AiChatProcessor {
         return yield* Effect.die(new Error('Chat processor requires a chat.'));
       }
       const selected = this._options.model;
-      if (!chat.model && selected) {
+      if (!chat.session?.model && selected) {
         Obj.update(chat, (chat) => {
-          chat.model = Ref.fromURI(selected);
+          chat.session = { ...chat.session, model: selected };
         });
       }
       // The model is the chat's, so the provider has to be the one that serves THAT model: the
       // configured provider can have moved on since the chat made its selection.
-      const model = (chat.model ? DXN.tryMake(chat.model.uri) : undefined) ?? selected;
+      const model = chat.session?.model ?? selected;
       return yield* AgentService.getSession(chat, {
         provider: model ? providerForModel(model, this._options.provider) : this._options.provider,
         location: chat.remote ? 'edge' : 'local',
@@ -708,3 +708,20 @@ export class AiChatProcessor {
     return Operation.schedule(AssistantOperation.UpdateChatName, { chat, prompt }, { spaceId });
   }
 }
+
+export type AiChatProcessorState = Pick<
+  AiChatProcessor,
+  'streaming' | 'active' | 'messages' | 'error' | 'mcpErrors' | 'activity'
+>;
+
+const idleProcessorState: AiChatProcessorState = {
+  streaming: Atom.make(false),
+  active: Atom.make(false),
+  messages: Atom.make<Message.Message[]>([]),
+  error: Atom.make<Option.Option<Error>>(Option.none()),
+  mcpErrors: Atom.make<readonly Trace.PayloadType<typeof Trace.McpServerError>[]>([]),
+  activity: Atom.make<Trace.PayloadType<typeof Trace.RequestPhase> | undefined>(undefined),
+};
+
+export const getProcessorState = (processor: AiChatProcessor | undefined): AiChatProcessorState =>
+  processor ?? idleProcessorState;

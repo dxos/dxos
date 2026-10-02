@@ -5,16 +5,18 @@
 // A standalone entrypoint, not a barrel namespace: it binds `node:http`, which the workerd hosts
 // importing `@dxos/mcp-server` must never pull in.
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { type IncomingMessage, type Server, type ServerResponse, createServer } from 'node:http';
 
+import { type Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 
 import { ToolFailure, failure } from './internal/failure.ts';
+import * as McpServer from './McpServer.ts';
 
 /** Matches EDGE's `createUpload`: minutes, since the credential rides in a URL and lands in logs. */
 const URL_TTL_MS = 10 * 60 * 1000;
@@ -40,6 +42,12 @@ type PendingUpload = {
 /** How long received bytes wait for `file.createFromUpload`; the URL's own TTL guards only the credential. */
 const RECEIVED_TTL_MS = 30 * 60 * 1000;
 
+/** Bytes held for one download URL; minted together with it, so the token exists from the start. */
+type PendingDownload = StagedUpload & {
+  readonly token: Buffer;
+  readonly expiresAt: number;
+};
+
 export type StagedUpload = {
   readonly bytes: Uint8Array;
   readonly type: string;
@@ -56,6 +64,7 @@ export type StagedUpload = {
  */
 export class Stage {
   readonly #uploads = new Map<string, PendingUpload>();
+  readonly #downloads = new Map<string, PendingDownload>();
   /** Bytes of bodies still streaming, so concurrent PUTs cannot together overrun {@link MAX_STAGED_BYTES}. */
   #inflightBytes = 0;
   #server?: Promise<{ server: Server; origin: string }>;
@@ -80,7 +89,7 @@ export class Stage {
       method: 'PUT' as const,
       expiresAt: new Date(expiresAt).toISOString(),
       maxBytes: MAX_UPLOAD_BYTES,
-      command: `curl --fail-with-body -T ${shellQuote(`./${name ?? 'FILE'}`)} ${shellQuote(url.toString())}`,
+      command: `curl --fail-with-body -T ${McpServer.shellQuote(`./${name ?? 'FILE'}`)} ${McpServer.shellQuote(url.toString())}`,
     };
   }
 
@@ -95,10 +104,51 @@ export class Stage {
     this.#uploads.delete(uploadId);
   }
 
+  /** Bytes a download can still stage without overrunning {@link MAX_STAGED_BYTES}. */
+  available(): number {
+    this.#prune();
+    return Math.max(0, MAX_STAGED_BYTES - this.#stagedBytes() - this.#inflightBytes);
+  }
+
+  /**
+   * Holds bytes for a download and returns its id; the matching URL comes from {@link downloadUrl}.
+   * Shaped as `@dxos/plugin-file/StagedUpload`'s `Sink`, which is what fills it.
+   */
+  stage(download: StagedUpload): string {
+    this.#prune();
+    if (this.#uploads.size + this.#downloads.size >= MAX_PENDING_UPLOADS) {
+      throw new Error(`Too many pending transfers (${MAX_PENDING_UPLOADS}); try again in a few minutes.`);
+    }
+    if (this.#stagedBytes() + this.#inflightBytes + download.bytes.byteLength > MAX_STAGED_BYTES) {
+      throw new Error('Too many bytes staged for transfer; try again in a few minutes.');
+    }
+    const downloadId = randomBytes(16).toString('hex');
+    this.#downloads.set(downloadId, {
+      ...download,
+      token: randomBytes(24),
+      expiresAt: Date.now() + URL_TTL_MS,
+    });
+    return downloadId;
+  }
+
+  /** Where to `GET` a staged download; `undefined` if the id is unknown or has expired. */
+  async downloadUrl(downloadId: string): Promise<{ url: string; expiresAt: string } | undefined> {
+    this.#prune();
+    const pending = this.#downloads.get(downloadId);
+    if (!pending) {
+      return undefined;
+    }
+    const { origin } = await this.#listen();
+    const url = new URL(`/download/${downloadId}`, origin);
+    url.searchParams.set('sig', pending.token.toString('hex'));
+    return { url: url.toString(), expiresAt: new Date(pending.expiresAt).toISOString() };
+  }
+
   async close(): Promise<void> {
     const listening = await this.#server;
     this.#server = undefined;
     this.#uploads.clear();
+    this.#downloads.clear();
     if (listening) {
       listening.server.closeAllConnections();
       await new Promise<void>((resolve) => listening.server.close(() => resolve()));
@@ -114,12 +164,20 @@ export class Stage {
         this.#uploads.delete(uploadId);
       }
     }
+    for (const [downloadId, pending] of this.#downloads) {
+      if (pending.expiresAt < now) {
+        this.#downloads.delete(downloadId);
+      }
+    }
   }
 
   #stagedBytes(): number {
     let total = 0;
     for (const pending of this.#uploads.values()) {
       total += pending.received?.bytes.byteLength ?? 0;
+    }
+    for (const pending of this.#downloads.values()) {
+      total += pending.bytes.byteLength;
     }
     return total;
   }
@@ -150,6 +208,10 @@ export class Stage {
   async #handle(request: IncomingMessage, response: ServerResponse): Promise<void> {
     this.#prune();
     const url = new URL(request.url ?? '/', 'http://127.0.0.1');
+    const download = /^\/download\/([0-9a-f]{32})$/.exec(url.pathname);
+    if (request.method === 'GET' && download) {
+      return this.#serveDownload(download[1], url, response);
+    }
     const match = /^\/upload\/([0-9a-f]{32})$/.exec(url.pathname);
     if (request.method !== 'PUT' || !match) {
       return reject(request, response, 404, 'Not found.');
@@ -199,10 +261,32 @@ export class Stage {
     log.info('staged local upload', { uploadId: match[1], size, type });
     respond(response, 200, JSON.stringify({ uploadId: match[1], size, type }));
   }
-}
 
-/** Single-quotes a word for a POSIX shell, so a file name with spaces, quotes or `$` stays one argument. */
-const shellQuote = (word: string) => `'${word.replaceAll("'", `'\\''`)}'`;
+  /**
+   * Answers any number of times until the URL expires, so an interrupted `curl` can simply be
+   * re-run; the bytes are released by expiry rather than by the first read.
+   */
+  #serveDownload(downloadId: string, url: URL, response: ServerResponse): void {
+    const pending = this.#downloads.get(downloadId);
+    const signature = Buffer.from(url.searchParams.get('sig') ?? '', 'hex');
+    if (
+      !pending ||
+      signature.length !== pending.token.length ||
+      !timingSafeEqual(signature, pending.token) ||
+      pending.expiresAt < Date.now()
+    ) {
+      return respond(response, 403, 'Invalid or expired download URL.');
+    }
+    response.writeHead(200, {
+      'Content-Type': pending.type,
+      'Content-Length': pending.bytes.byteLength,
+      // Served to a shell, but the listener is reachable from a browser tab too, so it never renders.
+      'Content-Disposition': 'attachment',
+      'X-Content-Type-Options': 'nosniff',
+    });
+    response.end(pending.bytes);
+  }
+}
 
 /** Answers without reading the body, draining it so the client sees the status rather than a reset. */
 const reject = (request: IncomingMessage, response: ServerResponse, status: number, body: string) => {
@@ -303,5 +387,32 @@ export const handlers = (stage: Stage) =>
           try: () => stage.mint(name),
           catch: (error) => failure('operation_failed', error instanceof Error ? error.message : String(error)),
         });
+      }),
+  });
+
+/**
+ * Binds `createDownload` to one stage. `file.resolveDownload` must be overridden with
+ * `@dxos/plugin-file/StagedUpload`'s `resolveDownloadHandler(stage)`, which is what puts the bytes
+ * here; the default handler resolves only files in EDGE's store, which this listener cannot serve.
+ */
+export const downloadHandlers = (stage: Stage, registry: Registry.Registry, host: McpServer.HostShape) =>
+  McpServer.DownloadToolkit.of({
+    createDownload: ({ file, spaceId }) =>
+      Effect.gen(function* () {
+        const resolved = yield* McpServer.resolveDownload(registry, host, { file, spaceId });
+        const minted = yield* Effect.promise(() => stage.downloadUrl(resolved.downloadId));
+        if (!minted) {
+          return yield* Effect.fail(failure('operation_failed', 'The download expired before its URL was minted.'));
+        }
+        const name = McpServer.downloadFileName(resolved);
+        return {
+          url: minted.url,
+          method: 'GET' as const,
+          expiresAt: minted.expiresAt,
+          name,
+          type: resolved.type,
+          size: resolved.size,
+          command: McpServer.downloadCommand(minted.url, name),
+        };
       }),
   });

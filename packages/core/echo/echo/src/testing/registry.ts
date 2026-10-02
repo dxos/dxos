@@ -3,7 +3,7 @@
 //
 
 import * as Layer from 'effect/Layer';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { Event } from '@dxos/async';
 

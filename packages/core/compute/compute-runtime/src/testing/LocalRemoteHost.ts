@@ -6,9 +6,9 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import type * as Rpc from 'effect/rpc/Rpc';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import type * as Rpc from 'effect/unstable/rpc/Rpc';
 
 import * as Process from '@dxos/compute/Process';
 

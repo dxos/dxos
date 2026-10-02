@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
@@ -83,6 +83,7 @@ export default Capability.makeModule(
               label: ['toggle-presentation.label', { ns: meta.profile.key }],
               icon: 'ph--presentation--regular',
               disposition: 'list-item',
+              testId: 'presenter.present',
               keyBinding: {
                 macos: 'shift+meta+p',
                 windows: 'shift+alt+p',

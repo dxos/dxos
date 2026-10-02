@@ -997,6 +997,9 @@
       "path": "tools/vite-plugin-log/tsconfig.json"
     },
     {
+      "path": "tools/vite-plugin-module-url/tsconfig.json"
+    },
+    {
       "path": "tools/vite-plugin-shutdown/tsconfig.json"
     },
     {

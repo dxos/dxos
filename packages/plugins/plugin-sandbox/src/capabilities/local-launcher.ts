@@ -39,7 +39,7 @@ export default Capability.makeModule(
       }
       const { Command } = await import('@tauri-apps/plugin-shell');
       const token = randomToken();
-      const command = Command.create('dx-sandbox', []);
+      const command = Command.create('dx-sandbox');
       const port = new Promise<number>((resolve, reject) => {
         let reported = false;
         // Each event is one line, but whether it keeps its terminator is not part of the shell plugin's contract.
@@ -76,7 +76,9 @@ export default Capability.makeModule(
           ),
         ]);
         log.info('dx-sandbox running', { pid: child.pid, port: ready });
-        return { child, backend: HttpBackend.make(`http://127.0.0.1:${ready}`, token) };
+        // `localhost`, not `127.0.0.1`: the app's CSP lets scripts load from `http://localhost:*` only, and a published
+        // plugin's module is imported from the URL this base makes.
+        return { child, backend: HttpBackend.make(`http://localhost:${ready}`, token) };
       } catch (error) {
         await child.kill().catch(() => {});
         throw error;

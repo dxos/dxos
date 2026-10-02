@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type FC, useEffect, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -54,8 +54,19 @@ export type ModuleLayout = ModuleSpec[][];
 export type ModuleContainerProps = {
   /** Static layout; omit when a harness contributes a runtime layout via {@link StoryLayout.Atom}. */
   layout?: ModuleLayout;
+  /**
+   * Column track sizes, underscore-separated as in a Tailwind arbitrary value (e.g. `2fr_1fr`);
+   * defaults to equal columns.
+   */
+  columns?: string;
+  /** Row track sizes per column, in the same form; a column without an entry has equal rows. */
+  rows?: readonly (string | undefined)[];
   compact?: boolean;
 };
+
+/** Grid tracks from an underscore-separated size list, else `count` equal tracks. */
+const tracks = (sizes: string | undefined, count: number): string =>
+  sizes?.replaceAll('_', ' ') ?? `repeat(${count}, minmax(0, 1fr))`;
 
 /** Stable fallback so `useAtomValue` stays unconditional when no {@link StoryLayout.Atom} is contributed. */
 const emptyLayoutAtom = Atom.make<ModuleLayout | undefined>(undefined);
@@ -196,7 +207,7 @@ const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string
  * drive its layout with this container. Provide `withAttention()` (from `@dxos/react-ui-attention/testing`)
  * in the story decorators to make attention actually track focus.
  */
-export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProps) => {
+export const ModuleContainer = ({ layout, columns, rows, compact = false }: ModuleContainerProps) => {
   const atomRegistry = useCapability(Capabilities.AtomRegistry);
   const layoutState = useCapability(StorybookCapabilities.LayoutState);
   const { graph } = useAppGraph();
@@ -238,13 +249,13 @@ export const ModuleContainer = ({ layout, compact = false }: ModuleContainerProp
   return (
     <div
       className={mx('dx-fill dx-fullscreen grid', !compact && 'gap-2 p-2')}
-      style={{ gridTemplateColumns: `repeat(${resolvedLayout.length}, minmax(0, 1fr))` }}
+      style={{ gridTemplateColumns: tracks(columns, resolvedLayout.length) }}
     >
       {resolvedLayout.map((column, columnIndex) => (
         <div
           key={columnIndex}
           className={mx('dx-expand grid', !compact && 'gap-2')}
-          style={{ gridTemplateRows: `repeat(${column.length}, minmax(0, 1fr))` }}
+          style={{ gridTemplateRows: tracks(rows?.[columnIndex], column.length) }}
         >
           {column.map((spec, moduleIndex) => {
             const cell = normalizeCell(spec, space.id, `${columnIndex}:${moduleIndex}`);

@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-canvas",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "Infinite multi-depth canvas as an illustrator drawing variant",
   "homepage": "https://dxos.org",
@@ -18,12 +18,14 @@
       "source": {
         "workerd": "./src/capabilities/gen/workerd.ts",
         "node": "./src/capabilities/gen/node.ts",
-        "default": "./src/capabilities/index.ts"
+        "tauri": "./src/capabilities/gen/tauri.ts",
+        "browser": "./src/capabilities/gen/browser.ts"
       },
       "types": "./dist/types/src/capabilities/index.d.ts",
       "workerd": "./dist/lib/capabilities.workerd.mjs",
       "node": "./dist/lib/capabilities.node.mjs",
-      "default": "./dist/lib/capabilities.mjs"
+      "tauri": "./dist/lib/capabilities.tauri.mjs",
+      "browser": "./dist/lib/capabilities.browser.mjs"
     },
     "#containers": {
       "source": "./src/containers/index.ts",
@@ -126,11 +128,14 @@
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-ui": "workspace:*",
+    "@dxos/storybook-testing": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "storybook": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

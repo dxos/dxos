@@ -357,6 +357,18 @@ export const Mercator = () => {
   );
 };
 
+/** The flat world map a world clock sits on: equirectangular, unrotated, no interaction. */
+export const Equirectangular = () => {
+  const topology = useTopology();
+  return (
+    <Globe.Root zoom={1}>
+      <Globe.Viewport>
+        <Globe.Canvas topology={topology} projection='equirectangular' fit='contain' styles={monochrome} />
+      </Globe.Viewport>
+    </Globe.Root>
+  );
+};
+
 type Story = StoryObj<typeof DefaultStory>;
 
 export const Globe1: Story = {

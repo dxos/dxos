@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Command$ from 'effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import type * as Exit$ from 'effect/Exit';
 import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
-import type * as Command$ from 'effect/unstable/cli/Command';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import type { FC, PropsWithChildren } from 'react';
 
 import type {

@@ -118,3 +118,31 @@ export const EnablePlugins = Operation.make({
     rejected: Schema.Array(PluginRejection),
   }),
 }).pipe(Operation.mutation('write'));
+
+/**
+ * User-initiated, like {@link EnablePlugins}: loading runs code from the URL inside the host, so the
+ * assistant offers it as a `plugin-url-prompt` surface and this runs on the user's click — it is
+ * never projected as an agent tool.
+ */
+export const LoadPlugin = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.registry.loadPlugin'),
+    name: 'Load Plugin',
+    description: 'Load a plugin from the URL of its manifest.json and, unless told not to, enable it.',
+    icon: 'ph--cloud-arrow-down--regular',
+  },
+  services: [Plugin.Service],
+  input: Schema.Struct({
+    url: Schema.String.annotate({
+      description: 'URL of the plugin manifest, e.g. https://example.com/my-plugin/manifest.json.',
+    }),
+    enable: Schema.optional(Schema.Boolean).annotate({
+      description:
+        'Enable the plugin once it is loaded (default true); false leaves it listed but off, unless its id is already enabled (e.g. from an earlier session), in which case it starts.',
+    }),
+  }),
+  output: Schema.Struct({
+    id: Schema.String.annotate({ description: 'Id of the plugin that was loaded.' }),
+    name: Schema.optional(Schema.String),
+  }),
+}).pipe(Operation.mutation('write'));

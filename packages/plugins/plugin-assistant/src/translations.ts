@@ -173,6 +173,13 @@ export const translations: Resource[] = [
         'plugin-prompt.unavailable': '{{plugin}} is not installed on this device.',
         'plugin-prompt.failed': 'Could not enable {{plugin}}. Try again from the plugin registry.',
         'plugin-prompt.button': 'Enable',
+        'plugin-url-prompt.title': 'Load {{plugin}}',
+        'plugin-url-prompt.default.name': 'plugin',
+        'plugin-url-prompt.description':
+          'Load {{plugin}} from this URL, then enable it in Plugins. It runs inside the app, so load only code you trust.',
+        'plugin-url-prompt.loaded': '{{plugin}} is loaded. Enable it in Plugins.',
+        'plugin-url-prompt.failed': 'Could not load the plugin: {{error}}',
+        'plugin-url-prompt.button': 'Load plugin',
 
         'search.placeholder': 'Search...',
         'prompt.placeholder': 'Enter question or command...',

@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -48,12 +48,8 @@ import { TaskFilter } from './TaskFilter.tsx';
 import { TaskGroupMenu, TaskSortMenu } from './TaskViewOptions.tsx';
 
 export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet> & {
-  /**
-   * Where a row opens its task. `'plank'` (the default) opens it beside the list, reusing the host's
-   * `task` deck level; `'companion'` opens the host's `~task` companion instead, which keeps the
-   * host itself in front of the reader. A host offers `'companion'` only where it contributes one.
-   */
-  detail?: 'plank' | 'companion';
+  /** Whether rows render their task's description beneath the title. */
+  showDescription?: boolean;
 };
 
 /**
@@ -63,7 +59,12 @@ export type TaskSetArticleProps = AppSurface.ObjectArticleProps<TaskSet.TaskSet>
  * {@link TaskOperation} verbs so the article and external agents share one write path: the verbs are
  * what keep the lists and parent edges consistent.
  */
-export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 'plank' }: TaskSetArticleProps) => {
+export const TaskSetArticle = ({
+  role,
+  attendableId,
+  subject: taskSet,
+  showDescription = true,
+}: TaskSetArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
@@ -162,15 +163,10 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
     spaceId,
   });
 
-  // A row opens its task through the shared reading gesture: the companion beside the list where the
-  // host contributes one and the viewport has room, a levelled plank otherwise. `attendableId` is
-  // the host's node — the project's inside its Tasks tab.
   const currentId = useSelection(attendableId, 'single');
   const openDetail = useDetailNavigation({
     contextId: attendableId,
     getPath: (id) => `${attendableId}/${id}`,
-    level: 'task',
-    companion: detail === 'companion' ? 'task' : undefined,
   });
   const handleOpen = useCallback(
     (task: Task.Task | undefined, { meta }: TaskSelectModifiers = {}) => openDetail(task?.id, { modified: meta }),
@@ -283,16 +279,16 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       tasks={tasks}
       groups={groups}
       hierarchical
-      collapsed={collapsed}
-      onCollapsedChange={setCollapsed}
       selectable
-      showDescription
-      descriptionComponents={descriptionComponents}
+      showDescription={showDescription}
       showEstimates
+      descriptionComponents={descriptionComponents}
       checked={checked}
+      collapsed={collapsed}
+      selected={currentId}
       getTaskActions={getTaskActions}
       onTaskCheck={onTaskCheck}
-      selected={currentId}
+      onCollapsedChange={setCollapsed}
       onTaskCreate={handleCreate}
       onTaskUpdate={handleUpdate}
       onTaskMove={arranged ? undefined : handleMove}
@@ -301,17 +297,12 @@ export const TaskSetArticle = ({ role, attendableId, subject: taskSet, detail = 
       <TaskList.Viewport>
         <TaskList.Content />
       </TaskList.Viewport>
-      {/* Create-only: the detail is the task the row opens, so the pane stays the add row rather
-          than turning into an editor the moment a row is selected. Full width, edge to edge — it is
-          the foot of the list, not a card floating in a gutter, so it lines up with the rows. */}
       <TaskList.Editor
         createOnly
         showDescription
-        // Only where a plugin can store the file, as the task's own article decides.
         acceptFiles={!!attachFile}
         descriptionExtensions={descriptionExtensions}
-        // Flush with the list, with no border of its own: it reads as the list's last row.
-        classNames='bg-input-surface px-15 py-2'
+        classNames='bg-input-surface px-2 pb-2'
         placeholder={t('task-create.placeholder')}
       />
     </TaskList.Root>

@@ -628,9 +628,12 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           status = 'error';
           throw new Error(`Invalid EID: ${uri}`);
         }
-        if (!EID.isLocal(parsedEchoUri) && echoSpaceId !== context.space) {
-          status = 'error';
-          throw new Error('Cross-space references are not yet supported');
+        // Mirrors `_resolveSync`: a cross-space target resolves in its own space's database when that
+        // database is open here, and is missing otherwise.
+        if (!EID.isLocal(parsedEchoUri) && echoSpaceId !== undefined && echoSpaceId !== context.space) {
+          const obj = await this._resolveDatabaseObjectAsync(echoSpaceId, echoUri, options);
+          status = obj ? 'resolved' : 'missing';
+          return obj;
         }
 
         const feedEchoId = context.feed ? EID.tryParse(context.feed) : undefined;

@@ -52,6 +52,7 @@ export namespace Echo {
   export const Space = `${Echo.id}.space`;
   export const Feeds = `${Echo.id}.feeds`;
   export const Objects = `${Echo.id}.objects`;
+  export const Queries = `${Echo.id}.queries`;
   export const Schema = `${Echo.id}.schema`;
   export const Registry = `${Echo.id}.registry`;
   export const Automerge = `${Echo.id}.automerge`;

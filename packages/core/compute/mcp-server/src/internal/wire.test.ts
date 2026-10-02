@@ -68,6 +68,14 @@ describe('Wire', () => {
       expect(message.result.instructions).to.include('invokeOperation');
     });
 
+    // Claude Code truncates server instructions at 2KB, silently dropping whatever comes last.
+    test('the instructions ask for the session to be renamed and fit the 2KB client limit', ({ expect }) => {
+      const message = discoverMessage();
+      Wire.normalize(message);
+      expect(message.result.instructions).to.include('rename your own session');
+      expect(new TextEncoder().encode(message.result.instructions).byteLength).to.be.below(2048);
+    });
+
     test('a host field wins over the shared identity', ({ expect }) => {
       const message = discoverMessage();
       Wire.normalize(message, { serverInfo: { title: 'Something else' } });

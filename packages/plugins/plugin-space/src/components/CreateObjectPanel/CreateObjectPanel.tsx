@@ -151,6 +151,7 @@ export const CreateObjectPanel = ({
         target={target}
         initialFormValues={initialFormValues}
         onCreateObject={(data) => handleCreateObject(data)}
+        onCancel={onCancel}
       />
     );
   }

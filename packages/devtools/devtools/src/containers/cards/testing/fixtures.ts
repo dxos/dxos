@@ -4,6 +4,7 @@
 
 import { create } from '@bufbuild/protobuf';
 
+import { type QueryMetrics } from '@dxos/echo-client';
 import { type EchoDataStats } from '@dxos/echo-host';
 import { SpaceId } from '@dxos/keys';
 import { ConnectionState } from '@dxos/network-manager';
@@ -17,9 +18,9 @@ import { type FeedSyncState, type PeerSyncState } from '@dxos/react-client/echo'
 
 import {
   type DatabaseInfo,
+  type IndexerRow,
   type MemoryInfo,
   type PerformanceEntryLike,
-  type QueryInfo,
   type ReceivedMessage,
   type Stats,
   type SyncRow,
@@ -122,22 +123,75 @@ export const performanceEntries: PerformanceEntryLike[] = [
   { entryType: 'largest-contentful-paint', name: '', duration: 0 },
 ];
 
-export const queries: QueryInfo[] = [
-  {
-    filter: { type: { itemId: 'dxos.org/type/Document' }, options: { deleted: 'exclude' } },
-    metrics: { objectsReturned: 42, executionTime: 12 },
-    active: true,
-  },
-  {
-    filter: { type: { itemId: 'dxos.org/type/Task' }, props: { completed: false } },
-    metrics: { objectsReturned: 7, executionTime: 310 },
-    active: true,
-  },
-  {
-    filter: { type: { itemId: 'dxos.org/type/Contact' } },
-    metrics: { objectsReturned: 0, executionTime: 3 },
-    active: false,
-  },
+const queryMetric = (query: string, metrics: Partial<QueryMetrics>): QueryMetrics => ({
+  query,
+  created: 1,
+  runs: 0,
+  subscriptions: 1,
+  active: 1,
+  updates: 1,
+  executions: 1,
+  totalTime: 0,
+  maxTime: 0,
+  lastTime: 0,
+  maxUpdateTime: 0,
+  lastCount: 0,
+  maxCount: 0,
+  lastSeen: 1_760_000_000_000,
+  ...metrics,
+});
+
+export const queries: QueryMetrics[] = [
+  queryMetric('Query.select(Filter.type(org.dxos.type.document))', {
+    created: 6,
+    subscriptions: 6,
+    active: 4,
+    updates: 31,
+    executions: 6,
+    totalTime: 72,
+    maxTime: 21,
+    lastTime: 9,
+    maxUpdateTime: 2.4,
+    lastCount: 42,
+    maxCount: 42,
+  }),
+  queryMetric(
+    'Query.select(Filter.type(org.dxos.type.task, { completed: Filter.eq(false) })).orderBy(Order.property("rank"))',
+    {
+      created: 2,
+      subscriptions: 2,
+      active: 2,
+      updates: 12,
+      executions: 2,
+      totalTime: 404,
+      maxTime: 310,
+      lastTime: 94,
+      maxUpdateTime: 18,
+      lastCount: 7,
+      maxCount: 9,
+    },
+  ),
+  queryMetric('Query.select(Filter.type(org.dxos.type.person))', {
+    created: 14,
+    runs: 14,
+    subscriptions: 0,
+    active: 0,
+    updates: 0,
+    executions: 14,
+    totalTime: 980,
+    maxTime: 96,
+    lastTime: 61,
+    lastCount: 128,
+    maxCount: 131,
+  }),
+  queryMetric('Query.select(Filter.everything()).options({ deleted: "include" })', {
+    active: 0,
+    executions: 1,
+    totalTime: 3,
+    maxTime: 3,
+    lastTime: 3,
+    lastCount: 0,
+  }),
 ];
 
 export const surfaceProfilerStats: SurfaceProfilerStats[] = [
@@ -200,6 +254,25 @@ export const syncRows: SyncRow[] = [
   { spaceId: 'BM6WP9RV4KT8XA2J', name: 'New space', state: syncState(true, 3) },
 ];
 
+export const indexerRows: IndexerRow[] = [
+  {
+    spaceId: SpaceId.random(),
+    name: 'Personal Space',
+    unindexed: 0,
+  },
+  {
+    spaceId: SpaceId.random(),
+    name: 'Acme Robotics',
+    unindexed: 37,
+  },
+  {
+    spaceId: SpaceId.random(),
+    name: 'New space',
+    unindexed: 0,
+    error: 'Request failed: 503',
+  },
+];
+
 const traceMessage = (index: number, type: string, space: string): ReceivedMessage => ({
   id: String(index),
   receivedAt: Date.now() - (10 - index) * 1_250,
@@ -221,7 +294,6 @@ export const stats: Stats = {
   database,
   network,
   edge: edgeSocket,
-  queries,
   performanceEntries,
 };
 

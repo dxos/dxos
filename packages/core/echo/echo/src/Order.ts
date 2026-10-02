@@ -32,9 +32,16 @@ class OrderClass implements Order<any> {
 /**
  * Order by the database's default order. For non-feed sources this is by id; for feed sources
  * this is insertion order, so `desc` reads newest-first. Defaults to `asc`.
+ *
+ * @performance O(1); builds an order AST node without sorting anything.
  */
 export const natural = (direction: QueryAST.OrderDirection = 'asc'): Order<any> =>
   new OrderClass({ kind: 'natural', direction });
+/**
+ * Order by a property of the current result shape.
+ *
+ * @performance O(1); builds an order AST node without sorting anything.
+ */
 export const property = <T>(property: keyof T & string, direction: QueryAST.OrderDirection): Order<T> =>
   new OrderClass({
     kind: 'property',
@@ -45,6 +52,8 @@ export const property = <T>(property: keyof T & string, direction: QueryAST.Orde
 /**
  * Order by relevance rank (for FTS/vector search results).
  * Higher rank = better match. Default direction is 'desc' (best matches first).
+ *
+ * @performance O(1); builds an order AST node without sorting anything.
  */
 export const rank = <T>(direction: QueryAST.OrderDirection = 'desc'): Order<T> =>
   new OrderClass({
@@ -55,6 +64,8 @@ export const rank = <T>(direction: QueryAST.OrderDirection = 'desc'): Order<T> =
 /**
  * Order by the system `updatedAt` timestamp (last re-indexed). Default direction is 'desc'
  * (most-recently-updated first). Mirrors {@link Filter.updated}.
+ *
+ * @performance O(1); builds an order AST node without sorting anything.
  */
 export const updated = <T>(direction: QueryAST.OrderDirection = 'desc'): Order<T> =>
   new OrderClass({
@@ -66,6 +77,8 @@ export const updated = <T>(direction: QueryAST.OrderDirection = 'desc'): Order<T
 /**
  * Order by the system `createdAt` timestamp (first indexed). Default direction is 'desc'
  * (most-recently-created first). Mirrors {@link Filter.created}.
+ *
+ * @performance O(1); builds an order AST node without sorting anything.
  */
 export const created = <T>(direction: QueryAST.OrderDirection = 'desc'): Order<T> =>
   new OrderClass({

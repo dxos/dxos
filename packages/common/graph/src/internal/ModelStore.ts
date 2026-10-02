@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import type * as GraphBuilder from '../GraphBuilder.ts';
 import * as GraphEdge from '../GraphEdge.ts';

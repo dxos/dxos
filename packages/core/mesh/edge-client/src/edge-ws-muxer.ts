@@ -2,7 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
+import { DeferredTask, Trigger, sleepWithContext } from '@dxos/async';
+import { Context } from '@dxos/context';
+import { BaseError } from '@dxos/errors';
+import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { buf } from '@dxos/protocols/buf';
 import { type Message, MessageSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
@@ -24,6 +27,8 @@ const FLAG_SEGMENT_SEQ = 1;
  */
 const FLAG_SEGMENT_SEQ_TERMINATED = 1 << 1;
 
+const isSegment = (frame: Uint8Array): boolean => (frame[0] & FLAG_SEGMENT_SEQ) !== 0;
+
 /**
  * https://developers.cloudflare.com/durable-objects/platform/limits/
  */
@@ -31,6 +36,7 @@ export const CLOUDFLARE_MESSAGE_MAX_BYTES = 1000 * 1000; // 1MB
 export const CLOUDFLARE_RPC_MAX_BYTES = 32 * 1000 * 1000; // 32MB
 
 const MAX_CHUNK_LENGTH = 16384;
+const MAX_OUT_CHANNEL_ID = 255;
 const MAX_BUFFERED_AMOUNT = CLOUDFLARE_MESSAGE_MAX_BYTES;
 const BUFFER_FULL_BACKOFF_TIMEOUT = 100;
 
@@ -56,8 +62,18 @@ export class WebSocketMuxer {
   private _inMessageAccumulatedBytes = 0;
   private readonly _outMessageChunks = new Map<number, MessageChunk[]>();
   private readonly _outMessageChannelByService = new Map<string, number>();
+  /** Channels whose last sent segment left the receiver mid-sequence. */
+  private readonly _outOpenSequences = new Set<number>();
+  /**
+   * Set once pending sends were dropped with a sequence still open at the receiver: the wire format has no abort, so
+   * the receiver keeps those segments and would prepend them to the next sequence on that channel.
+   */
+  private _segmentedSendError: Error | undefined;
 
-  private _sendTimeout: any | undefined;
+  /** Disposed by {@link destroy}, which stops the send task mid-wait. */
+  private readonly _ctx = new Context();
+  /** Writes queued frames; one run at a time, and later schedules join the next run. */
+  private readonly _sendTask = new DeferredTask(this._ctx, () => this._sendQueuedFrames());
 
   private readonly _maxChunkLength: number;
 
@@ -69,51 +85,36 @@ export class WebSocketMuxer {
   }
 
   /**
-   * Resolves when all the message chunks get enqueued for sending.
+   * Resolves once the socket has taken the whole message. Segments go out on the send task, which writes as much as
+   * the socket takes and waits only while it is connecting or its buffer is full; a message never overtakes one its
+   * service sent before it.
+   * Rejects with {@link MessageTooLargeError} past the Cloudflare limit, and with {@link WebSocketClosedError} if the
+   * socket is closing or closed or the muxer is destroyed, including while the message waits. A queued message also
+   * rejects with the error the socket's `send` throws. A close or a throw drops every queued message, and once a
+   * message was cut off mid-sequence every later segmented message rejects with that error.
    */
   public async send(message: Message): Promise<void> {
-    const binary = buf.toBinary(MessageSchema, message);
-    const channelId = this._resolveChannel(message);
-    if (
-      (channelId == null && binary.byteLength > CLOUDFLARE_MESSAGE_MAX_BYTES) ||
-      binary.byteLength > CLOUDFLARE_RPC_MAX_BYTES
-    ) {
-      log.error('Large message dropped', {
-        byteLength: binary.byteLength,
-        serviceId: message.serviceId,
-        payload: protocol.getPayloadType(message),
-        channelId,
-      });
+    const { frames, channelId } = this._encode(message);
+    const segmented = isSegment(frames[0]);
+    if (channelId === undefined || (!segmented && !this._outMessageChunks.has(channelId))) {
+      this._ws.send(frames[0]);
       return;
     }
-
-    if (channelId == null || binary.length < this._maxChunkLength) {
-      this._ws.send(concatUint8Arrays(new Uint8Array([0]), binary));
-      return;
+    if (segmented && this._segmentedSendError) {
+      throw this._segmentedSendError;
     }
 
-    const chunkCount = Math.ceil(binary.length / this._maxChunkLength);
-    log('muxer sending segmented message', {
-      byteLength: binary.byteLength,
-      chunkCount,
+    log('muxer queueing message', {
+      frameCount: frames.length,
       channelId,
       serviceId: message.serviceId,
       payload: protocol.getPayloadType(message),
     });
 
     const terminatorSentTrigger = new Trigger();
-    const messageChunks: MessageChunk[] = [];
-    for (let i = 0; i < binary.length; i += this._maxChunkLength) {
-      const chunk = binary.slice(i, i + this._maxChunkLength);
-      const isLastChunk = i + this._maxChunkLength >= binary.length;
-      if (isLastChunk) {
-        const flags = new Uint8Array([FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED, channelId]);
-        messageChunks.push({ payload: concatUint8Arrays(flags, chunk), trigger: terminatorSentTrigger });
-      } else {
-        const flags = new Uint8Array([FLAG_SEGMENT_SEQ, channelId]);
-        messageChunks.push({ payload: concatUint8Arrays(flags, chunk) });
-      }
-    }
+    const messageChunks: MessageChunk[] = frames.map((payload, index) =>
+      index === frames.length - 1 ? { payload, trigger: terminatorSentTrigger } : { payload },
+    );
 
     const queuedMessages = this._outMessageChunks.get(channelId);
     if (queuedMessages) {
@@ -122,15 +123,41 @@ export class WebSocketMuxer {
       this._outMessageChunks.set(channelId, messageChunks);
     }
 
-    this._sendChunkedMessages();
+    this._sendTask.schedule();
 
     await terminatorSentTrigger.wait();
-    log.debug('muxer segmented message send enqueued', {
-      byteLength: binary.byteLength,
-      chunkCount,
+    log.debug('muxer queued message sent', {
+      frameCount: frames.length,
       channelId,
       serviceId: message.serviceId,
     });
+  }
+
+  /**
+   * Writes every frame of the message before returning, with no queue, timer or back-pressure.
+   * Server only, such as the EDGE router on workerd: it holds the thread until the whole message is written, which a
+   * server can afford but a client cannot, since its UI and sync work wait behind it. Clients use {@link send}, which
+   * leaves the thread free and waits while the socket's buffer is full.
+   * Throws where {@link send} rejects, and on any message while `send` has messages queued, since its frames would cut
+   * into them.
+   */
+  public sendSync(message: Message): void {
+    invariant(this._outMessageChunks.size === 0, 'sendSync would cut into messages send has queued.');
+    const { frames } = this._encode(message);
+    if (isSegment(frames[0]) && this._segmentedSendError) {
+      throw this._segmentedSendError;
+    }
+    for (const [index, frame] of frames.entries()) {
+      try {
+        this._ws.send(frame);
+      } catch (error) {
+        // The receiver keeps the segments already written and would prepend them to the next sequence.
+        if (index > 0) {
+          this._segmentedSendError ??= error instanceof Error ? error : new Error(String(error));
+        }
+        throw error;
+      }
+    }
   }
 
   public receiveData(data: Uint8Array): Message | undefined {
@@ -207,18 +234,47 @@ export class WebSocketMuxer {
   }
 
   public destroy(): void {
-    if (this._sendTimeout) {
-      clearTimeout(this._sendTimeout);
-      this._sendTimeout = undefined;
-    }
-    for (const channelChunks of this._outMessageChunks.values()) {
-      channelChunks.forEach((chunk) => chunk.trigger?.wake());
-    }
-    this._outMessageChunks.clear();
+    void this._ctx.dispose();
+    this._rejectPendingSends(new WebSocketClosedError(this._ws.readyState));
     this._inMessageAccumulator.clear();
     this._inMessageAccumulatorBytes.clear();
     this._inMessageAccumulatedBytes = 0;
     this._outMessageChannelByService.clear();
+  }
+
+  /**
+   * Splits a message into its wire frames: one whole frame, or segments on its service's channel. Returns the channel
+   * of any message that names a service. Throws on a closing or closed socket, on a destroyed muxer and past the
+   * Cloudflare limit.
+   */
+  private _encode(message: Message): { frames: Uint8Array[]; channelId: number | undefined } {
+    if (this._ctx.disposed || this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
+      throw new WebSocketClosedError(this._ws.readyState);
+    }
+    const binary = buf.toBinary(MessageSchema, message);
+    const channelId = this._resolveChannel(message);
+    const maxByteLength = channelId == null ? CLOUDFLARE_MESSAGE_MAX_BYTES : CLOUDFLARE_RPC_MAX_BYTES;
+    if (binary.byteLength > maxByteLength) {
+      throw new MessageTooLargeError({
+        byteLength: binary.byteLength,
+        maxByteLength,
+        serviceId: message.serviceId,
+        payload: protocol.getPayloadType(message),
+      });
+    }
+    if (channelId == null || binary.byteLength < this._maxChunkLength) {
+      return { frames: [concatUint8Arrays(new Uint8Array([0]), binary)], channelId };
+    }
+
+    const frames: Uint8Array[] = [];
+    for (let offset = 0; offset < binary.byteLength; offset += this._maxChunkLength) {
+      const isLastChunk = offset + this._maxChunkLength >= binary.byteLength;
+      const flags = isLastChunk ? FLAG_SEGMENT_SEQ | FLAG_SEGMENT_SEQ_TERMINATED : FLAG_SEGMENT_SEQ;
+      frames.push(
+        concatUint8Arrays(new Uint8Array([flags, channelId]), binary.subarray(offset, offset + this._maxChunkLength)),
+      );
+    }
+    return { frames, channelId };
   }
 
   private _dropAccumulator(channelId: number): void {
@@ -227,56 +283,74 @@ export class WebSocketMuxer {
     this._inMessageAccumulatorBytes.delete(channelId);
   }
 
-  private _sendChunkedMessages(): void {
-    if (this._sendTimeout) {
-      return;
-    }
+  /**
+   * Writes queued frames one per channel per round until none are left, waiting while the socket is connecting or its
+   * buffer is full. Stops at a closing socket or a throwing `send`, rejecting every queued send.
+   */
+  private async _sendQueuedFrames(): Promise<void> {
+    while (this._outMessageChunks.size > 0) {
+      for (const [channelId, chunks] of this._outMessageChunks) {
+        const { readyState, bufferedAmount } = this._ws;
+        if (readyState === WebSocket.CLOSING || readyState === WebSocket.CLOSED) {
+          log.warn('muxer dropped queued segments (websocket closed)', {
+            readyState,
+            pendingChannels: this._outMessageChunks.size,
+          });
+          this._rejectPendingSends(new WebSocketClosedError(readyState));
+          return;
+        }
+        // `send()` throws `InvalidStateError` before the handshake completes, and a full buffer is back-pressure.
+        if (
+          readyState === WebSocket.CONNECTING ||
+          (bufferedAmount != null && bufferedAmount + MAX_CHUNK_LENGTH > MAX_BUFFERED_AMOUNT)
+        ) {
+          log.debug('muxer send paused', {
+            readyState,
+            bufferedAmount,
+            pendingChannels: this._outMessageChunks.size,
+          });
+          await sleepWithContext(this._ctx, BUFFER_FULL_BACKOFF_TIMEOUT);
+          break;
+        }
 
-    const send = () => {
-      if (this._ws.readyState === WebSocket.CONNECTING) {
-        // `send()` throws `InvalidStateError` before the handshake completes, so wait it out.
-        this._sendTimeout = setTimeout(send, BUFFER_FULL_BACKOFF_TIMEOUT);
-        return;
-      }
-      if (this._ws.readyState === WebSocket.CLOSING || this._ws.readyState === WebSocket.CLOSED) {
-        log.warn('send called for closed websocket');
-        this._sendTimeout = undefined;
-        return;
-      }
-
-      let timeout = 0;
-      const emptyChannels: number[] = [];
-      for (const [channelId, messages] of this._outMessageChunks.entries()) {
-        if (this._ws.bufferedAmount != null) {
-          if (this._ws.bufferedAmount + MAX_CHUNK_LENGTH > MAX_BUFFERED_AMOUNT) {
-            log.debug('muxer send paused (websocket buffer full)', {
-              channelId,
-              bufferedAmount: this._ws.bufferedAmount,
-              pendingChannels: this._outMessageChunks.size,
-            });
-            timeout = BUFFER_FULL_BACKOFF_TIMEOUT;
-            break;
+        const chunk = chunks.shift();
+        if (chunks.length === 0) {
+          this._outMessageChunks.delete(channelId);
+        }
+        if (!chunk) {
+          continue;
+        }
+        try {
+          this._ws.send(chunk.payload);
+        } catch (error) {
+          log.warn('muxer failed to send segmented message chunk', { channelId, error });
+          const sendError = error instanceof Error ? error : new Error(String(error));
+          chunk.trigger?.throw(sendError);
+          this._rejectPendingSends(sendError);
+          return;
+        }
+        if (isSegment(chunk.payload)) {
+          if ((chunk.payload[0] & FLAG_SEGMENT_SEQ_TERMINATED) === 0) {
+            this._outOpenSequences.add(channelId);
+          } else {
+            this._outOpenSequences.delete(channelId);
           }
         }
-
-        const nextMessage = messages.shift();
-        if (nextMessage) {
-          this._ws.send(nextMessage.payload);
-          nextMessage.trigger?.wake();
-        } else {
-          emptyChannels.push(channelId);
-        }
+        chunk.trigger?.wake();
       }
+    }
+  }
 
-      emptyChannels.forEach((channelId) => this._outMessageChunks.delete(channelId));
-
-      if (this._outMessageChunks.size > 0) {
-        this._sendTimeout = setTimeout(send, timeout);
-      } else {
-        this._sendTimeout = undefined;
-      }
-    };
-    this._sendTimeout = setTimeout(send);
+  /** Rejects every queued send and drops the frames they had yet to write. */
+  private _rejectPendingSends(error: Error): void {
+    for (const channelChunks of this._outMessageChunks.values()) {
+      channelChunks.forEach((chunk) => chunk.trigger?.throw(error));
+    }
+    this._outMessageChunks.clear();
+    if (this._outOpenSequences.size > 0) {
+      this._segmentedSendError ??= error;
+      this._outOpenSequences.clear();
+    }
   }
 
   private _resolveChannel(message: Message): number | undefined {
@@ -285,7 +359,9 @@ export class WebSocketMuxer {
     }
     let id = this._outMessageChannelByService.get(message.serviceId);
     if (!id) {
-      id = this._outMessageChannelByService.size + 1;
+      // Channel ids are one byte on the wire. Past that many services they are shared, which is safe because a
+      // channel is a single queue: its services take turns rather than interleave segments.
+      id = (this._outMessageChannelByService.size % MAX_OUT_CHANNEL_ID) + 1;
       this._outMessageChannelByService.set(message.serviceId, id);
     }
     return id;
@@ -306,6 +382,28 @@ export class SegmentedMessageLimitError extends Error {
   }
 }
 
+/**
+ * Rejects a send on a closing or closed socket or a destroyed muxer, or a queued send whose remaining frames were
+ * dropped because the socket began closing, or the muxer was destroyed, before they could be handed to it.
+ */
+export class WebSocketClosedError extends BaseError.extend(
+  'WebSocketClosedError',
+  'WebSocket closed before the message was sent.',
+) {
+  constructor(readyState: number) {
+    super({ context: { readyState } });
+  }
+}
+
+/**
+ * Rejects a send past Cloudflare's limit: 1MB for a message sent whole, 32MB for a segmented one.
+ */
+export class MessageTooLargeError extends BaseError.extend('MessageTooLargeError', 'Message exceeds the size limit.') {
+  constructor(context: { byteLength: number; maxByteLength: number; serviceId?: string; payload?: string }) {
+    super({ context });
+  }
+}
+
 type WebSocketCompat = {
   readonly readyState: number;
   /**
@@ -315,10 +413,11 @@ type WebSocketCompat = {
   send(message: (ArrayBuffer | ArrayBufferView) | string): void;
 };
 
+/** A frame in a channel's queue: a segment, or a whole message waiting behind its service's segments. */
 type MessageChunk = {
   payload: Uint8Array;
   /**
-   * Wakes when the payload is enqueued by WebSocket.
+   * Wakes when the payload is enqueued by WebSocket, or throws if the socket fails or the muxer is destroyed first.
    */
   trigger?: Trigger;
 };

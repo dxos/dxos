@@ -14,13 +14,13 @@
 // Run: `moon run plugin-illustrator:eval-layout-views -- --reference /abs/answers.json /abs/path/x.mmd …`.
 //
 
+import * as Decision from 'effect/ai/Decision';
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
-import * as Decision from 'effect/unstable/ai/Decision';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
 

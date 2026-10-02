@@ -9,8 +9,8 @@
 // the text rendering of the page, by the same batched decision call as `Architecture`.
 //
 
+import type * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
-import type * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 
 import * as Architecture from './architecture.ts';
 import type * as Score from './score.ts';

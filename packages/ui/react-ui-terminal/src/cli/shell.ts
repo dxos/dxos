@@ -3,11 +3,11 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as CliError from 'effect/cli/CliError';
+import * as Command from 'effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as CliError from 'effect/unstable/cli/CliError';
-import * as Command from 'effect/unstable/cli/Command';
 
 import type { TerminalBridge } from './bridge.ts';
 import { readLineResult } from './line-editor.ts';

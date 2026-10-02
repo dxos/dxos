@@ -37,16 +37,15 @@ import { translations as tasksTranslations } from '@dxos/plugin-tasks/translatio
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
-import { AttendableContainer, useSelection } from '@dxos/react-ui-attention';
+import { AttendableContainer } from '@dxos/react-ui-attention';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
-import { Loading, TestGrid, withLayout, withTheme } from '@dxos/react-ui/testing';
+import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { Text } from '@dxos/schema';
 import { Milestone, Outline, Repo, Task, TaskSet } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { ProjectTaskCompanion } from '../ProjectTaskCompanion/ProjectTaskCompanion.tsx';
 import { ProjectArticle } from './ProjectArticle.tsx';
 
 const PROJECT_NAME = 'Project 1';
@@ -230,44 +229,6 @@ const DefaultStory = ({ role, attendableId }: StoryArgs) => {
 };
 
 /**
- * The project and the task it opens, side by side — the master-detail the deck renders as two planks
- * (see `docs/TASK-DETAIL.md`). The grid stands in for the deck, as `MailboxArticle`'s three-column
- * story does: the ledger row publishes its selection through `LayoutOperation.Select`, this reads it
- * back, and the detail is the same `Task` article surface the deck would mount.
- */
-const MasterDetailStory = ({ role, attendableId }: StoryArgs) => {
-  const [space] = useSpaces();
-  const projects = useQuery(space?.db, Filter.type(Project.Project));
-  const project = projects.find((entry) => entry.name === PROJECT_NAME);
-  const tasks = useQuery(space?.db, Filter.type(Task.Task));
-  const selectedId = useSelection(attendableId, 'single');
-  const task = tasks.find((entry) => entry.id === selectedId);
-  if (!space?.db || !project) {
-    return <Loading data={{ db: !!space?.db, project: !!project }} />;
-  }
-
-  return (
-    <TestGrid.Root>
-      <TestGrid.Stack>
-        <TestGrid.Panel>
-          <AttendableContainer id={attendableId} classNames='contents'>
-            <ProjectArticle role={role} subject={project} attendableId={attendableId} />
-          </AttendableContainer>
-        </TestGrid.Panel>
-        {task && (
-          <TestGrid.Panel>
-            {/* The companion the deck mounts, not the task article directly: it reads the ledger's
-                selection itself, renders the article through the surface (so plugin-tasks'
-                `article.task` registration is still what resolves). */}
-            <ProjectTaskCompanion role={role} attendableId={attendableId} companionTo={project} />
-          </TestGrid.Panel>
-        )}
-      </TestGrid.Stack>
-    </TestGrid.Root>
-  );
-};
-
-/**
  * No-op for the one layout operation the ledger row invokes that belongs to DeckPlugin, which this
  * story does not install. `Select` is deliberately NOT stubbed: it belongs to AttentionPlugin (in
  * `corePlugins`), and it is what publishes the row the detail panel reads back.
@@ -305,8 +266,6 @@ const meta = {
         // handler that action runs.
         ProjectsPlugin.make(),
         AssistantPlugin.make(),
-        // For the card stack under the task companion: the surface is plugin-space's, so without it
-        // the companion renders the article alone and the stack silently resolves to nothing.
         SpacePlugin.make({}),
         // Provides `RemoteProcessManager`, which Assistant's `AgentService` spec now requires — the
         // spec is pruned without it, so delegating a task fails with "Chat not found".
@@ -382,76 +341,6 @@ export const Default: Story = {
   },
 };
 
-/**
- * Master-detail: the ledger on the left, the selected task's article on the right — what the deck
- * shows as two planks once a row is clicked.
- */
-export const TaskDetail: Story = {
-  ...Default,
-  render: MasterDetailStory,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await seedContent();
-    await showTab(canvas, 'tasks');
-    await userEvent.click(await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 }));
-    // The detail panel renders the same title as an editable field, so the form is what is asserted
-    // rather than a second copy of the row's text.
-    await expect(canvas.findByDisplayValue(TASK_TITLE, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // What the task produced, under its editor: the card grid the task article hands its artifacts
-    // to. Scoped to the grid rather than the canvas — the ledger row carries a chip with the same
-    // text, which would pass this assertion with no grid rendered at all.
-    const cards = () => canvasElement.querySelector<HTMLElement>('[data-testid="cardMasonry"]');
-    await waitFor(() => expect(cards()).toBeTruthy(), { timeout: 10_000 });
-    // Once only: the companion used to render the same artifacts a second time beneath the article.
-    await expect(canvasElement.querySelectorAll('[data-testid="cardMasonry"]')).toHaveLength(1);
-    // The exchange reads as two lines of the log: what was asked, and what it was answered with.
-    // Answered, so it is a record rather than a prompt — the pane offers no controls for it.
-    const history = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.history"]');
-    await waitFor(() => expect(history()).toBeTruthy(), { timeout: 10_000 });
-    await expect(within(history()!).findByText(TASK_QUESTION, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    await expect(within(history()!).findByText(TASK_ANSWER, undefined, { timeout: 10_000 })).resolves.toBeTruthy();
-    // The open one is a prompt instead: its text, the options it suggests, and a field for an answer
-    // it did not think of. Scoped to the prompt, since the ledger row summarises every question.
-    const prompt = () => canvasElement.querySelector<HTMLElement>('[data-testid="task-question"]:has(input)');
-    await waitFor(() => expect(prompt()).toBeTruthy(), { timeout: 10_000 });
-    await expect(
-      within(prompt()!).findByText(TASK_OPEN_QUESTION, undefined, { timeout: 10_000 }),
-    ).resolves.toBeTruthy();
-    await expect(within(prompt()!).findAllByTestId('task-question.option')).resolves.toHaveLength(2);
-    // The answered one stays a record: exactly one prompt, not two.
-    await expect(canvasElement.querySelectorAll('[data-testid="task-question.input"]')).toHaveLength(1);
-
-    // `findAllByText`: the card names the artifact in its header and again in the form its type
-    // contributes as the card's body, so the single-match query would throw on its own success.
-    await expect(
-      within(cards()!).findAllByText(TASK_ARTIFACT_TITLE, undefined, { timeout: 10_000 }),
-    ).resolves.not.toHaveLength(0);
-
-    // The description is edited with the host's contributed extensions live in it, as the ledger's
-    // own strip is: a task opened in the pane decorates `#123` and a pull-request URL rather than
-    // showing the reader raw markdown the list would have rendered.
-    await userEvent.click(await canvas.findByText(LINK_TASK_TITLE, undefined, { timeout: 10_000 }));
-    const editor = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskEditor.description"]');
-    await waitFor(async () => await expect(editor()?.textContent).toContain('supersedes'), { timeout: 10_000 });
-    await waitFor(
-      async () =>
-        await expect(
-          [...(editor()?.querySelectorAll('a.cm-link') ?? [])].map((link) => link.getAttribute('href')),
-        ).toContain('https://github.com/dxos/dxos/issues/12431'),
-      { timeout: 10_000 },
-    );
-    // A pasted URL is a chip here as it is in the row: the reader wrote a bare link either way, and
-    // the pane used to leave it as raw text while the row named it `#12752`.
-    await waitFor(
-      async () =>
-        await expect(
-          [...(editor()?.querySelectorAll('.dx-tag--anchor') ?? [])].map((chip) => chip.textContent),
-        ).toContain('#12752'),
-      { timeout: 10_000 },
-    );
-  },
-};
-
 /** The article opened on its Tasks tab: the seeded set, its two tasks, and the delegate toolbar. */
 export const Tasks: Story = {
   ...Default,
@@ -499,6 +388,9 @@ export const Sections: Story = {
 
 /** The contributed action's label, as written in `capabilities/task-action.ts`. */
 const TASK_ACTION_LABEL = 'Assign to agent';
+
+/** The copy action's label, as written in `capabilities/task-action.ts`. */
+const COPY_PROMPT_LABEL = 'Copy prompt';
 
 /**
  * The whole cross-plugin path in one gesture: plugin-projects contributes a `TaskAction`, the task
@@ -550,6 +442,61 @@ export const TaskAction: Story = {
       },
       { timeout: 10_000 },
     );
+  },
+};
+
+/**
+ * The row's `Copy prompt` starts its clipboard write inside the click that chose it.
+ *
+ * WebKit (Safari, the desktop webview) rejects a write that begins after the gesture has been lost
+ * to an await, and the prompt takes several to render; Chromium does not enforce this, so the story
+ * asserts the invariant itself: the write must be issued while the selecting event is still being
+ * dispatched (`window.event` is only set during dispatch).
+ */
+export const CopyPrompt: Story = {
+  ...Default,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const { task } = await seedContent();
+
+    const writes: { duringEvent: boolean; text: Promise<string> }[] = [];
+    const clipboard = navigator.clipboard;
+    const { write, writeText } = clipboard;
+    // Recorded rather than performed: a headless page holds no clipboard permission, so a real write
+    // never settles.
+    clipboard.write = async (items) => {
+      const [item] = items;
+      writes.push({
+        duringEvent: Reflect.get(window, 'event') !== undefined,
+        text: item.getType('text/plain').then((blob) => blob.text()),
+      });
+    };
+    clipboard.writeText = async (text) => {
+      writes.push({ duringEvent: Reflect.get(window, 'event') !== undefined, text: Promise.resolve(text) });
+    };
+
+    try {
+      await showTab(canvas, 'tasks');
+      const title = await canvas.findByText(TASK_TITLE, undefined, { timeout: 10_000 });
+      const row = title.closest('[data-testid="taskList.item"]');
+      await expect(row).toBeTruthy();
+      await userEvent.click(
+        await within(row as HTMLElement).findByTestId('taskList.item.actions', undefined, { timeout: 10_000 }),
+      );
+      await userEvent.click(await screen.findByText(COPY_PROMPT_LABEL, undefined, { timeout: 10_000 }));
+
+      await waitFor(() => expect(writes).toHaveLength(1), { timeout: 10_000 });
+      const [copied] = writes;
+      await expect(copied.duringEvent).toBe(true);
+
+      // The text that lands is the rendered prompt, addressed to the task the row belongs to.
+      const text = await copied.text;
+      await expect(text).toContain(TASK_TITLE);
+      await expect(text).toContain(Obj.getURI(task));
+    } finally {
+      clipboard.write = write;
+      clipboard.writeText = writeText;
+    }
   },
 };
 

@@ -212,9 +212,11 @@ const FORM_ACTIONS_NAME = 'Form.Actions';
 export type FormActionsProps = ThemedClassName<{
   submitLabel?: string;
   submitIcon?: string;
+  /** Disables submit on top of the form's own `canSave`, for work the form did not start itself. */
+  submitDisabled?: boolean;
 }>;
 
-export const FormActions = ({ classNames, submitLabel, submitIcon }: FormActionsProps) => {
+export const FormActions = ({ classNames, submitLabel, submitIcon, submitDisabled }: FormActionsProps) => {
   const { t } = useTranslation(translationKey);
   const {
     form: { canSave, onSave, onCancel },
@@ -247,7 +249,7 @@ export const FormActions = ({ classNames, submitLabel, submitIcon }: FormActions
         <IconButton
           type='submit'
           variant='primary'
-          disabled={!canSave}
+          disabled={!canSave || submitDisabled}
           icon={submitIcon ?? 'ph--check--regular'}
           iconEnd
           label={submitLabel ?? t('save-button.label')}

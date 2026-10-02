@@ -3,7 +3,7 @@
 //
 
 import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useMemo, useState } from 'react';
 
 export type AtomState<T> = {

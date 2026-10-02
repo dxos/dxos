@@ -37,6 +37,9 @@
       "path": "../../../tools/vite-plugin-log"
     },
     {
+      "path": "../../../tools/vite-plugin-module-url"
+    },
+    {
       "path": "../../../tools/vite-plugin-shutdown"
     },
     {
@@ -47,6 +50,9 @@
     },
     {
       "path": "../../common/effect-atom-solid"
+    },
+    {
+      "path": "../../common/graph"
     },
     {
       "path": "../../common/invariant"
@@ -92,6 +98,12 @@
     },
     {
       "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/echo/echo"
+    },
+    {
+      "path": "../../core/echo/echo-react"
     },
     {
       "path": "../../core/echo/echo-solid"
@@ -436,6 +448,9 @@
       "path": "../../sdk/app-framework"
     },
     {
+      "path": "../../sdk/app-graph"
+    },
+    {
       "path": "../../sdk/app-toolkit"
     },
     {
@@ -472,7 +487,13 @@
       "path": "../../ui/react-ui"
     },
     {
+      "path": "../../ui/react-ui-attention"
+    },
+    {
       "path": "../../ui/react-ui-form"
+    },
+    {
+      "path": "../../ui/react-ui-geo"
     },
     {
       "path": "../../ui/react-ui-menu"

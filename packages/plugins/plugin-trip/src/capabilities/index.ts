@@ -43,7 +43,7 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 // `useMemo`/`useObject`/`useObjects` in its own body.
 export const MarkerProvider = Capability.lazyModule(
   'MarkerProvider',
-  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: [] },
+  { provides: [MapCapabilities.MarkerProvider], activatesOn: MapEvents.Start, environments: ['browser', 'tauri'] },
   () => import('./marker-provider.tsx'),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {

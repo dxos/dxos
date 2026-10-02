@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { describe, test, vi } from 'vitest';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';

@@ -24,6 +24,7 @@ import { TestReplicationNetwork } from '../testing/index.ts';
 import { AutomergeHost, type RootDocumentSpaceKeyProvider } from './automerge-host.ts';
 import { type EchoNetworkAdapter } from './echo-network-adapter.ts';
 import { deriveCollectionIdFromSpaceId } from './space-collection.ts';
+import { waitForEviction } from './subduction-test-utils.ts';
 
 describe('AutomergeHost', () => {
   test('can create documents', async () => {
@@ -366,6 +367,180 @@ describe('AutomergeHost', () => {
     expect([...resyncHeads.values()].some((entry) => entry.documentId === documentId)).toBe(false);
   });
 
+  test('a resident document is different when an overlapping remote head is missing locally', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({ runtime, useSubduction: true });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    await host.flush(Context.default());
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
+    const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
+
+    const synchronizer = host['_collectionSynchronizer'];
+    const peerId = 'test-peer' as PeerId;
+    synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
+    expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(1);
+
+    // A malformed head is ignored rather than fatal.
+    synchronizer.onRemoteStateReceived(collectionId, peerId, {
+      documents: { [documentId]: [localHead, 'not-a-hash'] },
+    });
+    expect((await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments).toEqual(0);
+  });
+
+  test('an evicted document is different until an overlapping remote head is confirmed', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({
+      runtime,
+      useSubduction: true,
+      residency: { evictionDelay: 0, minResidentDocuments: 0 },
+    });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    const [ancestorHead] = A.getHeads(handle.doc());
+    handle.change((doc: any) => {
+      doc.value = 2;
+    });
+    await host.flush(Context.default());
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
+    const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
+    const synchronizer = host['_collectionSynchronizer'];
+    const peerId = 'test-peer' as PeerId;
+    const differentDocuments = async () =>
+      (await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments;
+
+    // Resident: checked and confirmed.
+    synchronizer.onRemoteStateReceived(collectionId, peerId, {
+      documents: { [documentId]: [localHead, ancestorHead] },
+    });
+    expect(await differentDocuments()).toEqual(0);
+
+    handle[Symbol.dispose]();
+    await waitForEviction(expect, host, documentId);
+
+    // Evicted: only a confirmed head counts as present.
+    expect(await differentDocuments()).toEqual(0);
+    synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: [localHead, missingHead] } });
+    expect(await differentDocuments()).toEqual(1);
+  });
+
+  test('an evicted document lacking a change stays different and is loaded once per head pair and connection', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const host = new AutomergeHost({
+      runtime,
+      useSubduction: true,
+      residency: { evictionDelay: 0, minResidentDocuments: 0 },
+    });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+
+    const handle = await host.createDoc<any>({ value: 1 });
+    const { documentId } = handle;
+    await host.flush(Context.default());
+    const collectionId = 'test-collection';
+    await host.updateLocalCollectionState(collectionId, [documentId]);
+    const [localHead] = (await host.getHeads([documentId]))[0] ?? [];
+    const [missingHead] = A.getHeads(A.from({ elsewhere: true }));
+    const [otherMissingHead] = A.getHeads(A.from({ elsewhere: false }));
+    const synchronizer = host['_collectionSynchronizer'];
+    const peerId = 'test-peer' as PeerId;
+    const differentDocuments = async () =>
+      (await host.getCollectionSyncState(collectionId)).peers?.[0]?.differentDocuments;
+    let loads = 0;
+    const leaseUntilSettled = host['_leaseUntilSettled'];
+    host['_leaseUntilSettled'] = (id: DocumentId) => {
+      loads += id === documentId ? 1 : 0;
+      leaseUntilSettled.call(host, id);
+    };
+    // A scheduled pass may spend the budget first; the count is the same either way.
+    const loadsAfter = async (change: () => void) => {
+      const before = loads;
+      change();
+      await host['_handleCollectionSync'](Context.default(), collectionId, peerId);
+      return loads - before;
+    };
+    const advertise = (heads: string[]) => () =>
+      synchronizer.onRemoteStateReceived(collectionId, peerId, { documents: { [documentId]: heads } });
+
+    expect(await loadsAfter(advertise([localHead, missingHead]))).toEqual(1);
+    handle[Symbol.dispose]();
+    await waitForEviction(expect, host, documentId);
+    expect(await differentDocuments()).toEqual(1);
+    expect(await loadsAfter(() => {})).toEqual(0);
+
+    expect(await loadsAfter(advertise([localHead, otherMissingHead]))).toEqual(1);
+    await waitForEviction(expect, host, documentId);
+    expect(await loadsAfter(() => {})).toEqual(0);
+
+    // The peer resends its state after reconnecting.
+    expect(
+      await loadsAfter(() => {
+        host['_onPeerDisconnected'](peerId);
+        advertise([localHead, otherMissingHead])();
+      }),
+    ).toEqual(1);
+  });
+
+  test('data stored for a document no collection references does not fault it in, across a restart', async () => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const residency = { evictionDelay: 0, minResidentDocuments: 0 };
+    const collectionId = 'test-collection';
+
+    const before = new AutomergeHost({ runtime, useSubduction: true, residency });
+    await before.open();
+    const removed = await before.createDoc<any>({ value: 1 });
+    const kept = await before.createDoc<any>({ value: 2 });
+    await before.flush(Context.default());
+    removed[Symbol.dispose]();
+    kept[Symbol.dispose]();
+    // Garbage collection removes a document from every collection.
+    await before.updateLocalCollectionState(collectionId, [kept.documentId]);
+    await before.removeDocument(removed.documentId);
+    await before.close();
+
+    const host = new AutomergeHost({ runtime, useSubduction: true, residency });
+    await host.open();
+    onTestFinished(async () => {
+      if (host.isOpen) {
+        await host.close();
+      }
+    });
+    await host.updateLocalCollectionState(collectionId, [kept.documentId]);
+
+    // The listener is synchronous, so both outcomes are final here.
+    const repo = host['_repo'];
+    repo.emit('subduction-detached-data', { documentId: removed.documentId });
+    repo.emit('subduction-detached-data', { documentId: kept.documentId });
+    expect(host.loadedDocumentIds).toContain(kept.documentId);
+    expect(host.loadedDocumentIds).not.toContain(removed.documentId);
+  });
+
   // The share-policy kick walks every resident document and Subduction ignores it for a diverged one,
   // so an evicted diverged document must not re-arm it on every diff pass.
   test('a diverged evicted document does not kick the share policy', async () => {
@@ -389,8 +564,7 @@ describe('AutomergeHost', () => {
     const collectionId = 'test-collection';
     await host.updateLocalCollectionState(collectionId, [documentId]);
     handle[Symbol.dispose]();
-    await host.drainEvictions();
-    expect(host.loadedDocumentIds).not.toContain(documentId);
+    await waitForEviction(expect, host, documentId);
 
     const task = (host as any)._sharePolicyChangedTask;
     const schedule = task.schedule.bind(task);

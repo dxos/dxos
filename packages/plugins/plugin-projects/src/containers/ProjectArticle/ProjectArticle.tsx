@@ -5,15 +5,15 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, useDetailNavigation } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
@@ -23,7 +23,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
-import { Banner, Flex, Icon, Panel, Splitter, Tabs, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Banner, Flex, Icon, Panel, Splitter, Tabs, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -33,7 +33,7 @@ import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectCard, ProjectPipeline } from '#components';
 import { meta } from '#meta';
-import { ProjectOperation, ProjectView } from '#types';
+import { ProjectCapabilities, ProjectOperation, ProjectView } from '#types';
 
 import { getProjectChatPath } from '../../paths.ts';
 
@@ -63,7 +63,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const { t } = useTranslation(meta.profile.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
-  const { tab, pipeline: showPipeline } = useViewState(ProjectView.aspect, subject.id);
+  const { tab, pipeline: showPipeline, axis = 'time' } = useViewState(ProjectView.aspect, subject.id);
   const { update: updateView } = useViewStateActions(ProjectView.aspect, subject.id);
   const setTab = useCallback((tab: ProjectView.Tab) => updateView((prev) => ({ ...prev, tab })), [updateView]);
   const invoker = useOperationInvoker();
@@ -86,9 +86,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
   const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
-  // `md` is the breakpoint plugin-deck calls "not mobile": below it the deck shows one plank at a
-  // time, so a companion beside the project would be a pane the reader cannot see.
-  const [isNotMobile] = useMediaQuery('md');
+  const settings = useAtomValue(useCapability(ProjectCapabilities.Settings));
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
   // tabs, separator, then the actions. The tablist only needs the `Tabs.Root` context, which
@@ -108,6 +106,7 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   );
   // The chart splits the Tasks tab, under the ledger: the rows above name the lanes, so the chart
   // shows only the drawing.
+  const setAxis = useCallback((axis: ProjectView.Axis) => updateView((prev) => ({ ...prev, axis })), [updateView]);
   const togglePipeline = useCallback(
     () => updateView((prev) => ({ ...prev, tab: 'tasks', pipeline: !prev.pipeline })),
     [updateView],
@@ -153,6 +152,13 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   // A session lane on the chart is the way into its chat. The project's own path helper, not the
   // navigation resolver: the resolver answers with the assistant's Chats section, which lists only
   // unparented chats, so that path names a node the deck cannot render.
+  // The same navigation the task ledger's rows use, under the same context, so a lane picked in the
+  // chart selects its row and opens the task where a row click would.
+  const openTask = useDetailNavigation({
+    contextId: attendableId,
+    getPath: (id) => `${attendableId}/${id}`,
+  });
+
   const handleSelectChat = useCallback(
     (chat: Chat.Chat) => {
       if (!db) {
@@ -307,12 +313,14 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             >
               <Splitter.Panel position='start'>
                 {/* TODO(burdon): Inline component for more control? */}
-                {/* A wide viewport opens the task in this project's `~task` companion, so the ledger
-                    stays in front of the reader; a narrow one has no room beside the plank, so the
-                    task opens as a plank of its own there. */}
                 <Surface.Surface
                   type={AppSurface.Section}
-                  data={{ subject: taskSet, attendableId, detail: isNotMobile ? 'companion' : 'plank' }}
+                  data={{
+                    subject: taskSet,
+                    attendableId,
+                    // Unset means shown: settings saved before the preference existed hold no key.
+                    showDescription: settings.showTaskDescriptions ?? true,
+                  }}
                   limit={1}
                 />
               </Splitter.Panel>
@@ -321,7 +329,15 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
                 {/* Mounted only while shown: the chart rebuilds its whole timeline from the space's
                     trace feed on every trace message, which is pure cost behind a collapsed panel. */}
                 {showPipeline && space && (
-                  <ProjectPipeline space={space} project={subject} tasks={tasks} onSelectChat={handleSelectChat} />
+                  <ProjectPipeline
+                    space={space}
+                    project={subject}
+                    tasks={tasks}
+                    axis={axis}
+                    onAxisChange={setAxis}
+                    onSelectTask={openTask}
+                    onSelectChat={handleSelectChat}
+                  />
                 )}
               </Splitter.Panel>
             </Splitter.Root>
@@ -453,6 +469,7 @@ const useToolbarActions = ({
     }
 
     Chat.linkCompanion({ chat, subject: project });
+    Chat.seedSession(chat, project.session);
     await invokePromise(SpaceOperation.AddObject, { object: chat }, { spaceId });
     await invokePromise(AssistantOperation.SetCurrentChat, { companionTo: project, chat }, { spaceId });
   }, [invokePromise, project, spaceId]);

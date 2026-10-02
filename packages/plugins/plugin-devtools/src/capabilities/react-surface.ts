@@ -28,7 +28,7 @@ import {
   NetworkCard,
   ObjectsArticle,
   PerformanceCard,
-  QueriesCard,
+  QueriesArticle,
   QueuesArticle,
   ReplicatorCard,
   ReplicatorMessagesCard,
@@ -53,6 +53,8 @@ import { Devtools } from '#types';
 
 import {
   EdgeCardSurface,
+  IndexerCardSurface,
+  QueriesCardSurface,
   SurfaceProfilerCardSurface,
   SwarmTraceCardSurface,
   SyncCardSurface,
@@ -192,8 +194,7 @@ export default Capability.makeModule(
         id: 'card.queries',
         filter: devtoolsCard,
         position: 9,
-        component: QueriesCard,
-        props: ({ data: { stats } }) => ({ queries: [...(stats.queries ?? [])].reverse() }),
+        component: QueriesCardSurface,
       }),
       Surface.create({
         id: 'card.sync',
@@ -202,9 +203,15 @@ export default Capability.makeModule(
         component: SyncCardSurface,
       }),
       Surface.create({
-        id: 'card.timeSeries',
+        id: 'card.indexer',
         filter: devtoolsCard,
         position: 12,
+        component: IndexerCardSurface,
+      }),
+      Surface.create({
+        id: 'card.timeSeries',
+        filter: devtoolsCard,
+        position: 13,
         component: TimeSeriesCard,
       }),
 
@@ -289,6 +296,12 @@ export default Capability.makeModule(
         filter: AppSurface.literal(DebugSurface.Page, Devtools.Echo.Objects),
         component: ActiveSpacePanel,
         props: ({ role }) => ({ role, Panel: ObjectsArticle }),
+      }),
+      Surface.create({
+        id: 'echo.queries',
+        filter: AppSurface.literal(DebugSurface.Page, Devtools.Echo.Queries),
+        component: QueriesArticle,
+        props: ({ role }) => ({ role }),
       }),
       Surface.create({
         id: 'echo.schema',

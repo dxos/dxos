@@ -22,6 +22,7 @@ import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
 import PluginImportSource from '@dxos/vite-plugin-import-source';
+import { ModuleUrlPlugin } from '@dxos/vite-plugin-module-url';
 
 // NOTE: Imported by relative path on purpose. Going through `@dxos/vite-plugin-log`
 // would force every package's `:test`/`:test-browser`/`:test-storybook` task to
@@ -666,6 +667,8 @@ const createBrowserProject = ({
       // Resolve `@dxos/*` to their `source` export (src/*.ts) so browser tests exercise source
       // instead of stale `dist/` build artifacts (mirrors the node project).
       PluginImportSource({ include: ['@dxos/**', '#*'] }),
+      // `?module-url` imports: tests that hand compiled module URLs to a worker to `import()`.
+      ModuleUrlPlugin(),
       // NDJSON log sink: browser realms (page + workers) POST `@dxos/log` entries to the dev-server
       // middleware, which appends them to `<package>/test-browser.log`. Mirrors the node file sink.
       DxosLogPlugin({ logToFile: { enabled: true, filename: BROWSER_LOG_FILE, logFilter: BROWSER_LOG_FILTER } }),

@@ -2,20 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, {
-  type KeyboardEvent,
-  type MouseEvent,
-  type PropsWithChildren,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import {
-  DxAnchorActivate,
   Icon,
   IconBlock,
   IconButton,
@@ -26,7 +17,7 @@ import {
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
-import { Listbox, useListDisclosure } from '@dxos/react-ui-list';
+import { Listbox, TREE_BLOCK, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
 import { type Actor, PullRequest, Task } from '@dxos/types';
 import { hoverableControlItem, mx, toHue } from '@dxos/ui-theme';
@@ -50,6 +41,7 @@ import {
   taskGroupNodeId,
 } from './tree-model.ts';
 import { useAssigneeDisplay } from './useAssigneeDisplay.ts';
+import { usePreviewAnchor } from './usePreviewAnchor.ts';
 
 /** Shared empty set, so a list with nothing in flight does not allocate one per render. */
 const EMPTY_IDS: ReadonlySet<string> = new Set<string>();
@@ -313,16 +305,34 @@ TaskListRoot.displayName = 'TaskList.Root';
 // add row stays pinned while the rows scroll.
 //
 
-type TaskListViewportProps = ComposableProps;
+type TaskListViewportProps = ComposableProps<{
+  /** Caps the height at exactly this many rows, so a longer list scrolls without showing a partial row. */
+  rows?: number;
+}>;
 
-const TaskListViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
-  return (
-    <Listbox.Viewport {...rest} classNames={mx('dx-shrink', className)} ref={forwardedRef}>
-      {children}
-    </Listbox.Viewport>
-  );
-});
+const TaskListViewport = composable<HTMLDivElement, TaskListViewportProps>(
+  ({ children, rows: rowsProp, ...props }, forwardedRef) => {
+    const { className, style, ...rest } = composableProps(props);
+    // Whole rows only: a fractional count would cut through the next row.
+    const rows = rowsProp === undefined ? undefined : Math.max(Math.floor(rowsProp), 0);
+    return (
+      <Listbox.Viewport
+        {...rest}
+        classNames={mx('dx-shrink', className)}
+        // Each row is one control tall (the rail-item square every cell holds), and the tree's grid
+        // puts a `gap-0.5` (0.125rem) between rows; without the gaps the last row is cut short.
+        style={
+          rows === undefined
+            ? style
+            : { ...style, maxHeight: `calc(${rows} * var(--dx-control) + ${Math.max(rows - 1, 0)} * 0.125rem)` }
+        }
+        ref={forwardedRef}
+      >
+        {children}
+      </Listbox.Viewport>
+    );
+  },
+);
 
 TaskListViewport.displayName = 'TaskList.Viewport';
 
@@ -358,7 +368,8 @@ const buildGridTemplate = ({
   hasActions: boolean;
 }): string => {
   const candidates: (GridTrack | false)[] = [
-    toggle && [undefined, 'var(--dx-control)'],
+    // The tree's block, which each level also indents by, so a guide lands under its branch's chevron.
+    toggle && [undefined, TREE_BLOCK],
     showGutter && ['gutter', 'var(--dx-control)'],
     ['status', 'var(--dx-control)'],
     ['title', 'minmax(0, 1fr)'],
@@ -683,40 +694,21 @@ const TaskListItemTags = ({ task, tags }: { task: Task.Task; tags: readonly Ref.
 TaskListItemTags.displayName = 'TaskList.ItemTags';
 
 /**
- * One artifact, as a tag that opens the object's preview card — the row names what the task
- * produced, and the reader wants to see it without leaving the list.
- *
- * Click, not hover or focus: the tag sits inside a listbox option, where a tab stop of its own would
- * split the row into several arrow-key stops, and a hover card would fire while the pointer crosses
- * the row on its way somewhere else.
+ * One artifact, as a tag: hovering shows the object's card and clicking opens the object. The tag
+ * takes no tab stop of its own, since inside a listbox option it would split the row into several
+ * arrow-key stops.
  *
  * A {@link PullRequest.PullRequest} renders as its `#number` pill — the form a PR link takes in
  * markdown — so a row reads the same as the text that references it.
  */
 const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
-  const tagRef = useRef<HTMLSpanElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
   const label = Obj.getLabel(artifact) ?? Obj.getTypename(artifact) ?? '';
-  // Keyed on the URI string, not the object: the live query re-identifies the artifact on every
-  // tick, and the callback should not change with it.
-  const uri = Obj.getURI(artifact);
-  const openCard = useCallback(() => {
-    const trigger = tagRef.current ?? buttonRef.current;
-    trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: uri, label, kind: 'card' }));
-  }, [uri, label]);
-  const handleClick = useCallback(
-    (event: MouseEvent<HTMLElement>) => {
-      // The row is an option: without this the click selects the task as well as opening the card.
-      event.stopPropagation();
-      openCard();
-    },
-    [openCard],
-  );
+  const anchor = usePreviewAnchor({ eid: Obj.getURI(artifact).toString(), label });
 
   if (PullRequest.instanceOf(artifact)) {
     return (
       <IconButton
-        ref={buttonRef}
+        {...anchor}
         variant='tag'
         density='sm'
         // The anchor chip's outlined look (`.dx-tag--anchor`), so the pill matches a PR link in a description.
@@ -724,16 +716,14 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
         icon='ph--git-pull-request--regular'
         iconClassNames={pullRequestStateStyle[artifact.state]}
         label={`#${artifact.number}`}
-        // No tab stop of its own, for the same reason the plain tag has none.
         tabIndex={-1}
         noTooltip
-        onClick={handleClick}
       />
     );
   }
 
   return (
-    <Tag ref={tagRef} hue='amber' classNames='cursor-pointer' onClick={handleClick}>
+    <Tag {...anchor} hue='amber' classNames='cursor-pointer'>
       {label}
     </Tag>
   );
@@ -761,47 +751,15 @@ type TaskListAssigneeProps = {
 };
 
 const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee, iconOnly }, _forwardedRef) => {
-  const tagRef = useRef<HTMLSpanElement>(null);
   const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
   const [session] = useObject(assignee.subject);
-
-  // Click, not hover: a hover-opened card has nothing to close it when the pointer moves on, so it
-  // was left open over the list until the reader clicked somewhere else.
-  const openCard = useCallback(() => {
-    const trigger = tagRef.current;
-    if (!trigger || !session) {
-      return;
-    }
-    trigger.dispatchEvent(
-      new DxAnchorActivate({
-        trigger,
-        eid: Obj.getURI(session).toString(),
-        label: label ?? '',
-        kind: 'card',
-        // Without this the popover falls back to the type's placeholder ("New item"), since a
-        // session's label prop is its title and the harness reports none.
-        title: harness?.title ?? label,
-      }),
-    );
-  }, [session, harness, label]);
-  const handleClick = useCallback(
-    (event: MouseEvent<HTMLElement>) => {
-      // The row is an option: without this the click selects the task as well as opening the card.
-      event.stopPropagation();
-      openCard();
-    },
-    [openCard],
-  );
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLElement>) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        event.stopPropagation();
-        openCard();
-      }
-    },
-    [openCard],
-  );
+  const anchor = usePreviewAnchor({
+    eid: session && Obj.getURI(session).toString(),
+    label: label ?? '',
+    // Without this the card falls back to the type's placeholder ("New item"), since a session's
+    // label prop is its title and the harness reports none.
+    title: harness?.title ?? label,
+  });
 
   if (!label && !agent) {
     return null;
@@ -809,11 +767,10 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
 
   const tag = (
     <Tag
-      ref={tagRef}
       hue={agent ? 'purple' : 'indigo'}
       data-testid='taskList.item.assignee'
-      // A button when there is a session to show, so the keyboard reaches the card the pointer does.
-      {...(session && { role: 'button', tabIndex: 0, onClick: handleClick, onKeyDown: handleKeyDown })}
+      // A button when there is a session to open, so the keyboard reaches it as the pointer does.
+      {...(session && { ...anchor, role: 'button', tabIndex: 0 })}
       classNames={session && 'cursor-pointer'}
     >
       {(agent || iconOnly) && <Icon icon={icon} size={3} classNames={mx('inline-block', !iconOnly && 'me-1')} />}
@@ -821,7 +778,7 @@ const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ a
     </Tag>
   );
 
-  // A session opens its card on hover, which already names the run; a tooltip would stack on it.
+  // A session shows its card on hover, which already names the run; a tooltip would stack on it.
   return iconOnly && !session && label ? (
     <Tooltip.Trigger asChild content={label}>
       {tag}

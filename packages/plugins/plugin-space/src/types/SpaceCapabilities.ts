@@ -3,9 +3,9 @@
 //
 
 import type * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -142,4 +142,6 @@ export type CreateObjectCustomPanelProps = {
   target: Database.Database | Obj.Unknown;
   initialFormValues?: Record<string, any>;
   onCreateObject: (data: Record<string, any>) => void | Promise<void>;
+  /** Abandons the create (closes the dialog); panels render it as their Cancel action. */
+  onCancel?: () => void;
 };

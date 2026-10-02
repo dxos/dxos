@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AnthropicStructuredOutput from 'effect/ai/AnthropicStructuredOutput';
+import * as Tool from 'effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as AnthropicStructuredOutput from 'effect/unstable/ai/AnthropicStructuredOutput';
-import * as Tool from 'effect/unstable/ai/Tool';
 import { describe, test } from 'vitest';
 
 import { OpaqueToolkit, ToolId, ToolResolverService } from '@dxos/ai';

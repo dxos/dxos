@@ -1,0 +1,123 @@
+/*
+ * Container grid (decision 5): a template root owns the rails, an inheriting container is a real subgrid, and every
+ * layout choice is an attribute resolved here.
+ */
+
+@layer dx-components {
+  .nx-grid[data-gutter='rail'] {
+    --nx-gutter: var(--nx-block-size);
+  }
+  .nx-grid[data-gutter='inset'] {
+    --nx-gutter: var(--nx-gap-size);
+  }
+  .nx-grid[data-gutter='sm'] {
+    --nx-gutter: var(--dx-gutter-sm);
+  }
+  .nx-grid[data-gutter='md'] {
+    --nx-gutter: var(--dx-gutter-md);
+  }
+  .nx-grid[data-gutter='lg'] {
+    --nx-gutter: var(--dx-gutter-lg);
+  }
+  .nx-grid[data-gutter='none'] {
+    --nx-gutter: 0px;
+  }
+
+  .nx-grid {
+    display: grid;
+    min-width: 0;
+    align-content: start;
+    font-size: var(--nx-font-size);
+    line-height: var(--nx-line-height);
+  }
+
+  /* Template root: the end track gives back whatever a native scrollbar consumes. */
+  .nx-grid:not([data-gutter='inherit']) {
+    grid-template-columns:
+      [full-start] var(--nx-gutter) [content-start] var(--nx-columns, minmax(0, 1fr))
+      [content-end] calc(var(--nx-gutter) - var(--nx-scroll-reserve, 0px)) [full-end];
+  }
+
+  .nx-grid[data-gutter='inherit'] {
+    grid-column: full;
+    grid-template-columns: subgrid;
+  }
+  /* Own columns start a fresh template inside the parent's content track (decision 5); no gutters of its own. */
+  .nx-grid[data-gutter='inherit'][data-columns] {
+    grid-column: content;
+    grid-template-columns: [full-start content-start] var(--nx-columns) [content-end full-end];
+  }
+
+  .nx-grid > * {
+    grid-column: content;
+  }
+  .nx-grid > [data-place='full'] {
+    grid-column: full;
+  }
+  .nx-grid > [data-rail='start'] {
+    grid-column: full-start / content-start;
+  }
+  .nx-grid > [data-rail='end'] {
+    grid-column: content-end / full-end;
+  }
+
+  /* Row gap only: the columns belong to the template (or the parent's, through subgrid). */
+  .nx-grid[data-gap='none'] {
+    row-gap: 0;
+  }
+  .nx-grid[data-gap='sm'] {
+    row-gap: 0.25rem;
+  }
+  .nx-grid[data-gap='md'] {
+    row-gap: 0.5rem;
+  }
+  .nx-grid[data-gap='lg'] {
+    row-gap: 0.75rem;
+  }
+
+  /* A row is at least one block tall so controls centre in it. */
+  .nx-grid[data-layout='row'] {
+    grid-auto-rows: minmax(var(--nx-block-size), auto);
+    align-items: center;
+  }
+  .nx-grid[data-layout='row'] > :not([data-rail]) {
+    grid-column: auto;
+  }
+  .nx-grid[data-layout='row'] > :nth-child(1 of :not([data-rail])) {
+    grid-column-start: content-start;
+  }
+
+  /* In a stack a control has no row of its own, so the container pads it out to a block. */
+  .nx-grid[data-layout='stack'] > .nx-control {
+    margin-block: var(--nx-control-inset);
+  }
+
+  .nx-block {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: var(--nx-block-size);
+    height: var(--nx-block-size);
+    justify-self: center;
+  }
+
+  /* Responsive: collapse against the nearest query container (the pane), never the viewport. */
+  @container (width < 24rem) {
+    .nx-grid.nx-grid[data-gutter='rail'] {
+      --nx-gutter: var(--nx-gap-size);
+    }
+    .nx-grid[data-columns] {
+      --nx-columns: minmax(0, 1fr);
+    }
+    .nx-grid > [data-rail] {
+      display: none;
+    }
+    .nx-grid[data-layout='row'] > :not([data-rail]) {
+      grid-column: content;
+    }
+  }
+
+  [data-debug] .nx-grid > * {
+    outline: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
+  }
+}

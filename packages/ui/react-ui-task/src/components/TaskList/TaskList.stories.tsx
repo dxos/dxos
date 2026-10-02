@@ -411,24 +411,36 @@ const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequ
 /**
  * Answers the card request an artifact tag dispatches, standing in for PreviewPlugin so the story
  * shows what each artifact is without the plugin layers. The event does not bubble, so it is caught
- * in the capture phase on `window`, as the app's own host does.
+ * in the capture phase on `window`, as the app's own host does. Opening an object is recorded on
+ * `artifact-opened` in place of navigating.
  */
 const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifacts: Obj.Unknown[] }>) => {
   const triggerRef = useRef<HTMLElement | null>(null);
   const [artifact, setArtifact] = useState<Obj.Unknown>();
   const [open, setOpen] = useState(false);
+  const [opened, setOpened] = useState<string>();
 
   const handleActivate = useCallback(
     (event: Event) => {
       if (!(event instanceof DxAnchorActivate)) {
         return;
       }
-      const match = artifacts.find((artifact) => String(Obj.getURI(artifact)) === event.eid);
-      if (match) {
-        triggerRef.current = event.trigger;
-        setArtifact(match);
-        setOpen(true);
+      if (event.state === false) {
+        setOpen(false);
+        return;
       }
+      const match = artifacts.find((artifact) => String(Obj.getURI(artifact)) === event.eid);
+      if (!match) {
+        return;
+      }
+      if (event.navigate) {
+        setOpen(false);
+        setOpened(Obj.getLabel(match));
+        return;
+      }
+      triggerRef.current = event.trigger;
+      setArtifact(match);
+      setOpen(true);
     },
     [artifacts],
   );
@@ -442,6 +454,9 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.VirtualTrigger virtualRef={triggerRef} />
       {children}
+      <output className='sr-only' data-testid='artifact-opened'>
+        {opened}
+      </output>
       {artifact && (
         <Popover.Portal>
           <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
@@ -738,6 +753,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+/** No description line, as the chat's checklist shows it: the add row is exactly one task row tall. */
+export const WithoutDescription: Story = {
+  args: {
+    showDescription: false,
+  },
+};
 
 /** A list long enough to scroll, group and number into double digits. */
 export const ManyTasks: Story = {
@@ -1134,7 +1156,7 @@ export const WithTags: Story = {
   },
 };
 
-/** A pull request, the one artifact a row shows, opens its summary from the row. */
+/** A pull request, the one artifact a row shows, shows its summary on hover and opens on click. */
 export const TestArtifactPreviews: Story = {
   render: ArtifactsStory,
   args: {
@@ -1150,6 +1172,7 @@ export const TestArtifactPreviews: Story = {
         ),
       ].find((element) => element.textContent === label);
     const preview = () => document.querySelector<HTMLElement>('[data-testid="artifact-preview"]');
+    const opened = () => document.querySelector<HTMLElement>('[data-testid="artifact-opened"]');
 
     const open = async (label: string, testId: string) => {
       const tag = await waitFor(
@@ -1162,13 +1185,17 @@ export const TestArtifactPreviews: Story = {
         },
         { timeout: 10_000 },
       );
-      await userEvent.click(tag);
+      await userEvent.hover(tag);
       await waitFor(async () => expect(preview()?.querySelector(`[data-testid="${testId}"]`)).toBeTruthy(), {
         timeout: 5_000,
       });
       await expect(preview()?.textContent).toContain(label);
-      await userEvent.keyboard('{Escape}');
+      await userEvent.unhover(tag);
       await waitFor(async () => expect(preview()).toBeNull());
+
+      await userEvent.click(tag);
+      await waitFor(async () => expect(opened()?.textContent).not.toBe(''));
+      await expect(preview()).toBeNull();
     };
 
     // The pull request's tag is its `#number` pill; the preview names it by its full reference.
@@ -1215,7 +1242,7 @@ export const TestCheckboxSelection: Story = {
 
     await waitFor(async () => expect(boxes().length).toBeGreaterThan(1));
     // Checkbox and ordinal are mutually exclusive: the box takes the gutter cell, so no row numbers.
-    await expect(canvasElement.querySelectorAll('.tabular-nums').length).toBe(0);
+    await expect(canvasElement.querySelectorAll('[data-testid="taskList.item.ordinal"]').length).toBe(0);
 
     const before = statuses();
     await userEvent.click(boxes()[0]);
@@ -1291,6 +1318,15 @@ export const TestEdit: Story = {
     await waitFor(async () => expect(title()).not.toEqual(document.activeElement));
     await expect(rows()).toHaveLength(before);
     await userEvent.clear(title());
+
+    // The mnemonic chip copies the task's reference; it does not select the row it sits in.
+    const mnemonic = rows()[0].querySelector<HTMLElement>('[data-testid="taskList.item.mnemonic"]');
+    if (!mnemonic) {
+      throw new Error('Task mnemonic not found.');
+    }
+    await userEvent.click(mnemonic);
+    await expect(canvasElement.querySelectorAll('[aria-selected="true"]')).toHaveLength(0);
+    await expect(title().value).toEqual('');
 
     // Selecting a task fills the pane with it.
     const first = rows()[0];
@@ -1793,7 +1829,7 @@ export const TestOrdinalsAreLinear: Story = {
   play: async ({ canvasElement }) => {
     const ordinals = () =>
       Array.from(canvasElement.querySelectorAll<HTMLElement>('[data-testid="taskList.item"]')).map(
-        (row) => row.querySelector('.tabular-nums')?.textContent ?? '',
+        (row) => row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
       );
 
     await waitFor(async () => expect(ordinals().length).toBeGreaterThan(1));
@@ -1834,7 +1870,7 @@ export const TestHierarchy: Story = {
           // A leaf IS the `treeitem`, but a branch's `treeitem` is a wrapper around the focusable
           // row — so the level is read from whichever of the two carries it.
           level: Number(row.closest('[role="treeitem"]')?.getAttribute('aria-level')),
-          ordinal: row.querySelector('.tabular-nums')?.textContent ?? '',
+          ordinal: row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
         }));
     const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
     const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;

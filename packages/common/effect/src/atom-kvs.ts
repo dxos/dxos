@@ -3,8 +3,8 @@
 //
 
 import * as BrowserKeyValueStore from '@effect/platform-browser/BrowserKeyValueStore';
+import * as Atom from 'effect/reactivity/Atom';
 import type * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 // TODO(wittjosiah): This is currently provided for convenience but maybe should be removed.
 const defaultRuntime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);
