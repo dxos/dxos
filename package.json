@@ -114,7 +114,6 @@
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "@vitest/expect": "catalog:",
-    "@vitest/runner": "catalog:",
     "@vitest/snapshot": "catalog:",
     "@vitest/spy": "catalog:",
     "@vitest/ui": "catalog:",

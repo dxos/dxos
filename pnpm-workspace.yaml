@@ -294,15 +294,14 @@ catalog:
   '@valtown/codemirror-ts': ^2.3.1
   '@vitejs/plugin-react': ^6.0.5
   '@vitejs/plugin-react-swc': ^4.3.3
-  '@vitest/browser': 4.1.10
-  '@vitest/browser-playwright': ^4.1.10
-  '@vitest/coverage-v8': ^4.1.10
-  '@vitest/expect': ^4.1.10
-  '@vitest/runner': ^4.1.10
-  '@vitest/snapshot': ^4.1.10
-  '@vitest/spy': ^4.1.10
-  '@vitest/ui': ^4.1.10
-  '@vitest/utils': ^4.1.10
+  '@vitest/browser': 5.0.3
+  '@vitest/browser-playwright': ^5.0.3
+  '@vitest/coverage-v8': ^5.0.3
+  '@vitest/expect': ^5.0.3
+  '@vitest/snapshot': ^5.0.3
+  '@vitest/spy': ^5.0.3
+  '@vitest/ui': ^5.0.3
+  '@vitest/utils': ^5.0.3
   '@vscode/vsce': ^3.7.1
   '@x402/core': ^2.17.0
   '@x402/evm': ^2.17.0
@@ -658,7 +657,7 @@ catalog:
   vite-plugin-turbosnap: ^1.0.3
   vite-plugin-wasm: ^3.6.0
   vite-tsconfig-paths: ^6.1.1
-  vitest: 4.1.10
+  vitest: 5.0.3
   wait-on: ^8.0.3
   wavefile: ^11.0.0
   web-ext: ^10.5.0
@@ -768,18 +767,19 @@ overrides:
 patchedDependencies:
   '@automerge/automerge-repo@2.6.0-subduction.48': patches/@automerge__automerge-repo@2.6.0-subduction.48.patch
   '@automerge/automerge-subduction@0.17.2': patches/@automerge__automerge-subduction@0.17.2.patch
-  '@vitest/browser@4.1.10': patches/@vitest__browser@4.1.10.patch
+  '@vitest/browser@5.0.3': patches/@vitest__browser@5.0.3.patch
   '@zag-js/presence@1.43.3': patches/@zag-js__presence@1.43.3.patch
   dfx@1.0.15: patches/dfx@1.0.15.patch
   js-clipper@1.0.1: patches/js-clipper@1.0.1.patch
   random-access-idb@1.2.2: patches/random-access-idb@1.2.2.patch
   uuid@8.3.2: patches/uuid@8.3.2.patch
-  vitest@4.1.10: patches/vitest@4.1.10.patch
+  vitest@5.0.3: patches/vitest@5.0.3.patch
 
 peerDependencyRules:
   allowedVersions:
     '@bryanguffey/astro-standard-site>astro': '>=5.0.0'
-    '@effect/vitest>vitest': '>=3.2.0'
+    '@cloudflare/vitest-pool-workers>@vitest/snapshot': '>=4.1.0'
+    '@cloudflare/vitest-pool-workers>vitest': '>=4.1.0'
     manifold-3d>esbuild-wasm: '*'
     partyserver>@cloudflare/workers-types: '>=5.0.0'
     vite-plugin-pwa>vite: '>=7.0.0'
@@ -790,6 +790,7 @@ peerDependencyRules:
     - '@effect/experimental'
     - '@effect/platform'
     - '@effect/rpc'
+    - '@vitest/runner'
     - redis
     - stage-js
     - webpack

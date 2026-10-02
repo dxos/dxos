@@ -734,7 +734,6 @@ const createBrowserProject = ({
         headless: !isDebug,
         provider: playwright({ ...SANDBOX_LAUNCH_OPTIONS }),
         instances: [{ browser: browserName }],
-        isolate: false,
       },
 
       setupFiles: [VITEST_BROWSER_LOG_SETUP],
