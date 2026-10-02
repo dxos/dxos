@@ -15,6 +15,8 @@ mod xattr_cmd;
 #[cfg(target_os = "macos")]
 mod menubar;
 #[cfg(target_os = "macos")]
+mod passkey;
+#[cfg(target_os = "macos")]
 mod spotlight;
 mod web_process;
 #[cfg(target_os = "linux")]
@@ -104,6 +106,9 @@ pub fn run() {
     #[cfg(all(not(debug_assertions), desktop))]
     let port_taken = !port_available(localhost_port);
 
+    #[cfg(target_os = "macos")]
+    let native_passkeys = passkey::available(&context.config().identifier);
+
     let builder = tauri::Builder::default()
         .manage(asset_cache::AssetCacheState::default())
         // Custom URI scheme: serves cached third-party plugin assets so plugins keep
@@ -140,9 +145,15 @@ pub fn run() {
 
     // Initialize tauri-nspanel plugin for macOS spotlight panel.
     #[cfg(target_os = "macos")]
-    let builder = builder
-        .plugin(tauri_nspanel::init())
-        .plugin(tauri_plugin_macos_passkey::init());
+    let builder = builder.plugin(tauri_nspanel::init());
+
+    // Unregistered, a stray `invoke` fails at once instead of opening a sheet that never returns.
+    #[cfg(target_os = "macos")]
+    let builder = if native_passkeys {
+        builder.plugin(tauri_plugin_macos_passkey::init())
+    } else {
+        builder
+    };
 
     // Initialize haptics plugin for mobile platforms.
     // Initialize web-auth plugin for mobile (ASWebAuthenticationSession on iOS, Custom Tabs on Android).
@@ -269,6 +280,14 @@ pub fn run() {
                     .build(),
             )?;
 
+            #[cfg(target_os = "macos")]
+            if !native_passkeys {
+                log::warn!(
+                    "native passkeys disabled: the signed application identifier does not name {}",
+                    app.config().identifier
+                );
+            }
+
             // Desktop: create window pointing at localhost plugin (production) or Vite dev server (dev).
             // SharedWorker requires HTTP origin, so desktop uses External URL.
             #[cfg(desktop)]
@@ -316,6 +335,9 @@ pub fn run() {
                 let window_builder = window_builder
                     .hidden_title(true)
                     .title_bar_style(tauri::TitleBarStyle::Overlay);
+                // Runs before any page script, so the page's first passkey check already sees it.
+                #[cfg(target_os = "macos")]
+                let window_builder = window_builder.initialization_script(passkey::page_script(native_passkeys));
                 let main_window = window_builder
                     // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
                     // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts

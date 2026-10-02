@@ -24,12 +24,12 @@ type Assertion = {
 
 const nativeAssertion = (
   challenge: string,
-): Effect.Effect<Assertion, PasskeyError.Dismissed | PasskeyError.LoginFailed> =>
+): Effect.Effect<Assertion, PasskeyError.Dismissed | PasskeyError.LoginFailed | PasskeyError.TimedOut> =>
   Effect.gen(function* () {
     const result = yield* Effect.tryPromise({
       try: () => NativePasskey.loginNativePasskey({ challenge: Uint8Array.from(Buffer.from(challenge, 'base64')) }),
       catch: PasskeyError.fromAssertion,
-    });
+    }).pipe(PasskeyError.timeoutNativePrompt);
     if (!result?.user_handle || !result.signature) {
       return yield* Effect.fail(
         new PasskeyError.LoginFailed({ message: 'Native passkey login returned no assertion.' }),
@@ -88,14 +88,20 @@ const webAssertion = (challenge: string): Effect.Effect<Assertion, PasskeyError.
 const handler: Operation.WithHandler<typeof RedeemPasskey> = RedeemPasskey.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* () {
+      const support = NativePasskey.getPasskeySupport();
+      if (support === 'none') {
+        return yield* Effect.fail(new PasskeyError.Unavailable());
+      }
+
       const recoveryChallenge = yield* Effect.mapError(
         Identity.requestRecoveryChallenge,
         PasskeyError.LoginFailed.wrap({ message: 'Failed to request a recovery challenge.' }),
       );
 
-      const assertion = yield* Match.value(NativePasskey.supportsNativePasskeys()).pipe(
-        Match.when(true, () => nativeAssertion(recoveryChallenge.challenge)),
-        Match.orElse(() => webAssertion(recoveryChallenge.challenge)),
+      const assertion = yield* Match.value(support).pipe(
+        Match.when('native', () => nativeAssertion(recoveryChallenge.challenge)),
+        Match.when('web', () => webAssertion(recoveryChallenge.challenge)),
+        Match.exhaustive,
       );
 
       // EDGE refuses the assertion when the passkey isn't registered as a recovery credential.

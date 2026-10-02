@@ -5,6 +5,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
 import { log } from '@dxos/log';
@@ -18,6 +19,8 @@ import { ClientOperation } from '#operations';
 import { useAccountUrl } from '../../hooks/index.ts';
 
 export const MANAGE_CREDENTIALS_DIALOG = `${meta.profile.key}.ManageCredentialsDialog`;
+
+const supportsPasskeys = NativePasskey.getPasskeySupport() !== 'none';
 
 /** Icon per recovery kind, so a passkey is distinguishable from a recovery code at a glance. */
 const KIND_ICONS: Record<Identity.RecoveryKind, string> = {
@@ -63,14 +66,16 @@ export const RecoveryCredentialsContainer = () => {
       <Form.Viewport scroll>
         <Form.Content>
           <Form.FieldSet label={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
-            <Form.Field standalone label={t('create-passkey.label')} description={t('create-passkey.description')}>
-              <IconButton
-                label={t('create-passkey.label')}
-                icon='ph--key--duotone'
-                variant='primary'
-                onClick={() => invokePromise(ClientOperation.CreatePasskey)}
-              />
-            </Form.Field>
+            {supportsPasskeys && (
+              <Form.Field standalone label={t('create-passkey.label')} description={t('create-passkey.description')}>
+                <IconButton
+                  label={t('create-passkey.label')}
+                  icon='ph--key--duotone'
+                  variant='primary'
+                  onClick={() => invokePromise(ClientOperation.CreatePasskey)}
+                />
+              </Form.Field>
+            )}
             <Form.Field
               standalone
               label={t('create-recovery-code.label')}

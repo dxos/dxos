@@ -13,6 +13,8 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { getHostPlatform } from '@dxos/util';
 
+import { PasskeyError } from '#types';
+
 import { CreatePasskey } from './definitions.ts';
 
 /**
@@ -40,15 +42,17 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
 
       const lookupKey = PublicKey.random();
 
-      const { recoveryKey, algorithm } = yield* Match.value(NativePasskey.supportsNativePasskeys()).pipe(
-        Match.when(true, () =>
+      const { recoveryKey, algorithm } = yield* Match.value(NativePasskey.getPasskeySupport()).pipe(
+        Match.when('native', () =>
           Effect.gen(function* () {
-            const result = yield* Effect.promise(() =>
-              NativePasskey.createNativePasskey({
-                username: identity.did,
-                userId: lookupKey.asUint8Array(),
-              }),
-            );
+            const result = yield* Effect.tryPromise({
+              try: () =>
+                NativePasskey.createNativePasskey({
+                  username: identity.did,
+                  userId: lookupKey.asUint8Array(),
+                }),
+              catch: PasskeyError.fromAssertion,
+            }).pipe(PasskeyError.timeoutNativePrompt);
             const { publicKey, algorithm: alg } = NativePasskey.extractPublicKeyFromAttestation(
               result.attestation_object,
             );
@@ -58,7 +62,7 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
             };
           }),
         ),
-        Match.orElse(() =>
+        Match.when('web', () =>
           Effect.gen(function* () {
             const credential = yield* Effect.promise(() =>
               navigator.credentials.create({
@@ -88,6 +92,8 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
             };
           }),
         ),
+        Match.when('none', () => Effect.fail(new PasskeyError.Unavailable())),
+        Match.exhaustive,
       );
 
       yield* Identity.createRecoveryCredential({

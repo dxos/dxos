@@ -4,6 +4,9 @@
 
 // @import-as-namespace
 
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+
 import { BaseError, type Cancellation, isCancellation } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -25,8 +28,27 @@ export class Rejected extends BaseError.extend('PasskeyRejectedError', 'Passkey 
 /** Passkey login failed before an assertion could be checked (service unreachable, unusable authenticator response). */
 export class LoginFailed extends BaseError.extend('PasskeyLoginError', 'Passkey login failed') {}
 
+/** The native prompt never answered. The bridge cannot cancel it, so its sheet may still be on screen. */
+export class TimedOut extends BaseError.extend('PasskeyTimedOutError', 'The passkey prompt did not respond') {}
+
+/** This host cannot complete a passkey request, so none was started. */
+export class Unavailable extends BaseError.extend(
+  'PasskeyUnavailableError',
+  'Passkeys are not available in this build',
+) {}
+
 /** Every way a passkey login can fail, as `ConfigError.ConfigError` names its own union. */
-export type PasskeyError = Dismissed | Rejected | LoginFailed;
+export type PasskeyError = Dismissed | Rejected | LoginFailed | TimedOut | Unavailable;
+
+/** Longest a native prompt may stay unanswered; the WebAuthn ceremony ceiling. */
+export const NATIVE_PROMPT_TIMEOUT = Duration.minutes(5);
+
+/** Abandon a native passkey call that never answers. */
+export const timeoutNativePrompt = <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+  duration: Duration.Input = NATIVE_PROMPT_TIMEOUT,
+): Effect.Effect<A, E | TimedOut, R> =>
+  Effect.timeoutOrElse(effect, { duration, orElse: () => Effect.fail(new TimedOut()) });
 
 /** Discriminates a passkey login failure so callers can pick a message without matching on error names. */
 export type Failure = 'dismissed' | 'rejected' | 'failed';

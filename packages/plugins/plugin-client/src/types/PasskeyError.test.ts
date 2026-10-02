@@ -2,8 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
 import { describe, expect, test } from 'vitest';
 
+import { EffectEx } from '@dxos/effect';
 import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 
 import * as PasskeyError from './PasskeyError.ts';
@@ -27,6 +29,17 @@ describe('passkey errors', () => {
     },
   );
 
+  // DX-1324: the native call never settles when the system drops the request.
+  test('a native prompt that never answers fails with TimedOut', async () => {
+    const error = await EffectEx.runPromise(Effect.flip(PasskeyError.timeoutNativePrompt(Effect.never, '10 millis')));
+    expect(PasskeyError.TimedOut.is(error)).to.be.true;
+  });
+
+  test('a native prompt that answers is passed through', async () => {
+    const value = await EffectEx.runPromise(PasskeyError.timeoutNativePrompt(Effect.succeed('ok'), '10 millis'));
+    expect(value).to.eq('ok');
+  });
+
   // DX-1281: the welcome screen reported a dismissal at error level, which swamped the
   // production error stream.
   test.each([
@@ -41,16 +54,19 @@ describe('passkey errors', () => {
     expect(entries[0].level).to.eq(LogLevel.INFO);
   });
 
-  test.each([new DOMException('no authenticator', 'NotSupportedError'), new Error('EDGE unreachable')])(
-    'a genuine failure is still reported at error level (%s)',
-    (error) => {
-      const entries = captureLogEntries(() => {
-        expect(PasskeyError.report(error)).to.eq('failed');
-      });
-      expect(entries).to.have.length(1);
-      expect(entries[0].level).to.eq(LogLevel.ERROR);
-    },
-  );
+  // A timed-out or unavailable prompt is a broken build, not a user choice, so neither may hide below error level.
+  test.each([
+    new DOMException('no authenticator', 'NotSupportedError'),
+    new Error('EDGE unreachable'),
+    new PasskeyError.TimedOut(),
+    new PasskeyError.Unavailable(),
+  ])('a genuine failure is still reported at error level (%s)', (error) => {
+    const entries = captureLogEntries(() => {
+      expect(PasskeyError.report(error)).to.eq('failed');
+    });
+    expect(entries).to.have.length(1);
+    expect(entries[0].level).to.eq(LogLevel.ERROR);
+  });
 });
 
 /** Collect the log entries `body` emits, so a test can assert on the level a code path reports at. */

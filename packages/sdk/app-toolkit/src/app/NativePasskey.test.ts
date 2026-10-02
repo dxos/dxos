@@ -142,6 +142,33 @@ describe('getRelyingPartyId', () => {
   });
 });
 
+describe('getPasskeySupport', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test.for([
+    { shell: true, platform: 'MacIntel', native: undefined, webAuthn: true, expected: 'native' },
+    { shell: true, platform: 'MacIntel', native: true, webAuthn: false, expected: 'native' },
+    // DX-1324: a shell whose signed identity cannot complete a native request must not fall back to WebAuthn either.
+    { shell: true, platform: 'MacIntel', native: false, webAuthn: true, expected: 'none' },
+    { shell: true, platform: 'Linux x86_64', native: undefined, webAuthn: true, expected: 'web' },
+    { shell: false, platform: 'MacIntel', native: false, webAuthn: true, expected: 'web' },
+    { shell: false, platform: 'MacIntel', native: undefined, webAuthn: false, expected: 'none' },
+  ])(
+    'shell $shell on $platform, host flag $native, WebAuthn $webAuthn -> $expected',
+    ({ shell, platform, native, webAuthn, expected }, { expect }) => {
+      if (shell) {
+        vi.stubGlobal('__TAURI__', {});
+      }
+      const credentials = webAuthn ? { create: () => {}, get: () => {} } : undefined;
+      vi.stubGlobal('navigator', { platform, credentials });
+      vi.stubGlobal('__DX_NATIVE_PASSKEYS__', native);
+      expect(NativePasskey.getPasskeySupport()).toBe(expected);
+    },
+  );
+});
+
 describe('extractPublicKeyFromAttestation', () => {
   test('extracts ES256 public key from attestation object', ({ expect }) => {
     const xCoord = new Uint8Array(32);
