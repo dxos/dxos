@@ -53,6 +53,9 @@ checked and passed:
   every subpath. Adding a
   package to that list requires the package to export `./package.json`, or the rule silently finds
   nothing.
+- **`@dxos/app-framework` and `@dxos/app-toolkit` have no root import.** Their roots re-export
+  every subpath, React components included, so `dxos-subpath-imports` also reports namespace,
+  side-effect and dynamic imports of either root, and `export ... from` it.
 - **`dxos-package-imports` steps aside for conditional aliases.** Where an alias resolves per
   condition (`#plugin` → `plugin.node.ts` under node, `plugin.tsx` by default), it and a relative
   path to one branch are *different modules*, so substituting one for the other would change which

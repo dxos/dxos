@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
-import { PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -50,7 +50,7 @@ export default FeedOperation.CurateMagazine.pipe(
       const synced = yield* syncFeeds(validFeeds).pipe(
         // A run that dies without a terminal status leaves the meter holding the statusbar forever,
         // offering a cancel control for work that is no longer happening.
-        Effect.tapError(() => Effect.sync(() => reportStatus({ message: PROGRESS_STATUS_FAILED }))),
+        Effect.tapError(() => Effect.sync(() => reportStatus({ message: Progress.STATUS_FAILED }))),
       );
       reportStatus({ current: validFeeds.length });
 
@@ -96,7 +96,7 @@ export default FeedOperation.CurateMagazine.pipe(
         }
       }
 
-      reportStatus({ current: selected.length, message: PROGRESS_STATUS_COMPLETE });
+      reportStatus({ current: selected.length, message: Progress.STATUS_COMPLETE });
 
       return { synced, curated };
     }),

@@ -27,6 +27,7 @@ export default defineConfig({
     'index': 'src/index.ts',
     'account/Account': 'src/account/Account.ts',
     'app-framework/AppCapabilities': 'src/app-framework/AppCapabilities.ts',
+    'app-framework/Progress': 'src/app-framework/Progress.ts',
     'app-framework/ObservabilityMapping': 'src/app-framework/ObservabilityMapping.ts',
     'app-framework/AppCapability': 'src/app-framework/AppCapability.ts',
     'app-framework/Tour': 'src/app-framework/Tour.ts',

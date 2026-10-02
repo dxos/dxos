@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { AiService } from '@dxos/ai';
-import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database } from '@dxos/echo';
@@ -78,7 +78,7 @@ const handler = BrainOperation.AnalyzeMailbox.pipe(
         extract,
         onProgress: ({ processed, total }) => reportStatus({ current: processed, total }),
       });
-      reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+      reportStatus({ message: Progress.STATUS_COMPLETE });
       return result;
     }),
   ),

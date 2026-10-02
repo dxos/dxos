@@ -15,7 +15,7 @@ import * as AppCapabilities from './AppCapabilities.ts';
  * kept-alive writable atom (so a background producer can populate it before any surface subscribes),
  * and per-provider atoms are derived selectors memoized by name.
  */
-export const createProgressRegistry = (registry: Registry.AtomRegistry): AppCapabilities.ProgressRegistry => {
+export const makeRegistry = (registry: Registry.AtomRegistry): AppCapabilities.ProgressRegistry => {
   const core = Progress.make();
   const snapshotAtom = Atom.make<Progress.Snapshot>(core.snapshot()).pipe(Atom.keepAlive);
   core.subscribe((snapshot) => registry.set(snapshotAtom, snapshot));

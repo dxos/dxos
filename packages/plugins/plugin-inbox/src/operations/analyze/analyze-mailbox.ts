@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -220,10 +220,10 @@ const handler = InboxOperation.AnalyzeMailbox.pipe(
       reportStatus({
         current: passes.length,
         message: signal.aborted
-          ? PROGRESS_STATUS_CANCELLED
+          ? Progress.STATUS_CANCELLED
           : failed > 0
-            ? PROGRESS_STATUS_FAILED
-            : PROGRESS_STATUS_COMPLETE,
+            ? Progress.STATUS_FAILED
+            : Progress.STATUS_COMPLETE,
       });
 
       return { completed, failed, skipped, cancelled, stages: results };

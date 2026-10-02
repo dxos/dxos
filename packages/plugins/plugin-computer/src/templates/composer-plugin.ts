@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { PLUGIN_DEV_SERVER_PORT } from '@dxos/app-framework';
+import * as PluginManifest from '@dxos/app-framework/PluginManifest';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import * as Templates from '@dxos/plugin-projects/Templates';
 import { isTauri } from '@dxos/util';
@@ -13,10 +13,10 @@ import { SKILL_KEY } from '../skills/computer-skill.ts';
 export const FOLDER = 'world-clock';
 
 /** The dev manifest `composerPlugin` serves, and the URL Plugins → Dev Server loads by default. */
-export const MANIFEST_URL = `http://localhost:${PLUGIN_DEV_SERVER_PORT}/manifest.json`;
+export const MANIFEST_URL = `http://localhost:${PluginManifest.DEV_SERVER_PORT}/manifest.json`;
 
 /** The plugin's entry as the dev server compiles it on request. */
-const ENTRY_URL = `http://localhost:${PLUGIN_DEV_SERVER_PORT}/src/plugin.tsx`;
+const ENTRY_URL = `http://localhost:${PluginManifest.DEV_SERVER_PORT}/src/plugin.tsx`;
 
 /** Run by the reader from the Composer app directory: the Computer shell kills scripts that outlive its timeout. */
 const DEV_SERVER_COMMAND = `node_modules/.bin/vite temp/plugins/${FOLDER}`;

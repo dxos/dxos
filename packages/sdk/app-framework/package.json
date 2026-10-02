@@ -157,6 +157,16 @@
       "source": "./src/Surface.ts",
       "types": "./dist/types/src/Surface.d.ts",
       "import": "./dist/lib/ns/Surface.mjs"
+    },
+    "./Devtools": {
+      "source": "./src/Devtools.ts",
+      "types": "./dist/types/src/Devtools.d.ts",
+      "import": "./dist/lib/ns/Devtools.mjs"
+    },
+    "./Translations": {
+      "source": "./src/Translations.ts",
+      "types": "./dist/types/src/Translations.d.ts",
+      "import": "./dist/lib/ns/Translations.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
