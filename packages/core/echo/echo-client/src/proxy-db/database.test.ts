@@ -726,6 +726,27 @@ describe('Database', () => {
     await expect.poll(() => registry.get(atom)?.id).toBe(second.id);
   });
 
+  test('Obj.getParent returns the parent on every read and follows a re-parent at once', async ({ expect }) => {
+    const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
+    const task = db.add(Obj.make(TestSchema.Task, { title: 'x' }));
+    const first = db.add(Obj.make(TestSchema.Person, { name: 'first', tasks: [Ref.make(task)] }));
+    const second = db.add(Obj.make(TestSchema.Person, { name: 'second', tasks: [Ref.make(task)] }));
+    Obj.setParent(task, first);
+    await db.flush();
+
+    expect(Obj.getParent(task)).toBe(first);
+    expect(Obj.getParent(task)).toBe(first);
+
+    Obj.setParent(task, second);
+    expect(Obj.getParent(task)).toBe(second);
+
+    Obj.setParent(task, undefined);
+    expect(Obj.getParent(task)).toBeUndefined();
+
+    Obj.setParent(task, first);
+    expect(Obj.getParent(task)).toBe(first);
+  });
+
   test('a property traversal returns targets in array order', async ({ expect }) => {
     const { db } = await builder.createDatabase({ types: [TestSchema.Person, TestSchema.Task] });
     const tasks = ['one', 'two', 'three'].map((title) => db.add(Obj.make(TestSchema.Task, { title })));

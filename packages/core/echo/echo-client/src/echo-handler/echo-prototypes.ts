@@ -275,9 +275,55 @@ const resolveEndpoint = (core: ObjectCore, ref: EncodedReference): any => {
   return database ? resolveStrongDepFromWorkingSet(database, EncodedReference.toURI(ref)) : core.lookupInLinkCache(ref);
 };
 
+/** A child's last resolved parent, and the stored ref it was resolved from. */
+type ParentCacheEntry = { uri: URI.URI; entityId: string; core: WeakRef<ObjectCore> };
+
+/**
+ * Resolved parents by child core: a working-set resolve builds a resolver request and walks the
+ * parent's strong-dependency closure, which a tree walk reading every task's parent paid per read.
+ */
+const parentCache = new WeakMap<ObjectCore, ParentCacheEntry>();
+
 export const getParent = (target: ProxyTarget): any => {
-  const parentRef = target[symbolInternals].getParent();
-  return parentRef === undefined ? undefined : resolveEndpoint(target[symbolInternals], parentRef);
+  const core = target[symbolInternals];
+  const parentRef = core.getParent();
+  if (parentRef === undefined) {
+    return undefined;
+  }
+  const database = getEchoDatabase(core);
+  if (!database) {
+    return core.lookupInLinkCache(parentRef);
+  }
+
+  // The stored ref is read on every call, so a re-parent misses; the core check catches a parent
+  // collected and rehydrated as a new core, whose old proxy must not be handed out.
+  const uri = EncodedReference.toURI(parentRef);
+  // The implementation behind the binding, which exposes cores by id.
+  const cores = database.graph.getDatabase(database.spaceId);
+  const cached = parentCache.get(core);
+  if (cached?.uri === uri) {
+    const parentCore = cached.core.deref();
+    if (
+      parentCore?.rootProxy &&
+      parentCore.isBodyAvailable &&
+      cores?.getObjectCoreById(cached.entityId, { load: false }) === parentCore
+    ) {
+      return parentCore.rootProxy;
+    }
+  }
+
+  const parent = resolveStrongDepFromWorkingSet(database, uri);
+  if (parent) {
+    // Only a parent this database holds as a core is cached; a feed-queue or cross-space parent
+    // has no core here and keeps the full resolve.
+    const eid = EID.tryParse(uri);
+    const entityId = eid ? EID.getEntityId(eid) : undefined;
+    const parentCore = entityId ? cores?.getObjectCoreById(entityId, { load: false }) : undefined;
+    if (entityId && parentCore && parentCore.rootProxy === parent) {
+      parentCache.set(core, { uri, entityId, core: new WeakRef(parentCore) });
+    }
+  }
+  return parent;
 };
 
 export const setParent = (target: ProxyTarget, value: any): void => {
