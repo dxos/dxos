@@ -79,6 +79,13 @@ const OBJECT_TYPENAMES: Record<string, string> = {
   Table: 'org.dxos.type.table',
 };
 
+/** The tree row's `data-drop-target` for each drop instruction a test asks for. */
+const DROP_TARGETS: Record<string, string> = {
+  'reorder-above': 'top',
+  'reorder-below': 'bottom',
+  'make-child': 'inside',
+};
+
 export class AppManager {
   page!: Page;
   shell!: ShellManager;
@@ -578,8 +585,12 @@ export class AppManager {
       .first()
       .click();
     await this.page.getByTestId('spacePlugin.renameObject').last().click();
-    await this.page.getByTestId('spacePlugin.rename.input').fill(newName);
-    await this.page.getByTestId('spacePlugin.rename.input').press('Enter');
+    // An object's rename popover is its properties form, whose Name field writes as it is typed; Escape closes it.
+    const name = this.page
+      .locator('[data-scope="popover"][data-part="content"]')
+      .getByRole('textbox', { name: 'Name' });
+    await name.fill(newName);
+    await name.press('Escape');
     await this.page.mouse.move(0, 0, { steps: 4 });
   }
 
@@ -641,7 +652,7 @@ export class AppManager {
     // Past the drag threshold, still inside the source row, and toward the target: a nudge away from
     // it leaves the pointer over the row that slides into the dragged row's place.
     await this.page.mouse.move(startX, startY + (initial.y < start.y ? -6 : 6), { steps: 2 });
-    await expect(active).toHaveAttribute('data-dragging', 'true');
+    await expect(active).toHaveAttribute('data-dragging');
 
     const box = await over.boundingBox();
     if (!box) {
@@ -657,13 +668,13 @@ export class AppManager {
       .poll(async () => {
         nudge = 1 - nudge;
         await this.page.mouse.move(x, y + nudge);
-        const zone = await over.getAttribute('data-instruction');
-        if (zone !== instruction) {
+        const zone = await over.getAttribute('data-drop-target');
+        if (zone !== DROP_TARGETS[instruction]) {
           return zone;
         }
         return !holdUntil || (await holdUntil()) ? zone : `${zone} (holding)`;
       })
-      .toBe(instruction);
+      .toBe(DROP_TARGETS[instruction]);
     await this.page.mouse.up();
   }
 
