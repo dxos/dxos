@@ -224,11 +224,7 @@ const TranscriptTabs = ({
               />
             </Tabs.Panel>
             <Tabs.Panel value='summary' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface
-                type={AppSurface.Tabpanel}
-                data={{ subject, attendableId, part: 'summary' }}
-                limit={1}
-              />
+              <Surface.Surface type={AppSurface.Tabpanel} data={{ subject, attendableId, part: 'summary' }} limit={1} />
             </Tabs.Panel>
           </Tabs.Viewport>
         </Panel.Content>

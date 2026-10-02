@@ -44,7 +44,5 @@ export const BookNotesCompanion = ({ subject: book, role, attendableId }: BookNo
     return null;
   }
 
-  return (
-    <Surface.Surface type={AppSurface.Article} data={{ subject: notes, attendableId }} role={role} limit={1} />
-  );
+  return <Surface.Surface type={AppSurface.Article} data={{ subject: notes, attendableId }} role={role} limit={1} />;
 };

@@ -27,7 +27,5 @@ export const MailboxModule = () => {
     return <Loading data={{ mailbox: false }} />;
   }
 
-  return (
-    <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: mailbox.id }} limit={1} />
-  );
+  return <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: mailbox.id }} limit={1} />;
 };

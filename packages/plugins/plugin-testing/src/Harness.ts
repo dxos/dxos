@@ -4,8 +4,8 @@
 
 // @import-as-namespace
 
-import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { type TestAppOptions, type TestHarness, createTestApp } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
