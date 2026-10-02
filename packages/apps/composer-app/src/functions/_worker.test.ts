@@ -32,7 +32,7 @@ const archive = {
 };
 
 const fetch = handler.fetch!;
-const env = { ASSETS: assets, ASSET_ARCHIVE: archive } as unknown as Parameters<typeof fetch>[1];
+const env = { ASSETS: assets, ASSET_ARCHIVE: archive, APPLE_TEAM_ID: 'TEAM' } as unknown as Parameters<typeof fetch>[1];
 
 const get = (path: string, secFetchMode?: string) =>
   fetch(
@@ -112,11 +112,7 @@ describe('apple-app-site-association', () => {
       .map((file) => `TEAM.org.dxos.composer.${path.basename(file, '.provisionprofile')}`);
     expect(channels).not.toHaveLength(0);
 
-    const response = await fetch(
-      new Request('https://composer.test/.well-known/apple-app-site-association'),
-      { ...env, APPLE_TEAM_ID: 'TEAM' },
-      {} as never,
-    );
+    const response = await get('/.well-known/apple-app-site-association');
     const document = await response.json();
     expect([...document.webcredentials.apps].sort()).toEqual(['TEAM.org.dxos.composer', ...channels].sort());
     expect(document.applinks.details[0].appIDs).toEqual(['TEAM.org.dxos.composer']);
