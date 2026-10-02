@@ -202,7 +202,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
           {mappedForCollection ? (
             <Flex column gap='sm'>
               {preview && previewIcon && (
-                <Next.Card.Root>
+                <Next.Card.Root grid>
                   <Next.Card.Header>
                     <Next.Block>
                       <Next.Icon

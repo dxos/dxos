@@ -42,7 +42,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu }: ObjectCardPr
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
 
   return (
-    <Next.Card.Root ref={cardRef} classNames={classNames}>
+    <Next.Card.Root grid ref={cardRef} classNames={classNames}>
       <Next.Card.Header>
         <Next.Block>
           <CardIconSlot subject={subject}>

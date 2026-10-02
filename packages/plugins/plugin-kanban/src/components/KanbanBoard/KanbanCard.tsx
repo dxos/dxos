@@ -61,7 +61,7 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         dragHandle={dragHandle}
       >
         <Next.Focus.Item asChild>
-          <Next.Card.Root ref={forwardedRef} data-testid='board-item'>
+          <Next.Card.Root grid ref={forwardedRef} data-testid='board-item'>
             <Next.Card.Header ref={cardRef}>
               <Next.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
               <Next.Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Next.Card.Title>

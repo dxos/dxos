@@ -105,7 +105,7 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
 
   return (
     <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-      <Next.Card.Root classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
+      <Next.Card.Root grid classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
         <Next.Card.Header>
           <Next.Block>
             <CardIconSlot subject={live}>

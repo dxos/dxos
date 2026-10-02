@@ -164,7 +164,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                 {/* `border={false}`: the popover content already draws the surface and its border,
                         so a bordered card inside it reads as a second frame. Matches the deck's popover. */}
                 {layout.popoverKind === 'card' && (
-                  <Next.Card.Root border={false} classNames='dx-card-popover rounded-md'>
+                  <Next.Card.Root grid border={false} classNames='dx-card-popover rounded-md'>
                     <Next.Card.Header>
                       {/* Disabled drag handle keeps the toolbar slot layout consistent with regular cards. */}
                       <Next.DragHandle />

@@ -7,6 +7,7 @@ import React, { type ComponentPropsWithoutRef, type MouseEvent, type ReactNode, 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { composable, composableProps } from '../../../util/index.ts';
 import { clickableProps } from '../../clickable.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
@@ -48,12 +49,16 @@ type CardRootProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
  * column that creates no grid. With `onClick` the card is a button (Enter and Space activate it); nested actions and
  * menus stop their clicks reaching it.
  */
-const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
-  ({ classNames, border = true, selected, grid = false, size, onClick, onKeyDown, ...props }, forwardedRef) => {
+const CardRoot = composable<HTMLDivElement, Omit<CardRootProps, keyof ThemedClassName<{}>>>(
+  ({ border = true, selected, grid = false, size, onClick, onKeyDown, ...props }, forwardedRef) => {
+    // Composable, so the card can be an `asChild` host's child (a Mosaic tile, a Focus item) and take its props.
+    const { className, ...rest } = composableProps<HTMLDivElement>(props, {
+      classNames: [recipes.cardRoot(), onClick && recipes.cardClickable()],
+    });
     const card = (
       <div
         data-surface={grid ? undefined : '+1'}
-        {...props}
+        {...rest}
         data-size={size}
         {...clickableProps(onClick, onKeyDown)}
         aria-current={selected ? 'true' : undefined}
@@ -62,7 +67,7 @@ const CardRoot = forwardRef<HTMLDivElement, CardRootProps>(
         data-grid={grid ? '' : undefined}
         data-border={border ? undefined : 'false'}
         data-selected={selected ? '' : undefined}
-        className={mx(recipes.cardRoot(), onClick && recipes.cardClickable(), classNames)}
+        className={className}
         ref={forwardedRef}
       />
     );

@@ -128,6 +128,7 @@ export const PopoverContent = () => {
     <Next.Popover.Content
       classNames={[
         roundedClassNames,
+        !isComponentPopover && 'p-0',
         !isRename && [
           'origin-(--transform-origin)',
           'data-[state=open]:animate-popover-in',
@@ -135,51 +136,60 @@ export const PopoverContent = () => {
         ],
       ]}
     >
-      <Next.Popover.Body>
-        {isComponentPopover && content && 'component' in content ? (
-          /*
-           * Base popover: a plugin-provided component (e.g., editor link preview).
-           */
+      {isComponentPopover && content && 'component' in content ? (
+        /*
+         * Base popover: a plugin-provided component (e.g., editor link preview).
+         */
+        <Next.Popover.Body>
           <Surface.Surface type={AppSurface.Popover} data={content} limit={1} />
-        ) : (
-          /*
-           * Card popover (default). Rendered for any open popover that isn't an explicit
-           * base-component popover so the popover can never collapse to a bare 1px frame: the
-           * header (icon + title + menu) always renders, and the body falls back to a fixed-
-           * height "no preview" row when no subject resolves a card Surface (e.g. system-type
-           * objects like a raw Feed that have no registered card and no renderable fields).
-           */
+        </Next.Popover.Body>
+      ) : (
+        /*
+         * Card popover (default). Rendered for any open popover that isn't an explicit
+         * base-component popover so the popover can never collapse to a bare 1px frame: the
+         * header (icon + title + menu) always renders, and the body falls back to a fixed-
+         * height "no preview" row when no subject resolves a card Surface (e.g. system-type
+         * objects like a raw Feed that have no registered card and no renderable fields). The card is the popover's
+         * content, regular-size and edge to edge as the current card popover; it scrolls itself (`dx-card-popover`) and
+         * keeps a card's minimum width and height within the space available.
+         */
+        <Next.Card.Root
+          grid
+          border={false}
+          classNames={[
+            'dx-card-popover dx-card-min-width',
+            'min-h-[min(var(--available-height),var(--spacing-card-min-height))]',
+            roundedClassNames,
+          ]}
+        >
+          <Next.Card.Header>
+            <Next.Block>
+              <CardIconSlot subject={popoverSubject}>
+                {icon && <Next.Icon icon={icon} classNames={iconStyles?.text} />}
+              </CardIconSlot>
+            </Next.Block>
+            <Next.Card.Title>{title}</Next.Card.Title>
+            {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+            <Next.Block rail='end'>
+              {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
+              <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
+                <Next.Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
+              </ActionMenu>
+            </Next.Block>
+          </Next.Card.Header>
 
-          <Next.Card.Root border={false} classNames={['dx-card-popover', roundedClassNames]} size='sm'>
-            <Next.Card.Header>
-              <Next.Block>
-                <CardIconSlot subject={popoverSubject}>
-                  {icon && <Next.Icon icon={icon} classNames={iconStyles?.text} />}
-                </CardIconSlot>
-              </Next.Block>
-              <Next.Card.Title>{title}</Next.Card.Title>
-              {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Next.Block rail='end'>
-                {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
-                <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                  <Next.Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
-                </ActionMenu>
-              </Next.Block>
-            </Next.Card.Header>
-
-            {content && 'subject' in content ? (
-              /** CardContent must render the Card.Body. */
-              <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
-            ) : (
-              <Next.Card.Body classNames='min-h-8'>
-                <Next.Card.Row>
-                  <Next.Card.Text variant='description'>{t('popover-no-preview.message')}</Next.Card.Text>
-                </Next.Card.Row>
-              </Next.Card.Body>
-            )}
-          </Next.Card.Root>
-        )}
-      </Next.Popover.Body>
+          {content && 'subject' in content ? (
+            /** CardContent must render the Card.Body. */
+            <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
+          ) : (
+            <Next.Card.Body classNames='min-h-8'>
+              <Next.Card.Row>
+                <Next.Card.Text variant='description'>{t('popover-no-preview.message')}</Next.Card.Text>
+              </Next.Card.Row>
+            </Next.Card.Body>
+          )}
+        </Next.Card.Root>
+      )}
     </Next.Popover.Content>
   );
 };

@@ -391,7 +391,7 @@ export const PreviewComponent = ({
         <div className='outline-hidden' {...frameProps} ref={cardRef}>
           {/* `Card.Root` does not pass `inert` through, so the gate sits on a box around it. */}
           <div inert={hasAttention ? undefined : true}>
-            <Next.Card.Root classNames={hasAttention && 'border-focus-ring-subtle'}>
+            <Next.Card.Root grid classNames={hasAttention && 'border-focus-ring-subtle'}>
               <Next.Card.Header>
                 <Next.Block />
                 <Next.Card.Title>{objectLabel}</Next.Card.Title>

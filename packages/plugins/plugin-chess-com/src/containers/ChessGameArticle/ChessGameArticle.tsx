@@ -90,7 +90,7 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
   const icon = Obj.getIcon(game)?.icon ?? 'ph--sword--regular';
 
   return (
-    <Next.Card.Root ref={cardRef}>
+    <Next.Card.Root grid ref={cardRef}>
       <Next.Card.Header>
         <Next.Block>
           <Next.Icon icon={icon} />

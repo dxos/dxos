@@ -87,7 +87,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
     return (
       <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={result.id} data={data} location={location}>
         <Next.Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-          <Next.Card.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
+          <Next.Card.Root grid ref={forwardedRef} role='button' classNames='cursor-pointer'>
             <Next.Card.Header ref={cardRef}>
               <Next.Block />
               <Next.Card.Title>

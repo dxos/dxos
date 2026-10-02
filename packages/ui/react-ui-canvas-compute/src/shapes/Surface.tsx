@@ -22,7 +22,7 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
   // TODO(burdon): Subject property?
   return (
     <Box shape={shape}>
-      <Next.Card.Root>
+      <Next.Card.Root grid>
         {value !== null && <Surface.Surface type={AppSurface.CardContent} data={{ subject: value }} limit={1} />}
       </Next.Card.Root>
     </Box>
