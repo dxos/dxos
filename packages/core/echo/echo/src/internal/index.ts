@@ -10,6 +10,7 @@ export * from './Format/index.ts';
 export * from './JsonSchema/index.ts';
 // TODO(wittjosiah): Required to ensure types are portable (need to export all types required for downstream inference).
 export * from './Obj/index.ts';
+export * from './Property/index.ts';
 export { prettyFilter, prettyQuery } from './Query/pretty.ts';
 export * from './Ref/index.ts';
 export * from './Type/index.ts';

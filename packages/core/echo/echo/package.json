@@ -123,6 +123,11 @@
       "types": "./dist/types/src/Order.d.ts",
       "import": "./dist/lib/Order.mjs"
     },
+    "./Property": {
+      "source": "./src/Property.ts",
+      "types": "./dist/types/src/Property.d.ts",
+      "import": "./dist/lib/Property.mjs"
+    },
     "./Query": {
       "source": "./src/Query.ts",
       "types": "./dist/types/src/Query.d.ts",

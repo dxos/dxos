@@ -38,6 +38,7 @@ export default defineConfig({
     Hypergraph: 'src/Hypergraph.ts',
     Json: 'src/Json.ts',
     View: 'src/View.ts',
+    Property: 'src/Property.ts',
   },
   test: { node: true },
 });
