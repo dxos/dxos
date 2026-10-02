@@ -173,7 +173,9 @@ A channel with a profile in `provisioning/<environment>.provisionprofile` embeds
 production's profile (the `MACOS_PROVISION_PROFILE` secret). The app is signed under whichever App ID its
 profile grants, so production and staging stay signed as production, and the app turns native passkeys
 off at runtime wherever that App ID does not name its bundle. The release fails if the signature and the
-profile disagree, or if any channel other than staging is not signed for its own bundle.
+profile disagree, if any channel other than staging is not signed for its own bundle, or if the profile
+does not list the certificate the app is signed with. The committed profiles outlive that certificate, so
+rotating `MACOS_CERTIFICATE` means regenerating and recommitting them.
 
 To give a channel its own identity: register an explicit App ID for its bundle ID with Associated
 Domains, create a Developer ID profile for it with the certificate CI signs with, commit it here, and

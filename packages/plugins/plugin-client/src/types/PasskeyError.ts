@@ -60,6 +60,8 @@ export type Failure = 'dismissed' | 'rejected' | 'failed';
  * What the native (Tauri) bridge rejects with for every `ASAuthorizationError`, a cancel included: it
  * collapses each into one plain string per ceremony, so a cancel cannot be told apart from a failure.
  */
+// TODO(wittjosiah): Patch tauri-plugin-macos-passkey to pass `ASAuthorizationError.code` through so only a
+//   cancel (1001) reads as a dismissal; today a domain-association failure is silenced along with it.
 const NATIVE_BRIDGE_REJECTIONS = ['Registration failed', 'Login failed'];
 
 /**
