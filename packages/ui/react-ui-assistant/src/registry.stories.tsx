@@ -310,6 +310,36 @@ export const ToolkitOperations: Story = {
   },
 };
 
+/** A code-mode `eval` call: named after the operation its code invokes, not after the `eval` tool. */
+export const ToolkitCodeMode: Story = {
+  args: {
+    content: toolkit([
+      {
+        ...call('tc-1', 'eval', { code: "await ops.createTask({ title: 'Ship the release notes' })" }),
+        operationKey: 'dxos.org/operation/create-task',
+        operationName: 'Create task',
+        operationIcon: 'ph--check-square--regular',
+      },
+      result('tc-1', 'eval', { output: 'Created task 01J9…', ok: true }),
+    ]),
+  },
+};
+
+/** A code-mode `eval` call spanning several operations: listed by name, in the order the code calls them. */
+export const ToolkitCodeModeMultiple: Story = {
+  args: {
+    content: toolkit([
+      {
+        ...call('tc-1', 'eval', {
+          code: "const [task] = await query('com.example.type.task');\nawait ops.updateTask({ task, status: 'done' });\nawait ops.createTask({ title: 'Follow up' });",
+        }),
+        operationName: 'Update task, Create task',
+      },
+      result('tc-1', 'eval', { output: 'ok', ok: true }),
+    ]),
+  },
+};
+
 /** Status and reasoning narrate the run from inside its panel; settled, the summary counts. */
 export const ToolkitNarrated: Story = {
   args: {
