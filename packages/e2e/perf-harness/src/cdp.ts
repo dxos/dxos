@@ -15,18 +15,22 @@ import { type TargetKind } from './types.ts';
  * Adopted from `composer-app/scripts/memory/measure.mjs`, which hit the same wall first.
  */
 export class Cdp {
-  #ws!: WebSocket;
+  readonly #ws: WebSocket;
   #id = 0;
   #pending = new Map<number, { resolve: (value: any) => void; reject: (error: Error) => void }>();
   #listeners = new Map<string, Set<(params: any) => void>>();
 
+  private constructor(ws: WebSocket) {
+    this.#ws = ws;
+  }
+
   static async connect(wsUrl: string): Promise<Cdp> {
-    const client = new Cdp();
-    client.#ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(wsUrl);
     await new Promise<void>((resolve, reject) => {
-      client.#ws.addEventListener('open', () => resolve(), { once: true });
-      client.#ws.addEventListener('error', () => reject(new Error(`CDP connect failed: ${wsUrl}`)), { once: true });
+      ws.addEventListener('open', () => resolve(), { once: true });
+      ws.addEventListener('error', () => reject(new Error(`CDP connect failed: ${wsUrl}`)), { once: true });
     });
+    const client = new Cdp(ws);
 
     // Otherwise every in-flight request awaits a socket that will never answer.
     const fail = (reason: string) => {
