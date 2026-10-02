@@ -100,3 +100,21 @@ describe('feedback logs', () => {
     expect(puts).toEqual([{ key, contentType: 'application/x-ndjson' }]);
   });
 });
+
+describe('apple-app-site-association', () => {
+  // DX-1324: a prerelease channel signed under its own App ID gets passkeys only when the domain names it.
+  test('passkeys are shared with the prerelease channels, universal links are not', async () => {
+    const response = await fetch(
+      new Request('https://composer.test/.well-known/apple-app-site-association'),
+      { ...env, APPLE_TEAM_ID: 'TEAM' },
+      {} as never,
+    );
+    const document = await response.json();
+    expect(document.webcredentials.apps).toEqual([
+      'TEAM.org.dxos.composer',
+      'TEAM.org.dxos.composer.dev',
+      'TEAM.org.dxos.composer.preview',
+    ]);
+    expect(document.applinks.details[0].appIDs).toEqual(['TEAM.org.dxos.composer']);
+  });
+});

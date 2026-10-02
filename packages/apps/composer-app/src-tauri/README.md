@@ -158,8 +158,27 @@ The build script outputs to `Externals/{arch}/${CONFIGURATION}/libapp.a` where `
 Desktop builds (`build_tauri` job) support macOS, Linux, and Windows:
 
 - Build with code signing for macOS (Apple Developer certificate)
+- Sign each channel under its own App ID when it has one (see below)
 - Generate updater artifacts via CrabNebula
 - Upload to CrabNebula Cloud for auto-updates
+
+### macOS signing per channel
+
+Native passkeys only work when the app's signed `com.apple.application-identifier` names its own bundle
+ID, and `composer.space` lists that App ID under `webcredentials` (`src/functions/_worker.ts`). Each
+non-production channel installs under a suffixed bundle ID (`org.dxos.composer.preview`), so it needs
+its own App ID and provisioning profile.
+
+A channel with a profile in `provisioning/<environment>.provisionprofile` is signed under
+`9428WC5MR8.org.dxos.composer.<environment>` with that profile embedded. Any other build embeds
+production's profile (the `MACOS_PROVISION_PROFILE` secret) and stays signed as production, so the app
+disables native passkeys at runtime. The release fails if the signature and the embedded profile name
+different App IDs.
+
+To give a channel its own identity: register an explicit App ID for its bundle ID with Associated
+Domains, create a Developer ID profile for it with the certificate CI signs with, commit it here, and
+add the App ID to `CHANNEL_BUNDLE_IDS` in `_worker.ts`. The AASA change only takes effect once the
+production web app is deployed.
 
 ### Publishing
 

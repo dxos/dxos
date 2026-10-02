@@ -219,20 +219,33 @@ jobs:
             exit 1
           fi
 
+      # A channel with its own App ID has its profile in src-tauri/provisioning/ and is signed under that
+      # App ID, which AuthenticationServices needs to resolve the app for passkeys (DX-1324). Any other
+      # build embeds production's profile and keeps production's signed identity.
       - name: Install macOS Provisioning Profile
         if: matrix.os == 'depot-macos-latest'
+        working-directory: ./packages/apps/composer-app/src-tauri
         env:
+          ENVIRONMENT: ${{ inputs.environment }}
           MACOS_PROVISION_PROFILE: ${{ secrets.MACOS_PROVISION_PROFILE }}
         run: |
-          if [ -z "$MACOS_PROVISION_PROFILE" ]; then
-            echo "Error: MACOS_PROVISION_PROFILE secret is not set"
+          channel_profile="provisioning/$ENVIRONMENT.provisionprofile"
+          if [ "$ENVIRONMENT" != production ] && [ -f "$channel_profile" ]; then
+            cp "$channel_profile" embedded.provisionprofile
+            team=$(plutil -extract com\\.apple\\.developer\\.team-identifier raw Entitlements.plist)
+            plutil -replace com\\.apple\\.application-identifier -string "$team.$(jq -r .identifier tauri.conf.json)" Entitlements.plist
+          else
+            if [ -z "$MACOS_PROVISION_PROFILE" ]; then
+              echo "Error: MACOS_PROVISION_PROFILE secret is not set"
+              exit 1
+            fi
+            echo "$MACOS_PROVISION_PROFILE" | base64 --decode > embedded.provisionprofile
+          fi
+          if [ ! -s embedded.provisionprofile ]; then
+            echo "Error: Provisioning profile is empty"
             exit 1
           fi
-          echo "$MACOS_PROVISION_PROFILE" | base64 --decode > packages/apps/composer-app/src-tauri/embedded.provisionprofile
-          if [ ! -s packages/apps/composer-app/src-tauri/embedded.provisionprofile ]; then
-            echo "Error: Provisioning profile is empty after decoding"
-            exit 1
-          fi
+          echo "signed identity -> $(plutil -extract com\\.apple\\.application-identifier raw Entitlements.plist)"
 
       - name: Set environment variables from secrets and env files
         run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
@@ -350,6 +363,19 @@ jobs:
               echo "::error::dx-sandbox is signed with restricted entitlement $restricted" && exit 1
             fi
           done
+
+      # macOS kills an app at launch when its signed application identifier is not the one its embedded
+      # profile grants, so a mismatch fails the release instead.
+      - name: Verify app signature matches its provisioning profile
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          app=$(ls -d packages/apps/composer-app/src-tauri/target/release/bundle/macos/*.app)
+          signed=$(codesign -d --entitlements - --xml "$app" 2>/dev/null | plutil -extract com\\.apple\\.application-identifier raw -)
+          granted=$(security cms -D -i "$app/Contents/embedded.provisionprofile" | plutil -extract Entitlements.com\\.apple\\.application-identifier raw -)
+          echo "signed: $signed, profile: $granted"
+          if [ "$signed" != "$granted" ]; then
+            echo "::error::app is signed as $signed but its profile grants $granted" && exit 1
+          fi
 
       - name: Upload assets
         timeout-minutes: 30
