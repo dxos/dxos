@@ -7,10 +7,10 @@ import * as Function from 'effect/Function';
 import * as Result from 'effect/Result';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useCardPivot } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -25,8 +25,8 @@ import { getCalendarEventPath, getMailboxMessagePath } from '../../paths.ts';
 export type RelatedToContactProps = AppSurface.ObjectArticleProps<Person.Person>;
 
 export const RelatedToContact = ({ subject: contact }: RelatedToContactProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const [cardRef, pivotId] = useCardPivot();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
   const db = Obj.getDatabase(contact);
   const workspace = db ? GraphPath.getSpacePath(db.spaceId) : undefined;
   const mailboxes = useQuery(db, Filter.type(Mailbox.Mailbox));

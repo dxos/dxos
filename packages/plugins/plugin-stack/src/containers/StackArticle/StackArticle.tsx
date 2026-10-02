@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useId, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Collection, Obj } from '@dxos/echo';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -22,7 +22,7 @@ import { meta } from '#meta';
 export type StackArticleProps = AppSurface.ObjectArticleProps<Collection.Collection>;
 
 export const StackArticle = ({ attendableId, subject: collection }: StackArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = useTranslation(meta.profile.key);
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 

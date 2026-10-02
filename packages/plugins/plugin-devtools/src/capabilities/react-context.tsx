@@ -7,7 +7,7 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { DevtoolsContextProvider } from '@dxos/devtools';
 
 import { meta } from '#meta';
@@ -17,9 +17,9 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }) => (
-        <Surface.ProfilerProvider>
+        <Surface.Root.ProfilerProvider>
           <DevtoolsContextProvider>{children}</DevtoolsContextProvider>
-        </Surface.ProfilerProvider>
+        </Surface.Root.ProfilerProvider>
       ),
     }),
   ),

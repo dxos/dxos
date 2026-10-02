@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { type EdgeStatus, EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';

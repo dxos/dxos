@@ -9,7 +9,7 @@ import { expect, waitFor } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -217,7 +217,7 @@ const MapStory = () => {
 
   return (
     <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
-      <Surface.Surface type={MapRole.MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
+      <Surface.Root.Surface type={MapRole.MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
     </AttendableContainer>
   );
 };

@@ -4,9 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
+import * as CardIconSlot from '@dxos/app-toolkit/CardIconSlot';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
@@ -41,13 +41,13 @@ export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
     <Card.Root fullWidth>
       <Card.Header>
         <Card.Block>
-          <CardIconSlot subject={subject}>
+          <CardIconSlot.Root subject={subject}>
             <Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--file--regular'} />
-          </CardIconSlot>
+          </CardIconSlot.Root>
         </Card.Block>
         <Card.Title classNames='line-clamp-1'>{title}</Card.Title>
       </Card.Header>
-      <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
+      <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
     </Card.Root>
   );
 };

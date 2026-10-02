@@ -6,3 +6,4 @@ export * as ScriptPlugin from './ScriptPlugin.ts';
 export * from '#meta';
 export * from '#types';
 export * from './util/index.ts';
+export * as Templates from './Templates.ts';

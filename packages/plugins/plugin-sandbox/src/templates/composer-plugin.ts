@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Skill from '@dxos/compute/Skill';
 import { Obj, Ref } from '@dxos/echo';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { scaffoldProject } from '@dxos/plugin-projects/Templates';
+import * as Templates from '@dxos/plugin-projects/Templates';
 import { Task, TaskSet } from '@dxos/types';
 
 import { Sandbox } from '#types';
@@ -133,7 +133,7 @@ export const makeComposerPluginTemplate = ({ ref }: { ref: string }): ProjectCap
   icon: 'ph--puzzle-piece--regular',
   scaffold: ({ name }) =>
     Effect.sync(() => {
-      const project = scaffoldProject({
+      const project = Templates.scaffoldProject({
         name: name ?? 'Composer Plugin',
         description:
           'A TypeScript plugin that adds a world clock page, a map with a row of clocks, under its own group in the navtree of every space, built in an EDGE sandbox and loaded into the running app from the port it is served on.',

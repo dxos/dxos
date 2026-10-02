@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Filter } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -16,7 +16,7 @@ import { Card, Panel, Toolbar } from '@dxos/react-ui';
 // `Routine.Routine`, which only references Instructions), so render it via the generic card surface
 // contributed by the PreviewPlugin.
 export const RoutineModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -39,7 +39,7 @@ const RoutineModuleContainer = ({ space }: { space: Space }) => {
       </Panel.Toolbar>
       <Panel.Content classNames='p-2 min-h-0'>
         <Card.Root>
-          <Surface.Surface type={AppSurface.CardContent} limit={1} data={{ subject: instructions }} />
+          <Surface.Root.Surface type={AppSurface.CardContent} limit={1} data={{ subject: instructions }} />
         </Card.Root>
       </Panel.Content>
     </Panel.Root>

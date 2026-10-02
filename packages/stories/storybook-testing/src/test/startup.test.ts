@@ -105,7 +105,7 @@ describe('ClientPlugin startup', () => {
     });
 
     // Minimal set of framework plugins needed for ClientPlugin to activate.
-    const plugins: Plugin.Plugin[] = [GraphPlugin.make(), ProcessManagerPlugin(), clientPlugin];
+    const plugins: Plugin.Plugin[] = [GraphPlugin.make(), ProcessManagerPlugin.make(), clientPlugin];
 
     const pluginLoader = Effect.fn(function* (id: string) {
       const plugin = plugins.find((plugin) => plugin.meta.profile.key === id);

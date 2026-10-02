@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { useOptionalAtomCapability } from '@dxos/app-framework/Hooks';
-import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -18,7 +18,7 @@ import { BeaconCapabilities } from '../capabilities/beacon-service.ts';
 export const BeaconStatusIndicator = () => {
   // The status bar paints with the shell, but the beacon service activates on `SpacesAvailable` — which
   // the forked client initialization can land long after — so absence is a normal early state here.
-  const state = useOptionalAtomCapability(BeaconCapabilities.State);
+  const state = Hooks.useOptionalAtomCapability(BeaconCapabilities.State);
   const { t } = useTranslation(meta.profile.key);
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 
@@ -48,7 +48,7 @@ export const BeaconStatusIndicator = () => {
 };
 
 const BeaconPopover = () => {
-  const state = useOptionalAtomCapability(BeaconCapabilities.State);
+  const state = Hooks.useOptionalAtomCapability(BeaconCapabilities.State);
   const { t } = useTranslation(meta.profile.key);
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 

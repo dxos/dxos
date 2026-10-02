@@ -6,13 +6,13 @@ import { addHours, isSameDay, startOfHour } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useAppGraph, useDetailNavigation } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Panel, useTranslation } from '@dxos/react-ui';
 import { useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { type CalendarController, type DateMarker, Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
@@ -43,7 +43,7 @@ export type CalendarArticleProps = AppSurface.ObjectArticleProps<Calendar.Calend
 
 export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [calendar] = useObject(subject);
   const db = Obj.getDatabase(calendar);
   // The calendar's graph node id: events open as its children and it is their pivot.
@@ -116,7 +116,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [id, invokePromise],
   );
 
-  const handleNavigate = useDetailNavigation({
+  const handleNavigate = ToolkitHooks.useDetailNavigation({
     contextId: id,
     getPath: (eventId) => getFeedObjectPath(id, eventId),
   });
@@ -171,8 +171,8 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     handleNavigate(event.id);
   }, [db, subject, selectedDate, handleNavigate]);
 
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
   const menuActions = useMenuBuilder(
     (get) => {
       // `MenuBuilder` mutates in place, so conditional actions can be added without reassignment.

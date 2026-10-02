@@ -6,8 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CollaborationOperation from '@dxos/app-toolkit/CollaborationOperation';
@@ -78,7 +78,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
 
   return (
     <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
-      <Surface.Surface
+      <Surface.Root.Surface
         type={AppSurface.CardContent}
         limit={1}
         data={{ subject } satisfies AppSurface.ObjectCardData}
@@ -99,8 +99,8 @@ export type CommentsArticleProps = AppSurface.ObjectArticleProps<Obj.Any>;
 
 export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   const identity = useIdentity();
   const subjectId = Obj.getURI(subject);
 
@@ -147,7 +147,7 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
     [members],
   );
 
-  const stateAtom = useCapability(CommentCapabilities.State);
+  const stateAtom = Hooks.useCapability(CommentCapabilities.State);
   const state = useAtomValue(stateAtom);
   const drafts = state.drafts[subjectId];
 
@@ -155,8 +155,8 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
   const { showResolvedThreads } = useViewState(commentsViewAspect, subjectId);
   const { set: setCommentsView } = useViewStateActions(commentsViewAspect, subjectId);
 
-  const commentConfigs = useCapabilities(AppCapabilities.CommentConfig);
-  const anchorSorts = useCapabilities(AppCapabilities.AnchorSort);
+  const commentConfigs = Hooks.useCapabilities(AppCapabilities.CommentConfig);
+  const anchorSorts = Hooks.useCapabilities(AppCapabilities.AnchorSort);
   const sort = useMemo(
     () => anchorSorts.find(({ key }) => key === Obj.getTypename(subject))?.sort,
     [anchorSorts, subject],

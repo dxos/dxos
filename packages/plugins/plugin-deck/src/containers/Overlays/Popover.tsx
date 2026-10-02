@@ -4,11 +4,11 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
-import { CardMenuSlot } from '@dxos/app-toolkit/CardMenuSlot';
-import { useObjectMenuItems } from '@dxos/app-toolkit/Hooks';
+import * as CardIconSlot from '@dxos/app-toolkit/CardIconSlot';
+import * as CardMenuSlot from '@dxos/app-toolkit/CardMenuSlot';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
 import {
@@ -95,7 +95,7 @@ export const PopoverContent = () => {
   // The popover is portaled; resolve the origin plank from the anchor element it was opened from.
   const pivotId =
     state.popoverAnchor instanceof Element ? Attention.getRootAttendableId(state.popoverAnchor) : undefined;
-  const objectMenuItems = useObjectMenuItems(popoverSubject, pivotId);
+  const objectMenuItems = Hooks.useObjectMenuItems(popoverSubject, pivotId);
   const menu = useMenuActions();
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
@@ -177,7 +177,7 @@ export const PopoverContent = () => {
             /*
              * Base popover: a plugin-provided component (e.g., editor link preview).
              */
-            <Surface.Surface type={AppSurface.Popover} data={content} limit={1} />
+            <Surface.Root.Surface type={AppSurface.Popover} data={content} limit={1} />
           ) : (
             /*
              * Card popover (default). Rendered for any open popover that isn't an explicit
@@ -190,14 +190,14 @@ export const PopoverContent = () => {
             <Card.Root border={false} classNames={['dx-card-popover', roundedClassNames]}>
               <Card.Header>
                 <Card.Block>
-                  <CardIconSlot subject={popoverSubject}>
+                  <CardIconSlot.Root subject={popoverSubject}>
                     {icon && <Icon icon={icon} classNames={iconStyles?.text} />}
-                  </CardIconSlot>
+                  </CardIconSlot.Root>
                 </Card.Block>
                 <Card.Title>{title}</Card.Title>
                 {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
                 <Card.Block end>
-                  {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
+                  {popoverSubject !== undefined && <CardMenuSlot.Root subject={popoverSubject} menu={menu} />}
                   <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
                     <IconButton
                       variant='ghost'
@@ -212,7 +212,7 @@ export const PopoverContent = () => {
 
               {content && 'subject' in content ? (
                 /** CardContent must render the Card.Body. */
-                <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
+                <Surface.Root.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
               ) : (
                 <Card.Body classNames='min-h-8'>
                   <Card.Row>

@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
@@ -56,8 +56,8 @@ type CallTranscriptionViewProps = {
  * tab reflects the live transcript feed. A story-local toolbar joins the call and toggles recording.
  */
 const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewProps) => {
-  const callManager = useCapabilities(CallsCapabilities.Manager)[0];
-  const transcriptionManagerProvider = useCapabilities(TranscriptionCapabilities.TranscriptionManagerProvider)[0];
+  const callManager = Hooks.useCapabilities(CallsCapabilities.Manager)[0];
+  const transcriptionManagerProvider = Hooks.useCapabilities(TranscriptionCapabilities.TranscriptionManagerProvider)[0];
   const roomId = Obj.getURI(meeting);
 
   const space = getSpace(transcript);
@@ -134,10 +134,14 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
       </Toolbar.Root>
       <div className='grid grid-cols-2 gap-2 dx-grow'>
         <div className='dx-expand'>
-          <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId }, attendableId: roomId }} limit={1} />
+          <Surface.Root.Surface
+            type={AppSurface.Article}
+            data={{ subject: { roomId }, attendableId: roomId }}
+            limit={1}
+          />
         </div>
         <div className='dx-expand'>
-          <Surface.Surface
+          <Surface.Root.Surface
             type={AppSurface.Article}
             data={{ subject: meeting, attendableId: Obj.getURI(meeting) }}
             limit={1}

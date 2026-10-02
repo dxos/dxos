@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import { Model } from '@dxos/ai';
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -48,8 +48,8 @@ export const SpaceTemplateToolbar = () => (
 
 const TemplateSelect = () => {
   const client = useClient();
-  const templates = useCapabilities(AppCapabilities.SpaceTemplate);
-  const { invokePromise } = useOperationInvoker();
+  const templates = Hooks.useCapabilities(AppCapabilities.SpaceTemplate);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [templateId, setTemplateId] = useState(VOYAGE_SPACE_ID);
   // Guards the seed effect against the re-renders between an open starting and its space landing.
   const busy = useRef(false);

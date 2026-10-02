@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
@@ -35,7 +35,7 @@ type Toast = {
  * app never opens it: the toast's action button does, inside a fresh user gesture.
  */
 export const useSupportSubmit = (): FeedbackSubmitHandler => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
   const attachScreenshot = useScreenshotAttachment();
 

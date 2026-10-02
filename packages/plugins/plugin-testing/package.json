@@ -59,8 +59,8 @@
       "import": "./dist/lib/index.mjs"
     },
     "./Harness": {
-      "source": "./src/harness.ts",
-      "types": "./dist/types/src/harness.d.ts",
+      "source": "./src/Harness.ts",
+      "types": "./dist/types/src/Harness.d.ts",
       "import": "./dist/lib/harness.mjs"
     },
     "./package.json": "./package.json",

@@ -8,3 +8,4 @@ export * from './constants.ts';
 export * from './paths.ts';
 export * from './storage.ts';
 export * from './util/index.ts';
+export * as Operations from './Operations.ts';

@@ -4,7 +4,7 @@
 
 import React, { type MouseEvent, useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -50,7 +50,7 @@ export type GalleryArticleProps = AppSurface.ObjectArticleProps<Collection.Colle
  */
 export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(collection);
 
   const [collectionSnapshot] = useObject(collection);

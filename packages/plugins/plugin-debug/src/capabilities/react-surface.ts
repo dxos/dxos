@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
@@ -37,19 +37,19 @@ export default Capability.makeModule(
     const fileUploader = (yield* Capability.getAll(AppCapabilities.FileUploader))[0];
 
     return Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: DebugSettingsSurface,
         props: ({ data: { subject } }) => ({ subject, logStore, onUpload: fileUploader }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'space',
         filter: AppSurface.literal(DebugSurface.Page, DebugNodes.SpaceType),
         component: SpaceGeneratorSurface,
         props: ({ role }) => ({ role }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'wireframe',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -70,17 +70,17 @@ export default Capability.makeModule(
           classNames: 'row-span-2 overflow-hidden',
         }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'console',
         filter: AppSurface.literal(DebugSurface.Page, DebugNodes.Console),
         component: DebugConsoleArticle,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'logsArticle',
         filter: AppSurface.literal(DebugSurface.Page, DebugNodes.Logs),
         component: LoggerPanel,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'objectDebug',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'debug'),
@@ -89,35 +89,35 @@ export default Capability.makeModule(
         component: ObjectDebugSurface,
         props: ({ role, data: { companionTo } }) => ({ role, companionTo }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'spaceObjects',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('spaceObjects')),
+        filter: Surface.Root.makeFilter(AppSurface.deckCompanion('spaceObjects')),
         component: SpaceObjectsSurface,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'debugStatus',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        filter: Surface.Root.makeFilter(AppSurface.StatusIndicator),
         position: Position.first,
         component: DebugStatus,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'debugPanelStatus',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        filter: Surface.Root.makeFilter(AppSurface.StatusIndicator),
         component: DebugPanelStatus,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'debugDrawer',
-        filter: Surface.makeFilter(AppSurface.Drawer),
+        filter: Surface.Root.makeFilter(AppSurface.Drawer),
         component: DebugPanelDrawer,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'statsPanel',
-        filter: Surface.makeFilter(DebugSurface.Stats),
+        filter: Surface.Root.makeFilter(DebugSurface.Stats),
         component: StatsPanel,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'statsCards',
-        filter: Surface.makeFilter(AppSurface.DevtoolsOverview),
+        filter: Surface.Root.makeFilter(AppSurface.DevtoolsOverview),
         // After the devtools cards (0–12) and before contributors that sit last.
         position: 20,
         component: StatsPanel,

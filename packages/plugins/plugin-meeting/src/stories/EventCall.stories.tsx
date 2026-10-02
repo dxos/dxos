@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 import { expect, screen, userEvent, within } from 'storybook/test';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
@@ -59,7 +59,7 @@ const DefaultStory = (_: StoryArgs) => {
   return (
     <div className='dx-expand grid grid-cols-2 gap-2'>
       <div className='dx-expand'>
-        <Surface.Surface
+        <Surface.Root.Surface
           type={AppSurface.Article}
           data={{ subject: event, attendableId: Obj.getURI(event), companionTo: calendar }}
           limit={1}
@@ -67,7 +67,7 @@ const DefaultStory = (_: StoryArgs) => {
       </div>
       {meeting && (
         <div className='dx-expand'>
-          <Surface.Surface
+          <Surface.Root.Surface
             type={AppSurface.Article}
             data={{ subject: meeting, attendableId: Obj.getURI(meeting) }}
             limit={1}

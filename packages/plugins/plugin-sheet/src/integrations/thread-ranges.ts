@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { debounce } from '@dxos/async';
 import { type CellAddress, type CompleteCellRange, inRange } from '@dxos/compute-hyperformula';
@@ -35,7 +35,7 @@ export const parseThreadAnchorAsCellRange = (cursor: string): CompleteCellRange 
 
 export const useSelectThreadOnCellFocus = () => {
   const { model, cursor } = useSheetContext();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const db = Obj.getDatabase(model.sheet);
   const anchors = useQuery(db, Query.select(Filter.id(model.sheet.id)).targetOf(AnchoredTo.AnchoredTo));

@@ -7,7 +7,7 @@ import * as Context from 'effect/Context';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { PluginManagerProvider } from '@dxos/app-framework/PluginManagerProvider';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { setupPluginManager } from '@dxos/app-framework/testing';
 import { fromHost } from '@dxos/client/local';
 import { Space as HaloSpace, Identity } from '@dxos/halo';
@@ -53,7 +53,7 @@ describe('review scenarios (headless)', () => {
   // scenarios run against the default policy.
   const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (
-    <PluginManagerProvider value={pluginManager}>
+    <PluginManagerProvider.Root value={pluginManager}>
       <ClientProvider client={client}>
         <HaloProvider
           services={Context.empty().pipe(
@@ -64,7 +64,7 @@ describe('review scenarios (headless)', () => {
           <ViewStateProvider>{children}</ViewStateProvider>
         </HaloProvider>
       </ClientProvider>
-    </PluginManagerProvider>
+    </PluginManagerProvider.Root>
   );
 
   for (const scenario of reviewScenarios) {

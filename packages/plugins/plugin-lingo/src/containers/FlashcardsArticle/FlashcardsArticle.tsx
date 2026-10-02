@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { Panel, useTranslation } from '@dxos/react-ui';
@@ -24,7 +24,7 @@ export type FlashcardsArticleProps = AppSurface.ObjectArticleProps<Vocabulary.Vo
  */
 export const FlashcardsArticle = ({ role, subject: deck, attendableId }: FlashcardsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // `ActionToolbar` gates itself on `useAttention(attendableId)`, so without an id the toolbar is
   // permanently disabled; fall back to the subject's URI when the surface supplies none.
   const attentionId = attendableId ?? Obj.getURI(deck);

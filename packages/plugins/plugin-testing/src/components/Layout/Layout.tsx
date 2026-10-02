@@ -6,8 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { type PropsWithChildren, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import {
@@ -65,7 +65,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation(meta.profile.key);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const registry = useContext(RegistryContext);
-  const stateAtom = useCapability(StorybookCapabilities.LayoutState);
+  const stateAtom = Hooks.useCapability(StorybookCapabilities.LayoutState);
   const layout = useAtomValue(stateAtom);
   const [iter, setIter] = useState(0);
   const [open, setOpen] = useState(false);
@@ -152,7 +152,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                 onOpenChange={(nextOpen) => updateState({ dialogOpen: nextOpen })}
               >
                 {layout.dialogBlockAlign === 'end' ? (
-                  <Surface.Surface
+                  <Surface.Root.Surface
                     type={AppSurface.Dialog}
                     data={layout.dialogContent}
                     limit={1}
@@ -165,7 +165,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                     classNames={layout.dialogOverlayClasses}
                     style={layout.dialogOverlayStyle}
                   >
-                    <Surface.Surface
+                    <Surface.Root.Surface
                       type={AppSurface.Dialog}
                       data={layout.dialogContent}
                       limit={1}
@@ -200,7 +200,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                           <Card.ActionIconButton action='close' onClick={handleClose} />
                         </Card.Header>
                         {layout.popoverContent ? (
-                          <Surface.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
+                          <Surface.Root.Surface type={AppSurface.CardContent} data={layout.popoverContent} limit={1} />
                         ) : (
                           // Matches the deck's popover, which opens a card with no subject for a link that did not resolve.
                           <Card.Body classNames='min-h-8'>
@@ -212,7 +212,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                       </Card.Root>
                     )}
                     {(layout.popoverKind === 'base' || layout.popoverKind === 'rename') && (
-                      <Surface.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
+                      <Surface.Root.Surface type={AppSurface.Popover} data={layout.popoverContent} limit={1} />
                     )}
                   </Popover.Viewport>
                   <Popover.Arrow />

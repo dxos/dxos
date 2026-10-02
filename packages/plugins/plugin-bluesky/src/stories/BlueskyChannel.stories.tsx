@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -41,7 +41,9 @@ const DefaultStory = () => {
     return <Loading data={{ channel }} />;
   }
 
-  return <Surface.Surface type={AppSurface.Article} data={{ subject: channel, attendableId: 'story' }} limit={1} />;
+  return (
+    <Surface.Root.Surface type={AppSurface.Article} data={{ subject: channel, attendableId: 'story' }} limit={1} />
+  );
 };
 
 const meta = {

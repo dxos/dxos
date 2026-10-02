@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import { useCallback, useState } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -37,8 +37,8 @@ export type UseSyncConnectionResult = {
  * button, and this hook share one code path (and one recreation offer).
  */
 export const useSyncConnection = (connection: Connection.Connection | undefined): UseSyncConnectionResult => {
-  const invoker = useOperationInvoker();
-  const manager = usePluginManager();
+  const invoker = Hooks.useOperationInvoker();
+  const manager = PluginManagerProvider.usePluginManager();
   const connector = useConnector(connection?.connectorId);
   const db = connection ? Obj.getDatabase(connection) : undefined;
   const [syncing, setSyncing] = useState(false);

@@ -128,9 +128,9 @@
       "import": "./dist/lib/operations.mjs"
     },
     "./ClientOptions": {
-      "source": "./src/types/ClientOptions.ts",
-      "types": "./dist/types/src/types/ClientOptions.d.ts",
-      "import": "./dist/lib/ClientOptions.mjs"
+      "source": "./src/ClientOptions.ts",
+      "types": "./dist/types/src/ClientOptions.d.ts",
+      "import": "./dist/lib/ns/ClientOptions.mjs"
     },
     "./ClientPlugin": {
       "source": "./src/ClientPlugin.ts",

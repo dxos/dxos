@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
@@ -14,7 +14,7 @@ import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { ResearchInputQueue } from '../testing/schema.ts';
 
 export const ResearchOutputModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -42,7 +42,7 @@ const ResearchOutputModuleContainer = ({ space }: { space: Space }) => {
           <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
             {objects.map((object) => (
               <Card.Root key={object.id}>
-                <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
+                <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
               </Card.Root>
             ))}
           </ScrollArea.Viewport>

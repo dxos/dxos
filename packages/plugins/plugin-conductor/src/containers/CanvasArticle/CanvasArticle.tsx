@@ -8,7 +8,7 @@ import React, { Fragment, useCallback, useEffect, useMemo } from 'react';
 
 import { AiService } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
@@ -115,7 +115,7 @@ const Container = (props: FlexProps) => <Flex {...props} classNames='aspect-squa
 
 const useGraphController = (canvas: CanvasBoard.CanvasBoard) => {
   const db = Obj.getDatabase(canvas);
-  const processManagerRuntime = useCapability(Capabilities.ProcessManagerRuntime);
+  const processManagerRuntime = Hooks.useCapability(Capabilities.ProcessManagerRuntime);
   const [computeGraph] = useObject(canvas.computeGraph);
   const controller = useMemo(() => {
     if (!canvas.computeGraph?.target || !db) {

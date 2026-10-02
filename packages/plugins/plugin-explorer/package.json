@@ -75,9 +75,9 @@
       "import": "./dist/lib/Graph.mjs"
     },
     "./Hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -106,9 +106,9 @@
       "import": "./dist/lib/ExplorerPlugin.mjs"
     },
     "./ForceGraph": {
-      "source": "./src/components/Graph/index.ts",
-      "types": "./dist/types/src/components/Graph/index.d.ts",
-      "import": "./dist/lib/ForceGraph.mjs"
+      "source": "./src/ForceGraph.ts",
+      "types": "./dist/types/src/ForceGraph.d.ts",
+      "import": "./dist/lib/ns/ForceGraph.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

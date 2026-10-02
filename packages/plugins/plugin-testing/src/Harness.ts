@@ -2,7 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+// @import-as-namespace
+
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestAppOptions, type TestHarness, createTestApp } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention/testing';
@@ -27,7 +29,7 @@ export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
 const headlessCorePlugins = (): Plugin.Plugin[] => [
   AttentionPlugin.make(),
   GraphPlugin.make(),
-  ProcessManagerPlugin(),
+  ProcessManagerPlugin.make(),
   SettingsPlugin.make(),
 ];
 

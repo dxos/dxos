@@ -6,12 +6,12 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/Hooks';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query } from '@dxos/echo';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { useTriggerRuntimeControls } from '@dxos/plugin-routine/Hooks';
+import * as RoutineHooks from '@dxos/plugin-routine/Hooks';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, Field, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -22,7 +22,7 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
  * so this panel only observes and invokes them.
  */
 export const TriggersModule = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -34,14 +34,14 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
     space.db,
     Query.select(Filter.type(Trigger.Trigger)).debugLabel('stories-inbox.TriggersModule'),
   );
-  const { state, start, stop } = useTriggerRuntimeControls(space.db);
+  const { state, start, stop } = RoutineHooks.useTriggerRuntimeControls(space.db);
 
   const [invokingId, setInvokingId] = useState<string | undefined>();
   const triggerToInvokeRef = useRef<Trigger.Trigger | undefined>(undefined);
 
   // Invoke via the aggregate monitor (not the local dispatcher directly) so a trigger marked
   // `remote` is routed to the EDGE dispatcher, while a local trigger runs in-process.
-  const invokeTrigger = useSpaceCallback(
+  const invokeTrigger = Hooks.useSpaceCallback(
     space.db.spaceId,
     [Trigger.TriggerMonitorService],
     Effect.fnUntraced(function* () {

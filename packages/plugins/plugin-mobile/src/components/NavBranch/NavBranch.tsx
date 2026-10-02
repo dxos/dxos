@@ -6,12 +6,12 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useConnections } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Avatar, Banner, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
@@ -91,11 +91,11 @@ const useEmptyGroupIds = (graph: AppGraph.ExpandableGraph, nodes: AppGraphNode.N
  */
 export const NavBranch = ({ id }: NavBranchProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { graph } = useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
 
   useExpandPath(id);
 
-  const children = useConnections(graph, id, 'child');
+  const children = GraphHooks.useConnections(graph, id, 'child');
   const emptyGroupIds = useEmptyGroupIds(graph, children);
 
   const visibleChildren = useMemo(
@@ -136,7 +136,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const ref = useRef<HTMLDivElement>(null);
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const isSelected = selectedValue === data.id;

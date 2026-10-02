@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { log } from '@dxos/log';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 
@@ -37,5 +37,5 @@ export const SurfaceWidget = ({ role, children }: WidgetProps<{ role?: string }>
     return null;
   }
 
-  return <Surface.Surface type={ChatSurface.ChatSurface} data={{ role, data }} limit={1} />;
+  return <Surface.Root.Surface type={ChatSurface.ChatSurface} data={{ role, data }} limit={1} />;
 };

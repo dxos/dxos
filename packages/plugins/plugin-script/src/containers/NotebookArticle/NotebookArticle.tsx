@@ -9,7 +9,7 @@ import * as Exit from 'effect/Exit';
 import type * as Types from 'effect/Types';
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { RunInstructions } from '@dxos/assistant-toolkit';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -90,7 +90,7 @@ export const NotebookArticle = ({ role, subject: notebook, attendableId, env }: 
   }, [db, notebook, graph]);
 
   const [promptResults, setPromptResults] = useState<Record<string, string>>({});
-  const handleExecPrompts = useSpaceCallback(
+  const handleExecPrompts = Hooks.useSpaceCallback(
     db?.spaceId,
     [] as const,
     Effect.fnUntraced(function* () {

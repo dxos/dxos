@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -21,7 +21,7 @@ import { MarkdownContainer } from './MarkdownContainer.tsx';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'surface.document',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -38,7 +38,7 @@ export default Capability.makeModule(() =>
           ref,
         }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'surface.text',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         // TODO(burdon): Why is attendableId required? See EventArticle.tsx
@@ -56,13 +56,13 @@ export default Capability.makeModule(() =>
           ref,
         }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'surface.pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: MarkdownSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'surface.editable',
         position: Position.first,
         filter: AppSurface.object(
@@ -73,7 +73,7 @@ export default Capability.makeModule(() =>
         component: EditableMarkdownCard,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'surface.preview',
         filter: AppSurface.object(
           AppSurface.CardContent,

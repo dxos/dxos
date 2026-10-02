@@ -76,14 +76,14 @@
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
     "./Hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./Overlays": {
-      "source": "./src/containers/Overlays/index.ts",
-      "types": "./dist/types/src/containers/Overlays/index.d.ts",
-      "import": "./dist/lib/overlays.mjs"
+      "source": "./src/Overlays.ts",
+      "types": "./dist/types/src/Overlays.d.ts",
+      "import": "./dist/lib/ns/Overlays.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -116,9 +116,9 @@
       "import": "./dist/lib/DeckPlugin.mjs"
     },
     "./DeckRole": {
-      "source": "./src/types/DeckRole.ts",
-      "types": "./dist/types/src/types/DeckRole.d.ts",
-      "import": "./dist/lib/DeckRole.mjs"
+      "source": "./src/DeckRole.ts",
+      "types": "./dist/types/src/DeckRole.d.ts",
+      "import": "./dist/lib/ns/DeckRole.mjs"
     },
     "./DeckSchema": {
       "source": "./src/types/DeckSchema.ts",

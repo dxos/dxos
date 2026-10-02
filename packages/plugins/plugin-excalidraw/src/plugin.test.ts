@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { ExcalidrawPlugin } from '#plugin';
@@ -18,7 +18,7 @@ describe('ExcalidrawPlugin', () => {
   // Boot imports start-gated module bodies (the harness fires the plugin's start event), which
   // can exceed the default 15s under vite-node transform load.
   test('modules activate on the event that gates them', { timeout: 60_000 }, async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), ExcalidrawPlugin()],
     });
 

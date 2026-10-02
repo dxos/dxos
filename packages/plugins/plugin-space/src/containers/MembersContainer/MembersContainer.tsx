@@ -5,8 +5,8 @@
 import * as Option from 'effect/Option';
 import React, { type Dispatch, type SetStateAction, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -61,7 +61,7 @@ export type MembersContainerProps = AppSurface.SpaceArticleProps<{
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
   const { t } = useTranslation(meta.profile.key);
   const config = useConfig();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
   const visibleInvitations = invitations?.filter(
     (invitation) => ![Invitation_State.CANCELLED].includes(invitation.get().state),
@@ -125,7 +125,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   );
 
   const contacts = useContacts();
-  const isSurfaceAvailable = Surface.useIsAvailable();
+  const isSurfaceAvailable = Surface.Root.useIsAvailable();
   const contactPickerData = useMemo(
     (): AppSurface.ContactPickerData => ({
       space,
@@ -179,7 +179,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             </Form.FieldSet>
             {showContactPicker && (
               <Form.FieldSet appearance='section' label={t('add-known-people.label')}>
-                <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
+                <Surface.Root.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
               </Form.FieldSet>
             )}
             <Form.FieldSet

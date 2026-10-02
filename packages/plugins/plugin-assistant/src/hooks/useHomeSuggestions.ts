@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 
@@ -24,7 +24,7 @@ const FALLBACK_SUGGESTION_KEYS = [
  */
 export const useHomeSuggestions = (space?: Space): readonly string[] | undefined => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const fallbacks = useMemo(
     () => FALLBACK_SUGGESTION_KEYS.map((key) => t(key, { year: new Date().getFullYear() })),
     [t],

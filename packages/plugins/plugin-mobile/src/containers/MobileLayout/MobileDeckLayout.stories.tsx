@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { DeckStoryPlugin, storyItemId } from '@dxos/plugin-deck/testing';
@@ -65,7 +65,7 @@ export const Default: Story = {
 
 /** Opens the given story items as the navigation stack, top-most last. */
 const OpenStory = ({ items }: { items: string[] }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   useAsyncEffect(async () => {
     for (const [index, subject] of items.entries()) {
       await invokePromise(LayoutOperation.Open, {

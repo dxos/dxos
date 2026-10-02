@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 
 import * as AppSurface from './app-surface.ts';
 
@@ -28,11 +28,11 @@ export type CardIconSlotProps = PropsWithChildren<{
  * `ObjectAvatar`. Only the override is shared.
  */
 export const CardIconSlot = ({ subject, children }: CardIconSlotProps) => {
-  const isAvailable = Surface.useIsAvailable();
+  const isAvailable = Surface.Root.useIsAvailable();
   const data = { subject };
 
   return isAvailable({ type: AppSurface.CardIcon, data }) ? (
-    <Surface.Surface type={AppSurface.CardIcon} data={data} limit={1} />
+    <Surface.Root.Surface type={AppSurface.CardIcon} data={data} limit={1} />
   ) : (
     <>{children}</>
   );

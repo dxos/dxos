@@ -4,17 +4,17 @@
 
 import React, { memo, useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { AlertDialog, Button, Panel, useTranslation } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
@@ -46,9 +46,9 @@ export type PublicationArticleProps = AppSurface.ObjectArticleProps<Blog.Publica
 export const PublicationArticle = ({ role, attendableId, subject }: PublicationArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [publication] = useObject(subject);
-  const { invokePromise } = useOperationInvoker();
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
   const [mode, setMode] = useState<ViewMode>('gallery');
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
@@ -83,7 +83,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
   // Publisher + connection resolution for the Sync action. A publisher is contributed by a provider
   // plugin (e.g. plugin-typefully); default to the first. The `Connection` it needs is looked up by
   // its access token's `source` (the provider-neutral credential handle).
-  const publishers = useCapabilities(BloggerCapabilities.PublisherService);
+  const publishers = Hooks.useCapabilities(BloggerCapabilities.PublisherService);
   const publisher = publishers[0];
   const db = Obj.getDatabase(subject);
   const connections = useQuery(db, Filter.type(Connection.Connection));
@@ -213,7 +213,7 @@ export const PublicationArticle = ({ role, attendableId, subject }: PublicationA
                   </Masonry.Content>
                 </Masonry.Root>
               ) : (
-                instructionsData && <Surface.Surface type={AppSurface.Article} data={instructionsData} limit={1} />
+                instructionsData && <Surface.Root.Surface type={AppSurface.Article} data={instructionsData} limit={1} />
               )}
             </div>
           </div>

@@ -8,10 +8,10 @@ import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
 import { EffectEx } from '@dxos/effect';
 import { Button } from '@dxos/react-ui';
 
@@ -19,9 +19,9 @@ import { PlaygroundRoles } from '../roles.ts';
 import { Number, createAlertOperation, createPluginId } from './generator.ts';
 
 export const Toolbar = () => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const plugins = useAtomValue(manager.plugins);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleAdd = useCallback(
     () =>
@@ -33,7 +33,7 @@ export const Toolbar = () => {
     [manager],
   );
 
-  const count = (useCapabilities(Number) as number[]).reduce((acc, curr) => acc + curr, 0);
+  const count = (Hooks.useCapabilities(Number) as number[]).reduce((acc, curr) => acc + curr, 0);
 
   const generatorPlugins = plugins.filter((plugin) => plugin.meta.profile.key.startsWith('org.dxos.test.generator.'));
 
@@ -57,9 +57,9 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
-      Surface.create({
+      Surface.Root.create({
         id: 'org.dxos.test.generator.toolbar',
-        filter: Surface.makeFilter(PlaygroundRoles.Toolbar),
+        filter: Surface.Root.makeFilter(PlaygroundRoles.Toolbar),
         component: Toolbar,
       }),
     ),

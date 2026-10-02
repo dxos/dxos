@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -45,7 +45,7 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
     return null;
   }
 
-  return <Surface.Surface role={role} type={AppSurface.Article} data={contentData} limit={1} />;
+  return <Surface.Root.Surface role={role} type={AppSurface.Article} data={contentData} limit={1} />;
 };
 
 PostArticle.displayName = 'PostArticle';

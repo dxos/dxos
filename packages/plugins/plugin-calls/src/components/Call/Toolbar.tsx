@@ -5,12 +5,11 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
-import { useActions, useNode } from '@dxos/plugin-graph/Hooks';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import {
   Icon,
   IconButton,
@@ -49,9 +48,9 @@ export const Toolbar = ({
   onLeave,
 }: ToolbarProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
-  const call = useCapability(CallsCapabilities.Manager);
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
+  const call = Hooks.useCapability(CallsCapabilities.Manager);
   const audioEnabled = useAtomValue(call.audioEnabledAtom);
   const videoEnabled = useAtomValue(call.videoEnabledAtom);
   const isScreensharing = useAtomValue(call.screensharingAtom);
@@ -62,8 +61,10 @@ export const Toolbar = ({
   const inRoom = isInRoom ?? joined;
 
   // Channel app graph node.
-  const node = useNode(graph, channel && Obj.getURI(channel));
-  const actions = useActions(graph, node?.id).filter((action) => action.properties.disposition === 'toolbar');
+  const node = GraphHooks.useNode(graph, channel && Obj.getURI(channel));
+  const actions = GraphHooks.useActions(graph, node?.id).filter(
+    (action) => action.properties.disposition === 'toolbar',
+  );
 
   // Screen sharing.
   const canSharescreen =

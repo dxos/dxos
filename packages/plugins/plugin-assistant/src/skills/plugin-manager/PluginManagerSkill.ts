@@ -5,7 +5,7 @@
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/keys';
-import { RegistryOperation } from '@dxos/plugin-registry/Operations';
+import * as Operations from '@dxos/plugin-registry/Operations';
 import { trim } from '@dxos/util';
 
 export const key = 'org.dxos.skill.pluginManager';
@@ -18,7 +18,7 @@ export const key = 'org.dxos.skill.pluginManager';
  * `QueryDisabledPlugins` is deliberately absent: it reaches the agent as a template input, so
  * projecting it as a tool as well would offer a call the instructions go on to prohibit.
  */
-export const operations = [RegistryOperation.QueryPlugins];
+export const operations = [Operations.RegistryOperation.QueryPlugins];
 
 /** The Plugin Manager skill: discover installed plugins and offer the disabled ones to the user. */
 export const make = (): Skill.Skill =>
@@ -83,7 +83,7 @@ export const make = (): Skill.Skill =>
         {
           name: 'disabled',
           kind: 'operation',
-          operation: DXN.getName(RegistryOperation.QueryDisabledPlugins.meta.key),
+          operation: DXN.getName(Operations.RegistryOperation.QueryDisabledPlugins.meta.key),
         },
       ],
     }),

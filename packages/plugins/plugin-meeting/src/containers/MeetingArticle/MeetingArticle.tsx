@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
@@ -35,10 +35,10 @@ export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>
  */
 export const MeetingArticle = ({ role, subject: meeting, attendableId }: MeetingArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [tab, setTab] = useState<MeetingTab>('notes');
   // The Call tab is offered only when the calls plugin contributes a transport provider.
-  const callAvailable = useCapabilities(CallsCapabilities.CallTransportProvider).length > 0;
+  const callAvailable = Hooks.useCapabilities(CallsCapabilities.CallTransportProvider).length > 0;
   const tabs = useMemo(() => (callAvailable ? TAB_ORDER : TAB_ORDER.filter((key) => key !== 'call')), [callAvailable]);
 
   // Subscribed to their own refs (not a plain `useObject(meeting)` snapshot) because these values are
@@ -125,12 +125,12 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
 
       {tab === 'call' && callData && (
         <Panel.Content>
-          <Surface.Surface type={AppSurface.Article} data={callData} limit={1} />
+          <Surface.Root.Surface type={AppSurface.Article} data={callData} limit={1} />
         </Panel.Content>
       )}
       {tab !== 'call' && articleData && (
         <Panel.Content>
-          <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
+          <Surface.Root.Surface type={AppSurface.Article} data={articleData} limit={1} />
         </Panel.Content>
       )}
     </Panel.Root>

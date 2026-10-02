@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useProgressMonitor } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -73,7 +73,7 @@ export type PullRequestArticleProps = AppSurface.ObjectArticleProps<PullRequest.
  */
 export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }: PullRequestArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [subject] = useObject(pullRequest);
   const db = Obj.getDatabase(pullRequest);
   const spaceId = db?.spaceId;
@@ -81,9 +81,11 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
   const walkthroughs = useQuery(db, Filter.type(Walkthrough.Walkthrough, { pullRequest: Ref.make(pullRequest) }));
   const walkthrough = useMemo(() => newestWalkthrough(walkthroughs), [walkthroughs]);
   // Watched by key rather than tied to `generating`, so a run started elsewhere shows here too.
-  const walkthroughProgress = useProgressMonitor(GitHubOperation.createWalkthroughProgressKey(pullRequest));
+  const walkthroughProgress = ToolkitHooks.useProgressMonitor(
+    GitHubOperation.createWalkthroughProgressKey(pullRequest),
+  );
   // Present only when plugin-progress is loaded; it is what lets the meter cancel or dismiss a run.
-  const progressRegistry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const progressRegistry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
 
   const [status, setStatus] = useState<Status>();
   // The live state where it has arrived, the stored one until then — an absent status is unknown,

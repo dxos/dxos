@@ -3,7 +3,7 @@
 //
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 
 import { ConfigModule } from './ConfigModule.tsx';
 import { DatabaseModule } from './DatabaseModule.tsx';
@@ -44,45 +44,45 @@ export const ModuleRole = {
  * spreads these into its own surface list so stories can reference them as bare `ModuleRole.X`
  * tokens in a layout without re-registering each component.
  */
-export const moduleSurfaces: Surface.Definition[] = [
-  Surface.create({
+export const moduleSurfaces: Surface.Root.Definition[] = [
+  Surface.Root.create({
     id: 'role.config',
-    filter: Surface.makeFilter(ModuleRole.Config),
+    filter: Surface.Root.makeFilter(ModuleRole.Config),
     component: ConfigModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.database',
-    filter: Surface.makeFilter(ModuleRole.Database),
+    filter: Surface.Root.makeFilter(ModuleRole.Database),
     component: DatabaseModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.executionGraph',
-    filter: Surface.makeFilter(ModuleRole.ExecutionGraph),
+    filter: Surface.Root.makeFilter(ModuleRole.ExecutionGraph),
     component: ExecutionGraphModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.invocations',
-    filter: Surface.makeFilter(ModuleRole.Invocations),
+    filter: Surface.Root.makeFilter(ModuleRole.Invocations),
     component: InvocationsModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.json',
-    filter: Surface.makeFilter(ModuleRole.Json),
+    filter: Surface.Root.makeFilter(ModuleRole.Json),
     component: JsonModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.logging',
-    filter: Surface.makeFilter(ModuleRole.Logging),
+    filter: Surface.Root.makeFilter(ModuleRole.Logging),
     component: LoggingModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.objects',
-    filter: Surface.makeFilter(ModuleRole.Objects),
+    filter: Surface.Root.makeFilter(ModuleRole.Objects),
     component: ObjectsModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.routine',
-    filter: Surface.makeFilter(ModuleRole.Routine),
+    filter: Surface.Root.makeFilter(ModuleRole.Routine),
     component: RoutineModule,
   }),
 ];

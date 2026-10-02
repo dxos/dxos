@@ -4,7 +4,7 @@
 
 import React, { type ComponentProps } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type Space } from '@dxos/react-client/echo';
 
 import { SearchArticle, SearchDialog } from '#containers';
@@ -16,7 +16,7 @@ export type SearchDialogSurfaceProps = {
 
 /** Search is scoped to the active space, so each surface resolves it before mounting the provider. */
 export const SearchDialogSurface = ({ props }: SearchDialogSurfaceProps) => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -29,7 +29,7 @@ export const SearchDialogSurface = ({ props }: SearchDialogSurfaceProps) => {
 };
 
 export const SearchInputSurface = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }

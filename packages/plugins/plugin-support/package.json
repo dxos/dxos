@@ -81,9 +81,9 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./FeedbackForm": {
-      "source": "./src/components/FeedbackForm/index.ts",
-      "types": "./dist/types/src/components/FeedbackForm/index.d.ts",
-      "import": "./dist/lib/FeedbackForm.mjs"
+      "source": "./src/FeedbackForm.ts",
+      "types": "./dist/types/src/FeedbackForm.d.ts",
+      "import": "./dist/lib/ns/FeedbackForm.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

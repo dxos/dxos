@@ -10,7 +10,6 @@ import * as Schema from 'effect/Schema';
 
 import { AiModelResolver, AiService, OpaqueToolkit } from '@dxos/ai';
 import { AnthropicResolver } from '@dxos/ai/resolvers';
-import { FunctionError, InvalidOperationInputError, InvalidOperationOutputError } from '@dxos/compute';
 import * as Credential from '@dxos/compute/Credential';
 import * as Header from '@dxos/compute/Header';
 import * as Operation from '@dxos/compute/Operation';
@@ -93,7 +92,7 @@ export const wrapFunctionHandler = (
         serviceTags.includes(Database.Service.key) &&
         (!context.services.dataService || !context.services.queryService)
       ) {
-        throw new FunctionError({
+        throw new Operation.FunctionError({
           message: 'Services not provided: dataService, queryService',
         });
       }
@@ -129,7 +128,7 @@ export const wrapFunctionHandler = (
               errors: 'all',
             })(dataWithDecodedRefs);
           } catch (error: any) {
-            throw new InvalidOperationInputError({
+            throw new Operation.InvalidOperationInputError({
               message: `Operation input did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
@@ -163,7 +162,7 @@ export const wrapFunctionHandler = (
           try {
             Schema.decodeUnknownSync(Schema.toType(func.output), { onExcessProperty: 'error' })(result);
           } catch (error: any) {
-            throw new InvalidOperationOutputError({
+            throw new Operation.InvalidOperationOutputError({
               message: `Operation output did not match schema (${func.meta.key}): ${error.message}`,
               cause: error,
             });
@@ -235,7 +234,7 @@ export class FunctionContext extends Resource {
           // whose message says only that a promise rejected, and the reason (a root document the
           // data plane cannot produce) is the whole diagnosis for the caller.
           catch: (error) =>
-            new FunctionError({
+            new Operation.FunctionError({
               message: `Space ${this.context.spaceId} failed to open: ${messageOf(error) ?? 'unknown error'}`,
               cause: error,
             }),
@@ -244,7 +243,7 @@ export class FunctionContext extends Resource {
             duration: SPACE_OPEN_TIMEOUT,
             orElse: () =>
               Effect.fail(
-                new FunctionError({
+                new Operation.FunctionError({
                   message: `Space ${this.context.spaceId} did not open within ${Duration.toMillis(SPACE_OPEN_TIMEOUT)}ms: its root document is not available on this data plane.`,
                 }),
               ),

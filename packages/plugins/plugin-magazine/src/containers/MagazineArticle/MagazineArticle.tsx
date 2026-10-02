@@ -5,10 +5,10 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useProgressMonitor, useShowItem } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -29,16 +29,16 @@ export type MagazineArticleProps = AppSurface.ObjectArticleProps<Magazine.Magazi
 
 export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const invoker = useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
   const [magazine] = useObject(subject);
-  const curateProgress = useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
+  const curateProgress = ToolkitHooks.useProgressMonitor(FeedOperation.createCurateProgressKey(subject));
 
   // The toolbar owns the view-filter atom and the curate/clear handlers; the article reads `view` to
   // filter the visible posts.
   const { menu, viewAtom } = useToolbar({ magazine: subject });
   const view = useAtomValue(viewAtom);
 
-  const showItem = useShowItem();
+  const showItem = ToolkitHooks.useShowItem();
   const id = attendableId ?? Obj.getURI(magazine);
   const currentId = useSelection(id, 'single');
   const db = Obj.getDatabase(magazine);

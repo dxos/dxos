@@ -10,7 +10,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { Invitation_AuthMethod, Invitation_State, InvitationEncoder } from '@dxos/client/invitations';
@@ -215,7 +215,11 @@ const StoryHostPlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.create({ id: 'inbox.mailboxHost', filter: Surface.makeFilter(HostRole), component: HostModule }),
+          Surface.Root.create({
+            id: 'inbox.mailboxHost',
+            filter: Surface.Root.makeFilter(HostRole),
+            component: HostModule,
+          }),
           ...moduleSurfaces,
         ]),
       ]),

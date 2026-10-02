@@ -15,7 +15,7 @@ import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { SandboxPlugin } from '#plugin';
 import { Sandbox, SandboxOperation } from '#types';
@@ -34,7 +34,7 @@ describe.skipIf(unavailable)('SandboxPlugin (composer harness, local backend)', 
   afterAll(() => rmSync(root, { recursive: true, force: true }));
 
   test('serves the operations from the contributed layer spec', { timeout: 60_000 }, async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), SandboxPlugin()],
     });
 

@@ -7,14 +7,14 @@ import { describe, test } from 'vitest';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { DeckPlugin } from '#plugin';
 import { DeckCapabilities } from '#types';
 
 describe('LayoutOperation.UpdateDrawer', () => {
   test('toggles, sets, and clamps the persisted drawer state', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [DeckPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [DeckPlugin()] });
     const readState = () => harness.get(Capabilities.AtomRegistry).get(harness.get(DeckCapabilities.State));
 
     expect(readState().drawerState).toBeUndefined();

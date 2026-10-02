@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { MailSyncError, type MailSyncItem, MailSyncProvider, type MailSyncSource } from '@dxos/plugin-inbox/MailSync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import type * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';
@@ -57,9 +57,9 @@ const JMAP_SYNC_CONFIG = {
  * the fused decode+map. Captures {@link JmapMailApi} + {@link Resolver} so the harness never names them.
  * Mirror of the Gmail provider (`googleMailSyncProvider`).
  */
-export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, JmapMailApi | Resolver> =>
+export const jmapMailSyncProvider = (): Layer.Layer<MailSync.MailSyncProvider, never, JmapMailApi | Resolver> =>
   Layer.effect(
-    MailSyncProvider,
+    MailSync.MailSyncProvider,
     Effect.gen(function* () {
       // The API is provided into the source stream (leaving `Cursor.Service` for the harness); the full
       // context into each `process` (whose only needs are API + resolver).
@@ -161,7 +161,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                 } satisfies EmailStage.Change;
               });
 
-            const toItem = (email: JmapMail.Email): MailSyncItem => ({
+            const toItem = (email: JmapMail.Email): MailSync.MailSyncItem => ({
               foreignId: email.id,
               key: new Date(email.receivedAt).getTime(),
               process: toMapped(email).pipe(Effect.provide(context)),
@@ -216,7 +216,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                   );
             const { token: capturedToken, createdIds, updatedIds, hasMoreDelta } = yield* resolveDelta;
 
-            const source: MailSyncSource = {
+            const source: MailSync.MailSyncSource = {
               buildSource: ({ windows, filter, tagIndex, onEnumerated, onRetrieved }) => {
                 // Incremental replaces the forward window with the delta's created ids but keeps the
                 // backward backfill window, so each tick still makes backfill progress. When a user filter
@@ -237,13 +237,13 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
                   }).pipe(
                     Stream.map(toItem),
                     Stream.provideService(JmapMailApi, providerApi),
-                    Stream.mapError(MailSyncError.wrap()),
+                    Stream.mapError(MailSync.MailSyncError.wrap()),
                   ),
                   // Empty on non-incremental runs; `jmapReconcile` re-fetches + diffs each `updated` id
                   // and resolves it to a `Change` itself (it needs the entityId to read local tags).
                   reconciles: jmapReconcile(updatedIds, target, folderTagMap, keywordTagMap, tagIndex).pipe(
                     Stream.provideService(JmapMailApi, providerApi),
-                    Stream.mapError(MailSyncError.wrap()),
+                    Stream.mapError(MailSync.MailSyncError.wrap()),
                   ),
                 };
               },
@@ -252,7 +252,7 @@ export const jmapMailSyncProvider = (): Layer.Layer<MailSyncProvider, never, Jma
               hasMoreDelta: () => hasMoreDelta,
             };
             return source;
-          }).pipe(Effect.provide(context), Effect.mapError(MailSyncError.wrap())),
+          }).pipe(Effect.provide(context), Effect.mapError(MailSync.MailSyncError.wrap())),
       };
     }),
   );

@@ -2,9 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ActivationEvents, Capabilities } from '../common/index.ts';
 import { Capability, Plugin } from '../core/index.ts';
 import { meta } from './meta.ts';
+
+export { meta };
 
 const ProcessManagerCapability = Capability.lazyModule(
   'ProcessManager',
@@ -41,7 +45,7 @@ const HistoryCapabilities = Capability.lazyModule(
   () => import('./history/capability.ts'),
 );
 
-export const ProcessManagerPlugin = Plugin.define(meta).pipe(
+export const make = Plugin.define(meta).pipe(
   Plugin.addModule(ProcessManagerCapability),
   Plugin.addModule(HistoryCapabilities),
   Plugin.make,

@@ -9,7 +9,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -132,7 +132,7 @@ const SurfaceStory = () => {
     return <Loading />;
   }
 
-  return <Surface.Surface type={AppSurface.CardMasonry} data={{ objects: owner.artifacts ?? [] }} limit={1} />;
+  return <Surface.Root.Surface type={AppSurface.CardMasonry} data={{ objects: owner.artifacts ?? [] }} limit={1} />;
 };
 
 export const ViaSurface: Story = {

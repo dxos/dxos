@@ -5,11 +5,11 @@
 import { isSameDay } from 'date-fns';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useShowItem } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
@@ -34,8 +34,8 @@ export type TripArticleProps = AppSurface.ObjectArticleProps<Trip.Trip> & {
 const SEGMENT_KINDS: Segment.Kind[] = ['flight', 'train', 'boat', 'road', 'accommodation', 'activity'];
 
 export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: TripArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const showItem = useShowItem();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const showItem = ToolkitHooks.useShowItem();
 
   // Subscribe to the `segments` array property so adding/removing a segment re-renders the stack.
   const reactiveSubject = Obj.isObject(subject) ? subject : undefined;
@@ -124,7 +124,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
 
   // The inline map is rendered by plugin-map's `map` surface; only offer the toggle when a marker
   // provider can plot this trip (i.e. plugin-map is active and matches the subject).
-  const mapProviders = useCapabilities(MapCapabilities.MarkerProvider);
+  const mapProviders = Hooks.useCapabilities(MapCapabilities.MarkerProvider);
   const mapAvailable = useMemo(() => mapProviders.some((provider) => provider.match(subject)), [mapProviders, subject]);
 
   const [showGlobe, setShowGlobe] = useState(defaultShowGlobe ?? false);
@@ -299,7 +299,7 @@ export const TripArticle = ({ role, subject, attendableId, defaultShowGlobe }: T
         {showGlobe && mapAvailable && (
           <Panel.Root classNames='border-t border-separator'>
             <Panel.Content>
-              <Surface.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
+              <Surface.Root.Surface type={MapRole.MapInline} data={{ subject, attendableId: id }} limit={1} />
             </Panel.Content>
           </Panel.Root>
         )}

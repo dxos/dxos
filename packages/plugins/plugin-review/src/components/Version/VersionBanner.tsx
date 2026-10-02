@@ -4,7 +4,7 @@
 
 import React, { useState } from 'react';
 
-import { NamePopover } from '@dxos/app-framework/NamePopover';
+import * as NamePopover from '@dxos/app-framework/NamePopover';
 import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
@@ -104,7 +104,7 @@ export const VersionBanner = ({
         </Toolbar.Button>
       )}
       {mode === 'checkpoint' && onBranchFrom && (
-        <NamePopover
+        <NamePopover.Root
           open={namingBranch}
           placeholder={t('branch-name.placeholder')}
           submitLabel={t('create.label')}
@@ -117,7 +117,7 @@ export const VersionBanner = ({
           <Toolbar.Button variant='ghost' onClick={() => setNamingBranch(true)}>
             {t('branch-from.label')}
           </Toolbar.Button>
-        </NamePopover>
+        </NamePopover.Root>
       )}
       {mode === 'branch' && view && onViewChange && (
         <Toolbar.ToggleGroup

@@ -7,7 +7,7 @@ import { type ComponentProps } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Position } from '@dxos/util';
@@ -18,27 +18,27 @@ import { COMMANDS_DIALOG } from '#meta';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: COMMANDS_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof CommandsDialogContent>>(AppSurface.Dialog, COMMANDS_DIALOG),
         component: CommandsDialogContent,
         props: ({ data: { props }, ref }) => ({ ...props, ref }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'navigation',
-        filter: Surface.makeFilter(AppSurface.Navigation),
+        filter: Surface.Root.makeFilter(AppSurface.Navigation),
         component: NavTreeContainer,
         props: ({ data: { current, popoverAnchorId }, ref }) => ({ tab: current, popoverAnchorId, ref }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'documentTitle',
-        filter: Surface.makeFilter(AppSurface.DocumentTitle),
+        filter: Surface.Root.makeFilter(AppSurface.DocumentTitle),
         component: NavTreeDocumentTitle,
         props: ({ data: { subject } }) => ({ node: AppGraphNode.isGraphNode(subject) ? subject : undefined }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'searchInput',
-        filter: Surface.makeFilter(AppSurface.SearchInput),
+        filter: Surface.Root.makeFilter(AppSurface.SearchInput),
         position: Position.last,
         component: CommandsTrigger,
       }),

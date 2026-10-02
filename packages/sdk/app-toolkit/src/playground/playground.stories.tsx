@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import {} from '@dxos/app-framework';
-import { useApp } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { DebugPlugin } from './debug/index.ts';
@@ -25,7 +25,7 @@ const plugins = [
 const defaults = plugins.map((plugin) => plugin.meta.profile.key);
 
 const DefaultStory = () => {
-  const App = useApp({
+  const App = Hooks.useApp({
     pluginLoader: (id: string) => Effect.sync(() => ({ plugin: createNumberPlugin(id) })),
     plugins,
     defaults,

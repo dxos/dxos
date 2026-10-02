@@ -16,7 +16,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -87,7 +87,7 @@ const NavBranchStoryPlugin = Plugin.define({
 }).pipe(Plugin.addModule(storyGraph), Plugin.addModule(AppCapability.translations(translations)), Plugin.make);
 
 const StoryRoot = ({ id }: { id: string }) => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
 
   // Expanded during this first render, before `NavBranch` mounts, so the branch arrives with its own
   // children already resolved — the state the panel above it leaves behind in the app. The cold-mount

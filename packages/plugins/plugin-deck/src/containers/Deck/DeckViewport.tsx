@@ -17,12 +17,12 @@ import React, {
   useState,
 } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { addEventListener } from '@dxos/async';
-import { useNode } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import {
   Flex,
   IconButton,
@@ -227,7 +227,7 @@ export const DeckContentEmpty = () => {
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
     <Flex column center classNames='p-8 relative dx-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
-      <Surface.Surface type={DeckRole.Keyshortcuts} />
+      <Surface.Root.Surface type={DeckRole.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </Flex>
   );
@@ -392,7 +392,7 @@ const PlankSplit = ({
   companionSize: number;
   total?: number;
 }>) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [liveSize, onSizeChange] = useSplitSize(companionSize, (next) => {
     // Committed unrounded: the seam is controlled from `liveSize`, so a value that did not round-trip
     // exactly would snap the panes when the persisted size reseeds it.
@@ -445,9 +445,9 @@ const FOLD_CONTENT_CLASSNAMES =
 const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const id = props.data;
   const { deck, state } = useDeckContext('DeckPlankTile');
-  const { invokePromise } = useOperationInvoker();
-  const { graph } = useAppGraph();
-  const node = useNode(graph, id);
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const node = GraphHooks.useNode(graph, id);
   const breakpoint = useBreakpoints();
   const { planks: rendered, maxPlankWidthPx, captureExposeGeometry, markExposeSelect } = useContext(PlankContext);
   const { open: companion, companionId } = useDeckCompanion(id);
@@ -979,7 +979,7 @@ const useScrollIntoView = ({
   scrollIntoViewId: string | undefined;
   scrollIntentRef: RefObject<string | undefined>;
 }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Outlives the effect on purpose: the effect clears the one-shot flag, which re-runs it with no id —
   // a cleanup there would kill the watchdog the moment it was armed.
   const watchdogRef = useRef<number | undefined>(undefined);
@@ -1317,7 +1317,7 @@ const useExposeInert = ({ getPlankTiles, expose }: { getPlankTiles: () => HTMLEl
 
 /** Exits fullscreen on Escape, and returns the toggle so the exit button takes the same path. */
 const useFullscreen = (fullscreenId: string | undefined) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const toggleFullscreen = useCallback(() => {
     if (!fullscreenId) {
@@ -1436,7 +1436,7 @@ export const DeckPlanks = () => {
   // all landed — the FLIP inversion is against the final geometry, not an intermediate one.
   const captureExposeGeometry = useExposeFlip({ stackRef, getPlankTiles, expose });
   const toggleFullscreen = useFullscreen(fullscreenId);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   // Read from refs so the key handler is bound once rather than rebound whenever the exposé toggles.
   const exposeRef = useRef(state.expose);

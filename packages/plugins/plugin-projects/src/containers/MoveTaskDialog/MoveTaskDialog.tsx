@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -24,7 +24,7 @@ export type MoveTaskDialogProps = {
 /** Picks the project a task (with its sub-tasks) moves into, then runs `MoveTaskToSet`. */
 export const MoveTaskDialog = ({ task }: MoveTaskDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(task);
   const [error, setError] = useState<string>();
   const projects = useQuery(db, Filter.type(Project.Project));

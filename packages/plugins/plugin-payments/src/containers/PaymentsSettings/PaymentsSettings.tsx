@@ -5,9 +5,9 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
-import { useCapabilities, useSettingsState } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -27,7 +27,7 @@ export type PaymentsSettingsProps = AppSurface.SettingsData;
 
 export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
+  const [identityService] = Hooks.useCapabilities(ClientCapabilities.IdentityService);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
   // Resolved per action rather than held in state: the presentation signer is only valid while the
@@ -37,7 +37,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
     return edgeIdentity && Option.getOrUndefined(edgeIdentity);
   }, [identityService]);
 
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const paymentsUrl = settings.paymentsUrl?.trim();
 
   const handleBuyPremium = useCallback(async () => {
@@ -98,7 +98,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
         <Form.Content>
           <Form.FieldSet
             label={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={meta.profile.key} />}
+            actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Fields />
             <Flex column gap='sm' classNames='my-2'>

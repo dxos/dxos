@@ -17,7 +17,7 @@ import { ScriptedLanguageModel, SERVICES_CONFIG } from '@dxos/ai/testing';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useCapabilities, useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
@@ -149,8 +149,8 @@ type DecoratorsProps = Merge<
  * hooks always resolve.
  */
 const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: ReactNode }) => {
-  const atomRegistry = useCapability(Capabilities.AtomRegistry);
-  const skillDefinitions = useCapabilities(AppCapabilities.SkillDefinition);
+  const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const skillDefinitions = Hooks.useCapabilities(AppCapabilities.SkillDefinition);
   const [space] = useSpaces();
   // Reactive: the chat is created asynchronously (module.setup on SpacesAvailable), and skill
   // definitions may all be contributed before this mounts — a one-shot query that finds no chat

@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useCapability } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import {
   Banner,
@@ -52,10 +52,10 @@ const SEVERITY_PALETTE: Record<DiagnosticSeverity, 'neutral' | 'amber' | 'rose'>
 
 export const DiagnosticsPanel = () => {
   const { t } = useTranslation(meta.profile.key);
-  const spaces = useCapability(ClientCapabilities.SpaceService);
-  const graph = useCapability(ClientCapabilities.Hypergraph);
-  const manager = usePluginManager();
-  const providers = useCapabilities(DoctorCapabilities.DiagnosticProvider);
+  const spaces = Hooks.useCapability(ClientCapabilities.SpaceService);
+  const graph = Hooks.useCapability(ClientCapabilities.Hypergraph);
+  const manager = PluginManagerProvider.usePluginManager();
+  const providers = Hooks.useCapabilities(DoctorCapabilities.DiagnosticProvider);
   const [runState, setRunState] = useState<RunState>({ status: 'idle' });
   const abortRef = useRef<AbortController | undefined>(undefined);
 

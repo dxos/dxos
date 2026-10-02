@@ -11,10 +11,10 @@ import React, {
   useMemo,
 } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { AttentionSigil, type AttentionSigilAction } from '@dxos/app-toolkit/AttentionSigil';
+import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import { Breadcrumb, Icon, Popover, type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 
@@ -33,7 +33,7 @@ const PLANK_LOADING = <PlankLoading />;
 const PENDING_DELAY = '1s';
 const pendingStyle = { animationDelay: PENDING_DELAY, animationFillMode: 'backwards' } as const;
 
-type SurfaceProps = ComponentProps<typeof Surface.Surface>;
+type SurfaceProps = ComponentProps<typeof Surface.Root.Surface>;
 
 /**
  * What a plank renders: its identity plus whatever chrome it can offer. A plank the URL names but
@@ -46,8 +46,8 @@ export type PlankProps = ThemedClassName<{
   /** Attendable id; defaults to the node id. */
   attendableId?: string;
   /** Grouped sigil menu actions; when present the sigil opens a menu, otherwise it is a plain button. */
-  actions?: AttentionSigilAction[][];
-  onAction?: (action: AttentionSigilAction) => void;
+  actions?: AttentionSigil.Action[][];
+  onAction?: (action: AttentionSigil.Action) => void;
   /** Navigation-history trail rendered before the title (flat mode); clicking one goes back to it. */
   breadcrumbs?: { id: string; label: string }[];
   onSelectBreadcrumb?: (id: string) => void;
@@ -138,7 +138,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
           <Pane.Toolbar>
             <ActionRoot>
               {actions && actions.length > 0 ? (
-                <AttentionSigil
+                <AttentionSigil.Root
                   icon={icon}
                   related={related}
                   attendableId={attendableId}
@@ -147,7 +147,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                   triggerLabel={label}
                 >
                   {sigilFooter}
-                </AttentionSigil>
+                </AttentionSigil.Root>
               ) : (
                 <Pane.Sigil
                   attendableId={attendableId}
@@ -213,7 +213,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
             // so the plank does not change under the reader on the way there.
             PLANK_LOADING
           ) : (
-            <Surface.Surface
+            <Surface.Root.Surface
               key={node.id}
               type={AppSurface.Article}
               data={data}

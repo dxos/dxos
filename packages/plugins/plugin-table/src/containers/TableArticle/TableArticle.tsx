@@ -7,10 +7,10 @@ import * as Match from 'effect/Match';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useAppGraph, useSchemaFilter } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
@@ -45,7 +45,7 @@ export type TableArticleProps = AppSurface.ObjectArticleProps<Table.Table>;
 export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
   ({ role, subject: object, attendableId }, forwardedRef) => {
     const registry = useContext(RegistryContext);
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = Hooks.useOperationInvoker();
     const tableRef = useRef<TableController>(null);
 
     const db = Obj.getDatabase(object);
@@ -59,7 +59,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     const queriedObjects = useQueryWorkaround(db, queryAst, schema);
     const filteredObjects = useGlobalFilteredObjects(queriedObjects);
 
-    const { graph } = useAppGraph();
+    const { graph } = ToolkitHooks.useAppGraph();
     const customActions = useMemo(() => {
       return Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }));
     }, [graph, attendableId]);
@@ -236,7 +236,7 @@ const useQueryWorkaround = (
   ast: QueryAST.Query | undefined,
   schema: Type.AnyEntity | undefined,
 ) => {
-  const baseFilter = useSchemaFilter(schema);
+  const baseFilter = ToolkitHooks.useSchemaFilter(schema);
   // Extract order and tag filter from query AST and apply them to the base filter query.
   const query = useMemo(() => {
     let query = Query.select(baseFilter);

@@ -15,7 +15,7 @@ import { Database, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
 import { Connection } from '@dxos/link';
-import { MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/MailSync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
 import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '#services';
@@ -27,13 +27,13 @@ import { googleMailSyncProvider } from '../operations/mail/sync/sync-provider.ts
  * the test to supply (mock, counting, fault, or Live). Production inlines this in the handler.
  */
 export const runGoogleSync = (
-  options: RunMailSyncOptions,
+  options: MailSync.RunMailSyncOptions,
 ): Effect.Effect<
   { newMessages: number },
-  MailSyncError | EntityNotFoundError,
+  MailSync.MailSyncError | EntityNotFoundError,
   Database.Service | Capability.Service | Operation.Service | Trace.TraceService | GoogleMailApi | Resolver
 > =>
-  runMailSync(options).pipe(
+  MailSync.runMailSync(options).pipe(
     Effect.provide(googleMailSyncProvider({ userId: 'me', label: 'all' })),
     Effect.withSpan('google-sync'),
   );

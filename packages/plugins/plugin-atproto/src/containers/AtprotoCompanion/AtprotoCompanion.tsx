@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -56,7 +56,7 @@ const INDENT_REM = 1;
  */
 export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const makeRepoLayer = useCapability(AtprotoCapabilities.RepoLayer);
+  const makeRepoLayer = Hooks.useCapability(AtprotoCapabilities.RepoLayer);
   const db = Obj.getDatabase(subject);
   // Subscribe to the object so edits recompute status and field values (read from this snapshot).
   const [live] = useObject(subject);

@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { useLayoutEffect } from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -69,7 +69,7 @@ export const makeCallState = (self: UserState, users: UserState[], media?: Parti
 
 /** Seeds the contributed `CallManager` with deterministic state for the lifetime of the story. */
 export const useSeedCallManager = (state: GlobalState): CallManager => {
-  const callManager = useCapability(CallsCapabilities.Manager);
+  const callManager = Hooks.useCapability(CallsCapabilities.Manager);
   useLayoutEffect(() => {
     callManager._setState(state);
   }, [callManager, state]);

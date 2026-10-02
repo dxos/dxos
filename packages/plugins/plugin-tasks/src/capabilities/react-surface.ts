@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Outline, RemoteSession, Task, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
 import { Position } from '@dxos/util';
@@ -38,7 +38,7 @@ const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { sh
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'article.journal',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -48,20 +48,20 @@ export default Capability.makeModule(() =>
         component: JournalArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'card.remoteSession',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, RemoteSession.RemoteSession),
         component: RemoteSessionCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'article.outline',
         filter: AppSurface.object(AppSurface.Article, Outline.Outline),
         component: OutlineArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         // Its own surface rather than a second filter on the article: only the embedded (section) case
         // carries `taskSet`, and a union data type could not destructure it.
         id: 'section.outline',
@@ -77,20 +77,20 @@ export default Capability.makeModule(() =>
           toolbar: false,
         }),
       }),
-      Surface.create({
+      Surface.Root.create({
         // A single task's detail: the plank a row opens, reused as the reader moves down a list.
         id: 'article.task',
         filter: AppSurface.object(AppSurface.Article, Task.Task),
         component: TaskArticle,
         props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'article.taskSet',
         filter: AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
         component: TaskSetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'section.taskSet',
         filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),
         component: TaskSetArticle,
@@ -101,13 +101,13 @@ export default Capability.makeModule(() =>
           showDescription,
         }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'card.outline',
         filter: AppSurface.object(AppSurface.CardContent, Outline.Outline),
         component: OutlineCard,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: QUICK_ENTRY_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, QUICK_ENTRY_DIALOG),
         component: QuickEntryDialog,

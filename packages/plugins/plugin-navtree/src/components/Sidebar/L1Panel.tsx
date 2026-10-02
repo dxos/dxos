@@ -8,8 +8,8 @@ import React, { memo, useCallback, useMemo } from 'react';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
-import { useActionRunner, useEdges } from '@dxos/plugin-graph/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import {
   Banner,
   DensityProvider,
@@ -120,8 +120,8 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
 
 /** Determines whether a workspace tab has been populated with real child content (i.e. expanded at least once). */
 const useIsActivatedWorkspace = (id: string): boolean => {
-  const { graph } = useAppGraph();
-  const edges = useEdges(graph, id);
+  const { graph } = Hooks.useAppGraph();
+  const edges = GraphHooks.useEdges(graph, id);
 
   return useMemo(() => {
     const childIds = edges[AppGraph.relationKey('child')] ?? [];
@@ -274,7 +274,7 @@ const MenuActions = ({
  * Builds the menu actions for the L1 panel header.
  */
 const useL1MenuActions = ({ item, path }: Pick<L1PanelProps, 'path'> & { item: AppGraphNode.Node }): L1MenuActions => {
-  const runAction = useActionRunner();
+  const runAction = GraphHooks.useActionRunner();
 
   const menuActions = getListActions(useActions(item));
 

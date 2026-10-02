@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
@@ -20,8 +20,8 @@ import { TasksCapabilities } from '#types';
  * `PluginManager`, so the list would stop working in a story).
  */
 export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => {
-  const invoker = useOperationInvoker();
-  const actions = useCapabilities(TasksCapabilities.TaskAction);
+  const invoker = Hooks.useOperationInvoker();
+  const actions = Hooks.useCapabilities(TasksCapabilities.TaskAction);
 
   return useCallback(
     (task: Task.Task) => {

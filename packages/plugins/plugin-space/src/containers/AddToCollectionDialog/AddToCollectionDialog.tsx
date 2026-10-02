@@ -5,7 +5,7 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -39,7 +39,7 @@ type CollectionItem = {
 /** Picks a collection in the object's space to list the object in. */
 export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(object);
   const space = useSpace(db?.spaceId);
   const collections = useQuery(db, Filter.type(Collection.Collection));

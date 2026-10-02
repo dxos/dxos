@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -16,7 +16,7 @@ import { Attention } from '@dxos/react-ui-attention/types';
 import { type Person } from '@dxos/types';
 
 export const PersonCard = ({ subject }: AppSurface.ObjectCardProps<Person.Person>) => {
-  const { invoke } = useOperationInvoker();
+  const { invoke } = Hooks.useOperationInvoker();
   // Card.Action's onClick carries no event, so resolve the origin plank from the card element itself.
   const cardRef = useRef<HTMLDivElement>(null);
   const { image, organization: { target: organization } = {}, emails = [] } = subject;

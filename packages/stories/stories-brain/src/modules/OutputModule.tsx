@@ -4,8 +4,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Query } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Thread } from '@dxos/pipeline-email';
@@ -22,7 +22,7 @@ import { usePipelineStory } from './pipeline-context.ts';
  * mutates (the store is not ECHO-reactive, so the registry's `subscribe` is the change signal).
  */
 const useFacts = (spaceId: string): RDF.Fact[] => {
-  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
+  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
   const [facts, setFacts] = useState<RDF.Fact[]>([]);
   useEffect(() => {
     let cancelled = false;
@@ -47,7 +47,7 @@ const useFacts = (spaceId: string): RDF.Fact[] => {
  * are the run's shared state; the live ECHO objects list is space-derived (Person/Organization/Thread).
  */
 export const OutputModule = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }

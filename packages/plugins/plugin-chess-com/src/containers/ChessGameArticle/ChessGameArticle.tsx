@@ -4,10 +4,10 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
@@ -22,7 +22,7 @@ export type ChessGameArticleProps = AppSurface.ObjectArticleProps<ChessComAccoun
 
 export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [account] = useObject(subject);
   const [gamesFeed] = useObject(account?.games);
   const db = Obj.getDatabase(subject);
@@ -91,8 +91,8 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
 const GameTile = ({ data: game }: { data: Game.Game }) => {
   const { t } = useTranslation(meta.profile.key);
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
-  const [cardRef, pivotId] = useCardPivot();
-  const objectMenuItems = useObjectMenuItems(game, pivotId);
+  const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
+  const objectMenuItems = ToolkitHooks.useObjectMenuItems(game, pivotId);
   const icon = Obj.getIcon(game)?.icon ?? 'ph--sword--regular';
 
   return (
@@ -114,7 +114,7 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
         </Card.Block>
       </Card.Header>
       <Card.Body>
-        <Surface.Surface
+        <Surface.Root.Surface
           type={AppSurface.CardContent}
           limit={1}
           data={{ subject: game } satisfies AppSurface.ObjectCardData}

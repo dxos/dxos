@@ -15,7 +15,7 @@ import { DXN } from '@dxos/keys';
 
 import { ActivationEvents, Capabilities } from '../../common/index.ts';
 import { Capability, Plugin } from '../../core/index.ts';
-import { ProcessManagerPlugin } from '../../plugin-process-manager/index.ts';
+import * as ProcessManagerPlugin from '../../plugin-process-manager/ProcessManagerPlugin.ts';
 import { createTestApp } from '../../testing/harness.ts';
 import { render } from '../../testing/react.tsx';
 import { useOperationHandler } from './useCapabilities.ts';
@@ -60,7 +60,7 @@ type MappedAddFn = ReturnType<typeof useMappedAdd>;
 
 describe('useCapabilities', () => {
   test('useOperationHandler resolves a lazy handler to a callable effect fn', async ({ expect }) => {
-    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin(), HandlerPlugin()] });
+    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin.make(), HandlerPlugin()] });
     let handler: AddFn | undefined;
     let view!: RenderResult;
     // Async act: RTL's sync-act render leaves an initial-mount suspension unresumable in jsdom.
@@ -79,7 +79,7 @@ describe('useCapabilities', () => {
   });
 
   test('useOperationHandler with map binds callback args to the operation input', async ({ expect }) => {
-    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin(), HandlerPlugin()] });
+    await using harness = await createTestApp({ plugins: [ProcessManagerPlugin.make(), HandlerPlugin()] });
     let handler: MappedAddFn | undefined;
     let view!: RenderResult;
     await act(async () => {

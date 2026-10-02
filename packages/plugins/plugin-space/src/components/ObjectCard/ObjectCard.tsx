@@ -4,11 +4,11 @@
 
 import React, { type ComponentType, type KeyboardEvent, type SyntheticEvent, useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
-import { CardMenuSlot } from '@dxos/app-toolkit/CardMenuSlot';
-import { useCardPivot, useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/Hooks';
+import * as CardIconSlot from '@dxos/app-toolkit/CardIconSlot';
+import * as CardMenuSlot from '@dxos/app-toolkit/CardMenuSlot';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
@@ -41,9 +41,9 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
 
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
-  const [cardRef, pivotId] = useCardPivot();
-  const objectMenuItems = useObjectMenuItems(subject, pivotId);
-  const handleOpen = useObjectNavigate(subject, detailOf);
+  const [cardRef, pivotId] = Hooks.useCardPivot();
+  const objectMenuItems = Hooks.useObjectMenuItems(subject, pivotId);
+  const handleOpen = Hooks.useObjectNavigate(subject, detailOf);
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (handleOpen && event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
@@ -69,15 +69,15 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
     >
       <Card.Header>
         <Card.Block>
-          <CardIconSlot subject={subject}>
+          <CardIconSlot.Root subject={subject}>
             <Icon icon={icon} />
-          </CardIconSlot>
+          </CardIconSlot.Root>
         </Card.Block>
         <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
         <Card.Block end>
           {/* React portals bubble through the component tree, so the menu's clicks would reach the card. */}
           <div role='none' className='contents' onClick={stopPropagation}>
-            <CardMenuSlot subject={subject} menu={menu} />
+            <CardMenuSlot.Root subject={subject} menu={menu} />
             {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
             <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
               <IconButton
@@ -91,7 +91,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
         </Card.Block>
       </Card.Header>
       <Card.Body>
-        <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+        <Surface.Root.Surface type={AppSurface.CardContent} data={data} limit={1} />
       </Card.Body>
     </Card.Root>
   );

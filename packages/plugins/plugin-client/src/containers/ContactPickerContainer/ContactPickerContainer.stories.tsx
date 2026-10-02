@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -45,7 +45,7 @@ const meta = {
               yield* createFakeContacts(client);
             }),
         }),
-        ProcessManagerPlugin(),
+        ProcessManagerPlugin.make(),
       ],
     }),
   ],

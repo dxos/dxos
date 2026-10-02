@@ -4,14 +4,14 @@
 
 import React, { useCallback } from 'react';
 
-import { type Surface } from '@dxos/app-framework/Surface';
+import type * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type FormFieldRendererProps } from '@dxos/react-ui-form';
 
 import { FileInput } from '#components';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope. */
-export type FileUploadFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &
+export type FileUploadFieldProps = Surface.Root.ComponentProps<AppSurface.FormInputData> &
   Pick<FormFieldRendererProps<File>, 'onValueChange'>;
 
 /**

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { Channel } from '@dxos/types';
@@ -19,15 +19,15 @@ import { MeetingCompanion } from './MeetingCompanion.tsx';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'meeting',
         filter: AppSurface.object(AppSurface.Article, Meeting.Meeting),
         component: MeetingArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'meetingCompanion',
-        filter: Surface.makeFilter(
+        filter: Surface.Root.makeFilter(
           AppSurface.Article,
           (data) =>
             (Obj.instanceOf(Meeting.Meeting, data.subject) || data.subject === 'meeting') &&

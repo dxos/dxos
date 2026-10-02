@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -36,7 +36,7 @@ export type ConnectorCompanionProps = AppSurface.ArticleProps<Cursor.Cursor>;
  */
 export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   // Subscribe so mutable fields (sync status, options) re-render; field reads use the live object.
   useAtomValue(useMemo(() => Obj.atom(subject), [subject]));

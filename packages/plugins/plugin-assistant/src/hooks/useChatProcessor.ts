@@ -9,7 +9,7 @@ import { useContext, useEffect, useMemo, useState } from 'react';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { AiSession } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
 import * as AgentService from '@dxos/compute/AgentService';
@@ -75,7 +75,7 @@ export const useChatProcessor = ({
     };
   }, [db, chat, feed]);
 
-  const serviceResolver = useCapability(Capabilities.ServiceResolver);
+  const serviceResolver = Hooks.useCapability(Capabilities.ServiceResolver);
 
   const processor = useMemo(() => {
     if (!runtime || !session || !chat || !feed || !db) {

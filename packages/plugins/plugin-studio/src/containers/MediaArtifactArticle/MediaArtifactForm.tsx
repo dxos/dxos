@@ -5,15 +5,15 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { useAppGraph, useProgressMonitor } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Field, Flex, Panel, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
@@ -53,11 +53,11 @@ export const MediaArtifactForm = ({
 }: MediaArtifactFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(artifact);
 
   // Providers for the artifact's kind; a Generator selector lets the user pick among them.
-  const services = useCapabilities(StudioCapabilities.GenerationService);
+  const services = Hooks.useCapabilities(StudioCapabilities.GenerationService);
   const providers = useMemo(
     () => services.filter((candidate) => candidate.kind === artifact.kind),
     [services, artifact.kind],
@@ -100,7 +100,7 @@ export const MediaArtifactForm = ({
   const connected = provider?.connectorId
     ? connections.some((connection) => connection.connectorId === provider.connectorId)
     : true;
-  const { graph } = useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   // The deck expands a plank's node; an artifact hosted by another article (a storyboard frame) has
   // a node of its own that nothing else expands, and an unexpanded node has no actions — no Connect.
   useEffect(() => {
@@ -112,7 +112,7 @@ export const MediaArtifactForm = ({
     });
     return () => cancelAnimationFrame(frame);
   }, [graph, nodeId, attendableId]);
-  const runAction = useActionRunner();
+  const runAction = GraphHooks.useActionRunner();
 
   // Provider-listed fields render as comboboxes; the provider's own renderers take precedence.
   const fieldMap = useMemo(() => (provider ? providerFieldMap(provider) : undefined), [provider]);
@@ -176,7 +176,7 @@ export const MediaArtifactForm = ({
   // The op publishes a progress monitor under the artifact's id for as long as it runs, so a
   // generation started before this form mounted (navigated away and back, or an agent's) reads as
   // busy too — `generating` alone dies with the component.
-  const running = useProgressMonitor(`${meta.profile.key}/${artifactId}`) !== undefined;
+  const running = ToolkitHooks.useProgressMonitor(`${meta.profile.key}/${artifactId}`) !== undefined;
 
   // A produced variant with a persisted jobId is an in-flight async job whose op is no longer
   // running (a reload); resume awaiting it so a long provider poll survives (the op polls without

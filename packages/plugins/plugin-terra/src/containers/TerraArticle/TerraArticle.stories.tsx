@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Button } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -71,7 +71,7 @@ export const Objects: Story = {
 
 const CachedStory = () => {
   const terra = useMemo(() => Terra.make({ config: { seed: 'terra-cache', resolution: 192 } }), []);
-  const cache = useOptionalCapability(TerraCapabilities.PlanetCache);
+  const cache = Hooks.useOptionalCapability(TerraCapabilities.PlanetCache);
   const [mounted, setMounted] = useState(true);
 
   return (

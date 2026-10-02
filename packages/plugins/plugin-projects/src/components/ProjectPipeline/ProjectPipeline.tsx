@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as Project from '@dxos/compute/Project';
-import { useSessionTimeline } from '@dxos/plugin-assistant/Hooks';
+import * as Hooks from '@dxos/plugin-assistant/Hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Banner, useTranslation } from '@dxos/react-ui';
 import { Gantt, type GanttAxis, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';
@@ -47,7 +47,7 @@ export const ProjectPipeline = ({
 }: ProjectPipelineProps) => {
   const { t } = useTranslation(meta.profile.key);
   const chats = useProjectChats(space, project);
-  const timeline = useSessionTimeline(space, { chats, tasks });
+  const timeline = Hooks.useSessionTimeline(space, { chats, tasks });
 
   // The chart hands back its own lane shape, which carries no chat; the timeline's lane of the same
   // id does, so the pick is resolved through it.

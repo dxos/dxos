@@ -86,9 +86,9 @@
       "import": "./dist/lib/GitHubPlugin.mjs"
     },
     "./Extensions": {
-      "source": "./src/extensions/index.ts",
-      "types": "./dist/types/src/extensions/index.d.ts",
-      "import": "./dist/lib/extensions.mjs"
+      "source": "./src/Extensions.ts",
+      "types": "./dist/types/src/Extensions.d.ts",
+      "import": "./dist/lib/ns/Extensions.mjs"
     },
     "./GitHubCapabilities": {
       "source": "./src/types/GitHubCapabilities.ts",

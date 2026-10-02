@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Attention } from '@dxos/react-ui-attention';
 
 /**
@@ -14,7 +14,7 @@ import { Attention } from '@dxos/react-ui-attention';
  * before attempting to access their children.
  */
 export const useExpandPath = (nodeId?: string) => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
 
   useEffect(() => {
     if (nodeId) {

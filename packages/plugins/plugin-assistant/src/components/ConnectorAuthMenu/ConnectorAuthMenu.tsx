@@ -5,14 +5,14 @@
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { type Database, Filter, type Obj, type Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useGraphMenuActions, useMenuGraph } from '@dxos/react-ui-menu';
 
@@ -46,8 +46,8 @@ export type ConnectorAuthMenuProps = {
 export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }: ConnectorAuthMenuProps) => {
   const { t } = useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
-  const runAction = useActionRunner();
-  const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
+  const runAction = GraphHooks.useActionRunner();
+  const allConnectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(db, Filter.type(Connection.Connection));
 
   const graph = useMenuGraph(() => {

@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
@@ -72,7 +72,7 @@ export type SubscriptionsArticleProps = AppSurface.ObjectArticleProps<Mailbox.Ma
  */
 export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const feed = useResolveRef(mailbox.feed);
   const db = Obj.getDatabase(mailbox);
   const messages = useQuery(

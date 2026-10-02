@@ -313,3 +313,5 @@ export interface Monitor {
 export class TriggerMonitorService extends Context.Service<TriggerMonitorService, Monitor>()(
   '@dxos/functions/TriggerMonitorService',
 ) {}
+
+export { TriggerStateNotFoundError } from '../errors.ts';

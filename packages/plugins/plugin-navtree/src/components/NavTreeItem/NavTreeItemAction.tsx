@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as Hooks from '@dxos/plugin-graph/Hooks';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
@@ -38,7 +38,7 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
   ({ parent, path, label, icon, testId, menuActions, caller, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
     const density = useDensityContext();
-    const runAction = useActionRunner();
+    const runAction = Hooks.useActionRunner();
     const handleAction = useCallback(
       (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps = {}) => runAction(action, { ...params, path }),
       [runAction, path],
@@ -82,7 +82,7 @@ export const NavTreeItemMonolithicAction = (
     baseLabel,
   } = props;
   const density = useDensityContext();
-  const runAction = useActionRunner();
+  const runAction = Hooks.useActionRunner();
   return (
     <IconButton
       {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}

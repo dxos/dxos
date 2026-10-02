@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
@@ -37,9 +37,9 @@ const TestPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(pluginMeta)
 
 const TestExtension = Capability.contribute(
   Capabilities.ReactSurface,
-  Surface.create({
+  Surface.Root.create({
     id: 'storyArticle',
-    filter: Surface.makeFilter(AppSurface.Article),
+    filter: Surface.Root.makeFilter(AppSurface.Article),
     component: ({ data: { subject } }) => (subject ? <JsonHighlighter data={subject} /> : <Loading />),
   }),
 );

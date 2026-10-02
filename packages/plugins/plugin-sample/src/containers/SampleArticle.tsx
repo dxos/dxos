@@ -12,10 +12,10 @@ import React, { useCallback } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Panel } from '@dxos/react-ui';
 import {
   type ActionExecutor,
@@ -94,8 +94,8 @@ export default SampleArticle;
 const useMenuActions = (
   attendableId: string,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = Hooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
 
   const menuActions = useMenuBuilder(
     (get): ActionGraphProps =>

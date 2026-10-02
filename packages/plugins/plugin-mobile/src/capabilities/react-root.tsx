@@ -7,7 +7,7 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useDismissToast } from '@dxos/plugin-deck/Hooks';
+import * as Hooks from '@dxos/plugin-deck/Hooks';
 
 import { MobileDeckLayout } from '#containers';
 import { meta } from '#meta';
@@ -17,7 +17,7 @@ export default Capability.makeModule(
     return Capability.contribute(Capabilities.ReactRoot, {
       id: meta.profile.key,
       root: () => {
-        const handleDismissToast = useDismissToast();
+        const handleDismissToast = Hooks.useDismissToast();
 
         return <MobileDeckLayout onDismissToast={handleDismissToast} />;
       },

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import {
@@ -21,7 +21,7 @@ import { Ibkr } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'portfolioArticle',
         // Article view for the navigable Portfolio owner; `AppSurface.object` narrows
         // `data.subject` to a Portfolio, whose backing feed holds the stored reports.
@@ -29,14 +29,14 @@ export default Capability.makeModule(() =>
         component: PortfolioArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'portfolioProperties',
         // Companion properties panel for the Portfolio; carries the daily-sync trigger control.
         filter: AppSurface.object(AppSurface.ObjectProperties, Ibkr.Portfolio),
         component: PortfolioProperties,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'portfolioReportDetail',
         // Complementary plank opened when a PortfolioReport is selected in the PortfolioArticle list.
         // The app-graph-builder resolves the selected report as the companion node's subject.
@@ -47,13 +47,13 @@ export default Capability.makeModule(() =>
         component: PortfolioReportDetail,
         props: ({ role, data: { subject, companionTo } }) => ({ role, subject, companionTo }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'instrumentArticle',
         filter: AppSurface.object(AppSurface.Article, Ibkr.Instrument),
         component: InstrumentArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'instrumentCard',
         filter: AppSurface.object(AppSurface.CardContent, Ibkr.Instrument),
         component: InstrumentCard,

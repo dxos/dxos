@@ -7,8 +7,8 @@ import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
-import { useGraphTreeModel } from '@dxos/plugin-graph/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { ScrollArea, useTranslation } from '@dxos/react-ui';
 import { useManager } from '@dxos/react-ui-attention';
 import { Path, Tree } from '@dxos/react-ui-list';
@@ -39,7 +39,7 @@ const LEGACY_PAGE_IDS: Record<string, string> = {
 export const DebugPanelSidebar = () => {
   const { t } = useTranslation(meta.profile.key);
   const { contextId, nodeId, open, select, setOpen } = useDebugPanelContext();
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const manager = useManager();
   // The model reads state through atoms, and the manager's atom for this context is that state.
   const stateAtom = useMemo(() => manager.atom(debugPanelAspect, contextId), [manager, contextId]);
@@ -52,7 +52,7 @@ export const DebugPanelSidebar = () => {
     }),
     [stateAtom],
   );
-  const model = useGraphTreeModel(DebugNodes.DEBUG_ROOT_ID, state);
+  const model = GraphHooks.useGraphTreeModel(DebugNodes.DEBUG_ROOT_ID, state);
 
   // Persisted state names nodes whose children come from connectors that only run on expansion, so
   // without this an open branch restores empty and a nested selection restores to a blank page. A

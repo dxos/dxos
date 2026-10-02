@@ -11,14 +11,14 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { DebugPlugin } from '#plugin';
 import { DebugOperation } from '#types';
 
 describe('DebugOperation.Snapshot', () => {
   test('returns a degraded snapshot on a headless host', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [DebugPlugin()] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [DebugPlugin()] });
 
     const snapshot = await harness.runPromise(Operation.invoke(DebugOperation.Snapshot, {}));
 
@@ -35,7 +35,7 @@ describe('DebugOperation.Snapshot', () => {
   });
 
   test('reports the spaces and the errors logged since a timestamp', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), SpacePlugin({}), DebugPlugin()],
     });
     const client = harness.get(ClientCapabilities.Client);

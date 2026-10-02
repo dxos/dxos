@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
 import { Provider } from '@dxos/ai';
-import { useOptionalCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type DXN } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
@@ -32,7 +32,7 @@ export const AssistantSettings = ({ settings, onSettingsChange, scope }: Assista
 
   // The Ollama manager is the bundled sidecar (desktop only). Its presence selects the local
   // provider: the managed `built-in` vs. an external `ollama` server.
-  const ollamaManager = useOptionalCapability(AssistantCapabilities.OllamaManager);
+  const ollamaManager = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager);
   const localProvider = ollamaManager ? Provider.builtIn : Provider.ollama;
   const localProviderKey = ollamaManager ? 'built-in' : 'ollama';
 

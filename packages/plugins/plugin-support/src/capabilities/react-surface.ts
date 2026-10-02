@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Hints, Keyshortcuts } from '@dxos/plugin-deck/DeckRole';
+import * as DeckRole from '@dxos/plugin-deck/DeckRole';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
 import { Position } from '@dxos/util';
 
@@ -32,7 +32,7 @@ import { SHORTCUTS_DIALOG } from '../constants.ts';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'supportTicket',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Support.Ticket),
@@ -41,19 +41,19 @@ export default Capability.makeModule(() =>
         component: SupportArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'feedback',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
+        filter: Surface.Root.makeFilter(AppSurface.deckCompanion('help')),
         component: FeedbackPanel,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'discord',
-        filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
+        filter: Surface.Root.makeFilter(AppSurface.deckCompanion('discord')),
         component: DiscordPanel,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'helpMenu',
-        filter: Surface.makeFilter(AppSurface.StatusIndicator),
+        filter: Surface.Root.makeFilter(AppSurface.StatusIndicator),
         position: Position.last,
         component: HelpMenu,
       }),
@@ -61,7 +61,7 @@ export default Capability.makeModule(() =>
       // owns the open article's typename. Matches any article via
       // `companion(Article)` with no schema filter; the resolver inside the
       // panel maps `companionTo` → owning plugin → `meta.description`.
-      Surface.create({
+      Surface.Root.create({
         id: 'helpCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'help'),
@@ -70,7 +70,7 @@ export default Capability.makeModule(() =>
         component: SupportCompanion,
         props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'homeHelpCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'help'),
@@ -78,22 +78,22 @@ export default Capability.makeModule(() =>
         ),
         component: SupportHomeCompanion,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'hints',
-        filter: Surface.makeFilter(Hints),
+        filter: Surface.Root.makeFilter(DeckRole.Hints),
         component: ShortcutsHints,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'keyshortcuts',
-        filter: Surface.makeFilter(Keyshortcuts),
+        filter: Surface.Root.makeFilter(DeckRole.Keyshortcuts),
         component: ShortcutsList,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: SHORTCUTS_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, SHORTCUTS_DIALOG),
         component: ShortcutsDialogContent,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: SupportSettings,

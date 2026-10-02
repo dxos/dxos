@@ -6,12 +6,12 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { useSettingsDivergedKeys } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { EffectEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
@@ -58,15 +58,15 @@ export type PublicRegistryArticleProps = {
 export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryArticleProps>(
   ({ id, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
-    const manager = usePluginManager();
-    const { invoke } = useOperationInvoker();
+    const manager = PluginManagerProvider.usePluginManager();
+    const { invoke } = Hooks.useOperationInvoker();
     const { entries, loading, error } = useRegistryPlugins();
     // Reloaded on every visit, so a plugin published since boot (a private one in particular) shows up.
     useEffect(() => manager.pluginRegistry.refresh(), [manager]);
     const plugins = useAtomValue(manager.plugins);
     const installedIds = useMemo(() => plugins.map((plugin) => plugin.meta.profile.key), [plugins]);
     const extraTagsById = useAutoTags(entries);
-    const deviceOnlyIds = useSettingsDivergedKeys(AppSettings.PLUGINS_NAMESPACE);
+    const deviceOnlyIds = ToolkitHooks.useSettingsDivergedKeys(AppSettings.PLUGINS_NAMESPACE);
 
     // Snapshot of installed plugin ids at mount time. Used to sort installed
     // plugins to the top without having newly-installed rows jump up mid-session.

@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { useCallback, useContext } from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
 import { SpotlightCapabilities } from '#types';
 
@@ -17,7 +17,7 @@ export type UseSpotlightState = {
 
 export const useSpotlightState = (): UseSpotlightState => {
   const registry = useContext(RegistryContext);
-  const stateAtom = useCapability(SpotlightCapabilities.State);
+  const stateAtom = Hooks.useCapability(SpotlightCapabilities.State);
   const state = useAtomValue(stateAtom);
 
   const updateState = useCallback(

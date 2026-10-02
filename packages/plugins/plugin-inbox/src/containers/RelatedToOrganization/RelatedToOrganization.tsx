@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useCardPivot } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -23,8 +23,8 @@ import { RelatedContacts } from '#components';
 export const RelatedToOrganization = ({
   subject: organization,
 }: AppSurface.ObjectArticleProps<Organization.Organization>) => {
-  const { invoke } = useOperationInvoker();
-  const [cardRef, pivotId] = useCardPivot();
+  const { invoke } = Hooks.useOperationInvoker();
+  const [cardRef, pivotId] = ToolkitHooks.useCardPivot();
   const db = Obj.getDatabase(organization);
 
   const contacts = useQuery(db, Filter.type(Person.Person));

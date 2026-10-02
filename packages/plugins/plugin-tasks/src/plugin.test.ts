@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Type } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Task, TaskMigration, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -17,7 +17,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('TasksPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), TasksPlugin()],
     });
 
@@ -32,7 +32,7 @@ describe('TasksPlugin', () => {
   });
 
   test('contributes the task hierarchy migrations', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), TasksPlugin()],
     });
 
@@ -44,7 +44,7 @@ describe('TasksPlugin', () => {
 
   test('registers the task types with the client', async ({ expect }) => {
     // Without these registered, every task verb fails where it stores the object.
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), TasksPlugin()],
     });
 

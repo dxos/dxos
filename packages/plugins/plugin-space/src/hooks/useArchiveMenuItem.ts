@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
 import { useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Annotation, Obj } from '@dxos/echo';
 import { useTranslation } from '@dxos/react-ui';
 import { ArchivedAnnotation, isArchivable } from '@dxos/schema';
@@ -23,7 +23,7 @@ export type ArchiveMenuItem = { label: string; icon: string; onClick: () => void
  */
 export const useArchiveMenuItem = (object: Obj.Unknown): { archived: boolean; item?: ArchiveMenuItem } => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const archivable = isArchivable(object) && Obj.getDatabase(object) !== undefined;
   const archived = Option.getOrElse(
     useAtomValue(useMemo(() => Annotation.atom(object, ArchivedAnnotation), [object])),

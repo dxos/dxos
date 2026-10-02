@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
-import { FeedbackForm } from '@dxos/plugin-support/FeedbackForm';
+import * as FeedbackForm from '@dxos/plugin-support/FeedbackForm';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import {
   AlertDialog,

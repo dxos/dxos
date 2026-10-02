@@ -7,7 +7,7 @@ import { type ComponentProps } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Script from '@dxos/compute/Script';
 
@@ -26,13 +26,13 @@ import {
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: ScriptSettingsSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'script.article',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -42,19 +42,19 @@ export default Capability.makeModule(() =>
         component: ScriptArticleSurface,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'notebook.article',
         filter: AppSurface.object(AppSurface.Article, Notebook.Notebook),
         component: NotebookArticleSurface,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Script.Script),
         component: ScriptProperties,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'companion.execute',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'execute'),
@@ -63,7 +63,7 @@ export default Capability.makeModule(() =>
         component: TestContainer,
         props: ({ role, data: { companionTo } }) => ({ role, script: companionTo }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'companion.logs',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'logs'),
@@ -72,7 +72,7 @@ export default Capability.makeModule(() =>
         component: ScriptLogsSurface,
         props: ({ role, data: { companionTo } }) => ({ role, script: companionTo }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: DEPLOYMENT_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof DeploymentDialog>>(AppSurface.Dialog, DEPLOYMENT_DIALOG),
         component: DeploymentDialog,

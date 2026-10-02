@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { memo, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
 import { CallsCapabilities } from '#types';
 
@@ -16,7 +16,7 @@ import { ResponsiveGridItem, type ResponsiveGridItemProps } from '../ResponsiveG
 export const SCREENSHARE_SUFFIX = '_screenshare';
 
 export const Participant = memo(({ item: user, debug, ...props }: ResponsiveGridItemProps<UserState>) => {
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = Hooks.useCapability(CallsCapabilities.Manager);
   const self = useAtomValue(call.selfAtom);
   const videoEnabled = useAtomValue(call.videoEnabledAtom);
   const localVideoStream = useAtomValue(call.localVideoStreamAtom);

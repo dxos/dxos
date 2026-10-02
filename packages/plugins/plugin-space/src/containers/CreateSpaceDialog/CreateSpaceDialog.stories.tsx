@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, screen, waitFor } from 'storybook/test';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import { DXN } from '@dxos/keys';
@@ -65,7 +65,7 @@ const meta = {
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [ProcessManagerPlugin(), ClientPlugin.make({}), TemplatesPlugin()],
+      plugins: [ProcessManagerPlugin.make(), ClientPlugin.make({}), TemplatesPlugin()],
     }),
   ],
   tags: ['test'],

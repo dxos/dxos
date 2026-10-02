@@ -6,8 +6,8 @@ import * as Effect from 'effect/Effect';
 import { useCallback, useMemo, useState } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, Obj, Query, Type } from '@dxos/echo';
@@ -48,8 +48,8 @@ export const useSyncTrigger = ({
   handleToggleSync: () => Promise<void>;
 } => {
   const [pending, setPending] = useState(false);
-  const { invokePromise } = useOperationInvoker();
-  const manager = usePluginManager();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const manager = PluginManagerProvider.usePluginManager();
   const { connection } = useTargetConnection(subject);
   const connector = useConnectorEntry(connection, connectors);
 

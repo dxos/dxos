@@ -183,3 +183,8 @@ export class Manager {
     return rest.reduce((effect, provider) => Effect.catch(effect, () => lookup(provider)), lookup(first));
   }
 }
+
+export {
+  EdgeRegistryPluginProvider as EdgePluginProvider,
+  type EdgeRegistryPluginProviderOptions as EdgePluginProviderOptions,
+} from './edge-registry-plugin-provider.ts';

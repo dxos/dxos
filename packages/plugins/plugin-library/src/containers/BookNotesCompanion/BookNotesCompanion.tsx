@@ -4,7 +4,7 @@
 
 import React, { useEffect } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/react-client/echo';
@@ -44,5 +44,7 @@ export const BookNotesCompanion = ({ subject: book, role, attendableId }: BookNo
     return null;
   }
 
-  return <Surface.Surface type={AppSurface.Article} data={{ subject: notes, attendableId }} role={role} limit={1} />;
+  return (
+    <Surface.Root.Surface type={AppSurface.Article} data={{ subject: notes, attendableId }} role={role} limit={1} />
+  );
 };

@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { Icon } from '@dxos/react-ui';
@@ -17,7 +17,7 @@ import { MarkdownLink, type MarkdownViewProps } from '@dxos/react-ui-markdown';
  * extensions `useMarkdownExtensions` gathers.
  */
 export const useDescriptionComponents = (): MarkdownViewProps['components'] => {
-  const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
+  const resolvers = Hooks.useCapabilities(PreviewCapabilities.LinkResolver);
   return useMemo(
     () => ({
       a: ({ children, href, ...props }) => {

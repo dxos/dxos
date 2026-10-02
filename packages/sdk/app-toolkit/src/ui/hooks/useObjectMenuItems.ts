@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import { type RefObject, type SyntheticEvent, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { EID } from '@dxos/keys';
@@ -21,7 +21,7 @@ import { CollectionOperation, LayoutOperation, NavigationOperation } from '../..
 
 const OPEN_ICON = 'ph--arrow-square-out--regular';
 
-type Invoke = ReturnType<typeof useOperationInvoker>['invoke'];
+type Invoke = ReturnType<typeof Hooks.useOperationInvoker>['invoke'];
 
 /**
  * Open an object from a card, beside the plank the card lives in. A card holds an object and has no idea
@@ -97,7 +97,7 @@ export const useObjectNavigate = (
   subject: unknown,
   detailOf?: string,
 ): ((event: SyntheticEvent<HTMLElement>) => void) | undefined => {
-  const { invoke } = useOperationInvoker();
+  const { invoke } = Hooks.useOperationInvoker();
 
   return useMemo(() => {
     if (!canNavigateToSubject(subject)) {
@@ -129,7 +129,7 @@ export const useObjectNavigate = (
  * own element.
  */
 export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[] => {
-  const { invoke } = useOperationInvoker();
+  const { invoke } = Hooks.useOperationInvoker();
   const { t } = useTranslation(osTranslations);
 
   return useMemo(() => {

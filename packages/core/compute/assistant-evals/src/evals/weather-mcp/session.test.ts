@@ -23,7 +23,7 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as DatabaseSkill from '@dxos/plugin-space/DatabaseSkill';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { findObject, toolInvocations } from '../../assertions.ts';
 import { EvalRunError } from '../../errors.ts';
@@ -47,7 +47,7 @@ describe('weather MCP hand-off', () => {
       // Filled in once the space is seeded and the server is up; the script reads them when it emits.
       const target: { skill?: string; server?: string } = {};
 
-      await using harness = await createComposerTestApp({
+      await using harness = await Harness.createComposerTestApp({
         plugins: [
           ClientPlugin.make({ types: [...WeatherSpace.make().schemas, Collection.Collection] }),
           AssistantPlugin.make({

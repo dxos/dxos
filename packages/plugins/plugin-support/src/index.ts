@@ -8,3 +8,4 @@ export * from './errors.ts';
 export * from '#meta';
 export * from '#skills';
 export * from '#types';
+export * as FeedbackForm from './FeedbackForm.ts';

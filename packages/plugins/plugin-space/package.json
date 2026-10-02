@@ -85,19 +85,19 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./CardMasonry": {
-      "source": "./src/components/CardMasonry/index.ts",
-      "types": "./dist/types/src/components/CardMasonry/index.d.ts",
-      "import": "./dist/lib/CardMasonry.mjs"
+      "source": "./src/CardMasonry.ts",
+      "types": "./dist/types/src/CardMasonry.d.ts",
+      "import": "./dist/lib/ns/CardMasonry.mjs"
     },
     "./Containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "import": "./dist/lib/containers.mjs"
+      "source": "./src/Containers.ts",
+      "types": "./dist/types/src/Containers.d.ts",
+      "import": "./dist/lib/ns/Containers.mjs"
     },
     "./Hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./package.json": "./package.json",
     "./testing": {
@@ -171,9 +171,9 @@
       "import": "./dist/lib/SpaceSurface.mjs"
     },
     "./Dashboard": {
-      "source": "./src/dashboard/index.ts",
-      "types": "./dist/types/src/dashboard/index.d.ts",
-      "import": "./dist/lib/dashboard.mjs"
+      "source": "./src/Dashboard.ts",
+      "types": "./dist/types/src/Dashboard.d.ts",
+      "import": "./dist/lib/ns/Dashboard.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

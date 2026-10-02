@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
@@ -62,7 +62,7 @@ const PreviewCard = () => {
                 <Card.ActionIconButton action='close' />
               </Popover.Close>
             </Card.Header>
-            <Surface.Surface type={AppSurface.CardContent} data={{ subject: target.object }} limit={1} />
+            <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: target.object }} limit={1} />
           </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />
@@ -82,7 +82,7 @@ type StoryArgs = {
  */
 const DefaultStory = ({ text }: StoryArgs) => {
   const { themeMode } = useThemeContext();
-  const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
+  const resolvers = Hooks.useCapabilities(PreviewCapabilities.LinkResolver);
   const handleLookup = useCallback<NonNullable<EditorPreviewProviderProps['onLookup']>>(
     async (ref) => {
       for (const { match, resolve } of resolvers.flat()) {

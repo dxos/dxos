@@ -6,13 +6,13 @@ import { useEffect } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 
 /**
  * Expands a root node in the app graph.
  */
 export const useLoadDescendents = (root?: AppGraphNode.Node) => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   useEffect(() => {
     if (!root) {
       return;

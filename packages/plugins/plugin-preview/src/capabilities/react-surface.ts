@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
 import { Expando } from '@dxos/schema';
@@ -53,14 +53,14 @@ export default Capability.makeModule(() =>
       // TODO(burdon): Create helpers and factor out.
       //
 
-      Surface.create({
+      Surface.Root.create({
         id: 'organizationContent',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Organization.Organization),
         component: OrganizationCardContent,
         props: ({ role, data }) => ({ role, ...data }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'contactContent',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Person.Person),
@@ -69,7 +69,7 @@ export default Capability.makeModule(() =>
       }),
       // A person's card leads with their face, not the generic person glyph. Contributed only for
       // `Person`; every other type keeps its host's default depiction.
-      Surface.create({
+      Surface.Root.create({
         id: 'contactIcon',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardIcon, Person.Person),
@@ -77,28 +77,28 @@ export default Capability.makeModule(() =>
         props: ({ data: { subject } }) => ({ subject }),
       }),
 
-      Surface.create({
+      Surface.Root.create({
         id: 'schemaPopoverProject',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Pipeline.Pipeline),
         component: ProjectCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'schemaPopoverTask',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Task.Task),
         component: TaskCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'schemaPopoverExpando',
         filter: AppSurface.object(AppSurface.CardContent, Expando.Expando),
         component: ExpandoCard,
         props: ({ role, data: { subject, ignorePaths } }) => ({ role, subject, ignorePaths }),
       }),
 
-      Surface.create({
+      Surface.Root.create({
         id: 'schemaPopoverDynamicType',
         filter: AppSurface.subject(AppSurface.CardContent, (subject): subject is Obj.Unknown => {
           if (!Obj.isObject(subject)) {
@@ -134,7 +134,7 @@ export default Capability.makeModule(() =>
       // Fallback for any object.
       //
 
-      Surface.create({
+      Surface.Root.create({
         id: 'fallbackPopover',
         position: Position.last,
         filter: AppSurface.subject(AppSurface.CardContent, Obj.isObject),
@@ -142,9 +142,9 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, projection } }) => ({ role, subject, projection }),
       }),
 
-      Surface.create({
+      Surface.Root.create({
         id: 'fallbackJson',
-        filter: Surface.makeFilter(AppSurface.CardContent),
+        filter: Surface.Root.makeFilter(AppSurface.CardContent),
         position: Position.last,
         component: JsonCard,
         props: ({ data }) => ({ data }),
@@ -169,7 +169,7 @@ export default Capability.makeModule(() =>
 
       // Last-resort candidate (plank `limit={1}`) for an object whose plugin is absent — e.g. one
       // created in a build that shares a backend with a full-catalog build.
-      Surface.create({
+      Surface.Root.create({
         id: 'unsupportedTypeArticle',
         position: Position.last,
         filter: AppSurface.subject(AppSurface.Article, isTypeUnavailable),

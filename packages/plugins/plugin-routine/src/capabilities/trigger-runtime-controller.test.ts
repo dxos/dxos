@@ -13,7 +13,7 @@ import type { SpaceId } from '@dxos/keys';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { RoutinePlugin } from '#plugin';
 
@@ -23,7 +23,7 @@ import { RoutinePlugin } from '#plugin';
  * `{ space }` context, so the returned instance is the same one the
  * controller is driving.
  */
-const getDispatcher = (harness: Awaited<ReturnType<typeof createComposerTestApp>>, spaceId: SpaceId) =>
+const getDispatcher = (harness: Awaited<ReturnType<typeof Harness.createComposerTestApp>>, spaceId: SpaceId) =>
   harness.runPromise(
     Effect.flatMap(TriggerDispatcher, Effect.succeed).pipe(
       Effect.provide(ServiceResolver.provide({ space: spaceId }, TriggerDispatcher)),
@@ -32,7 +32,7 @@ const getDispatcher = (harness: Awaited<ReturnType<typeof createComposerTestApp>
 
 describe('TriggerRuntimeController', () => {
   test('toggles the per-space TriggerDispatcher as triggersDisabled changes', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()],
     });
 
@@ -76,7 +76,7 @@ describe('TriggerRuntimeController', () => {
   });
 
   test('does not re-issue start when triggersDisabled is reasserted to the same value', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({ types: [Feed.Feed] }), RoutinePlugin()],
     });
 

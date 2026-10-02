@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useOptionalCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 
 /**
@@ -20,4 +20,4 @@ import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
  * hook actually needs.
  */
 export const usePlatform = (): DeckCapabilities.Platform =>
-  useOptionalCapability(DeckCapabilities.Platform) ?? 'desktop';
+  Hooks.useOptionalCapability(DeckCapabilities.Platform) ?? 'desktop';

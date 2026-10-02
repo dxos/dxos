@@ -9,7 +9,7 @@ import * as HttpClient from 'effect/http/HttpClient';
 import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import { describe, test } from 'vitest';
 
-import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
+import * as FunctionsAiError from '@dxos/compute/FunctionsAiError';
 import { EffectEx } from '@dxos/effect';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
@@ -54,7 +54,7 @@ describe('FunctionsAiHttpClient', () => {
 
     const exit = await Effect.runPromiseExit(runRequest(service));
     const error = extractDefect(exit);
-    expect(error).toBeInstanceOf(FunctionsAiMemoizationMissError);
+    expect(error).toBeInstanceOf(FunctionsAiError.MemoizationMissError);
     expect(error?.name).toBe('FunctionsAiMemoizationMissError');
     expect((error as any)?.context?.cacheKey).toBe('abc');
     expect((error as any)?.context?.status).toBe(500);
@@ -73,7 +73,7 @@ describe('FunctionsAiHttpClient', () => {
 
     const exit = await Effect.runPromiseExit(runRequest(service));
     const error = extractDefect(exit);
-    expect(error).toBeInstanceOf(FunctionsAiUpstreamError);
+    expect(error).toBeInstanceOf(FunctionsAiError.UpstreamError);
     expect((error as any)?.context?.type).toBe('overloaded_error');
     expect((error as any)?.context?.status).toBe(529);
   });

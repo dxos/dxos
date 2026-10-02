@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref, Relation } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -39,12 +39,12 @@ export type ReaderArticleProps = AppSurface.ObjectArticleProps<Obj.Unknown>;
  */
 export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Attention sits on the article this companion accompanies, not on the companion itself, so the
   // subject's URI is what `ActionToolbar`'s `useAttention` has to match — otherwise the toolbar is
   // permanently disabled.
   const attentionId = (subject && Obj.getURI(subject)) ?? attendableId;
-  const settings = useAtomValue(useCapability(LingoCapabilities.Settings));
+  const settings = useAtomValue(Hooks.useCapability(LingoCapabilities.Settings));
   const { text, textRef } = useSourceText(subject);
 
   const db = subject ? Obj.getDatabase(subject) : undefined;

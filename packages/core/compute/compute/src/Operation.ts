@@ -922,3 +922,12 @@ const _migration = Migration.define({
  * Exported as an array for extensibility — append future versions here.
  */
 export const migrations = [_migration];
+
+export {
+  FunctionError,
+  FunctionNotFoundError,
+  InvalidOperationInputError,
+  InvalidOperationOutputError,
+  InvokerNotInitializedError,
+  NoHandlerError,
+} from './errors.ts';

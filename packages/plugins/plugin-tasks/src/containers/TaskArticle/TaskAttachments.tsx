@@ -15,13 +15,13 @@ import React, {
 } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapabilities, useOperation, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
-import { CardMasonry } from '@dxos/plugin-space/CardMasonry';
+import * as CardMasonry from '@dxos/plugin-space/CardMasonry';
 import { Column, Icon, useTranslation } from '@dxos/react-ui';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
 import { type File, Task } from '@dxos/types';
@@ -36,7 +36,7 @@ import { TaskOperation } from '#types';
  * plugin-file, and a drop it cannot store must not be offered at all.
  */
 const useCanCreateFiles = (): boolean => {
-  const handlerSets = useCapabilities(Capabilities.OperationHandler);
+  const handlerSets = Hooks.useCapabilities(Capabilities.OperationHandler);
   return useMemo(
     () =>
       handlerSets.some((set) =>
@@ -65,7 +65,7 @@ export type AttachFile = (task: Task.Task, file: globalThis.File) => Promise<boo
  * when no plugin can store a file.
  */
 export const useAttachFile = (): AttachFile | undefined => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const canCreateFiles = useCanCreateFiles();
 
   const attachOne = useCallback<AttachFile>(
@@ -243,7 +243,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
   const [refs] = useObject(task, 'attachments');
   const dragging = useContext(FileDragContext);
 
-  const removeAttachment = useOperation(
+  const removeAttachment = Hooks.useOperation(
     TaskOperation.RemoveAttachment,
     (file: Ref.Ref<File.File>) => ({ task: Ref.make(task), file }),
     { spaceId: Obj.getDatabase(task)?.spaceId },
@@ -285,7 +285,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
       >
         {hasCards ? (
           <RemoveAttachmentContext.Provider value={handleRemove}>
-            <CardMasonry
+            <CardMasonry.Root
               objects={refs ?? []}
               size='compact'
               inline

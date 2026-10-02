@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Button, Icon, useTranslation } from '@dxos/react-ui';
 
@@ -12,7 +12,7 @@ import { COMMANDS_DIALOG, meta } from '#meta';
 
 // TODO(thure): Refactor to be handled by a more appropriate plugin.
 export const CommandsTrigger = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = useTranslation(meta.profile.key);
   return (
     <Button

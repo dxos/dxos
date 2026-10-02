@@ -5,11 +5,11 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
-import { useUpdateRow } from '@dxos/app-toolkit/UpdateRow';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
+import * as UpdateRow from '@dxos/app-toolkit/UpdateRow';
 import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -21,8 +21,8 @@ export type PwaSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 /** The web counterpart of NativeSettings: same row, same capability, whichever platform contributed it. */
 export const PwaSettings = () => {
   const { t } = useTranslation(meta.profile.key);
-  const manager = useCapability(AppCapabilities.UpdateManager);
-  const { description, button } = useUpdateRow({ manager, t });
+  const manager = Hooks.useCapability(AppCapabilities.UpdateManager);
+  const { description, button } = UpdateRow.useUpdateRow({ manager, t });
 
   return (
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
@@ -30,7 +30,7 @@ export const PwaSettings = () => {
         <Form.Content>
           <Form.FieldSet
             label={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={meta.profile.key} />}
+            actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Field standalone label={t('settings.updates.label')} description={description}>
               {button}

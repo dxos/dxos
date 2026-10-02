@@ -80,19 +80,19 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./InstructionsEditor": {
-      "source": "./src/components/InstructionsEditor/index.ts",
-      "types": "./dist/types/src/components/InstructionsEditor/index.d.ts",
-      "import": "./dist/lib/InstructionsEditor.mjs"
+      "source": "./src/InstructionsEditor.ts",
+      "types": "./dist/types/src/InstructionsEditor.d.ts",
+      "import": "./dist/lib/ns/InstructionsEditor.mjs"
     },
     "./TemplateEditor": {
-      "source": "./src/components/TemplateEditor/index.ts",
-      "types": "./dist/types/src/components/TemplateEditor/index.d.ts",
-      "import": "./dist/lib/TemplateEditor.mjs"
+      "source": "./src/TemplateEditor.ts",
+      "types": "./dist/types/src/TemplateEditor.d.ts",
+      "import": "./dist/lib/ns/TemplateEditor.mjs"
     },
     "./Hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./package.json": "./package.json",
     "./testing": {
@@ -106,9 +106,9 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./Wire": {
-      "source": "./src/util/wire.ts",
-      "types": "./dist/types/src/util/wire.d.ts",
-      "import": "./dist/lib/Wire.mjs"
+      "source": "./src/Wire.ts",
+      "types": "./dist/types/src/Wire.d.ts",
+      "import": "./dist/lib/ns/Wire.mjs"
     },
     "./Routine": {
       "source": "./src/types/Routine.ts",

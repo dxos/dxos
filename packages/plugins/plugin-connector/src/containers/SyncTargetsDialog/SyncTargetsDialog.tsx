@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -35,8 +35,8 @@ export type SyncTargetsDialogProps = {
  */
 export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  const manager = usePluginManager();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const manager = PluginManagerProvider.usePluginManager();
 
   const db = Obj.getDatabase(connection);
   const allCursors = useQuery(db, Filter.type(Cursor.Cursor));

@@ -7,9 +7,9 @@ import * as Schema from 'effect/Schema';
 import * as SchemaAST from 'effect/SchemaAST';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { log } from '@dxos/log';
 import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { type FormFieldRendererProps, FormFieldRow, TextField } from '@dxos/react-ui-form';
@@ -44,8 +44,8 @@ export type FileUrlFieldProps = FormFieldRendererProps & { accept?: string };
  */
 export const FileUrlField = ({ accept, ...props }: FileUrlFieldProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const space = useActiveSpace();
-  const [upload] = useCapabilities(AppCapabilities.FileUploader);
+  const space = ToolkitHooks.useActiveSpace();
+  const [upload] = Hooks.useCapabilities(AppCapabilities.FileUploader);
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 

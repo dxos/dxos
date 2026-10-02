@@ -4,8 +4,8 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { useTypeOptions } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { EID, Filter, Obj, Query, type QueryAST, Ref, Scope, Tag, Type, type View } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -20,12 +20,12 @@ import { SpaceOperation } from '#types';
 export type ViewEditorProps = { view: View.View };
 
 export const ViewEditor = ({ view }: ViewEditorProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const db = Obj.getDatabase(view);
   const [type, setType] = useState<Type.AnyEntity>();
   const tags = useQuery(db, Filter.type(Tag.Tag));
-  const types = useTypeOptions({
+  const types = ToolkitHooks.useTypeOptions({
     db,
     annotation: {
       location: ['database', 'runtime'],

@@ -9,7 +9,7 @@ import React, { useContext, useEffect } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
-import { useAtomCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Alarm, SessionStore } from '@dxos/assistant';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
@@ -50,7 +50,7 @@ type StoryArgs = {
 const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs) => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(ChatType.Chat));
-  const settings = useAtomCapability(AssistantCapabilities.Settings);
+  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const registry = useRegistry();
   const { preset, ...chatProps } = usePresets(settings, chat);
   const db = space?.db;

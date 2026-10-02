@@ -4,10 +4,10 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useAppGraph, useLayout } from '@dxos/app-toolkit/Hooks';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Column, Flex, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,
@@ -36,7 +36,7 @@ export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
  */
 export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticleProps) => {
   const { actions, onAction } = useMenuActions(attendableId);
-  const layout = useLayout();
+  const layout = Hooks.useLayout();
   // The card-scale gutter is a fifth of a phone viewport; mobile steps down to the dialog scale.
   const gutter = layout.mode === 'mobile' ? 'md' : 'lg';
 
@@ -51,12 +51,12 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
           <ScrollArea.Root orientation='vertical' centered padding>
             <ScrollArea.Viewport>
               <Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
-                <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
+                <Surface.Root.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
               </Flex>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <Column.Center classNames='dx-document pb-4'>
-            <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
+            <Surface.Root.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
           </Column.Center>
         </Column.Root>
       </Panel.Content>
@@ -76,8 +76,8 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
 const useMenuActions = (
   attendableId?: string,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = Hooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
 
   const menuActions = useMenuBuilder(
     (get): ActionGraphProps => {

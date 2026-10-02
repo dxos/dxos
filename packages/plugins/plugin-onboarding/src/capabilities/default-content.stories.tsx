@@ -7,16 +7,16 @@ import * as Effect from 'effect/Effect';
 import React from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
-import { promptRunExtension } from '@dxos/plugin-assistant/Extensions';
+import * as Extensions from '@dxos/plugin-assistant/Extensions';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
@@ -49,7 +49,7 @@ const PromptExtensionPlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
-          () => promptRunExtension({ onRun: (promptText) => console.log('[run prompt]', promptText) }),
+          () => Extensions.promptRunExtension({ onRun: (promptText) => console.log('[run prompt]', promptText) }),
         ]),
       ]),
   }),
@@ -57,7 +57,7 @@ const PromptExtensionPlugin = Plugin.define(
 );
 
 const DefaultStory = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const id = doc && Obj.getURI(doc);
@@ -70,7 +70,7 @@ const DefaultStory = () => {
 
   return (
     <div className='contents'>
-      <Surface.Surface type={AppSurface.Article} data={{ subject: doc, attendableId: id ?? 'story' }} limit={1} />
+      <Surface.Root.Surface type={AppSurface.Article} data={{ subject: doc, attendableId: id ?? 'story' }} limit={1} />
     </div>
   );
 };

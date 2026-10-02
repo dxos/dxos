@@ -6,9 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker, useOptionalCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
@@ -74,11 +74,11 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     forwardedRef,
   ) => {
     const { t } = useTranslation(meta.profile.key);
-    const manager = usePluginManager();
-    const { invoke, invokePromise } = useOperationInvoker();
-    const allSettings = useCapabilities(AppCapabilities.Settings);
+    const manager = PluginManagerProvider.usePluginManager();
+    const { invoke, invokePromise } = Hooks.useOperationInvoker();
+    const allSettings = Hooks.useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
-    const settingsSync = useOptionalCapability(AppCapabilities.SettingsSync);
+    const settingsSync = Hooks.useOptionalCapability(AppCapabilities.SettingsSync);
     const [filter, setFilter] = useState('');
 
     const filtered = useMemo(() => {

@@ -11,7 +11,7 @@ export default defineConfig({
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     core: 'src/core.ts',
-    harness: 'src/harness.ts',
+    harness: 'src/Harness.ts',
     meta: 'src/meta.ts',
     operations: 'src/operations/index.ts',
     plugin: 'src/plugin.ts',

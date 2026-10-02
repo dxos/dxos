@@ -6,6 +6,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/Surface': 'src/Surface.ts',
+    'ns/SharedPackages': 'src/SharedPackages.ts',
+    'ns/PluginManagerProvider': 'src/PluginManagerProvider.ts',
+    'ns/NamePopover': 'src/NamePopover.ts',
+    'ns/Hooks': 'src/Hooks.ts',
+    'ns/HomeSection': 'src/HomeSection.ts',
+    'ns/Cli': 'src/Cli.ts',
+    'ns/App': 'src/App.ts',
     'App': 'src/ui/components/App/index.ts',
     'HomeSection': 'src/ui/components/HomeSection/index.ts',
     'Hooks': 'src/ui/hooks/index.ts',
@@ -33,6 +41,7 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
     'testing/react': 'src/testing/react.tsx',
     'core/capability-manager': 'src/core/capability-manager.ts',
+    'plugin-process-manager/ProcessManagerPlugin': 'src/plugin-process-manager/ProcessManagerPlugin.ts',
     'plugin-process-manager/history/history-tracker': 'src/plugin-process-manager/history/history-tracker.ts',
     'core/plugin-asset-cache': 'src/core/plugin-asset-cache.ts',
     'core/plugin-manifest': 'src/core/plugin-manifest.ts',

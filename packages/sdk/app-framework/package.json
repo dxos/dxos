@@ -68,6 +68,11 @@
       "types": "./dist/types/src/core/plugin-manifest.d.ts",
       "import": "./dist/lib/core/plugin-manifest.mjs"
     },
+    "./ProcessManagerPlugin": {
+      "source": "./src/plugin-process-manager/ProcessManagerPlugin.ts",
+      "types": "./dist/types/src/plugin-process-manager/ProcessManagerPlugin.d.ts",
+      "import": "./dist/lib/plugin-process-manager/ProcessManagerPlugin.mjs"
+    },
     "./Registry": {
       "source": "./src/core/registry.ts",
       "types": "./dist/types/src/core/registry.d.ts",
@@ -79,9 +84,9 @@
       "import": "./dist/lib/common/Role.mjs"
     },
     "./SharedPackages": {
-      "source": "./src/vite-plugin/packages.ts",
-      "types": "./dist/types/src/vite-plugin/packages.d.ts",
-      "import": "./dist/lib/vite-plugin/packages.mjs"
+      "source": "./src/SharedPackages.ts",
+      "types": "./dist/types/src/SharedPackages.d.ts",
+      "import": "./dist/lib/ns/SharedPackages.mjs"
     },
     "./UndoMapping": {
       "source": "./src/plugin-process-manager/history/undo-mapping.ts",
@@ -108,9 +113,9 @@
       "import": "./dist/lib/vite-plugin.mjs"
     },
     "./Cli": {
-      "source": "./src/cli/index.ts",
-      "types": "./dist/types/src/cli/index.d.ts",
-      "import": "./dist/lib/cli.mjs"
+      "source": "./src/Cli.ts",
+      "types": "./dist/types/src/Cli.d.ts",
+      "import": "./dist/lib/ns/Cli.mjs"
     },
     "./testing": {
       "source": "./src/testing/index.ts",
@@ -124,34 +129,34 @@
     },
     "./package.json": "./package.json",
     "./App": {
-      "source": "./src/ui/components/App/index.ts",
-      "types": "./dist/types/src/ui/components/App/index.d.ts",
-      "import": "./dist/lib/App.mjs"
+      "source": "./src/App.ts",
+      "types": "./dist/types/src/App.d.ts",
+      "import": "./dist/lib/ns/App.mjs"
     },
     "./HomeSection": {
-      "source": "./src/ui/components/HomeSection/index.ts",
-      "types": "./dist/types/src/ui/components/HomeSection/index.d.ts",
-      "import": "./dist/lib/HomeSection.mjs"
+      "source": "./src/HomeSection.ts",
+      "types": "./dist/types/src/HomeSection.d.ts",
+      "import": "./dist/lib/ns/HomeSection.mjs"
     },
     "./Hooks": {
-      "source": "./src/ui/hooks/index.ts",
-      "types": "./dist/types/src/ui/hooks/index.d.ts",
-      "import": "./dist/lib/Hooks.mjs"
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./NamePopover": {
-      "source": "./src/ui/components/NamePopover/index.ts",
-      "types": "./dist/types/src/ui/components/NamePopover/index.d.ts",
-      "import": "./dist/lib/NamePopover.mjs"
+      "source": "./src/NamePopover.ts",
+      "types": "./dist/types/src/NamePopover.d.ts",
+      "import": "./dist/lib/ns/NamePopover.mjs"
     },
     "./PluginManagerProvider": {
-      "source": "./src/ui/components/PluginManager/index.ts",
-      "types": "./dist/types/src/ui/components/PluginManager/index.d.ts",
-      "import": "./dist/lib/PluginManagerProvider.mjs"
+      "source": "./src/PluginManagerProvider.ts",
+      "types": "./dist/types/src/PluginManagerProvider.d.ts",
+      "import": "./dist/lib/ns/PluginManagerProvider.mjs"
     },
     "./Surface": {
-      "source": "./src/ui/components/Surface/index.ts",
-      "types": "./dist/types/src/ui/components/Surface/index.d.ts",
-      "import": "./dist/lib/Surface.mjs"
+      "source": "./src/Surface.ts",
+      "types": "./dist/types/src/Surface.d.ts",
+      "import": "./dist/lib/ns/Surface.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

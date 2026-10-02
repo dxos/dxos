@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useEffect, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
 import { Main, useTranslation } from '@dxos/react-ui';
@@ -112,7 +112,7 @@ export const DeckContent = ({ children }: DeckContentProps) => {
         minHeight={DeckSchema.DRAWER_MIN_HEIGHT}
         maxHeight={DeckSchema.DRAWER_MAX_HEIGHT}
       >
-        <Surface.Surface type={AppSurface.Drawer} limit={1} />
+        <Surface.Root.Surface type={AppSurface.Drawer} limit={1} />
       </Main.Drawer>
       <Main.Overlay />
       {children}

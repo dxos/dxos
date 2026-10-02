@@ -4,9 +4,9 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -36,9 +36,9 @@ export type PullRequestCardMenuProps = AppSurface.CardMenuData<PullRequest.PullR
  */
 export const PullRequestCardMenu = ({ subject, menu }: PullRequestCardMenuProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const openObject = useOpenObject();
-  const activeSpace = useActiveSpace();
+  const activeSpace = ToolkitHooks.useActiveSpace();
   const db = Obj.getDatabase(subject) ?? activeSpace?.db;
   const { owner, repo, number } = subject;
 

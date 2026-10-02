@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Obj } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 
@@ -16,7 +16,7 @@ import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilitie
  * task set) stands in for it, so a contribution can resolve against the project that owns it.
  */
 export const useMarkdownExtensions = (subject?: Obj.Unknown): Extension[] => {
-  const extensionProviders = useCapabilities(MarkdownCapabilities.ExtensionProvider);
+  const extensionProviders = Hooks.useCapabilities(MarkdownCapabilities.ExtensionProvider);
   return useMemo(
     () =>
       (extensionProviders ?? [])

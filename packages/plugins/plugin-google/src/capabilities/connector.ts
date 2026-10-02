@@ -19,7 +19,7 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/MailSync';
+import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import * as SyncOptions from '@dxos/plugin-inbox/SyncOptions';
 import { OAuthProvider } from '@dxos/protocols';
 
@@ -141,9 +141,9 @@ export default Capability.makeModule(
           // (no remoteTarget) to create the Mailbox, then binds.
           materializeTarget: GoogleOperation.MaterializeGmailTarget,
           optionsSchema: SyncOptions.SyncOptions,
-          auto: MAIL_AUTO_SYNC,
-          trigger: Trigger.specTimer(MAIL_SYNC_CRON),
-          remote: MAIL_REMOTE_SYNC,
+          auto: MailSync.MAIL_AUTO_SYNC,
+          trigger: Trigger.specTimer(MailSync.MAIL_SYNC_CRON),
+          remote: MailSync.MAIL_REMOTE_SYNC,
         },
         onTokenCreated,
         testConnection: testGoogleConnection,

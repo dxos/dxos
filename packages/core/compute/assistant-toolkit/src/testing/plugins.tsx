@@ -7,7 +7,7 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
@@ -36,9 +36,9 @@ declare global {
 export const capabilities: Capability.AnyContribution[] = [
   Capability.contribute(
     Capabilities.ReactSurface,
-    Surface.create({
+    Surface.Root.create({
       id: 'pluginDefault',
-      filter: Surface.makeFilter(AppSurface.CardContent),
+      filter: Surface.Root.makeFilter(AppSurface.CardContent),
       position: Position.last,
       component: ({ data }) => (
         <Card.Body>

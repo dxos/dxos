@@ -89,14 +89,14 @@
       "import": "./dist/lib/index.mjs"
     },
     "./MailSync": {
-      "source": "./src/sync/index.ts",
-      "types": "./dist/types/src/sync/index.d.ts",
-      "import": "./dist/lib/sync.mjs"
+      "source": "./src/MailSync.ts",
+      "types": "./dist/types/src/MailSync.d.ts",
+      "import": "./dist/lib/ns/MailSync.mjs"
     },
     "./Containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "import": "./dist/lib/containers.mjs"
+      "source": "./src/Containers.ts",
+      "types": "./dist/types/src/Containers.d.ts",
+      "import": "./dist/lib/ns/Containers.mjs"
     },
     "./package.json": "./package.json",
     "./testing": {
@@ -175,9 +175,9 @@
       "import": "./dist/lib/SyncStreamConfig.mjs"
     },
     "./SystemTags": {
-      "source": "./src/types/SystemTags.ts",
-      "types": "./dist/types/src/types/SystemTags.d.ts",
-      "import": "./dist/lib/SystemTags.mjs"
+      "source": "./src/SystemTags.ts",
+      "types": "./dist/types/src/SystemTags.d.ts",
+      "import": "./dist/lib/ns/SystemTags.mjs"
     },
     "./ReplyGeneration": {
       "source": "./src/types/ReplyGeneration.ts",

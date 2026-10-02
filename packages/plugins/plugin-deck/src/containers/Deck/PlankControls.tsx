@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTranslation } from '@dxos/react-ui';
 
@@ -28,7 +28,7 @@ export type PlankCompanionControlsProps = {
 export const PlankCompanionControls = forwardRef<HTMLDivElement, PlankCompanionControlsProps>(
   ({ primary }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = Hooks.useOperationInvoker();
     // `anchor` names the plank this control belongs to: companions are per-plank, and resolving the
     // target from attention instead would close whichever plank happened to be attended.
     const handleCloseCompanion = useCallback(() => {

@@ -5,11 +5,11 @@
 import * as Match from 'effect/Match';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { ForceGraph } from '@dxos/plugin-explorer/ForceGraph';
-import { useGraphModel } from '@dxos/plugin-explorer/Hooks';
+import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
+import * as ExplorerHooks from '@dxos/plugin-explorer/Hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
@@ -20,7 +20,7 @@ import { mx } from '@dxos/ui-theme';
 import { ResearchInputQueue } from '../testing/index.ts';
 
 export const GraphModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -39,7 +39,7 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
     feed ? Query.select(Filter.everything()).from(feed) : Query.select(Filter.nothing()),
   );
 
-  const model = useGraphModel(space.db, undefined, undefined, items);
+  const model = ExplorerHooks.useGraphModel(space.db, undefined, undefined, items);
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
@@ -60,7 +60,7 @@ const GraphModuleContainer = ({ space }: { space: Space }) => {
         <SearchBar space={space} onSubmit={handleSubmit} />
       </Panel.Toolbar>
       <Panel.Content classNames='relative min-h-0'>
-        <ForceGraph classNames='min-h-[50vh]' model={model} />
+        <ForceGraph.Root classNames='min-h-[50vh]' model={model} />
 
         {open && (
           <div

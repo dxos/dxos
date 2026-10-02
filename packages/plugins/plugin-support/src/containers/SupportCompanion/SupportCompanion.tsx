@@ -13,8 +13,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
@@ -40,8 +40,8 @@ export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj
  */
 export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanionProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const manager = usePluginManager();
-  const { invokePromise } = useOperationInvoker();
+  const manager = PluginManagerProvider.usePluginManager();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const schemasByModule = useAtomValue(manager.capabilities.atomByModule(AppCapabilities.Schema));
   const createEntriesByModule = useAtomValue(manager.capabilities.atomByModule(SpaceCapabilities.CreateObjectEntry));
 

@@ -6,8 +6,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import {
   EdgeCard,
@@ -33,7 +33,7 @@ import { Devtools } from '#types';
 const DEBUG_HOSTS = new Set(['devtoolsOverview', 'debugDrawer']);
 
 /** Whether a mounted surface is part of the debug tooling rather than the app being inspected. */
-export const isDebugSurface = ({ id, role, ancestors }: Surface.Mounted): boolean =>
+export const isDebugSurface = ({ id, role, ancestors }: Surface.Root.Mounted): boolean =>
   role.endsWith('.devtoolsOverview') ||
   (id !== undefined && DEBUG_HOSTS.has(id)) ||
   ancestors.some((ancestor) => DEBUG_HOSTS.has(ancestor));
@@ -52,7 +52,7 @@ export const isDevtoolsCardData = (data: unknown): data is DevtoolsCardData =>
  * The card role narrowed to the stack's data. `Surface.makeFilter` types its data by the token, so
  * the binding is built directly, as `AppSurface.subject` does.
  */
-export const devtoolsCard: Surface.Filter<DevtoolsCardData> = {
+export const devtoolsCard: Surface.Root.Filter<DevtoolsCardData> = {
   bindings: [{ role: AppSurface.DevtoolsOverview.role, guard: isDevtoolsCardData }],
 };
 
@@ -81,20 +81,20 @@ export const SurfaceProfilerCardSurface = ({
   surfaceProfilerStats,
   onClearSurfaceProfiler,
 }: SurfaceProfilerCardSurfaceProps) => {
-  const [debug, setDebug] = useState(() => Surface.isDebugEnabled());
+  const [debug, setDebug] = useState(() => Surface.Root.isDebugEnabled());
   const handleDebugChange = useCallback((enabled: boolean) => {
-    Surface.setDebug(enabled);
+    Surface.Root.setDebug(enabled);
     setDebug(enabled);
   }, []);
 
   // The selected role's surfaces with their data and dispatch metrics, following mounts and unmounts.
-  const selected = Surface.useSelected();
-  const mounted = Surface.useMounted();
+  const selected = Surface.Root.useSelected();
+  const mounted = Surface.Root.useMounted();
   const detail = useMemo(() => {
     if (!selected) {
       return undefined;
     }
-    const metrics = new Map(Surface.getMetrics().map((metric) => [metric.id, metric]));
+    const metrics = new Map(Surface.Root.getMetrics().map((metric) => [metric.id, metric]));
     return mounted
       .filter((surface) => surface.role === selected && !isDebugSurface(surface))
       .map(({ id, role, data }) => ({ id, data, metric: metrics.get(`surface/${id}/${role}`) }));
@@ -107,7 +107,7 @@ export const SurfaceProfilerCardSurface = ({
       onDebugChange={handleDebugChange}
       onClear={onClearSurfaceProfiler}
       selected={selected}
-      onSelect={Surface.select}
+      onSelect={Surface.Root.select}
       detail={detail}
     />
   );
@@ -131,7 +131,7 @@ export const IndexerCardSurface = () => {
 /** The slowest queries; the header button shows every query on the devtools Queries page. */
 export const QueriesCardSurface = () => {
   const { queries } = useQueryMetrics();
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const handleOpen = useCallback(
     () => void invokePromise(DebugOperation.OpenPage, { nodeId: Devtools.getNodePath(Devtools.Echo.Queries) }),
     [invokePromise],

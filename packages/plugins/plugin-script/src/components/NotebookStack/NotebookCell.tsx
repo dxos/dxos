@@ -4,13 +4,13 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useResolveRef } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { TemplateEditor } from '@dxos/plugin-routine/TemplateEditor';
+import * as TemplateEditor from '@dxos/plugin-routine/TemplateEditor';
 import { useThemeContext, useTranslation } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { Editor, type EditorViewProps } from '@dxos/react-ui-editor';
@@ -120,7 +120,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             onChange={handleQueryChange}
           />
           {explorerGraph && !dragging && (
-            <Surface.Surface
+            <Surface.Root.Surface
               type={AppSurface.Section}
               limit={1}
               data={{ subject: explorerGraph, attendableId: cell.id }}
@@ -137,7 +137,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
 
       return (
         <>
-          <TemplateEditor id={cell.id} source={prompt.text} lineNumbers={false} classNames={editorStyles} />
+          <TemplateEditor.Root id={cell.id} source={prompt.text} lineNumbers={false} classNames={editorStyles} />
           <NotebookPromptResult cell={cell} promptResults={promptResults} />
         </>
       );

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Collection, Obj } from '@dxos/echo';
 
@@ -39,21 +39,21 @@ const isArtifactCollection = (collection?: Collection.Collection): boolean => {
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'artifactArticle',
         filter: AppSurface.object(AppSurface.Article, MediaArtifact.MediaArtifact),
         component: MediaArtifactArticle,
         // `nodeId` rides along for an article nested in another (a storyboard frame) — see the article.
         props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'storyboardArticle',
         filter: AppSurface.object(AppSurface.Article, Storyboard.Storyboard),
         component: StoryboardArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       // The storyboard's frame companion (see the `frame` node in the graph builder).
-      Surface.create({
+      Surface.Root.create({
         id: 'frameCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, FRAME_COMPANION),
@@ -62,7 +62,7 @@ export default Capability.makeModule(() =>
         component: FrameCompanion,
         props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'galleryArticle',
         filter: AppSurface.object(AppSurface.Article, Collection.Collection, (data) =>
           isArtifactCollection(data.subject),
@@ -71,7 +71,7 @@ export default Capability.makeModule(() =>
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
 
-      Surface.create({
+      Surface.Root.create({
         id: 'lightboxArticle',
         filter: AppSurface.object(AppSurface.Article, Lightbox.Lightbox),
         component: LightboxArticle,
@@ -79,7 +79,7 @@ export default Capability.makeModule(() =>
       }),
 
       // Card rendering of a MediaArtifact (cover thumbnail) — composes Artifacts into collections/boards.
-      Surface.create({
+      Surface.Root.create({
         id: 'artifactCard',
         filter: AppSurface.object(AppSurface.CardContent, MediaArtifact.MediaArtifact),
         component: MediaArtifactCard,
@@ -87,18 +87,18 @@ export default Capability.makeModule(() =>
       }),
 
       // Default variant renderers (image/*, video/*), overridable per contentType via Position.first.
-      Surface.create({
+      Surface.Root.create({
         id: 'imageVariant',
-        filter: Surface.makeFilter(
+        filter: Surface.Root.makeFilter(
           VariantRenderer,
           (data) => typeof data.contentType === 'string' && data.contentType.startsWith('image/'),
         ),
         component: ImageVariant,
         props: ({ data: { variant } }) => ({ variant }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'videoVariant',
-        filter: Surface.makeFilter(
+        filter: Surface.Root.makeFilter(
           VariantRenderer,
           (data) => typeof data.contentType === 'string' && data.contentType.startsWith('video/'),
         ),

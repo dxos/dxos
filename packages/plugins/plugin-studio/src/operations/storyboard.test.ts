@@ -10,7 +10,6 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
-import { type NoHandlerError } from '@dxos/compute/Errors';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
@@ -97,7 +96,7 @@ describe('storyboard operations', () => {
   const operationService = (): Operation.OperationService => ({
     // The service's `invoke` is generic over the definition; this stub serves one known operation, so
     // the concrete effect is widened to the generic signature (test-only stub, as in other handler tests).
-    invoke: <I, O>(op: Operation.Definition<I, O>, ...args: unknown[]): Effect.Effect<O, NoHandlerError> =>
+    invoke: <I, O>(op: Operation.Definition<I, O>, ...args: unknown[]): Effect.Effect<O, Operation.NoHandlerError> =>
       (op.meta.key === StudioOperation.Generate.meta.key
         ? generateHandler
             .handler(args[0] as Parameters<typeof generateHandler.handler>[0])
@@ -106,7 +105,7 @@ describe('storyboard operations', () => {
               Effect.provideService(Capability.Service, capabilityService()),
               Effect.provide(configuredCredentialsLayer([])),
             )
-        : Effect.die(`unexpected operation: ${op.meta.key}`)) as Effect.Effect<O, NoHandlerError>,
+        : Effect.die(`unexpected operation: ${op.meta.key}`)) as Effect.Effect<O, Operation.NoHandlerError>,
     schedule: () => Effect.die('schedule is not implemented'),
     invokePromise: () => Promise.resolve({ error: new Error('invokePromise is not implemented') }),
   });

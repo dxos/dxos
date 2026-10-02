@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { useOnTransition } from '@dxos/react-ui';
@@ -15,7 +15,7 @@ export const useOnEditAnalytics = (
   textBlock: ContentBlock.Text | undefined,
   editing: boolean,
 ) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const onEdit = useCallback(() => {
     if (!message || !textBlock) {

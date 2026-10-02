@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { expect, waitFor } from 'storybook/test';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -126,8 +126,8 @@ const CompanionStory = () => {
 
   return (
     <div {...attentionAttrs} className='grid grid-cols-[1fr_1fr]'>
-      <Surface.Surface type={AppSurface.Article} data={mailboxData} />
-      <Surface.Surface type={AppSurface.Article} data={companionData} />
+      <Surface.Root.Surface type={AppSurface.Article} data={mailboxData} />
+      <Surface.Root.Surface type={AppSurface.Article} data={companionData} />
     </div>
   );
 };

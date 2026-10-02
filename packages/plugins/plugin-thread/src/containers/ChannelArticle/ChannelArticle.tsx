@@ -6,8 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
@@ -51,15 +51,15 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   const members = useMembers(space?.id);
   const id = channel ? Obj.getURI(channel) : undefined;
   const activity = useStatus(space, id);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
-  const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
+  const providers = Hooks.useCapabilities(ThreadCapabilities.ChannelBackend);
   const provider = channel ? ChannelBackend.resolveProvider(providers, channel.backend.kind) : undefined;
   const messages = useMessages(channel);
   const readOnly = channel ? (provider?.readOnly?.(channel) ?? Obj.getMeta(channel).keys.length > 0) : false;
 
-  const callProvider = useCapabilities(CallsCapabilities.CallTransportProvider)[0];
-  const callManager = useCapabilities(CallsCapabilities.Manager)[0];
+  const callProvider = Hooks.useCapabilities(CallsCapabilities.CallTransportProvider)[0];
+  const callManager = Hooks.useCapabilities(CallsCapabilities.Manager)[0];
   const joined = useAtomValue(callManager?.joinedAtom ?? NOT_JOINED);
   const currentRoomId = useAtomValue(callManager?.roomIdAtom ?? NO_ROOM);
   // `chatOnly` (the in-call chat companion) keeps showing messages so the call lives only in the primary.
@@ -121,7 +121,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
       )}
       {showCall ? (
         <Panel.Content>
-          <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
+          <Surface.Root.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
         </Panel.Content>
       ) : (
         <Panel.Content asChild>

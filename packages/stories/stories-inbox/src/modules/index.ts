@@ -3,7 +3,7 @@
 //
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 
 import { ArchiveModule } from './ArchiveModule.tsx';
 import { ConnectorModule } from './ConnectorModule.tsx';
@@ -53,90 +53,90 @@ export const StoryRole = {
 };
 
 /** React surfaces for the story columns, one per `StoryRole` token. */
-export const moduleSurfaces: Surface.Definition[] = [
-  Surface.create({
+export const moduleSurfaces: Surface.Root.Definition[] = [
+  Surface.Root.create({
     id: 'inbox.archive',
-    filter: Surface.makeFilter(StoryRole.Archive),
+    filter: Surface.Root.makeFilter(StoryRole.Archive),
     component: ArchiveModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.attachment',
-    filter: Surface.makeFilter(StoryRole.Attachment),
+    filter: Surface.Root.makeFilter(StoryRole.Attachment),
     component: AttachmentModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.connector',
-    filter: Surface.makeFilter(StoryRole.Connector),
+    filter: Surface.Root.makeFilter(StoryRole.Connector),
     component: ConnectorModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.facts',
-    filter: Surface.makeFilter(StoryRole.Facts),
+    filter: Surface.Root.makeFilter(StoryRole.Facts),
     component: FactsModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.mailbox',
-    filter: Surface.makeFilter(StoryRole.Mailbox),
+    filter: Surface.Root.makeFilter(StoryRole.Mailbox),
     component: MailboxModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.message',
-    filter: Surface.makeFilter(StoryRole.Message),
+    filter: Surface.Root.makeFilter(StoryRole.Message),
     component: MessageModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.selectedMessage',
-    filter: Surface.makeFilter(StoryRole.SelectedMessage),
+    filter: Surface.Root.makeFilter(StoryRole.SelectedMessage),
     component: SelectedMessageModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.selectedMessageBlocks',
-    filter: Surface.makeFilter(StoryRole.SelectedMessageBlocks),
+    filter: Surface.Root.makeFilter(StoryRole.SelectedMessageBlocks),
     component: SelectedMessageBlocksModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.selectedMessageJson',
-    filter: Surface.makeFilter(StoryRole.SelectedMessageJson),
+    filter: Surface.Root.makeFilter(StoryRole.SelectedMessageJson),
     component: SelectedMessageJsonModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.stats',
-    filter: Surface.makeFilter(StoryRole.Stats),
+    filter: Surface.Root.makeFilter(StoryRole.Stats),
     component: StatsModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.swarmTrace',
-    filter: Surface.makeFilter(StoryRole.SwarmTrace),
+    filter: Surface.Root.makeFilter(StoryRole.SwarmTrace),
     component: SwarmTraceModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.syncState',
-    filter: Surface.makeFilter(StoryRole.SyncState),
+    filter: Surface.Root.makeFilter(StoryRole.SyncState),
     component: SyncStateModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.thread',
-    filter: Surface.makeFilter(StoryRole.Thread),
+    filter: Surface.Root.makeFilter(StoryRole.Thread),
     component: ThreadModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.threadJson',
-    filter: Surface.makeFilter(StoryRole.ThreadJson),
+    filter: Surface.Root.makeFilter(StoryRole.ThreadJson),
     component: ThreadJsonModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.topics',
-    filter: Surface.makeFilter(StoryRole.Topics),
+    filter: Surface.Root.makeFilter(StoryRole.Topics),
     component: TopicsModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.trace',
-    filter: Surface.makeFilter(StoryRole.Trace),
+    filter: Surface.Root.makeFilter(StoryRole.Trace),
     component: TraceModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'inbox.triggers',
-    filter: Surface.makeFilter(StoryRole.Triggers),
+    filter: Surface.Root.makeFilter(StoryRole.Triggers),
     component: TriggersModule,
   }),
 ];

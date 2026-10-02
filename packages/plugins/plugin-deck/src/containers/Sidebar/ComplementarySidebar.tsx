@@ -4,8 +4,8 @@
 
 import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { IconButton, type Label, Main, Panel, Tabs, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
@@ -27,7 +27,7 @@ export type ComplementarySidebarProps = {
 };
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = useTranslation(meta.profile.key);
   const { state, updateState } = useDeckState();
   const breakpoint = useBreakpoints();
@@ -109,7 +109,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
             style={iconSize(4)}
           >
-            <Surface.Surface type={AppSurface.StatusIndicator} />
+            <Surface.Root.Surface type={AppSurface.StatusIndicator} />
           </div>
           <div className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
             <ToggleComplementarySidebarButton />
@@ -173,7 +173,7 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='dx-r1-surface'>
-        <Surface.Surface
+        <Surface.Root.Surface
           type={AppSurface.deckCompanion(Attention.getLinkedVariant(companion.id))}
           data={data}
           fallback={PlankErrorFallback}

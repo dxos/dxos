@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -34,7 +34,7 @@ const DefaultStory = () => {
   const space = spaces[spaces.length - 1];
   const people = useQuery(space?.db, Filter.type(Person.Person));
   const organizations = useQuery(space?.db, Filter.type(Organization.Organization));
-  const invoker = useOperationInvoker();
+  const invoker = Hooks.useOperationInvoker();
   const [status, setStatus] = useState<string>('Not run.');
 
   const handleEnrich = useCallback(() => {

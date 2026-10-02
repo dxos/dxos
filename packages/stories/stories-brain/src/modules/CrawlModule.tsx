@@ -7,8 +7,8 @@ import * as Layer from 'effect/Layer';
 import React, { useCallback, useState } from 'react';
 
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { useCapability } from '@dxos/app-framework/Hooks';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { AgentRegistry, type ChannelInfo, Source } from '@dxos/crawler';
 import { EffectEx } from '@dxos/effect';
 import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
@@ -26,7 +26,7 @@ import { useFactsStory } from './context.ts';
  * providing Brain's per-space `FactStore` so extracted facts land in the same store the viewer reads.
  */
 export const CrawlModule = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -34,8 +34,8 @@ export const CrawlModule = () => {
 };
 
 const CrawlModuleContainer = ({ space }: { space: Space }) => {
-  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
-  const crawler = useCapability(CrawlerStores);
+  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
+  const crawler = Hooks.useCapability(CrawlerStores);
   const { setFacts, setSelected } = useFactsStory();
 
   const [options, setOptions] = useState<CrawlOptions>(initialOptions);

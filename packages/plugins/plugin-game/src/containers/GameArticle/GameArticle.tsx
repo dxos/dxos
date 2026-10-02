@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
@@ -17,7 +17,7 @@ export type GameArticleProps = AppSurface.ObjectArticleProps<Game.Game>;
 
 export const GameArticle = ({ role, attendableId, subject: game }: GameArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const variants = useCapabilities(GameCapabilities.VariantProvider);
+  const variants = Hooks.useCapabilities(GameCapabilities.VariantProvider);
   // Resolved live rather than as a snapshot: variants mutate their state, and a snapshot is frozen.
   const variant = useResolveRef(game.variant);
 

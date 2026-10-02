@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj } from '@dxos/echo';
@@ -27,7 +27,7 @@ export const TaskDetail = ({ object, attendableId }: ResolvedCellProps) => {
   }
 
   return (
-    <Surface.Surface
+    <Surface.Root.Surface
       type={AppSurface.Article}
       data={{ subject: task, attendableId: `${attendableId}/${task.id}` }}
       limit={1}

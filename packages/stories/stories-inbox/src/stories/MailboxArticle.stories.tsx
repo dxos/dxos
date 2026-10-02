@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapabilities, useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Blob, type Database, Feed, Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -73,8 +73,8 @@ const seedAttachment = async (db: Database.Database, mailbox: Mailbox.Mailbox) =
 
 /** The seeded layout; forces conversation grouping per variant, independent of any persisted value. */
 const DefaultStory = ({ conversations, columns }: StoryArgs) => {
-  const registry = useCapability(Capabilities.AtomRegistry);
-  const [settingsAtom] = useCapabilities(InboxCapabilities.Settings);
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const [settingsAtom] = Hooks.useCapabilities(InboxCapabilities.Settings);
   useEffect(() => {
     if (settingsAtom && conversations !== undefined) {
       registry.set(settingsAtom, { ...registry.get(settingsAtom), conversations });

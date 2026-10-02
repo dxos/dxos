@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -27,5 +27,7 @@ export const MailboxModule = () => {
     return <Loading data={{ mailbox: false }} />;
   }
 
-  return <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: mailbox.id }} limit={1} />;
+  return (
+    <Surface.Root.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: mailbox.id }} limit={1} />
+  );
 };

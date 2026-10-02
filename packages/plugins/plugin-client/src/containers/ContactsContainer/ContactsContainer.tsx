@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -17,7 +17,7 @@ import { meta } from '#meta';
 
 export const ContactsContainer = () => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const contacts = useContacts();
   const spaces = useSpaces();
   const [filter, setFilter] = useState('');

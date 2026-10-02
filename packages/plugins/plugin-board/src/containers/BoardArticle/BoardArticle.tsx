@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -208,7 +208,7 @@ export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticl
                     const itemLayout = layout.items[item.id];
                     return itemLayout ? (
                       <BoardComponent.Cell item={item} key={item.id} layout={itemLayout}>
-                        <Surface.Surface
+                        <Surface.Root.Surface
                           type={AppSurface.CardContent}
                           data={{ subject: item, editable: true }}
                           limit={1}

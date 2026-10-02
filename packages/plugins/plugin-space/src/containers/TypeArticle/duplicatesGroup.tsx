@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -45,8 +45,8 @@ export const useDuplicatesGroup = ({
   duplicates,
   onConfirmed,
 }: UseDuplicatesGroupOptions): ActionGroupBuilderFn => {
-  const [ephemeral, updateEphemeral] = useAtomCapabilityState(SpaceCapabilities.EphemeralState);
-  const { invokePromise } = useOperationInvoker();
+  const [ephemeral, updateEphemeral] = Hooks.useAtomCapabilityState(SpaceCapabilities.EphemeralState);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { spec, current, position, total, scanning, next, previous, refresh } = duplicates;
   const staged = ephemeral.mergePreview?.typeUri === typeUri ? ephemeral.mergePreview : undefined;
 

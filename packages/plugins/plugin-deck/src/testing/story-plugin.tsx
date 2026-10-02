@@ -9,20 +9,20 @@ import React, { forwardRef, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useAppGraph, useLayout } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
-import { useConnections } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { random } from '@dxos/random';
 import { Panel } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
@@ -160,14 +160,14 @@ const toStoryItemNode = (item: StoryItem, index: number, depth: number): AppGrap
 const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
   Effect.succeed([
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'storyNavigation',
-        filter: Surface.makeFilter(AppSurface.Navigation),
+        filter: Surface.Root.makeFilter(AppSurface.Navigation),
         component: ({ data, ref }) => <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'storyArticle',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
+        filter: Surface.Root.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
         component: ({ data }) => {
           const subject = (data as any)?.subject;
           const attendableId = (data as any)?.attendableId as string | undefined;
@@ -192,9 +192,9 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
           );
         },
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'storyArticleCompanion',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
+        filter: Surface.Root.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
         component: ({ data: { subject, companionTo, properties, variant } }) => {
           if (companionTo == null) {
             return <Loading />;
@@ -298,11 +298,11 @@ type NavContainerProps = {
 };
 
 const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forwardedRef) => {
-  const { graph } = useAppGraph();
-  const layout = useLayout();
-  const { invokePromise } = useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const layout = ToolkitHooks.useLayout();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
-  const items = useConnections(graph, STORY_WORKSPACE_PATH, 'child');
+  const items = GraphHooks.useConnections(graph, STORY_WORKSPACE_PATH, 'child');
   const activeSet = useMemo(() => new Set(layout.active), [layout.active]);
 
   return (
@@ -333,9 +333,9 @@ type ItemComponentProps = {
 };
 
 const ItemComponent = ({ id }: ItemComponentProps) => {
-  const { graph } = useAppGraph();
-  const { invokePromise } = useOperationInvoker();
-  const connections = useConnections(graph, id, 'child');
+  const { graph } = ToolkitHooks.useAppGraph();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const connections = GraphHooks.useConnections(graph, id, 'child');
   const items = useMemo(() => connections.filter((node) => !AppGraphNode.isActionLike(node)), [connections]);
 
   return (

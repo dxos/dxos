@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
 import { Button, Field, Flex, Icon, Panel, type ThemedClassName, useTranslation } from '@dxos/react-ui';
@@ -43,7 +43,7 @@ export const MediaArtifactVariants = ({
   actionsNodeId,
 }: MediaArtifactVariantsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const db = Obj.getDatabase(artifact);
   const [artifactSnapshot] = useObject(artifact);
   const variantRefs = artifactSnapshot?.variants ?? [];
@@ -196,7 +196,7 @@ export const MediaArtifactVariants = ({
               {t('generating.label')}
             </Flex>
           ) : (
-            <Surface.Surface
+            <Surface.Root.Surface
               type={VariantRenderer}
               data={{
                 variant: {

@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useProcessManagerRuntime } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { addEventListener } from '@dxos/async';
 import { ProcessManager } from '@dxos/compute-runtime';
@@ -67,7 +67,7 @@ const JsonInspectorPanel = ({ data }: { data: unknown }) => (
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const runtime = useProcessManagerRuntime();
+  const runtime = Hooks.useProcessManagerRuntime();
 
   // Advances through `agentScenarios` so repeated clicks show different shapes (nesting, concurrency, failure).
   const scenarioRef = useRef(0);

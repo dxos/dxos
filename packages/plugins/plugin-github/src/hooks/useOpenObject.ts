@@ -5,10 +5,10 @@
 import * as Effect from 'effect/Effect';
 import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import { Obj } from '@dxos/echo';
@@ -25,8 +25,8 @@ const GRAPH_NODE_TIMEOUT = '10 seconds';
  * find; expanding only asks the connectors, so wait for the node to land.
  */
 export const useOpenObject = (): ((object: Obj.Any) => Promise<void>) => {
-  const { invokePromise } = useOperationInvoker();
-  const { graph } = useAppGraph();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
 
   return useCallback(
     async (object: Obj.Any) => {

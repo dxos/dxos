@@ -6,9 +6,9 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useAtomCapability, useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import type * as ChatType from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -38,9 +38,9 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     // pill floats over the last turn — on a phone the rail has nowhere to live outside the text and
     // the pill covers the reply it reports on. Neither has a toggle to orphan; both are passive.
     const mobile = usePlatform() === 'mobile';
-    const settings = useAtomCapability(AssistantCapabilities.Settings);
-    const atomRegistry = useCapability(Capabilities.AtomRegistry);
-    const stateAtom = useCapability(AssistantCapabilities.State);
+    const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
+    const atomRegistry = Hooks.useCapability(Capabilities.AtomRegistry);
+    const stateAtom = Hooks.useCapability(AssistantCapabilities.State);
     // Transient (pre-submit) chats have no database; fall back to the companion's.
     const db = (chat && Obj.getDatabase(chat)) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });
@@ -54,7 +54,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const [chatViewType] = useObject(chat, 'viewType');
     const viewType = (chatViewType as ChatView | undefined) ?? settings.chatView;
 
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = Hooks.useOperationInvoker();
     const handleViewUsage = useCallback(() => {
       void invokePromise(ClientOperation.OpenUsage, undefined);
     }, [invokePromise]);
@@ -69,7 +69,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     // matching on the chat files them; it falls back to the object for a surface rendered outside a
     // plank. Filtered to the prompt surface for the same reason the id is: an action on the chat
     // acts on the chat, and only some of those belong beside the text being composed.
-    const { graph } = useAppGraph();
+    const { graph } = ToolkitHooks.useAppGraph();
     const actionNodeId = nodeId ?? (chat && Obj.getURI(chat));
     const customActions = useMemo(
       () => Atom.make((get) => graphActions(graph, get, actionNodeId, { filter: isPromptAction })),

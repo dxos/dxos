@@ -4,7 +4,7 @@
 
 import { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useOptionalAtomCapabilityState } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { EdgeServiceName } from '@dxos/config';
 import { log } from '@dxos/log';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
@@ -28,8 +28,8 @@ const RECORDER_INTERVAL_MS = 200;
 export const useChatVoiceInput = (docId: string, editorRef: RefObject<ChatEditorController | null>): void => {
   const { t } = useTranslation(meta.profile.key);
   // Voice input is optional: tolerate the transcription plugin being absent (no session ⇒ inactive).
-  const [session, setSession] = useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
-  const [settings] = useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
+  const [session, setSession] = Hooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  const [settings] = Hooks.useOptionalAtomCapabilityState(TranscriptionCapabilities.Settings);
   const endpoint = useEdgeServiceEndpoint(EdgeServiceName.Transcription);
 
   const active = !!session?.recording && session.id === docId;

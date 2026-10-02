@@ -3,7 +3,7 @@
 //
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
 
 import { AgentModule } from './AgentModule.tsx';
@@ -40,47 +40,47 @@ export const StoryRole = {
  * (the harness chat and space-scoped debug views), each registered under a `StoryRole` token and
  * referenced as a bare token in a story layout. Generic diagnostics come from `commonSurfaces`.
  */
-export const moduleSurfaces: Surface.Definition[] = [
+export const moduleSurfaces: Surface.Root.Definition[] = [
   ...commonSurfaces,
 
-  Surface.create({
+  Surface.Root.create({
     id: 'role.agent',
-    filter: Surface.makeFilter(StoryRole.Agent),
+    filter: Surface.Root.makeFilter(StoryRole.Agent),
     component: AgentModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.chat',
-    filter: Surface.makeFilter(StoryRole.Chat),
+    filter: Surface.Root.makeFilter(StoryRole.Chat),
     component: ChatModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.context',
-    filter: Surface.makeFilter(StoryRole.Context),
+    filter: Surface.Root.makeFilter(StoryRole.Context),
     component: ContextModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.graph',
-    filter: Surface.makeFilter(StoryRole.Graph),
+    filter: Surface.Root.makeFilter(StoryRole.Graph),
     component: GraphModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.project',
-    filter: Surface.makeFilter(StoryRole.Project),
+    filter: Surface.Root.makeFilter(StoryRole.Project),
     component: ProjectModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.researchInput',
-    filter: Surface.makeFilter(StoryRole.ResearchInput),
+    filter: Surface.Root.makeFilter(StoryRole.ResearchInput),
     component: ResearchInputModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.researchOutput',
-    filter: Surface.makeFilter(StoryRole.ResearchOutput),
+    filter: Surface.Root.makeFilter(StoryRole.ResearchOutput),
     component: ResearchOutputModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'role.tasks',
-    filter: Surface.makeFilter(StoryRole.Tasks),
+    filter: Surface.Root.makeFilter(StoryRole.Tasks),
     component: TasksModule,
   }),
 ];

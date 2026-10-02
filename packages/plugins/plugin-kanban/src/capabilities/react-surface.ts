@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { SchemaEx } from '@dxos/effect';
 import { Position } from '@dxos/util';
@@ -20,7 +20,7 @@ import { PivotColumnField } from './PivotColumnField.tsx';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'root',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -30,14 +30,14 @@ export default Capability.makeModule(() =>
         component: KanbanArticle,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'objectProperties',
         position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Kanban.Kanban),
         component: KanbanProperties,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'createInitialSchemaForm',
         filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, PivotColumnAnnotationId)),
         component: PivotColumnField,

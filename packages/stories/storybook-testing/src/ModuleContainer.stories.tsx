@@ -10,9 +10,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { DXN } from '@dxos/keys';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -30,7 +30,7 @@ const PanelC = Role.make<Record<string, any>>('org.dxos.storybook.storyModules.p
 
 /** Trivial surface component: shows its label and the active space it resolved. */
 const ExamplePanel = ({ label }: { label: string }) => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
@@ -55,19 +55,19 @@ const ExampleSurfacesPlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.create({
+          Surface.Root.create({
             id: 'panelA',
-            filter: Surface.makeFilter(PanelA),
+            filter: Surface.Root.makeFilter(PanelA),
             component: () => <ExamplePanel label='Panel A' />,
           }),
-          Surface.create({
+          Surface.Root.create({
             id: 'panelB',
-            filter: Surface.makeFilter(PanelB),
+            filter: Surface.Root.makeFilter(PanelB),
             component: () => <ExamplePanel label='Panel B' />,
           }),
-          Surface.create({
+          Surface.Root.create({
             id: 'panelC',
-            filter: Surface.makeFilter(PanelC),
+            filter: Surface.Root.makeFilter(PanelC),
             component: () => <ExamplePanel label='Panel C' />,
           }),
         ]),

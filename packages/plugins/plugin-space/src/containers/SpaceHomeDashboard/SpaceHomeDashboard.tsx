@@ -5,8 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useMemo } from 'react';
 
-import { HomeSection } from '@dxos/app-framework/HomeSection';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as HomeSection from '@dxos/app-framework/HomeSection';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { Collection, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space, useMembers } from '@dxos/react-client/echo';
@@ -35,7 +35,7 @@ export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHo
   const { t } = useTranslation(meta.profile.key);
   const members = useMembers(space?.key);
 
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const core = useAtomValue(manager.core);
   const enabled = useAtomValue(manager.enabled);
   const plugins = useMemo(() => enabled.filter((id) => !core.includes(id)).length, [core, enabled]);

@@ -12,9 +12,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { RunAgainError } from '@dxos/compute';
-import { ServiceNotAvailableError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
+import * as Process from '@dxos/compute/Process';
 import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -23,7 +22,7 @@ import { Database, EID, Filter, type Key, Obj, Query, Ref, Type } from '@dxos/ec
 import { invariant } from '@dxos/invariant';
 import { type AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { makeRoutine } from '@dxos/plugin-routine';
+import * as Wire from '@dxos/plugin-routine/Wire';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { meta } from '#meta';
@@ -279,7 +278,11 @@ export const triggerOfRoutine = (routine: Routine.Routine): Trigger.Trigger | un
  */
 export const triggerMonitorLayer = (
   spaceId: Key.SpaceId,
-): Layer.Layer<Trigger.TriggerMonitorService, CapabilityNotFoundError | ServiceNotAvailableError, Capability.Service> =>
+): Layer.Layer<
+  Trigger.TriggerMonitorService,
+  CapabilityNotFoundError | ServiceResolver.ServiceNotAvailableError,
+  Capability.Service
+> =>
   Layer.unwrap(
     Capability.get(Capabilities.ServiceResolver).pipe(
       Effect.map((resolver) =>
@@ -355,7 +358,7 @@ export const scaffoldRoutine = ({
     input: { connection: Ref.make(connection), priority: '{{event.data.priority}}' },
   });
 
-  return makeRoutine({
+  return Wire.makeRoutine({
     // Label the Routine after the account so several connections stay distinguishable.
     name: name ?? routineName(connection),
     // A connector's sync is statically defined and already in the registry, so the Routine refers to
@@ -464,7 +467,7 @@ export const syncAll = <A, E, R>({
           ),
           Effect.catchDefect((defect) =>
             Effect.succeed<Outcome>(
-              RunAgainError.is(defect)
+              Process.RunAgainError.is(defect)
                 ? { kind: 'rerun' }
                 : isUnauthorizedError(defect)
                   ? { kind: 'failure', failure: retag401(defect) }
@@ -546,7 +549,7 @@ export const runSync = ({
         // Continuation is dispatcher-driven; a direct invocation surfaces `runAgain` as a defect.
         // Accept the partial sync — an on-demand connector's next manual sync resumes the cursor.
         Effect.catchDefect((defect) =>
-          RunAgainError.is(defect)
+          Process.RunAgainError.is(defect)
             ? Effect.sync(() => log.info('sync capped; more on next run', { connectorId: connector.id }))
             : Effect.die(defect),
         ),

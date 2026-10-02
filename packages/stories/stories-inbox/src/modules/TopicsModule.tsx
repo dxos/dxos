@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { type Space, useQuery } from '@dxos/react-client/echo';
@@ -18,7 +18,7 @@ import { type Space, useQuery } from '@dxos/react-client/echo';
  * in the space-level Topics section (`@dxos/plugin-brain`).
  */
 export const TopicsModule = ({ data }: { data?: { attendableId?: string } }) => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -33,7 +33,7 @@ const TopicsModuleContainer = ({ space, attendableId }: { space: Space; attendab
 
   const id = attendableId ?? Obj.getURI(mailbox).toString();
   return (
-    <Surface.Surface
+    <Surface.Root.Surface
       type={AppSurface.Article}
       data={{
         subject: mailbox,

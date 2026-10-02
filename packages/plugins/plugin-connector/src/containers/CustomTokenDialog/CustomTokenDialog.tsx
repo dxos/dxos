@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, type Key, type Obj, type Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
@@ -44,9 +44,9 @@ export const CustomTokenDialog = ({
   existingTarget,
 }: CustomTokenDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invoke } = useOperationInvoker();
-  const coordinator = useCapability(ConnectorCoordination.ConnectorCoordinator);
-  const connectors = useCapabilities(ConnectorSpec.Connector).flat();
+  const { invoke } = Hooks.useOperationInvoker();
+  const coordinator = Hooks.useCapability(ConnectorCoordination.ConnectorCoordinator);
+  const connectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const connector = useMemo(() => connectors.find((entry) => entry.id === connectorId), [connectors, connectorId]);
   const credentialForm = connector?.credentialForm;
   const [error, setError] = useState<string>();

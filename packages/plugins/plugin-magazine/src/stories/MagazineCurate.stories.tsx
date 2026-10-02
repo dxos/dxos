@@ -14,7 +14,7 @@ import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AgentHandlers } from '@dxos/assistant-toolkit';
@@ -116,7 +116,7 @@ const DefaultStory = () => {
             fallback — the deck disambiguates via the app-graph node, which a story has no equivalent of. */}
         <MagazineArticle role='article' subject={magazine} attendableId='story' />
         {/* The object-properties companion surface (plugin-space DefaultProperties); 'settings' is unambiguous. */}
-        <Surface.Surface type={AppSurface.Article} data={{ subject: 'settings', companionTo: magazine }} />
+        <Surface.Root.Surface type={AppSurface.Article} data={{ subject: 'settings', companionTo: magazine }} />
       </Panel.Content>
     </Panel.Root>
   );

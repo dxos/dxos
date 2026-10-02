@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { WorkspaceSettingsContainer } from '#containers';
@@ -17,7 +17,7 @@ const GENERAL_TYPE = `${meta.profile.key}.general`;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'workspaceSettings',
         filter: AppSurface.literal(AppSurface.Article, GENERAL_TYPE),
         component: WorkspaceSettingsContainer,

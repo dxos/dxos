@@ -5,13 +5,13 @@
 import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { useDeckState } from '@dxos/plugin-deck/Hooks';
-import { useActionRunner, useNode } from '@dxos/plugin-graph/Hooks';
+import * as DeckHooks from '@dxos/plugin-deck/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/react-ui-menu';
 
@@ -43,14 +43,14 @@ const ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-ite
  */
 export const useMobileAppBar = (): MobileAppBar => {
   const { t } = useTranslation(meta.profile.key);
-  const { state } = useDeckState();
-  const stateAtom = useCapability(DeckCapabilities.State);
-  const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
-  const { graph } = useAppGraph();
+  const { state } = DeckHooks.useDeckState();
+  const stateAtom = Hooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
+  const { graph } = ToolkitHooks.useAppGraph();
   const { stack, topId, rootId, pop } = useMobileStack();
-  const runAction = useActionRunner();
+  const runAction = GraphHooks.useActionRunner();
 
-  const node = useNode(graph, topId);
+  const node = GraphHooks.useNode(graph, topId);
   const title = node ? toLocalizedString(node.properties.label, t) : undefined;
 
   // Derives activeId from the state atom (rather than `useMobileStack`) so this atom does not need

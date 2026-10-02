@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
-import { useOptionalCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
 import * as AppCapabilities from '../../app-framework/AppCapabilities.ts';
 import * as AppSettings from '../../types/AppSettings.ts';
@@ -43,7 +43,7 @@ export type SettingsKeyScopeState = {
 
 /** Reactive sync scope for one settings prefix. */
 export const useSettingsScope = (prefix: string): SettingsScopeState => {
-  const sync = useOptionalCapability(AppCapabilities.SettingsSync);
+  const sync = Hooks.useOptionalCapability(AppCapabilities.SettingsSync);
   const unsynced = useAtomValue(sync?.unsynced ?? emptyUnsynced);
   const takeLocal = useCallback(() => sync?.takeLocal(prefix), [sync, prefix]);
   const rejoinAccount = useCallback(
@@ -57,7 +57,7 @@ export const useSettingsScope = (prefix: string): SettingsScopeState => {
 
 /** Reactive sync scope for one key within a prefix, rather than the prefix as a whole. */
 export const useSettingsKeyScope = (prefix: string, key: string): SettingsKeyScopeState => {
-  const sync = useOptionalCapability(AppCapabilities.SettingsSync);
+  const sync = Hooks.useOptionalCapability(AppCapabilities.SettingsSync);
   const pins = useAtomValue(sync?.pinned ?? emptyPinned);
   const pin = useCallback(() => sync?.pinKey(prefix, key), [sync, prefix, key]);
   const unpin = useCallback(() => sync?.unpinKey(prefix, key), [sync, prefix, key]);
@@ -80,7 +80,7 @@ const noKeys: ReadonlySet<string> = new Set();
  * layer is republished, which the sync does on any settings change.
  */
 export const useSettingsDivergedKeys = (prefix: string): ReadonlySet<string> => {
-  const sync = useOptionalCapability(AppCapabilities.SettingsSync);
+  const sync = Hooks.useOptionalCapability(AppCapabilities.SettingsSync);
   const pins = useAtomValue(sync?.pinned ?? emptyPinned);
 
   return useMemo(

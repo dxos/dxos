@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -31,7 +31,7 @@ export type DrawingArticleProps = AppSurface.ObjectArticleProps<Drawing.Drawing>
  */
 export const DrawingArticle = ({ role, attendableId, subject: drawing, extrinsic }: DrawingArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const variants = useCapabilities(IllustratorCapabilities.VariantProvider);
+  const variants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const ref = drawing.canvas;
   // Subscribe via the snapshot for load/re-render, but hand variants the LIVE object —
   // their store adapters need `Doc.createAccessor`, which rejects snapshots.
@@ -47,7 +47,7 @@ export const DrawingArticle = ({ role, attendableId, subject: drawing, extrinsic
   );
 
   // Activation opens what the object depicts, when its `ref` names an ECHO object.
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const handleActivate = useCallback(
     (objectId: string) => {
       const db = canvas && Obj.getDatabase(canvas);
