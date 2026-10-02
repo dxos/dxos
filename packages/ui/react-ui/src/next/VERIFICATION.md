@@ -43,6 +43,13 @@ Grouped by screen or component; IDs are global and never reused.
 | V034 | Tab from the sidebar should move focus to the article, but the article shows no focus indicator                               | —                     | app: focus sidebar, press Tab; assert `document.activeElement` is the article and it draws the ring | open   |     |
 | V035 | A second Tab moves focus somewhere else, also with no visible indicator (identify the target; every tab stop must show focus) | —                     | app: Tab twice; log `document.activeElement` and its computed focus style                           | open   |     |
 
+### Article toolbars
+
+| ID   | Bug                                                                                                                                             | Screenshot                  | Repro                                                               | Status | Fix |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------- | ------ | --- |
+| V036 | Article toolbars should be 40px tall (`lg`?) — check against main's toolbar height                                                              | —                           | app: README toolbar height; ActionToolbar story at the article size | open   |     |
+| V037 | Mic button + chevron (split/dropdown button): no gap between the icon button and its chevron; also a stray arrow tip shows under the mic button | `V036-mic-split-button.png` | app: README toolbar mic control; story for the split-button pattern | open   |     |
+
 ### Plugin registry
 
 | ID   | Bug                                                               | Screenshot                                          | Repro                                        | Status | Fix        |
