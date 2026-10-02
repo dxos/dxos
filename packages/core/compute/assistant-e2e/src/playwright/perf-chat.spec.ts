@@ -25,8 +25,17 @@ const WORKSPACE_ROOT = path.resolve(import.meta.dirname, '../../../../../..');
 
 const FLOW = 'assistant-chat';
 
-/** `stories-assistant`'s `Chat` / `PerfScripted`: a 20-turn calculator loop over a scripted model. */
-const STORY_URL = 'http://localhost:9009/iframe.html?id=stories-stories-assistant-chat--perf-scripted&viewMode=story';
+/**
+ * The two spaces the same chat flow runs in: `stories-assistant`'s `Chat / PerfScripted` (a fresh
+ * space) and `PerfScriptedBusy` (a space seeded with the shape of a long-lived one). Both drive a
+ * 20-turn calculator loop over a scripted model; the label is the row's `scale`, the trend's join key.
+ */
+const FIXTURES = [
+  { scale: 'blank', storyId: 'stories-stories-assistant-chat--perf-scripted' },
+  { scale: 'busy', storyId: 'stories-stories-assistant-chat--perf-scripted-busy' },
+] as const;
+
+const storyUrl = (storyId: string) => `http://localhost:9009/iframe.html?id=${storyId}&viewMode=story`;
 
 /** The closing line the scripted model emits only after its twentieth tool result. */
 const DONE = /Done — ran 20 calculations/;
@@ -39,119 +48,147 @@ const IDLE_MS = 10_000;
 
 const BUDGET_MS = 120_000;
 
+/** Writing the busy space is minutes of feed appends in the browser. */
+const SEED_BUDGET_MS = 900_000;
+
 const chatPrompt = (page: Page): Locator =>
   page
     .getByText(/enter question or command/i)
     .locator('xpath=ancestor::*[contains(@class,"cm-editor")]//*[contains(@class,"cm-content")]');
 
-test.describe('Assistant chat performance', () => {
-  test('measure', async () => {
-    const runId = Date.now().toString(36);
-    const artifactDir = path.join(WORKSPACE_ROOT, 'test-results', 'perf', 'artifacts', `${FLOW}-${runId}`);
+/**
+ * Seeds the space, then reloads and measures the reopened profile: a busy space is one somebody
+ * returns to, and seeding inside the measured boot would charge the writes to it.
+ */
+const runFlow = async ({ scale, storyId }: (typeof FIXTURES)[number]) => {
+  const runId = Date.now().toString(36);
+  const artifactDir = path.join(WORKSPACE_ROOT, 'test-results', 'perf', 'artifacts', `${FLOW}-${scale}-${runId}`);
 
-    const instrumented = await launchInstrumentedBrowser();
-    const { browser, browserCdp, debugPort } = instrumented;
-    let context: BrowserContext | undefined;
-    try {
-      context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
-      const page = await context.newPage();
-      const network = trackNetwork(page);
+  const instrumented = await launchInstrumentedBrowser();
+  const { browser, browserCdp, debugPort } = instrumented;
+  let context: BrowserContext | undefined;
+  try {
+    context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const page = await context.newPage();
+    const network = trackNetwork(page);
 
-      const comparability: Comparability = {
-        servingMode: 'dev',
-        pluginSet: 'storybook',
-        profileState: 'first-run',
-        settleMs: SETTLE_MS,
-        instruments: 'profiler',
+    const comparability: Comparability = {
+      servingMode: 'dev',
+      pluginSet: 'storybook',
+      profileState: 'returning',
+      settleMs: SETTLE_MS,
+      instruments: 'profiler',
+    };
+
+    const runner = new StageRunner({
+      flow: FLOW,
+      mode: 'measure',
+      scale,
+      iteration: 0,
+      page,
+      browserCdp,
+      debugPort,
+      network,
+      comparability,
+      screenshotDir: path.join(artifactDir, 'stages'),
+    });
+
+    await installProbes(page);
+
+    await runner.stage('seed', async () => {
+      await page.goto(storyUrl(storyId), { timeout: BUDGET_MS });
+      // `__dxosPerfSeed` is set by the story's seeding (`stories-assistant` `busy-space.ts`).
+      const seeded = () => {
+        const seed: unknown = Reflect.get(globalThis, '__dxosPerfSeed');
+        return typeof seed === 'object' && seed !== null && 'done' in seed && seed.done === true;
       };
-
-      const runner = new StageRunner({
-        flow: FLOW,
-        mode: 'measure',
-        scale: 'turns=20',
-        iteration: 0,
-        page,
-        browserCdp,
-        debugPort,
-        network,
-        comparability,
-        screenshotDir: path.join(artifactDir, 'stages'),
+      await page.waitForFunction(seeded, undefined, {
+        timeout: SEED_BUDGET_MS,
+        polling: 1_000,
       });
+      await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
+    });
 
-      await installProbes(page);
+    await runner.stage('boot', async () => {
+      await page.reload({ timeout: BUDGET_MS });
+      await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
+    });
 
-      await runner.stage('boot', async () => {
-        await page.goto(STORY_URL, { timeout: BUDGET_MS });
-        await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
-      });
-
-      // The boot stage has no attached targets to read a footprint from, so it is read here.
-      const bootRow = runner.rows.find((row) => row.stage === 'boot');
-      if (bootRow && bootRow.footprint.length === 0) {
-        bootRow.footprint = await readProcessFootprint(browserCdp);
-        bootRow.appFootprintBytes = sumAppFootprint(bootRow.footprint);
-      }
-
-      await page.waitForTimeout(SETTLE_MS);
-
-      const targets = await attachAll(debugPort);
-      runner.adopt(targets);
-      runner.attachInstruments({ profiler: startProfiling(artifactDir) });
-
-      // A request to EDGE's generate route means a live model answered rather than the script.
-      const liveModelCalls: string[] = [];
-      const onRequest = (request: Request) => {
-        if (new URL(request.url()).pathname.includes('/ai/generate/')) {
-          liveModelCalls.push(request.url());
-        }
-      };
-      page.context().on('request', onRequest);
-
-      await runner.stage('assistant-turns', async () => {
-        const prompt = chatPrompt(page);
-        await prompt.click({ timeout: BUDGET_MS });
-        await page.keyboard.type('Run the calculations.');
-        await page.keyboard.press('Enter');
-        await page
-          .getByText(DONE)
-          .first()
-          .waitFor({ timeout: BUDGET_MS * 2 });
-        if (liveModelCalls.length > 0) {
-          throw new Error(`chat reached a live model: ${liveModelCalls.slice(0, 3).join(', ')}`);
-        }
-      });
-
-      await runner.stage('scroll-thread', async () => {
-        await page.getByText(DONE).first().hover({ timeout: BUDGET_MS });
-        for (let step = 0; step < 10; step++) {
-          await page.mouse.wheel(0, -2_000);
-          await page.waitForTimeout(100);
-        }
-        await page.mouse.wheel(0, 20_000);
-        await page.waitForTimeout(500);
-      });
-
-      await runner.stage('idle', async () => {
-        await page.waitForTimeout(IDLE_MS);
-      });
-
-      page.context().off('request', onRequest);
-
-      const rows = runner.rows;
-      appendRows(WORKSPACE_ROOT, `${FLOW}-measure`, rows);
-      const report = writeRunReport(WORKSPACE_ROOT, `${FLOW}-measure-${runId}`, rows);
-      log.info('perf report', { report, artifactDir });
-      for (const row of rows) {
-        log.info('stage', summarize(row));
-      }
-      runner.dispose();
-
-      expect(rows.filter((row) => !row.ok).map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
-    } finally {
-      await context?.close().catch((error) => log.warn('context did not close', { error }));
-      await instrumented.close();
+    // Neither stage has attached targets to read a footprint from, so the boot row's is read here.
+    const bootRow = runner.rows.find((row) => row.stage === 'boot');
+    if (bootRow && bootRow.footprint.length === 0) {
+      bootRow.footprint = await readProcessFootprint(browserCdp);
+      bootRow.appFootprintBytes = sumAppFootprint(bootRow.footprint);
     }
-  });
+
+    await page.waitForTimeout(SETTLE_MS);
+
+    const targets = await attachAll(debugPort);
+    runner.adopt(targets);
+    runner.attachInstruments({ profiler: startProfiling(artifactDir) });
+
+    // A request to EDGE's generate route means a live model answered rather than the script.
+    const liveModelCalls: string[] = [];
+    const onRequest = (request: Request) => {
+      if (new URL(request.url()).pathname.includes('/ai/generate/')) {
+        liveModelCalls.push(request.url());
+      }
+    };
+    page.context().on('request', onRequest);
+
+    await runner.stage('assistant-turns', async () => {
+      const prompt = chatPrompt(page);
+      await prompt.click({ timeout: BUDGET_MS });
+      await page.keyboard.type('Run the calculations.');
+      await page.keyboard.press('Enter');
+      await page
+        .getByText(DONE)
+        .first()
+        .waitFor({ timeout: BUDGET_MS * 3 });
+      if (liveModelCalls.length > 0) {
+        throw new Error(`chat reached a live model: ${liveModelCalls.slice(0, 3).join(', ')}`);
+      }
+    });
+
+    await runner.stage('scroll-thread', async () => {
+      await page.getByText(DONE).first().hover({ timeout: BUDGET_MS });
+      for (let step = 0; step < 10; step++) {
+        await page.mouse.wheel(0, -2_000);
+        await page.waitForTimeout(100);
+      }
+      await page.mouse.wheel(0, 20_000);
+      await page.waitForTimeout(500);
+    });
+
+    await runner.stage('idle', async () => {
+      await page.waitForTimeout(IDLE_MS);
+    });
+
+    page.context().off('request', onRequest);
+
+    const rows = runner.rows;
+    appendRows(WORKSPACE_ROOT, `${FLOW}-measure`, rows);
+    const report = writeRunReport(WORKSPACE_ROOT, `${FLOW}-measure-${scale}-${runId}`, rows);
+    log.info('perf report', { report, artifactDir });
+    for (const row of rows) {
+      log.info('stage', summarize(row));
+    }
+    runner.dispose();
+
+    expect(rows.filter((row) => !row.ok).map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
+  } finally {
+    await context?.close().catch((error) => log.warn('context did not close', { error }));
+    await instrumented.close();
+  }
+};
+
+test.describe('Assistant chat performance', () => {
+  for (const fixture of FIXTURES) {
+    test(fixture.scale, async () => {
+      test.setTimeout(SEED_BUDGET_MS + 600_000);
+      await runFlow(fixture);
+    });
+  }
 });
 
 const MB = 1024 * 1024;

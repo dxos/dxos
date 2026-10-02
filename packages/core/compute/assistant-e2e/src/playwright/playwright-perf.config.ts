@@ -20,7 +20,7 @@ export default defineConfig({
   testMatch: '**/perf-*.spec.ts',
   // Playwright's recorder snapshots the DOM on the page's main thread, which lands inside the stages.
   use: { ...preset.use, trace: 'off', video: 'off', screenshot: 'off' },
-  timeout: 600_000,
+  timeout: 0,
   expect: { timeout: 30_000 },
   workers: 1,
   // Two flows measured at once would contend for the same cores and measure each other.

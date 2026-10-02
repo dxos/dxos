@@ -18,6 +18,7 @@ import {
 import * as AssistantChat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownOperation from '@dxos/plugin-markdown/MarkdownOperation';
@@ -32,6 +33,8 @@ import {
   ModuleContainer,
   config,
   createDecorators,
+  seedBlankSpace,
+  seedBusySpace,
   storyParameters,
 } from '../testing/index.ts';
 
@@ -944,6 +947,21 @@ export const PerfScripted: Story = {
     config: config.offlinePersistent,
     skills: [CalculatorSkill.key],
     scripted: perfScript,
+    onInit: seedBlankSpace,
+  }),
+  args: {
+    layout: [[StoryRole.Chat]],
+  },
+};
+
+/** {@link PerfScripted} on a space shaped like a long-lived one, to compare against the blank run. */
+export const PerfScriptedBusy: Story = {
+  decorators: createDecorators({
+    config: config.offlinePersistent,
+    types: [Trace.Message, AiContext.Binding, Message.Message],
+    skills: [CalculatorSkill.key],
+    scripted: perfScript,
+    onInit: seedBusySpace,
   }),
   args: {
     layout: [[StoryRole.Chat]],
