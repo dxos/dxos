@@ -20,6 +20,15 @@ const EchoToolkit = Toolkit.make(
   }),
 );
 
+const FailingToolkit = Toolkit.make(
+  Tool.make('fail', {
+    description: 'Fails with its argument',
+    parameters: Schema.Struct({ value: Schema.String }),
+    success: Schema.String,
+    failure: Schema.String,
+  }),
+);
+
 /** Records whether the handler ran, so "never invoked" is asserted rather than inferred. */
 const makeToolkit = () => {
   const calls: string[] = [];
@@ -67,6 +76,23 @@ describe('callTool', () => {
 
       expect(result.error).toBeUndefined();
       expect(calls).toEqual(['hello']);
+    }),
+  );
+
+  it.effect(
+    'reports a string failure verbatim',
+    Effect.fn(function* ({ expect }) {
+      const toolkit = FailingToolkit.pipe(
+        Effect.provide(FailingToolkit.toLayer({ fail: ({ value }) => Effect.fail(value) })),
+      );
+
+      const result = yield* callTool(yield* toolkit, {
+        ...makeToolCall('{"value":"printed\\nError: boom"}'),
+        name: 'fail',
+      });
+
+      expect(result.error).toEqual('printed\nError: boom');
+      expect(result.result).toBeUndefined();
     }),
   );
 });

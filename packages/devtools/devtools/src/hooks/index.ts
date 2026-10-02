@@ -9,6 +9,7 @@ export * from './useFeedMessages.tsx';
 export * from './useIndexerRows.ts';
 export * from './useMetadata.tsx';
 export * from './useProxiedClient.tsx';
+export * from './useQueryMetrics.ts';
 export * from './useRoutes.tsx';
 export * from './useSections.tsx';
 export * from './useSpacesInfo.tsx';

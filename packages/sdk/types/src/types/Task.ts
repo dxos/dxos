@@ -836,33 +836,54 @@ export const rootTasks = (tasks: readonly Task[]): Task[] => {
 };
 
 /**
- * Direct sub-tasks of `task` within `byId`, in `subtasks` order. An entry whose parent edge names
- * another task is skipped (the edge wins, so a task shows under exactly one parent), and a child
- * whose edge names `task` but that the list does not hold yet is appended rather than hidden.
+ * {@link subTasks} over an index built once, for a caller walking the whole tree: each parent edge is
+ * a reactive ref resolve, so reading every task's edge per visited node makes the walk quadratic.
+ *
+ * The children of a task come in `subtasks` order. An entry whose parent edge names another task is
+ * skipped (the edge wins, so a task shows under exactly one parent), and a child whose edge names
+ * the task but that the list does not hold yet is appended rather than hidden.
  */
-const childrenOf = (tasks: readonly Task[], byId: ReadonlyMap<string, Task>, task: Task): Task[] => {
-  const children: Task[] = [];
-  const seen = new Set<string>();
-  for (const ref of task.subtasks ?? []) {
-    const id = refEntityId(ref);
-    const child = id === undefined ? undefined : byId.get(id);
-    if (child && !seen.has(child.id) && parentTaskId(child) === task.id) {
-      seen.add(child.id);
-      children.push(child);
+export const childIndex = (tasks: readonly Task[]): ((task: Task) => Task[]) => {
+  const byId = new Map<string, Task>();
+  const parentOf = new Map<string, string | undefined>();
+  const edged = new Map<string, Task[]>();
+  for (const task of tasks) {
+    byId.set(task.id, task);
+    const parent = parentTaskId(task);
+    parentOf.set(task.id, parent);
+    if (parent !== undefined) {
+      const siblings = edged.get(parent);
+      if (siblings) {
+        siblings.push(task);
+      } else {
+        edged.set(parent, [task]);
+      }
     }
   }
-  for (const candidate of tasks) {
-    if (!seen.has(candidate.id) && parentTaskId(candidate) === task.id) {
-      seen.add(candidate.id);
-      children.push(candidate);
+
+  return (task) => {
+    const children: Task[] = [];
+    const seen = new Set<string>();
+    for (const ref of task.subtasks ?? []) {
+      const id = refEntityId(ref);
+      const child = id === undefined ? undefined : byId.get(id);
+      if (child && !seen.has(child.id) && parentOf.get(child.id) === task.id) {
+        seen.add(child.id);
+        children.push(child);
+      }
     }
-  }
-  return children;
+    for (const candidate of edged.get(task.id) ?? []) {
+      if (!seen.has(candidate.id)) {
+        seen.add(candidate.id);
+        children.push(candidate);
+      }
+    }
+    return children;
+  };
 };
 
-/** Direct sub-tasks of `task` that `tasks` holds, in the parent's `subtasks` order. */
-export const subTasks = (tasks: readonly Task[], task: Task): Task[] =>
-  childrenOf(tasks, new Map(tasks.map((candidate) => [candidate.id, candidate])), task);
+/** Direct sub-tasks of `task` that `tasks` holds, in the parent's `subtasks` order (see {@link childIndex}). */
+export const subTasks = (tasks: readonly Task[], task: Task): Task[] => childIndex(tasks)(task);
 
 /**
  * `tasks` in tree pre-order: the roots in `refs` order (a holder's list, e.g. `TaskSet.tasks`), each
@@ -870,7 +891,7 @@ export const subTasks = (tasks: readonly Task[], task: Task): Task[] =>
  * appended rather than dropped.
  */
 export const orderTree = (tasks: readonly Task[], refs: ReadonlyArray<Ref.Ref<Task>>): Task[] => {
-  const byId = new Map(tasks.map((task) => [task.id, task]));
+  const childrenOf = childIndex(tasks);
   const ordered: Task[] = [];
   const seen = new Set<string>();
   const visit = (task: Task): void => {
@@ -879,7 +900,7 @@ export const orderTree = (tasks: readonly Task[], refs: ReadonlyArray<Ref.Ref<Ta
     }
     seen.add(task.id);
     ordered.push(task);
-    childrenOf(tasks, byId, task).forEach(visit);
+    childrenOf(task).forEach(visit);
   };
   orderTasks(rootTasks(tasks), refs).forEach(visit);
   for (const task of tasks) {
@@ -1004,6 +1025,7 @@ export const milestoneProgress = (tasks: readonly Task[], milestone: Milestone.M
  * Effect. Sees only what the list contains. Cycle-safe.
  */
 export const subtree = (tasks: readonly Task[], task: Task): Task[] => {
+  const childrenOf = childIndex(tasks);
   const collected: Task[] = [];
   const seen = new Set<string>();
   const visit = (current: Task): void => {
@@ -1012,7 +1034,7 @@ export const subtree = (tasks: readonly Task[], task: Task): Task[] => {
     }
     seen.add(current.id);
     collected.push(current);
-    for (const child of subTasks(tasks, current)) {
+    for (const child of childrenOf(current)) {
       visit(child);
     }
   };

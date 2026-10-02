@@ -103,17 +103,23 @@ export const MAX_INLINE_SIZE = 4 * 1024 * 1024;
 
 /**
  * Creates a new blob object. Does not add it to the database — see {@link fromBytes}.
+ *
+ * @performance O(1); allocates an in-memory blob object.
  */
 export const make = (props: Obj.MakeProps<typeof Blob>): Blob => Obj.make(Blob, props);
 
 /**
  * Creates an inline {@link BlobData} variant that embeds raw bytes on the ECHO object.
+ *
+ * @performance O(1); wraps the bytes without copying.
  */
 export const inlineData = (bytes: Uint8Array): BlobData => ({ _tag: 'inline', bytes });
 
 /**
  * Creates an external {@link BlobData} variant that references bytes held by a registered backend.
  * @param uri - Backend-scoped URI, e.g. as returned by a `BlobBackend.put` call.
+ *
+ * @performance O(1).
  */
 export const externalData = (uri: string): BlobData => ({ _tag: 'external', uri });
 
@@ -140,6 +146,8 @@ export interface FromBytesOptions {
  * const blob = yield* Blob.fromBytes(bytes, { type: 'image/png' });
  * yield* Database.add(blob);
  * ```
+ *
+ * @performance Async; O(size) to hash, plus the backend upload (a no-op for inline storage).
  */
 export const fromBytes = (
   bytes: Uint8Array,
@@ -171,6 +179,8 @@ export const fromBytes = (
  * const blob = yield* Blob.fromUpload(uploadId);
  * yield* Database.add(blob);
  * ```
+ *
+ * @performance Async; one backend round trip, and the bytes never pass through this process.
  */
 export const fromUpload = (
   uploadId: string,
@@ -196,6 +206,8 @@ export const fromUpload = (
  * ```ts
  * const bytes = yield* Blob.read(blob);
  * ```
+ *
+ * @performance Async; O(size), read inline or fetched from the backend.
  */
 export const read = (blob: Blob): Effect.Effect<Uint8Array, Error.BlobNotAvailableError, Database.Service> =>
   Database.Service.pipe(
@@ -215,6 +227,8 @@ export const read = (blob: Blob): Effect.Effect<Uint8Array, Error.BlobNotAvailab
 
 /**
  * Checks whether a blob's bytes are currently available.
+ *
+ * @performance Async; one backend check, with no byte transfer.
  */
 export const exists = (blob: Blob): Effect.Effect<boolean, never, Database.Service> =>
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.blobExists(blob)))).pipe(
@@ -224,6 +238,9 @@ export const exists = (blob: Blob): Effect.Effect<boolean, never, Database.Servi
 /**
  * Returns a renderable URL for the blob: inline blobs resolve to a `data:` URL; external blobs
  * are resolved by the registered backend's `getUrl`, if it implements one.
+ *
+ * @performance Async; an inline blob encodes all of its bytes into a `data:` URL (O(size)), an external one asks the
+ * backend.
  */
 export const url = (blob: Blob): Effect.Effect<Option.Option<string>, never, Database.Service> =>
   Database.Service.pipe(
