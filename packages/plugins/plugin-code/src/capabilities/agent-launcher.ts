@@ -61,13 +61,15 @@ export default Capability.makeModule(
       if (stale !== undefined) {
         await new shell.Child(stale)
           .kill()
-          .catch((error) => log.info('no earlier dx-agent to stop', { pid: stale, error }));
+          .catch((error) => log.warn('could not stop the earlier dx-agent', { pid: stale, error }));
+        writePid(undefined);
       }
 
       const token = randomToken();
       const command = shell.Command.create('dx-agent', [], {
         env: { DX_AGENT_WORKTREES: await join(await appDataDir(), WORKTREES_DIR) },
       });
+      let pid: number | undefined;
       const port = new Promise<number>((resolve, reject) => {
         let reported = false;
         command.stdout.on('data', (line) => {
@@ -83,6 +85,10 @@ export default Capability.makeModule(
         });
         command.on('close', ({ code, signal }) => {
           current = undefined;
+          // A pid the plugin no longer holds can be handed to another of its processes.
+          if (pid !== undefined && readPid() === pid) {
+            writePid(undefined);
+          }
           reject(new Error(`dx-agent exited before it was ready (code ${code}, signal ${signal})`));
           if (!stopping) {
             log.warn('dx-agent exited', { code, signal });
@@ -93,7 +99,8 @@ export default Capability.makeModule(
       command.stderr.on('data', (data) => log.info('dx-agent', { output: data }));
 
       const child = await command.spawn();
-      writePid(child.pid);
+      pid = child.pid;
+      writePid(pid);
       try {
         await child.write(`${token}\n`);
         const ready = await Promise.race([
@@ -106,6 +113,7 @@ export default Capability.makeModule(
         return { child, port: ready, token };
       } catch (error) {
         await child.kill().catch((killError) => log.warn('dx-agent kill failed', { error: killError }));
+        writePid(undefined);
         throw error;
       }
     };

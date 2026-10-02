@@ -112,7 +112,7 @@ describe('ComposerMcp', () => {
     }
   });
 
-  test('resolves a reference in the input against the space it names', async ({ expect }) => {
+  test('resolves a reference in the input against its space, and refuses one into another', async ({ expect }) => {
     const ReviewTask = Operation.make({
       meta: { key: DXN.make('com.example.operation.tasks.review'), name: 'Review Task' },
       input: Schema.Struct({ task: Ref.Ref(Task.Task) }),
@@ -155,17 +155,25 @@ describe('ComposerMcp', () => {
         const loaded = yield* Effect.promise(() =>
           call(handle, 'tools/call', { name: 'loadSkill', arguments: { skill: SKILL } }),
         );
-        const invoked = yield* Effect.promise(() =>
-          call(handle, 'tools/call', {
-            name: 'invokeOperation',
-            arguments: {
-              key: 'com.example.operation.tasks.review',
-              input: { task: { '/': Obj.getURI(task) } },
-              skillToken: loaded.result.structuredContent.skillToken,
-            },
-          }),
-        );
+        const review = (task: unknown, spaceId?: SpaceId) =>
+          Effect.promise(() =>
+            call(handle, 'tools/call', {
+              name: 'invokeOperation',
+              arguments: {
+                key: 'com.example.operation.tasks.review',
+                input: { task },
+                ...(spaceId && { spaceId }),
+                skillToken: loaded.result.structuredContent.skillToken,
+              },
+            }),
+          );
+        const invoked = yield* review({ '/': Obj.getURI(task) });
         expect(JSON.stringify(invoked.result)).toContain('Ship it');
+
+        // Naming the chat's space does not let a reference reach into another one.
+        const elsewhere = yield* review({ '/': `echo://${SpaceId.random()}/${task.id}` }, db.spaceId);
+        expect(elsewhere.result.isError).toBe(true);
+        expect(JSON.stringify(elsewhere.result)).toContain('references another space');
       } finally {
         yield* Effect.promise(() => dispose());
       }

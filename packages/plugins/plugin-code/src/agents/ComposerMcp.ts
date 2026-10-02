@@ -17,7 +17,7 @@ import * as HttpRouter from 'effect/unstable/http/HttpRouter';
 import { DXOS_VERSION } from '@dxos/client';
 import type * as Operation from '@dxos/compute/Operation';
 import { Database, Registry } from '@dxos/echo';
-import { SpaceId } from '@dxos/keys';
+import { EID, SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
 
 /** The name an agent knows Composer's MCP server by. */
@@ -55,6 +55,12 @@ export const host = ({ handlers, invoke, spaceIds, database }: HostOptions): Mcp
       );
       if (!handler) {
         return yield* Effect.fail(McpServer.hostError(`Operation not found: ${key}`));
+      }
+      // References resolve through the target space's database, which can read other open spaces' objects, so
+      // the input may name no space but that one.
+      const foreign = referencedSpaces(input).find((referenced) => referenced !== spaceId);
+      if (foreign !== undefined) {
+        return yield* Effect.fail(McpServer.hostError(`The input references another space: ${foreign}`));
       }
       // Arguments arrive in wire form; a reference among them decodes to a ref in the target space.
       const decode = Schema.decodeUnknownEffect(handler.input)(input);
@@ -112,6 +118,22 @@ const declineSubscription = async (request: Request): Promise<Response> => {
     id: Option.isSome(body) ? body.value.id : null,
     error: { code: -32601, message: 'Subscriptions are not supported by this server.' },
   });
+};
+
+/** The spaces named by the reference envelopes (`{ "/": <uri> }`) anywhere in a wire-form value. */
+const referencedSpaces = (value: unknown, seen = new Set<unknown>()): SpaceId[] => {
+  if (value === null || typeof value !== 'object' || seen.has(value)) {
+    return [];
+  }
+  seen.add(value);
+  const entries = Array.isArray(value) ? value : Object.values(value);
+  const uri = !Array.isArray(value) && '/' in value && entries.length === 1 ? value['/'] : undefined;
+  if (typeof uri === 'string') {
+    const eid = EID.tryParse(uri);
+    const space = eid && EID.getSpaceId(eid);
+    return space ? [space] : [];
+  }
+  return entries.flatMap((entry) => referencedSpaces(entry, seen));
 };
 
 /** Operation keys travel with or without the `dxn:` prefix. */
