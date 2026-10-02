@@ -140,11 +140,12 @@ export const startX11Recorder = async ({ display, dir, file, size, fps, crf }) =
 };
 
 /**
- * Records from snapshots: `snapshot` answers a PNG of the webview, and each one is held until the next arrives,
+ * Records from snapshots: `snapshot(signal)` answers a PNG of the webview, abandoning the request when `signal`
+ * aborts (on `stop`), and each one is held until the next arrives,
  * so the video runs at a steady `fps` whatever the snapshot rate. A snapshot occupies the app's main thread, so
  * the next is not requested until the main thread has had as long again to itself.
  *
- * @param {{ snapshot: () => Promise<Buffer>, dir: string, file: string, size: { width: number, height: number }, fps: number, crf: number }} options
+ * @param {{ snapshot: (signal: AbortSignal) => Promise<Buffer>, dir: string, file: string, size: { width: number, height: number }, fps: number, crf: number }} options
  */
 export const startSnapshotRecorder = async ({ snapshot, dir, file, size, fps, crf }) => {
   const capture = path.join(dir, 'capture.mkv');
@@ -181,6 +182,7 @@ export const startSnapshotRecorder = async ({ snapshot, dir, file, size, fps, cr
   let latest;
   let written = 0;
   let stopping = false;
+  const stopped = new AbortController();
 
   /** Writes the latest frame as often as the clock says is due, so frame N is always at N / fps seconds. */
   const pump = () => {
@@ -199,13 +201,16 @@ export const startSnapshotRecorder = async ({ snapshot, dir, file, size, fps, cr
     while (!stopping) {
       const begin = Date.now();
       try {
-        latest = await snapshot();
+        latest = await snapshot(stopped.signal);
         failures = 0;
       } catch (error) {
         // A navigation can fail a snapshot or two; a webview that never answers is a recording lost.
         if (++failures === 20) {
           console.error(`snapshots keep failing: ${error.message}`);
         }
+      }
+      if (stopping) {
+        break;
       }
       const took = Date.now() - begin;
       await sleep(Math.max(1000 / fps - took, took));
@@ -214,6 +219,7 @@ export const startSnapshotRecorder = async ({ snapshot, dir, file, size, fps, cr
 
   const finish = async () => {
     stopping = true;
+    stopped.abort();
     await grab;
     clearInterval(timer);
     pump();

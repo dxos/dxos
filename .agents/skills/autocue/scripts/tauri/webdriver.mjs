@@ -61,9 +61,17 @@ export const createSession = async (server, capabilities) => {
     navigate: (url) => session('POST', '/url', { url }),
     url: () => session('GET', '/url'),
     screenshot: () => session('GET', '/screenshot'),
-    /** A screenshot outside the command queue, for a recorder that must not wait behind a long script. */
-    // Bounded, so a webview that stops answering cannot hold the recorder's shutdown.
-    frame: () => call('GET', `${base}/screenshot`, undefined, AbortSignal.timeout(5_000)),
+    /**
+     * A screenshot outside the command queue, for a recorder that must not wait behind a long script. Bounded, and
+     * abandoned when `signal` aborts, so a webview that stops answering cannot stall the recorder's shutdown.
+     */
+    frame: (signal) =>
+      call(
+        'GET',
+        `${base}/screenshot`,
+        undefined,
+        AbortSignal.any([AbortSignal.timeout(5_000), ...(signal ? [signal] : [])]),
+      ),
     setTimeouts: (timeouts) => session('POST', '/timeouts', timeouts),
     windowRect: () => session('GET', '/window/rect'),
     setWindowRect: (rect) => session('POST', '/window/rect', rect),

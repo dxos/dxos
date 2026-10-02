@@ -134,10 +134,11 @@ const launchEmbedded = async ({ app, width, height, theme, port, log, fresh, onE
   if (
     await probe().then(
       () => true,
-      () => false,
+      // Refused is free; a listener that accepts and never answers holds the port all the same.
+      (error) => error.name === 'TimeoutError',
     )
   ) {
-    throw new Error(`something already answers WebDriver on ${server}: quit it, or pass --driver-port`);
+    throw new Error(`something already listens on ${server}: quit it, or pass --driver-port`);
   }
 
   // A first-run take: a new identity, no window state, no plugins switched on by an earlier run.
@@ -231,7 +232,7 @@ const launchEmbedded = async ({ app, width, height, theme, port, log, fresh, onE
 
   const record = ({ dir, file, size, fps, crf }) =>
     startSnapshotRecorder({
-      snapshot: async () => Buffer.from(await session.frame(), 'base64'),
+      snapshot: async (signal) => Buffer.from(await session.frame(signal), 'base64'),
       dir,
       file,
       size,
