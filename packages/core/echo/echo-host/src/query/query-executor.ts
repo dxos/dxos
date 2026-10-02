@@ -879,6 +879,9 @@ export class QueryExecutor extends Resource {
       case 'FilterDeletedStep':
         ({ workingSet: newWorkingSet, trace } = await this._execFilterDeletedStep(step, workingSet));
         break;
+      case 'ResolveVersionsStep':
+        ({ workingSet: newWorkingSet, trace } = await this._execResolveVersionsStep(step, workingSet));
+        break;
       case 'UnionStep':
         ({ workingSet: newWorkingSet, trace } = await this._execUnionStep(step, workingSet));
         break;
@@ -1367,6 +1370,35 @@ export class QueryExecutor extends Resource {
         ...ExecutionTrace.makeEmpty(),
         name: 'Filter(timestamp)',
         details: JSON.stringify(params),
+        objectCount: result.length,
+      },
+    };
+  }
+
+  /** Keeps a document item only when the working set holds no item of its object at a newer listed version. */
+  private async _execResolveVersionsStep(
+    step: QueryPlan.ResolveVersionsStep,
+    workingSet: QueryItem[],
+  ): Promise<StepExecutionResult> {
+    const isDocument = (item: QueryItem) => item.documentId !== null && item.queueId === null;
+    const rankOf = (item: QueryItem): number => {
+      const type = item.meta?.typeDXN ?? item.doc?.system?.type?.['/'];
+      return type === undefined ? -1 : step.versions.indexOf(type);
+    };
+    const newest = new Map<string, number>();
+    for (const item of workingSet.filter(isDocument)) {
+      const key = `${item.spaceId}:${item.objectId}`;
+      newest.set(key, Math.max(newest.get(key) ?? -1, rankOf(item)));
+    }
+    const result = workingSet.filter(
+      (item) => !isDocument(item) || rankOf(item) >= (newest.get(`${item.spaceId}:${item.objectId}`) ?? -1),
+    );
+    return {
+      workingSet: result,
+      trace: {
+        ...ExecutionTrace.makeEmpty(),
+        name: 'ResolveVersions',
+        details: JSON.stringify(step.versions),
         objectCount: result.length,
       },
     };

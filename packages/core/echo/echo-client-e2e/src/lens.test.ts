@@ -6,10 +6,9 @@ import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { DXN, Filter, Obj, Query, Type } from '@dxos/echo';
+import { DXN, Filter, Lens, Obj, Query, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
-import { Lens } from '@dxos/echo-panproto';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { Task } from '@dxos/types';
@@ -38,10 +37,8 @@ class GtdTask extends Type.makeObject<GtdTask>(DXN.make('org.dxos.test.GtdTask',
   }),
 ) {}
 
-const LENS_ID = 'org.dxos.test.lens.task-as-gtd';
-
 const taskAsGtd = () =>
-  Lens.make(LENS_ID, Task.Task, GtdTask, {
+  Lens.make(Task.Task, GtdTask, {
     // `title` and `description` match by name and type, so they are absent from the mapping.
     urgency: Lens.from(
       'priority',
@@ -106,7 +103,7 @@ describe('object lens over a database-backed object', () => {
     expect(task.status).to.eq('done');
     expect(task.priority).to.eq('urgent');
     // ...and the target-only property landed in that object's annotations, not as a stray field.
-    expect(Lens.getOverlay(task, LENS_ID, 'context')).to.eq('@work');
+    expect(Lens.getOverlay(task, Lens.nameOf(Task.Task, GtdTask), 'context')).to.eq('@work');
     expect(Object.keys(task)).not.to.include('context');
 
     await db.flush();
@@ -174,8 +171,19 @@ describe('object lens over a database-backed object', () => {
     await db2.waitUntilHeadsReplicated(await db1.getDocumentHeads());
     await db2.updateIndexes();
 
-    const [task2] = await db2.query(Query.select(Filter.type(Task.Task))).run();
-    expect(task2).to.exist;
+    // Cross-peer visibility isn't guaranteed the instant `waitUntilHeadsReplicated`/`updateIndexes`
+    // resolve, so poll for the replicated object rather than reading the query result once.
+    let replicated: Task.Task | undefined;
+    await expect
+      .poll(async () => {
+        [replicated] = await db2.query(Query.select(Filter.type(Task.Task))).run();
+        return replicated;
+      })
+      .toBeDefined();
+    invariant(replicated, 'expected the replicated task to be queryable');
+    // Bind through a const: narrowing on a `let` assigned inside the poll closure does not survive
+    // to the later uses below.
+    const task2 = replicated;
     expect(task2.id).to.eq(task1.id);
 
     // Peer 2 drives the object through the lens; peer 1 stays on the canonical type.
@@ -204,7 +212,7 @@ describe('object lens over a database-backed object', () => {
     expect(task2.status).to.eq('done');
 
     // The lens's own change propagates in both directions, including the overlay.
-    await expect.poll(() => Lens.getOverlay(task1, LENS_ID, 'context')).toBe('@work');
+    await expect.poll(() => Lens.getOverlay(task1, Lens.nameOf(Task.Task, GtdTask), 'context')).toBe('@work');
     expect(Lens.get(task1, lens).done).to.eq(true);
 
     // And a canonical-side change shows through the lens on the other peer.

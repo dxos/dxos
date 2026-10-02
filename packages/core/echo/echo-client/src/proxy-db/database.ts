@@ -3,6 +3,7 @@
 //
 
 import { type Heads } from '@automerge/automerge';
+import { type AutomergeUrl } from '@automerge/automerge-repo';
 import * as EffectContext from 'effect/Context';
 import * as Equal from 'effect/Equal';
 import * as Option from 'effect/Option';
@@ -21,6 +22,7 @@ import {
   Feed,
   Filter,
   JsonSchema,
+  Lens,
   Migration,
   Obj,
   Query,
@@ -100,6 +102,19 @@ export interface EchoDatabase extends Database.Database {
    * Run migrations.
    */
   runMigrations(migrations: Migration.Migration[]): Promise<void>;
+
+  /**
+   * The object at version `type` of its type: the live object when it reads that version, else an object
+   * bound to that version's document, whose edits are translated to the object's other versions.
+   * Undefined when the object has no document for that version.
+   */
+  version<S extends Type.AnyObj>(obj: Obj.Unknown, type: S): Promise<Type.InstanceType<S> | undefined>;
+
+  /** @internal */
+  _versionOfType(obj: Entity.Unknown, type: string): Promise<Entity.Unknown>;
+
+  /** @internal */
+  _peekVersionOfType(obj: Entity.Unknown, type: string, onLoad?: () => void): Entity.Unknown | undefined;
 
   /**
    * Get the current per-peer automerge document sync state.
@@ -282,6 +297,27 @@ const combineSyncState = (
  */
 type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta> };
 
+/** Whether `value` is an object of exactly version `type`; `Obj.instanceOf` matches any version of a typename. */
+const isAtVersion = <S extends Type.AnyObj>(type: S, value: unknown): value is Type.InstanceType<S> => {
+  const actual = Obj.instanceOf(type, value) ? Obj.getType(value) : undefined;
+  return actual !== undefined && Type.getURI(actual) === Type.getURI(type);
+};
+
+/** Every declared type the lenses connect, once each, oldest version first. */
+const versionTypesOf = (lenses: readonly Lens.Any[]): Type.AnyObj[] =>
+  [
+    ...new Map(
+      lenses
+        .filter(Lens.isVersionLens)
+        .flatMap((lens) => [lens.source, lens.target])
+        .map((type) => [Type.getURI(type), type]),
+    ).values(),
+  ].sort(
+    (left, right) =>
+      Type.getTypename(left).localeCompare(Type.getTypename(right)) ||
+      Lens.compareVersions(Lens.versionOf(left), Lens.versionOf(right)),
+  );
+
 /**
  * User-facing API for the space database.
  * Implements EchoDatabase interface; delegates all document and core-object
@@ -319,6 +355,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * Disposals of handles retired by a service swap. A disposal that lost writes is kept until {@link flush} raises it.
    */
   readonly #retiredFeeds = new Set<Promise<void>>();
+  /** The lens adoption in flight, so adoptions run one at a time. */
+  #adoption: Promise<void> = Promise.resolve();
+  readonly #versionBindings = new Map<string, Entity.Unknown>();
 
   constructor(params: EchoDatabaseProps) {
     super();
@@ -406,6 +445,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       await this._entityManager.openWithSpaceState(this._ctx, { rootUrl: this._rootUrl });
     }
 
+    this.#adoptLenses();
+    this._ctx.onDispose(this.graph.registry.changed.on(() => this.#adoptLenses()));
+
     if (this._preloadSchemaOnOpen) {
       await this.query(Filter.type(PersistentSchema)).run();
     }
@@ -427,6 +469,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     this.#feeds.clear();
     await Promise.allSettled([...this.#retiredFeeds]);
     this.#retiredFeeds.clear();
+    await this.#adoption;
     await this._entityManager.close();
   }
 
@@ -440,6 +483,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     if (this._lifecycleState === LifecycleState.OPEN) {
       if (firstTime) {
         await this._entityManager.openWithSpaceState(this._ctx, { rootUrl });
+        this.#adoptLenses();
       } else {
         await this._entityManager.updateSpaceState(this._ctx, { rootUrl });
       }
@@ -551,6 +595,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    */
   add<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
     invariant(!Type.isType(obj), 'use db.addType() to persist Type entities');
+    invariant(!Lens.isLens(obj) && !Lens.isStored(obj), 'use db.addLens() to persist lenses');
     if (opts?.to) {
       // Synchronous feed append: registers the object as a live feed object and schedules the
       // background write. Returns the same instance; confirm persistence with `db.flush()`.
@@ -592,6 +637,12 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       origin: opts?.origin ?? 'unknown',
     });
     return persisted;
+  }
+
+  async addLens(lens: Lens.Any): Promise<Lens.Stored> {
+    const stored = await this.query(Filter.type(Lens.Stored)).run();
+    const match = stored.find((candidate) => candidate.name === lens.name && candidate.digest === lens.digest);
+    return match ?? this._addObject(Lens.toStored(lens));
   }
 
   private _addObject<T extends Entity.Unknown = Entity.Unknown>(obj: T, opts?: Database.AddOptions): T {
@@ -805,11 +856,110 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   }
 
   async flush(opts?: Database.FlushOptions): Promise<void> {
+    // Storing adopted lenses is a write this database started, so a flush covers it.
+    await this.#adoption;
     await this._entityManager.flush(opts);
     await Promise.all([
       ...[...this.#feeds.values()].map((handle) => handle.waitForPendingWrites()),
       ...[...this.#retiredFeeds].map((disposal) => disposal.finally(() => this.#retiredFeeds.delete(disposal))),
     ]);
+  }
+
+  async version<S extends Type.AnyObj>(obj: Obj.Unknown, type: S): Promise<Type.InstanceType<S> | undefined> {
+    const bound = await this._versionOfType(obj, Type.getURI(type));
+    return isAtVersion(type, bound) ? bound : undefined;
+  }
+
+  /**
+   * The object at the version whose type URI is `type`: `obj` itself when it reads that version or has
+   * no document for it.
+   * @internal
+   */
+  async _versionOfType(obj: Entity.Unknown, type: string): Promise<Entity.Unknown> {
+    const url = this.#versionUrl(obj, type);
+    return url ? this._loadVersionBinding(obj.id, url) : obj;
+  }
+
+  /**
+   * As {@link _versionOfType}, without waiting: undefined until the version is bound, and `onLoad`, when
+   * given, is called once it is.
+   * @internal
+   */
+  _peekVersionOfType(obj: Entity.Unknown, type: string, onLoad?: () => void): Entity.Unknown | undefined {
+    const url = this.#versionUrl(obj, type);
+    if (!url) {
+      return obj;
+    }
+    const bound = this.#versionBindings.get(`${obj.id} ${url}`);
+    if (!bound && onLoad) {
+      void this._loadVersionBinding(obj.id, url).then(onLoad, (err) => log.catch(err));
+    }
+    return bound;
+  }
+
+  /** The document holding version `type` of `obj`, when it is not the one `obj` reads. */
+  #versionUrl(obj: Entity.Unknown, type: string): AutomergeUrl | undefined {
+    // Only a versioned object has a url, so feed items, which have no core, return before the core is read.
+    const url = this._entityManager.versionDocumentUrlOfType(obj.id, type);
+    if (url === undefined) {
+      return undefined;
+    }
+    const core = getObjectCore(obj);
+    const own = core.getType();
+    return url !== core.docHandle?.url && !(own && EncodedReference.toURI(own) === type) ? url : undefined;
+  }
+
+  /**
+   * The object bound to its version document `url`, beside the live object, which reads the version it
+   * routes to; one per version for the database's lifetime, so every read of that version shares it.
+   * @internal
+   */
+  async _loadVersionBinding(objectId: string, url: AutomergeUrl): Promise<Entity.Unknown> {
+    if (this._entityManager.routedDocumentUrl(objectId) === url) {
+      // The routed document can change before the live core moves onto it, which happens once the document loads.
+      await this._entityManager.rerouteWhenReady(objectId, url);
+      const live = await this._loadObjectById(objectId);
+      // The live object reads `url`, or reads what replaced it, which `url` may never arrive to supersede.
+      if (
+        live &&
+        (getObjectCore(live).docHandle?.url === url || this._entityManager.routedDocumentUrl(objectId) !== url)
+      ) {
+        return live;
+      }
+    }
+    const key = `${objectId} ${url}`;
+    const existing = this.#versionBindings.get(key);
+    if (existing) {
+      return existing;
+    }
+    const core = await this._entityManager.bindCoreToVersion(objectId, url);
+    const object = this.#versionBindings.get(key) ?? initEchoReactiveObjectRootProxy(core, this);
+    this.#versionBindings.set(key, object);
+    return object;
+  }
+
+  /**
+   * Adopts the lenses registered for this database: reads the versions they connect, and stores each lens
+   * between two versions of one type in the space, where the host finds it and keeps version documents in
+   * sync.
+   */
+  #adoptLenses(): void {
+    const lenses = this.graph.registry.lenses().filter(Lens.isVersionLens);
+    this._entityManager.setKnownVersionTypes(versionTypesOf(lenses).map((type) => Type.getURI(type)));
+    if (lenses.length === 0 || this._rootUrl === undefined) {
+      return;
+    }
+    this.#adoption = this.#adoption
+      .then(async () => {
+        for (const lens of lenses) {
+          await this.addLens(lens);
+        }
+      })
+      .catch((err) => {
+        if (!(err instanceof RpcClosedError)) {
+          log.catch(err);
+        }
+      });
   }
 
   async runMigrations(migrations: Migration.Migration[]): Promise<void> {

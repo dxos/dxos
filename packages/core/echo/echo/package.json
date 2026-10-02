@@ -108,6 +108,11 @@
       "types": "./dist/types/src/Key.d.ts",
       "import": "./dist/lib/Key.mjs"
     },
+    "./Lens": {
+      "source": "./src/Lens.ts",
+      "types": "./dist/types/src/Lens.d.ts",
+      "import": "./dist/lib/Lens.mjs"
+    },
     "./Migration": {
       "source": "./src/Migration.ts",
       "types": "./dist/types/src/Migration.d.ts",

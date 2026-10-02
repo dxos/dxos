@@ -4,8 +4,7 @@
 
 import React, { type ReactNode, useCallback } from 'react';
 
-import { Obj } from '@dxos/echo';
-import { Lens } from '@dxos/echo-panproto';
+import { Lens, Obj } from '@dxos/echo';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
 import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
@@ -13,7 +12,7 @@ import { Form, type FormUpdateMeta, omitId } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Task } from '@dxos/types';
 
-import { GTD_LENS_ID, GtdLens, GtdTask } from './gtd.ts';
+import { GtdLens, GtdTask } from './gtd.ts';
 
 //
 // Two interfaces over one object, plus an inspector showing where the data actually lands.
@@ -179,7 +178,7 @@ const JsonSection = ({ title, data, testId }: { title: string; data: unknown; te
  */
 export const RawInspector = ({ task }: { task: Obj.Unknown }) => {
   const [snapshot] = useObject(task);
-  const overlays = snapshot ? Lens.getOverlays(task, GTD_LENS_ID) : {};
+  const overlays = snapshot ? Lens.getOverlays(task, GtdLens.overlayKey) : {};
 
   // `@`/`~` prefixes are the snapshot's own bookkeeping, not properties of the Task.
   const stored: Record<string, unknown> = snapshot ? JSON.parse(JSON.stringify(snapshot)) : {};

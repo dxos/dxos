@@ -267,7 +267,10 @@ export class QueryPlanner {
     if (query.options.deleted) {
       newContext.deletedHandling = query.options.deleted;
     }
-    return this._generate(query.query, newContext);
+    const plan = this._generate(query.query, newContext);
+    return query.options.versions && query.options.versions.length > 0
+      ? withResolvedVersions(plan, query.options.versions)
+      : plan;
   }
 
   private _generateFromClause(query: QueryAST.QueryFromClause, context: GenerationContext): QueryPlan.Plan {
@@ -1242,7 +1245,14 @@ export class QueryPlanner {
     // We can only do this if there are no unions, traversals, or set differences between them.
     // AggregateStep is also a blocker: a limit above it counts whole groups, so it must not be
     // pushed down into the flat SelectStep/OrderStep scan (that would slice objects, not groups).
-    const BLOCKERS = new Set(['UnionStep', 'TraverseStep', 'SetDifferenceStep', 'AggregateStep']);
+    // ResolveVersionsStep drops rows after the scan, so a limit pushed past it would starve the result.
+    const BLOCKERS = new Set([
+      'UnionStep',
+      'TraverseStep',
+      'SetDifferenceStep',
+      'AggregateStep',
+      'ResolveVersionsStep',
+    ]);
 
     let selectStepIndex = -1;
     let orderStepIndex = -1;
@@ -1377,6 +1387,26 @@ const namedEntityAnchor = (anchor: QueryAST.Query): URI.URI | undefined => {
   }
   // `Filter.key` takes a bare NSID, but a caller holding a DXN passes it through unchanged.
   return DXN.isDXN(filter.metaKey) ? DXN.tryMake(filter.metaKey) : DXN.tryMake(`dxn:${filter.metaKey}`);
+};
+
+/** Steps that page, order or group a finished result, which version resolution must precede. */
+const RESULT_SHAPING_STEPS = new Set(['OrderStep', 'LimitStep', 'SkipStep', 'AggregateStep']);
+
+/**
+ * Resolves every object the plan returns to one of its version documents: the newest version, of those
+ * the reader lists, among the rows the query itself matched. It runs once over the whole result, after
+ * unions and traversals, and before the result is ordered, paged or grouped.
+ */
+const withResolvedVersions = (plan: QueryPlan.Plan, versions: readonly string[]): QueryPlan.Plan => {
+  let index = plan.steps.length;
+  while (index > 0 && RESULT_SHAPING_STEPS.has(plan.steps[index - 1]._tag)) {
+    index--;
+  }
+  return QueryPlan.Plan.make([
+    ...plan.steps.slice(0, index),
+    { _tag: 'ResolveVersionsStep', versions },
+    ...plan.steps.slice(index),
+  ]);
 };
 
 type GenerationContext = {

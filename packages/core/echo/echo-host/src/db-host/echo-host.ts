@@ -59,6 +59,7 @@ import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './inv
 import { LocalFeedServiceImpl } from './local-feed-service.ts';
 import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
 import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
+import { VersionTranslator } from './version-translator.ts';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
@@ -169,6 +170,10 @@ export class EchoHost extends Resource {
   /** Resolved when the host opens; the query planner builds compiled statements with it. */
   private _sql: SqlClient.SqlClient | undefined;
   private readonly _convergenceKeyMerger: ConvergenceKeyMerger;
+  private readonly _versionTranslator: VersionTranslator;
+  /** The translation pass scheduled by the latest index pass, awaited on close. */
+  #versionPass: Promise<void> = Promise.resolve();
+  #versionPassStarted = false;
   private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
@@ -242,6 +247,19 @@ export class EchoHost extends Resource {
           .pipe(RuntimeProvider.runPromise(this._runtime)),
       loadDoc: (ctx, documentId, opts) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId, opts),
       flushDoc: (ctx, documentId) => this._automergeHost.flush(ctx, { documentIds: [documentId] }),
+    });
+
+    this._versionTranslator = new VersionTranslator({
+      spaceIds: () => this._spaceStateManager.spaceIds,
+      rootDocumentId: (spaceId) => this._spaceStateManager.getSpaceRootDocumentId(spaceId),
+      queryType: (spaceId, typeDXN) =>
+        this.indexEngine.queryType({ spaceId, typeDXN }).pipe(RuntimeProvider.runPromise(this._runtime)),
+      loadDoc: (ctx, documentId, opts) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId, opts),
+      createDoc: (doc) => this._automergeHost.createDoc<DatabaseDirectory>(doc, { preserveHistory: true }),
+      queryReferrers: (spaceId, objectId) =>
+        this.indexEngine
+          .queryReferrers(spaceId, EID.make({ entityId: objectId }))
+          .pipe(RuntimeProvider.runPromise(this._runtime)),
     });
 
     this._queryService = new QueryServiceImpl({
@@ -422,10 +440,17 @@ export class EchoHost extends Resource {
 
   protected override async _close(ctx: Context): Promise<void> {
     await this._indexScheduler.close();
+    // The version pass runs off the index pass, so it can still be translating once indexing has stopped.
+    await this.#versionPass;
 
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
     await this._automergeHost.close();
+  }
+
+  /** Resolves once the version-document pass the latest index pass scheduled has finished. */
+  async versionsSettled(): Promise<void> {
+    await this.#versionPass;
   }
 
   /**
@@ -1252,6 +1277,15 @@ export class EchoHost extends Resource {
             }
           }
           log('cleared serviced convergence-key intents', { cleared, upToId: maxId });
+        }
+
+        // Version documents follow the documents just indexed; the first pass syncs every versioned
+        // object. Not awaited: translating a long history must not hold up indexing.
+        if (result.updated > 0 || !this.#versionPassStarted) {
+          this.#versionPassStarted = true;
+          this.#versionPass = this._versionTranslator
+            .schedule(this._ctx)
+            .catch((err) => log.warn('version documents: pass failed', { err }));
         }
         performance.measure('Index Automerge', {
           start: 'indexEngine.update.automerge:start',

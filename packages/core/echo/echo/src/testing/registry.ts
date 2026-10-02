@@ -25,6 +25,9 @@ export const registryLayerNoop: Layer.Layer<Registry.Service> = Layer.succeed(Re
   get: () => undefined,
   getByURI: () => undefined,
   list: () => [],
+  lenses: () => [],
+  lensBetween: () => undefined,
+  lensesFrom: () => [],
   // QueryFn is an overloaded interface — a single generic function cannot satisfy both overload
   // signatures without a cast. This is the intentional type-system boundary.
   query: ((_queryOrFilter: unknown) => ({

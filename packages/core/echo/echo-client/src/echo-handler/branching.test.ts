@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { Context } from '@dxos/context';
 import { Obj, Ref } from '@dxos/echo';
 import { TestReplicationNetwork } from '@dxos/echo-host/testing';
+import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { PublicKey } from '@dxos/keys';
 
@@ -70,6 +71,23 @@ describe('branching', () => {
     // The child reports the same branch set as the root (inherited via the registry reverse-lookup).
     expect(getBranches(child)).toContain('b1');
     expect(getCurrentBranch(child)).toBe(getCurrentBranch(root));
+  });
+
+  test('reserved branch names are hidden from the branch list and cannot be created', async () => {
+    const { db, root } = await setup();
+    await createBranch(root, 'b1');
+    const url = db._entityManager.getObjectDocumentId(root.id);
+    db._entityManager.getSpaceRootDocHandle().change((doc: DatabaseDirectory) => {
+      doc.branches ??= {};
+      doc.branches[root.id] ??= {};
+      doc.branches[root.id][DatabaseDirectory.versionBranchName('0.2.0')] = { members: { [root.id]: `${url}` } };
+    });
+
+    expect(getBranches(root).sort()).toEqual(['b1', 'main']);
+    await expect(createBranch(root, '@mine')).rejects.toThrow(/reserved/);
+    expect(DatabaseDirectory.getVersionDocUrls(db._entityManager.getSpaceRootDocHandle().doc(), root.id)).toEqual({
+      '0.2.0': `${url}`,
+    });
   });
 
   test('switchBranch isolates edits and cascades to the child automatically', async () => {

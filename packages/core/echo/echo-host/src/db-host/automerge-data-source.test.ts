@@ -6,7 +6,7 @@ import { getHeads } from '@automerge/automerge';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Context } from '@dxos/context';
-import { type DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
+import { DatabaseDirectory, EntityStructure, SpaceDocVersion, createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { type IndexCursor } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
@@ -438,5 +438,28 @@ describe('AutomergeDataSource', () => {
     );
     expect(second.activity).toContainEqual({ spaceId, documentId: branch.documentId, full: true, changes: [] });
     expect(second.activity).toContainEqual(expect.objectContaining({ documentId: root.documentId }));
+  });
+
+  test('a version document recorded under a reserved branch name keeps its activity', async () => {
+    const host = await setupAutomergeHost();
+    const spaceId = SpaceId.random();
+    const dataSource = new AutomergeDataSource(host);
+    const version = await createDatabaseDirectory(host, spaceId, {
+      'obj-1': EntityStructure.makeObject({ type: TEST_TYPE, data: { title: 'At a newer version' } }),
+    });
+    const root = await createDatabaseDirectory(host, spaceId, {});
+    root.change((doc: DatabaseDirectory) => {
+      doc.branches = {
+        'obj-1': { [DatabaseDirectory.versionBranchName('0.2.0')]: { members: { 'obj-1': version.url } } },
+      };
+    });
+    await host.flush(Context.default());
+
+    const result = await EffectEx.runAndForwardErrors(
+      dataSource.getChangedObjects(Context.default(), [], { activity: true }),
+    );
+    const activity = result.activity?.find(({ documentId }) => documentId === version.documentId);
+    // A branch document is discarded as `full` with no changes; a version document keeps its own.
+    expect(activity?.changes.length).toBeGreaterThan(0);
   });
 });
