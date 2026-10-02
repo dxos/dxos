@@ -17,7 +17,7 @@ import { Database, Error as EchoError, Filter, Obj, Query, Ref, Type } from '@dx
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { PublicKey } from '@dxos/keys';
+import { EID, EntityId, PublicKey, SpaceId } from '@dxos/keys';
 import { RpcClosedError, makeInProcessClient } from '@dxos/protocols';
 import { DataService, QueryService } from '@dxos/protocols/rpc';
 import { openAndClose } from '@dxos/test-utils';
@@ -759,6 +759,36 @@ describe('Database', () => {
       person.tasks!.push(Ref.make(four));
     });
     await expect.poll(titles).toEqual(['three', 'one', 'two', 'four']);
+  });
+
+  describe('loading cross-space targets', () => {
+    test('ref.tryLoad resolves a target in another open space', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      await using dbA = await peer.createDatabase();
+      await using dbB = await peer.createDatabase();
+      const task = dbA.add(Obj.make(TestSchema.Task, { title: 'remote' }));
+      await dbA.flush();
+      const person = dbB.add(
+        Obj.make(TestSchema.Person, { name: 'Alice', tasks: [Ref.fromURI(Obj.getURI(task, { prefer: 'absolute' }))] }),
+      );
+      await dbB.flush();
+
+      const [ref] = person.tasks ?? [];
+      expect(await ref.tryLoad()).toMatchObject({ id: task.id, title: 'remote' });
+      expect(await ref.load()).toMatchObject({ id: task.id });
+    });
+
+    test('ref.tryLoad resolves to undefined for a target in a space that is not open', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [TestSchema.Person, TestSchema.Task] });
+      await using db = await peer.createDatabase();
+      const uri = EID.make({ spaceId: SpaceId.random(), entityId: EntityId.random() });
+      const person = db.add(Obj.make(TestSchema.Person, { name: 'Alice', tasks: [Ref.fromURI(uri)] }));
+      await db.flush();
+
+      const [ref] = person.tasks ?? [];
+      await expect(ref.tryLoad()).resolves.toBeUndefined();
+      await expect(ref.load()).rejects.toThrow('Object not found');
+    });
   });
 
   describe('loading deleted targets', () => {
