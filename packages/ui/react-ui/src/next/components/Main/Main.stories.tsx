@@ -41,6 +41,15 @@ const ComplementaryToggle = () => {
   );
 };
 
+/** Buttons inside a landmark, so Enter has somewhere to move focus and the area reads like a populated sidebar. */
+const AreaItems = ({ label }: { label: string }) => (
+  <>
+    {['One', 'Two', 'Three'].map((item) => (
+      <Next.Button key={item} variant='ghost' align='start'>{`${label} ${item}`}</Next.Button>
+    ))}
+  </>
+);
+
 const DefaultStory = ({
   defaultNavigationSidebarState = 'closed',
   defaultComplementarySidebarState = 'closed',
@@ -59,14 +68,16 @@ const DefaultStory = ({
         <Next.Toolbar.Root>
           <Next.Toolbar.Text>Navigation</Next.Toolbar.Text>
         </Next.Toolbar.Root>
+        <AreaItems label='Navigation' />
       </Next.Main.NavigationSidebar>
-      <Next.Main.Content data-testid='content'>
+      <Next.Main.Content handlesFocus data-testid='content'>
         <Next.Toolbar.Root>
           <NavigationToggle />
           <Next.Toolbar.Text>Main</Next.Toolbar.Text>
           <Next.Button onClick={() => setDrawerState(drawerState === 'open' ? 'closed' : 'open')}>Drawer</Next.Button>
           <ComplementaryToggle />
         </Next.Toolbar.Root>
+        <AreaItems label='Main' />
         <div className='h-[150dvh] p-4'>Tall content</div>
       </Next.Main.Content>
       <Next.Main.Drawer label='Drawer'>
@@ -76,6 +87,7 @@ const DefaultStory = ({
         <Next.Toolbar.Root>
           <Next.Toolbar.Text>Complementary</Next.Toolbar.Text>
         </Next.Toolbar.Root>
+        <AreaItems label='Complementary' />
       </Next.Main.ComplementarySidebar>
     </Next.Main.Root>
   );
@@ -85,7 +97,7 @@ const meta = {
   title: 'ui/react-ui-core/next/components/Main',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  args: { defaultNavigationSidebarState: 'closed', defaultComplementarySidebarState: 'closed' },
+  args: { defaultNavigationSidebarState: 'expanded', defaultComplementarySidebarState: 'expanded' },
   argTypes: {
     defaultNavigationSidebarState: { control: 'inline-radio', options: ['closed', 'collapsed', 'expanded'] },
     defaultComplementarySidebarState: { control: 'inline-radio', options: ['closed', 'collapsed', 'expanded'] },
@@ -109,6 +121,7 @@ const sidebar = (canvasElement: HTMLElement, side: 'start' | 'end') => {
 
 /** The toggles drive the sidebar states; a closed sidebar is inert and off screen, an open one a labelled landmark. */
 export const Test: Story = {
+  args: { defaultNavigationSidebarState: 'closed', defaultComplementarySidebarState: 'closed' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const start = sidebar(canvasElement, 'start');
@@ -150,5 +163,31 @@ export const Drawer: Story = {
     await userEvent.click(canvas.getByRole('button', { name: 'Drawer' }));
     await waitFor(() => expect(canvas.queryByRole('region', { name: 'Drawer' })).toBeNull());
     await waitFor(() => expect(parseFloat(getComputedStyle(content).paddingBlockEnd)).toBe(0));
+  },
+};
+
+/**
+ * The sidebars and the main area are focus areas: Tab moves between them, and the focused one draws an inset ring that
+ * paints over its children, so a toolbar's background cannot hide it.
+ */
+export const FocusAreas: Story = {
+  play: async ({ canvasElement }) => {
+    const areas = [
+      sidebar(canvasElement, 'start'),
+      within(canvasElement).getByTestId('content'),
+      sidebar(canvasElement, 'end'),
+    ];
+    const reached = new Set<HTMLElement>();
+    for (let step = 0; step < 30 && reached.size < areas.length; step++) {
+      await userEvent.tab();
+      const area = areas.find((candidate) => candidate === document.activeElement);
+      if (area) {
+        reached.add(area);
+        const style = getComputedStyle(area);
+        await expect(style.outlineStyle).toBe('solid');
+        await expect(parseFloat(style.outlineOffset)).toBeLessThan(0);
+      }
+    }
+    await expect(reached.size).toBe(areas.length);
   },
 };

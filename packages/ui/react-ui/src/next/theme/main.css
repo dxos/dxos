@@ -40,9 +40,10 @@
     overflow: auto;
     overscroll-behavior: auto;
   }
+  /* An inset outline, not a shadow: outlines paint over descendants, so a toolbar or panel background cannot hide it. */
   .nx-main-content[data-handles-focus]:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
 
   @media (width >= 64rem) {
@@ -85,8 +86,8 @@
     transition-duration: var(--nx-main-duration);
   }
   .nx-main-sidebar:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
   .nx-main-sidebar :is([aria-current]:not([aria-current='false']), [aria-selected='true']) {
     color: var(--color-sidebar-current-fg, inherit);
@@ -206,8 +207,8 @@
     transition-timing-function: var(--nx-main-easing);
   }
   .nx-main-drawer:focus-visible {
-    outline: none;
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
   @media (width >= 64rem) {
     .nx-main-drawer[data-sidebar-left-state='collapsed'] {
