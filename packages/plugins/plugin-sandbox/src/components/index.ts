@@ -3,3 +3,4 @@
 //
 
 export * from './RepositoryViewer/index.ts';
+export * from './SandboxTerminal/index.ts';

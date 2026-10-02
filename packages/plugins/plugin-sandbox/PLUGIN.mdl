@@ -24,6 +24,23 @@ URL lives as long as the sandbox.
 `exec` streams the command's output from the service and returns once it exits, so a command of several
 minutes runs in one call; a request answered only at the end lost its connection while the command ran.
 
+## Terminal
+
+The article surface of a `Sandbox` is an interactive shell in its container: an xterm (`XtermView` from
+`@dxos/react-ui-terminal`) attached by WebSocket to `<edge>/sandbox/spaces/<space>/sandboxes/<id>/terminal`,
+which forwards the upgrade to the PTY the `@cloudflare/sandbox` SDK serves. Binary frames carry the PTY's
+bytes both ways; text frames carry JSON control messages (`resize` up; `ready`, `exit`, `error` down).
+
+- **Persistent.** The shell runs in the container session `terminal`, not the socket, so closing the
+  article leaves it running and reopening it resumes the same shell with its scrollback. A dropped
+  socket reconnects with backoff; an exited shell restarts on the next keystroke.
+- **Authenticated.** A browser cannot set `Authorization` on an upgrade, so the verifiable presentation
+  travels as a `base64url.bearer.authorization.dxos.org.*` subprotocol beside `dxos.sandbox.terminal.v1`,
+  minted per connection by the `OpenTerminal` operation; the service answers with the latter.
+- **EDGE only.** Local sandboxes have no PTY, so their article reports the backend cannot open one.
+- **No command environment.** The shell does not get the sandbox's `credentials` or attached
+  repositories' git config, which are applied per command by `exec`.
+
 ## Backends
 
 The operations run against `SandboxService.Service`, which the plugin contributes to the process

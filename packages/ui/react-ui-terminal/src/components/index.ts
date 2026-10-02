@@ -3,3 +3,4 @@
 //
 
 export * from './Terminal/index.ts';
+export * from './XtermView/index.ts';

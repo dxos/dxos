@@ -200,6 +200,29 @@ export const PublishFiles = Operation.make({
   services: [Database.Service, SandboxService.Service],
 });
 
+/**
+ * Where the article's terminal opens the sandbox's interactive shell. Not a tool: the endpoint
+ * carries a credential, minted per call for one connection.
+ */
+export const OpenTerminal = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.sandbox.openTerminal'),
+    name: 'OpenTerminal',
+    description: "Opens a connection to the sandbox's persistent interactive shell.",
+    icon: 'ph--terminal-window--regular',
+  },
+  input: Schema.Struct({
+    sandbox: Ref.Ref(Sandbox.Sandbox).annotate({ description: 'The sandbox object ID.' }),
+    cols: Schema.optional(Schema.Number),
+    rows: Schema.optional(Schema.Number),
+  }),
+  output: Schema.Struct({
+    url: Schema.String,
+    protocols: Schema.Array(Schema.String),
+  }),
+  services: [Database.Service, SandboxService.Service],
+});
+
 /** The variable a granted account token is exported as, which `dx` reads for its API key. */
 export const ACCOUNT_TOKEN_ENV = 'DX_API_TOKEN';
 
