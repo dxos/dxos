@@ -35,6 +35,14 @@ Grouped by screen or component; IDs are global and never reused.
 | V031 | Article menus are not visible (dropdowns opened from an article/plank toolbar)                                                          | —                              | app: open README, open each toolbar dropdown (paragraph style, view mode, more) and the plank menu; check the popup renders above the plank | open   |            |
 | V032 | R0 (right rail) sidebar open/close button is not horizontally centred in the rail (the icons above it are)                              | `V032-r0-sidebar.png`          | app: measure the toggle's centre vs the rail's centre and vs the other rail icons                                                           | open   |            |
 
+### Shell: Main (focus)
+
+| ID   | Bug                                                                                                                           | Screenshot            | Repro                                                                                               | Status | Fix |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------- | ------ | --- |
+| V033 | Sidebar focus ring is clipped (the focused navigation sidebar's ring is cut off at its edges)                                 | `V033-main-focus.png` | app: focus the sidebar; Next Main story: ring fully inside the sidebar box                          | open   |     |
+| V034 | Tab from the sidebar should move focus to the article, but the article shows no focus indicator                               | —                     | app: focus sidebar, press Tab; assert `document.activeElement` is the article and it draws the ring | open   |     |
+| V035 | A second Tab moves focus somewhere else, also with no visible indicator (identify the target; every tab stop must show focus) | —                     | app: Tab twice; log `document.activeElement` and its computed focus style                           | open   |     |
+
 ### Plugin registry
 
 | ID   | Bug                                                               | Screenshot                                          | Repro                                        | Status | Fix        |
