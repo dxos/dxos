@@ -831,7 +831,7 @@ No open questions remain.
 | 8   | Arrays and layout templates   | needs milestones 4, 6, 7                                                                                           |
 | 9   | Ref and lookup fields         | needs milestones 5, 6                                                                                              |
 | 10  | Higher-level form components  | needs milestones 7–9, point 10                                                                                     |
-| 11  | Tree next                     | blocked on points 2, 3                                                                                             |
+| 11  | Tree next                     | blocked on point 3                                                                                                  |
 
 ## 7. Migration plan
 
