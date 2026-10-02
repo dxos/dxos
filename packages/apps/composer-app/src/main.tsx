@@ -64,6 +64,7 @@ import {
   registerPreloadErrorHandler,
   reportBootAssetFailure,
   reportWebProcessTerminations,
+  restoreDragRegionFocus,
   runStorageResetMigration,
   setSafeModeUrl,
   setupConfig,
@@ -334,6 +335,7 @@ const main = async () => {
   if (isTauri) {
     const platform = getHostPlatform();
     document.body.setAttribute('data-platform', platform);
+    restoreDragRegionFocus();
   }
 
   // Read the persisted opt-out state up front so we can suppress PostHog's heavy
