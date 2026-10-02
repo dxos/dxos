@@ -199,7 +199,11 @@ export const Test: Story = {
       }
 
       const add = byTestId(canvasElement, `add-${size}`).getBoundingClientRect();
-      await expect(add.left - inset, `add-${size} cell`).toBeCloseTo(toolbar.left, 0);
+      // The cell starts after the toolbar's inline padding.
+      const toolbarPadding = parseFloat(
+        getComputedStyle(byTestId(canvasElement, `add-${size}`).closest('.nx-toolbar') ?? canvasElement).paddingLeft,
+      );
+      await expect(add.left - inset, `add-${size} cell`).toBeCloseTo(toolbar.left + toolbarPadding, 0);
 
       // A leading icon then the label, spaced by the gap and padded like a text button; a trailing icon mirrors it.
       const share = byTestId(canvasElement, `share-${size}`);
