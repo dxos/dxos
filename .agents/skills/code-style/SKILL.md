@@ -116,7 +116,7 @@ capital-case names and are re-exported as namespaces:
 src/
   Foo.ts
   Bar.ts
-  errors.ts
+  BazError.ts
   index.ts
   testing/
     index.ts
@@ -130,7 +130,7 @@ src/
 // index.ts
 export * as Foo from './Foo';
 export * as Bar from './Bar';
-export * from './errors';
+export * as BazError from './BazError';
 ```
 
 ```ts
@@ -149,7 +149,13 @@ export const func: {
 
 - The `@import-as-namespace` linter directive marks a file as a namespace export.
 - Internal code is hidden in `internal/`, which is not exported.
-- `testing/` and `errors.ts` are the exceptions (exported directly).
+- `testing/` is the exception (exported directly).
+- Errors follow the `effect` package. An error that belongs to one namespace is exported from it
+  (`Operation.NoHandlerError`, like `Cause.TimeoutError`). A family of errors with no owning
+  namespace gets a `<Domain>Error` namespace module (`FunctionsAiError.UpstreamError`, like
+  `SqlError` or `HttpClientError`). There is no catch-all `errors` export.
+- Two packages' namespaces of the same name can meet in one file by prefixing the import:
+  `import * as AppHooks from '@dxos/app-framework/Hooks'` beside `import * as Hooks from '@dxos/react-ui/Hooks'`.
 - For a namespace file, avoid prefixing top-level types with the namespace name —
   inside `Foo.ts` prefer `Manager`, `Service`, `Options` over `FooManager`,
   `FooService`, `FooOptions` (callers see `Foo.Manager` either way).

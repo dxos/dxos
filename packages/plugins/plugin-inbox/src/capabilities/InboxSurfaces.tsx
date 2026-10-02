@@ -7,9 +7,9 @@
 
 import React from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { parentId } from '@dxos/graph/GraphNode';
-import { useNode } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { type Event, type Message } from '@dxos/types';
 
 import { EventArticle, MessageArticle } from '#containers';
@@ -29,8 +29,8 @@ export const MessageArticleSurface = ({
   attendableId,
   nodeId = attendableId,
 }: MessageArticleSurfaceProps) => {
-  const { graph } = useAppGraph();
-  const parent = useNode(graph, parentId(nodeId));
+  const { graph } = Hooks.useAppGraph();
+  const parent = GraphHooks.useNode(graph, parentId(nodeId));
   // A message lives under its mailbox view; every mailbox view carries the mailbox as its node
   // `data`, so use that (not `properties.mailbox`, which only some views set) to scope the
   // conversation lookup in MessageArticle.
@@ -53,8 +53,8 @@ export const EventArticleSurface = ({
   attendableId,
   nodeId = attendableId,
 }: EventArticleSurfaceProps) => {
-  const { graph } = useAppGraph();
-  const parentNode = useNode(graph, parentId(nodeId));
+  const { graph } = Hooks.useAppGraph();
+  const parentNode = GraphHooks.useNode(graph, parentId(nodeId));
   const calendar = Calendar.instanceOf(parentNode?.data) ? parentNode.data : undefined;
   if (!calendar) {
     return null;

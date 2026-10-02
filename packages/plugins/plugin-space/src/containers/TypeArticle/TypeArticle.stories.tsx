@@ -10,7 +10,7 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useAtomCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -139,7 +139,7 @@ const DefaultStory = ({ type }: StoryArgs) => {
  * merge preview has nowhere to render and the review cannot be walked end to end in a story.
  */
 const StoryCompanion = ({ space, type }: { space: Space; type: Type.AnyObj }) => {
-  const { mergePreview } = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const { mergePreview } = Hooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   if (mergePreview?.typeUri === Type.getURI(type)) {
     return <MergePreview type={type} preview={mergePreview} />;
   }

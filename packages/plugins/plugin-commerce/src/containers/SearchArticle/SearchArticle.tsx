@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
@@ -31,7 +31,7 @@ export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
  */
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   // Use the live `subject` for reads/writes (the tag helpers mutate it); subscribe via useObject so
   // the view re-renders when results/tags change.
   const search = subject;

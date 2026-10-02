@@ -5,10 +5,10 @@
 import { formatDistance, isValid } from 'date-fns';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { getEnvString } from '@dxos/config';
-import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { useConfig } from '@dxos/react-client';
 import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -32,7 +32,7 @@ const GITHUB_URL = 'https://github.com/dxos/dxos';
 
 export const HelpMenu = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const releasedAt = timestamp ? new Date(timestamp) : undefined;

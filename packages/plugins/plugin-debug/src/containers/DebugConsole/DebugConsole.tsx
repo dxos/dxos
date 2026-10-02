@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useRef } from 'react';
 
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { Terminal, type TerminalApi } from '@dxos/react-ui-terminal';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as IconButton from '@dxos/react-ui/IconButton';
@@ -38,7 +38,7 @@ export type DebugConsoleProps = {
  */
 export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const apiRef = useRef<TerminalApi | null>(null);
   const lastResultRef = useRef('');
   const cli = useMemo(

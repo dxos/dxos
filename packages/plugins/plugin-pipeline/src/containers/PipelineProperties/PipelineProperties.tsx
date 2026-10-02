@@ -7,7 +7,7 @@ import * as Struct from 'effect/Struct';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useTypeOptions } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
@@ -41,7 +41,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
   const [type, setType] = useState<Type.AnyEntity>();
   const projectionRef = useRef<ProjectionModel>(null);
   const tags = useQuery(db, Filter.type(Tag.Tag));
-  const types = useTypeOptions({
+  const types = ToolkitHooks.useTypeOptions({
     db,
     annotation: {
       location: ['database', 'runtime'],

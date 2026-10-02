@@ -18,7 +18,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Task } from '@dxos/types';
 
 import { ProjectsPlugin } from '#plugin';
@@ -274,7 +274,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
 });
 
 const setup = async () => {
-  const harness = await createComposerTestApp({
+  const harness = await Harness.createComposerTestApp({
     // Tasks is declared in Projects' `dependsOn`; Assistant supplies the `CreateChat` handler.
     // Routine is what provides `RemoteProcessManager`, which Assistant's `AgentService` spec
     // requires — without it that spec is pruned and every delegation fails to resolve `AgentService`.

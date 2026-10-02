@@ -6,9 +6,9 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useShowItem } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
@@ -46,7 +46,7 @@ export type StoryboardArticleProps = AppSurface.ObjectArticleProps<Storyboard.St
  */
 export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: StoryboardArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   // Live frame objects (not snapshots): the rows mutate them and the drag controller keys on them.
   const [refs] = useObject(storyboard, 'frames');
   const framesAtom = useMemo(
@@ -77,7 +77,7 @@ export const StoryboardArticle = ({ role, subject: storyboard, attendableId }: S
   // falls back to the first frame so a deleted or not-yet-loaded selection shows the opening frame.
   const selectedId = useSelection(attendableId, 'single');
   const selectedFrame = frames.find((frame) => frame.id === selectedId) ?? frames[0];
-  const showItem = useShowItem();
+  const showItem = ToolkitHooks.useShowItem();
   const handleSelect = useCallback(
     (id: string) => {
       if (!attendableId) {

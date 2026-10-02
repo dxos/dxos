@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type PullRequest } from '@dxos/types';
@@ -36,7 +36,7 @@ const markSynced = (id: string, now: number) => {
  * and one synced within {@link SYNC_INTERVAL} is skipped too.
  */
 export const useSyncPullRequest = (pullRequest: PullRequest.PullRequest): void => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const spaceId = Obj.getDatabase(pullRequest)?.spaceId;
   useEffect(() => {
     const now = Date.now();

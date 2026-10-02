@@ -6,8 +6,8 @@ import React, { useMemo } from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type InvocationsState } from '@dxos/compute-runtime';
-import { useTriggerRuntimeControls } from '@dxos/plugin-routine/Hooks';
-import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
+import * as RoutineHooks from '@dxos/plugin-routine/Hooks';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as IconButton from '@dxos/react-ui/IconButton';
@@ -45,7 +45,7 @@ export type SpaceStatusProps = AppSurface.SpaceArticleProps;
 
 export const SpaceStatus = ({ space }: SpaceStatusProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { state } = useTriggerRuntimeControls(space.db);
+  const { state } = RoutineHooks.useTriggerRuntimeControls(space.db);
   // The dispatcher is stopped for the space when `triggersDisabled` is set, so `enabled` already
   // reflects the space-wide kill-switch; per-trigger edge routing does not affect this indicator.
   const isEnabled = state?.enabled ?? false;

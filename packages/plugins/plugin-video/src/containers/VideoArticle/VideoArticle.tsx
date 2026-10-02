@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -28,7 +28,7 @@ export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
  * The transcript/summary are shown in a tab panel below the player on large form factors.
  */
 export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const [video] = useObject(subject);
   const [tab, setTab] = useState('transcript');
   const [summarizing, setSummarizing] = useState(false);
@@ -103,7 +103,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
-        <Surface.Surface
+        <Surface.Root.Surface
           type={AppSurface.Section}
           data={{
             subject,
@@ -219,14 +219,18 @@ const TranscriptTabs = ({
         <Panel.Content asChild>
           <Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>
             <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface
+              <Surface.Root.Surface
                 type={AppSurface.Tabpanel}
                 data={{ subject, attendableId, part: 'transcript' }}
                 limit={1}
               />
             </Tabs.Panel>
             <Tabs.Panel value='summary' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface type={AppSurface.Tabpanel} data={{ subject, attendableId, part: 'summary' }} limit={1} />
+              <Surface.Root.Surface
+                type={AppSurface.Tabpanel}
+                data={{ subject, attendableId, part: 'summary' }}
+                limit={1}
+              />
             </Tabs.Panel>
           </Tabs.Viewport>
         </Panel.Content>

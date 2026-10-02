@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
@@ -32,12 +32,12 @@ export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?:
       {variant === 'topbar' && (
         <div className='dx-fullscreen pointer-events-none'>
           <div className='grid h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>
-            <Surface.Surface type={AppSurface.SearchInput} limit={1} />
+            <Surface.Root.Surface type={AppSurface.SearchInput} limit={1} />
           </div>
         </div>
       )}
       <span className='grow' />
-      <Surface.Surface type={DeckRole.VersionInfo} limit={1} />
+      <Surface.Root.Surface type={DeckRole.VersionInfo} limit={1} />
     </header>
   );
 };

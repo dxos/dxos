@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
 
@@ -15,7 +15,7 @@ export type DrawingCardProps = AppSurface.ObjectCardProps<Drawing.Drawing>;
 
 /** Resolves the drawing's canvas and delegates rendering to the variant claiming its schema. */
 export const DrawingCard = ({ role, subject: drawing, editable }: DrawingCardProps) => {
-  const variants = useCapabilities(IllustratorCapabilities.VariantProvider);
+  const variants = Hooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const ref = drawing.canvas;
   const [snapshot] = useObject(ref);
   const canvas = snapshot ? ref.target : undefined;

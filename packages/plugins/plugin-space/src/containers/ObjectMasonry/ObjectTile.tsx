@@ -5,10 +5,10 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
+import * as CardIconSlot from '@dxos/app-toolkit/CardIconSlot';
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Obj, Type } from '@dxos/echo';
@@ -44,7 +44,7 @@ export const TileAdapter = ({ data }: { data: TileData | undefined; index: numbe
 /** Selectable header-only card for a single object. */
 export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
   const typename = Obj.getTypename(live);
@@ -114,9 +114,9 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
       <Card.Root fullWidth classNames={['dx-hover', onSelect && 'cursor-pointer', current && 'dx-current']}>
         <Card.Header>
           <Card.Block>
-            <CardIconSlot subject={live}>
+            <CardIconSlot.Root subject={live}>
               <Icon.Root icon={icon} classNames={iconStyles?.text} />
-            </CardIconSlot>
+            </CardIconSlot.Root>
           </Card.Block>
           <Card.Title>{label}</Card.Title>
           {menuItems.length > 0 && <Card.Menu items={menuItems} />}
@@ -126,7 +126,7 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
             <Tag.Root classNames='justify-self-start'>{t('archived.label')}</Tag.Root>
           </Card.Row>
         )}
-        {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
+        {showCardContent && <Surface.Root.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
       </Card.Root>
     </Focus.Item>
   );

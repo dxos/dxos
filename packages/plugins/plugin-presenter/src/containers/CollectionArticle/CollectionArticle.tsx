@@ -4,9 +4,9 @@
 
 import React, { useContext, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useLayout } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type Collection, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -21,7 +21,7 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
   const [slide, setSlide] = useState(0);
   const { running } = useContext(PresenterContext);
   const handleExit = useExitPresenter(collection);
-  const layout = useLayout();
+  const layout = Hooks.useLayout();
   const fullscreen = layout.mode === 'solo--fullscreen';
   const [liveCollection] = useObject(collection);
 
@@ -35,7 +35,7 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
               <Pager index={slide} count={liveCollection.objects.length} keys={running} onChange={setSlide} />
             }
           >
-            <Surface.Surface
+            <Surface.Root.Surface
               type={AppSurface.Slide}
               data={{
                 subject: liveCollection.objects[slide],

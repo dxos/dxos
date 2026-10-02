@@ -4,8 +4,8 @@
 
 import React, { memo, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Carousel from '@dxos/react-ui/Carousel';
 import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -23,7 +23,7 @@ const WELCOME_SLIDE = {
 
 export const SupportHomeCompanion = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
 
   return (
     <Panel.Root>
@@ -50,7 +50,7 @@ export const SupportHomeCompanion = () => {
 
 const WelcomePanel = memo(() => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
 
   const slides = useMemo(() => {
     const seen = new Set<string>();

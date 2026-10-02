@@ -8,3 +8,4 @@ export * from '#types';
 export { HaloServicesLayer } from './halo-services-layer.ts';
 export { meta } from '#meta';
 export * from '#operations';
+export * as ClientOptions from './ClientOptions.ts';

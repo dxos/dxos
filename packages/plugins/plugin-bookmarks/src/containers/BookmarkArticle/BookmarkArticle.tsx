@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -23,7 +23,7 @@ import { useImageLoads } from '../useImageLoads.ts';
 export type BookmarkArticleProps = AppSurface.ObjectArticleProps<Bookmark.Bookmark>;
 
 export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [bookmark] = useObject(subject);
   const imageLoads = useImageLoads(bookmark.image);
   const [summarizing, setSummarizing] = useState(false);

@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo } from 'react';
 
-import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -32,10 +32,10 @@ const WorkspaceSettingsSchema = Schema.Struct({
 /** Renders nothing until a filesystem workspace is active; the workspace comes from context. */
 export const WorkspaceSettingsContainer = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const client = useClient();
   const workspace = useActiveFileSystemWorkspace();
-  const [, updateState] = useAtomCapabilityState(FileSystemCapabilities.State);
+  const [, updateState] = AppHooks.useAtomCapabilityState(FileSystemCapabilities.State);
 
   const values = useMemo(
     () => ({

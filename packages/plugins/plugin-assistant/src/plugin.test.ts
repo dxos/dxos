@@ -27,7 +27,7 @@ import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RegistryPlugin from '@dxos/plugin-registry/RegistryPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { AssistantPlugin } from '#plugin';
@@ -45,7 +45,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('AssistantPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), AssistantPlugin()],
     });
 
@@ -84,14 +84,14 @@ describe('AssistantPlugin', () => {
     {
       // The curated production and mobile sets ship no registry, so the skill's verbs would have no
       // handlers there.
-      await using harness = await createComposerTestApp({
+      await using harness = await Harness.createComposerTestApp({
         plugins: [ClientPlugin.make({}), AssistantPlugin()],
       });
       expect(skillKeys(harness)).not.toContain(PluginManagerSkill.key);
     }
 
     {
-      await using harness = await createComposerTestApp({
+      await using harness = await Harness.createComposerTestApp({
         plugins: [ClientPlugin.make({}), AssistantPlugin(), RegistryPlugin.make()],
       });
       expect(skillKeys(harness)).toContain(PluginManagerSkill.key);
@@ -102,7 +102,7 @@ describe('AssistantPlugin', () => {
     // The skill only helps if it reaches the model, and it does that by being bound to the chat --
     // a user who never opens chat settings would otherwise never see a plugin offered.
     const boundSkillUris = async (plugins: Plugin.Plugin[]) => {
-      await using harness = await createComposerTestApp({ plugins });
+      await using harness = await Harness.createComposerTestApp({ plugins });
       const { defaultSpace } = await EffectEx.runAndForwardErrors(
         initializeIdentity(harness.get(ClientCapabilities.Client)),
       );
@@ -136,7 +136,7 @@ describe('AssistantPlugin', () => {
   });
 
   test('resolves a language model through the plugin AI service', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [
         ClientPlugin.make({}),
         AssistantPlugin({
@@ -167,7 +167,7 @@ describe('AssistantPlugin', () => {
   });
 
   test('runs instructions end to end through the plugin', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [
         ClientPlugin.make({}),
         AssistantPlugin({
@@ -214,7 +214,7 @@ describe('AssistantPlugin', () => {
     'boots the agent service with the standard skills and completes a turn',
     { timeout: 120_000 },
     async ({ expect }) => {
-      await using harness = await createComposerTestApp({
+      await using harness = await Harness.createComposerTestApp({
         plugins: [
           ClientPlugin.make({}),
           AssistantPlugin({

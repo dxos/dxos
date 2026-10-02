@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useCapability, useOptionalCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -96,7 +96,7 @@ type StoryArgs = {
  * `createAnalyzeProgressKey` on their own copy of the mailbox.
  */
 const ProgressProbe = ({ mailbox }: { mailbox: Mailbox.Mailbox }) => {
-  const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const registry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
   useEffect(() => {
     if (!registry) {
       return;
@@ -118,7 +118,7 @@ const DefaultStory = ({ conversations, progress }: StoryArgs) => {
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
 
   // Force the conversation-grouping setting per-variant, independent of any persisted value.
-  const settingsAtom = useCapability(InboxCapabilities.Settings);
+  const settingsAtom = Hooks.useCapability(InboxCapabilities.Settings);
   const setSettings = useAtomSet(settingsAtom);
   useEffect(() => {
     if (conversations !== undefined) {

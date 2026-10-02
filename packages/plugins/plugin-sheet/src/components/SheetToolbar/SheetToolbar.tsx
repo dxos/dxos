@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useContext, useMemo } from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type CompleteCellRange } from '@dxos/compute-hyperformula';
 import {
   type ActionGraphProps,
@@ -71,7 +71,7 @@ export const SheetToolbar = Util.composable<HTMLDivElement, SheetToolbarProps>((
   useAlignState(stateAtom);
   useStyleState(stateAtom);
 
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const customActions = useMemo(() => {
     return Atom.make((get) => graphActions(graph, get, attendableId, { filter: isToolbarAction }));
   }, [graph, attendableId]);

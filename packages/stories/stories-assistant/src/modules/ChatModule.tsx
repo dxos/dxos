@@ -4,13 +4,13 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useProcessManagerRuntime } from '@dxos/app-framework/Hooks';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as ChatSchema from '@dxos/assistant/Chat';
 import { Filter } from '@dxos/echo';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
-import { Chat } from '@dxos/plugin-assistant/Chat';
-import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/Hooks';
+import * as Chat from '@dxos/plugin-assistant/Chat';
+import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import * as IconButton from '@dxos/react-ui/IconButton';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -19,7 +19,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
 
 export const ChatModule = () => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -34,7 +34,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
   const chat = chats.find(({ id }) => id === selected) ?? chats.at(-1);
 
   // The picker edits the chat's own model, so the hook needs the chat it is rendered for.
-  const { preset, ...chatProps } = usePresets({}, chat);
+  const { preset, ...chatProps } = AssistantHooks.usePresets({}, chat);
 
   // Every chat in the space, not the companion chats of one object: the story is a tour of the
   // space, and its chats are the thing worth moving between.
@@ -42,8 +42,8 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
   const switcher = useMemo(() => ({ chats: [...chats], onSelect }), [chats, onSelect]);
 
   const registry = useRegistry();
-  const runtime = useProcessManagerRuntime();
-  const processor = useChatProcessor({ runtime, db: space.db, chat, preset, registry });
+  const runtime = Hooks.useProcessManagerRuntime();
+  const processor = AssistantHooks.useChatProcessor({ runtime, db: space.db, chat, preset, registry });
 
   // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.

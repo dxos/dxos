@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { useClient } from '@dxos/react-client';
@@ -33,9 +33,9 @@ export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> & {
  */
 export const ResetDialog = ({ mode, invitationCode, onBeforeReset }: ResetDialogProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const client = useClient();
-  const onIdentityDeleted = useCapabilities(ClientCapabilities.OnIdentityDeleted);
+  const onIdentityDeleted = AppHooks.useCapabilities(ClientCapabilities.OnIdentityDeleted);
 
   const handleReset = useCallback(async () => {
     if (onBeforeReset) {

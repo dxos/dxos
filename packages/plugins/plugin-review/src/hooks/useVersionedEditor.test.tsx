@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { PluginManagerProvider } from '@dxos/app-framework/PluginManagerProvider';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { setupPluginManager } from '@dxos/app-framework/testing';
 import { fromHost } from '@dxos/client/local';
 import { Text as EchoText, Obj } from '@dxos/echo';
@@ -74,11 +74,11 @@ describe('editor binding lifecycle', () => {
   // harness drives the default policy.
   const pluginManager = setupPluginManager();
   const wrapper = ({ children }: PropsWithChildren) => (
-    <PluginManagerProvider value={pluginManager}>
+    <PluginManagerProvider.Root value={pluginManager}>
       <ClientProvider client={client}>
         <ViewStateProvider>{children}</ViewStateProvider>
       </ClientProvider>
-    </PluginManagerProvider>
+    </PluginManagerProvider.Root>
   );
 
   const setup = () =>

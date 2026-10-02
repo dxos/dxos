@@ -6,8 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import { Obj, Ref, Type } from '@dxos/echo';
@@ -68,7 +68,7 @@ export type LightboxArticleProps = AppSurface.ObjectArticleProps<Lightbox.Lightb
  */
 export const LightboxArticle = ({ role, subject: lightbox, attendableId }: LightboxArticleProps) => {
   const { hasAttention } = useAttention(attendableId);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const [items] = useObject(lightbox, 'items');
   const itemsAtom = useMemo(
@@ -219,7 +219,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
                       layout={itemLayout}
                       title={<Card.Title>{Obj.getLabel(artifact)}</Card.Title>}
                     >
-                      <Surface.Surface type={AppSurface.CardContent} data={{ subject: artifact }} limit={1} />
+                      <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: artifact }} limit={1} />
                     </Board.Cell>
                   ) : null;
                 })}

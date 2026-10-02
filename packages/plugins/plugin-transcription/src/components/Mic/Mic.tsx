@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useAtomCapabilityState } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 import {
   type AudioInputDevice,
@@ -32,8 +32,8 @@ export type MicProps = {
  */
 export const Mic = ({ docId }: MicProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const [session, setSession] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
-  const [settings, setSettings] = useAtomCapabilityState(TranscriptionCapabilities.Settings);
+  const [session, setSession] = AppHooks.useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  const [settings, setSettings] = AppHooks.useAtomCapabilityState(TranscriptionCapabilities.Settings);
 
   const recording = !!session?.recording && session.id === docId;
 

@@ -13,10 +13,10 @@ import { expect, waitFor, within } from 'storybook/test';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -24,13 +24,13 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
-import { useConnections } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { Editor } from '@dxos/react-ui-editor';
@@ -135,7 +135,7 @@ const LAUNCHER_MESSAGES = Array.from({ length: 4 }, (_, index) => ({
 }));
 
 const TestLauncher = ({ launcherId }: { launcherId: string }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Selection state, so a click re-renders the launcher's own subtree the way the mailbox list does.
   const [selected, setSelected] = useState<string | undefined>(undefined);
 
@@ -174,7 +174,7 @@ const REVEAL_PLANK_ID = `${STORY_WORKSPACE_ID}/story-item-5`;
 
 /** Reveals a plank from outside the deck, and marks the button once the deck's effects have run. */
 const TestRevealControls = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const reveal = useCallback(
     async (button: HTMLButtonElement, focus?: boolean) => {
       delete button.dataset.revealed;
@@ -200,7 +200,7 @@ const TestRevealControls = () => {
 
 /** Opens one more plank beside the seeded ones. */
 const TestOpenNextControls = ({ targetId }: { targetId?: string }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const handleClick = useCallback(() => {
     if (targetId) {
       void invokePromise(LayoutOperation.Open, { subject: [targetId], disposition: 'add' });
@@ -309,18 +309,18 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
     Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
       Effect.succeed(
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.create({
+          Surface.Root.create({
             id: 'storyLauncher',
-            filter: Surface.makeFilter(
+            filter: Surface.Root.makeFilter(
               AppSurface.Article,
               (data) =>
                 data.companionTo == null && (data.subject as { launcher?: boolean } | undefined)?.launcher === true,
             ),
             component: ({ data }) => <TestLauncher launcherId={String(data.attendableId)} />,
           }),
-          Surface.create({
+          Surface.Root.create({
             id: 'storyArticle',
-            filter: Surface.makeFilter(
+            filter: Surface.Root.makeFilter(
               AppSurface.Article,
               (data) =>
                 data.companionTo == null && (data.subject as { launcher?: boolean } | undefined)?.launcher !== true,
@@ -331,9 +331,9 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
               return <TestArticle title={title} content={contentFor(title)} />;
             },
           }),
-          Surface.create({
+          Surface.Root.create({
             id: 'storyArticleCompanion',
-            filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
+            filter: Surface.Root.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
             component: ({ data }) => {
               const companionTo = data.companionTo as StoryItem | undefined;
               return (
@@ -491,14 +491,14 @@ const DefaultStory = ({
   openNextControl = false,
   settings: settingsOverrides = NO_SETTINGS,
 }: StoryArgs) => {
-  const [settings, updateSettings] = useAtomCapabilityState(DeckCapabilities.Settings);
+  const [settings, updateSettings] = Hooks.useAtomCapabilityState(DeckCapabilities.Settings);
 
   // The deck reads its experiments from settings, not from props, so the story writes them there.
   useEffect(() => {
     updateSettings((current) => ({ ...current, ...settingsOverrides }));
   }, [settingsOverrides, updateSettings]);
-  const pluginManager = usePluginManager();
-  const { graph } = useAppGraph();
+  const pluginManager = PluginManagerProvider.usePluginManager();
+  const { graph } = ToolkitHooks.useAppGraph();
   const { state, deck, updateState, updateEphemeral } = useDeckState();
 
   // Only root expands automatically at graph-capability startup, so this story owns expanding the
@@ -506,7 +506,7 @@ const DefaultStory = ({
   // resolves. The graph qualifies connector node ids with their parent path (e.g.
   // `root/default/story-item-1`), so the seeded `active` list holds the materialized ids.
   useState(() => AppGraph.expandSync(graph, STORY_WORKSPACE_ID, 'child'));
-  const workspaceChildren = useConnections(graph, STORY_WORKSPACE_ID, 'child');
+  const workspaceChildren = GraphHooks.useConnections(graph, STORY_WORKSPACE_ID, 'child');
   const items = useMemo(() => workspaceChildren.filter((node) => node.type === 'story-item'), [workspaceChildren]);
   const launcherNode = useMemo(
     () => workspaceChildren.find((node) => node.type === 'story-launcher'),

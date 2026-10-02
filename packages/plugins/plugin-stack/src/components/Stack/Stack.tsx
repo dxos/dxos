@@ -12,9 +12,9 @@ import React, {
   useState,
 } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { AttentionSigilButton } from '@dxos/app-toolkit/AttentionSigil';
+import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Obj } from '@dxos/echo';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -207,9 +207,9 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
       <div className='p-1 dx-toolbar-surface'>
         <Menu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
           <Menu.Trigger asChild>
-            <AttentionSigilButton size='md' attendableId={attendableId}>
+            <AttentionSigil.Button size='md' attendableId={attendableId}>
               <Icon.Root icon={icon} classNames='transition-opacity' />
-            </AttentionSigilButton>
+            </AttentionSigil.Button>
           </Menu.Trigger>
           <Menu.Portal>
             <Menu.Content>
@@ -278,7 +278,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
             <h2 className='flex items-center font-medium'>{title}</h2>
           </div>
         ) : (
-          <Surface.Surface type={AppSurface.Section} data={surfaceData} limit={1} />
+          <Surface.Root.Surface type={AppSurface.Section} data={surfaceData} limit={1} />
         )}
       </div>
     </Mosaic.Tile>

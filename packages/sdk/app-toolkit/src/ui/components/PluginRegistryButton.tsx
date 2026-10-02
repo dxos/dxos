@@ -4,7 +4,7 @@
 
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as IconButton from '@dxos/react-ui/IconButton';
 import { osTranslations } from '@dxos/ui-theme';
@@ -26,7 +26,7 @@ export type PluginRegistryButtonProps = Partial<
 export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistryButtonProps>(
   ({ onClick, ...props }, forwardedRef) => {
     const { t } = Hooks.useTranslation(osTranslations);
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = AppHooks.useOperationInvoker();
     const available = usePluginRegistryAvailable();
     if (!available) {
       return null;

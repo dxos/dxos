@@ -12,7 +12,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { FilePlugin } from '#plugin';
 import { FileCapabilities, FileOperation } from '#types';
@@ -138,7 +138,7 @@ const makeFile = (name: string, type: string, bytes: Uint8Array): globalThis.Fil
   new globalThis.File([bytes as BlobPart], name, { type });
 
 const setup = async () => {
-  const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
+  const harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({}), FilePlugin()] });
   // The node plugin variant omits the browser-only `InlineBackend` module (settings UI, etc.) —
   // contribute the descriptor directly so `resolveActiveStorage` has something to resolve.
   harness.capabilities.contribute({

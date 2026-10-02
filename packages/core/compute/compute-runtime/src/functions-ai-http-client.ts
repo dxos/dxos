@@ -11,7 +11,7 @@ import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute/Errors';
+import * as FunctionsAiError from '@dxos/compute/FunctionsAiError';
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv, ErrorCodec } from '@dxos/protocols';
 
@@ -121,12 +121,12 @@ const parseUpstreamError = async (response: Response): Promise<Error | undefined
   const inner = body.error;
   const message = inner.message ?? `Upstream AI service responded with HTTP ${response.status}`;
   if (inner.type === 'memoization_miss' && typeof inner.cacheKey === 'string') {
-    return new FunctionsAiMemoizationMissError({
+    return new FunctionsAiError.MemoizationMissError({
       message,
       context: { cacheKey: inner.cacheKey, status: response.status },
     });
   }
-  return new FunctionsAiUpstreamError({
+  return new FunctionsAiError.UpstreamError({
     message,
     context: { type: inner.type, status: response.status, ...(inner.cacheKey ? { cacheKey: inner.cacheKey } : {}) },
   });

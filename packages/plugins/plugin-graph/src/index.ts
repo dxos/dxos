@@ -5,4 +5,4 @@
 export * as GraphPlugin from './GraphPlugin.ts';
 export * from './action.ts';
 export * from '#meta';
-export * from '#hooks';
+export * as Hooks from './Hooks.ts';

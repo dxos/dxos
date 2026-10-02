@@ -5,8 +5,8 @@
 import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -71,7 +71,7 @@ export type PreviewComponentProps = WidgetProps<
     suggest?: boolean;
     onOpen?: (eid: URI.URI) => void;
     /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
-    isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
+    isSurfaceAvailable?: ReturnType<typeof Surface.Root.useIsAvailable>;
   } & LinkWidgetState
 >;
 
@@ -98,11 +98,11 @@ export const PreviewComponent = ({
   // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
   // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
   // first document render. The invoker is only the open-click fallback; absence is tolerable.
-  const invoker = useOptionalCapability(Capabilities.OperationInvoker);
+  const invoker = AppHooks.useOptionalCapability(Capabilities.OperationInvoker);
   const invokePromise = invoker?.invokePromise;
 
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
-  const defaultIsSurfaceAvailable = Surface.useIsAvailable();
+  const defaultIsSurfaceAvailable = Surface.Root.useIsAvailable();
   const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -357,7 +357,7 @@ export const PreviewComponent = ({
             )}
             inert={hasAttention ? undefined : true}
           >
-            <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
+            <Surface.Root.Surface type={AppSurface.Section} data={data} limit={1} />
           </div>
 
           <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
@@ -401,7 +401,7 @@ export const PreviewComponent = ({
                 <Card.Title>{objectLabel}</Card.Title>
               </Card.Header>
               <Card.Body>
-                <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
+                <Surface.Root.Surface type={AppSurface.CardContent} data={data} limit={1} />
               </Card.Body>
             </Card.Root>
           </div>

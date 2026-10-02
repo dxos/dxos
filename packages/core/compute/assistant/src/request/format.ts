@@ -6,7 +6,6 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 
-import type { FunctionNotFoundError } from '@dxos/compute/Errors';
 import type * as Operation from '@dxos/compute/Operation';
 import * as Template from '@dxos/compute/Template';
 import { Database, type Error, Obj, type Registry } from '@dxos/echo';
@@ -30,7 +29,7 @@ export const formatSystemPrompt = ({
   instructions = [],
 }: Pick<AiRequest.RunProps, 'system' | 'skills' | 'objects' | 'instructions'>): Effect.Effect<
   string,
-  FunctionNotFoundError | Error.EntityNotFoundError,
+  Operation.FunctionNotFoundError | Error.EntityNotFoundError,
   Database.Service | Registry.Service | Operation.Service
 > =>
   Effect.gen(function* () {

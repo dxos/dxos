@@ -29,7 +29,7 @@ import { OperationInvoker } from '@dxos/operation';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Expando } from '@dxos/schema';
 
 import { ConnectorSpec } from '#types';
@@ -353,7 +353,7 @@ describe('Binding.scaffoldRoutine', () => {
   ];
 
   test('wires an account-level trigger to the connector’s sync operation', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -377,7 +377,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('marks the trigger remote for a connector that syncs on EDGE', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -387,7 +387,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('persists nothing until the caller adds the draft', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -417,7 +417,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('names the routine after the account so several connections stay distinguishable', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
     Obj.update(connection, (connection) => Obj.setLabel(connection, 'work@example.com'));
@@ -428,7 +428,7 @@ describe('Binding.scaffoldRoutine', () => {
   });
 
   test('findRoutine locates the saved routine so deleting the connection takes it too', async ({ expect }) => {
-    await using harness = await createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
+    await using harness = await Harness.createComposerTestApp({ plugins: [ClientPlugin.make({ types })] });
     const db = await initSpace(harness);
     const connection = makeConnection(db);
 
@@ -999,7 +999,7 @@ describe('Binding.syncAll', () => {
     EffectEx.runPromise(makeInvoker().invoke(TestSync, { connection: Ref.make(connection), priority }));
 });
 
-const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestApp>>) => {
+const initSpace = async (harness: Awaited<ReturnType<typeof Harness.createComposerTestApp>>) => {
   const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );

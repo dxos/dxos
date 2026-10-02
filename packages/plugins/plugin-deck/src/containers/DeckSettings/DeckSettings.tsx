@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Form } from '@dxos/react-ui-form';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
@@ -19,7 +19,7 @@ export type DeckSettingsProps = AppSurface.SettingsData;
 
 export const DeckSettings = ({ subject }: DeckSettingsProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { settings, updateSettings } = AppHooks.useSettingsState<Settings.Settings>(subject.atom);
 
   return (
     <Form.Root
@@ -32,7 +32,7 @@ export const DeckSettings = ({ subject }: DeckSettingsProps) => {
         <Form.Content>
           <Form.FieldSet
             label={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={meta.profile.key} />}
+            actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Fields
               filter={(properties) =>

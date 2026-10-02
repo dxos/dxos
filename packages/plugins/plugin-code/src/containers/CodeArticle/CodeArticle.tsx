@@ -6,7 +6,7 @@ import { javascript } from '@codemirror/lang-javascript';
 import { markdown } from '@codemirror/lang-markdown';
 import React, { forwardRef, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useAtomCapabilityState, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
@@ -70,8 +70,8 @@ const languageForPath = (path: string) => {
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
   ({ role, subject: project, attendableId }, forwardedRef) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
-    const invoker = useOperationInvoker();
-    const [buildRunState, updateBuildRun] = useAtomCapabilityState(CodeCapabilities.BuildRun);
+    const invoker = AppHooks.useOperationInvoker();
+    const [buildRunState, updateBuildRun] = AppHooks.useAtomCapabilityState(CodeCapabilities.BuildRun);
     const projectId = project.id;
     const projectState = buildRunState[projectId];
 

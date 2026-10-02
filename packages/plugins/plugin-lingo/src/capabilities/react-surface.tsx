@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { FlashcardsArticle, ReaderArticle, VocabularyArticle } from '#containers';
@@ -15,14 +15,14 @@ import { Vocabulary } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'vocabularyArticle',
         filter: AppSurface.object(AppSurface.Article, Vocabulary.Vocabulary),
         component: VocabularyArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       // Companion surfaces bind to `companionTo`; `subject` is the variant literal from the graph.
-      Surface.create({
+      Surface.Root.create({
         id: 'flashcardsArticle',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'flashcards'),
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
         component: FlashcardsArticle,
         props: ({ role, data: { attendableId, companionTo } }) => ({ role, attendableId, subject: companionTo }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'readerArticle',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'reader'),

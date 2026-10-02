@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { Form } from '@dxos/react-ui-form';
@@ -74,7 +74,7 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
  * resolver answers (another pull request, an issue) becomes the anchor chip the editor makes of it.
  */
 const useBodyComponents = (): MarkdownViewProps['components'] => {
-  const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
+  const resolvers = AppHooks.useCapabilities(PreviewCapabilities.LinkResolver);
   return useMemo(
     () => ({
       a: ({ children, href, node: _node, ...props }) => {

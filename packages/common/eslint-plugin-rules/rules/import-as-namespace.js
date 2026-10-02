@@ -8,6 +8,17 @@ import path from 'node:path';
 const DIRECTIVE_TEXT = '@import-as-namespace';
 const DIRECTIVE_LINE_REGEX = /^\s*\/\/\s*@import-as-namespace\s*$/m;
 const PASCAL_CASE_REGEX = /^[A-Z][a-zA-Z0-9]*$/;
+
+/**
+ * An import may also prefix the name with a PascalCase qualifier (`AppHooks` for `Hooks`), so two
+ * packages' namespaces of the same name can meet in one file.
+ */
+const isAllowedImportName = (actual, expected) =>
+  actual === expected ||
+  actual === expected + 'Module' ||
+  (actual.length > expected.length &&
+    actual.endsWith(expected) &&
+    PASCAL_CASE_REGEX.test(actual.slice(0, -expected.length)));
 const TS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
 
 /**
@@ -16,7 +27,8 @@ const TS_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx'];
  * When a module contains the `// @import-as-namespace` directive comment, this rule enforces:
  * - The module filename is PascalCase (e.g. `LanguageModel.ts`).
  * - All imports of the module use namespace form: `import * as LanguageModel from './LanguageModel'`.
- * - The namespace name matches the filename (without extension), or has a `Module` suffix.
+ * - The namespace name matches the filename (without extension), has a `Module` suffix, or (on
+ *   imports) a PascalCase prefix: `import * as AppHooks from '@dxos/app-framework/Hooks'`.
  * - Re-exports use namespace form: `export * as LanguageModel from './LanguageModel'`.
  *
  * The `Module` suffix is allowed as an escape hatch when the expected namespace name conflicts
@@ -141,7 +153,7 @@ export default {
         if (!hasDirective) {
           return;
         }
-        const filename = path.basename(context.getFilename());
+        const filename = path.basename(context.filename ?? context.getFilename());
         const stem = filename.replace(/\.\w+$/, '');
         if (!PASCAL_CASE_REGEX.test(stem)) {
           context.report({
@@ -161,7 +173,7 @@ export default {
           return;
         }
 
-        const currentFile = context.getFilename();
+        const currentFile = context.filename ?? context.getFilename();
         const resolved = resolveRelativeImport(source, currentFile);
         if (!resolved) {
           return;
@@ -186,8 +198,7 @@ export default {
         }
 
         const actual = node.specifiers[0].local.name;
-        const allowedNames = [expectedNamespace, expectedNamespace + 'Module'];
-        if (!allowedNames.includes(actual)) {
+        if (!isAllowedImportName(actual, expectedNamespace)) {
           context.report({
             node,
             messageId: 'namespaceMustMatchFilename',
@@ -209,7 +220,7 @@ export default {
           return;
         }
 
-        const currentFile = context.getFilename();
+        const currentFile = context.filename ?? context.getFilename();
         const resolved = resolveRelativeImport(source, currentFile);
         if (!resolved) {
           return;
@@ -239,7 +250,7 @@ export default {
           return;
         }
 
-        const currentFile = context.getFilename();
+        const currentFile = context.filename ?? context.getFilename();
         const resolved = resolveRelativeImport(source, currentFile);
         if (!resolved) {
           return;

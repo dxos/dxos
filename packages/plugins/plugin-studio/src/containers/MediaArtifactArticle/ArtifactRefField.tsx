@@ -6,7 +6,7 @@ import type * as Schema from 'effect/Schema';
 import type * as SchemaAST from 'effect/SchemaAST';
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type Database, type Entity, Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
@@ -39,7 +39,7 @@ const useImageArtifacts = (db?: Database.Database): Entity.Any[] =>
  * artifacts, since a reference is consumed as a still whatever the request's own kind.
  */
 export const ArtifactRefField = (props: FormFieldRendererProps) => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
 
   return (
     <FormFieldRow

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -30,7 +30,7 @@ export type SummarySectionProps = {
  */
 export const SummarySection = ({ subject }: SummarySectionProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const [video] = useObject(subject);
   const uri = Obj.getURI(subject);
   // Resolve the summary's target so we know whether to show the editor or the pending state.

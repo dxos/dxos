@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import { Form } from '@dxos/react-ui-form';
 import * as Field from '@dxos/react-ui/Field';
@@ -21,7 +21,7 @@ import { meta } from '#meta';
  */
 export const RoutineSettings = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   const [properties, changeProperties] = useObject(space?.properties);
   const enabled = !(properties?.triggersDisabled ?? false);
 

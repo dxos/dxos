@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { CodeArticle, CodeSettings, SpecArticle } from '#containers';
@@ -18,13 +18,13 @@ import { isPluginSpecSubject } from '../plugin-spec.ts';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'pluginSpec',
         filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
         component: SpecArticle,
         props: ({ role, data: { subject } }) => ({ role, content: subject.content }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'specArticle',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Spec.Spec),
@@ -33,7 +33,7 @@ export default Capability.makeModule(() =>
         component: SpecArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'codeArticle',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, CodeProject.CodeProject),
@@ -42,7 +42,7 @@ export default Capability.makeModule(() =>
         component: CodeArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'codeSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: CodeSettings,

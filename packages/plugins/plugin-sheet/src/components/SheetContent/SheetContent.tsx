@@ -14,7 +14,7 @@ import React, {
   useState,
 } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
@@ -95,7 +95,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
   //  a reliable dependency for `useEffect` whereas `useLayoutEffect` does not guarantee the element will be defined.
   const [dxGrid, setDxGrid] = useState<DxGridElement | null>(null);
   const [extraplanarFocus, setExtraplanarFocus] = useState<DxGridPosition | null>(null);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const rangeController = useRef<RangeController>(null);
   const { hasAttention } = useAttention(id);
 
@@ -331,7 +331,7 @@ export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((
     [model],
   );
 
-  const [gridInstances] = useCapabilities(SheetCapabilities.GridInstances);
+  const [gridInstances] = AppHooks.useCapabilities(SheetCapabilities.GridInstances);
   useEffect(() => {
     if (dxGrid && gridInstances) {
       gridInstances.register(attendableId, dxGrid, setActiveRefs);

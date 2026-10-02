@@ -17,7 +17,7 @@ import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { dataGenerator } from '@dxos/plugin-script/Templates';
+import * as Templates from '@dxos/plugin-script/Templates';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';
@@ -126,7 +126,7 @@ export class EdgeReplicant {
 
   @trace.span()
   async deployFunction({ source }: { source?: string } = {}): Promise<{ functionId: string; version: string }> {
-    const buildResult = await bundleFunction({ source: source ?? dataGenerator });
+    const buildResult = await bundleFunction({ source: source ?? Templates.dataGenerator });
 
     if (buildResult.error || !buildResult.bundle) {
       log.error('Bundle creation failed', { buildResult });

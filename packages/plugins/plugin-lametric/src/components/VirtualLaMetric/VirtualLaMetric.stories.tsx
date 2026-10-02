@@ -5,27 +5,29 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { type MetricSpec } from '@dxos/plugin-space/Dashboard';
+import type * as Dashboard from '@dxos/plugin-space/Dashboard';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { toFrames } from '#render';
 
 import { VirtualLaMetric } from './VirtualLaMetric.tsx';
 
-const stats: MetricSpec[] = [
+const stats: Dashboard.MetricSpec[] = [
   { kind: 'stat', title: 'Objects', value: '128' },
   { kind: 'stat', title: 'Feeds', value: '3' },
   { kind: 'stat', title: 'Types', value: '9' },
   { kind: 'stat', title: 'Plugins', value: '21' },
 ];
 
-const progress: MetricSpec[] = [{ kind: 'progress', title: 'Syncing mailbox', ratio: 0.42, detail: '42/100' }];
+const progress: Dashboard.MetricSpec[] = [
+  { kind: 'progress', title: 'Syncing mailbox', ratio: 0.42, detail: '42/100' },
+];
 
-const indeterminate: MetricSpec[] = [{ kind: 'progress', title: 'Indexing', detail: '128' }];
+const indeterminate: Dashboard.MetricSpec[] = [{ kind: 'progress', title: 'Indexing', detail: '128' }];
 
-const overflowing: MetricSpec[] = [{ kind: 'stat', title: 'Unindexed attachments', value: '1284' }];
+const overflowing: Dashboard.MetricSpec[] = [{ kind: 'stat', title: 'Unindexed attachments', value: '1284' }];
 
-type StoryProps = { metrics?: (MetricSpec | null)[] };
+type StoryProps = { metrics?: (Dashboard.MetricSpec | null)[] };
 
 // Frames are built through the same `toFrames` the driver uses, so the story shows exactly what the
 // device is sent rather than a hand-written approximation of it.

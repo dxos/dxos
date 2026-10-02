@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -20,7 +20,7 @@ import { filterSpaceInvitations, joinSpaceInvitation } from '../../inbox/index.t
 export const SpaceInvitationsContainer = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const client = useClient();
-  const invoker = useOperationInvoker();
+  const invoker = AppHooks.useOperationInvoker();
   const notices = useInboxNotices();
   const contacts = useContacts();
   const spaces = useSpaces();

@@ -4,13 +4,13 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
-import { useContextBinder } from '@dxos/plugin-assistant/Hooks';
+import * as AssistantHooks from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -19,7 +19,7 @@ import * as Panel from '@dxos/react-ui/Panel';
 import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 export const ContextModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -32,7 +32,7 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
   // TODO(burdon): Reconcile objects vs. artifacts.
   const chats = useQuery(space.db, Filter.type(Chat.Chat));
   const feedTarget = chats.at(-1)?.feed.target;
-  const binder = useContextBinder(space, feedTarget);
+  const binder = AssistantHooks.useContextBinder(space, feedTarget);
   const objects = useBoundObjects(binder);
 
   // Durable artifacts live on the Project (the agent stores none): surface the first project's
@@ -83,7 +83,7 @@ const ContextModuleContainer = ({ space }: { space: Space }) => {
  * but `getObjects()` is a one-shot read; subscribing here re-renders when a process binds a new
  * object to context (no Agent object required).
  */
-const useBoundObjects = (binder: ReturnType<typeof useContextBinder>): Obj.Unknown[] => {
+const useBoundObjects = (binder: ReturnType<typeof AssistantHooks.useContextBinder>): Obj.Unknown[] => {
   const [objects, setObjects] = useState<Obj.Unknown[]>([]);
   useEffect(() => {
     if (!binder) {
@@ -121,7 +121,7 @@ const Tile = ({ data }: { data: ContextItem }) => {
   // Render via a card Surface (PreviewPlugin provides the generic `card--content` fallback).
   return (
     <Card.Root>
-      <Surface.Surface type={AppSurface.CardContent} limit={1} data={{ subject }} />
+      <Surface.Root.Surface type={AppSurface.CardContent} limit={1} data={{ subject }} />
     </Card.Root>
   );
 };

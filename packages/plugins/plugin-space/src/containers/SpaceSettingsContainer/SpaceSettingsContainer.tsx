@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -35,7 +35,7 @@ const SpaceFormSchema = SpaceSchema.SpaceForm;
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const client = useClient();
   const [edgeReplication, setEdgeReplication] = useState(
     space.internal.data.edgeReplication === EdgeReplicationSetting.ENABLED,
@@ -160,7 +160,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
     await invokePromise(SpaceOperation.ExportSpace, { space, format: SpacesService.SpaceArchiveFormat.enums.JSON });
   }, [space, invokePromise]);
 
-  const repairs = useCapabilities(SpaceCapabilities.Repair);
+  const repairs = AppHooks.useCapabilities(SpaceCapabilities.Repair);
   const handleRepair = useCallback(async () => {
     await Promise.all(repairs.map((repair) => repair({ space, isDefault: isDefaultSpace })));
   }, [space, repairs, isDefaultSpace]);

@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
 import * as Field from '@dxos/react-ui/Field';
 
@@ -16,7 +16,7 @@ import { Markdown } from '#types';
 export type MarkdownSettingsProps = AppSurface.SettingsData;
 
 export const MarkdownSettings = ({ subject }: MarkdownSettingsProps) => {
-  const { settings, updateSettings } = useSettingsState<Markdown.Settings>(subject.atom);
+  const { settings, updateSettings } = Hooks.useSettingsState<Markdown.Settings>(subject.atom);
 
   return (
     <Form.Root
@@ -27,7 +27,7 @@ export const MarkdownSettings = ({ subject }: MarkdownSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet label={meta.profile.name} actions={<SettingsScope prefix={meta.profile.key} />}>
+          <Form.FieldSet label={meta.profile.name} actions={<SettingsScope.Root prefix={meta.profile.key} />}>
             <Form.Fields
               fieldMap={{ snippets: SnippetsField }}
               filter={(properties) =>

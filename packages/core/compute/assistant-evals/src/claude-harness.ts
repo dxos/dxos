@@ -39,7 +39,7 @@ import * as StagedUpload from '@dxos/plugin-file/StagedUpload';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import {
   EdgeStatus_ConnectionState,
@@ -490,7 +490,7 @@ export const runClaudeEval = async <T>(
   // A throwaway tree, so a prompt that goes wrong cannot touch the checkout the eval runs from.
   const workdir = fs.mkdtempSync(path.join(os.tmpdir(), 'dx-mcp-eval-'));
   const uploads = options.localUploads && remoteUrl == null ? new LocalUpload.Stage() : undefined;
-  const app = await createComposerTestApp({
+  const app = await Harness.createComposerTestApp({
     plugins: [
       ClientPlugin.make({
         types: [Tag.Tag, ...(options.types ?? [])],

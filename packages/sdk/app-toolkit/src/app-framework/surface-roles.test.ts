@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 
 import { AppSurface } from '../ui/index.ts';
 import * as AppCapabilities from './AppCapabilities.ts';
@@ -15,8 +15,8 @@ import * as AppCapability from './AppCapability.ts';
 const Empty = () => null;
 
 const surfaces = Capability.contribute(Capabilities.ReactSurface, [
-  Surface.create({ id: 'article', filter: Surface.makeFilter(AppSurface.Article), component: Empty }),
-  Surface.create({ id: 'grid', filter: Surface.makeFilter(AppSurface.CardMasonry), component: Empty }),
+  Surface.Root.create({ id: 'article', filter: Surface.Root.makeFilter(AppSurface.Article), component: Empty }),
+  Surface.Root.create({ id: 'grid', filter: Surface.Root.makeFilter(AppSurface.CardMasonry), component: Empty }),
 ]);
 
 describe('AppCapability.undeclaredSurfaceRoles', () => {

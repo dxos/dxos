@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Invitation } from '@dxos/halo';
@@ -35,9 +35,9 @@ type Status = 'confirm' | 'sending' | 'waiting' | 'success' | 'error';
  */
 export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const identity = useIdentity();
-  const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
+  const [identityService] = AppHooks.useCapabilities(ClientCapabilities.IdentityService);
   const [flow, setFlow] = useState<Invitation.Flow>();
   const [status, setStatus] = useState<Status>('confirm');
   const [error, setError] = useState<string>();

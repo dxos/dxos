@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as Position from '@dxos/util/Position';
@@ -23,15 +23,15 @@ export default Capability.makeModule(
     // Mobile projects the graph root and branch/workspace nodes onto their own full-screen
     // surfaces instead of the desktop deck's plank rendering.
     return Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'home',
-        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === GraphNode.RootId),
+        filter: Surface.Root.makeFilter(AppSurface.Article, (data) => data.attendableId === GraphNode.RootId),
         component: Home,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'navBranch',
         position: Position.last,
-        filter: Surface.makeFilter(
+        filter: Surface.Root.makeFilter(
           AppSurface.Article,
           (data) => ALLOWED_DISPOSITIONS.includes(data.properties?.disposition) || data.properties?.role === 'branch',
         ),

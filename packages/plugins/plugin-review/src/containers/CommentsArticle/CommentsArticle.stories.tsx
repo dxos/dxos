@@ -8,7 +8,7 @@ import React, { useEffect } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
@@ -16,7 +16,7 @@ import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -189,7 +189,7 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ agentMode }: StoryArgs) => {
-  const { graph } = useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const attendableId = doc && qualifyId(GraphNode.RootId, doc.id);
@@ -203,8 +203,8 @@ const DefaultStory = ({ agentMode }: StoryArgs) => {
 
   // Push the variant's `agentMode` into the markdown plugin settings so that
   // CommentOperation.Create stamps new threads with the matching agent config.
-  const markdownSettings = useCapability(MarkdownCapabilities.Settings);
-  const registry = useCapability(Capabilities.AtomRegistry);
+  const markdownSettings = Hooks.useCapability(MarkdownCapabilities.Settings);
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
   useEffect(() => {
     if (!markdownSettings) {
       return;

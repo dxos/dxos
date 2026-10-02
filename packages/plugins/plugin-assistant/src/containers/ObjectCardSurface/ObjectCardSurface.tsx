@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { EID } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
 
@@ -24,7 +24,7 @@ export const ObjectCardSurface = ({ id }: ObjectCardSurfaceProps) => {
   const eid = id ? EID.tryParse(id) : undefined;
   const spaceId = eid && EID.getSpaceId(eid);
   const named = useSpace(spaceId);
-  const active = useActiveSpace();
+  const active = Hooks.useActiveSpace();
   const db = (named ?? active)?.db;
   if (!eid) {
     return null;

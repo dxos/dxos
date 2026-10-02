@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { CallsPlugin } from '#plugin';
@@ -13,7 +13,7 @@ import { CallsPlugin } from '#plugin';
 describe('CallsPlugin', () => {
   // Calls own no persistent schema, so this is a load smoke test (activation rethrows on error).
   test('loads and is enabled', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), CallsPlugin()],
     });
 

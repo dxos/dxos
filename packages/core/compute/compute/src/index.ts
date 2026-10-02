@@ -20,3 +20,4 @@ export * as Runnable from './Runnable.ts';
 export * as ServiceResolver from './ServiceResolver.ts';
 export * as StorageService from './StorageService.ts';
 export * as Trace from './Trace.ts';
+export * as FunctionsAiError from './FunctionsAiError.ts';

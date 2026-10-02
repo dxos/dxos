@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -28,7 +28,7 @@ type MeetingItemProps = {
 
 const MeetingItem = ({ meeting, getLabel }: MeetingItemProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
 
   const handleSelectMeeting = useCallback(
     () => invokePromise(MeetingOperation.SetActive, { object: meeting }),
@@ -51,7 +51,7 @@ export type MeetingsListProps = AppSurface.ArticleProps<undefined, {}, Obj.Unkno
 
 export const MeetingsList = ({ companionTo: channel }: MeetingsListProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const db = Obj.getDatabase(channel);
   const meetings = useQuery(db, Query.type(Meeting.Meeting));
   // TODO(wittjosiah): This should be done in the query.

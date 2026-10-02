@@ -5,7 +5,7 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { AttentionSigilButton } from '@dxos/app-toolkit/AttentionSigil';
+import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
 import * as DensityProvider from '@dxos/react-ui/DensityProvider';
 import * as IconButton from '@dxos/react-ui/IconButton';
@@ -174,7 +174,7 @@ PaneTabs.displayName = 'Pane.Tabs';
 export const Pane = {
   Root: PaneRoot,
   Toolbar: PaneToolbar,
-  Sigil: AttentionSigilButton,
+  Sigil: AttentionSigil.Button,
   Title: PaneTitle,
   Tabs: PaneTabs,
   Content: PaneContent,

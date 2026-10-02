@@ -10,7 +10,7 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Annotation, DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { FAVORITE_TAG } from '@dxos/plugin-space/Dashboard';
+import * as Dashboard from '@dxos/plugin-space/Dashboard';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -29,7 +29,7 @@ class StoryItem extends Type.makeObject<StoryItem>(DXN.make('org.dxos.type.test.
 ) {}
 
 const seed = async (space: Space) => {
-  const tag = await Tag.findOrCreate(space.db, { label: FAVORITE_TAG });
+  const tag = await Tag.findOrCreate(space.db, { label: Dashboard.FAVORITE_TAG });
   const tagRef = Ref.make(tag);
   for (const name of ['Inbox', 'Roadmap', 'Weekly team notes', 'Contacts']) {
     space.db.add(Obj.make(StoryItem, { name, [Obj.Meta]: { tags: [tagRef] } }));

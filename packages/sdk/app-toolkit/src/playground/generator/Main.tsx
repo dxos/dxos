@@ -8,8 +8,8 @@ import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { Listbox } from '@dxos/react-ui-list';
 import * as IconButton from '@dxos/react-ui/IconButton';
@@ -43,7 +43,7 @@ const Item = ({
 };
 
 export const Main = () => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const plugins = useAtomValue(manager.plugins);
   const core = useAtomValue(manager.core);
 
@@ -74,9 +74,9 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
-      Surface.create({
+      Surface.Root.create({
         id: 'org.dxos.test.generator.main',
-        filter: Surface.makeFilter(PlaygroundRoles.Primary),
+        filter: Surface.Root.makeFilter(PlaygroundRoles.Primary),
         component: Main,
       }),
     ),

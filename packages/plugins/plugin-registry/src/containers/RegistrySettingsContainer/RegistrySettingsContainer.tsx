@@ -6,12 +6,12 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import React, { useCallback } from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
-import { useSettingsScope } from '@dxos/app-toolkit/Hooks';
-import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { RegistrySettings } from '#components';
@@ -28,10 +28,10 @@ export type RegistrySettingsContainerProps = {
  * the manager's add/enable/remove flow.
  */
 export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainerProps) => {
-  const manager = usePluginManager();
-  const { settings, updateSettings } = useSettingsState<RegistrySettingsType>(subject.atom);
+  const manager = PluginManagerProvider.usePluginManager();
+  const { settings, updateSettings } = Hooks.useSettingsState<RegistrySettingsType>(subject.atom);
   const activeDevPluginIds = useAtomValue(manager.devPluginIds);
-  const pluginScope = useSettingsScope(AppSettings.PLUGINS_NAMESPACE);
+  const pluginScope = ToolkitHooks.useSettingsScope(AppSettings.PLUGINS_NAMESPACE);
 
   const onEnableDev = useCallback(
     async (url: string) => {
@@ -54,7 +54,7 @@ export const RegistrySettingsContainer = ({ subject }: RegistrySettingsContainer
 
   return (
     <RegistrySettings
-      scope={<SettingsScope prefix={subject.prefix} />}
+      scope={<SettingsScope.Root prefix={subject.prefix} />}
       settings={settings}
       onSettingsChange={updateSettings}
       activeDevPluginIds={activeDevPluginIds}

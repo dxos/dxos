@@ -8,9 +8,9 @@
 import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
-import { type Surface } from '@dxos/app-framework/Surface';
+import type * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useTypeOptions } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Database, Obj } from '@dxos/echo';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
@@ -19,7 +19,7 @@ import * as Field from '@dxos/react-ui/Field';
 import { type TypeInputOptions, getTypeInputOptions } from '../types/SpaceForm.ts';
 
 /** The form renderer's own props ride alongside `data`; `type` comes from the field AST. */
-export type SpaceFormFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &
+export type SpaceFormFieldProps = Surface.Root.ComponentProps<AppSurface.FormInputData> &
   Omit<FormFieldRendererProps, 'type'>;
 
 export const HueField = ({ data, label, readonly, getValue, onValueChange }: SpaceFormFieldProps) => {
@@ -65,7 +65,7 @@ export const TypenameField = ({ data, ...inputProps }: SpaceFormFieldProps) => {
     location: [],
     kind: [],
   }));
-  const options = useTypeOptions({ db, annotation });
+  const options = Hooks.useTypeOptions({ db, annotation });
 
   if (!ast) {
     return null;

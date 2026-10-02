@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Skill from '@dxos/compute/Skill';
 import { Obj, Ref } from '@dxos/echo';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { scaffoldProject } from '@dxos/plugin-projects/Templates';
+import * as Templates from '@dxos/plugin-projects/Templates';
 import { Task } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -41,7 +41,7 @@ export const studioTemplate: ProjectCapabilities.Template = {
   icon: 'ph--paint-brush--regular',
   scaffold: ({ name }) =>
     Effect.sync(() => {
-      const project = scaffoldProject({
+      const project = Templates.scaffoldProject({
         name,
         text: STUDIO_INSTRUCTIONS,
         skills: PROJECT_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))),

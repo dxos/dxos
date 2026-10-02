@@ -5,7 +5,6 @@
 import { type Client } from '@dxos/client';
 import { FUNCTIONS_META_KEY } from '@dxos/compute-runtime';
 import { FunctionServiceError } from '@dxos/compute-runtime';
-import { FunctionError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import { type Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
@@ -176,7 +175,7 @@ export class FunctionsServiceClient {
         input,
       );
     } catch (error) {
-      throw FunctionError.wrap({ message: 'Failed to invoke function', ifTypeDiffers: true })(error);
+      throw Operation.FunctionError.wrap({ message: 'Failed to invoke function', ifTypeDiffers: true })(error);
     }
   }
 

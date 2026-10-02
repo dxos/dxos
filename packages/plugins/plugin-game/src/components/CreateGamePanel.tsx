@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Form, omitId } from '@dxos/react-ui-form';
@@ -37,7 +37,7 @@ type VariantSelection = Schema.Schema.Type<typeof VariantSelection>;
  * it in a Game.
  */
 export const CreateGamePanel = ({ target, onCreateObject, onCancel, variants: variantsProp }: CreateGamePanelProps) => {
-  const capabilityVariants = useCapabilities(GameCapabilities.VariantProvider);
+  const capabilityVariants = AppHooks.useCapabilities(GameCapabilities.VariantProvider);
   const variants = variantsProp ?? capabilityVariants;
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const selected = useMemo(() => variants.find((v) => v.id === selectedId), [variants, selectedId]);

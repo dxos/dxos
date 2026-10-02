@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { PluginRegistryButton } from '@dxos/app-toolkit/PluginRegistryButton';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as PluginRegistryButton from '@dxos/app-toolkit/PluginRegistryButton';
 import { Obj, Ref } from '@dxos/echo';
 import { Form } from '@dxos/react-ui-form';
 import * as Banner from '@dxos/react-ui/Banner';
@@ -53,12 +53,12 @@ export type BookingSearchProps = {
 
 const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const kind = Segment.getKind(segment);
 
   // Resolve contributed services for the provider picker + empty state. The actual search runs
   // through the SearchBookings operation so the assistant shares the same path.
-  const allServices = useCapabilities(TripCapabilities.BookingService);
+  const allServices = AppHooks.useCapabilities(TripCapabilities.BookingService);
   const services = useMemo(() => allServices.filter((service) => service.kinds.includes(kind)), [allServices, kind]);
   const [serviceId, setServiceId] = useState<string | undefined>(undefined);
   const service = useMemo(
@@ -187,7 +187,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
           <Banner.Title>{t('booking.no-providers.message')}</Banner.Title>
           <Banner.Body classNames='flex flex-col py-1 gap-2'>
             <span>{t('booking.enable-providers.message')}</span>
-            <PluginRegistryButton />
+            <PluginRegistryButton.Root />
           </Banner.Body>
         </Banner.Content>
       </Banner.Root>

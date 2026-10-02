@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
-import { useUpdateRow } from '@dxos/app-toolkit/UpdateRow';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
+import * as UpdateRow from '@dxos/app-toolkit/UpdateRow';
 import { Form } from '@dxos/react-ui-form';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
@@ -20,8 +20,8 @@ export type NativeSettingsProps = AppSurface.SettingsProps<Settings.Settings>;
 /** Update status comes from the update-manager capability, so this panel takes no settings props. */
 export const NativeSettings = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const manager = useCapability(NativeCapabilities.UpdateManager);
-  const { description, button } = useUpdateRow({ manager, t });
+  const manager = AppHooks.useCapability(NativeCapabilities.UpdateManager);
+  const { description, button } = UpdateRow.useUpdateRow({ manager, t });
 
   return (
     <Form.Root schema={Schema.Struct({})} values={{}} variant='settings'>
@@ -29,7 +29,7 @@ export const NativeSettings = () => {
         <Form.Content>
           <Form.FieldSet
             label={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={meta.profile.key} />}
+            actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Field standalone label={t('settings.updates.label')} description={description}>
               {button}

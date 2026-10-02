@@ -6,6 +6,14 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/Surface': 'src/Surface.ts',
+    'ns/SharedPackages': 'src/SharedPackages.ts',
+    'ns/PluginManagerProvider': 'src/PluginManagerProvider.ts',
+    'ns/NamePopover': 'src/NamePopover.ts',
+    'ns/Hooks': 'src/Hooks.ts',
+    'ns/HomeSection': 'src/HomeSection.ts',
+    'ns/Cli': 'src/Cli.ts',
+    'ns/App': 'src/App.ts',
     'App': 'src/ui/components/App/index.ts',
     'HomeSection': 'src/ui/components/HomeSection/index.ts',
     'Hooks': 'src/ui/hooks/index.ts',

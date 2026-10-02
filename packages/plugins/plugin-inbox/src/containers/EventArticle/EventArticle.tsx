@@ -7,10 +7,10 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Database, Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
@@ -35,8 +35,8 @@ export const EventArticle = ({
   nodeId = attendableId,
   companionTo: calendar,
 }: EventArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
-  const { graph } = useAppGraph();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const { graph } = ToolkitHooks.useAppGraph();
   const db = Obj.getDatabase(calendar);
   // Resolve the live (mutable, reactive) db object so edits to a draft re-render the controlled
   // inputs. The companion subject can be a non-reactive snapshot; querying by id yields the proxy.

@@ -4,7 +4,7 @@
 
 import { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 
 import * as LayoutOperation from '../../operations/LayoutOperation.ts';
 
@@ -29,7 +29,7 @@ export type DetailActivation = {
  * would otherwise keep the last row highlighted with nothing open.
  */
 export const useDetailNavigation = ({ contextId, getPath }: DetailNavigationOptions) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   return useCallback(
     (id: string | undefined, { modified = false }: DetailActivation = {}) => {

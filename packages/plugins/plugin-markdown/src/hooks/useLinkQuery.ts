@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Annotation, Database, Filter, Obj, Query, Type } from '@dxos/echo';
@@ -47,7 +47,7 @@ const insertLink = (view: EditorView, head: number, label: string, uri: string, 
 
 export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Unknown) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
 
   const filter = useMemo(
     () =>

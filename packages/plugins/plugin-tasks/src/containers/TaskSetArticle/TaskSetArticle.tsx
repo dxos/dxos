@@ -9,9 +9,9 @@ import * as Exit from 'effect/Exit';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type RefObject, useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useCapabilities, useOperation, useOperationHandler, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useDetailNavigation } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
@@ -123,7 +123,7 @@ export const TaskSetArticle = ({
   const handleClearFilter = useCallback(() => setFilterText(''), [setFilterText]);
   const { checked, onTaskCheck } = useCheckedTasks(taskSet);
 
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   // Files dropped on the create pane attach once the task exists: the create answers with the new
   // task's id, and the live object is in the working set by then, since this client wrote it.
   const attachFile = useAttachFile();
@@ -157,18 +157,22 @@ export const TaskSetArticle = ({
     [invokePromise, taskSet, spaceId, attachFile, db],
   );
 
-  const handleUpdate = useOperation(
+  const handleUpdate = AppHooks.useOperation(
     TaskOperation.UpdateTask,
     (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
   );
 
-  const handleDelete = useOperation(TaskOperation.DeleteTask, (task: Task.Task) => ({ task: Ref.make(task) }), {
-    spaceId,
-  });
+  const handleDelete = AppHooks.useOperation(
+    TaskOperation.DeleteTask,
+    (task: Task.Task) => ({ task: Ref.make(task) }),
+    {
+      spaceId,
+    },
+  );
 
   const currentId = useSelection(attendableId, 'single');
-  const openDetail = useDetailNavigation({
+  const openDetail = ToolkitHooks.useDetailNavigation({
     contextId: attendableId,
     getPath: (id) => `${attendableId}/${id}`,
   });
@@ -227,7 +231,7 @@ export const TaskSetArticle = ({
   // unloaded, so with the rows already in hand the write commits in the same tick the gesture ends.
   // Going through the invoker instead re-rendered from the model before the write landed and again
   // after it, which is the jump.
-  const move = useOperationHandler(
+  const move = AppHooks.useOperationHandler(
     TaskOperation.MoveTask,
     (task: Task.Task, { parentTask, before }: TaskPlacement) => ({
       task: Ref.make(task),
@@ -436,7 +440,7 @@ const useFilterQuery = (
  * which rows an action will act on, so with nothing to act on it is an affordance that does nothing.
  */
 const useCheckedTasks = (taskSet: TaskSet.TaskSet) => {
-  const actions = useCapabilities(TasksCapabilities.TaskAction);
+  const actions = AppHooks.useCapabilities(TasksCapabilities.TaskAction);
   const ids = useSelection(taskSet.id, 'multi');
   const { toggle } = useSelectionActions(taskSet.id);
   const checked = useMemo(() => new Set(ids), [ids]);

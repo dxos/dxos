@@ -9,10 +9,10 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useHomeVisibility } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -67,19 +67,19 @@ const meta = {
         // Home-content contributors normally wired by the plugin's react-surface capability,
         // including the per-section visibility gate + close affordance.
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.create({
+          Surface.Root.create({
             id: 'story.spaceHomeRecent',
-            filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
+            filter: Surface.Root.makeFilter(SpaceSurface.SpaceHomeContent),
             component: ({ data }) => {
-              const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeRecent');
+              const { visible, hide } = Hooks.useHomeVisibility(data.space, 'spaceHomeRecent');
               return visible ? <SpaceHomeRecent space={data.space} onClose={hide} /> : null;
             },
           }),
-          Surface.create({
+          Surface.Root.create({
             id: 'story.spaceHomeDashboard',
-            filter: Surface.makeFilter(SpaceSurface.SpaceHomeContent),
+            filter: Surface.Root.makeFilter(SpaceSurface.SpaceHomeContent),
             component: ({ data }) => {
-              const { visible, hide } = useHomeVisibility(data.space, 'spaceHomeDashboard');
+              const { visible, hide } = Hooks.useHomeVisibility(data.space, 'spaceHomeDashboard');
               return visible ? <SpaceHomeDashboard space={data.space} onClose={hide} /> : null;
             },
           }),

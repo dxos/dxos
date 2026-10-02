@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { IrohBeaconPlugin } from '#plugin';
@@ -13,7 +13,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('IrohBeaconPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [IrohBeaconPlugin()],
     });
 

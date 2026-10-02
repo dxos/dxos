@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { HomeSection } from '@dxos/app-framework/HomeSection';
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as HomeSection from '@dxos/app-framework/HomeSection';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -39,7 +39,7 @@ type SpaceScopedProps = {
 export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
 
-  const schemas = useCapabilities(AppCapabilities.Schema);
+  const schemas = AppHooks.useCapabilities(AppCapabilities.Schema);
   const filter = useMemo(() => {
     const collectionTypename = Type.getTypename(Collection.Collection);
     const types = schemas
@@ -76,7 +76,7 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
 };
 
 const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const { t } = Hooks.useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
   const label = ThemeProvider.toLocalizedString(

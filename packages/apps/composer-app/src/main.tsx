@@ -15,13 +15,8 @@ import React, { StrictMode, Suspense, lazy, useCallback, useEffect, useState } f
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { bootLoader } from '@dxos/app-framework/App';
-import {
-  FIRST_INTERACTIVE_EVENT,
-  STARTUP_ACTIVATED_EVENT,
-  STARTUP_FAILED_EVENT,
-  useApp,
-} from '@dxos/app-framework/Hooks';
+import * as AppApp from '@dxos/app-framework/App';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
 import * as Registry from '@dxos/app-framework/Registry';
@@ -145,7 +140,7 @@ declare global {
  * The CSS animation in `index.html` keeps painting on the compositor thread
  * regardless of main-thread work, so this is purely textual feedback.
  */
-const bootStatus = (text: string) => bootLoader?.status({ humanized: text });
+const bootStatus = (text: string) => AppApp.bootLoader?.status({ humanized: text });
 
 // Stamp every (re-)evaluation of this module so we can tell Vite HMR reloads
 // from a true page boot. Dev-only — production has no HMR and the diagnostic
@@ -409,7 +404,7 @@ const main = async () => {
   };
 
   window.addEventListener(
-    STARTUP_ACTIVATED_EVENT,
+    Hooks.STARTUP_ACTIVATED_EVENT,
     () => {
       startupActivated = true;
       // The scheduler carries on with independent modules after one fails, so activation can still
@@ -423,7 +418,7 @@ const main = async () => {
     { once: true },
   );
   window.addEventListener(
-    FIRST_INTERACTIVE_EVENT,
+    Hooks.FIRST_INTERACTIVE_EVENT,
     (event) => {
       const firstInteractiveMs = event.detail;
       void observability
@@ -432,7 +427,7 @@ const main = async () => {
     },
     { once: true },
   );
-  window.addEventListener(STARTUP_FAILED_EVENT, (event) => captureStartupFailure(event.detail), { once: true });
+  window.addEventListener(Hooks.STARTUP_FAILED_EVENT, (event) => captureStartupFailure(event.detail), { once: true });
   // Detect if this is the popover window in Tauri.
   const isPopover = await Match.value(isTauri).pipe(
     Match.when(
@@ -451,7 +446,7 @@ const main = async () => {
   // The popover shares storage and the host's termination queue with the main window, which reports them.
   if (!isPopover) {
     window.addEventListener(
-      STARTUP_ACTIVATED_EVENT,
+      Hooks.STARTUP_ACTIVATED_EVENT,
       () => {
         const failure = readBootAssetFailure();
         void observability
@@ -622,19 +617,19 @@ const main = async () => {
         // Pass `range` so the loader updates the existing line in place
         // ("Loading plugins (3/12)") instead of appending a fresh entry per
         // tick — keeps the visible log compact.
-        bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
+        AppApp.bootLoader?.status({ humanized: 'Loading plugins', range: { index: loaded, total } });
         // The ring spans two phases — remote-plugin preload (0 → 50%) and
         // module activation (50 → 100%, driven from `Placeholder` once
         // React mounts). Splitting the range keeps it monotonic across
         // the boundary.
-        bootLoader?.progress((loaded / total) * 0.5);
+        AppApp.bootLoader?.progress((loaded / total) * 0.5);
       },
     }),
   );
 
   bootStatus('Building Composer…');
   // Park the ring at 50% — preload done, activation about to take over.
-  bootLoader?.progress(0.5);
+  AppApp.bootLoader?.progress(0.5);
   const remotePlugins: Plugin.Plugin[] = remotePluginsResult;
   const plugins = [...builtinPlugins, ...remotePlugins];
   const pluginLoader = UrlLoader.make(builtinPlugins, { cache: assetCache });
@@ -722,7 +717,7 @@ const main = async () => {
       raiseFatalError = (error) => setFatalError(error instanceof Error ? error : new Error(String(error)));
     }, []);
 
-    const App = useApp({
+    const App = Hooks.useApp({
       fallback: Fallback,
       // The boot loader (injected by `bootLoaderPlugin`, with the brand mark
       // supplied via `markSvg` in vite.config.ts) is the loading UI; `App`

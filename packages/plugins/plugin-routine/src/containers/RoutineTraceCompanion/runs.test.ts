@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute/Errors';
+import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj, Ref } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';
@@ -78,7 +78,7 @@ describe('groupIntoRuns', () => {
       triggerEntityId: TRIGGER_ID,
       eventType: Trace.OperationEnd.key,
       eventOutcome: 'failure',
-      eventErrorCode: RUN_AGAIN_ERROR_CODE,
+      eventErrorCode: Process.RUN_AGAIN_ERROR_CODE,
       timestamp: 2000,
     });
     const runs = groupIntoRuns([start, end], new Set([TRIGGER_ID]));
@@ -91,7 +91,7 @@ describe('groupIntoRuns', () => {
       triggerEntityId: TRIGGER_ID,
       eventType: Trace.OperationEnd.key,
       eventOutcome: 'failure',
-      eventError: RUN_AGAIN_MESSAGE,
+      eventError: Process.RUN_AGAIN_MESSAGE,
       timestamp: 2000,
     });
     const runs = groupIntoRuns([end], new Set([TRIGGER_ID]));
@@ -104,7 +104,7 @@ describe('groupIntoRuns', () => {
       triggerEntityId: TRIGGER_ID,
       eventType: Trace.OperationEnd.key,
       eventOutcome: 'failure',
-      eventErrorCode: RUN_AGAIN_ERROR_CODE,
+      eventErrorCode: Process.RUN_AGAIN_ERROR_CODE,
       timestamp: 1000,
     });
     const failure = makeMessage({

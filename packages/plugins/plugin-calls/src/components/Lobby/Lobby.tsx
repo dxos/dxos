@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
@@ -42,7 +42,7 @@ type LobbyPreviewProps = {};
 
 const LobbyPreview = (_props: LobbyPreviewProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = AppHooks.useCapability(CallsCapabilities.Manager);
   const videoEnabled = useAtomValue(call.videoEnabledAtom);
   const videoStream = useAtomValue(call.localVideoStreamAtom);
   const [classNames, setClassNames] = useState('');
@@ -92,7 +92,7 @@ type LobbyToolbarProps = Util.ThemedClassName<
 >;
 
 const LobbyToolbar = ({ roomId, ...props }: LobbyToolbarProps) => {
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = AppHooks.useCapability(CallsCapabilities.Manager);
   const [count, setCount] = useState<number>(0);
 
   // TODO(wittjosiah): Leaving the room doesn't remove you from the swarm.

@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { useObject } from '@dxos/echo-react';
 import * as Flex from '@dxos/react-ui/Flex';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -32,7 +32,7 @@ const tone = (score: number) => (score >= 0.75 ? 'bg-emerald-500' : score >= 0.4
  */
 export const DrawingScores = ({ role, drawing }: DrawingScoresProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const variants = useCapabilities(IllustratorCapabilities.VariantProvider);
+  const variants = AppHooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const ref = drawing.canvas;
   const [snapshot] = useObject(ref);
   const canvas = snapshot ? ref.target : undefined;

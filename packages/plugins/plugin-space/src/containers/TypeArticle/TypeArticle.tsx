@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
-import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -63,7 +63,7 @@ export type TypeArticleProps = {
  */
 export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const [layout, setLayout] = useState<Layout>('masonry');
   const typeUri = Type.getURI(type);
   const objects = useQuery(space.db, Filter.type(typeUri));
@@ -93,7 +93,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
 
   // TODO(burdon): Factor out as an aspect?
   const duplicates = useDuplicates({ space, type, objects, enabled: layout === 'duplicates' });
-  const { mergePreview } = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const { mergePreview } = AppHooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   const stagedPreview = mergePreview?.typeUri === typeUri ? mergePreview : undefined;
 
   // Merged-away ids would otherwise linger in the shared selection and the companion's card stack.

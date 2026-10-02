@@ -4,13 +4,13 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as CardIconSlot from '@dxos/app-toolkit/CardIconSlot';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
@@ -72,14 +72,14 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             <Card.Root fullWidth>
               <Card.Header>
                 <Card.Block>
-                  <CardIconSlot subject={subject}>
+                  <CardIconSlot.Root subject={subject}>
                     <Icon.Root icon={icon} />
-                  </CardIconSlot>
+                  </CardIconSlot.Root>
                 </Card.Block>
                 <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
               </Card.Header>
               <Card.Body>
-                <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
+                <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
               </Card.Body>
             </Card.Root>
 
@@ -89,7 +89,11 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
               <Field.Root>
                 <Field.Label>{t('related-actions.label')}</Field.Label>
               </Field.Root>
-              <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
+              <Surface.Root.Surface
+                type={SpaceSurface.Prompts}
+                data={{ subject, attendableId: subject.id }}
+                limit={1}
+              />
             </Flex.Root>
 
             {/* Gated on the unfiltered set so hiding every type does not remove the filter itself. */}
@@ -136,8 +140,8 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 const useMenuActions = (
   attendableId?: string,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
 
   const menuActions = useMenuBuilder(
     (get): ActionGraphProps =>

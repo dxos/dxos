@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -32,7 +32,7 @@ export type QuestionCardProps = {
  */
 export const QuestionCard = ({ task, questionId }: QuestionCardProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   // Snapshot rather than the object: the card must repaint when the answer lands, including when
   // it lands from another surface showing the same question — the task's own row, say.
   const [snapshot] = useObject(task);

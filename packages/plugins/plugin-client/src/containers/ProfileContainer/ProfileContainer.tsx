@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { type ChangeEvent, type Dispatch, type SetStateAction, useCallback, useMemo, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
@@ -52,7 +52,7 @@ const usePendingGatedState = <T,>(value: T, pending: boolean): [T, Dispatch<SetS
 
 export const ProfileContainer = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const identity = useIdentity();
   const pendingRef = useRef(false);
   // Bumped on every edit, so a write's completion can tell whether a newer edit has queued behind

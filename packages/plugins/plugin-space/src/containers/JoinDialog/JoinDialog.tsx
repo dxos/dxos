@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Trigger } from '@dxos/async';
@@ -25,7 +25,7 @@ export type JoinDialogProps = JoinPanelProps & {
 };
 
 export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialogProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const client = useClient();
   const { t } = Hooks.useTranslation(meta.profile.key);
 

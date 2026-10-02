@@ -4,14 +4,14 @@
 
 import React, { useMemo } from 'react';
 
-import { type Surface } from '@dxos/app-framework/Surface';
+import type * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Database, Obj, Type } from '@dxos/echo';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 import * as Field from '@dxos/react-ui/Field';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope; `type` comes from the field AST. */
-export type PivotColumnFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &
+export type PivotColumnFieldProps = Surface.Root.ComponentProps<AppSurface.FormInputData> &
   Omit<FormFieldRendererProps, 'type'>;
 
 /**

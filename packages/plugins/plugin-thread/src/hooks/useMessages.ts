@@ -4,7 +4,7 @@
 
 import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Channel, type Message } from '@dxos/types';
 
 import { ChannelBackend, ThreadCapabilities } from '#types';
@@ -13,7 +13,7 @@ const EMPTY: readonly Message.Message[] = [];
 
 /** Reactive message list for a channel, resolved through its backend provider. */
 export const useMessages = (channel: Channel.Channel | undefined): readonly Message.Message[] => {
-  const providers = useCapabilities(ThreadCapabilities.ChannelBackend);
+  const providers = Hooks.useCapabilities(ThreadCapabilities.ChannelBackend);
   const provider = useMemo(
     () => (channel ? ChannelBackend.resolveProvider(providers, channel.backend.kind) : undefined),
     [providers, channel],

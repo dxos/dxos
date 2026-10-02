@@ -6,7 +6,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Option from 'effect/Option';
 import { useContext, useEffect, useState } from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
@@ -20,7 +20,7 @@ export type Breadcrumb = { id: string; label: string };
  * matching {@link useCompanions}.
  */
 export const useBreadcrumbs = (ids: string[]): Breadcrumb[] => {
-  const { graph } = useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const registry = useContext(RegistryContext);
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [crumbs, setCrumbs] = useState<Breadcrumb[]>([]);

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { corePlugins } from '@dxos/plugin-testing';
@@ -40,7 +40,7 @@ export const Default: Story = {};
 
 export const OnePlank: Story = {
   render: () => {
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = Hooks.useOperationInvoker();
     useAsyncEffect(async () => {
       // A singleton `active` list renders fullbleed; opening into a fresh deck yields that directly.
       await invokePromise(LayoutOperation.Open, { subject: [storyItemId(0)], navigation: 'immediate' });
@@ -52,7 +52,7 @@ export const OnePlank: Story = {
 
 export const ManyPlanks: Story = {
   render: () => {
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = Hooks.useOperationInvoker();
     useAsyncEffect(async () => {
       await invokePromise(LayoutOperation.Open, { subject: [storyItemId(0)], navigation: 'immediate' });
       await invokePromise(LayoutOperation.Open, {

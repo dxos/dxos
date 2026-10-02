@@ -8,7 +8,7 @@ import React, { type ReactNode, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Identity, Space } from '@dxos/halo';
 import { makeIdentityService, makeSpaceService } from '@dxos/halo-adapter-client';
 import { HaloProvider } from '@dxos/halo-react';
@@ -22,7 +22,7 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }: { children?: ReactNode }) => {
-        const client = useCapability(ClientCapabilities.Client);
+        const client = Hooks.useCapability(ClientCapabilities.Client);
         // Wrap the tree with the HALO services (via the client adapter) so `@dxos/halo-react`
         // hooks resolve. Kept inside ClientProvider while consumers migrate off `@dxos/client`.
         const services = useMemo(

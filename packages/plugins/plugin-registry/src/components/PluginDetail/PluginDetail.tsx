@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, type ReactNode } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { useLayout } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 import * as Button from '@dxos/react-ui/Button';
 import * as Carousel from '@dxos/react-ui/Carousel';
@@ -135,7 +135,7 @@ export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
   ) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
     const { themeMode } = ThemeProvider.useThemeContext();
-    const layout = useLayout();
+    const layout = ToolkitHooks.useLayout();
     // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
     // 4rem floor on both left it with less width for the center content than the gutters themselves.
     const isMobile = layout.mode === 'mobile';

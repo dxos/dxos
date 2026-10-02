@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { FactViewer } from '@dxos/react-ui-rdf';
 
 import { BrainCapabilities } from '#types';
@@ -19,8 +19,8 @@ import { useFacts } from './use-facts.ts';
  * presentational {@link FactViewer}. Space-scoped via {@link useActiveSpace} — no container coupling.
  */
 export const FactsCompanion = () => {
-  const registry = useCapability(BrainCapabilities.FactStoreRegistry);
-  const space = useActiveSpace();
+  const registry = Hooks.useCapability(BrainCapabilities.FactStoreRegistry);
+  const space = ToolkitHooks.useActiveSpace();
   const facts = useFacts(registry, space?.id);
   return <FactViewer.Root facts={facts} />;
 };

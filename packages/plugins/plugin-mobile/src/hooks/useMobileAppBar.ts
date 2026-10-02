@@ -5,13 +5,13 @@
 import * as Atom from 'effect/reactivity/Atom';
 import { useCallback, useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { useDeckState } from '@dxos/plugin-deck/Hooks';
-import { useActionRunner, useNode } from '@dxos/plugin-graph/Hooks';
+import * as DeckHooks from '@dxos/plugin-deck/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
@@ -44,14 +44,14 @@ const ACTION_DISPOSITIONS = ['list-item', 'list-item-primary', 'heading-list-ite
  */
 export const useMobileAppBar = (): MobileAppBar => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { state } = useDeckState();
-  const stateAtom = useCapability(DeckCapabilities.State);
-  const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
-  const { graph } = useAppGraph();
+  const { state } = DeckHooks.useDeckState();
+  const stateAtom = AppHooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = AppHooks.useCapability(DeckCapabilities.EphemeralState);
+  const { graph } = ToolkitHooks.useAppGraph();
   const { stack, topId, rootId, pop } = useMobileStack();
-  const runAction = useActionRunner();
+  const runAction = GraphHooks.useActionRunner();
 
-  const node = useNode(graph, topId);
+  const node = GraphHooks.useNode(graph, topId);
   const title = node ? ThemeProvider.toLocalizedString(node.properties.label, t) : undefined;
 
   // Derives activeId from the state atom (rather than `useMobileStack`) so this atom does not need

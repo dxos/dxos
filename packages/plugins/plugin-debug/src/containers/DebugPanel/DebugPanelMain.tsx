@@ -4,10 +4,10 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
-import { useNode } from '@dxos/plugin-graph/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
@@ -26,7 +26,7 @@ const KEEP_MOUNTED: ReadonlySet<unknown> = new Set([DebugNodes.Console, DebugNod
 export const DebugPanelMain = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const { contextId, nodeId, select } = useDebugPanelContext();
-  const { graph } = useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const handleNavigate = useCallback(
     (target: string) => {
       AppGraph.expandPath(graph, target);
@@ -34,7 +34,7 @@ export const DebugPanelMain = () => {
     },
     [graph, select],
   );
-  const node = useNode(graph, nodeId);
+  const node = GraphHooks.useNode(graph, nodeId);
   const keepMounted = node !== undefined && KEEP_MOUNTED.has(node.data);
   const [visited, setVisited] = useState<string[]>([]);
   useEffect(() => {
@@ -91,7 +91,7 @@ type DebugPanelPageProps = {
 /** One tool's article surface; the `div` is its show/hide element, not layout. */
 const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugPanelPageProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const node = useNode(graph, nodeId);
+  const node = GraphHooks.useNode(graph, nodeId);
   const data = useMemo<DebugSurface.PageData | undefined>(
     () =>
       node && {
@@ -110,7 +110,7 @@ const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugP
 
   return (
     <div role='none' className='dx-expand' hidden={hidden}>
-      <Surface.Surface type={DebugSurface.Page} data={data} limit={1} />
+      <Surface.Root.Surface type={DebugSurface.Page} data={data} limit={1} />
     </div>
   );
 };

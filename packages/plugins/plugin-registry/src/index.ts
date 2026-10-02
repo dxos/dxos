@@ -9,3 +9,4 @@ export * from './paths.ts';
 export * from './storage.ts';
 export * from './util/index.ts';
 export * from '#operations';
+export * as Operations from './Operations.ts';

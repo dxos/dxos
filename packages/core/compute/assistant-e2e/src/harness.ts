@@ -35,7 +35,7 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Employer, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -261,7 +261,7 @@ export const agentTest = (options: AgentTestOptions): ((ctx: TestContext) => Eff
       Effect.gen(function* () {
         const harness = yield* Effect.acquireRelease(
           Effect.promise(async () =>
-            createComposerTestApp({
+            Harness.createComposerTestApp({
               plugins: await createDefaultPlugins(ctx, options),
             }),
           ),

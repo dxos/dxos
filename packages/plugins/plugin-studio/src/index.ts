@@ -7,4 +7,4 @@ export * from '#meta';
 export * from '#operations';
 export * from '#skills';
 export * from '#types';
-export * from './templates/index.ts';
+export * as Templates from './Templates.ts';

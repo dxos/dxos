@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -30,7 +30,7 @@ export type SearchPropertiesProps = {
  */
 export const SearchProperties = ({ search }: SearchPropertiesProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const database = Obj.getDatabase(search);
 
   // Reactive query of every Provider in the space — used to resolve the Provider objects (and their

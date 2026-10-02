@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { useOperation } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -48,7 +48,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
-  const handleUpdate = useOperation(
+  const handleUpdate = AppHooks.useOperation(
     TaskOperation.UpdateTask,
     (task: Task.Task, props: Task.Edit) => ({ task: Ref.make(task), ...props }),
     { spaceId },
@@ -56,7 +56,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
   const { onFiles: handleAttach, pending: pendingAttachments } = useAttachFiles(task);
 
   // Record-only: an agent that asked over the MCP reads the answer back off the task.
-  const handleQuestionAnswer = useOperation(
+  const handleQuestionAnswer = AppHooks.useOperation(
     TaskOperation.AnswerQuestion,
     (task: Task.Task, question: string, answer: string) => ({ task: Ref.make(task), question, answer }),
     { spaceId },

@@ -11,7 +11,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
-import { scaffoldProject } from '@dxos/plugin-projects/Templates';
+import * as Templates from '@dxos/plugin-projects/Templates';
 import { Outline, Task, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -72,7 +72,7 @@ export const helpdeskSpace: AppCapabilities.SpaceTemplate = {
       Feed.Feed,
     ]);
     const project = space.db.add(
-      scaffoldProject({
+      Templates.scaffoldProject({
         name: 'Helpdesk',
         description: 'Customer support work-stream.',
         text: PROJECT_INSTRUCTIONS,

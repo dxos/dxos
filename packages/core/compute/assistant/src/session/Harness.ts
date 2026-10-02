@@ -13,9 +13,9 @@ import type * as RpcClient from 'effect/rpc/RpcClient';
 import type * as Scope from 'effect/Scope';
 
 import { ProcessManager } from '@dxos/compute-runtime';
-import { ServiceNotAvailableError } from '@dxos/compute/Errors';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Annotation, Database, EID, Feed, Filter, Obj, type URI } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
@@ -143,7 +143,7 @@ export const layerSpec: LayerSpec.LayerSpec = LayerSpec.make(
           // is not possible here. Die with ServiceNotAvailableError to signal a programming error
           // (missing 'conversation' in spawn environment) that callers cannot recover from.
           return yield* Effect.die(
-            new ServiceNotAvailableError(HarnessService.key, {
+            new ServiceResolver.ServiceNotAvailableError(HarnessService.key, {
               message: `Service not available: ${HarnessService.key} — process spawn is missing 'conversation' in environment (set via Operation.withInvocationOptions or ProcessManager.spawn environment)`,
             }),
           );

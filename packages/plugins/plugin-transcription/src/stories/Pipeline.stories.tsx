@@ -24,9 +24,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useAtomCapability, useCapabilities } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -34,7 +34,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
@@ -155,14 +155,14 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ stages, seed }: StoryArgs) => {
-  const { graph } = useAppGraph();
+  const { graph } = ToolkitHooks.useAppGraph();
   const [space] = useSpaces();
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const attendableId = doc && GraphNode.qualifyId(GraphNode.RootId, doc.id);
   // Mark the editor attended so its toolbar (and the contributed record action) are active.
   const attentionAttrs = useAttentionAttributes(attendableId);
-  const [editorViews] = useCapabilities(MarkdownCapabilities.EditorViews);
-  const status = useAtomCapability(TranscriptionCapabilities.PipelineStatus);
+  const [editorViews] = Hooks.useCapabilities(MarkdownCapabilities.EditorViews);
+  const status = Hooks.useAtomCapability(TranscriptionCapabilities.PipelineStatus);
   const [telemetry, setTelemetry] = useState<TelemetryEvent[]>([]);
   const [summary, setSummary] = useState<string>();
 
@@ -294,7 +294,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   if (!showStatus) {
     return (
       <div className='contents' {...attentionAttrs}>
-        <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
+        <Surface.Root.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
     );
   }
@@ -302,7 +302,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   return (
     <div className='dx-expand grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
       <div className='dx-expand'>
-        <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
+        <Surface.Root.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
       <PipelineStatus
         phase={stages ? 'idle' : (status?.phase ?? 'idle')}

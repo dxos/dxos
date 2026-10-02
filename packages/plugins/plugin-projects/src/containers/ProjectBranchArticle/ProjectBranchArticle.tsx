@@ -9,7 +9,7 @@ import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { ObjectMasonryArticle } from '@dxos/plugin-space/Containers';
+import * as Containers from '@dxos/plugin-space/Containers';
 import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
@@ -32,7 +32,7 @@ export const ProjectChatsArticle = ({ role, project, attendableId }: ProjectBran
   const chats = useMemo(() => children.filter(Obj.instanceOf(Chat.Chat)), [children]);
 
   return (
-    <ObjectMasonryArticle
+    <Containers.ObjectMasonryArticle
       role={role}
       attendableId={attendableId}
       objects={chats}
@@ -61,7 +61,7 @@ export const ProjectArtifactsArticle = ({ role, project, attendableId }: Project
   const artifacts = useQuery(ids.length > 0 ? db : undefined, Filter.id(...ids));
 
   return (
-    <ObjectMasonryArticle
+    <Containers.ObjectMasonryArticle
       role={role}
       attendableId={attendableId}
       objects={artifacts}

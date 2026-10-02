@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
-import { useCapability, useOptionalCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Util from '@dxos/react-ui/Util';
 
 import { useDebugMode } from '#hooks';
@@ -45,7 +45,7 @@ type CallRootProps = PropsWithChildren<{ fullscreen?: boolean }>;
  * flags) with the composable parts below; renders no DOM of its own.
  */
 const CallRoot = ({ children, fullscreen }: CallRootProps) => {
-  const call = useCapability(CallsCapabilities.Manager);
+  const call = Hooks.useCapability(CallsCapabilities.Manager);
   const debug = useDebugMode();
   return <CallContext.Provider value={{ call, debug, fullscreen }}>{children}</CallContext.Provider>;
 };
@@ -76,7 +76,7 @@ CallViewport.displayName = CALL_VIEWPORT_NAME;
 // event and this root mounts eagerly, so read it optionally and render nothing until it exists
 // (an empty audio sink is correct while there is no call).
 const CallAudio = () => {
-  const call = useOptionalCapability(CallsCapabilities.Manager);
+  const call = Hooks.useOptionalCapability(CallsCapabilities.Manager);
   return call ? <CallAudioStream call={call} /> : null;
 };
 

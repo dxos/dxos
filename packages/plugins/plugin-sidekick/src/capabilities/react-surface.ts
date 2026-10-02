@@ -7,7 +7,7 @@ import { lazy } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { Sidekick } from '#types';
@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
-      Surface.create({
+      Surface.Root.create({
         id: 'sidekickDashboard',
         filter: AppSurface.object(AppSurface.Article, Sidekick.Profile),
         component: SidekickArticle,

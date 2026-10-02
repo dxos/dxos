@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback, useEffect, useState } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import { generateName } from '@dxos/display-name';
 import { type Key, Obj } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
@@ -41,7 +41,7 @@ export type SpacePresenceProps = {
 };
 
 export const SpacePresence = ({ object, spaceId }: SpacePresenceProps) => {
-  const ephemeral = useAtomCapability(SpaceCapabilities.EphemeralState);
+  const ephemeral = AppHooks.useAtomCapability(SpaceCapabilities.EphemeralState);
   const identity = useIdentity();
   const db = Obj.getDatabase(object);
   const space = useSpace(spaceId ?? db?.spaceId);

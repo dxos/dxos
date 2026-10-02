@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -35,7 +35,7 @@ type CreateProjectValues = Schema.Schema.Type<typeof CreateProjectValues>;
 export const CreateProjectPanel = ({ onCreateObject, onCancel, templates: templatesProp }: CreateProjectPanelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const [name, setName] = useState('');
-  const capabilityTemplates = useCapabilities(ProjectCapabilities.Template);
+  const capabilityTemplates = AppHooks.useCapabilities(ProjectCapabilities.Template);
 
   const templates = templatesProp ?? capabilityTemplates;
   // The global create dialog has no subject, so subject-required templates (e.g. an inbox research

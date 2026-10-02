@@ -11,8 +11,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { scaffoldProject } from '@dxos/plugin-projects/Templates';
-import { makeRoutine } from '@dxos/plugin-routine/Wire';
+import * as Templates from '@dxos/plugin-projects/Templates';
+import * as Wire from '@dxos/plugin-routine/Wire';
 import { trim } from '@dxos/util';
 
 import { CrmOperation } from '#types';
@@ -55,14 +55,14 @@ export const crmPipeline: ProjectCapabilities.Template = {
       // The feed spec requires the live feed object; Database.load is a read-only DB operation.
       const feed = yield* Database.load(mailbox.feed);
 
-      const project = scaffoldProject({
+      const project = Templates.scaffoldProject({
         name: name ?? `CRM Pipeline — ${mailbox.name ?? 'Mailbox'}`,
         text: PROJECT_INSTRUCTIONS,
         skills: PROJECT_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))),
         objects: [Ref.make(mailbox)],
       });
 
-      const routine = makeRoutine({
+      const routine = Wire.makeRoutine({
         name: 'Process Mailbox',
         spec: { kind: 'runnable', runnable: Ref.fromURI(CrmOperation.ProcessMailbox.meta.key) },
         trigger: Trigger.make({

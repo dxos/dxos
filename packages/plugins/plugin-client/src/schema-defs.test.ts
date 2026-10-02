@@ -13,7 +13,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { DXN, Type } from '@dxos/echo';
 // ClientPlugin's `#plugin` loader resolves to `plugin.node.ts` under the source condition vitest uses.
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { ClientCapabilities, ClientEvents } from '#types';
 
@@ -56,7 +56,7 @@ const makeSeedPlugin = (result: { registered?: boolean }) =>
 describe('SchemaDefs', () => {
   test('registers contributed schema before an IdentityCreated consumer runs', async ({ expect }) => {
     const result: { registered?: boolean } = {};
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), NotePlugin(), makeSeedPlugin(result)()],
       // A cold boot creates the identity seconds before the host goes idle, so the wave
       // `SchemaDefs` normally rides in on has not run: `autoStart: false` skips the harness's

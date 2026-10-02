@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import { Dnd } from '@dxos/react-ui-dnd';
 
 import { useDeckState } from '#hooks';
@@ -18,8 +18,8 @@ import { ActiveNode } from './ActiveNode.tsx';
 export type DeckLayoutProps = Pick<ToasterProps, 'onDismissToast'>;
 
 export const DeckLayout = ({ onDismissToast }: DeckLayoutProps) => {
-  const settings = useAtomCapability(DeckCapabilities.Settings);
-  const pluginManager = usePluginManager();
+  const settings = Hooks.useAtomCapability(DeckCapabilities.Settings);
+  const pluginManager = PluginManagerProvider.usePluginManager();
   const { deck, state, updateState } = useDeckState();
   const { toasts } = state;
 

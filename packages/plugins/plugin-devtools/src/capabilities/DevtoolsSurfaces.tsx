@@ -6,9 +6,9 @@
 
 import React, { type ComponentType, useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { InvocationTraceContainer, SpaceInfoArticle, SpaceListArticle, TestingArticle } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
@@ -32,7 +32,7 @@ export type ActiveSpacePanelProps = {
  * the active space (it is a hook) nor decline to render, so they share this wrapper.
  */
 export const ActiveSpacePanel = ({ role, Panel }: ActiveSpacePanelProps) => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
 
   return space ? <Panel role={role} space={space} /> : null;
 };
@@ -51,7 +51,7 @@ export const SpaceListSurface = ({ role, onNavigate }: NavigableSurfaceProps) =>
 
 /** The active space; selecting a feed or pipeline shows the feeds page in the debug panel. */
 export const SpaceInfoSurface = ({ role, onNavigate }: NavigableSurfaceProps) => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   const handleSelect = useCallback(() => onNavigate(Devtools.getNodePath(Devtools.Echo.Feeds)), [onNavigate]);
   if (!space) {
     return null;
@@ -61,7 +61,7 @@ export const SpaceInfoSurface = ({ role, onNavigate }: NavigableSurfaceProps) =>
 };
 
 export const EdgeTracesSurface = ({ role }: { role?: string }) => {
-  const space = useActiveSpace();
+  const space = ToolkitHooks.useActiveSpace();
   const feed = useResolveRef(space?.properties.invocationTraceFeed);
   if (!space) {
     return null;
@@ -73,7 +73,7 @@ export const EdgeTracesSurface = ({ role }: { role?: string }) => {
 };
 
 export const EdgeTestingSurface = ({ role }: { role?: string }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const onScriptPluginOpen = useCallback(
     async (space: Space) => {
       await space.waitUntilReady();

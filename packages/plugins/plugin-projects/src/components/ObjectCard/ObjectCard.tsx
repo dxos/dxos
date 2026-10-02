@@ -4,12 +4,12 @@
 
 import React, { type KeyboardEventHandler, useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
+import * as CardIconSlot from '@dxos/app-toolkit/CardIconSlot';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useArchiveMenuItem } from '@dxos/plugin-space/Hooks';
+import * as SpaceHooks from '@dxos/plugin-space/Hooks';
 import * as Card from '@dxos/react-ui/Card';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -34,7 +34,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
   const [object] = useObject(objectProp);
   const label = Obj.getLabel(object)?.trim() || t('object-card.untitled.label');
   const icon = Obj.getIcon(object)?.icon ?? 'ph--file--regular';
-  const { archived, item: archiveItem } = useArchiveMenuItem(objectProp);
+  const { archived, item: archiveItem } = SpaceHooks.useArchiveMenuItem(objectProp);
   const menuItems = [
     ...(onDelete ? [{ label: t('object-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }] : []),
     ...(archiveItem ? [archiveItem] : []),
@@ -68,9 +68,9 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
     >
       <Card.Header>
         <Card.Block>
-          <CardIconSlot subject={object}>
+          <CardIconSlot.Root subject={object}>
             <Icon.Root icon={icon} />
-          </CardIconSlot>
+          </CardIconSlot.Root>
         </Card.Block>
         <Card.Title classNames='line-clamp-2'>{label}</Card.Title>
         {menuItems.length > 0 && <Card.Menu items={menuItems} />}
@@ -83,7 +83,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
       {/* The surface emits its own `Card.Body` (see BookmarkCard/RoutineCard), so this must not wrap it —
           a second body would double the card's padding. Nothing renders for a type with no registered
           card surface; the header still identifies it. */}
-      <Surface.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
+      <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: object }} limit={1} />
     </Card.Root>
   );
 };

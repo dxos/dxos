@@ -26,7 +26,7 @@ import React, {
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { DropIndicator } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import * as Hooks from '@dxos/react-ui/Hooks';
@@ -85,7 +85,7 @@ const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
   const { onSelect, onTabChange } = useNavTreeContext();
   const { getItem } = useNavTreeState();
   const [isLg] = Hooks.useMediaQuery('lg');
-  const runAction = useActionRunner();
+  const runAction = GraphHooks.useActionRunner();
 
   return useCallback(
     (event: MouseEvent) => {
@@ -300,7 +300,7 @@ export const L0Menu = ({
   onItemHover,
 }: L0MenuProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const runAction = useActionRunner();
+  const runAction = GraphHooks.useActionRunner();
   const handleAction = useCallback(
     (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps) => {
       void runAction(action, params);

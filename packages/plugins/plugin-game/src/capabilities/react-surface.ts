@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 import { GameArticle, GameCard } from '#containers';
@@ -15,7 +15,7 @@ import { Game } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'game',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Game.Game),
@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
         component: GameArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'gameCard',
         filter: AppSurface.object(AppSurface.CardContent, Game.Game),
         component: GameCard,

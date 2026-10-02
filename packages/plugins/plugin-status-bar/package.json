@@ -59,9 +59,9 @@
       "import": "./dist/lib/index.mjs"
     },
     "./StatusBar": {
-      "source": "./src/components/StatusBar/index.ts",
-      "types": "./dist/types/src/components/StatusBar/index.d.ts",
-      "import": "./dist/lib/StatusBar.mjs"
+      "source": "./src/StatusBar.ts",
+      "types": "./dist/types/src/StatusBar.d.ts",
+      "import": "./dist/lib/ns/StatusBar.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

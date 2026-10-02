@@ -85,24 +85,24 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./Chat": {
-      "source": "./src/components/Chat/index.ts",
-      "types": "./dist/types/src/components/Chat/index.d.ts",
-      "import": "./dist/lib/Chat.mjs"
+      "source": "./src/Chat.ts",
+      "types": "./dist/types/src/Chat.d.ts",
+      "import": "./dist/lib/ns/Chat.mjs"
     },
     "./TracePanel": {
-      "source": "./src/containers/TracePanel/TracePanel.tsx",
-      "types": "./dist/types/src/containers/TracePanel/TracePanel.d.ts",
-      "import": "./dist/lib/TracePanel.mjs"
+      "source": "./src/TracePanel.ts",
+      "types": "./dist/types/src/TracePanel.d.ts",
+      "import": "./dist/lib/ns/TracePanel.mjs"
     },
     "./Extensions": {
-      "source": "./src/extensions/index.ts",
-      "types": "./dist/types/src/extensions/index.d.ts",
-      "import": "./dist/lib/extensions.mjs"
+      "source": "./src/Extensions.ts",
+      "types": "./dist/types/src/Extensions.d.ts",
+      "import": "./dist/lib/ns/Extensions.mjs"
     },
     "./Hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./package.json": "./package.json",
     "./testing": {

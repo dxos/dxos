@@ -14,7 +14,6 @@ import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/testing/TestClock';
 import { describe, expect, test } from 'vitest';
 
-import { NoHandlerError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -137,7 +136,7 @@ describe('OperationInvoker', () => {
 
       expect(result._tag).toBe('Failure');
       if (result._tag === 'Failure') {
-        expect(result.failure).toBeInstanceOf(NoHandlerError);
+        expect(result.failure).toBeInstanceOf(Operation.NoHandlerError);
       }
     }),
   );
@@ -278,7 +277,7 @@ describe('OperationInvoker.invokePromise', () => {
     const result = await invoker.invokePromise(ToString, { value: 42 });
 
     expect(result.error).toBeDefined();
-    expect(result.error).toBeInstanceOf(NoHandlerError);
+    expect(result.error).toBeInstanceOf(Operation.NoHandlerError);
   });
 });
 

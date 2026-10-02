@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { CanvasPlugin } from '#plugin';
@@ -18,7 +18,7 @@ describe('CanvasPlugin', () => {
   // The plugin declares `dependsOn` the illustrator, so the harness boots it too: without it nothing
   // here activates at all, which is the point of the declaration.
   test('modules activate on the expected events', { timeout: 60_000 }, async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), IllustratorPlugin.make(), CanvasPlugin()],
     });
 

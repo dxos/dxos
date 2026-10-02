@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { type InvitationResult } from '@dxos/react-client/invitations';
@@ -17,7 +17,7 @@ import { meta } from '#meta';
 import { ClientOperation } from '#operations';
 
 export const JoinDialog = (props: JoinPanelProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const { t } = Hooks.useTranslation(meta.profile.key);
 
   const handleCancelResetStorage = useCallback(() => invokePromise(ClientOperation.ShareIdentity), [invokePromise]);

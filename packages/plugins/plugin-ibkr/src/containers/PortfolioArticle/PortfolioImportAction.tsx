@@ -4,7 +4,7 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -29,7 +29,7 @@ export type PortfolioImportActionProps = {
  */
 export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const inputRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);

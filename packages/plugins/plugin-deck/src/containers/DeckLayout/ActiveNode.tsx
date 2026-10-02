@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
-import { useNode } from '@dxos/plugin-graph/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { useAttended } from '@dxos/react-ui-attention';
 
 import { useNodeActionExpander } from '#hooks';
@@ -15,15 +15,15 @@ import { useNodeActionExpander } from '#hooks';
 // TODO(burdon): Factor out to effect in plugin set document title.
 export const ActiveNode = () => {
   const [id] = useAttended();
-  const { graph } = useAppGraph();
-  const activeNode = useNode(graph, id);
+  const { graph } = Hooks.useAppGraph();
+  const activeNode = GraphHooks.useNode(graph, id);
   useNodeActionExpander(activeNode);
 
   return (
     <div className='sr-only'>
       {/* TODO(wittjosiah): Weird that this is a surface, feel like it's not really render logic.
             Probably this lives in React-land currently in order to access translations? */}
-      <Surface.Surface
+      <Surface.Root.Surface
         type={AppSurface.DocumentTitle}
         data={{ subject: activeNode } satisfies AppSurface.DocumentTitleData}
         limit={1}

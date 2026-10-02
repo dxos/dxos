@@ -5,7 +5,7 @@
 import { useAtom, useAtomSet } from '@effect/atom-react/Hooks';
 import React, { type FormEvent, useCallback, useState } from 'react';
 
-import { useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
@@ -29,8 +29,8 @@ type AccountState = 'loading' | 'present' | 'missing' | 'error';
 export const AccountContainer = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const identity = useIdentity();
-  const { invokePromise } = useOperationInvoker();
-  const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);
+  const { invokePromise } = AppHooks.useOperationInvoker();
+  const accountCacheAtom = AppHooks.useCapability(ClientCapabilities.AccountCache);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
   const [resendStatus, setResendStatus] = useState<string | null>(null);

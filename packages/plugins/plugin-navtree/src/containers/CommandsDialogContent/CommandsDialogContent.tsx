@@ -4,13 +4,12 @@
 
 import React, { forwardRef, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useActions } from '@dxos/plugin-graph/Hooks';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { getHotkeyScope, keySymbols } from '@dxos/react-focus';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import * as Button from '@dxos/react-ui/Button';
@@ -30,9 +29,9 @@ export type CommandsDialogContentProps = {
 export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogContentProps>(
   ({ selected: initial }, forwardedRef) => {
     const { t } = Hooks.useTranslation(meta.profile.key);
-    const { invokePromise } = useOperationInvoker();
-    const runAction = useActionRunner();
-    const { graph } = useAppGraph();
+    const { invokePromise } = AppHooks.useOperationInvoker();
+    const runAction = GraphHooks.useActionRunner();
+    const { graph } = ToolkitHooks.useAppGraph();
     const [selected, setSelected] = useState<string | undefined>(initial);
 
     // Traverse graph.
@@ -65,7 +64,7 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
     }, [graph]);
 
     const group = allActions.find(({ id }) => id === selected);
-    const groupActions = useActions(graph, group?.id);
+    const groupActions = GraphHooks.useActions(graph, group?.id);
     const actions = AppGraphNode.isActionGroup(group) ? groupActions : allActions;
 
     const { results, handleSearch } = useSearchListResults({

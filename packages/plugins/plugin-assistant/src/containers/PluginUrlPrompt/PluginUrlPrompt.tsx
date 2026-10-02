@@ -5,10 +5,10 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
-import { describeLoadError } from '@dxos/plugin-registry/Operations';
+import * as Operations from '@dxos/plugin-registry/Operations';
 import * as RegistryOperation from '@dxos/plugin-registry/RegistryOperation';
 import * as Button from '@dxos/react-ui/Button';
 import * as Flex from '@dxos/react-ui/Flex';
@@ -35,9 +35,9 @@ export type PluginUrlPromptProps = {
  */
 export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_URL_PROMPT_NAME);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -58,7 +58,7 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
     const { data, error } = await invokePromise(RegistryOperation.LoadPlugin, { url, enable: false });
     setPending(false);
     if (error || !data) {
-      setError(describeLoadError(error));
+      setError(Operations.describeLoadError(error));
     } else {
       // The agent is waiting on a click it cannot observe, so the outcome is reported as a turn.
       submit(`Loaded the plugin \`${data.id}\` from ${url}; I will enable it in Plugins. Continue.`);

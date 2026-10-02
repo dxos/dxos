@@ -4,7 +4,7 @@
 
 import React, { type ReactNode, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Attention } from '@dxos/react-ui-attention';
@@ -103,7 +103,7 @@ export const Companion = ({
           (support, assistant) keeps its state when the plank it is beside changes. */}
       {companions.map((node, index) => (
         <Pane.Content key={Attention.getLinkedVariant(node.id)} classNames={mx(node.id !== selected && 'hidden')}>
-          <Surface.Surface type={AppSurface.Article} data={companionDataList[index]} limit={1} />
+          <Surface.Root.Surface type={AppSurface.Article} data={companionDataList[index]} limit={1} />
         </Pane.Content>
       ))}
     </Pane.Root>

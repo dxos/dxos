@@ -6,7 +6,7 @@ import './spotlight.css';
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
 import * as Dialog from '@dxos/react-ui/Dialog';
@@ -62,7 +62,7 @@ export const SpotlightLayout = () => {
   return (
     <div className='grid inset-0 overflow-hidden' data-spotlight>
       <Dialog.Root open={state.dialogOpen} modal={false}>
-        <Surface.Surface type={AppSurface.Dialog} data={dialogContent} limit={1} fallback={ErrorFallback.Root} />
+        <Surface.Root.Surface type={AppSurface.Dialog} data={dialogContent} limit={1} fallback={ErrorFallback.Root} />
       </Dialog.Root>
     </div>
   );

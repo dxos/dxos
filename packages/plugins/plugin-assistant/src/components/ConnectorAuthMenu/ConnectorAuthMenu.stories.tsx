@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import React, { useContext, useMemo } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Filter, Obj, Ref } from '@dxos/echo';
@@ -19,7 +19,7 @@ import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ActionToolbar, isToolbarAction, useGraphMenuActions } from '@dxos/react-ui-menu';
@@ -86,8 +86,8 @@ const TOOLBAR_NODE_ID = 'story-toolbar-target';
 const ToolbarStory = () => {
   const [space] = useSpaces();
   const registry = useContext(RegistryContext);
-  const runAction = useActionRunner();
-  const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
+  const runAction = GraphHooks.useActionRunner();
+  const allConnectors = Hooks.useCapabilities(ConnectorSpec.Connector).flat();
   const allConnections = useQuery(space?.db, Filter.type(Connection.Connection));
   const targets = useQuery(space?.db, Filter.type(Expando.Expando));
   const target = targets[0];

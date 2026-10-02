@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Entity, Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -15,7 +15,7 @@ import { getHashHue } from '@dxos/ui-theme';
 import { ResearchInputQueue } from '../testing/schema.ts';
 
 export const ResearchInputModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }

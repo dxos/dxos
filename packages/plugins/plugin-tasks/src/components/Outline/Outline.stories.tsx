@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { githubReferences, referenceUrl } from '@dxos/plugin-github/Extensions';
+import * as Extensions from '@dxos/plugin-github/Extensions';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -28,7 +28,10 @@ const OutlineStory = ({ content = '- [x] Initial content', references, onSelectL
   // The outline owns its core extensions; a host adds what only it knows about. Here that is
   // plugin-github's `#123` decoration, which in the app resolves against the project's repository.
   const extensions = useMemo(
-    () => (references ? [githubReferences({ resolve: (number) => referenceUrl(references, number) })] : undefined),
+    () =>
+      references
+        ? [Extensions.githubReferences({ resolve: (number) => Extensions.referenceUrl(references, number) })]
+        : undefined,
     [references],
   );
   if (text) {

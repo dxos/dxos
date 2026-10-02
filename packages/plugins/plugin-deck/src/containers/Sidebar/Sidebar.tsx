@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Main from '@dxos/react-ui/Main';
 import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
@@ -33,7 +33,7 @@ export const Sidebar = () => {
       label={label}
       classNames={['grid', topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
-      <Surface.Surface type={AppSurface.Navigation} data={navigationData} limit={1} />
+      <Surface.Root.Surface type={AppSurface.Navigation} data={navigationData} limit={1} />
     </Main.NavigationSidebar>
   );
 };

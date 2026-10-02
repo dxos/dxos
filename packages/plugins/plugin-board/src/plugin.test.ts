@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { BoardPlugin } from '#plugin';
@@ -14,7 +14,7 @@ const moduleId = (name: string) => `${meta.profile.key}.module.${name}`;
 
 describe('BoardPlugin', () => {
   test('modules activate on the expected events', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), BoardPlugin()],
     });
 

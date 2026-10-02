@@ -4,15 +4,15 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useAppGraph, useShowItem } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { useAtomState } from '@dxos/react-hooks';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
@@ -39,7 +39,7 @@ export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio
  */
 export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArticleProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const showItem = useShowItem();
+  const showItem = ToolkitHooks.useShowItem();
 
   // `useObject` re-renders when the Portfolio's feed ref resolves, so the query below picks up the feed.
   const [portfolio] = useObject(subject);
@@ -70,7 +70,7 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
   const id = attendableId ?? Obj.getURI(subject);
   const currentId = useSelection(id, 'single');
 
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   // IBKR has no external-sync Cursor, so the connection is detected space-wide by connectorId.
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const connected = connections.some((connection) => connection.connectorId === IBKR_CONNECTOR_ID);
@@ -95,8 +95,8 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
     }
   }, [invokePromise, db, subject, setSyncing]);
 
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
   const menuActions = useMenuBuilder(
     (get) => {
       // `MenuBuilder` mutates in place, so the conditional sync action is added without reassignment.

@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Entity, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
@@ -50,7 +50,7 @@ export type RenamePopoverProps = { subject: RenameSubject };
 export const RenamePopover = ({ subject }: RenamePopoverProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
   const space = !isRenameCallback(subject) && isSpace(subject);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const [name, setNameState] = useState(() => getName(subject));
 
   // Commit the latest value when the popover is dismissed (Enter, click-outside, or blur), unless cancelled.

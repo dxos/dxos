@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Form } from '@dxos/react-ui-form';
 
 export type DefaultSettingsProps = {
@@ -25,8 +25,8 @@ export type DefaultSettingsProps = {
  * every schema-driven settings article shows a consistent title.
  */
 export const DefaultSettings = ({ subject }: DefaultSettingsProps) => {
-  const manager = usePluginManager();
-  const { settings, updateSettings } = useSettingsState<Record<string, any>>(subject.atom);
+  const manager = PluginManagerProvider.usePluginManager();
+  const { settings, updateSettings } = Hooks.useSettingsState<Record<string, any>>(subject.atom);
   const title = manager.getPlugins().find((plugin) => plugin.meta.profile.key === subject.prefix)?.meta.profile.name;
 
   return (
@@ -38,7 +38,7 @@ export const DefaultSettings = ({ subject }: DefaultSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet label={title ?? subject.prefix} actions={<SettingsScope prefix={subject.prefix} />}>
+          <Form.FieldSet label={title ?? subject.prefix} actions={<SettingsScope.Root prefix={subject.prefix} />}>
             <Form.Fields />
           </Form.FieldSet>
         </Form.Content>

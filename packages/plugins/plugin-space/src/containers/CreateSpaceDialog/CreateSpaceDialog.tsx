@@ -8,8 +8,8 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -35,12 +35,12 @@ const initialValues: FormValues = { private: false, edgeReplication: true };
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { invoke } = useOperationInvoker();
+  const { invoke } = AppHooks.useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();
   const [error, setError] = useState<string | undefined>(undefined);
-  const manager = usePluginManager();
-  const contributed = useCapabilities(AppCapabilities.SpaceTemplate);
+  const manager = PluginManagerProvider.usePluginManager();
+  const contributed = AppHooks.useCapabilities(AppCapabilities.SpaceTemplate);
   const templates = useMemo(
     () =>
       contributed

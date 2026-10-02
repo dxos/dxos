@@ -4,8 +4,8 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { type Database, Filter } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
@@ -38,8 +38,8 @@ export type IntegrationPromptProps = {
  */
 export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPromptProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const space = useActiveSpace();
-  const connectors = useCapabilities(ConnectorSpec.Connector).flat();
+  const space = ToolkitHooks.useActiveSpace();
+  const connectors = AppHooks.useCapabilities(ConnectorSpec.Connector).flat();
   const matched = useMemo(() => (service ? matchConnectors(connectors, service) : []), [connectors, service]);
   const connectorIds = useMemo(() => matched.map((connector) => connector.id), [matched]);
   const label = matched[0]?.label ?? service;

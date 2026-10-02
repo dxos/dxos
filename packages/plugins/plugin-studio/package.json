@@ -152,9 +152,9 @@
       "import": "./dist/lib/StudioSkill.mjs"
     },
     "./Templates": {
-      "source": "./src/templates/index.ts",
-      "types": "./dist/types/src/templates/index.d.ts",
-      "import": "./dist/lib/templates.mjs"
+      "source": "./src/Templates.ts",
+      "types": "./dist/types/src/Templates.d.ts",
+      "import": "./dist/lib/ns/Templates.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

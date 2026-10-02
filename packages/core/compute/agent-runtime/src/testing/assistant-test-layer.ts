@@ -28,7 +28,6 @@ import {
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Credential from '@dxos/compute/Credential';
-import { ServiceNotAvailableError } from '@dxos/compute/Errors';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
@@ -218,13 +217,13 @@ export const AssistantTestServiceResolverLayer = (
         ServiceResolver.succeed(Harness.HarnessService, (context) =>
           Effect.gen(function* () {
             if (!context.conversation) {
-              return yield* Effect.fail(new ServiceNotAvailableError(Harness.HarnessService.key));
+              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(Harness.HarnessService.key));
             }
             // Read the manager lazily: the resolver is invoked at spawn time, by which point the
             // holder has been filled (see the construction-cycle note in `AssistantTestLayer`).
             const processManager = processManagerHolder.current;
             if (!processManager) {
-              return yield* Effect.fail(new ServiceNotAvailableError(ProcessManager.Service.key));
+              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(ProcessManager.Service.key));
             }
             const runtime = yield* Effect.context<Database.Service>();
             return yield* Harness.make({ conversation: context.conversation, processManager, runtime });
@@ -236,7 +235,7 @@ export const AssistantTestServiceResolverLayer = (
             // operation resolution runs.
             const agentService = agentServiceHolder.current;
             if (!agentService) {
-              return yield* Effect.fail(new ServiceNotAvailableError(AgentService.key));
+              return yield* Effect.fail(new ServiceResolver.ServiceNotAvailableError(AgentService.key));
             }
             return agentService;
           }),

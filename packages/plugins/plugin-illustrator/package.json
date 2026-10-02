@@ -126,9 +126,9 @@
       "import": "./dist/lib/IllustratorEvents.mjs"
     },
     "./IllustratorModel": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "import": "./dist/lib/model.mjs"
+      "source": "./src/IllustratorModel.ts",
+      "types": "./dist/types/src/IllustratorModel.d.ts",
+      "import": "./dist/lib/ns/IllustratorModel.mjs"
     },
     "./IllustratorPlugin": {
       "source": "./src/IllustratorPlugin.ts",

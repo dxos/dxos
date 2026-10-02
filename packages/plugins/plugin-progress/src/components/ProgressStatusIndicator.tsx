@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { useProgressMonitors } from '@dxos/app-toolkit/Hooks';
-import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import * as IconButton from '@dxos/react-ui/IconButton';
@@ -22,8 +22,8 @@ import { meta } from '#meta';
  */
 export const ProgressStatusIndicator = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const registry = useCapability(AppCapabilities.ProgressRegistry);
-  const monitors = useProgressMonitors();
+  const registry = AppHooks.useCapability(AppCapabilities.ProgressRegistry);
+  const monitors = ToolkitHooks.useProgressMonitors();
   const active = monitors.filter((monitor) => monitor.status === 'running' || monitor.status === 'pending');
 
   return (

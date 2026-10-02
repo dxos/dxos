@@ -8,13 +8,13 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useActivationSignal, useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
-import { usePluginRegistryAvailable } from '@dxos/app-toolkit/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
-import { PluginRegistryButton } from '@dxos/app-toolkit/PluginRegistryButton';
+import * as PluginRegistryButton from '@dxos/app-toolkit/PluginRegistryButton';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
@@ -68,11 +68,11 @@ export const ObjectFormDialog = ({
   targetNodeId,
 }: ObjectFormDialogProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   // Demand signal: load policy-parked CreateObjectEntry providers; the picker below reads them
   // reactively, so entries pop in as their chunks arrive.
-  useActivationSignal(SpaceEvents.CreateObjectRequested);
-  const operationInvoker = useOperationInvoker();
+  AppHooks.useActivationSignal(SpaceEvents.CreateObjectRequested);
+  const operationInvoker = AppHooks.useOperationInvoker();
   const { invoke } = operationInvoker;
   const [target, setTarget] = useState<Database.Database | Obj.Unknown | undefined>(initialTarget);
   const [typename, setTypename] = useState<string | undefined>(initialTypename);
@@ -134,7 +134,7 @@ export const ObjectFormDialog = ({
   const showTypeSelector = !typename;
   // Gated here as well as in the button: `Dialog.Close asChild` needs an element child, so the
   // action bar cannot wrap a button that renders nothing.
-  const registryAvailable = usePluginRegistryAvailable();
+  const registryAvailable = ToolkitHooks.usePluginRegistryAvailable();
 
   const viewTypenames = useMemo(() => {
     const set = new Set<string>();
@@ -386,7 +386,7 @@ export const ObjectFormDialog = ({
         registryAvailable && (
           <Dialog.ActionBar>
             <Dialog.Close asChild>
-              <PluginRegistryButton />
+              <PluginRegistryButton.Root />
             </Dialog.Close>
           </Dialog.ActionBar>
         )

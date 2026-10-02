@@ -6,9 +6,9 @@ import * as Effect from 'effect/Effect';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';
-import { useActivationSignal, useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, type Obj } from '@dxos/echo';
@@ -27,11 +27,11 @@ export type DefaultPropertiesProps = AppSurface.ObjectPropertiesProps<Obj.Unknow
  */
 export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesProps>(
   ({ role, subject: object }, forwardedRef) => {
-    const manager = usePluginManager();
-    const operationInvoker = useOperationInvoker();
+    const manager = PluginManagerProvider.usePluginManager();
+    const operationInvoker = Hooks.useOperationInvoker();
     // Demand signal: this companion can create related objects, so pull parked entry providers.
-    useActivationSignal(SpaceEvents.CreateObjectRequested);
-    const createEntries = useCapabilities(SpaceCapabilities.CreateObjectEntry);
+    Hooks.useActivationSignal(SpaceEvents.CreateObjectRequested);
+    const createEntries = Hooks.useCapabilities(SpaceCapabilities.CreateObjectEntry);
     const data = useMemo<AppSurface.ObjectPropertiesData>(() => ({ subject: object }), [object]);
 
     const resolveCreateEntry = useCallback(
@@ -65,7 +65,7 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
         <Panel.Content asChild>
           <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry}>
             {/* TODO(burdon): Ambiguous naming since providers only replace parts; can't update Toolbar, etc. Consider DefaultSettings pattern. */}
-            <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
+            <Surface.Root.Surface type={AppSurface.ObjectProperties} data={data} />
           </ObjectProperties>
         </Panel.Content>
       </Panel.Root>

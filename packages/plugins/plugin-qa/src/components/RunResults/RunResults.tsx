@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as Icon from '@dxos/react-ui/Icon';
@@ -20,7 +20,7 @@ export type RunResultsProps = { run: TestRun.TestRun };
  * article and the expanded feed row on the plan, so both offer the same controls.
  */
 export const RunResults = ({ run }: RunResultsProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [error, setError] = useState<string | undefined>();
   const [completing, setCompleting] = useState(false);
   // Read through the snapshot so results appearing on the run re-render this list; the operations

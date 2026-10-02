@@ -16,7 +16,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { useAtomCapabilityState } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Listbox } from '@dxos/react-ui-list';
 import { useSpeechRecognition } from '@dxos/react-ui-transcription';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -33,7 +33,7 @@ const DOC_ID = 'keyword-detection';
 // Reads the shared recording flag toggled by the `Mic` button (the editor driver stays idle when no
 // editor view is registered for this session).
 const useRecordingSession = (docId: string): boolean => {
-  const [session] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
+  const [session] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   return !!session?.recording && session.id === docId;
 };
 

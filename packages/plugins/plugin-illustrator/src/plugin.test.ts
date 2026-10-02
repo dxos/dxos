@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Type } from '@dxos/echo';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 
 import { IllustratorPlugin } from '#plugin';
 import { Drawing } from '#types';
@@ -16,7 +16,7 @@ describe('IllustratorPlugin', () => {
   // Canvas is written to the database by every variant's create flow, so the plugin that owns the
   // type must register it — registering it from a renderer plugin breaks the others when disabled.
   test('registers both the Drawing and Canvas schemas', async ({ expect }) => {
-    await using harness = await createComposerTestApp({
+    await using harness = await Harness.createComposerTestApp({
       plugins: [ClientPlugin.make({}), IllustratorPlugin()],
     });
 

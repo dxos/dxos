@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Position from '@dxos/util/Position';
 
@@ -17,27 +17,27 @@ import { ProviderArticle, ResultCard, SearchArticle, SearchProperties } from '..
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: 'resultCard',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Result.Result),
         component: ResultCard,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'searchArticle',
         filter: AppSurface.object(AppSurface.Article, Search.Search),
         component: SearchArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'objectProperties',
         position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Search.Search),
         component: SearchProperties,
         props: ({ data: { subject } }) => ({ search: subject }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: 'providerArticle',
         filter: AppSurface.object(AppSurface.Article, Provider.Provider),
         component: ProviderArticle,

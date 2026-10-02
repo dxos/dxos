@@ -43,7 +43,7 @@ import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
+import * as Harness from '@dxos/plugin-testing/Harness';
 import { Employer, Message, Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
@@ -452,7 +452,7 @@ export function createEvalRunner<I, O>(
     const run = Effect.scoped(
       Effect.gen(function* () {
         const harness = yield* Effect.promise(async () =>
-          createComposerTestApp({
+          Harness.createComposerTestApp({
             plugins: await createDefaultPlugins({ ...options, model, makeTurnProducer, record }),
           }),
         );

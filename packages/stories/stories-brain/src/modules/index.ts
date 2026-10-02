@@ -3,7 +3,7 @@
 //
 
 import * as Role from '@dxos/app-framework/Role';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 
 import { CrawlModule } from './CrawlModule.tsx';
 import { EntitiesModule } from './EntitiesModule.tsx';
@@ -36,45 +36,45 @@ export const StoryRole = {
 };
 
 /** React surfaces for the stories-brain modules, one per `StoryRole` token. */
-export const moduleSurfaces: Surface.Definition[] = [
-  Surface.create({
+export const moduleSurfaces: Surface.Root.Definition[] = [
+  Surface.Root.create({
     id: 'brain.crawl',
-    filter: Surface.makeFilter(StoryRole.Crawl),
+    filter: Surface.Root.makeFilter(StoryRole.Crawl),
     component: CrawlModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'brain.query',
-    filter: Surface.makeFilter(StoryRole.Query),
+    filter: Surface.Root.makeFilter(StoryRole.Query),
     component: QueryModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'brain.questions',
-    filter: Surface.makeFilter(StoryRole.Questions),
+    filter: Surface.Root.makeFilter(StoryRole.Questions),
     component: QuestionsModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'brain.facts',
-    filter: Surface.makeFilter(StoryRole.Facts),
+    filter: Surface.Root.makeFilter(StoryRole.Facts),
     component: FactsModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'brain.entities',
-    filter: Surface.makeFilter(StoryRole.Entities),
+    filter: Surface.Root.makeFilter(StoryRole.Entities),
     component: EntitiesModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'brain.input',
-    filter: Surface.makeFilter(StoryRole.Input),
+    filter: Surface.Root.makeFilter(StoryRole.Input),
     component: InputModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'brain.pipeline',
-    filter: Surface.makeFilter(StoryRole.Pipeline),
+    filter: Surface.Root.makeFilter(StoryRole.Pipeline),
     component: PipelineModule,
   }),
-  Surface.create({
+  Surface.Root.create({
     id: 'brain.output',
-    filter: Surface.makeFilter(StoryRole.Output),
+    filter: Surface.Root.makeFilter(StoryRole.Output),
     component: OutputModule,
   }),
 ];

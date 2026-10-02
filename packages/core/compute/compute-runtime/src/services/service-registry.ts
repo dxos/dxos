@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import type * as Option from 'effect/Option';
 
-import { ServiceNotAvailableError } from '@dxos/compute/Errors';
+import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 
 export namespace ServiceRegistry {
   export interface Service {
@@ -26,10 +26,10 @@ export class ServiceRegistry extends Context.Service<ServiceRegistry, ServiceReg
    */
   static resolve: <T extends Context.Key<any, any>>(
     tag: T,
-  ) => Effect.Effect<Context.Service.Shape<T>, ServiceNotAvailableError, ServiceRegistry> = (tag) =>
+  ) => Effect.Effect<Context.Service.Shape<T>, ServiceResolver.ServiceNotAvailableError, ServiceRegistry> = (tag) =>
     ServiceRegistry.pipe(
       Effect.flatMap((registry) => Effect.fromOption(registry.resolve(tag))),
-      Effect.mapError(() => new ServiceNotAvailableError(tag.key)),
+      Effect.mapError(() => new ServiceResolver.ServiceNotAvailableError(tag.key)),
     );
 
   static provide: {
@@ -39,7 +39,7 @@ export class ServiceRegistry extends Context.Service<ServiceRegistry, ServiceReg
       effect: Effect.Effect<A, E, R>,
     ) => Effect.Effect<
       A,
-      E | ServiceNotAvailableError,
+      E | ServiceResolver.ServiceNotAvailableError,
       Exclude<R, { [K in keyof Tags]: Context.Service.Identifier<Tags[K]> }[number]> | ServiceRegistry
     >;
   } = (...tags) =>

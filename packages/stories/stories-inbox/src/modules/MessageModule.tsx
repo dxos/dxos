@@ -4,10 +4,10 @@
 
 import React from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Order, Query } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -17,7 +17,7 @@ import { Message } from '@dxos/types';
 
 /** The selected thread (companion of the mailbox; tracks the mailbox article's selection). */
 export const MessageModule = ({ data }: { data?: { attendableId?: string } }) => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -41,7 +41,7 @@ const MessageModuleContainer = ({ space, attendableId }: { space: Space; attenda
   // against the mailbox passed as `companionTo`. The article's surface filter matches a single non-draft
   // Message, so handing it a thread array resolves no surface at all.
   return selected ? (
-    <Surface.Surface
+    <Surface.Root.Surface
       type={AppSurface.Article}
       data={{ subject: selected, companionTo: mailbox, attendableId }}
       limit={1}

@@ -17,7 +17,7 @@ import * as Option from 'effect/Option';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { createCliApp } from '@dxos/app-framework/Cli';
+import * as Cli from '@dxos/app-framework/Cli';
 import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
 import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
@@ -181,7 +181,7 @@ const program = Effect.gen(function* () {
   const installationId = yield* Effect.promise(() => Observability.getInstallationId(namespace));
   const observabilityInstance = yield* initializeObservability({ config, namespace, distinctId: installationId });
 
-  const { command, layer: pluginLayer } = yield* createCliApp({
+  const { command, layer: pluginLayer } = yield* Cli.createCliApp({
     rootCommand: dx,
     subCommands: [
       repl,

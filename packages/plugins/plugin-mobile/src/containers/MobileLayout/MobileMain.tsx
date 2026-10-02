@@ -4,13 +4,13 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
-import { useDeckState } from '@dxos/plugin-deck/Hooks';
-import { useNode } from '@dxos/plugin-graph/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as DeckHooks from '@dxos/plugin-deck/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -31,8 +31,8 @@ type MainPanelProps = {
  * node, and the stack renders a variable number of them — hooks cannot run in a loop.
  */
 const MainPanel = ({ id, popoverAnchorId }: MainPanelProps) => {
-  const { graph } = useAppGraph();
-  const node = useNode(graph, id);
+  const { graph } = Hooks.useAppGraph();
+  const node = GraphHooks.useNode(graph, id);
   const placeholder = useMemo(() => <Loading />, []);
   const data = useMemo(() => {
     return (
@@ -46,7 +46,7 @@ const MainPanel = ({ id, popoverAnchorId }: MainPanelProps) => {
   }, [id, node, node?.data, node?.properties, popoverAnchorId]);
 
   return (
-    <Surface.Surface
+    <Surface.Root.Surface
       key={id}
       type={AppSurface.Article}
       data={data}
@@ -63,8 +63,8 @@ MainPanel.displayName = MAIN_PANEL_NAME;
  * Mobile main content: the deck's active panels projected as a navigation stack.
  */
 export const MobileMain = () => {
-  const { state } = useDeckState();
-  const { graph } = useAppGraph();
+  const { state } = DeckHooks.useDeckState();
+  const { graph } = Hooks.useAppGraph();
   const { stack, topId, pop } = useMobileStack();
   const attentionAttrs = useAttentionAttributes(topId);
   const { keyboardOpen } = useMobileLayout(MAIN_NAME);

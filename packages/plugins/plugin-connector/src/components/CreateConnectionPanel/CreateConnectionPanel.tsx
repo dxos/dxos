@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
@@ -44,7 +44,7 @@ export const CreateConnectionPanel = ({
   connectors: connectorsProp,
 }: CreateConnectionPanelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const capabilityConnectors = useCapabilities(Connector).flat();
+  const capabilityConnectors = AppHooks.useCapabilities(Connector).flat();
   const connectors = connectorsProp ?? capabilityConnectors;
   const [connectorId, setConnectorId] = useState<string>();
   const [error, setError] = useState<string>();

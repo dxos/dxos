@@ -22,7 +22,6 @@ import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { NoHandlerError, RunAgainError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -340,7 +339,7 @@ const DEFAULT_STALE_REFERENCE_RETRY_INTERVAL = Duration.minutes(15);
  */
 const STALE_REFERENCE_ERROR_NAMES: ReadonlySet<string> = new Set([
   EchoError.EntityNotFoundError.name,
-  NoHandlerError.name,
+  Operation.NoHandlerError.name,
 ]);
 
 /** Walks the `cause` chain, since the process boundary wraps the originating error. */
@@ -760,7 +759,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
    * failure cause propagates intact, surfacing the error as a defect (`Exit.die(RunAgainError)`).
    */
   private _isRunAgainRequest = (result: Exit.Exit<unknown>): boolean =>
-    Exit.isFailure(result) && RunAgainError.is(Cause.squash(result.cause));
+    Exit.isFailure(result) && Process.RunAgainError.is(Cause.squash(result.cause));
 
   invokeScheduledTriggers = ({
     kinds = ['timer', 'feed', 'subscription'],

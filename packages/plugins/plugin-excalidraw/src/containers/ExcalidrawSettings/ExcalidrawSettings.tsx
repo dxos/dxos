@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { useSettingsState } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -15,7 +15,7 @@ import { Settings } from '#types';
 export type ExcalidrawSettingsProps = AppSurface.SettingsData;
 
 export const ExcalidrawSettings = ({ subject }: ExcalidrawSettingsProps) => {
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
 
   return (
     <Form.Root
@@ -26,7 +26,7 @@ export const ExcalidrawSettings = ({ subject }: ExcalidrawSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.FieldSet label={meta.profile.name} actions={<SettingsScope prefix={meta.profile.key} />}>
+          <Form.FieldSet label={meta.profile.name} actions={<SettingsScope.Root prefix={meta.profile.key} />}>
             <Form.Fields />
           </Form.FieldSet>
         </Form.Content>

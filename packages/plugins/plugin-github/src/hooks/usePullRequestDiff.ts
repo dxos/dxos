@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -25,7 +25,7 @@ export const usePullRequestDiff = (
   spaceId: SpaceId | undefined,
   enabled: boolean,
 ): PullRequestDiff => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [result, setResult] = useState<PullRequestDiff>({});
   const [requested, setRequested] = useState(false);
   useEffect(() => {

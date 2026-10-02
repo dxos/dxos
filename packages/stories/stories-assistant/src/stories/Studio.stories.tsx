@@ -23,7 +23,7 @@ import * as Storyboard from '@dxos/plugin-studio/Storyboard';
 import * as StudioCapabilities from '@dxos/plugin-studio/StudioCapabilities';
 import * as StudioOperation from '@dxos/plugin-studio/StudioOperation';
 import * as StudioSkill from '@dxos/plugin-studio/StudioSkill';
-import { STUDIO_TASK_TITLE, studioTemplate } from '@dxos/plugin-studio/Templates';
+import * as Templates from '@dxos/plugin-studio/Templates';
 import { type Space } from '@dxos/react-client/echo';
 import { accessTokensFromEnv } from '@dxos/storybook-testing';
 
@@ -49,7 +49,7 @@ let storySpace: Space | undefined;
 const seedStudioProject = async ({ space }: { space: Space }) => {
   storySpace = space;
   const project = await EffectEx.runPromise(
-    studioTemplate
+    Templates.studioTemplate
       .scaffold({ name: 'Studio' })
       .pipe(Effect.provideService(Database.Service, Database.makeService(space.db))),
   );
@@ -274,7 +274,7 @@ export const TestStoryboardScripted: Story = {
   args: sharedArgs,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await submitPrompt(canvasElement, `Do the task: ${STUDIO_TASK_TITLE}`);
+    await submitPrompt(canvasElement, `Do the task: ${Templates.STUDIO_TASK_TITLE}`);
 
     const storyboard = await waitForStoryboard(async (storyboard, frames) => {
       if (storyboard.name !== 'How Studio works' || frames.length !== 3) {

@@ -201,3 +201,5 @@ export const compose = (...resolvers: readonly ServiceResolver[]): ServiceResolv
 export const empty: ServiceResolver = make((tag, context) => {
   return Effect.fail(new ServiceNotAvailableError(String(tag.key ?? tag)));
 });
+
+export { ServiceNotAvailableError } from './errors.ts';

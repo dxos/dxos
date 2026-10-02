@@ -5,8 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as RegistryOperation from '@dxos/plugin-registry/RegistryOperation';
 import * as Button from '@dxos/react-ui/Button';
 import * as Flex from '@dxos/react-ui/Flex';
@@ -31,9 +31,9 @@ export type PluginPromptProps = {
  */
 export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_PROMPT_NAME);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = AppHooks.useOperationInvoker();
   const enabled = useAtomValue(manager.enabled);
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);

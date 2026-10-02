@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useCallback, useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { invariant } from '@dxos/invariant';
 
 import { DeckCapabilities, DeckSchema } from '#types';
@@ -27,9 +27,9 @@ export type DeckStateHook = {
  * Returns the combined state, the active deck, and update functions for each atom.
  */
 export const useDeckState = (): DeckStateHook => {
-  const registry = useCapability(Capabilities.AtomRegistry);
-  const stateAtom = useCapability(DeckCapabilities.State);
-  const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
+  const registry = Hooks.useCapability(Capabilities.AtomRegistry);
+  const stateAtom = Hooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
   const persistedState = useAtomValue(stateAtom);
   const ephemeralState = useAtomValue(ephemeralAtom);
 

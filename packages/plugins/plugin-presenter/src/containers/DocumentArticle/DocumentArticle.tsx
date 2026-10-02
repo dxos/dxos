@@ -5,7 +5,7 @@
 import React from 'react';
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useLayout } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -18,7 +18,7 @@ export type DocumentArticleProps = AppSurface.ObjectArticleProps<Markdown.Docume
 
 export const DocumentArticle = ({ role, subject: document }: DocumentArticleProps) => {
   const handleExit = useExitPresenter(document);
-  const layout = useLayout();
+  const layout = Hooks.useLayout();
   const fullscreen = layout.mode === 'solo--fullscreen';
   const [content] = useObject(document.content, 'content');
 

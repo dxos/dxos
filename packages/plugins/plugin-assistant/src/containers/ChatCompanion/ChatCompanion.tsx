@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
@@ -20,7 +20,7 @@ export type ChatCompanionProps = Omit<AppSurface.ArticleProps<Chat.Chat, {}, Obj
 
 export const ChatCompanion = forwardRef<HTMLDivElement, ChatCompanionProps>(
   ({ role = 'article', subject: chat, companionTo, attendableId }, forwardedRef) => {
-    const { invokePromise } = useOperationInvoker();
+    const { invokePromise } = Hooks.useOperationInvoker();
     const db = Obj.getDatabase(companionTo);
 
     // Persist (and flush) a transient chat before the first request so the agent can resolve

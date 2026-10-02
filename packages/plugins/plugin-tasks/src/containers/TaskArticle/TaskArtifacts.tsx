@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { CardMasonry } from '@dxos/plugin-space/CardMasonry';
+import * as CardMasonry from '@dxos/plugin-space/CardMasonry';
 import * as Column from '@dxos/react-ui/Column';
 import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Task } from '@dxos/types';
@@ -31,7 +31,7 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
 
   return (
     <Column.Section label={t('task-artifacts.label')} data-testid='tasksPlugin.artifacts'>
-      <CardMasonry objects={artifacts} size='compact' inline />
+      <CardMasonry.Root objects={artifacts} size='compact' inline />
     </Column.Section>
   );
 };

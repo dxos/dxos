@@ -8,14 +8,14 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 import { PlaygroundRoles } from '../roles.ts';
 
 export const Debug = () => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const core = useAtomValue(manager.core);
   const enabled = useAtomValue(manager.enabled);
   const active = useAtomValue(manager.active);
@@ -37,9 +37,9 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
-      Surface.create({
+      Surface.Root.create({
         id: 'org.dxos.test.debug.main',
-        filter: Surface.makeFilter(PlaygroundRoles.Secondary),
+        filter: Surface.Root.makeFilter(PlaygroundRoles.Secondary),
         component: Debug,
       }),
     ),

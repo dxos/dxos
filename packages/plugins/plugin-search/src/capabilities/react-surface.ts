@@ -7,7 +7,7 @@ import { type ComponentProps } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { isSpace } from '@dxos/react-client/echo';
 
@@ -19,18 +19,18 @@ import { SearchCompanionSurface, SearchDialogSurface, SearchInputSurface } from 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.create({
+      Surface.Root.create({
         id: SEARCH_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof SearchDialog>>(AppSurface.Dialog, SEARCH_DIALOG),
         component: SearchDialogSurface,
         props: ({ data: { props } }) => ({ props }),
       }),
-      Surface.create({
+      Surface.Root.create({
         id: `${SEARCH_DIALOG}.searchInput`,
-        filter: Surface.makeFilter(AppSurface.SearchInput),
+        filter: Surface.Root.makeFilter(AppSurface.SearchInput),
         component: SearchInputSurface,
       }),
-      Surface.create({
+      Surface.Root.create({
         id: `${SEARCH_DIALOG}.search`,
         filter: AppSurface.subject(AppSurface.deckCompanion('search'), isSpace),
         component: SearchCompanionSurface,

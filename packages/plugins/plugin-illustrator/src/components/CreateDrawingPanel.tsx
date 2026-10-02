@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useCapabilities } from '@dxos/app-framework/Hooks';
+import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -32,7 +32,7 @@ type VariantSelection = Schema.Schema.Type<typeof VariantSelection>;
  */
 export const CreateDrawingPanel = ({ onCreateObject, onCancel, variants: variantsProp }: CreateDrawingPanelProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const capabilityVariants = useCapabilities(IllustratorCapabilities.VariantProvider);
+  const capabilityVariants = AppHooks.useCapabilities(IllustratorCapabilities.VariantProvider);
   const variants = variantsProp ?? capabilityVariants;
   const sorted = useMemo(() => [...variants].sort((a, b) => a.label.localeCompare(b.label)), [variants]);
   const { results, handleSearch } = useSearchListResults({

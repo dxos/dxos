@@ -7,7 +7,7 @@ import React, { type PropsWithChildren } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useCapability } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { RootAttentionProvider, ViewStateProvider } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -18,8 +18,8 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: (props: PropsWithChildren) => {
-        const attention = useCapability(AttentionCapabilities.Attention);
-        const viewState = useCapability(AttentionCapabilities.ViewState);
+        const attention = Hooks.useCapability(AttentionCapabilities.Attention);
+        const viewState = Hooks.useCapability(AttentionCapabilities.ViewState);
 
         return (
           <RootAttentionProvider

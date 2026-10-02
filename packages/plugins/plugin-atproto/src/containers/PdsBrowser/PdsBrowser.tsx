@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { useCapability } from '@dxos/app-framework/Hooks';
-import { Surface } from '@dxos/app-framework/Surface';
+import * as AppHooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
@@ -50,7 +50,7 @@ type RecordItem = { id: string; record: AtprotoRepo.RepoRecord };
  */
 export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const readRepoLayer = useCapability(AtprotoCapabilities.ReadRepoLayer);
+  const readRepoLayer = AppHooks.useCapability(AtprotoCapabilities.ReadRepoLayer);
 
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));
@@ -221,7 +221,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
                     </Card.Block>
                     <Card.Title>{Obj.getLabel(preview)}</Card.Title>
                   </Card.Header>
-                  <Surface.Surface type={AppSurface.CardContent} data={{ subject: preview }} limit={1} />
+                  <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: preview }} limit={1} />
                 </Card.Root>
               )}
               {alreadyImported ? (

@@ -11,7 +11,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -115,7 +115,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
 };
 
 const DefaultStory = () => {
-  const state = useAtomCapability(StoryState);
+  const state = Hooks.useAtomCapability(StoryState);
 
   return (
     <Main.Root navigationSidebarState='expanded'>
@@ -136,7 +136,7 @@ const DefaultStory = () => {
 const MISSING_WORKSPACE = 'root/B4NRQGGJ7XSDT4WMGXCTZNBLTDYIWGXNQIB6JW3AVLW3G';
 
 const UnavailableWorkspaceStory = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   useEffect(() => {
     void invokePromise(LayoutOperation.SwitchWorkspace, { subject: MISSING_WORKSPACE });
   }, [invokePromise]);

@@ -4,13 +4,13 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { ObjectsTree } from '@dxos/devtools';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
 import { type EntityId } from '@dxos/keys';
-import { ForceGraph } from '@dxos/plugin-explorer/ForceGraph';
-import { useGraphModel } from '@dxos/plugin-explorer/Hooks';
+import * as ForceGraph from '@dxos/plugin-explorer/ForceGraph';
+import * as ExplorerHooks from '@dxos/plugin-explorer/Hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';
 import { type EditorController, QueryEditor } from '@dxos/react-ui-components';
@@ -46,7 +46,7 @@ const VIEW_OPTIONS: { value: DatabaseView; icon: string; label: string }[] = [
 ];
 
 export const DatabaseModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }
@@ -60,7 +60,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
   const [open, setOpen] = useState(false);
   const [selectedId, setSelectedId] = useState<EntityId | null>(null);
 
-  const model = useGraphModel(space.db, filter);
+  const model = ExplorerHooks.useGraphModel(space.db, filter);
   useEffect(() => {
     model?.setFilter(filter ?? Filter.everything());
   }, [model, filter]);
@@ -92,7 +92,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
         <DatabaseSearchBar space={space} view={view} onSubmit={handleSubmit} onViewChange={handleViewChange} />
       </Panel.Toolbar>
       <Panel.Content classNames='relative min-h-0'>
-        {view === 'graph' && <ForceGraph classNames='min-h-[50vh]' model={model} />}
+        {view === 'graph' && <ForceGraph.Root classNames='min-h-[50vh]' model={model} />}
 
         {view === 'object-tree' && (
           <ScrollArea.Root classNames='h-full'>

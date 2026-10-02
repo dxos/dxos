@@ -11,8 +11,8 @@ import { Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { scaffoldProject } from '@dxos/plugin-projects/Templates';
-import { makeRoutine } from '@dxos/plugin-routine/Wire';
+import * as Templates from '@dxos/plugin-projects/Templates';
+import * as Wire from '@dxos/plugin-routine/Wire';
 import { trim } from '@dxos/util';
 
 import { BrainOperation } from '#types';
@@ -54,7 +54,7 @@ export const mailboxFacts: ProjectCapabilities.Template = {
       );
       const mailbox = subject;
 
-      const project = scaffoldProject({
+      const project = Templates.scaffoldProject({
         name: name ?? `Mailbox Facts — ${mailbox.name ?? 'Mailbox'}`,
         text: PROJECT_INSTRUCTIONS,
         skills: PROJECT_SKILL_KEYS.map((key) => Ref.fromURI(Skill.registryURI(key))),
@@ -63,7 +63,7 @@ export const mailboxFacts: ProjectCapabilities.Template = {
 
       // Deterministic operation action: the trigger fires AnalyzeMailbox directly with the mailbox
       // ref baked in at scaffold time; the persisted cursor makes re-runs incremental.
-      const routine = makeRoutine({
+      const routine = Wire.makeRoutine({
         name: 'Analyze Mailbox',
         spec: { kind: 'runnable', runnable: Ref.fromURI(BrainOperation.AnalyzeMailbox.meta.key) },
         trigger: Trigger.make({

@@ -4,11 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/Surface';
+import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { useAppGraph } from '@dxos/app-toolkit/Hooks';
-import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/Hooks';
-import { useNode } from '@dxos/plugin-graph/Hooks';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
+import * as DeckHooks from '@dxos/plugin-deck/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 import * as Banner from '@dxos/react-ui/Banner';
 import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
@@ -26,18 +26,18 @@ const DRAWER_NAME = 'MobileDeckLayout.Drawer';
  */
 export const MobileDrawer = () => {
   const { t } = Hooks.useTranslation(meta.profile.key);
-  const { graph } = useAppGraph();
-  const { state } = useDeckState();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const { state } = DeckHooks.useDeckState();
   const { topId } = useMobileStack();
 
   const placeholder = useMemo(() => <Loading />, []);
 
   // Companions of the visible panel; the drawer shows the one the complementary sidebar selects.
-  const companions = useCompanions(topId) ?? [];
-  const { companionId, variant } = useSelectedCompanion(companions, state.complementarySidebarPanel);
+  const companions = DeckHooks.useCompanions(topId) ?? [];
+  const { companionId, variant } = DeckHooks.useSelectedCompanion(companions, state.complementarySidebarPanel);
 
-  const node = useNode(graph, companionId);
-  const parentNode = useNode(graph, topId);
+  const node = GraphHooks.useNode(graph, companionId);
+  const parentNode = GraphHooks.useNode(graph, topId);
 
   const data = useMemo<AppSurface.ArticleData | undefined>(() => {
     if (!node || !companionId) {
@@ -64,7 +64,7 @@ export const MobileDrawer = () => {
       <Panel.Content>
         {/* A drawer opened on a plank that contributes no companion would otherwise read as broken. */}
         {data ? (
-          <Surface.Surface
+          <Surface.Root.Surface
             type={AppSurface.Article}
             data={data}
             limit={1}

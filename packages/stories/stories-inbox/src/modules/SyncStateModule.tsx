@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type Database } from '@dxos/echo';
 import { type Space } from '@dxos/react-client/echo';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -16,7 +16,7 @@ import * as Toolbar from '@dxos/react-ui/Toolbar';
  * as live JSON, driven by {@link Database.subscribeToSyncState}.
  */
 export const SyncStateModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }

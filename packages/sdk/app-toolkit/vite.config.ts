@@ -6,6 +6,15 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/AppSurface': 'src/AppSurface.ts',
+    'ns/UpdateRow': 'src/UpdateRow.ts',
+    'ns/SettingsScope': 'src/SettingsScope.ts',
+    'ns/PluginRegistryButton': 'src/PluginRegistryButton.ts',
+    'ns/NotFoundArticle': 'src/NotFoundArticle.ts',
+    'ns/Hooks': 'src/Hooks.ts',
+    'ns/CardMenuSlot': 'src/CardMenuSlot.ts',
+    'ns/CardIconSlot': 'src/CardIconSlot.ts',
+    'ns/AttentionSigil': 'src/AttentionSigil.ts',
     'AppSurface': 'src/ui/components/app-surface.ts',
     'AttentionSigil': 'src/ui/components/AttentionSigil.tsx',
     'CardIconSlot': 'src/ui/components/CardIconSlot.tsx',
