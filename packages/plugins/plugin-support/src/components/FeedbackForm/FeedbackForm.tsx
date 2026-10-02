@@ -161,7 +161,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
   }
 
   return (
-    <div className='flex w-full pt-form-padding'>
+    <Flex classNames='w-full pt-form-padding'>
       <IconButton
         classNames='w-full'
         type='button'
@@ -170,7 +170,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
         onClick={handleClick}
         data-testid='download-logs-button'
       />
-    </div>
+    </Flex>
   );
 };
 
