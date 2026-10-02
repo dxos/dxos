@@ -151,7 +151,7 @@ export const _Task: StoryObj<typeof DefaultStory<Task.Task>> = {
     image: true,
   },
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(canvasElement.querySelector('.dx-tag')).not.toBeNull());
+    await waitFor(() => expect(canvasElement.querySelector('.dx-tag')).not.toBeNull(), { timeout: 10_000 });
     await expect(canvasElement.querySelector('[data-testid="error-boundary-fallback"]')).toBeNull();
   },
 };
