@@ -15,6 +15,7 @@ import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
+import { PasskeyError } from '#types';
 
 import { useAccountUrl } from '../../hooks/index.ts';
 
@@ -39,9 +40,19 @@ export const RecoveryCredentialsContainer = () => {
   );
   const activeCount = recoveryCredentials.filter((credential) => !credential.recovery?.revoked).length;
   const [revokeError, setRevokeError] = useState<string | null>(null);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   // The account page is where a revocation can also be confirmed with a fresh passkey assertion.
   const { openAccountPage } = useAccountUrl();
+
+  const handleCreatePasskey = useCallback(async () => {
+    setCreateError(null);
+    const { error } = await invokePromise(ClientOperation.CreatePasskey);
+    // A dismissed prompt is the user changing their mind, not a failure to report.
+    if (error && PasskeyError.report(error) !== 'dismissed') {
+      setCreateError(t('create-passkey-failed.message'));
+    }
+  }, [invokePromise, t]);
 
   const handleRevoke = useCallback(
     (lookupKey: string) => {
@@ -72,9 +83,16 @@ export const RecoveryCredentialsContainer = () => {
                   label={t('create-passkey.label')}
                   icon='ph--key--duotone'
                   variant='primary'
-                  onClick={() => invokePromise(ClientOperation.CreatePasskey)}
+                  onClick={handleCreatePasskey}
                 />
               </Form.Field>
+            )}
+            {createError && (
+              <Banner.Root valence='error'>
+                <Banner.Content>
+                  <Banner.Body>{createError}</Banner.Body>
+                </Banner.Content>
+              </Banner.Root>
             )}
             <Form.Field
               standalone

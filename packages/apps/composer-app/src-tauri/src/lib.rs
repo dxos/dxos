@@ -147,6 +147,9 @@ pub fn run() {
     #[cfg(target_os = "macos")]
     let builder = builder.plugin(tauri_nspanel::init());
 
+    #[cfg(target_os = "macos")]
+    let builder = builder.plugin(passkey::init(native_passkeys));
+
     // Unregistered, a stray `invoke` fails at once instead of opening a sheet that never returns.
     #[cfg(target_os = "macos")]
     let builder = if native_passkeys {
@@ -335,9 +338,6 @@ pub fn run() {
                 let window_builder = window_builder
                     .hidden_title(true)
                     .title_bar_style(tauri::TitleBarStyle::Overlay);
-                // Runs before any page script, so the page's first passkey check already sees it.
-                #[cfg(target_os = "macos")]
-                let window_builder = window_builder.initialization_script(passkey::page_script(native_passkeys));
                 let main_window = window_builder
                     // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
                     // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts

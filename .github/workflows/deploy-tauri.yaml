@@ -219,9 +219,9 @@ jobs:
             exit 1
           fi
 
-      # A channel with its own App ID has its profile in src-tauri/provisioning/ and is signed under that
-      # App ID, which AuthenticationServices needs to resolve the app for passkeys (DX-1324). Any other
-      # build embeds production's profile and keeps production's signed identity.
+      # A channel with its own App ID has its profile in src-tauri/provisioning/; any other build embeds
+      # production's. The app is signed under whichever App ID the embedded profile grants, so the two
+      # cannot disagree.
       - name: Install macOS Provisioning Profile
         if: matrix.os == 'depot-macos-latest'
         working-directory: ./packages/apps/composer-app/src-tauri
@@ -230,10 +230,8 @@ jobs:
           MACOS_PROVISION_PROFILE: ${{ secrets.MACOS_PROVISION_PROFILE }}
         run: |
           channel_profile="provisioning/$ENVIRONMENT.provisionprofile"
-          if [ "$ENVIRONMENT" != production ] && [ -f "$channel_profile" ]; then
+          if [ -f "$channel_profile" ]; then
             cp "$channel_profile" embedded.provisionprofile
-            team=$(plutil -extract com\\.apple\\.developer\\.team-identifier raw Entitlements.plist)
-            plutil -replace com\\.apple\\.application-identifier -string "$team.$(jq -r .identifier tauri.conf.json)" Entitlements.plist
           else
             if [ -z "$MACOS_PROVISION_PROFILE" ]; then
               echo "Error: MACOS_PROVISION_PROFILE secret is not set"
@@ -245,7 +243,9 @@ jobs:
             echo "Error: Provisioning profile is empty"
             exit 1
           fi
-          echo "signed identity -> $(plutil -extract com\\.apple\\.application-identifier raw Entitlements.plist)"
+          app_id=$(security cms -D -i embedded.provisionprofile | plutil -extract Entitlements.com\\.apple\\.application-identifier raw -)
+          plutil -replace com\\.apple\\.application-identifier -string "$app_id" Entitlements.plist
+          echo "signed identity -> $app_id"
 
       - name: Set environment variables from secrets and env files
         run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
@@ -365,16 +365,23 @@ jobs:
           done
 
       # macOS kills an app at launch when its signed application identifier is not the one its embedded
-      # profile grants, so a mismatch fails the release instead.
+      # profile grants. Separately, native passkeys only work when that identifier names the app's own
+      # bundle (DX-1324); staging is the one channel still signed under production's App ID.
       - name: Verify app signature matches its provisioning profile
         if: matrix.os == 'depot-macos-latest'
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
           app=$(ls -d packages/apps/composer-app/src-tauri/target/release/bundle/macos/*.app)
           signed=$(codesign -d --entitlements - --xml "$app" 2>/dev/null | plutil -extract com\\.apple\\.application-identifier raw -)
           granted=$(security cms -D -i "$app/Contents/embedded.provisionprofile" | plutil -extract Entitlements.com\\.apple\\.application-identifier raw -)
-          echo "signed: $signed, profile: $granted"
+          bundle=$(plutil -extract CFBundleIdentifier raw "$app/Contents/Info.plist")
+          echo "signed: $signed, profile: $granted, bundle: $bundle"
           if [ "$signed" != "$granted" ]; then
             echo "::error::app is signed as $signed but its profile grants $granted" && exit 1
+          fi
+          if [ "$ENVIRONMENT" != staging ] && [ "${signed#*.}" != "$bundle" ]; then
+            echo "::error::app is signed as $signed, which does not name its bundle $bundle, so native passkeys are off" && exit 1
           fi
 
       - name: Upload assets

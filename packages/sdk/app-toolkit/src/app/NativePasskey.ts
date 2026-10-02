@@ -66,19 +66,18 @@ export const APP_SCHEME = 'composer://';
 export type PasskeySupport = 'native' | 'web' | 'none';
 
 /**
- * Set by the macOS desktop host before any page script runs (`src-tauri/src/passkey.rs` in composer-app):
- * `false` when its signed identity cannot complete a native request.
+ * Set by the macOS desktop shell in every webview before page script runs (`src-tauri/src/passkey.rs` in
+ * composer-app): `true` only when its signed identity can complete a native request.
  */
 const NATIVE_PASSKEYS_GLOBAL = '__DX_NATIVE_PASSKEYS__';
 
 /**
  * The macOS shell never falls back to WebAuthn, whose `localhost` origin cannot reach a `composer.space`
- * passkey. An absent flag reads as native: a shell that cannot complete a request leaves the bridge
- * unregistered, so a call fails at once.
+ * passkey, so a shell that does not vouch for native passkeys has none.
  */
 export const getPasskeySupport = (): PasskeySupport => {
   if (isTauri() && getHostPlatform() === 'macos') {
-    return Reflect.get(globalThis, NATIVE_PASSKEYS_GLOBAL) === false ? 'none' : 'native';
+    return Reflect.get(globalThis, NATIVE_PASSKEYS_GLOBAL) === true ? 'native' : 'none';
   }
 
   return globalThis.navigator?.credentials && 'create' in globalThis.navigator.credentials ? 'web' : 'none';

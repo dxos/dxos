@@ -169,15 +169,16 @@ ID, and `composer.space` lists that App ID under `webcredentials` (`src/function
 non-production channel installs under a suffixed bundle ID (`org.dxos.composer.preview`), so it needs
 its own App ID and provisioning profile.
 
-A channel with a profile in `provisioning/<environment>.provisionprofile` is signed under
-`9428WC5MR8.org.dxos.composer.<environment>` with that profile embedded. Any other build embeds
-production's profile (the `MACOS_PROVISION_PROFILE` secret) and stays signed as production, so the app
-disables native passkeys at runtime. The release fails if the signature and the embedded profile name
-different App IDs.
+A channel with a profile in `provisioning/<environment>.provisionprofile` embeds it; any other build embeds
+production's profile (the `MACOS_PROVISION_PROFILE` secret). The app is signed under whichever App ID its
+profile grants, so production and staging stay signed as production, and the app turns native passkeys
+off at runtime wherever that App ID does not name its bundle. The release fails if the signature and the
+profile disagree, or if any channel other than staging is not signed for its own bundle.
 
 To give a channel its own identity: register an explicit App ID for its bundle ID with Associated
 Domains, create a Developer ID profile for it with the certificate CI signs with, commit it here, and
-add the App ID to `CHANNEL_BUNDLE_IDS` in `_worker.ts`. The AASA change only takes effect once the
+add the App ID to `CHANNEL_BUNDLE_IDS` in `_worker.ts`. For staging, also drop its exemption from the
+release check in `deploy-tauri.yaml`. The AASA change only takes effect once the
 production web app is deployed.
 
 ### Publishing

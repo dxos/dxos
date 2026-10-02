@@ -24,63 +24,50 @@ pub fn page_script(available: bool) -> String {
     format!("globalThis.{PAGE_GLOBAL} = {available};")
 }
 
+/// Publishes availability to every webview, so no window (the main one or the spotlight panel) can
+/// offer a passkey the shell cannot complete.
+pub fn init<R: tauri::Runtime>(available: bool) -> tauri::plugin::TauriPlugin<R> {
+    tauri::plugin::Builder::new("dx-passkey-gate")
+        .js_init_script(page_script(available))
+        .build()
+}
+
 mod entitlement {
-    use std::ffi::{c_char, c_void, CStr};
-
-    type CFTypeRef = *const c_void;
-
-    const APPLICATION_IDENTIFIER: &CStr = c"com.apple.application-identifier";
-    const UTF8: u32 = 0x0800_0100;
-
-    #[link(name = "CoreFoundation", kind = "framework")]
-    extern "C" {
-        fn CFGetTypeID(cf: CFTypeRef) -> usize;
-        fn CFRelease(cf: CFTypeRef);
-        fn CFStringCreateWithCString(allocator: CFTypeRef, c_str: *const c_char, encoding: u32) -> CFTypeRef;
-        fn CFStringGetCString(string: CFTypeRef, buffer: *mut c_char, size: isize, encoding: u32) -> u8;
-        fn CFStringGetTypeID() -> usize;
-    }
+    use core_foundation::base::{CFType, CFTypeRef, TCFType};
+    use core_foundation::string::{CFString, CFStringRef};
 
     #[link(name = "Security", kind = "framework")]
     extern "C" {
-        fn SecTaskCopyValueForEntitlement(task: CFTypeRef, entitlement: CFTypeRef, error: *mut CFTypeRef) -> CFTypeRef;
         fn SecTaskCreateFromSelf(allocator: CFTypeRef) -> CFTypeRef;
-    }
-
-    /// A +1 Core Foundation reference, released on drop.
-    struct Owned(CFTypeRef);
-
-    impl Owned {
-        fn new(reference: CFTypeRef) -> Option<Self> {
-            // `then`, not `then_some`: an eagerly built `Owned` would release null on drop.
-            (!reference.is_null()).then(|| Self(reference))
-        }
-    }
-
-    impl Drop for Owned {
-        fn drop(&mut self) {
-            // SAFETY: `Owned` only holds non-null references returned by a Create or Copy function.
-            unsafe { CFRelease(self.0) }
-        }
+        fn SecTaskCopyValueForEntitlement(
+            task: CFTypeRef,
+            entitlement: CFStringRef,
+            error: *mut CFTypeRef,
+        ) -> CFTypeRef;
     }
 
     /// The application identifier this process was signed with; `None` when unsigned or absent.
     pub fn application_identifier() -> Option<String> {
-        // SAFETY: arguments are live CF references or null where the API accepts null, and the value is
-        // checked to be a CFString before it is read as one.
+        let key = CFString::from_static_string("com.apple.application-identifier");
+        // SAFETY: both calls follow the Create/Copy rule, so each non-null result is owned once by the
+        // `CFType` wrapping it; the API accepts a null allocator and a null error out-parameter.
         unsafe {
-            let task = Owned::new(SecTaskCreateFromSelf(std::ptr::null()))?;
-            let key = Owned::new(CFStringCreateWithCString(std::ptr::null(), APPLICATION_IDENTIFIER.as_ptr(), UTF8))?;
-            let value = Owned::new(SecTaskCopyValueForEntitlement(task.0, key.0, std::ptr::null_mut()))?;
-            if CFGetTypeID(value.0) != CFStringGetTypeID() {
+            let task = SecTaskCreateFromSelf(std::ptr::null());
+            if task.is_null() {
                 return None;
             }
-
-            let mut buffer = [0 as c_char; 256];
-            if CFStringGetCString(value.0, buffer.as_mut_ptr(), buffer.len() as isize, UTF8) == 0 {
+            let task = CFType::wrap_under_create_rule(task);
+            let value = SecTaskCopyValueForEntitlement(
+                task.as_CFTypeRef(),
+                key.as_concrete_TypeRef(),
+                std::ptr::null_mut(),
+            );
+            if value.is_null() {
                 return None;
             }
-            CStr::from_ptr(buffer.as_ptr()).to_str().ok().map(str::to_owned)
+            CFType::wrap_under_create_rule(value)
+                .downcast::<CFString>()
+                .map(|identifier| identifier.to_string())
         }
     }
 }
