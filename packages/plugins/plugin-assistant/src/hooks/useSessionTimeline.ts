@@ -4,7 +4,7 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Duration from 'effect/Duration';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';

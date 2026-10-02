@@ -4,6 +4,9 @@
 
 // @import-as-namespace
 
+import * as McpServer$ from 'effect/ai/McpServer';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
@@ -11,9 +14,6 @@ import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
 import * as Sink from 'effect/Sink';
 import * as EffectStdio from 'effect/Stdio';
-import * as McpServer$ from 'effect/unstable/ai/McpServer';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';

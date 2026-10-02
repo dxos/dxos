@@ -6,7 +6,7 @@ import { type Instruction, extractInstruction } from '@atlaskit/pragmatic-drag-a
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 

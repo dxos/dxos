@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';

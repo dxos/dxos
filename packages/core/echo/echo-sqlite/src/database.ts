@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import type * as Scope from 'effect/Scope';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
-import type * as SqlError from 'effect/unstable/sql/SqlError';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import {

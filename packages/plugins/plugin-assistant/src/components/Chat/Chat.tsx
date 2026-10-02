@@ -5,7 +5,7 @@
 import { Collapsible } from '@ark-ui/react/collapsible';
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';

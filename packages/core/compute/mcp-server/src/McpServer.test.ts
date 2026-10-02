@@ -2,19 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
-import type * as Context from 'effect/Context';
-import * as Duration from 'effect/Duration';
-import * as Effect from 'effect/Effect';
-import * as Layer from 'effect/Layer';
-import type * as Result from 'effect/Result';
-import * as Schema from 'effect/Schema';
-import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
-import * as McpServer$ from 'effect/unstable/ai/McpServer';
-import * as HttpRouter from 'effect/unstable/http/HttpRouter';
 import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+
+import * as McpProtocol from 'effect/ai/McpProtocol';
+import * as McpServer$ from 'effect/ai/McpServer';
+import type * as Context from 'effect/Context';
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+import * as HttpRouter from 'effect/http/HttpRouter';
+import * as Layer from 'effect/Layer';
+import type * as Result from 'effect/Result';
+import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';

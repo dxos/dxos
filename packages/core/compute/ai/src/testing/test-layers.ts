@@ -6,11 +6,11 @@ import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as Config from 'effect/Config';
 import type * as ConfigError from 'effect/Config';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import * as AiModelResolver from '../AiModelResolver.ts';
 import type * as AiService from '../AiService.ts';

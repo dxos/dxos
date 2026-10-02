@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as McpProtocol from 'effect/ai/McpProtocol';
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as References from 'effect/References';
-import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';

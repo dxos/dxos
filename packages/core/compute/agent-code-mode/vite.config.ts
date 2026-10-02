@@ -20,7 +20,7 @@ export default defineConfig({
       browsers: ['chromium'],
       include: ['**/src/**/*.browser.test.ts'],
       // Pulled in by the worker entry, so vite only discovers them once the worker boots.
-      optimizeDeps: ['@effect/platform-browser/BrowserWorker', 'effect/Data', 'effect/unstable/rpc/RpcClient'],
+      optimizeDeps: ['@effect/platform-browser/BrowserWorker', 'effect/Data', 'effect/rpc/RpcClient'],
     },
     workerd: {
       // Dynamic isolate loading is what `WorkerdSandbox` is built on, and the binding exists only

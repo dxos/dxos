@@ -26,3 +26,16 @@ DX_STORYBOOK_BROWSER=webkit pnpm --dir packages/ui/react-ui exec vitest run --pr
 
 Measured on 1.43.3: it fails without the patch and passes with it, in WebKit only. A pass without the
 patch means the upgrade carries the fix, and the patch and this section can go.
+
+## `dfx@1.0.15`
+
+**What.** Rewrites dfx's `effect/unstable/*` imports to the top-level paths Effect 4.0.0 moved them to
+(`effect/unstable/http/HttpClient` becomes `effect/http/HttpClient`, and likewise for `persistence`
+and `socket`).
+
+**Why.** Effect 4.0.0 removed the `unstable/` prefix. dfx still imports through it as of 1.0.16, so
+without the patch `plugin-discord` fails to typecheck and its layers fail to load at runtime.
+
+**Retesting after a dfx upgrade.** If the new release's `dist` has no `effect/unstable/` imports, drop
+this patch's line from `pnpm-workspace.yaml`, reinstall, and run `moon run plugin-discord:build`. A
+clean build means the patch and this section can go.

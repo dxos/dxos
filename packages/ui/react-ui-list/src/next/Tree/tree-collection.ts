@@ -3,7 +3,7 @@
 //
 
 import { createTreeCollection } from '@ark-ui/react/collection';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { type TreeItemDataProps, type TreeModel } from '../../components/Tree/TreeContext.ts';
 import { Path } from '../../util/index.ts';

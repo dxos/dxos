@@ -4,7 +4,7 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';

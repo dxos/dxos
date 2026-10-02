@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as AiError from 'effect/ai/AiError';
+import type * as Response from 'effect/ai/Response';
+import type * as Tool from 'effect/ai/Tool';
 import * as Cause from 'effect/Cause';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
-import type * as AiError from 'effect/unstable/ai/AiError';
-import type * as Response from 'effect/unstable/ai/Response';
-import type * as Tool from 'effect/unstable/ai/Tool';
 
 import { log } from '@dxos/log';
 

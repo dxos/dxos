@@ -7,8 +7,8 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Semaphore from 'effect/Semaphore';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';

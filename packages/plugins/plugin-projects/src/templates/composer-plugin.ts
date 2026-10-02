@@ -87,10 +87,10 @@ export const readGuide = (how: string): TaskSeed => ({
   estimate: 'xs',
 });
 
-/** The plugin itself; `folder` is where its files go and `outDir` where its build lands. */
-export const writePlugin = (folder: string, outDir: string, outDirReason: string, extra = ''): TaskSeed => ({
+/** The plugin itself; `folder` is where its files go and `build` the sentence that says where it is served from. */
+export const writePlugin = (folder: string, build: string, extra = ''): TaskSeed => ({
   title: 'Write the plugin in TypeScript',
-  description: `Create \`dx.config.ts\`, \`vite.config.ts\`, \`tsconfig.json\` and \`src/plugin.tsx\` in \`${folder}/\`: a "World Clock" group in each space's navtree with a "Clocks" page under it. Define a \`Clock\` ECHO type holding its clocks, each a timezone and its position (from \`timezones\` in \`@dxos/react-ui-geo/data\`), one per space, stored on the first change; until then the page shows the reader's own timezone. The article shows plugin-map's \`World\` surface with a marker per clock and the Clock as its \`subject\`, and beneath it a single row of clock cards sorted west to east, each with a ghost delete button in its top-right corner (rendered after the card's text, or the text covers it) and showing the date, the time (24-hour, zero-padded, no AM/PM, ticking every second) and the timezone, then an empty card the same size as the clock cards with a large ghost plus button centered in it that opens a react-ui-form with a timezone select. Clicking a clock selects it with \`LayoutOperation.Select\`, which highlights its card and its pin on the map. Build the article from the guide's put-together example. Give each clock card \`data-testid="worldClock.clock"\`, the empty card \`data-testid="worldClock.new"\`, its plus button \`data-testid="worldClock.add"\` and each delete button \`data-testid="worldClock.delete"\`. Depend on \`org.dxos.plugin.map\` and tag it \`labs\` in \`dx.config.ts\`, as the guide does. Add to the navtree, never replace it: no workspace, no rail tab. Set the build \`outDir\` to \`'${outDir}'\` ${outDirReason}.${extra}`,
+  description: `Create \`dx.config.ts\`, \`vite.config.ts\`, \`tsconfig.json\` and \`src/plugin.tsx\` in \`${folder}/\`: a "World Clock" group in each space's navtree with a "Clocks" page under it. Define a \`Clock\` ECHO type holding its clocks, each a timezone and its position (from \`timezones\` in \`@dxos/react-ui-geo/data\`), one per space, stored on the first change; until then the page shows the reader's own timezone. The article shows plugin-map's \`World\` surface with a marker per clock and the Clock as its \`subject\`, and beneath it a single row of clock cards sorted west to east, each with a ghost delete button in its top-right corner (rendered after the card's text, or the text covers it) and showing the date, the time (24-hour, zero-padded, no AM/PM, ticking every second) and the timezone, then an empty card the same size as the clock cards with a large ghost plus button centered in it that opens a react-ui-form with a timezone select. Clicking a clock selects it with \`LayoutOperation.Select\`, which highlights its card and its pin on the map. Build the article from the guide's put-together example. Give each clock card \`data-testid="worldClock.clock"\`, the empty card \`data-testid="worldClock.new"\`, its plus button \`data-testid="worldClock.add"\` and each delete button \`data-testid="worldClock.delete"\`. Depend on \`org.dxos.plugin.map\` and tag it \`labs\` in \`dx.config.ts\`, as the guide does. Add to the navtree, never replace it: no workspace, no rail tab. ${build}${extra}`,
   estimate: 's',
 });
 
@@ -141,8 +141,7 @@ ${IDS}`,
     ),
     writePlugin(
       '.',
-      'dist',
-      'so the build lands in the folder the last subtask publishes',
+      "Set the build `outDir` to `'dist'` so the build lands in the folder the last subtask publishes.",
       ` Beside them write this \`package.json\`, which pins every package to the build of this app, and an \`.npmrc\` holding \`${NPMRC.trim()}\`:\n\n\`\`\`json\n${packageJson(toolchain)}\n\`\`\``,
     ),
     {

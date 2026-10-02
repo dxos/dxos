@@ -411,24 +411,36 @@ const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequ
 /**
  * Answers the card request an artifact tag dispatches, standing in for PreviewPlugin so the story
  * shows what each artifact is without the plugin layers. The event does not bubble, so it is caught
- * in the capture phase on `window`, as the app's own host does.
+ * in the capture phase on `window`, as the app's own host does. Opening an object is recorded on
+ * `artifact-opened` in place of navigating.
  */
 const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifacts: Obj.Unknown[] }>) => {
   const triggerRef = useRef<HTMLElement | null>(null);
   const [artifact, setArtifact] = useState<Obj.Unknown>();
   const [open, setOpen] = useState(false);
+  const [opened, setOpened] = useState<string>();
 
   const handleActivate = useCallback(
     (event: Event) => {
       if (!(event instanceof DxAnchorActivate)) {
         return;
       }
-      const match = artifacts.find((artifact) => String(Obj.getURI(artifact)) === event.eid);
-      if (match) {
-        triggerRef.current = event.trigger;
-        setArtifact(match);
-        setOpen(true);
+      if (event.state === false) {
+        setOpen(false);
+        return;
       }
+      const match = artifacts.find((artifact) => String(Obj.getURI(artifact)) === event.eid);
+      if (!match) {
+        return;
+      }
+      if (event.navigate) {
+        setOpen(false);
+        setOpened(Obj.getLabel(match));
+        return;
+      }
+      triggerRef.current = event.trigger;
+      setArtifact(match);
+      setOpen(true);
     },
     [artifacts],
   );
@@ -442,6 +454,9 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.VirtualTrigger virtualRef={triggerRef} />
       {children}
+      <output className='sr-only' data-testid='artifact-opened'>
+        {opened}
+      </output>
       {artifact && (
         <Popover.Portal>
           <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
@@ -1141,7 +1156,7 @@ export const WithTags: Story = {
   },
 };
 
-/** A pull request, the one artifact a row shows, opens its summary from the row. */
+/** A pull request, the one artifact a row shows, shows its summary on hover and opens on click. */
 export const TestArtifactPreviews: Story = {
   render: ArtifactsStory,
   args: {
@@ -1157,6 +1172,7 @@ export const TestArtifactPreviews: Story = {
         ),
       ].find((element) => element.textContent === label);
     const preview = () => document.querySelector<HTMLElement>('[data-testid="artifact-preview"]');
+    const opened = () => document.querySelector<HTMLElement>('[data-testid="artifact-opened"]');
 
     const open = async (label: string, testId: string) => {
       const tag = await waitFor(
@@ -1169,13 +1185,17 @@ export const TestArtifactPreviews: Story = {
         },
         { timeout: 10_000 },
       );
-      await userEvent.click(tag);
+      await userEvent.hover(tag);
       await waitFor(async () => expect(preview()?.querySelector(`[data-testid="${testId}"]`)).toBeTruthy(), {
         timeout: 5_000,
       });
       await expect(preview()?.textContent).toContain(label);
-      await userEvent.keyboard('{Escape}');
+      await userEvent.unhover(tag);
       await waitFor(async () => expect(preview()).toBeNull());
+
+      await userEvent.click(tag);
+      await waitFor(async () => expect(opened()?.textContent).not.toBe(''));
+      await expect(preview()).toBeNull();
     };
 
     // The pull request's tag is its `#number` pill; the preview names it by its full reference.

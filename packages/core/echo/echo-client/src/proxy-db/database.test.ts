@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Scope from 'effect/Scope';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { inspect } from 'node:util';
 import { afterEach, beforeEach, describe, expect, onTestFinished, test } from 'vitest';
 
@@ -849,6 +849,42 @@ describe('Database', () => {
 
       expect(registry.get(atom)).toMatchObject({ id: tasks[0].id });
       expect(registry.get(Obj.atom(ref))).toBeUndefined();
+    });
+
+    test('Ref.loadAll omits a deleted target unless deleted are included', async ({ expect }) => {
+      const { db, refs, tasks } = await setup();
+      db.remove(tasks[1]);
+
+      expect((await Ref.loadAll(refs)).map((task) => task.title)).toEqual(['one', 'three']);
+      expect((await Ref.loadAll(refs, { deleted: 'include' })).map((task) => task.title)).toEqual([
+        'one',
+        'two',
+        'three',
+      ]);
+    });
+
+    test('Obj.atomReactive over a ref array reads loaded targets in order and drops one once removed', async ({
+      expect,
+    }) => {
+      const { db, person, tasks } = await setup();
+      const registry = AtomRegistry.make();
+      const titles = () => registry.get(Obj.atomReactive(person.tasks!)).map((task) => task.title);
+
+      expect(titles()).toEqual(['one', 'two', 'three']);
+      Obj.update(person, (person) => {
+        person.tasks = [person.tasks![2], person.tasks![0], person.tasks![1]];
+      });
+      expect(titles()).toEqual(['three', 'one', 'two']);
+
+      const atom = Obj.atomReactive(person.tasks!);
+      const included = Obj.atomReactive(person.tasks!, { deleted: 'include' });
+      registry.subscribe(atom, () => {});
+      registry.subscribe(included, () => {});
+      expect(registry.get(included)).toHaveLength(3);
+
+      db.remove(tasks[0]);
+      expect(registry.get(atom).map((task) => task.title)).toEqual(['three', 'two']);
+      expect(registry.get(included).map((task) => task.title)).toEqual(['three', 'one', 'two']);
     });
   });
 

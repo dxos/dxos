@@ -14,13 +14,13 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Queue from 'effect/Queue';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
+import * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
