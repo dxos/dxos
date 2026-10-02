@@ -9,7 +9,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import type { MaybePromise } from '@dxos/util';
 
-import { WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
+import { WorkerBuildMismatchError, WorkerNotTerminableError, WorkerTerminationError } from './errors.ts';
 import { DisplaceChannel, type TerminateRequest } from './internal/displace-channel.ts';
 import {
   LOCK_OR_RPC_WAIT_TIMEOUT,
@@ -115,11 +115,24 @@ export type Options = {
    * mixed-generation workers: a SharedWorker coordinator or dedicated worker running code from a
    * previous dev-server instance or app deploy alongside a freshly loaded page.
    *
-   * TODO(burdon): Durable fix for the mixed-generation case: exchange a generation/build id in the
-   *  coordinator handshake; on mismatch the older generation steps down, the coordinator self-closes
-   *  (so the next connect spawns fresh code), and stale tabs are told to reload.
+   * A mixed generation is caught earlier when both sides carry a {@link Options.buildId}.
    */
   onPersistentFailure?: (error: unknown) => void;
+  /**
+   * Identifies the app build this tab runs, and so the build of any worker it spawns as leader. When
+   * set, a follower refuses a leader's port unless the leader reports the same build: RPC contracts
+   * change between builds, and a tab speaking one to a worker from another mis-decodes replies —
+   * a write the worker committed then reads as failed and is retried as a duplicate. A leader that
+   * reports no build predates this check, so it counts as a different build.
+   */
+  buildId?: string;
+  /**
+   * Invoked on both sides of a refused port: on the follower that refused it, and on the leader (when
+   * its build carries this check) through the follower's broadcast. Only the app knows which build is
+   * newer and whether a reload is safe, so converging the generations — typically by reloading the
+   * older tab — is left to it. Fires on every refused attempt, so the callback owns its own guard.
+   */
+  onBuildMismatch?: (mismatch: BuildMismatch) => void;
   onConnect: (args: {
     clientToWorker: MessagePort;
     workerToClient: MessagePort;
@@ -127,6 +140,16 @@ export type Options = {
     livenessLockKey: string;
     isOwner: boolean;
   }) => Promise<Handle>;
+};
+
+/** A leader and a follower found running different app builds; see {@link Options.onBuildMismatch}. */
+export type BuildMismatch = {
+  /** Which side of the refused port this tab is on. */
+  role: 'leader' | 'follower';
+  /** This tab's build. */
+  local: string | undefined;
+  /** The other side's build; `undefined` when it predates build ids. */
+  remote: string | undefined;
 };
 
 const DEFAULT_LEADER_HEARTBEAT_INTERVAL = 1_000;
@@ -167,6 +190,8 @@ export class Connection extends Resource {
   readonly #workerProbeTimeout: number;
   readonly #maxLeaderFailures: number;
   readonly #onPersistentFailure: ((error: unknown) => void) | undefined;
+  readonly #buildId: string | undefined;
+  readonly #onBuildMismatch: ((mismatch: BuildMismatch) => void) | undefined;
 
   #connectionHandle: Handle | undefined;
   #leaderSession: LeaderSession | undefined;
@@ -239,6 +264,8 @@ export class Connection extends Resource {
       'maxLeaderFailures must be a positive integer',
     );
     this.#onPersistentFailure = options.onPersistentFailure;
+    this.#buildId = options.buildId;
+    this.#onBuildMismatch = options.onBuildMismatch;
   }
 
   onReconnect = (callback: () => Promise<void>) => {
@@ -261,6 +288,14 @@ export class Connection extends Resource {
         if (message.leaderId !== this.#clientId) {
           this.#peerLeaderHeartbeat = Date.now();
         }
+      }
+      if (message.type === 'build-mismatch' && message.leaderId === this.#leaderSession?.leaderId) {
+        log.warn('worker-connection: a follower refused this leader: different build', {
+          clientId: message.clientId,
+          local: this.#buildId,
+          remote: message.buildId,
+        });
+        this.#reportBuildMismatch({ role: 'leader', local: this.#buildId, remote: message.buildId });
       }
     });
     this.#coordinator.onError?.on(this._ctx, (error) => {
@@ -338,6 +373,14 @@ export class Connection extends Resource {
     return backoff * (0.5 + Math.random() * 0.5);
   }
 
+  #reportBuildMismatch(mismatch: BuildMismatch): void {
+    try {
+      this.#onBuildMismatch?.(mismatch);
+    } catch (callbackError) {
+      log.catch(callbackError);
+    }
+  }
+
   #escalate(error: unknown): void {
     try {
       this.#onPersistentFailure?.(error);
@@ -386,6 +429,7 @@ export class Connection extends Resource {
             this.#config,
             this.#clientId,
             this.#workerProbeTimeout,
+            this.#buildId,
           );
           const isCurrent = () => this.#leaderSession === session;
           try {
@@ -641,6 +685,20 @@ export class Connection extends Resource {
       }
 
       const { clientToWorker, workerToClient, leaderId, livenessLockKey, isOwner } = result;
+      if (this.#buildId !== undefined && result.buildId !== this.#buildId) {
+        // Closing the ports and failing the attempt releases its session lock, which ends the session.
+        clientToWorker.close();
+        workerToClient.close();
+        const mismatch = { role: 'follower', local: this.#buildId, remote: result.buildId } as const;
+        this.#coordinator?.sendMessage({
+          type: 'build-mismatch',
+          leaderId,
+          clientId: this.#clientId,
+          buildId: this.#buildId,
+        });
+        this.#reportBuildMismatch(mismatch);
+        throw new WorkerBuildMismatchError({ context: { leaderId, local: mismatch.local, remote: mismatch.remote } });
+      }
       log('worker-connection: connected to worker', { leaderId, isOwner });
       this.#connectPhase = 'port-received';
       // A port proves the coordinator link works, so the steal budget below is about the incumbent
@@ -857,6 +915,7 @@ class LeaderSession extends Resource {
   readonly #config: Record<string, any> | undefined;
   readonly #ownerClientId: string;
   readonly #workerProbeTimeout: number;
+  readonly #buildId: string | undefined;
   readonly #leaderId = `leader-${crypto.randomUUID()}`;
   /** Nonces the worker has echoed back, matched against the probe that is waiting for one. */
   readonly #probeReplies = new Event<string>();
@@ -875,6 +934,7 @@ class LeaderSession extends Resource {
     config: Record<string, any> | undefined,
     ownerClientId: string,
     workerProbeTimeout: number,
+    buildId: string | undefined,
   ) {
     super();
     this.#createWorker = createWorker;
@@ -882,9 +942,15 @@ class LeaderSession extends Resource {
     this.#config = config;
     this.#ownerClientId = ownerClientId;
     this.#workerProbeTimeout = workerProbeTimeout;
+    this.#buildId = buildId;
   }
 
   readonly onClose = new Event<Error | undefined>();
+
+  /** Identifies this session in the `provide-port` messages it sends. */
+  get leaderId(): string {
+    return this.#leaderId;
+  }
 
   /** The error the worker reported when its runtime failed to start. */
   get startFailure(): Error | undefined {
@@ -922,6 +988,7 @@ class LeaderSession extends Resource {
             leaderId: this.#leaderId,
             livenessLockKey: this.#livenessLockKey,
             isOwner: event.data.isOwner,
+            buildId: this.#buildId,
           });
           break;
         case 'session-failed':

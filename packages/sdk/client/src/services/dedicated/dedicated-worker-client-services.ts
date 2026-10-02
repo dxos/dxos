@@ -23,6 +23,10 @@ export interface DedicatedWorkerClientServicesOptions {
   leaderTimeouts?: LeaderTimeoutOptions;
   /** See {@link Client.Options.onPersistentFailure}. */
   onPersistentFailure?: Client.Options['onPersistentFailure'];
+  /** See {@link Client.Options.buildId}. */
+  buildId?: Client.Options['buildId'];
+  /** See {@link Client.Options.onBuildMismatch}. */
+  onBuildMismatch?: Client.Options['onBuildMismatch'];
 }
 
 /**
@@ -43,6 +47,8 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       config: options.config?.values,
       leaderTimeouts: options.leaderTimeouts,
       onPersistentFailure: options.onPersistentFailure,
+      buildId: options.buildId,
+      onBuildMismatch: options.onBuildMismatch,
       onConnect: async ({ clientToWorker, workerToClient }) => {
         const config = options.config ?? new Config();
 
