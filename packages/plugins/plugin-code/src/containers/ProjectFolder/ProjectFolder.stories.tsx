@@ -15,14 +15,14 @@ import { Form } from '@dxos/react-ui-form';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
-import { CodeCapabilities, type Settings } from '#types';
+import { CodeCapabilities, type State } from '#types';
 
 import { ProjectFolder } from './ProjectFolder.tsx';
 
 const FOLDER = '/Users/me/code/voyage';
 
 const project = Project.make({ name: 'Voyage' });
-const settings = Atom.make<Settings.Settings>({ agentRepositories: { [project.id]: FOLDER } }).pipe(Atom.keepAlive);
+const state = Atom.make<State.State>({ repositories: { [project.id]: FOLDER } }).pipe(Atom.keepAlive);
 
 const meta = {
   title: 'plugins/plugin-code/containers/ProjectFolder',
@@ -37,7 +37,7 @@ const meta = {
   decorators: [
     withTheme(),
     withLayout({ layout: 'column' }),
-    withPluginManager({ capabilities: [Capability.contribute(CodeCapabilities.Settings, settings)] }),
+    withPluginManager({ capabilities: [Capability.contribute(CodeCapabilities.State, state)] }),
   ],
   parameters: {
     translations,

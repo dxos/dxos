@@ -27,6 +27,7 @@ import { isTauri } from '@dxos/util';
 import { AgentError } from '../errors.ts';
 import * as CodeCapabilities from '../types/CodeCapabilities.ts';
 import * as Settings from '../types/Settings.ts';
+import * as State from '../types/State.ts';
 import * as AcpAgent from './AcpAgent.ts';
 import * as ComposerMcp from './ComposerMcp.ts';
 import * as Protocol from './Protocol.ts';
@@ -77,6 +78,11 @@ export const make = (
     const helper = () => manager.getAll(CodeCapabilities.AgentHelper).at(0);
     const settings = (): Settings.Settings | undefined => {
       const [atom] = manager.getAll(CodeCapabilities.Settings);
+      const [registry] = manager.getAll(Capabilities.AtomRegistry);
+      return atom && registry ? registry.get(atom) : undefined;
+    };
+    const state = (): State.State | undefined => {
+      const [atom] = manager.getAll(CodeCapabilities.State);
       const [registry] = manager.getAll(Capabilities.AtomRegistry);
       return atom && registry ? registry.get(atom) : undefined;
     };
@@ -166,13 +172,12 @@ export const make = (
       },
       workspace: (chat) =>
         Effect.gen(function* () {
-          const current = settings();
           const project = Workspace.projectOf(chat);
-          const folder = ((project && current?.agentRepositories?.[project.id]) ?? current?.agentWorkspace)?.trim();
+          const folder = project && state()?.repositories?.[project.id]?.trim();
           if (!folder) {
             return yield* Effect.fail(
               new AgentError({
-                message: `Choose the folder ${definition.label} works in, on the project's overview or in the Code plugin settings.`,
+                message: `${definition.label} works in a project's code folder: choose one on the project's overview.`,
               }),
             );
           }

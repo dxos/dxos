@@ -15,9 +15,15 @@ import { meta } from '#meta';
 import type * as Protocol from '../agents/Protocol.ts';
 import type { AgentError } from '../errors.ts';
 import type * as SettingsModule from './Settings.ts';
+import type * as StateModule from './State.ts';
 
 export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
   `${meta.profile.key}.capability.settings`,
+);
+
+/** What the plugin keeps on this device only, such as each project's repository folder. */
+export const State = Capability.makeSingleton<Atom.Writable<StateModule.State>>()(
+  `${meta.profile.key}.capability.state`,
 );
 
 /**

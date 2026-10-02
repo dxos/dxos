@@ -24,6 +24,7 @@ export default defineConfig({
     Settings: 'src/types/Settings.ts',
     SourceFile: 'src/types/SourceFile.ts',
     Spec: 'src/types/Spec.ts',
+    State: 'src/types/State.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

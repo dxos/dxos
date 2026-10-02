@@ -50,4 +50,9 @@ export const AgentLauncher = Capability.lazyModule(
   { provides: [CodeCapabilities.AgentHelper], activatesOn: ActivationEvents.Startup, environments: ['tauri'] },
   () => import('./agent-launcher.ts'),
 );
+export const State = Capability.lazyModule(
+  'State',
+  { provides: [CodeCapabilities.State], activatesOn: ActivationEvents.Startup },
+  () => import('./state.ts'),
+);
 export const Translations = AppCapability.translations(translations);

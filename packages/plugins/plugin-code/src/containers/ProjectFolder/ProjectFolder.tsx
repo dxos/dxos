@@ -4,33 +4,36 @@
 
 import React, { useCallback } from 'react';
 
-import { useCapability, useSettingsState } from '@dxos/app-framework/ui';
+import * as Capabilities from '@dxos/app-framework/Capabilities';
+import { useAtomCapability, useCapability } from '@dxos/app-framework/ui';
 import type * as Project from '@dxos/compute/Project';
 import { log } from '@dxos/log';
 import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
-import { CodeCapabilities, type Settings } from '#types';
+import { CodeCapabilities } from '#types';
 
 export type ProjectFolderProps = { project: Project.Project };
 
 /**
  * The project's repository folder on this device, which coding agents work in. Kept in this plugin's
- * settings rather than on the project, since a path means nothing on another device.
+ * local state rather than on the project or in its settings, both of which sync: a path means nothing on
+ * another device.
  */
 export const ProjectFolder = ({ project }: ProjectFolderProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(useCapability(CodeCapabilities.Settings));
-  const folder = settings.agentRepositories?.[project.id];
+  const registry = useCapability(Capabilities.AtomRegistry);
+  const stateAtom = useCapability(CodeCapabilities.State);
+  const folder = useAtomCapability(CodeCapabilities.State).repositories?.[project.id];
 
   const setFolder = useCallback(
     (folder: string | undefined) =>
-      updateSettings(({ agentRepositories = {}, ...current }) => {
-        const { [project.id]: _, ...others } = agentRepositories;
-        return { ...current, agentRepositories: folder ? { ...others, [project.id]: folder } : others };
+      registry.update(stateAtom, ({ repositories = {}, ...state }) => {
+        const { [project.id]: _, ...others } = repositories;
+        return { ...state, repositories: folder ? { ...others, [project.id]: folder } : others };
       }),
-    [project.id, updateSettings],
+    [project.id, registry, stateAtom],
   );
 
   const handleChoose = useCallback(() => {
