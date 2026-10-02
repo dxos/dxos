@@ -32,7 +32,7 @@ import { EventStack, type EventStackActionHandler, useTargetConnection } from '#
 import { meta } from '#meta';
 import { Calendar, DraftEvent, SystemTags } from '#types';
 
-import { getCalendarPath, getCalendarRangeSelectionId, getFeedObjectPath } from '../../paths.ts';
+import { getCalendarPath, getFeedObjectPath } from '../../paths.ts';
 import { InitializeCalendar } from './InitializeCalendar.tsx';
 
 const byDate =
@@ -110,7 +110,7 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
   const handleRangeSelect = useCallback(
     ({ range }: { range: { from: Date; to: Date } }) => {
       void invokePromise(LayoutOperation.Select, {
-        contextId: getCalendarRangeSelectionId(id),
+        contextId: Calendar.getRangeSelectionId(id),
         subject: { mode: 'range', from: range.from.toISOString(), to: range.to.toISOString() },
       });
     },

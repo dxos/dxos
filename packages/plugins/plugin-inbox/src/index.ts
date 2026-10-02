@@ -5,7 +5,6 @@
 export * as InboxPlugin from './InboxPlugin.ts';
 export * from '#meta';
 export * from '#types';
-export { getCalendarRangeSelectionId } from './paths.ts';
 export * from '#skills';
 export * from '#operations';
 export * as Containers from './Containers.ts';
