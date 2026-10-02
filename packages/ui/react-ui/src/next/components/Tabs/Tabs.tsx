@@ -8,6 +8,7 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
+import { composable, composableProps } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/index.ts';
@@ -35,12 +36,12 @@ type TabsRootProps = ThemedClassName<
 
 /**
  * Ark's tabs: a list of triggers over (horizontal) or beside (vertical) the selected content. A trigger activates on
- * click or Enter (`activationMode='manual'`); arrow keys move focus along the list.
+ * click or Enter (`activationMode='manual'`); arrow keys move focus along the list. Composable, so a host's `asChild`
+ * (e.g. `Panel.Root`) merges its className and ref onto the tabs element.
  */
-const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
+const TabsRoot = composable<HTMLDivElement, Omit<TabsRootProps, 'classNames'>>(
   (
     {
-      classNames,
       value,
       defaultValue,
       onValueChange,
@@ -54,7 +55,7 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
     forwardedRef,
   ) => (
     <TabsPrimitive.Root
-      {...props}
+      {...composableProps(props, { classNames: recipes.tabs() })}
       {...(value !== undefined && { value })}
       defaultValue={defaultValue}
       onValueChange={onValueChange && (({ value }) => onValueChange(value))}
@@ -64,7 +65,6 @@ const TabsRoot = forwardRef<HTMLDivElement, TabsRootProps>(
       unmountOnExit={!keepMounted}
       data-size={size}
       data-selected-variant={selectedVariant}
-      className={mx(recipes.tabs(), classNames)}
       ref={forwardedRef}
     />
   ),

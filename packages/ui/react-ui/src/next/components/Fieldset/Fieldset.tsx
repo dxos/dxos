@@ -10,7 +10,13 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { type Level, type Span, containerAttributes, spanAttributes } from '../Container/index.ts';
+import {
+  DefaultGutterProvider,
+  type Level,
+  type Span,
+  containerAttributes,
+  spanAttributes,
+} from '../Container/index.ts';
 
 //
 // Root
@@ -54,7 +60,7 @@ const FieldsetRoot = forwardRef<HTMLDivElement, FieldsetRootProps>(
         className={mx(recipes.fieldsetRoot(), gutter && recipes.container(), classNames)}
       >
         <div role='group' aria-disabled={disabled ? true : undefined} ref={forwardedRef}>
-          {children}
+          {gutter ? <DefaultGutterProvider gutter={undefined}>{children}</DefaultGutterProvider> : children}
         </div>
       </FieldsetPrimitive.Root>
     );

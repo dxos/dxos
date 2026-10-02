@@ -39,25 +39,34 @@ export type FormViewportProps = PropsWithChildren<{
 
 /**
  * The gutter Container that owns the form's rails; with `scroll`, the Body of a pane of its own. Composable, so a
- * form component can be the `asChild` child of a host that merges its layout props and ref onto it.
+ * form component can be the `asChild` child of a host that merges its layout props and ref onto it. The gutter defaults
+ * to the enclosing panel's (`sm`, the form inset), else `sm`.
  */
 export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
-  ({ children, scroll, size, width, gutter = 'rail', ...props }, forwardedRef) =>
-    scroll ? (
-      <Next.Panel.Root {...props} size={size} width={width} ref={forwardedRef}>
+  ({ children, scroll, size, width, gutter, ...props }, forwardedRef) => {
+    const defaultGutter = Next.useDefaultGutter();
+    return scroll ? (
+      <Next.Panel.Root
+        {...props}
+        size={size}
+        width={width}
+        gutter={gutter === 'inherit' ? undefined : gutter}
+        ref={forwardedRef}
+      >
         <Next.Panel.Body asChild>
           <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport asChild>
-              <Next.Container gutter={gutter}>{children}</Next.Container>
+              <Next.Container>{children}</Next.Container>
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
         </Next.Panel.Body>
       </Next.Panel.Root>
     ) : (
-      <Next.Container {...props} gutter={gutter} ref={forwardedRef}>
+      <Next.Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} ref={forwardedRef}>
         {children}
       </Next.Container>
-    ),
+    );
+  },
 );
 
 FormViewport.displayName = 'Form.Viewport';

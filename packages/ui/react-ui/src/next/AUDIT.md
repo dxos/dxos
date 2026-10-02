@@ -817,6 +817,12 @@ No open questions remain.
   composed host). Every Next caller now composes the ScrollArea and the rail Container it relied on (react-ui Panel,
   Listbox and MasterDetail stories, react-ui-form/next stories and `Form.Viewport scroll`, plugin-registry); no preset
   prop was added (TASKS.md records the candidate).
+- **Panel gutter defaults to `sm`** (2026-10-02). `Panel.Root gutter` (default `sm`) is the gutter of the first
+  unnamed Container under `Panel.Body`, so `Form.Viewport` (whose default was `rail`, 32px) insets forms by 8px as
+  main's `Form.Viewport gutter='sm'` did; a non-scrolling Viewport outside a panel falls back to `sm`. The react-ui-form
+  stories dropped their `gutter='rail'`; `rail` stays only where rows put icons in the gutter (Card, Banner, the
+  Panel/Listbox/MasterDetail rail stories). Follow-up: audit the remaining react-ui stories that name `rail` around
+  plain content.
 - **Theme context split.** `useThemeContext`'s `tx` is not carried into Next (Next styles through `.nx-*` CSS). The
   values Next components still read come from `Next.useThemeMode()` (`themeMode`), `Next.usePlatform()` (`platform`)
   and `Next.useIosKeyboard()` (`hasIosKeyboard`), which read the existing ThemeProvider (no new provider).

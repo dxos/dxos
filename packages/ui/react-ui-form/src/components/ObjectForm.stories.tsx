@@ -43,7 +43,7 @@ const DefaultStory = ({ component = 'form' }: StoryArgs) => {
       <Next.Panel.Body asChild>
         <Next.ScrollArea.Root>
           <Next.ScrollArea.Viewport asChild>
-            <Next.Container gutter='rail'>
+            <Next.Container>
               <ObjectForm object={person} type={Person.Person} />
             </Next.Container>
           </Next.ScrollArea.Viewport>

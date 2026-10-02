@@ -45,7 +45,7 @@ const DefaultStory = (_: PaneArgs) => {
       <Next.Panel.Body asChild>
         <Next.ScrollArea.Root>
           <Next.ScrollArea.Viewport asChild>
-            <Next.Container gutter='rail'>
+            <Next.Container>
               <Form.Root
                 schema={OptionsSchema}
                 values={values}

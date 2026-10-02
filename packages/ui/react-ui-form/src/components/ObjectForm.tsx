@@ -10,6 +10,7 @@ import { type Database, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import { composable } from '@dxos/react-ui';
 import { FactoryAnnotation } from '@dxos/schema';
 
 import { translationKey } from '#translations';
@@ -157,46 +158,44 @@ export type ObjectPropertiesProps = PropsWithChildren<
 
 /**
  * An object's properties pane: its type's fields and meta tags in a scrolling form, then `children` (e.g. a plugin's
- * extra rows) in a set of their own.
+ * extra rows) in a set of their own. Composable, so a host's `Panel.Body asChild` merges its slot props and ref onto
+ * the form's viewport.
  */
-export const ObjectProperties = ({
-  children,
-  object,
-  getCreateDefaults,
-  resolveCreateEntry,
-}: ObjectPropertiesProps) => {
-  const db = Obj.getDatabase(object);
-  const [snapshot] = useObject(object);
-  const { values, handleCreate, handleChange } = useObjectFormModel({ object, snapshot, db });
-  // `Obj.getType` misses database-registered (dynamic) schemas, which `useType` resolves by the stored type URI.
-  const registered = useType(db, Obj.getTypeURI(object));
-  const type = Obj.getType(object) ?? registered;
-  const formSchema = useMemo(() => (type ? withMetaTags(Type.getSchema(type)) : undefined), [type]);
-  if (!formSchema) {
-    return null;
-  }
+export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps>(
+  ({ children, object, getCreateDefaults, resolveCreateEntry, ...props }, forwardedRef) => {
+    const db = Obj.getDatabase(object);
+    const [snapshot] = useObject(object);
+    const { values, handleCreate, handleChange } = useObjectFormModel({ object, snapshot, db });
+    // `Obj.getType` misses database-registered (dynamic) schemas, which `useType` resolves by the stored type URI.
+    const registered = useType(db, Obj.getTypeURI(object));
+    const type = Obj.getType(object) ?? registered;
+    const formSchema = useMemo(() => (type ? withMetaTags(Type.getSchema(type)) : undefined), [type]);
+    if (!formSchema) {
+      return null;
+    }
 
-  return (
-    <Form.Root
-      schema={formSchema}
-      values={values}
-      db={db}
-      createTypename={Type.getTypename(Tag.Tag)}
-      createOptionLabel={CREATE_TAG_LABEL}
-      createOptionIcon='ph--tag--regular'
-      createInitialValuePath='label'
-      createFieldMap={createFieldMap}
-      onValuesChanged={handleChange}
-      onCreate={handleCreate}
-      getCreateDefaults={getCreateDefaults}
-      resolveCreateEntry={resolveCreateEntry}
-    >
-      <Form.Viewport scroll>
-        <Form.Content>
-          <Form.Fields />
-          {children && <Form.FieldSet>{children}</Form.FieldSet>}
-        </Form.Content>
-      </Form.Viewport>
-    </Form.Root>
-  );
-};
+    return (
+      <Form.Root
+        schema={formSchema}
+        values={values}
+        db={db}
+        createTypename={Type.getTypename(Tag.Tag)}
+        createOptionLabel={CREATE_TAG_LABEL}
+        createOptionIcon='ph--tag--regular'
+        createInitialValuePath='label'
+        createFieldMap={createFieldMap}
+        onValuesChanged={handleChange}
+        onCreate={handleCreate}
+        getCreateDefaults={getCreateDefaults}
+        resolveCreateEntry={resolveCreateEntry}
+      >
+        <Form.Viewport {...props} scroll ref={forwardedRef}>
+          <Form.Content>
+            <Form.Fields />
+            {children && <Form.FieldSet>{children}</Form.FieldSet>}
+          </Form.Content>
+        </Form.Viewport>
+      </Form.Root>
+    );
+  },
+);

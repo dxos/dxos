@@ -33,7 +33,7 @@ const DefaultStory = (_: PaneArgs) => {
         <Next.Panel.Body asChild>
           <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport asChild>
-              <Next.Container gutter='rail'>
+              <Next.Container>
                 <Form.Content>
                   <Form.Fields />
                 </Form.Content>
@@ -64,21 +64,21 @@ export const Default: Story = {};
 
 export const Narrow: Story = { args: { paneWidth: '20rem' } };
 
-/** Distance from the panel's inline start to the first input: the start rail (or the inset when collapsed). */
+/** Distance from the panel's inline start to the first input: the panel's gutter. */
 const startGutter = (canvasElement: HTMLElement) => {
   const panel = within(canvasElement).getByTestId('panel').getBoundingClientRect();
   return within(canvasElement).getByRole('textbox', { name: 'Name' }).getBoundingClientRect().left - panel.left;
 };
 
-/** 1. Test: `sm` reaches controls and popups, the body scrolls between header and footer, the rails are a block wide. */
+/** 1. Test: `sm` reaches controls and popups, the body scrolls between header and footer, the form takes the panel's `sm` gutter. */
 export const Test: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(canvasElement.ownerDocument.body);
     const panel = canvas.getByTestId('panel');
 
-    // 2. Controls read the panel's size: an sm block is 1.5rem, so the rail (a block) is 24px.
-    await expect(startGutter(canvasElement)).toBeCloseTo(24, 0);
+    // 2. The form's Container names no gutter, so it takes the panel's: `sm`, the 8px form inset.
+    await expect(startGutter(canvasElement)).toBeCloseTo(8, 0);
 
     // 3. The body scrolls; the header and the footer's actions stay in the pane.
     // The toolbar is a scroll viewport too; the body's is the one that is a Container.
@@ -112,12 +112,10 @@ export const Test: Story = {
   },
 };
 
-/** 1. TestNarrow: below the collapse width the rails give way to the inset gutter. */
+/** 1. TestNarrow: the panel's `sm` gutter does not collapse, so a narrow pane keeps the form inset. */
 export const TestNarrow: Story = {
   args: { paneWidth: '20rem' },
   play: async ({ canvasElement }) => {
-    const gutter = startGutter(canvasElement);
-    await expect(gutter).toBeGreaterThan(0);
-    await expect(gutter).toBeLessThan(24);
+    await expect(startGutter(canvasElement)).toBeCloseTo(8, 0);
   },
 };

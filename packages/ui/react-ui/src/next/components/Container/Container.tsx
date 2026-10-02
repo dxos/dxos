@@ -3,7 +3,7 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import React, { type CSSProperties, useEffect, useRef } from 'react';
+import React, { type CSSProperties, type PropsWithChildren, createContext, useContext, useEffect, useRef } from 'react';
 
 import { log } from '@dxos/log';
 import { useComposedRefs } from '@dxos/react-hooks';
@@ -35,12 +35,34 @@ export const spanAttributes = (span: Span | undefined) => {
 };
 
 //
+// Default gutter
+//
+
+/**
+ * The gutter a Container takes when it names none. `Panel.Body` provides its panel's (`sm` by default), and every grid
+ * part clears it for its subtree, so only the first Container under a Body becomes a template root on it and nested
+ * Containers stay subgrids.
+ */
+const DefaultGutterContext = createContext<Gutter | undefined>(undefined);
+
+/** The gutter an unnamed Container here would take, or `undefined` where it would inherit. */
+export const useDefaultGutter = () => useContext(DefaultGutterContext);
+
+/** Provides the gutter an unnamed Container under it takes (`undefined` restores `inherit`). */
+export const DefaultGutterProvider = ({ gutter, children }: PropsWithChildren<{ gutter: Gutter | undefined }>) => (
+  <DefaultGutterContext.Provider value={gutter}>{children}</DefaultGutterContext.Provider>
+);
+
+//
 // Container
 //
 
 export type ContainerProps = {
   size?: Size;
-  /** `inherit` makes the container a subgrid of its parent's tracks; any other value starts a fresh template. */
+  /**
+   * `inherit` makes the container a subgrid of its parent's tracks; any other value starts a fresh template. Unset, it
+   * is the enclosing `Panel.Body`'s gutter for the first Container under the Body, and `inherit` everywhere else.
+   */
   gutter?: Gutter;
   /** Inner template for the content track; interior line names only, since edge names collide with `content-*`. */
   columns?: string;
@@ -109,7 +131,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       children,
       asChild,
       size,
-      gutter = 'inherit',
+      gutter: gutterProp,
       columns,
       layout = 'stack',
       place,
@@ -123,6 +145,8 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
     },
     forwardedRef,
   ) => {
+    const defaultGutter = useDefaultGutter();
+    const gutter = gutterProp ?? defaultGutter ?? 'inherit';
     const localRef = useRef<HTMLDivElement>(null);
     const ref = useComposedRefs(forwardedRef, localRef);
     const { className, style, ...rest } = composableProps(props, { classNames: recipes.container() });
@@ -152,18 +176,20 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       padBlock,
     });
     return (
-      <ark.div
-        asChild={asChild}
-        {...rest}
-        data-scope='container'
-        data-part='root'
-        {...attributes}
-        style={{ ...columnsStyle, ...style }}
-        className={className}
-        ref={ref}
-      >
-        {children}
-      </ark.div>
+      <DefaultGutterProvider gutter={undefined}>
+        <ark.div
+          asChild={asChild}
+          {...rest}
+          data-scope='container'
+          data-part='root'
+          {...attributes}
+          style={{ ...columnsStyle, ...style }}
+          className={className}
+          ref={ref}
+        >
+          {children}
+        </ark.div>
+      </DefaultGutterProvider>
     );
   },
 );

@@ -246,6 +246,7 @@ import {
   dragScope as nextDragScope,
   parseCaptureOwnerStack as nextParseCaptureOwnerStack,
   toAvatarHue as nextToAvatarHue,
+  useDefaultGutter as nextUseDefaultGutter,
   useEditable as nextUseEditable,
   useFocus as nextUseFocus,
   useMainSidebars as nextUseMainSidebars,
@@ -266,6 +267,7 @@ import { type Size as NextSizeType } from './sizes.ts';
 export namespace Next {
   export type Size = NextSizeType;
   export const Container = NextContainer;
+  export const useDefaultGutter = nextUseDefaultGutter;
   export type ContainerProps = NextContainerProps;
   export type Gutter = NextGutter;
   export type ContainerGap = NextContainerGap;

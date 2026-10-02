@@ -18,9 +18,16 @@ import { type CSSVariables } from '../Container/index.ts';
 /** A narrow reading width, so the story's pane is wider than the document. */
 const READING_WIDTH: CSSVariables = { '--spacing-document-max-width': '20rem' };
 
+/** `--dx-gutter-sm` and `--dx-gutter-md` (ui-theme spacing): the form and dialog insets, the same at every size. */
+const SM_GUTTER = 8;
+const MD_GUTTER = 16;
+
 const ROWS = Array.from({ length: 30 }, (_, index) => `Item ${index + 1}`);
 
-/** A panel filling a fixed-height host: a toolbar header, 30 rows with rail icons that overflow the body, and a footer. */
+/**
+ * A panel filling a fixed-height host: a toolbar header, 30 rows with rail icons that overflow the body (so its
+ * Container names `gutter='rail'`), and a footer.
+ */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <div data-place='full' className='h-64' data-testid={`host-${size}`}>
     <Next.Panel.Root size={size} data-testid={`panel-${size}`}>
@@ -58,7 +65,8 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
 
 /**
  * The default panel above one whose header is empty and which has no footer, so both rows collapse to nothing (its Body
- * a plain slot with no ScrollArea), and a panel at the document width.
+ * a plain slot with no ScrollArea), a panel at the document width, and two whose body Containers name no gutter: they
+ * take the panel's (`sm` by default, `md` here), and a Container nested in one stays a subgrid.
  */
 const TestStory = (args: SizeArgs) => (
   <>
@@ -76,11 +84,35 @@ const TestStory = (args: SizeArgs) => (
         <Next.Panel.Body asChild>
           <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport asChild>
-              <Next.Container gutter='rail'>
+              <Next.Container>
                 <Next.Typography data-testid={`reading-text-${args.size}`}>Reading width</Next.Typography>
               </Next.Container>
             </Next.ScrollArea.Viewport>
           </Next.ScrollArea.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
+    </div>
+    <div data-place='full' className='h-16'>
+      <Next.Panel.Root size={args.size} data-testid={`default-gutter-${args.size}`}>
+        <Next.Panel.Body asChild>
+          <Next.ScrollArea.Root>
+            <Next.ScrollArea.Viewport asChild>
+              <Next.Container data-testid={`default-gutter-body-${args.size}`}>
+                <Next.Container data-testid={`default-gutter-nested-${args.size}`}>
+                  <Next.Typography data-testid={`default-gutter-text-${args.size}`}>Default gutter</Next.Typography>
+                </Next.Container>
+              </Next.Container>
+            </Next.ScrollArea.Viewport>
+          </Next.ScrollArea.Root>
+        </Next.Panel.Body>
+      </Next.Panel.Root>
+    </div>
+    <div data-place='full' className='h-16'>
+      <Next.Panel.Root size={args.size} gutter='md' data-testid={`md-gutter-${args.size}`}>
+        <Next.Panel.Body>
+          <Next.Container>
+            <Next.Typography data-testid={`md-gutter-text-${args.size}`}>Panel gutter</Next.Typography>
+          </Next.Container>
         </Next.Panel.Body>
       </Next.Panel.Root>
     </div>
@@ -116,7 +148,7 @@ export const Test: Story = {
     // `width='document'` keeps the body's content at the reading width, centred in the panel.
     const reading = byTestId(canvasElement, 'reading-md').getBoundingClientRect();
     const readingText = byTestId(canvasElement, 'reading-text-md').getBoundingClientRect();
-    await expect(readingText.width).toBeCloseTo(320 - 2 * GEOMETRY.md.block, 0);
+    await expect(readingText.width).toBeCloseTo(320 - 2 * SM_GUTTER, 0);
     await expect(readingText.left - reading.left).toBeCloseTo(reading.right - readingText.right, 0);
 
     for (const size of SIZES) {
@@ -161,6 +193,17 @@ export const Test: Story = {
       await expect(rail.left, `${size} rail start`).toBeCloseTo(rect.left, 0);
       await expect(byTestId(canvasElement, `text-${size}`).getBoundingClientRect().left).toBeCloseTo(rail.right, 0);
       await expect(byTestId(canvasElement, `row-${size}`).getBoundingClientRect().height).toBeCloseTo(block, 0);
+
+      // A body Container that names no gutter takes the panel's: `sm` by default, at every size; one nested in it
+      // inherits; `Panel.Root gutter` changes it.
+      const defaultPanel = byTestId(canvasElement, `default-gutter-${size}`).getBoundingClientRect();
+      await expect(byTestId(canvasElement, `default-gutter-body-${size}`)).toHaveAttribute('data-gutter', 'sm');
+      await expect(byTestId(canvasElement, `default-gutter-nested-${size}`)).toHaveAttribute('data-gutter', 'inherit');
+      const defaultText = byTestId(canvasElement, `default-gutter-text-${size}`).getBoundingClientRect();
+      await expect(defaultText.left - defaultPanel.left, `${size} default panel gutter`).toBeCloseTo(SM_GUTTER, 0);
+      const mdPanel = byTestId(canvasElement, `md-gutter-${size}`).getBoundingClientRect();
+      const mdText = byTestId(canvasElement, `md-gutter-text-${size}`).getBoundingClientRect();
+      await expect(mdText.left - mdPanel.left, `${size} md panel gutter`).toBeCloseTo(MD_GUTTER, 0);
     }
     await expectScoped(canvasElement);
 

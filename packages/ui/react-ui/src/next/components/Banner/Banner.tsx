@@ -15,7 +15,7 @@ import { composable, composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { Block } from '../Block/index.ts';
 import { Button } from '../Button/index.ts';
-import { containerAttributes } from '../Container/index.ts';
+import { DefaultGutterProvider, containerAttributes } from '../Container/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { Typography } from '../Typography/index.ts';
 
@@ -73,7 +73,7 @@ const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
         ref={forwardedRef}
       >
         <BannerProvider titleId={titleId} descriptionId={descriptionId} valence={valence} icon={icon}>
-          {children}
+          <DefaultGutterProvider gutter={undefined}>{children}</DefaultGutterProvider>
         </BannerProvider>
       </div>
     );

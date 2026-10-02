@@ -686,8 +686,12 @@ audit" (points 25–39, all accepted as recommended except where these rules say
    `Toolbar.Root` as a child when they need one. A one-row toolbar keeps adjacent planks aligned, and an empty header
    takes no space. Body is a plain slot (decided 2026-10-01): the growing row, with `asChild` and no ScrollArea or
    Container of its own. Scrolling content composes
-   `Panel.Body asChild > ScrollArea.Root > ScrollArea.Viewport asChild > Container gutter='rail'`; a canvas or board
-   takes the slot directly with `asChild`. Root `width='document'` pads a scrolling Body's viewport.
+   `Panel.Body asChild > ScrollArea.Root > ScrollArea.Viewport asChild > Container`; a canvas or board
+   takes the slot directly with `asChild`. Root `width='document'` pads a scrolling Body's viewport. The Body's gutter
+   is the panel's (decided 2026-10-02): the first Container under a Body that names no `gutter` takes Root's `gutter`
+   (`sm`, the form inset main uses, by default), through a context that every Container, and the grid parts
+   `Fieldset` (with a gutter) and `Banner`, clear for their subtree, so nested Containers stay subgrids. Content that
+   puts icons in the rails (a list of rail rows, a Card) names `gutter='rail'`; `Form.Viewport` takes the default.
 6. **Items follow Ark's anatomy.** Every composite with items exports `Item`, `ItemText`, `ItemIndicator`,
    `ItemGroup` and `ItemGroupLabel`, so any row can be composed from parts.
 7. **Data renders the default row; children replace it.** An Item with no children renders its default layout from
