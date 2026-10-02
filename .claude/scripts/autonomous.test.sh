@@ -68,7 +68,7 @@ payload() {
   jq -nc --arg p "$1" --arg t "${2:-}" --arg s "${3:-session-a}" '{prompt: $p, transcript_path: $t, session_id: $s}'
 }
 stop_payload() { jq -nc --argjson a "${1:-false}" --arg s "${2:-session-a}" '{stop_hook_active: $a, session_id: $s}'; }
-reset() { chmod 600 "$owner_file" 2>/dev/null; rm -f "$sandbox"/.claude/.autonomous*; }
+reset() { chmod 600 "$owner_file" 2>/dev/null; rm -rf "$sandbox"/.claude/.autonomous*; }
 state() { [ -e "$task_file" ] && printf 'active' || printf 'inactive'; }
 
 transcript="$sandbox/transcript.jsonl"
@@ -257,6 +257,10 @@ contains 'takeover: announced with the old owner' 'replaced a run owned by anoth
 check 'takeover: owner is the new session' 'session-b' "$(bash "$script" owner)"
 check 'takeover: old owner no longer injected' '' "$(run "$(payload 'carry on')")"
 check 'takeover: old owner no longer logged' '0' "$(grep -c 'carry on' "$user_log")"
+check 'takeover: user show omits the old owner' '0' \
+  "$(bash "$script" user show 200 | grep -c 'keep the PR small')"
+contains 'takeover: user show keeps the new owner' 'take this over' \
+  "$(bash "$script" user show 200)"
 
 reset
 printf 'legacy task' > "$task_file"
@@ -271,6 +275,24 @@ contains 'unreadable owner: not treated as inactive' '- TASK: guarded task' \
 check 'unreadable owner: stop hook still blocks' 'block' \
   "$(stop_run "$(stop_payload false session-b)" | jq -r '.decision')"
 chmod 600 "$owner_file"
+
+# --- concurrent starts ------------------------------------------------------
+
+reset
+for i in 1 2 3 4 5 6 7 8; do
+  for who in a b; do
+    AUTONOMOUS_SESSION_ID="session-$who" bash "$script" set "task of session-$who" >/dev/null 2>&1 &
+  done
+done
+wait
+check 'racing starts leave owner and task paired' "task of $(bash "$script" owner)" "$(bash "$script" get)"
+check 'racing starts release the lock' 'absent' "$([ -e "$sandbox/.claude/.autonomous.lock" ] && printf held || printf absent)"
+
+reset
+mkdir "$sandbox/.claude/.autonomous.lock"
+touch -t 202001010000 "$sandbox/.claude/.autonomous.lock"
+bash "$script" set 'after a crash' >/dev/null 2>&1
+check 'a stale lock is broken' 'after a crash' "$(bash "$script" get)"
 
 # --- restarting ---------------------------------------------------------------
 

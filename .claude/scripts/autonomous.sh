@@ -31,6 +31,8 @@
 # survives `stop`, so the last owner keeps feeding the user log between runs and
 # a restart in the same session needs no backfill. Starting a run from another
 # session takes it over; `stop` and `dod set` from another session are refused.
+# Entries carry their session, and `user show` returns only the owner's, so a
+# takeover never reads the previous owner's messages as its own.
 #
 # The user log is written by the hook rather than the agent for the same reason
 # the focus pin is derived in a hook: an agent asked to remember what the user
@@ -46,7 +48,7 @@
 #   autonomous.sh log add <text>   -> append a timestamped decision
 #   autonomous.sh log show [n]     -> tail the decision log
 #   autonomous.sh user add <text>  -> append a user message from the owner (hook only)
-#   autonomous.sh user show [n]    -> tail the user log
+#   autonomous.sh user show [n]    -> tail the owner's entries in the user log
 #   autonomous.sh reminders get|bump|reset
 #   autonomous.sh stop <reason>    -> end the run; the reason is required and logged
 #   autonomous.sh context          -> the block injected into every prompt of the owner
@@ -72,6 +74,7 @@ dod_file="$root/.claude/.autonomous-dod"
 user_log="$root/.claude/.autonomous-user.md"
 decision_log="$root/.claude/.autonomous-log.md"
 reminders="$root/.claude/.autonomous-reminders"
+lock_dir="$root/.claude/.autonomous.lock"
 
 session="${AUTONOMOUS_SESSION_ID:-${CLAUDE_CODE_SESSION_ID:-}}"
 
@@ -166,6 +169,40 @@ append_log() {
   printf '%s\n' "$entry" >> "$file" 2>/dev/null || return 1
 }
 
+# Serialises `set` and `stop`, so two sessions racing `/autonomous` cannot leave
+# one's task under the other's owner. mkdir is atomic and needs no flock, which
+# macOS lacks. A lock older than a minute is from a killed process.
+acquire_lock() {
+  local tries=0
+  until mkdir "$lock_dir" 2>/dev/null; do
+    if [ -n "$(find "$lock_dir" -maxdepth 0 -mmin +1 2>/dev/null)" ]; then
+      rm -rf "$lock_dir" 2>/dev/null || true
+      continue
+    fi
+    tries=$((tries + 1))
+    [ "$tries" -lt 50 ] || { printf 'ERROR: %s is held by another caller\n' "$lock_dir" >&2; exit 1; }
+    sleep 0.1
+  done
+  trap 'rm -rf "$lock_dir" 2>/dev/null || true' EXIT
+}
+
+# The user log entries recorded by the owner, or every entry when no owner is
+# recorded. Headers are matched outside code fences only, so a logged message
+# cannot forge one.
+owner_entries() {
+  local owner
+  owner=$(read_file "$owner_file" 2>/dev/null) || owner=''
+  if [ -z "$owner" ]; then
+    cat "$user_log"
+    return
+  fi
+  awk -v tag="(session $owner)" '
+    /^```$/ { fenced = !fenced }
+    !fenced && /^### / { keep = (index($0, tag) > 0) }
+    keep
+  ' "$user_log"
+}
+
 clear_run() {
   rm -f "$task_file" "$dod_file" "$reminders" 2>/dev/null || return 1
   return 0
@@ -239,6 +276,7 @@ case "${1:-get}" in
   set)
     text=$(truncate_text "${2:-}")
     [ -n "$text" ] || { printf 'usage: autonomous.sh set <task>\n' >&2; exit 2; }
+    acquire_lock
     # Owner before task, so no reader pairs the new task with the old owner.
     if [ -n "$session" ]; then
       write_file "$owner_file" "$session" || { printf 'ERROR: could not write %s\n' "$owner_file" >&2; exit 1; }
@@ -305,7 +343,7 @@ case "${1:-get}" in
         ;;
       show)
         [ -e "$user_log" ] || exit 0
-        tail -n "${3:-80}" "$user_log" 2>/dev/null || true
+        owner_entries 2>/dev/null | tail -n "${3:-80}" || true
         ;;
       path) printf '%s\n' "$user_log" ;;
       *) printf 'usage: autonomous.sh user {add <text>|show [n]|path}\n' >&2; exit 2 ;;
@@ -333,6 +371,7 @@ case "${1:-get}" in
     # that was abandoned, which is the failure this whole mechanism exists to
     # prevent — so the reason is mandatory.
     [ -n "$reason" ] || { printf 'usage: autonomous.sh stop <reason>\n' >&2; exit 2; }
+    acquire_lock
     if [ -z "$(current_task)" ]; then
       printf 'Autonomous mode was not active.\n'
       exit 0
