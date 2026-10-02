@@ -205,12 +205,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
           <Form.FieldSet label={t('space-controls.title')} description={t('space-controls.description')}>
             <Form.Field standalone label={t('space-id.title')} description={t('space-id.description')}>
-              <Flex gap='sm' align='center'>
-                <Next.Field.Root>
-                  <Next.Input value={space.id} disabled classNames='flex-1 text-xs' variant='mono' />
-                </Next.Field.Root>
-                <Next.SystemButton.Clipboard iconOnly label={t('copy-space-id.label')} value={space.id} />
-              </Flex>
+              <Next.Input value={space.id} disabled variant='mono' copyable aria-label={t('space-id.title')} />
             </Form.Field>
             <Form.Field standalone label={t('backup-space.title')} description={t('backup-space.description')}>
               <Next.Menu.Root>
