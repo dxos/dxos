@@ -55,6 +55,12 @@ export const PluginAsset = AppCapability.pluginAsset({
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
+// Idle by default; browser-only since what it fetches is a React chunk.
+export const Preload = Capability.lazyModule(
+  'Preload',
+  { provides: [], environments: ['browser', 'tauri'] },
+  () => import('./preload.ts'),
+);
 export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.role.dialog',

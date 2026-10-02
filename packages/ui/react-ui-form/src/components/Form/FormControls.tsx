@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren, useRef } from 'react';
+import React, { type PropsWithChildren, useLayoutEffect, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
 import {
@@ -155,6 +155,29 @@ FormViewport.displayName = FORM_VIEWPORT_NAME;
 
 const FORM_CONTENT_NAME = 'Form.Content';
 
+/** Controls a person types into. */
+const TEXT_FIELD =
+  'input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([disabled]):not([readonly]), textarea:not([disabled]):not([readonly]), [contenteditable="true"]';
+
+/**
+ * Marks the form's first text field as the dialog's initial focus: a form is opened to be filled in.
+ * It precedes `Form.Actions` in the DOM, so it wins the first-marked lookup over the cancel button,
+ * which keeps the focus for a form with nothing to type into. Re-run each commit since fields resolve
+ * from the schema after mount.
+ */
+const useFirstFieldAutoFocus = (root: { current: HTMLElement | null }) => {
+  const markedRef = useRef<HTMLElement | null>(null);
+  useLayoutEffect(() => {
+    const field = root.current?.querySelector<HTMLElement>(TEXT_FIELD) ?? null;
+    if (field === markedRef.current) {
+      return;
+    }
+    markedRef.current?.removeAttribute(DIALOG_AUTOFOCUS_ATTRIBUTE);
+    field?.setAttribute(DIALOG_AUTOFOCUS_ATTRIBUTE, '');
+    markedRef.current = field;
+  });
+};
+
 export type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 // The viewed body: centered in the viewport's gutter. Pure body — the gutter Column is owned by `Form.Viewport`.
@@ -164,6 +187,7 @@ export const FormContent = composable<HTMLDivElement, FormContentProps>(({ child
   const localRef = useRef<HTMLDivElement>(null);
   const mergedRef = useMergeRefs([forwardedRef, localRef]);
   useKeyHandler(localRef, form);
+  useFirstFieldAutoFocus(localRef);
 
   return (
     <div

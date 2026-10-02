@@ -6,6 +6,7 @@ export { useScroller, useSize } from 'mini-virtual-list';
 
 export * from './composeEventHandlers.ts';
 export * from './createContext.ts';
+export * from './lazyWithPreload.ts';
 export * from './useAsyncEffect.ts';
 export * from './useAtomState.ts';
 export * from './useAsyncState.ts';

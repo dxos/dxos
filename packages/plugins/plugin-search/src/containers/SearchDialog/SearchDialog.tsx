@@ -62,7 +62,7 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
   );
 
   return (
-    <Dialog.Content>
+    <Dialog.Content data-testid='search.dialog'>
       <Dialog.Header>
         <Dialog.Title>{t('search-dialog.title')}</Dialog.Title>
         <Dialog.Close asChild>
@@ -75,6 +75,7 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
             classNames='px-0'
             autoFocus
             escapeBehavior='dismiss'
+            data-testid='search.dialog.input'
             placeholder={t('search.placeholder')}
             {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
           />

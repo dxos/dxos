@@ -7,6 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { expect, waitFor } from 'storybook/test';
 
 import { Annotation, Filter, Format, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -14,7 +15,7 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Toolbar, Tooltip } from '@dxos/react-ui';
+import { Dialog, Toolbar, Tooltip } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import { hues } from '@dxos/ui-types';
@@ -494,4 +495,43 @@ const ReactiveBufferedStory = () => {
  */
 export const ReactiveBuffered: Story<ReactiveValues> = {
   render: () => <ReactiveBufferedStory />,
+};
+
+const DialogFormSchema = Schema.Struct({
+  name: Schema.String,
+  notes: Schema.optional(Schema.String),
+});
+
+/** A form in a dialog opens with the caret in its first field rather than on Cancel. */
+export const TestDialogFocusesFirstField: Story<Schema.Schema.Type<typeof DialogFormSchema>> = {
+  render: () => (
+    <Dialog.Root defaultOpen>
+      <Dialog.Overlay>
+        <Dialog.Content>
+          <Dialog.Header>
+            <Dialog.Title>Form dialog</Dialog.Title>
+          </Dialog.Header>
+          <Form.Root schema={DialogFormSchema} onSave={() => {}} onCancel={() => {}}>
+            <Form.Viewport>
+              <Form.Content>
+                <Form.Fields />
+              </Form.Content>
+            </Form.Viewport>
+            <Form.Actions />
+          </Form.Root>
+        </Dialog.Content>
+      </Dialog.Overlay>
+    </Dialog.Root>
+  ),
+  play: async () => {
+    // The meta's client decorator creates an identity and a space before anything renders.
+    await waitFor(
+      async () => {
+        const first = document.querySelector('[role="dialog"] [role="form"] input');
+        await expect(first).not.toBeNull();
+        await expect(document.activeElement).toBe(first);
+      },
+      { timeout: 10_000 },
+    );
+  },
 };
