@@ -3,8 +3,8 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 

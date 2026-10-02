@@ -4,15 +4,15 @@
 
 // @import-as-namespace
 
+import * as McpProtocol from 'effect/ai/McpProtocol';
+import * as McpServer$ from 'effect/ai/McpServer';
+import * as Tool from 'effect/ai/Tool';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as HttpRouter from 'effect/http/HttpRouter';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
-import * as McpServer$ from 'effect/unstable/ai/McpServer';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as HttpRouter from 'effect/unstable/http/HttpRouter';
 
 import { DXOS_VERSION } from '@dxos/client';
 import type * as Operation from '@dxos/compute/Operation';

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 /**
  * A menu item one plugin contributes to another plugin's object surface — "analyse this mailbox",
