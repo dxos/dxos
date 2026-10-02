@@ -148,10 +148,11 @@ describe('getPasskeySupport', () => {
   });
 
   test.for([
-    { shell: true, platform: 'MacIntel', native: undefined, webAuthn: true, expected: 'native' },
     { shell: true, platform: 'MacIntel', native: true, webAuthn: false, expected: 'native' },
     // DX-1324: a shell whose signed identity cannot complete a native request must not fall back to WebAuthn either.
     { shell: true, platform: 'MacIntel', native: false, webAuthn: true, expected: 'none' },
+    // A webview the shell did not vouch for gets no passkeys rather than a bridge that may be absent.
+    { shell: true, platform: 'MacIntel', native: undefined, webAuthn: true, expected: 'none' },
     { shell: true, platform: 'Linux x86_64', native: undefined, webAuthn: true, expected: 'web' },
     { shell: false, platform: 'MacIntel', native: false, webAuthn: true, expected: 'web' },
     { shell: false, platform: 'MacIntel', native: undefined, webAuthn: false, expected: 'none' },

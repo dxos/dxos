@@ -20,6 +20,12 @@ describe('passkey errors', () => {
     },
   );
 
+  // The native bridge rejects a failed registration with this plain string, which is not a dismissal.
+  test('a failed registration is classified apart from a login failure', () => {
+    expect(PasskeyError.RegistrationFailed.is(PasskeyError.fromRegistration('Registration failed'))).to.be.true;
+    expect(PasskeyError.Dismissed.is(PasskeyError.fromRegistration('the operation was canceled'))).to.be.true;
+  });
+
   // The bug this guards: a failure the classifier doesn't recognise must still reach the user.
   // A `switch` on the error tag without a default would regress to silence.
   test.each([new Error('Recovery key not registered.'), 'plain string', undefined, null])(

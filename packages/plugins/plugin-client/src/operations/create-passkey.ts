@@ -51,8 +51,8 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
                   username: identity.did,
                   userId: lookupKey.asUint8Array(),
                 }),
-              catch: PasskeyError.fromAssertion,
-            }).pipe(PasskeyError.timeoutNativePrompt);
+              catch: PasskeyError.fromRegistration,
+            });
             const { publicKey, algorithm: alg } = NativePasskey.extractPublicKeyFromAttestation(
               result.attestation_object,
             );
@@ -64,31 +64,45 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
         ),
         Match.when('web', () =>
           Effect.gen(function* () {
-            const credential = yield* Effect.promise(() =>
-              navigator.credentials.create({
-                publicKey: {
-                  challenge: new Uint8Array(),
-                  rp: { id: NativePasskey.getRelyingPartyId(), name: 'Composer' },
-                  user: {
-                    id: lookupKey.asUint8Array() as Uint8Array<ArrayBuffer>,
-                    name: identity.did,
-                    displayName: identity.displayName ?? '',
+            const credential = yield* Effect.tryPromise({
+              try: () =>
+                navigator.credentials.create({
+                  publicKey: {
+                    challenge: new Uint8Array(),
+                    rp: { id: NativePasskey.getRelyingPartyId(), name: 'Composer' },
+                    user: {
+                      id: new Uint8Array(lookupKey.asUint8Array()),
+                      name: identity.did,
+                      displayName: identity.displayName ?? '',
+                    },
+                    pubKeyCredParams: [
+                      { type: 'public-key', alg: -8 },
+                      { type: 'public-key', alg: -7 },
+                    ],
+                    authenticatorSelection: {
+                      residentKey: 'required',
+                      requireResidentKey: true,
+                    },
                   },
-                  pubKeyCredParams: [
-                    { type: 'public-key', alg: -8 },
-                    { type: 'public-key', alg: -7 },
-                  ],
-                  authenticatorSelection: {
-                    residentKey: 'required',
-                    requireResidentKey: true,
-                  },
-                },
-              }),
-            );
-            invariant(credential, 'Credential not available');
+                }),
+              catch: PasskeyError.fromRegistration,
+            });
+            // A null credential means the authenticator resolved without creating one; same signal as a dismissal.
+            if (
+              !(credential instanceof PublicKeyCredential) ||
+              !(credential.response instanceof AuthenticatorAttestationResponse)
+            ) {
+              return yield* Effect.fail(new PasskeyError.Dismissed({ message: 'No passkey was created.' }));
+            }
+            const publicKey = credential.response.getPublicKey();
+            if (!publicKey) {
+              return yield* Effect.fail(
+                new PasskeyError.RegistrationFailed({ message: 'The authenticator returned no public key.' }),
+              );
+            }
             return {
-              recoveryKey: PublicKey.from(new Uint8Array((credential as any).response.getPublicKey())),
-              algorithm: (credential as any).response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519',
+              recoveryKey: PublicKey.from(new Uint8Array(publicKey)),
+              algorithm: credential.response.getPublicKeyAlgorithm() === -7 ? 'ES256' : 'ED25519',
             };
           }),
         ),
