@@ -403,3 +403,30 @@ test QA-2: Send one-shot feedback via the help companion
   # No `after` — feedback goes straight to the observability backend; no ECHO object is created to remove.
 ```
 
+
+```mdl
+test QA-3: Report an issue to a local project
+  desc: The help companion's "Report to project" path — files the report as a task in a project of the active space, with logs and a screenshot attached.
+  actors: both
+  status: unverified
+  given:
+    - an identity exists
+    - the active space holds a project named "Composer Bugs"
+  steps:
+    - name: Open the help companion
+      do: Click the `?` / help affordance to open the `--help` companion.
+      expect: the FeedbackForm renders, ending with a project picker and a "Report to project" button
+      note: NO `invoke` — opening a deck companion panel is a UI gesture with no operation behind it.
+    - name: Fill in the report
+      do: Enter a title and description, and tick "Attach screenshot".
+      expect: the "Report to project" button becomes enabled
+    - name: Report to the project
+      do: Pick "Composer Bugs" and click "Report to project".
+      expect: a "Report filed in project" toast is shown and the form clears
+    - name: Open the reported task
+      do: Open "Composer Bugs", its Tasks tab, and then the new task.
+      expect: the task carries the report's title and description, with a screenshot and a `composer-logs-*.ndjson.gz` attachment
+  after:
+    - name: Delete the project
+      do: Right-click "Composer Bugs" in the navtree and choose Delete.
+```
