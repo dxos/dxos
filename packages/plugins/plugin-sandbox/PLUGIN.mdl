@@ -24,6 +24,21 @@ URL lives as long as the sandbox.
 `exec` streams the command's output from the service and returns once it exits, so a command of several
 minutes runs in one call; a request answered only at the end lost its connection while the command ran.
 
+## Terminal
+
+The article surface of a `Sandbox` is a shell: a `LineTerminal` (`@dxos/react-ui-terminal`) whose every
+line is one `Exec` in the session `terminal`.
+
+- **Sessions.** `exec` takes an optional `session`, a named shell in the container: its commands are
+  `eval`ed in that shell, so `cd`, `export` and shell variables carry to its next command. Commands in one
+  session run one at a time, as in any shell; commands with no session, and other sessions, run
+  alongside, so an agent's tool calls never wait on the reader's terminal.
+- **Timeouts reset.** A session command past its timeout deletes the session, and whatever it was still
+  running, so the next command starts a fresh shell rather than queueing behind it.
+- **Line at a time.** A line's output appears once it finishes; full-screen and interactive programs
+  (editors, pagers, password prompts) are not supported.
+- **EDGE only.** Local sandboxes run every command as its own process and ignore `session`.
+
 ## Backends
 
 The operations run against `SandboxService.Service`, which the plugin contributes to the process
@@ -359,4 +374,50 @@ test QA-2: Build in a sandbox, push to a repository with git, pick it up in anot
     - name: Delete the sandbox and the repository
       do: Delete "QA Repo" (both) from the navtree.
       invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $sandbox.sandboxId }, { "/": $repository.repositoryId }], target: $given.space }
+```
+
+```mdl
+test QA-3: Use the sandbox's shell, where cd and export carry between lines
+  desc: The Sandbox article is a shell over exec sessions — state persists from line to line, plain exec is never blocked by it.
+  actors: both
+  status: verified
+  given:
+    - an identity exists
+    - space: a space is open
+    - plugin-sandbox is enabled, with the EDGE backend
+    - no Sandbox named "QA Shell" exists — ABORT rather than reusing one this test did not create
+  steps:
+    - name: Create the sandbox
+      do: Ask the assistant to create a sandbox named "QA Shell".
+      invoke: [op:createSandbox] { name: "QA Shell", accountAccess: false }
+      capture: created
+      assert: return !!$created.sandboxId
+
+    - name: Open its shell
+      do: Open "QA Shell" from the navtree.
+      expect: the article is a terminal with a `$` prompt
+
+    - name: Change directory and export a variable
+      do: Type `mkdir -p demo && cd demo && export GREETING=hello`, then Enter.
+      invoke: [op:exec] { sandbox: { "/": $created.sandboxId }, command: "mkdir -p demo && cd demo && export GREETING=hello", session: "terminal" }
+      expect: the prompt returns with no error
+
+    - name: The next line sees both
+      do: Type `echo "$GREETING from $(pwd)"`, then Enter.
+      invoke: [op:exec] { sandbox: { "/": $created.sandboxId }, command: "echo \"$GREETING from $(pwd)\"", session: "terminal" }
+      expect: the terminal prints "hello from /workspace/demo"
+      assert: return $result.stdout.trim() === 'hello from /workspace/demo'
+
+    - name: A failing command reports its exit code
+      do: Type `ls missing`, then Enter.
+      expect: the error prints in red, followed by "exit 2"
+
+    - name: Plain exec runs alongside, without the session's state
+      do: (agent) Run `echo "[$GREETING]"` with no session while the terminal is open.
+      invoke: [op:exec] { sandbox: { "/": $created.sandboxId }, command: "echo \"[$GREETING]\"" }
+      assert: return $result.stdout.trim() === '[]'
+  after:
+    - name: Delete the sandbox
+      do: Right-click "QA Shell" in the navtree and choose Delete.
+      invoke: org.dxos.operation.space.removeObjects { refs: [{ "/": $created.sandboxId }], target: $given.space }
 ```
