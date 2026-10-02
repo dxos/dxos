@@ -3,4 +3,4 @@
 //
 
 export * from './FeedbackForm.tsx';
-export type { FeedbackPluginOption } from './types.ts';
+export type { FeedbackPluginOption, FeedbackProjectOption } from './types.ts';

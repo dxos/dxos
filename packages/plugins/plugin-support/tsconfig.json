@@ -46,6 +46,9 @@
       "path": "../../core/echo/echo"
     },
     {
+      "path": "../../core/echo/echo-client"
+    },
+    {
       "path": "../../core/echo/echo-react"
     },
     {
@@ -68,6 +71,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../../sdk/types"
     },
     {
       "path": "../../ui/brand"
@@ -101,6 +107,9 @@
     },
     {
       "path": "../plugin-deck"
+    },
+    {
+      "path": "../plugin-file"
     },
     {
       "path": "../plugin-observability"

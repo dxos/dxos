@@ -10,6 +10,7 @@ import { HelpOperation, SupportOperation } from '#types';
 export const SupportOperationHandlerSet = OperationHandlerSet.lazy([
   SupportOperation.SubmitReport.pipe(Operation.lazyHandler(() => import('./submit-report.ts'))),
   SupportOperation.SubmitIssue.pipe(Operation.lazyHandler(() => import('./submit-issue.ts'))),
+  SupportOperation.SubmitToProject.pipe(Operation.lazyHandler(() => import('./submit-to-project.ts'))),
   SupportOperation.CreateTicket.pipe(Operation.lazyHandler(() => import('./create-ticket.ts'))),
   SupportOperation.MarkInProgress.pipe(Operation.lazyHandler(() => import('./mark-in-progress.ts'))),
   SupportOperation.ResolveTicket.pipe(Operation.lazyHandler(() => import('./resolve-ticket.ts'))),

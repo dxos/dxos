@@ -12,4 +12,9 @@ export type ObservabilityPluginOptions = {
    * When omitted the "Download logs" action is hidden.
    */
   downloadLogs?: () => void | Promise<void>;
+  /**
+   * Optional callback that returns the captured logs as a blob, for flows that attach them to an object
+   * rather than save them to disk. When omitted those flows send no logs.
+   */
+  exportLogs?: () => Promise<Blob>;
 };

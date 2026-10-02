@@ -18,3 +18,9 @@ export class SupportForbiddenError extends BaseError.extend(
 
 /** The support service refused or failed to file the report. */
 export class SupportSubmitError extends BaseError.extend('SupportSubmitError', 'Failed to file the support report') {}
+
+/** The project owns no task set, so a report has nowhere to be filed. */
+export class ProjectNotReportableError extends BaseError.extend(
+  'ProjectNotReportableError',
+  'The project has no task set to file the report into',
+) {}
