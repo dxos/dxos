@@ -110,10 +110,12 @@ export const Test: Story = {
     await expect(open).toHaveAttribute('data-surface', 'popup');
     await expect(open).toHaveAttribute('data-size', 'xl');
     await expect(getComputedStyle(open).getPropertyValue('--nx-level').trim()).toBe('5');
-    await waitFor(() => {
+    await waitFor(async () => {
       const card = open.getBoundingClientRect();
       const trigger = large.getBoundingClientRect();
-      expect(card.bottom <= trigger.top || card.top >= trigger.bottom, `card ${card.top}-${card.bottom}`).toBe(true);
+      await expect(card.bottom <= trigger.top || card.top >= trigger.bottom, `card ${card.top}-${card.bottom}`).toBe(
+        true,
+      );
     });
     await expectArrow(large, open);
   },
