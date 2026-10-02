@@ -362,9 +362,10 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
       return () => unregisterItem(value);
     }, [value, onSelect, disabled, registerItem, unregisterItem]);
 
+    // Instant, as a native listbox: a smooth scroll restarts on every key repeat and lags behind the highlight.
     useEffect(() => {
       if (isSelected && internalRef.current) {
-        internalRef.current.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        internalRef.current.scrollIntoView({ block: 'nearest' });
       }
     }, [isSelected]);
 

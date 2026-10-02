@@ -41,8 +41,12 @@
   .nx-scroll-viewport.nx-grid[data-layout='row'] {
     grid-auto-rows: auto;
   }
-  /* In a height-bound scrolling grid, `auto` rows shrink toward their items' minimum to fit; rows keep their content. */
-  .nx-scroll-viewport.nx-grid:not([data-layout='row']) {
+  /*
+   * A nested scrolling list that joins its host's gutters (a subgrid viewport) is height-bound by its host, where
+   * `auto` rows shrink toward their items' minimum to fit; its rows keep their content height and the list scrolls.
+   * Host bodies (template roots) keep `auto` rows so a flexible child, like this list, can take the remaining height.
+   */
+  .nx-scroll-viewport.nx-grid[data-gutter='inherit']:not([data-layout='row']) {
     grid-auto-rows: max-content;
   }
   .nx-scroll-viewport:not([data-native]) {
