@@ -8,8 +8,8 @@ import * as Migrator from 'effect/sql/Migrator';
 import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
-import { SqlMigrations } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import agentRegistryInit from './agent-registry/0001_init.sql?raw';
 import { MIGRATIONS as AGENT_REGISTRY, MIGRATIONS_TABLE as AGENT_REGISTRY_TABLE } from './agent-registry/index.ts';
