@@ -13,6 +13,13 @@ import { FeedAnnotation, TagIndex } from '@dxos/schema';
 
 export const SKILL_KEY = 'org.dxos.skill.calendar';
 
+/**
+ * Selection context id for a calendar's planning date range. Kept distinct from the calendar's own
+ * context id (which holds the `single` event selection) so the two selection modes don't collide.
+ * Written by `CalendarArticle` (on range drag) and read by plugin-trip's "Plan trip from calendar".
+ */
+export const getRangeSelectionId = (contextId: string): string => `${contextId}/plan-range`;
+
 /** Calendar object schema. */
 export class Calendar extends Type.makeObject<Calendar>(DXN.make('org.dxos.type.calendar', '0.1.0'))(
   Schema.Struct({
