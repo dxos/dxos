@@ -10,12 +10,12 @@
 // be unused, and a runtime import would ship the module.
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import type {} from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
-import * as Prompt from 'effect/unstable/ai/Prompt';
 import * as TokenX from 'tokenx';
 
 import { log } from '@dxos/log';

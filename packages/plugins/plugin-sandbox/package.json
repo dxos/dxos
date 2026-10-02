@@ -180,6 +180,7 @@
   "dependencies": {
     "@carderne/sandbox-runtime": "catalog:",
     "@dxos/app-framework": "workspace:*",
+    "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/config": "workspace:*",
@@ -192,6 +193,7 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -204,7 +206,9 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

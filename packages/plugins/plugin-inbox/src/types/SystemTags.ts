@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { Database, Obj, Ref, Tag } from '@dxos/echo';
 import { type EntityId } from '@dxos/keys';

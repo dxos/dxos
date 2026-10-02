@@ -4,18 +4,18 @@
 
 // @import-as-namespace
 
+import * as AiError from 'effect/ai/AiError';
+import type * as Decision from 'effect/ai/Decision';
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import type * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import type * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import type * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
-import * as AiError from 'effect/unstable/ai/AiError';
-import type * as Decision from 'effect/unstable/ai/Decision';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import type * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
 import * as AiModelResolver from '../../AiModelResolver.ts';
 import { AiModelNotAvailableError } from '../../errors.ts';

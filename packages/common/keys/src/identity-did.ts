@@ -9,6 +9,7 @@ import * as Schema from 'effect/Schema';
 import { invariant } from '@dxos/invariant';
 
 import { randomBytes } from './random-bytes.ts';
+import { withStatics } from './schema-statics.ts';
 
 /**
  * Denotes RFC4648 base-32 format.
@@ -66,7 +67,7 @@ export const IdentityDid: Schema.Codec<IdentityDid, string> & {
   isValid: (value: unknown) => value is IdentityDid;
   make: (value: string) => IdentityDid;
   random: () => IdentityDid;
-} = Object.assign(IdentityDidSchema, {
+} = withStatics(IdentityDidSchema, {
   byteLength: DECODED_BYTE_LENGTH,
 
   encode: (value: Uint8Array): IdentityDid => {

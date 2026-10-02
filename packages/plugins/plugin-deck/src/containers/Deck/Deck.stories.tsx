@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import * as FiberHandle from 'effect/FiberHandle';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
@@ -139,12 +139,10 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   const handleOpen = useCallback(
     (messageId: string) => {
       setSelected(messageId);
-      // The exact shape MailboxArticle dispatches: a level-open relative to this plank as the root.
       void invokePromise(LayoutOperation.Open, {
         subject: [`${launcherId}/${messageId}`],
-        root: launcherId,
-        level: 'message',
-        disposition: 'add',
+        pivotId: launcherId,
+        disposition: 'detail',
         navigation: 'immediate',
       });
     },
@@ -391,7 +389,6 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                     properties: { label: item.title, icon: item.icon },
                   }),
                 ),
-                // The launcher declares its chain on the node, the way the app resolves it off the type.
                 AppGraphNode.make({
                   id: LAUNCHER_ID,
                   type: 'story-launcher',
@@ -399,7 +396,6 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                   properties: {
                     label: 'Inbox',
                     icon: 'ph--tray--regular',
-                    deck: { levels: [{ key: 'list' }, { key: 'message' }] },
                   },
                 }),
               ]),

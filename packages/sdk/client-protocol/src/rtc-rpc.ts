@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as RpcClient from 'effect/rpc/RpcClient';
 import type * as Scope from 'effect/Scope';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import { normalizeHandlers } from '@dxos/protocols';
 import { RTCService } from '@dxos/protocols/rpc';

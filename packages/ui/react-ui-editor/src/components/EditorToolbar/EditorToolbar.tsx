@@ -3,7 +3,7 @@
 //
 
 import { type EditorView } from '@codemirror/view';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { memo, useMemo } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';

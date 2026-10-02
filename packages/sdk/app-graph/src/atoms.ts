@@ -3,7 +3,7 @@
 //
 
 import * as Equal from 'effect/Equal';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { type MulticastObservable } from '@dxos/async';
 

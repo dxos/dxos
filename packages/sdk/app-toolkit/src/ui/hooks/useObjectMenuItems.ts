@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import { type MouseEvent, type RefObject, useEffect, useMemo, useRef, useState } from 'react';
+import { type RefObject, type SyntheticEvent, useEffect, useMemo, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
@@ -31,12 +31,12 @@ type Invoke = ReturnType<typeof useOperationInvoker>['invoke'];
  * entity id, which would resolve against the *active* space and so mis-resolve a card showing an object
  * from elsewhere.
  */
-export const openObject = (
-  subject: Obj.Unknown,
-  invoke: Invoke,
-  options: { pivotId?: string; modifiers?: { shift?: boolean } },
-): Effect.Effect<void> =>
-  Effect.gen(function* () {
+export const openObject = Effect.fnUntraced(
+  function* (
+    subject: Obj.Unknown,
+    invoke: Invoke,
+    options: { pivotId?: string; disposition?: 'add' | 'detail'; modifiers?: { shift?: boolean } },
+  ) {
     // `canNavigateToSubject` guarantees a database; without one there is nothing to address.
     const db = Obj.getDatabase(subject);
     if (!db) {
@@ -55,11 +55,13 @@ export const openObject = (
     // profile without plugin-space — where opening the database path still beats doing nothing.
     const path = targets[0]?.path ?? GraphPath.getObjectPathFromObject(subject);
     yield* invoke(LayoutOperation.Open, { subject: [path], disposition: 'add', ...options });
-  }).pipe(
-    // A click must never throw, but a swallowed Open failure reads as "nothing happened" — leave a trace.
-    Effect.tapCause((cause) => Effect.sync(() => log.warn('failed to open object', { id: subject.id, cause }))),
-    Effect.ignore,
-  );
+  },
+  (effect, subject) =>
+    effect.pipe(
+      Effect.tapCause((cause) => Effect.sync(() => log.warn('failed to open object', { id: subject.id, cause }))),
+      Effect.ignore,
+    ),
+);
 
 /**
  * Helper for card content that opens objects (e.g. a related-object link): attach `ref` to the card's
@@ -85,13 +87,16 @@ const canNavigateToSubject = (subject: unknown): subject is Obj.Unknown =>
   TypeOptions.isUserObject(subject);
 
 /**
- * Returns an onClick handler that opens the subject in the layout, or undefined if the subject is not navigable
- * (e.g. not an Echo object, or not of a user-facing type). Use with Card.Title for object cards.
- * A card lives inside a plank, so opening its object always adds a plank beside that plank (`add`), never
- * replacing it. The origin plank is resolved structurally from the click target via {@link Attention.getRootAttendableId},
- * and the destination path via {@link openObject}.
+ * Returns an activation handler that opens the subject in the layout, or undefined if the subject is not
+ * navigable (e.g. not an Echo object, or not of a user-facing type). Use it for a card's own click.
+ * A card lives inside a plank, so its object opens as a plank beside that plank (`add`), resolved
+ * structurally from the target via {@link Attention.getRootAttendableId} — or, given `detailOf`, as that
+ * plank's detail unless meta/ctrl is held. The destination path comes from {@link openObject}.
  */
-export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLElement>) => void) | undefined => {
+export const useObjectNavigate = (
+  subject: unknown,
+  detailOf?: string,
+): ((event: SyntheticEvent<HTMLElement>) => void) | undefined => {
   const { invoke } = useOperationInvoker();
 
   return useMemo(() => {
@@ -99,13 +104,19 @@ export const useObjectNavigate = (subject: unknown): ((event: MouseEvent<HTMLEle
       return;
     }
 
-    return (event: MouseEvent<HTMLElement>) => {
+    return (event: SyntheticEvent<HTMLElement>) => {
       // `currentTarget` is only valid while the event is dispatching, so read the pivot before the
       // resolution the program awaits.
-      const pivotId = Attention.getRootAttendableId(event.currentTarget);
-      void EffectEx.runPromise(openObject(subject, invoke, { pivotId }));
+      const pivotId = detailOf ?? Attention.getRootAttendableId(event.currentTarget);
+      const { nativeEvent } = event;
+      const keys = nativeEvent instanceof MouseEvent || nativeEvent instanceof KeyboardEvent ? nativeEvent : undefined;
+      const modified = !!keys && (keys.metaKey || keys.ctrlKey);
+      const disposition = detailOf && !modified ? 'detail' : 'add';
+      void EffectEx.runPromise(
+        openObject(subject, invoke, { pivotId, disposition, modifiers: { shift: keys?.shiftKey } }),
+      );
     };
-  }, [subject, invoke]);
+  }, [subject, detailOf, invoke]);
 };
 
 /**

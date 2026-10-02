@@ -512,6 +512,8 @@ export type CardMasonryData = {
   objects: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
   /** The plank the grid renders in, so a card's actions resolve against the right node. */
   attendableId?: string;
+  /** Clicking a card opens its object as this plank's detail rather than as a plank beside it. */
+  detailOf?: string;
   /**
    * `compact` renders the cards at three quarters of their size, so a companion-width host fits two
    * columns where full-size cards would stack in one.

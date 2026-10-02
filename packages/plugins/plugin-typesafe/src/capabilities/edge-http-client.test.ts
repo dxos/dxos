@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Decision from 'effect/ai/Decision';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
-import * as Decision from 'effect/unstable/ai/Decision';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
 import { afterEach, describe, test, vi } from 'vitest';
 
 import { TypeSafeResolver } from '@dxos/ai/resolvers';

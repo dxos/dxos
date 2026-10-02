@@ -1021,9 +1021,10 @@ companion).
       so editing is the same gesture wherever a task is opened and the
       description keeps its live markdown extensions. Still to grow into:
       assignee, dependencies, sub-tasks, history, delegation.
-- [x] **Row opens the detail** — `TaskSetArticle` rows invoke
-      `LayoutOperation.Select` + `LayoutOperation.Open` at `level: 'task'`;
-      meta-click opens its own plank; arrow keys read down the list through
+- [x] **Row opens the detail** — `TaskSetArticle` rows open the task as the
+      host plank's detail through `useDetailNavigation` (a companion tab under
+      a flattened deck, a reused plank otherwise); meta-click opens its own
+      plank; arrow keys read down the list through
       `useArticleKeyboardNavigation`.
 - [ ] **Retire the `TaskList.Edit` strip** — it is `createOnly` in
       `TaskSetArticle` now (the article is the editor, so a selected row no

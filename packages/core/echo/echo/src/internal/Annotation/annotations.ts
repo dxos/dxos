@@ -80,7 +80,7 @@ export const getSchemaURI = (schema: Schema.Top): URI.URI | undefined => {
 export const TypenameSchema = Schema.String.pipe(
   Schema.check(
     Schema.isPattern(
-      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/,
+      /^[a-zA-Z]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(\.[a-zA-Z]([a-zA-Z0-9]{0,62})?)$/u,
     ),
   ),
 ).annotate({
@@ -92,7 +92,7 @@ export const TypenameSchema = Schema.String.pipe(
  * Semantic version format: `major.minor.patch`
  * Example: `1.0.0`
  */
-export const VersionSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+.\d+.\d+$/))).annotate({
+export const VersionSchema = Schema.String.pipe(Schema.check(Schema.isPattern(/^\d+.\d+.\d+$/u))).annotate({
   description: 'Semantic version format: `major.minor.patch`',
   example: '1.0.0',
 });
@@ -520,7 +520,7 @@ const IconAnnotationSchema = Schema.Struct({
    * weight variants. All three are admitted because a type whose subject IS a brand — an Anthropic
    * session, a GitHub repo — has no honest Phosphor equivalent.
    */
-  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/))),
+  icon: Schema.String.pipe(Schema.check(Schema.isPattern(/^(ph|px|dx)--[a-z0-9-]+--[a-z]+$/u))),
 
   /**
    * Color name.

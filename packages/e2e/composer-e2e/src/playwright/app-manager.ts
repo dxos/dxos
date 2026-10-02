@@ -735,6 +735,10 @@ export class AppManager {
     return this.page.getByTestId(`pluginList.${plugin}`).locator('input[type="checkbox"]');
   }
 
+  async togglePlugin(plugin: string): Promise<void> {
+    await this.getPluginToggle(plugin).click();
+  }
+
   async changeStorageVersionInMetadata(version: number): Promise<void> {
     await this.page.evaluate(
       ({ version }) => {

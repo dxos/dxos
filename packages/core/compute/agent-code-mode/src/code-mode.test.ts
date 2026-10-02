@@ -23,13 +23,16 @@ import { Message } from '@dxos/types';
 import { EffectDialect } from './dialect-effect.ts';
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
-import { EVAL_TOOL_NAME, makeEvalToolkit } from './eval-tool.ts';
+import { DEFAULT_MAX_OUTPUT, EVAL_TOOL_NAME, makeEvalToolkit } from './eval-tool.ts';
 import { makeCodeModeTurnProducer } from './producer.ts';
 import * as Sandbox from './Sandbox.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
 const TASK_TYPENAME = 'com.example.type.task';
+
+/** The versioned DXN the effect dialect resolves the type by. */
+const TASK_DXN = String(DXN.make(TASK_TYPENAME, '0.1.0'));
 
 class Task extends Type.makeObject<Task>(DXN.make(TASK_TYPENAME, '0.1.0'))(
   Schema.Struct({
@@ -128,16 +131,19 @@ const ScoreOperation: SandboxOperation = {
   name: 'score',
   description: 'Scores a title',
   parameters: {},
-  // The real definition, so a dialect that hands the model the operation itself has one to bind.
+  // The real definition, so a dialect that hands the model the operation itself has one to resolve.
   definition: Score,
   invoke: (input: unknown) => Effect.succeed((input as { title: string }).title.length),
 };
 
-/** How the effect dialect keys `ops`: by the operation's own DXN, not its derived tool name. */
+/** The DXN the effect dialect resolves the operation by, not its derived tool name. */
 const SCORE_KEY = String(Score.meta.key);
 
-/** Runs `code` through the eval tool exactly as a turn would, returning what it printed. */
-const runEval = Effect.fnUntraced(function* (code: string, dialect: Dialect = PlainDialect) {
+/** What one eval call returns to the model. */
+const EvalResult = Schema.Struct({ output: Schema.String, ok: Schema.Boolean });
+
+/** Runs `code` through the eval tool exactly as a turn would, returning its whole result. */
+const runEvalResult = Effect.fnUntraced(function* (code: string, dialect: Dialect = PlainDialect) {
   const runtime = yield* Effect.context<Database.Service | Operation.Service>();
   const toolkit = makeEvalToolkit({
     dialect: { ...dialect, bindings: (context) => ({ ...dialect.bindings(context), ProbeError }) },
@@ -153,8 +159,12 @@ const runEval = Effect.fnUntraced(function* (code: string, dialect: Dialect = Pl
     providerExecuted: false,
   });
   expect(result.error).toBeUndefined();
-  return JSON.parse(String(result.result)).output as string;
+  return Schema.decodeUnknownSync(EvalResult)(JSON.parse(String(result.result)));
 });
+
+/** Runs `code` through the eval tool exactly as a turn would, returning what it printed. */
+const runEval = (code: string, dialect: Dialect = PlainDialect) =>
+  runEvalResult(code, dialect).pipe(Effect.map(({ output }) => output));
 
 describe('code mode', { tags: ['model-fixture'] }, () => {
   //
@@ -205,6 +215,88 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
   );
 
   it.effect(
+    'the sandbox caps its output and tells the model it did',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult(`print('x'.repeat(${DEFAULT_MAX_OUTPUT + 1_000}));`);
+        expect(ok).toBe(true);
+        expect(output).toContain(`capped at ${DEFAULT_MAX_OUTPUT} characters`);
+        expect(output.length).toBeLessThan(DEFAULT_MAX_OUTPUT + 500);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'a failure is reported even after the output budget is spent',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult(
+          `print('x'.repeat(${DEFAULT_MAX_OUTPUT + 1_000})); throw new Error('boom');`,
+        );
+        expect(ok).toBe(false);
+        expect(output.endsWith('Error: boom')).toBe(true);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'yielding something that is not an effect points at Database.load',
+    Effect.fnUntraced(
+      function* (_) {
+        const { output, ok } = yield* runEvalResult('yield* Promise.resolve(1);', EffectDialect);
+        expect(ok).toBe(false);
+        expect(output).toContain('is not iterable');
+        expect(output).toContain('yield* Database.load(ref)');
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'the effect dialect binds DOCS as a plain object of markdown',
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* runEval(
+          "yield* print(Object.keys(DOCS).join(',')); yield* print(DOCS['README.md'].slice(0, 28));",
+          EffectDialect,
+        );
+        expect(output).toEqual(
+          'README.md,database.md,queries.md,operations.md,errors.md,catalog/types.md,catalog/operations.md\n' +
+            '# Code mode (Effect dialect)',
+        );
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    "the README's recipe lists every type and operation key from the catalog",
+    Effect.fnUntraced(
+      function* (_) {
+        const output = yield* runEval(
+          `
+          const typeKeys = DOCS['catalog/types.md'].match(/dxn:[^\\s\`]+/g);
+          const operationKeys = DOCS['catalog/operations.md'].match(/dxn:[^\\s\`']+/g) ?? [];
+          yield* print(typeKeys.includes('${TASK_DXN}'), operationKeys.join(','));
+          const Score = yield* Database.resolve(operationKeys[0]);
+          yield* print('scored', yield* Operation.invoke(Score, { title: 'abc' }));
+        `,
+          EffectDialect,
+        );
+        expect(output).toEqual(`true ${SCORE_KEY}\nscored 3`);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
     'the effect dialect reads, writes and invokes operations through the ECHO API',
     Effect.fnUntraced(
       function* (_) {
@@ -212,15 +304,15 @@ describe('code mode', { tags: ['model-fixture'] }, () => {
 
         const output = yield* runEval(
           `
-          const tasks = yield* Database.query(Filter.type(types['${TASK_TYPENAME}'], { status: 'open' })).run;
+          const tasks = yield* Database.query(Filter.type((yield* Database.resolve('${TASK_DXN}')), { status: 'open' })).run;
           yield* print('open', tasks.length);
           for (const task of tasks) {
             Obj.update(task, (task) => { task.priority = task.title.length; });
           }
-          const created = yield* Database.add(Obj.make(types['${TASK_TYPENAME}'], { title: 'Review the PR', status: 'open' }));
+          const created = yield* Database.add(Obj.make((yield* Database.resolve('${TASK_DXN}')), { title: 'Review the PR', status: 'open' }));
           yield* Database.flush();
           yield* print('created', created.title);
-          yield* print('scored', yield* Operation.invoke(ops['${SCORE_KEY}'], { title: created.title }));
+          yield* print('scored', yield* Operation.invoke((yield* Database.resolve('${SCORE_KEY}')), { title: created.title }));
         `,
           EffectDialect,
         );

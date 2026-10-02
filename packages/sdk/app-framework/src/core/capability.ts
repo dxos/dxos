@@ -6,8 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/reactivity/Atom';
 import type * as Scope from 'effect/Scope';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import type { DXN } from '@dxos/keys';
 

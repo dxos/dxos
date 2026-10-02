@@ -4,9 +4,9 @@
 
 import { DiscordConfig, type DiscordREST, DiscordRESTMemoryLive } from 'dfx';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Credential from '@dxos/compute/Credential';
 import { Database, Error, type Ref } from '@dxos/echo';

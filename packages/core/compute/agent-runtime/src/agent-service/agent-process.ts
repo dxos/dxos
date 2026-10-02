@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Cause from 'effect/Cause';
 import * as Clock from 'effect/Clock';
 import * as DateTime from 'effect/DateTime';
@@ -12,8 +14,6 @@ import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, Model, OpaqueToolkit } from '@dxos/ai';
 import {

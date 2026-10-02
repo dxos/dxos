@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import * as Schedule from 'effect/Schedule';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import { Common, getSpace, syncAllToEdge, waitForSync, withTimeout } from '@dxos/cli-util';
 import { type Key } from '@dxos/echo';
