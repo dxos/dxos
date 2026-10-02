@@ -1772,6 +1772,9 @@ importers:
       '@octokit/rest':
         specifier: 'catalog:'
         version: 22.0.1
+      '@opentelemetry/api':
+        specifier: 'catalog:'
+        version: 1.9.1
       '@phosphor-icons/core':
         specifier: 'catalog:'
         version: 2.1.1

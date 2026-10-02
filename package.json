@@ -87,6 +87,7 @@
     "@effect/vitest": "catalog:",
     "@moonrepo/cli": "catalog:",
     "@octokit/rest": "catalog:",
+    "@opentelemetry/api": "catalog:",
     "@phosphor-icons/core": "catalog:",
     "@playwright/test": "catalog:",
     "@rollup/plugin-inject": "catalog:",
