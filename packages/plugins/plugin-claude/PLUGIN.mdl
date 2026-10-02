@@ -392,15 +392,16 @@ test QA-1: Configure, deploy and run a Claude managed agent
 test QA-2: Assign a project task to Claude Code
   desc: |
     A project task goes to Claude Code on this computer, which works in its own
-    git worktree, asks before running a command, marks the task through
-    Composer's tools, and continues the same session in a follow-up. Walked by
-    the autocue flow `packages/plugins/plugin-claude/autocue/claude-code-task.mjs`.
+    git worktree, marks the task through Composer's tools, and continues the
+    same session in a follow-up. Coding agents keep their default permission
+    mode, auto, so Claude asks only before a risky action. Walked by the autocue
+    flow `packages/plugins/plugin-claude/autocue/claude-code-task.mjs`.
   actors: human
   covers: [F-8.1, F-8.3, F-8.4]
   status: verified
   given:
-    - Composer is the desktop app (or a `DX_TAURI=true` build with plugin-code's
-      autocue desktop bridge)
+    - Composer is the desktop app (for autocue, the test build from
+      `moon run composer-app:tauri-build-test`)
     - `claude` is installed and signed in on this computer
     - a git repository on this computer for the project (the flow seeds one)
     - space: a space is open
@@ -423,7 +424,7 @@ test QA-2: Assign a project task to Claude Code
       do: Open the task's menu and choose "Assign to Claude Code".
       expect: the task is started, and the project's chat holds the task brief as a context panel
     - name: Watch Claude work, allowing what it asks to run
-      do: Open the Assistant companion and answer each permission card with Yes.
+      do: Open the Assistant companion and answer any permission card with Yes.
       expect: |
         commands, edits and Composer tool calls stream in, the turn ends with a
         summary, and the task is in review or done
@@ -432,6 +433,37 @@ test QA-2: Assign a project task to Claude Code
       expect: |
         the same session continues and commits on a `composer/` branch of the
         repository, where `node greet.js Ada -s` prints HELLO, ADA!; `main` is unchanged
+```
+
+```mdl
+test QA-3: Claude Code asks before every edit and command
+  desc: |
+    QA-2 with coding agents set to the `default` permission mode: each file
+    edit and command Claude Code makes waits on a card in the chat. Walked by
+    the same autocue flow with `AUTOCUE_AGENT_PERMISSIONS=default`.
+  actors: human
+  covers: [F-8.3]
+  status: verified
+  given:
+    - as QA-2
+  steps:
+    - name: Enable the Claude plugin
+      do: As QA-2.
+      expect: Claude is enabled, and the Code plugin with it
+    - name: Set coding agents to default permissions
+      do: Open the Code plugin's settings and set "Coding agent permissions" to default.
+      expect: the setting reads default
+    - name: Assign a task as in QA-2
+      do: Walk QA-2 from "Create a project" through "Assign the task to Claude Code".
+      expect: the task is started
+    - name: Watch Claude work, allowing each request
+      do: Open the Assistant companion and answer each permission card with Yes.
+      expect: |
+        a card appears before each edit and command, Claude continues only once
+        it is answered, and the task ends in review or done
+    - name: Ask for more in a follow-up
+      do: As QA-2, answering each card with Yes.
+      expect: as QA-2, with a card before the commit
 ```
 
 ---

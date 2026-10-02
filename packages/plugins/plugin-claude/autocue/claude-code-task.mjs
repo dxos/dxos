@@ -6,30 +6,25 @@ import { execFileSync } from 'node:child_process';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-// Re-imported with the driver's cache-busting query, so an edit to the bridge is picked up by the next `run` too.
-const { installDesktopBridge } = await import(
-  `../../plugin-code/autocue/desktop-bridge.mjs${new URL(import.meta.url).search}`
-);
 
 /**
  * Assign a project task to Claude Code on this computer and drive it from Composer: Claude works in a git
- * worktree of the project's repository, streams its session into the chat, asks before running a command, marks
- * the task through Composer's MCP tools, and commits when asked in a follow-up.
+ * worktree of the project's repository, streams its session into the chat, marks the task through Composer's MCP
+ * tools, and commits when asked in a follow-up.
  *
- * @mdl packages/plugins/plugin-claude/PLUGIN.mdl test QA-2
- * @app composer-app `DX_TAURI=true` dev build, served by `moon run composer-app:serve` on :4174, with the desktop
- *   app's native half stood in for by plugin-code's `autocue/desktop-bridge.mjs`; `claude` installed and signed in
+ * @mdl packages/plugins/plugin-claude/PLUGIN.mdl test QA-2, and test QA-3 with `AUTOCUE_AGENT_PERMISSIONS=default`
+ * @app composer-app desktop test build, driven by `driver.mjs --target tauri`; `claude` installed and signed in
  *
- *   export DX_TAURI=true DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true
- *   moon run composer-app:stage-agent-helper
- *   moon run composer-app:serve -- --port 4174 --strictPort
- *   node .agents/skills/autocue/scripts/driver.mjs --url http://localhost:4174 --out /tmp/demo
+ *   DX_TAURI=true DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true moon run composer-app:tauri-build-test
+ *   node .agents/skills/autocue/scripts/driver.mjs --target tauri --fresh on --out /tmp/demo
  *
- * The bridge spawns the staged `dx-agent` exactly as the app's shell scope does, so everything from the helper on is
- * the shipped code; what it replaces is Tauri's IPC, and the folder picker, which it answers with the demo repository.
- * Step 1 rebuilds that repository and clears the app data folder, so every take starts from the same commit.
+ * Coding agents start in `auto`, where Claude asks only before a risky action. Set `AUTOCUE_AGENT_PERMISSIONS` in
+ * the driver's environment to another mode (`default` asks before every edit and command) and the take opens by
+ * choosing it in the Code plugin's settings.
+ *
+ * The native folder picker cannot be driven, so the flow writes the demo repository where the picker's choice goes.
+ * Step 1 rebuilds that repository, so every take starts from the same commit; `--fresh on` clears the worktrees
+ * earlier takes left in the test build's data folder.
  */
 
 /** A beat for the viewer to take in a result. */
@@ -38,11 +33,13 @@ const LINGER = 2_500;
 /** Claude's turns: long enough for a slow model, short enough that a stuck turn fails the step. */
 const TURN_TIMEOUT = 5 * 60_000;
 
+const PERMISSIONS = process.env.AUTOCUE_AGENT_PERMISSIONS ?? 'auto';
+
+/** What Claude asks before in each mode that asks more than `auto`. */
+const ASKS = { acceptEdits: 'before every command', default: 'before every edit and command' };
+
 const DEMO_DIR = join(tmpdir(), 'autocue-claude-code');
 const REPOSITORY = join(DEMO_DIR, 'greeter');
-const APP_DATA = join(DEMO_DIR, 'app-data');
-
-const HELPER = fileURLToPath(new URL('../../../apps/composer-app/src-tauri/agent/dx-agent', import.meta.url));
 
 const PROJECT_TITLE = 'Greeter';
 const TASK_TITLE = 'Add a --shout flag to greet.js';
@@ -129,19 +126,24 @@ const answerUntilIdle = async ({ demo, page }) => {
   throw new Error('Claude did not finish its turn in time');
 };
 
+/** Opens Plugins, filtered to `name`. On a fresh profile the first click can land while the navtree settles. */
+const openPlugins = async ({ demo, page }, name) => {
+  const filter = page.locator('input[placeholder="Filter…"]').first();
+  for (let attempt = 0; attempt < 3 && !(await filter.isVisible()); attempt++) {
+    await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
+    await filter.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
+  }
+  await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
+  await demo.type({ selector: 'input[placeholder="Filter…"]', value: name, label: 'Filter' });
+  await page.waitForTimeout(LINGER);
+};
+
 export const steps = [
   {
-    name: 'Prep (off camera): seed the repository and stand in for the desktop app',
+    name: 'Prep (off camera): seed the repository',
     setup: true,
     run: async ({ demo, page }) => {
       await seedRepository();
-      globalThis.autocueDesktop ??= await installDesktopBridge(page, {
-        programs: { 'dx-agent': HELPER },
-        appData: APP_DATA,
-      });
-      globalThis.autocueDesktop.folder = REPOSITORY;
-      // A navigation would otherwise inherit the driver's gesture timeout, a few seconds.
-      await page.reload({ timeout: 180_000 });
       await page.locator('[data-testid="deck.plank"]').first().waitFor({ timeout: 180_000 });
       const notice = page.locator('[data-testid="org.dxos.plugin.observability.notice"] button:has-text("Close")');
       if (
@@ -152,7 +154,7 @@ export const steps = [
       ) {
         await notice.click();
       }
-      // The take starts here: the reload and the boot above are not part of it.
+      // The take starts here: the boot above is not part of it.
       await demo.cut();
     },
   },
@@ -164,26 +166,42 @@ export const steps = [
       ),
     run: async ({ demo, page }) => {
       await demo.caption({ value: 'Enable the Claude plugin', subtitle: 'Plugins → Claude' });
-      // On a fresh profile the first click can land while the navtree is still settling.
-      const filter = page.locator('input[placeholder="Filter…"]').first();
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
-        if (
-          await filter.waitFor({ state: 'visible', timeout: 5_000 }).then(
-            () => true,
-            () => false,
-          )
-        ) {
-          break;
-        }
-      }
-      await demo.type({ selector: 'input[placeholder="Filter…"]', value: 'Claude', label: 'Filter' });
-      await page.waitForTimeout(LINGER);
+      await openPlugins({ demo, page }, 'Claude');
       await demo.click({ selector: 'input[id="org.dxos.plugin.claude-input"]', label: 'Enable Claude' });
       await page.locator('input[id="org.dxos.plugin.claude-input"]:checked').waitFor();
       await page.waitForTimeout(LINGER);
     },
   },
+  ...(PERMISSIONS === 'auto'
+    ? []
+    : [
+        {
+          name: `Set coding agents to ${PERMISSIONS} permissions`,
+          done: ({ page }) =>
+            page.evaluate((mode) => {
+              const { manager } = composer;
+              const [settings] = manager.capabilities.getAll({
+                identifier: 'org.dxos.plugin.code.capability.settings',
+              });
+              return manager.registry.get(settings).agentPermissionMode === mode;
+            }, PERMISSIONS),
+          run: async ({ demo, page }) => {
+            await demo.caption({
+              value: `Have Claude ask ${ASKS[PERMISSIONS]}`,
+              subtitle: `Code settings → Coding agent permissions → ${PERMISSIONS}`,
+            });
+            await openPlugins({ demo, page }, 'Code');
+            await demo.click({ selector: '[data-testid="pluginList.org.dxos.plugin.code"] button', label: 'Settings' });
+            const select = '[data-testid="deck.plank"] [role="combobox"]';
+            await page.locator(select).first().waitFor({ timeout: 10_000 });
+            await page.waitForTimeout(LINGER);
+            await demo.click({ selector: select, label: 'Coding agent permissions' });
+            await demo.click({ selector: `[role="option"][data-value="${PERMISSIONS}"]`, label: PERMISSIONS });
+            await page.locator(`${select}:has-text("${PERMISSIONS}")`).waitFor();
+            await page.waitForTimeout(LINGER);
+          },
+        },
+      ]),
   {
     name: 'Create a project',
     done: async ({ page }) =>
@@ -223,7 +241,26 @@ export const steps = [
         value: "Choose the project's code folder",
         subtitle: 'Kept on this device only; each delegated task gets its own git worktree of it',
       });
-      await demo.click({ selector: 'button:has-text("Choose folder")', label: 'Choose folder…' });
+      // Stands in for the native picker, which nothing can drive: its choice goes where the picker's would, the
+      // plugin's local state.
+      await demo.hover({ selector: 'button:has-text("Choose folder")' });
+      await page.evaluate(
+        async ({ title, folder }) => {
+          const spaceId = document.querySelector('[data-testid="spacePlugin.space"]').dataset.value.split('/').pop();
+          const projects = await dxos
+            .spaces(spaceId)
+            .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
+            .run();
+          const project = projects.findLast((project) => project.name === title);
+          const { manager } = composer;
+          const [state] = manager.capabilities.getAll({ identifier: 'org.dxos.plugin.code.capability.state' });
+          manager.registry.update(state, ({ repositories = {}, ...rest }) => ({
+            ...rest,
+            repositories: { ...repositories, [project.id]: folder },
+          }));
+        },
+        { title: PROJECT_TITLE, folder: REPOSITORY },
+      );
       await page.locator('[data-testid="deck.plank"]').getByText(REPOSITORY).first().waitFor();
       await page.waitForTimeout(LINGER);
     },
@@ -274,7 +311,10 @@ export const steps = [
     run: async ({ demo, page }) => {
       await demo.caption({
         value: 'Claude Code works in its own worktree',
-        subtitle: 'Its session streams into the chat; anything it asks to run waits for an answer here',
+        subtitle:
+          PERMISSIONS === 'auto'
+            ? 'Its session streams into the chat; it asks here only before a risky action'
+            : 'Its session streams into the chat; each edit and command waits for an answer here',
       });
       const tab = page.locator('[data-testid="deck.companion"] >> role=tab[name="Assistant"]').first();
       if ((await tab.getAttribute('aria-selected')) !== 'true') {
