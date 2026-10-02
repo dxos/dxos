@@ -5737,6 +5737,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/perf-harness':
+        specifier: workspace:*
+        version: link:../../../e2e/perf-harness
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
