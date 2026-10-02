@@ -1,6 +1,6 @@
 {
   "name": "@dxos/crx-protocol",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "Shared CRX <-> Composer wire protocol (effect schema).",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",

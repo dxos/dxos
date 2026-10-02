@@ -1,5 +1,42 @@
 # @dxos/storybook-testing
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/ai@0.12.1
+  - @dxos/assistant@0.12.1
+  - @dxos/compute@0.12.1
+  - @dxos/compute-runtime@0.12.1
+  - @dxos/link@0.12.1
+  - @dxos/echo-query@0.12.1
+  - @dxos/devtools@0.12.1
+  - @dxos/plugin-client@0.12.1
+  - @dxos/plugin-explorer@0.12.1
+  - @dxos/app-framework@0.12.1
+  - @dxos/app-graph@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/client@0.12.1
+  - @dxos/react-client@0.12.1
+  - @dxos/react-ui-components@0.12.1
+  - @dxos/react-ui-list@0.12.1
+  - @dxos/react-ui-trace@0.12.1
+  - @dxos/plugin-graph@0.12.1
+  - @dxos/plugin-testing@0.12.1
+  - @dxos/react-ui-chat@0.12.1
+  - @dxos/react-ui-debug@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/react-ui-attention@0.12.1
+  - @dxos/react-ui-masonry@0.12.1
+  - @dxos/react-ui-syntax-highlighter@0.12.1
+  - @dxos/ui-theme@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

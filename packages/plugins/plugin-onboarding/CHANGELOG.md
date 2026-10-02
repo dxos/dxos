@@ -1,5 +1,48 @@
 # @dxos/plugin-onboarding
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/compute@0.12.1
+  - @dxos/plugin-client@0.12.1
+  - @dxos/plugin-illustrator@0.12.1
+  - @dxos/plugin-inbox@0.12.1
+  - @dxos/plugin-kanban@0.12.1
+  - @dxos/plugin-map@0.12.1
+  - @dxos/plugin-markdown@0.12.1
+  - @dxos/plugin-routine@0.12.1
+  - @dxos/plugin-sheet@0.12.1
+  - @dxos/plugin-space@0.12.1
+  - @dxos/plugin-support@0.12.1
+  - @dxos/plugin-tldraw@0.12.1
+  - @dxos/app-framework@0.12.1
+  - @dxos/app-graph@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/client@0.12.1
+  - @dxos/react-client@0.12.1
+  - @dxos/schema@0.12.1
+  - @dxos/types@0.12.1
+  - @dxos/react-ui-table@0.12.1
+  - @dxos/config@0.12.1
+  - @dxos/async@0.12.1
+  - @dxos/context@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/errors@0.12.1
+  - @dxos/graph@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/credentials@0.12.1
+  - @dxos/edge-client@0.12.1
+  - @dxos/protocols@0.12.1
+  - @dxos/brand@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/ui-theme@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

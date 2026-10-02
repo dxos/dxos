@@ -1,5 +1,14 @@
 # @dxos/halo-e2e
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/client@0.12.1
+  - @dxos/halo@0.12.1
+  - @dxos/halo-adapter-client@0.12.1
+  - @dxos/keys@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @dxos/assistant-evals
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/app-toolkit@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/edge-client@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

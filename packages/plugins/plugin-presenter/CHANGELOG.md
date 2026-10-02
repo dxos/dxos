@@ -1,5 +1,26 @@
 # @dxos/plugin-presenter
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/compute@0.12.1
+  - @dxos/echo-react@0.12.1
+  - @dxos/plugin-deck@0.12.1
+  - @dxos/plugin-markdown@0.12.1
+  - @dxos/app-framework@0.12.1
+  - @dxos/app-graph@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/ui-editor@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/random@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/react-ui-attention@0.12.1
+  - @dxos/ui-theme@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

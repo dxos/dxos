@@ -1,5 +1,18 @@
 # @dxos/plugin-theme
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/i18n@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/ui-theme@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

@@ -1,5 +1,25 @@
 # @dxos/pipeline-email
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/ai@0.12.1
+  - @dxos/compute@0.12.1
+  - @dxos/extractor@0.12.1
+  - @dxos/extractor-lib@0.12.1
+  - @dxos/link@0.12.1
+  - @dxos/schema@0.12.1
+  - @dxos/types@0.12.1
+  - @dxos/pipeline-rdf@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/markdown@0.12.1
+  - @dxos/node-std@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/pipeline@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

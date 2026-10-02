@@ -1,5 +1,16 @@
 # @dxos/random-access-storage
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/async@0.12.1
+  - @dxos/debug@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/node-std@0.12.1
+  - @dxos/util@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

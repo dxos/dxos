@@ -1,5 +1,14 @@
 # @dxos/halo
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/link@0.12.1
+  - @dxos/errors@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/protocols@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

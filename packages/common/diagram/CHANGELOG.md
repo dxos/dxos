@@ -1,5 +1,13 @@
 # @dxos/diagram
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/effect@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/util@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

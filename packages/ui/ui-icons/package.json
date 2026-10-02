@@ -1,6 +1,6 @@
 {
   "name": "@dxos/ui-icons",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "private": true,
   "description": "Extended icons for the DXOS UI, drawn in the style of Phosphor.",
   "homepage": "https://dxos.org",

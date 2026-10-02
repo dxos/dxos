@@ -1,5 +1,22 @@
 # @dxos/react-ui
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/async@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/i18n@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/lit-ui@0.12.1
+  - @dxos/react-error-boundary@0.12.1
+  - @dxos/react-focus@0.12.1
+  - @dxos/react-hooks@0.12.1
+  - @dxos/ui-theme@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

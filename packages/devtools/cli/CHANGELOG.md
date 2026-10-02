@@ -1,5 +1,66 @@
 # @dxos/cli
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/ai@0.12.1
+  - @dxos/assistant@0.12.1
+  - @dxos/assistant-toolkit@0.12.1
+  - @dxos/compute@0.12.1
+  - @dxos/compute-runtime@0.12.1
+  - @dxos/edge-compute@0.12.1
+  - @dxos/mcp-server@0.12.1
+  - @dxos/echo-client@0.12.1
+  - @dxos/cli-util@0.12.1
+  - @dxos/plugin-assistant@0.12.1
+  - @dxos/plugin-chess@0.12.1
+  - @dxos/plugin-client@0.12.1
+  - @dxos/plugin-connector@0.12.1
+  - @dxos/plugin-file@0.12.1
+  - @dxos/plugin-game@0.12.1
+  - @dxos/plugin-google@0.12.1
+  - @dxos/plugin-inbox@0.12.1
+  - @dxos/plugin-jmap@0.12.1
+  - @dxos/plugin-kanban@0.12.1
+  - @dxos/plugin-map@0.12.1
+  - @dxos/plugin-markdown@0.12.1
+  - @dxos/plugin-projects@0.12.1
+  - @dxos/plugin-registry@0.12.1
+  - @dxos/plugin-review@0.12.1
+  - @dxos/plugin-routine@0.12.1
+  - @dxos/plugin-sample@0.12.1
+  - @dxos/plugin-script@0.12.1
+  - @dxos/plugin-space@0.12.1
+  - @dxos/plugin-table@0.12.1
+  - @dxos/plugin-tasks@0.12.1
+  - @dxos/plugin-transcription@0.12.1
+  - @dxos/introspect@0.12.1
+  - @dxos/app-framework@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/client@0.12.1
+  - @dxos/client-protocol@0.12.1
+  - @dxos/observability@0.12.1
+  - @dxos/schema@0.12.1
+  - @dxos/types@0.12.1
+  - @dxos/plugin-observability@0.12.1
+  - @dxos/halo@0.12.1
+  - @dxos/halo-adapter-client@0.12.1
+  - @dxos/async@0.12.1
+  - @dxos/context@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/effect-atom-solid@0.12.1
+  - @dxos/errors@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/random@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/edge-client@0.12.1
+  - @dxos/protocols@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

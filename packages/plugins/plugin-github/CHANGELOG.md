@@ -1,5 +1,43 @@
 # @dxos/plugin-github
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/ai@0.12.1
+  - @dxos/compute@0.12.1
+  - @dxos/link@0.12.1
+  - @dxos/echo-react@0.12.1
+  - @dxos/plugin-connector@0.12.1
+  - @dxos/plugin-crx@0.12.1
+  - @dxos/plugin-markdown@0.12.1
+  - @dxos/plugin-preview@0.12.1
+  - @dxos/plugin-space@0.12.1
+  - @dxos/app-framework@0.12.1
+  - @dxos/app-graph@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/types@0.12.1
+  - @dxos/react-ui-components@0.12.1
+  - @dxos/react-ui-editor@0.12.1
+  - @dxos/react-ui-form@0.12.1
+  - @dxos/react-ui-list@0.12.1
+  - @dxos/react-ui-markdown@0.12.1
+  - @dxos/ui-editor@0.12.1
+  - @dxos/react-ui-menu@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/errors@0.12.1
+  - @dxos/graph@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/protocols@0.12.1
+  - @dxos/lit-ui@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/react-ui-masonry@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

@@ -1,5 +1,19 @@
 # @dxos/react-ui-canvas
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/react-ui-editor@0.12.1
+  - @dxos/react-ui-form@0.12.1
+  - @dxos/ui-editor@0.12.1
+  - @dxos/debug@0.12.1
+  - @dxos/diagram@0.12.1
+  - @dxos/react-hooks@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/ui-theme@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

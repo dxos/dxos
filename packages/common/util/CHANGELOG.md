@@ -1,5 +1,14 @@
 # @dxos/util
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/debug@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/node-std@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

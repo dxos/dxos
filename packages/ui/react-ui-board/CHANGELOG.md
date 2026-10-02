@@ -1,5 +1,16 @@
 # @dxos/react-ui-board
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/react-ui-dnd@0.12.1
+  - @dxos/ui-theme@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

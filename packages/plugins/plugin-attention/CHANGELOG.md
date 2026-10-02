@@ -1,5 +1,17 @@
 # @dxos/plugin-attention
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/compute@0.12.1
+  - @dxos/app-framework@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/plugin-graph@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/react-focus@0.12.1
+  - @dxos/react-ui-attention@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @dxos/echo-react
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

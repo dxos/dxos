@@ -1,5 +1,16 @@
 # @dxos/react-ui-attention
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/invariant@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/react-focus@0.12.1
+  - @dxos/react-hooks@0.12.1
+  - @dxos/ui-theme@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

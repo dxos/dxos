@@ -1,5 +1,15 @@
 # @dxos/react-ui-syntax-highlighter
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/util@0.12.1
+  - @dxos/react-hooks@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/ui-theme@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

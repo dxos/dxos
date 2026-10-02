@@ -1,5 +1,28 @@
 # @dxos/ui-editor
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/echo-client@0.12.1
+  - @dxos/echo-doc@0.12.1
+  - @dxos/app-graph@0.12.1
+  - @dxos/client@0.12.1
+  - @dxos/nlp@0.12.1
+  - @dxos/async@0.12.1
+  - @dxos/context@0.12.1
+  - @dxos/display-name@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/protocols@0.12.1
+  - @dxos/ui@0.12.1
+  - @dxos/ui-theme@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

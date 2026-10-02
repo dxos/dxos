@@ -1,5 +1,13 @@
 # @dxos/introspect-tools
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/effect@0.12.1
+  - @dxos/effect-zod@0.12.1
+  - @dxos/util@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

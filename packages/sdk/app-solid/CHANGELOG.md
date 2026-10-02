@@ -1,5 +1,15 @@
 # @dxos/app-solid
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/app-framework@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/effect-atom-solid@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/web-context-solid@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

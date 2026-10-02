@@ -1,5 +1,18 @@
 # @dxos/worker-framework
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/async@0.12.1
+  - @dxos/context@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/errors@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/tracing@0.12.1
+  - @dxos/util@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

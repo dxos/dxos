@@ -1,5 +1,18 @@
 # @dxos/react-ui-list
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/react-ui-menu@0.12.1
+  - @dxos/debug@0.12.1
+  - @dxos/react-focus@0.12.1
+  - @dxos/react-list@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/react-ui-virtual@0.12.1
+  - @dxos/ui-theme@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

@@ -1,5 +1,22 @@
 # @dxos/echo
 
+## 0.12.1
+
+### Patch Changes
+
+- c7cc480: Indexing passes no longer read feeds that have nothing new: a caught-up feed is answered from memory instead of SQLite, and the two index legs of a pass share one read. Background passes started by trace-feed appends are coalesced to at most one per second, so an agent turn's trace writes no longer keep the database worker busy. `flush` and feed-scoped queries still see trace messages immediately.
+- @dxos/async@0.12.1
+  - @dxos/debug@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/errors@0.12.1
+  - @dxos/invariant@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/node-std@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/blob@0.12.1
+  - @dxos/echo-protocol@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

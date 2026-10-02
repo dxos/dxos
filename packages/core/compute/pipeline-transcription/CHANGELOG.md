@@ -1,5 +1,22 @@
 # @dxos/pipeline-transcription
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/ai@0.12.1
+  - @dxos/assistant@0.12.1
+  - @dxos/types@0.12.1
+  - @dxos/async@0.12.1
+  - @dxos/context@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/errors@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/tracing@0.12.1
+  - @dxos/pipeline@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

@@ -1,5 +1,22 @@
 # @dxos/react-ui-task
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/echo-react@0.12.1
+  - @dxos/types@0.12.1
+  - @dxos/react-ui-list@0.12.1
+  - @dxos/react-ui-markdown@0.12.1
+  - @dxos/ui-editor@0.12.1
+  - @dxos/react-ui-menu@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/ui-theme@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

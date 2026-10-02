@@ -1,5 +1,17 @@
 # @dxos/react-ui-debug
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/react-ui-list@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/react-ui-attention@0.12.1
+  - @dxos/react-ui-syntax-highlighter@0.12.1
+  - @dxos/ui-theme@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

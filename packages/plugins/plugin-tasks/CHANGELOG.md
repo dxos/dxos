@@ -1,5 +1,48 @@
 # @dxos/plugin-tasks
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/compute@0.12.1
+  - @dxos/echo-client@0.12.1
+  - @dxos/echo-doc@0.12.1
+  - @dxos/echo-query@0.12.1
+  - @dxos/echo-react@0.12.1
+  - @dxos/plugin-client@0.12.1
+  - @dxos/plugin-file@0.12.1
+  - @dxos/plugin-markdown@0.12.1
+  - @dxos/plugin-preview@0.12.1
+  - @dxos/plugin-space@0.12.1
+  - @dxos/app-framework@0.12.1
+  - @dxos/app-graph@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/react-client@0.12.1
+  - @dxos/schema@0.12.1
+  - @dxos/types@0.12.1
+  - @dxos/react-ui-components@0.12.1
+  - @dxos/react-ui-editor@0.12.1
+  - @dxos/react-ui-form@0.12.1
+  - @dxos/react-ui-markdown@0.12.1
+  - @dxos/react-ui-task@0.12.1
+  - @dxos/ui-editor@0.12.1
+  - @dxos/react-ui-menu@0.12.1
+  - @dxos/halo-react@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/errors@0.12.1
+  - @dxos/graph@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/lit-ui@0.12.1
+  - @dxos/react-hooks@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/react-ui-attention@0.12.1
+  - @dxos/react-ui-calendar@0.12.1
+  - @dxos/ui-theme@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

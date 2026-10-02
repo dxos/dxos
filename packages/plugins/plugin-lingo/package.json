@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-lingo",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "private": true,
   "description": "Language learning: vocabulary, flashcards, and an inline reader",
   "homepage": "https://dxos.org",

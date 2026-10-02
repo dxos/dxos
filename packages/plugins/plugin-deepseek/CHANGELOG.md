@@ -1,5 +1,22 @@
 # @dxos/plugin-deepseek
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/compute@0.12.1
+  - @dxos/link@0.12.1
+  - @dxos/plugin-connector@0.12.1
+  - @dxos/plugin-sandbox@0.12.1
+  - @dxos/app-framework@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/errors@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/util@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes

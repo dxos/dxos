@@ -1,5 +1,11 @@
 # @dxos/react-focus
 
+## 0.12.1
+
+### Patch Changes
+
+- @dxos/util@0.12.1
+
 ## 0.12.0
 
 ### Patch Changes

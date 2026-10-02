@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-excalidraw",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "private": true,
   "description": "Excalidraw sketch plugin",
   "homepage": "https://dxos.org",

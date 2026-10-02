@@ -1,5 +1,29 @@
 # @dxos/plugin-preview
 
+## 0.12.1
+
+### Patch Changes
+
+- Updated dependencies [c7cc480]
+  - @dxos/echo@0.12.1
+  - @dxos/echo-react@0.12.1
+  - @dxos/plugin-client@0.12.1
+  - @dxos/app-framework@0.12.1
+  - @dxos/app-toolkit@0.12.1
+  - @dxos/schema@0.12.1
+  - @dxos/types@0.12.1
+  - @dxos/react-ui-card@0.12.1
+  - @dxos/react-ui-form@0.12.1
+  - @dxos/async@0.12.1
+  - @dxos/effect@0.12.1
+  - @dxos/keys@0.12.1
+  - @dxos/log@0.12.1
+  - @dxos/util@0.12.1
+  - @dxos/react-ui@0.12.1
+  - @dxos/react-ui-attention@0.12.1
+  - @dxos/react-ui-syntax-highlighter@0.12.1
+  - @dxos/ui-types@0.12.1
+
 ## 0.12.0
 
 ### Minor Changes
