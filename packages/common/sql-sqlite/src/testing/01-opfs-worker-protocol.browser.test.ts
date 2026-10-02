@@ -13,7 +13,7 @@ import {
   waitForWorkerMessage,
 } from './opfs-test-helpers.ts';
 
-describe('opfs-worker protocol browser test', { timeout: 60_000, sequential: true }, () => {
+describe('opfs-worker protocol browser test', { timeout: 60_000, concurrent: false }, () => {
   test('imports serialized database via worker import message', async () => {
     const source = await createSerializedDatabase();
     const worker = spawnOpfsWorker();

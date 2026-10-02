@@ -15,7 +15,7 @@ import {
   seedExportPoolImportAndHypercoreWrite,
 } from './opfs-test-helpers.ts';
 
-describe('opfs SqliteClient browser test', { timeout: 120_000, sequential: true }, () => {
+describe('opfs SqliteClient browser test', { timeout: 120_000, concurrent: false }, () => {
   test('runs CRUD via SqliteClient and OPFS worker', async () => {
     await runWithOpfsSqliteClient(
       Effect.gen(function* () {

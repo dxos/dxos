@@ -14,7 +14,7 @@ import {
   waitForInWorkerTestRunner,
 } from './opfs-test-helpers.ts';
 
-describe('opfs in-worker SqliteClient browser test', { timeout: 120_000, sequential: true }, () => {
+describe('opfs in-worker SqliteClient browser test', { timeout: 120_000, concurrent: false }, () => {
   test('runs CRUD inside dedicated worker via SqliteClient.layerOpfs', async () => {
     const worker = spawnInWorkerTestRunner();
     try {
