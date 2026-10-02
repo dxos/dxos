@@ -73,6 +73,13 @@ Grouped by screen or component; IDs are global and never reused.
 | ---- | ----------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------- | ------ | --- |
 | V047 | Search panel toolbar input should be full width, with a search icon as its end adornment (Input `end` slot) | `V047-search-panel.png` | app: R0 rail → Search; plugin-search story: input spans the toolbar, end icon present | open   |     |
 
+### Cards (all)
+
+| ID   | Bug                                                                                                                                                                                                                                 | Screenshot                    | Repro                                                                                              | Status | Fix |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------- | ------ | --- |
+| V048 | Search result card shows the red `asChild` slot warning (its child is not composable or drops the slot's props)                                                                                                                     | `V048-search-result-card.png` | app: Search companion, query `re`; assert no `.dx-slot-warning`                                    | open   |     |
+| V049 | Next Card's `grid` defaults to false, but every object card (search results, previews, companion, popovers) should use the grid — set it at the object-card surface, not per call site; the title row also shows an empty icon cell | `V048-search-result-card.png` | app: search result, preview popover (V040), companion card; Card story for the object-card surface | open   |     |
+
 ### Plugin registry
 
 | ID   | Bug                                                               | Screenshot                                          | Repro                                        | Status | Fix        |
