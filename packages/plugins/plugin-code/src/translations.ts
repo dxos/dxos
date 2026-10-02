@@ -69,6 +69,12 @@ export const translations = [
         'build.failed.label': 'Build failed',
         'build.clean.label': 'Build clean',
         'run.failed.label': 'Runtime error',
+        'project-folder.label': 'Code folder on this device',
+        'project-folder.description':
+          'Repository that coding agents such as Claude Code work in. Each delegated task gets its own git worktree of it.',
+        'project-folder.empty.label': 'Not set',
+        'project-folder.choose.label': 'Choose folder…',
+        'project-folder.clear.label': 'Clear',
       },
     },
   },

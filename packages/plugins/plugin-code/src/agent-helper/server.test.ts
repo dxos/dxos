@@ -4,7 +4,8 @@
 
 import * as acp from '@agentclientprotocol/sdk';
 import { createWebSocketStream } from '@agentclientprotocol/sdk/experimental/ws-client';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { execFileSync } from 'node:child_process';
+import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { request } from 'node:http';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -30,7 +31,12 @@ describe('agent helper', () => {
 
   beforeEach(async () => {
     workdir = await mkdtemp(join(tmpdir(), 'dx-agent-'));
-    server = await serve({ token: TOKEN, agents, path: [dirname(process.execPath)] });
+    server = await serve({
+      token: TOKEN,
+      agents,
+      path: [dirname(process.execPath), '/usr/bin', '/opt/homebrew/bin'],
+      worktrees: join(workdir, 'worktrees'),
+    });
   });
 
   afterEach(async () => {
@@ -82,6 +88,34 @@ describe('agent helper', () => {
         .end();
     });
     expect(status).toBe(403);
+  });
+
+  test('serves worktrees: ensure, list and remove', async ({ expect }) => {
+    const repository = join(workdir, 'repo');
+    await mkdir(repository);
+    execFileSync('git', ['init', '-q', '-b', 'main'], { cwd: repository });
+    execFileSync(
+      'git',
+      ['-c', 'user.name=t', '-c', 'user.email=t@example.com', 'commit', '-q', '--allow-empty', '-m', 'init'],
+      {
+        cwd: repository,
+      },
+    );
+    const call = (method: string, path: string, body?: unknown) =>
+      fetch(`http://127.0.0.1:${server.port}${path}`, {
+        method,
+        headers: { 'authorization': `Bearer ${TOKEN}`, 'content-type': 'application/json' },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      });
+
+    const created = await call('POST', Protocol.WORKTREES_PATH, { repository, key: 'k1', branch: 'composer/k1' });
+    expect(created.status).toBe(200);
+    expect(await created.json()).toEqual({ key: 'k1', path: join(workdir, 'worktrees', 'k1'), branch: 'composer/k1' });
+    expect((await (await call('GET', Protocol.WORKTREES_PATH)).json()).map(({ key }: { key: string }) => key)).toEqual([
+      'k1',
+    ]);
+    expect((await call('POST', Protocol.WORKTREES_PATH, { repository })).status).toBe(400);
+    expect(await (await call('DELETE', `${Protocol.WORKTREES_PATH}?key=k1`)).json()).toEqual({ outcome: 'removed' });
   });
 
   test('relays an ACP session to the agent process', async ({ expect }) => {

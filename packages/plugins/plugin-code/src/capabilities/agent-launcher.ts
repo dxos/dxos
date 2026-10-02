@@ -5,6 +5,7 @@
 import { createWebSocketStream } from '@agentclientprotocol/sdk/experimental/ws-client';
 import type { Child } from '@tauri-apps/plugin-shell';
 import * as Effect from 'effect/Effect';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -17,6 +18,11 @@ import * as CodeCapabilities from '../types/CodeCapabilities.ts';
 
 /** How long the helper may take to report its port before the start counts as failed. */
 const START_TIMEOUT_MS = 15_000;
+
+/** Under the app's data folder: where delegated chats get their git worktrees. */
+const WORKTREES_DIR = 'agent-worktrees';
+
+const HelperRefusal = Schema.Struct({ error: Schema.String });
 
 type Helper = { child: Child; port: number; token: string };
 
@@ -38,9 +44,14 @@ export default Capability.makeModule(
       if (!isTauri()) {
         throw new Error('coding agents need the desktop app');
       }
-      const { Command } = await import('@tauri-apps/plugin-shell');
+      const [{ Command }, { appDataDir, join }] = await Promise.all([
+        import('@tauri-apps/plugin-shell'),
+        import('@tauri-apps/api/path'),
+      ]);
       const token = randomToken();
-      const command = Command.create('dx-agent');
+      const command = Command.create('dx-agent', [], {
+        env: { DX_AGENT_WORKTREES: await join(await appDataDir(), WORKTREES_DIR) },
+      });
       const port = new Promise<number>((resolve, reject) => {
         let reported = false;
         command.stdout.on('data', (line) => {
@@ -95,22 +106,54 @@ export default Capability.makeModule(
         }),
     });
 
-    const agents = helper.pipe(
-      Effect.flatMap(({ port, token }) =>
-        Effect.tryPromise({
-          try: async () => {
-            const response = await fetch(`http://localhost:${port}${Protocol.AGENTS_PATH}`, {
-              headers: { authorization: `Bearer ${token}` },
-            });
-            if (!response.ok) {
-              throw new Error(`agent helper answered ${response.status}`);
-            }
-            return Schema.decodeUnknownSync(Schema.Array(Protocol.AgentStatus))(await response.json());
-          },
-          catch: (cause) => new AgentError({ message: 'could not list coding agents', cause }),
+    /** One request to the helper, its JSON answer decoded with `schema`. */
+    const call = <A>(label: string, path: string, schema: Schema.Codec<A>, init: RequestInit = {}) =>
+      helper.pipe(
+        Effect.flatMap(({ port, token }) =>
+          Effect.tryPromise({
+            try: async () => {
+              const response = await fetch(`http://localhost:${port}${path}`, {
+                ...init,
+                headers: {
+                  authorization: `Bearer ${token}`,
+                  ...(init.body !== undefined && { 'content-type': 'application/json' }),
+                },
+              });
+              const body: unknown = await response.json();
+              if (!response.ok) {
+                const refusal = Schema.decodeUnknownOption(HelperRefusal)(body);
+                throw new Error(
+                  Option.isSome(refusal) ? refusal.value.error : `agent helper answered ${response.status}`,
+                );
+              }
+              return Schema.decodeUnknownSync(schema)(body);
+            },
+            catch: (cause) =>
+              new AgentError({
+                message: `${label}: ${cause instanceof Error ? cause.message : String(cause)}`,
+                cause,
+              }),
+          }),
+        ),
+      );
+
+    const agents = call('could not list coding agents', Protocol.AGENTS_PATH, Schema.Array(Protocol.AgentStatus));
+
+    const worktrees: CodeCapabilities.AgentHelper['worktrees'] = {
+      ensure: (request) =>
+        call('could not prepare a worktree', Protocol.WORKTREES_PATH, Protocol.Worktree, {
+          method: 'POST',
+          body: JSON.stringify(request),
         }),
-      ),
-    );
+      remove: (key) =>
+        call(
+          'could not remove a worktree',
+          `${Protocol.WORKTREES_PATH}?${new URLSearchParams({ key })}`,
+          Schema.Struct({ outcome: Protocol.WorktreeOutcome }),
+          { method: 'DELETE' },
+        ).pipe(Effect.map(({ outcome }) => outcome)),
+      list: call('could not list worktrees', Protocol.WORKTREES_PATH, Schema.Array(Protocol.Worktree)),
+    };
 
     const connect = (agent: string, cwd: string) =>
       helper.pipe(
@@ -129,7 +172,7 @@ export default Capability.makeModule(
       }),
     );
 
-    return Capability.contribute(CodeCapabilities.AgentHelper, { agents, connect });
+    return Capability.contribute(CodeCapabilities.AgentHelper, { agents, connect, worktrees });
   }),
 );
 

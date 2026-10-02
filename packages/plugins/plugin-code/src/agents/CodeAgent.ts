@@ -4,14 +4,18 @@
 
 // @import-as-namespace
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Schedule from 'effect/Schedule';
 import type * as Scope from 'effect/Scope';
 import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Database } from '@dxos/echo';
+import { Chat } from '@dxos/assistant';
+import { type Client } from '@dxos/client';
+import { Database, Filter, Obj, Query } from '@dxos/echo';
 import { log } from '@dxos/log';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -22,9 +26,16 @@ import { AgentError } from '../errors.ts';
 import * as CodeCapabilities from '../types/CodeCapabilities.ts';
 import * as Settings from '../types/Settings.ts';
 import * as AcpAgent from './AcpAgent.ts';
+import * as Workspace from './Workspace.ts';
 
 /** How long to wait for the agent helper to appear before reporting the agent unavailable. */
 const HELPER_WAIT = { attempts: 30, interval: '1 second' } as const;
+
+/** How often finished delegations' worktrees are looked for. */
+const SWEEP_INTERVAL = Duration.minutes(10);
+
+/** Task statuses that end a delegation; `review` still waits on a person, `failed` on a retry. */
+const FINISHED: ReadonlySet<string> = new Set(['done', 'cancelled', 'duplicate']);
 
 export type Definition = {
   /** The harness id chats name (`chat.session.harness`); also the helper's agent directory. */
@@ -61,6 +72,12 @@ export const make = (
       yield* probe(definition.id, helper, (value) =>
         manager.getAll(Capabilities.AtomRegistry).at(0)?.set(availability, value),
       ).pipe(Effect.forkScoped);
+      yield* sweepWorktrees({
+        agent: definition.id,
+        sessions,
+        helper,
+        client: () => manager.getAll(ClientCapabilities.Client).at(0),
+      }).pipe(Effect.repeat(Schedule.spaced(SWEEP_INTERVAL)), Effect.forkScoped);
     }
 
     const options: AcpAgent.AgentOptions = {
@@ -72,22 +89,41 @@ export const make = (
           ? current.connect(definition.id, cwd)
           : Effect.fail(new AgentError({ message: `${definition.label} needs the Composer desktop app.` }));
       },
-      workspace: () => {
-        const folder = settings()?.agentWorkspace?.trim();
-        if (!folder) {
-          return Effect.fail(
-            new AgentError({ message: `Choose the folder ${definition.label} works in, in the Code plugin settings.` }),
-          );
-        }
-        // The helper only accepts an absolute path; `~` cannot be expanded from the page.
-        return isAbsolutePath(folder)
-          ? Effect.succeed(folder)
-          : Effect.fail(
+      workspace: (chat) =>
+        Effect.gen(function* () {
+          const current = settings();
+          const project = Workspace.projectOf(chat);
+          const folder = ((project && current?.agentRepositories?.[project.id]) ?? current?.agentWorkspace)?.trim();
+          if (!folder) {
+            return yield* Effect.fail(
               new AgentError({
-                message: `The ${definition.label} folder in the Code plugin settings must be a full path, such as /Users/me/code/project.`,
+                message: `Choose the folder ${definition.label} works in, on the project's overview or in the Code plugin settings.`,
               }),
             );
-      },
+          }
+          // The helper only accepts an absolute path; `~` cannot be expanded from the page.
+          if (!isAbsolutePath(folder)) {
+            return yield* Effect.fail(
+              new AgentError({
+                message: `The ${definition.label} folder must be a full path, such as /Users/me/code/project.`,
+              }),
+            );
+          }
+
+          // Delegated work gets a worktree of its own, so its changes stay apart from the checkout and
+          // from other delegations; a chat with no tasks works in the folder itself.
+          const key = Workspace.worktreeKey(chat);
+          const agentHelper = helper();
+          if (chat.tasks.length === 0 || !key || !agentHelper) {
+            return folder;
+          }
+          const worktree = yield* agentHelper.worktrees.ensure({
+            repository: folder,
+            key,
+            branch: Workspace.branchName(chat),
+          });
+          return worktree.path;
+        }),
       mode: () => settings()?.agentPermissionMode ?? Settings.DEFAULT_AGENT_PERMISSION_MODE,
       device: () => toPublicKey(manager.getAll(ClientCapabilities.Client).at(0)?.halo.device?.deviceKey)?.toHex(),
     };
@@ -109,6 +145,53 @@ export const make = (
         }),
     } satisfies AssistantCapabilities.Agent;
   });
+
+/**
+ * Removes the worktrees of this agent's delegated chats whose tasks are all finished, or whose chat
+ * was deleted. The branch stays, and so does a worktree with uncommitted changes or a chat the agent
+ * is still connected to.
+ */
+const sweepWorktrees = ({
+  agent,
+  sessions,
+  helper,
+  client,
+}: {
+  agent: string;
+  sessions: AcpAgent.Sessions;
+  helper: () => CodeCapabilities.AgentHelper | undefined;
+  client: () => Client | undefined;
+}): Effect.Effect<void> =>
+  Effect.gen(function* () {
+    const agentHelper = helper();
+    const spaces = client()?.spaces;
+    if (!agentHelper || !spaces) {
+      return;
+    }
+    for (const { key } of yield* agentHelper.worktrees.list) {
+      const parsed = Workspace.parseWorktreeKey(key);
+      // A space this device has not opened says nothing about the chat, so its worktrees wait.
+      const space = parsed && spaces.get(parsed.spaceId);
+      if (!parsed || !space) {
+        continue;
+      }
+      const found = yield* Effect.promise(() =>
+        space.db.query(Query.select(Filter.id(parsed.chatId))).firstOrUndefined(),
+      );
+      if (found && Obj.instanceOf(Chat.Chat, found)) {
+        if (found.session?.harness !== agent || sessions.has(found.id)) {
+          continue;
+        }
+        const tasks = yield* Effect.forEach(found.tasks, (ref) => Effect.promise(() => ref.tryLoad()));
+        // A task that no longer resolves was deleted, which ends it as surely as finishing it.
+        if (!tasks.every((task) => task === undefined || FINISHED.has(task.status ?? 'todo'))) {
+          continue;
+        }
+      }
+      const outcome = yield* agentHelper.worktrees.remove(key);
+      log.info('delegation worktree swept', { key, outcome });
+    }
+  }).pipe(Effect.catch((error) => Effect.sync(() => log.warn('worktree sweep failed', { error }))));
 
 const isAbsolutePath = (path: string): boolean => path.startsWith('/') || /^[A-Za-z]:[\\/]/.test(path);
 

@@ -29,6 +29,14 @@ export type AgentHelper = {
   readonly agents: Effect.Effect<readonly Protocol.AgentStatus[], AgentError>;
   /** Starts an agent working in `cwd` and returns its ACP connection. */
   readonly connect: (agent: string, cwd: string) => Effect.Effect<acp.Stream, AgentError>;
+  /** Git worktrees in the app's data folder, which delegated chats work in. */
+  readonly worktrees: {
+    /** The worktree for `key`, created on first use; a folder that is not a repository is returned as is. */
+    readonly ensure: (request: Protocol.WorktreeRequest) => Effect.Effect<Protocol.Worktree, AgentError>;
+    /** Removes a worktree, keeping its branch; one with uncommitted changes is kept (`dirty`). */
+    readonly remove: (key: string) => Effect.Effect<Protocol.WorktreeOutcome, AgentError>;
+    readonly list: Effect.Effect<readonly Protocol.Worktree[], AgentError>;
+  };
 };
 
 export const AgentHelper = Capability.makeSingleton<AgentHelper>()(`${meta.profile.key}.capability.agentHelper`);

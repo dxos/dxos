@@ -23,6 +23,28 @@ export const AGENTS_PATH = '/agents';
 /** Upgrades to a WebSocket that carries one agent's ACP traffic, one JSON-RPC message per frame. */
 export const ACP_PATH = '/acp';
 
+/**
+ * Git worktrees in the app's data folder, one per delegated chat: `POST` ensures one, `DELETE ?key=`
+ * removes one, `GET` lists them.
+ */
+export const WORKTREES_PATH = '/worktrees';
+
+export const WorktreeRequest = Schema.Struct({
+  /** The repository folder the worktree is a checkout of. */
+  repository: Schema.String,
+  /** Names the worktree's directory; letters, digits, `-` and `_`. */
+  key: Schema.String,
+  branch: Schema.String,
+});
+export type WorktreeRequest = Schema.Schema.Type<typeof WorktreeRequest>;
+
+export const Worktree = Schema.Struct({ key: Schema.String, path: Schema.String, branch: Schema.String });
+export type Worktree = Schema.Schema.Type<typeof Worktree>;
+
+/** `dirty`: kept, since it holds changes that exist nowhere else. */
+export const WorktreeOutcome = Schema.Literals(['removed', 'dirty', 'missing']);
+export type WorktreeOutcome = Schema.Schema.Type<typeof WorktreeOutcome>;
+
 /** An agent the helper knows, as the page sees it. */
 export const AgentStatus = Schema.Struct({
   id: Schema.String,

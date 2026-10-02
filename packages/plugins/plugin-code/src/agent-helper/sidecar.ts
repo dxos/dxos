@@ -52,7 +52,8 @@ export type AgentHelperOptions = {
  * one JSON line on `output`. The helper stops when `input` closes, so it never outlives the app.
  *
  * Agents are the directories beside the executable (`DX_AGENT_DIR` overrides), one per plugin that
- * shipped a helper-side entry.
+ * shipped a helper-side entry. Worktrees go in `DX_AGENT_WORKTREES`, which the app points at its data
+ * folder.
  */
 export const runAgentHelper = async ({ input, output, env }: AgentHelperOptions): Promise<void> => {
   const lines = createInterface({ input })[Symbol.asyncIterator]();
@@ -69,6 +70,7 @@ export const runAgentHelper = async ({ input, output, env }: AgentHelperOptions)
     agents,
     path,
     launch: (entry) => ({ command: process.execPath, args: [AGENT_FLAG, entry] }),
+    worktrees: env.DX_AGENT_WORKTREES,
   });
   output.write(`${JSON.stringify({ port: server.port })}\n`);
 
