@@ -272,10 +272,14 @@ DialogBody.displayName = 'Next.Dialog.Body';
 
 type DialogFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-/** An end-justified `Next.Group` of actions; the child div wins the merge, so the part keeps the dialog scope. */
+/**
+ * An end-justified `Next.Group` of actions; the child div wins the merge, so the part keeps the dialog scope. The
+ * actions stay regular-sized in a small dialog, since they are the dialog's primary targets.
+ */
 const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(({ classNames, ...props }, forwardedRef) => (
   <Group asChild justify='end'>
     <div
+      data-size='md'
       {...props}
       data-scope='dialog'
       data-part='footer'

@@ -9,6 +9,8 @@
     position: fixed;
     inset: 0;
     background: var(--color-scrim-surface);
+    /* The current dialog's frosted scrim: the page recedes rather than only darkening. */
+    backdrop-filter: blur(var(--blur-xs, 4px));
   }
 
   .nx-dialog-positioner {
@@ -67,12 +69,13 @@
     padding-inline: var(--nx-dialog-gutter);
   }
 
+  /* The dialog's heading, at the current dialog's text-xl; its line stays within the header's block at every size. */
   .nx-dialog-title {
     flex: 1;
     min-width: 0;
     margin: 0;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--text-xl);
+    line-height: min(var(--text-xl--line-height), var(--nx-block-size));
     font-weight: 500;
   }
 
