@@ -1,0 +1,880 @@
+---
+id: org.dxos.plugin.interlocutor
+name: InterlocutorPlugin
+version: 0.1.0
+---
+
+Manages autonomous **interlocutor** agents in a space: assistant `Agent` objects that converse with
+people from Discord threads and Composer chats, interview them, and keep what they learn as ECHO
+objects — `Memory` claims and `Goal`s linked to the `Person` or `Organization` they are about.
+
+This document records what is built. Design intent lives in [`docs/DESIGN.md`](./docs/DESIGN.md)
+(architecture, EDGE gateway, identity) and [`docs/MEMORY.md`](./docs/MEMORY.md) (the memory graph and
+the interview skill); items there that are not built are listed under "Not built" below rather than
+specified.
+
+The plugin depends on `org.dxos.plugin.assistant` (which registers `Agent`, `Chat` and `HasSubject`
+and renders the Agent article). It ships a workerd variant with no React surfaces and no Discord
+operations, so EDGE's operation service can host the agent and memory operations.
+
+## Extensions
+
+The following extension dialects are used in this document. `op@1.1`, `test@1.0` and `step@1.0`
+are defined in [`packages/reflect/deus/lang/qa.mdl`](../../reflect/deus/lang/qa.mdl); `node` and
+`surface` in [`packages/reflect/deus/lang/app.mdl`](../../reflect/deus/lang/app.mdl); `skill@1.0` in
+[`packages/plugins/plugin-crm/PLUGIN.mdl`](../plugin-crm/PLUGIN.mdl); the rest in the Appendix.
+
+| Term        | URI                            |
+|-------------|--------------------------------|
+| `type`      | `org.dxos.mdl.type@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
+| `component` | `org.dxos.mdl.component@1.0`   |
+| `op`        | `org.dxos.mdl.op@1.1`          |
+| `skill`     | `org.dxos.mdl.skill@1.0`       |
+| `node`      | `org.dxos.mdl.node@1.0`        |
+| `surface`   | `org.dxos.mdl.surface@1.0`     |
+| `test`      | `org.dxos.mdl.test@1.0`        |
+| `step`      | `org.dxos.mdl.step@1.0`        |
+
+## External types
+
+Used, not defined, here: `Agent` and `Chat` (`@dxos/assistant`), `Instructions` and `Skill`
+(`@dxos/compute`), `Feed` (`@dxos/echo`), `AccessToken` (`@dxos/link`), `Person`, `Organization` and
+the `HasSubject` relation (`@dxos/types`), `ProfileOf` (`@dxos/plugin-crm`, registered here too so
+profiles can be written without plugin-crm enabled) and `Markdown.Document` (`@dxos/plugin-markdown`).
+
+## Types
+
+```mdl
+type DiscordBinding
+  desc: |
+    Binds an agent to a Discord bot. Typename `org.dxos.type.interlocutor.discordBinding@0.1.0`.
+    Parented to its agent (`Obj.Parent`), so it is deleted with the agent; at most one per agent is
+    expected and `loadForAgent` returns the first child binding. Label: `applicationId`.
+  fields:
+    agent: Ref<Agent>               # hidden from forms; set once by make()
+    accessToken: Ref<AccessToken>   # "Bot token"
+    applicationId: string           # "Application ID"; also the EDGE route key
+    guildId?: string                # "Server ID"
+    channels: string[]              # Discord channel ids the bot listens in
+```
+
+```mdl
+type DiscordBinding.Properties
+  desc: The user-editable subset of DiscordBinding (everything but `agent`); the binding form's schema.
+  fields:
+    accessToken: Ref<AccessToken>
+    applicationId: string
+    guildId?: string
+    channels: string[]
+```
+
+```mdl
+type GatewayState
+  literals: idle | connecting | ready | closed | failed
+```
+
+```mdl
+type BotStatus
+  desc: Mirrors the EDGE compute-service `DiscordBotStatus`; every bot route answers with one.
+  fields:
+    running: boolean
+    gateway: GatewayState
+    config?: { spaceId: string, agent: string, applicationId: string, accessTokenId: string, channels: string[], binding?: string }
+    botUserId?: string
+    threads: number                 # Discord threads mapped to chats
+    lastError?: string              # why the gateway last failed; EDGE retries on a watchdog
+```
+
+```mdl
+type Memory
+  desc: |
+    One atomic, third-person claim about one or more entities. Typename
+    `org.dxos.type.interlocutor.memory@0.1.0`. Linked to each subject by a `HasSubject` relation
+    (source = memory, target = entity). Never overwritten: a contradiction supersedes. Label: `content`.
+  fields:
+    content: string
+    kind: fact | preference | goal | commitment | relationship | event
+    origin: stated | inferred       # default stated
+    confidence?: number             # 0..1, checked by recordMemory
+    observedAt: DateTime            # default now
+    status: active | superseded | retracted   # default active
+    supersedes?: Ref<Obj>           # the memory this one replaces
+    source?: Ref<Obj>               # the message or chat it came from (optional as built)
+```
+
+```mdl
+type Goal
+  desc: |
+    A goal held by one or more people or organizations. Typename
+    `org.dxos.type.interlocutor.goal@0.1.0`. New goals are `proposed`; only the owner's confirmation
+    moves them on. `owners` cannot be typed as Person | Organization in the schema, so the operations
+    enforce it. Label: `title`.
+  fields:
+    title: string
+    description?: string
+    horizon: now | quarter | year | long-term
+    status: proposed | confirmed | active | achieved | dropped
+    owners: Ref<Obj>[]              # Person | Organization, checked by suggestGoal
+    parent?: Ref<Obj>               # the goal this one serves
+```
+
+```mdl
+type Profile
+  desc: |
+    Not a stored type — a `Markdown.Document` parented to the subject and linked to it by `ProfileOf`,
+    rendered deterministically by `Profile.render` from the subject's live goals (sections Goals,
+    Proposed goals, Achieved goals; dropped omitted) and active memories grouped by kind (Facts,
+    Preferences, Aspirations, Commitments, Relationships, Events; inferred ones marked _(inferred)_).
+    Regenerated, never edited as the source of truth.
+```
+
+## Operations
+
+Agent operations (`InterlocutorOperationHandlerSet`, every host including workerd).
+
+```mdl
+op createAgent
+  key: org.dxos.operation.interlocutor.createAgent
+  desc: Creates an interlocutor agent with its instructions, first chat and context bindings.
+  input:
+    name: string
+    instructions?: string           # markdown; default ''
+  output: { agent: Ref<Agent> }
+  effects: [echo:write]
+  requires: [Database.Service]
+  note: |
+    `Agent.makeInitialized` with the Interview skill in the agent's Instructions skill set and the
+    Interlocutor skill bound to the first chat. The Agents section's + action invokes it with name ''.
+```
+
+```mdl
+op ensureThreadChat
+  key: org.dxos.operation.interlocutor.ensureThreadChat
+  desc: Returns the chat mirroring a Discord thread for the agent, creating it on first contact.
+  input:
+    agent: Ref<Agent>
+    threadId: string
+    title?: string                  # names a new chat
+    channelId?: string
+  output: { chat: Ref<Chat>, feed: Ref<Feed> }
+  effects: [echo:read, echo:write]
+  requires: [Database.Service]
+  note: |
+    Idempotent on (agent, threadId): the chat carries `Obj.Meta` keys `{ source: 'discord.com', id:
+    threadId }` and, when given, `{ source: 'discord.com/channel', id: channelId }`; a chat with the
+    thread key parented to another agent is not a match. A new chat is parented to the agent, shares
+    its Instructions, and is bound to the skills and objects of the agent's current chat (an agent
+    with no chat contributes itself), plus the new chat. Called by the EDGE gateway, which lives
+    outside this package.
+```
+
+```mdl
+op listAgents
+  key: org.dxos.operation.interlocutor.listAgents
+  desc: Lists every Agent in the space with the number of chats parented to it.
+  input: {}
+  output: { agents: { agent: Ref<Agent>, name?: string, chats: number }[] }
+  effects: [echo:read]
+  requires: [Database.Service]
+  note: Lists all `Agent` objects, not only ones this plugin created.
+```
+
+Memory operations (the Interview skill's tools).
+
+```mdl
+op resolveEntity
+  key: org.dxos.operation.interlocutor.resolveEntity
+  desc: Finds the Person or Organization matching the handles or name, creating it if absent.
+  input:
+    name?: string
+    handles?: { label?: string, value: string }[]   # e.g. { label: 'discord', value: '<user id>' }
+    kind?: person | organization                    # default person
+  output: { entity: Ref<Obj>, created: boolean }
+  errors:
+    InterlocutorOperationError: neither a name nor a handle was given
+  effects: [echo:read, echo:write]
+  requires: [Database.Service]
+  note: |
+    Person: a handle match wins (value equal, and label equal when the handle has one); otherwise a
+    case-insensitive match on fullName or preferredName. Handles the match lacks are appended to its
+    `identities`. Organization: case-insensitive name match only; handles are ignored.
+```
+
+```mdl
+op recordMemory
+  key: org.dxos.operation.interlocutor.recordMemory
+  desc: Records one atomic third-person claim about the given subjects.
+  input:
+    content: string
+    kind: fact | preference | goal | commitment | relationship | event
+    origin?: stated | inferred
+    subjects: Ref<Obj>[]            # at least one
+    confidence?: number             # 0..1
+    source?: Ref<Obj>
+    supersedes?: Ref<Memory>
+  output: { memory: Ref<Memory> }
+  errors:
+    InterlocutorOperationError: no subjects, or confidence outside 0..1
+  effects: [echo:write]
+  requires: [Database.Service]
+  note: One `HasSubject` per subject; a superseded memory's status becomes `superseded`.
+```
+
+```mdl
+op retrieveMemories
+  key: org.dxos.operation.interlocutor.retrieveMemories
+  desc: Returns the active memories about a subject (newest first) and the live goals it owns.
+  input:
+    subject?: Ref<Obj>              # all memories and goals if omitted
+    query?: string                  # case-insensitive substring of content
+    limit?: number
+  output: |
+    { memories: { memory: Ref<Memory>, content, kind, origin, observedAt }[],
+      goals: { goal: Ref<Goal>, title, horizon, status }[] }
+  effects: [echo:read]
+  requires: [Database.Service]
+  note: Live goals are every status but `dropped`; ties in observedAt break on id.
+```
+
+```mdl
+op suggestGoal
+  key: org.dxos.operation.interlocutor.suggestGoal
+  desc: Records a goal the owners described; it stays proposed until confirmed.
+  input:
+    title: string
+    description?: string
+    horizon: now | quarter | year | long-term
+    owners: Ref<Obj>[]              # at least one; each a Person or Organization
+    parent?: Ref<Goal>
+  output: { goal: Ref<Goal> }
+  errors:
+    InterlocutorOperationError: no owners, or an owner that is not a Person or Organization
+  effects: [echo:write]
+  requires: [Database.Service]
+```
+
+```mdl
+op setGoalStatus
+  key: org.dxos.operation.interlocutor.setGoalStatus
+  desc: Sets the status of a goal its owner has answered for.
+  input:
+    goal: Ref<Goal>
+    status?: confirmed | active | achieved | dropped   # default confirmed
+  output: { goal: Ref<Goal> }
+  effects: [echo:write]
+  requires: [Database.Service]
+  note: No transition rules are enforced; any listed status may be set from any other.
+```
+
+```mdl
+op updateProfile
+  key: org.dxos.operation.interlocutor.updateProfile
+  desc: Rewrites the subject's profile document from its live goals and active memories.
+  input:
+    subject: Ref<Obj>               # Person or Organization
+  output: { document: Ref<Obj> }
+  effects: [echo:read, echo:write]
+  requires: [Database.Service]
+  note: |
+    Updates the existing `ProfileOf` document's text in place (and its `lastResearchedAt`);
+    otherwise creates a `Markdown.Document` parented to the subject plus a `ProfileOf` relation.
+```
+
+Discord bot operations (`DiscordOperationHandlerSet`, browser and tauri only — they call EDGE as the
+user through `EdgeHttpClientService`). Every verb addresses `/compute/discord/bots/<applicationId>`.
+
+```mdl
+op startDiscordBot
+  key: org.dxos.operation.interlocutor.startDiscordBot
+  desc: Starts, or reconfigures, the EDGE gateway for the binding's bot.
+  input:
+    binding: Ref<DiscordBinding>
+  output: { status: BotStatus }
+  errors:
+    InterlocutorOperationError: binding has no applicationId; EDGE unreachable; response is not a BotStatus
+  effects: [http]
+  requires: [Database.Service, EdgeHttpClientService]
+  note: PUT with body `{ spaceId, binding: 'echo://<spaceId>/<bindingId>' }`; EDGE reads the rest from the binding.
+```
+
+```mdl
+op stopDiscordBot
+  key: org.dxos.operation.interlocutor.stopDiscordBot
+  desc: Stops the EDGE gateway for the binding's bot; EDGE keeps its config and thread map.
+  input:
+    binding: Ref<DiscordBinding>
+  output: {}
+  errors:
+    InterlocutorOperationError: as startDiscordBot
+  effects: [http]
+  requires: [Database.Service, EdgeHttpClientService]
+  note: DELETE.
+```
+
+```mdl
+op getDiscordBotStatus
+  key: org.dxos.operation.interlocutor.getDiscordBotStatus
+  desc: Reports the EDGE gateway status of the binding's bot.
+  input:
+    binding: Ref<DiscordBinding>
+  output: { status: BotStatus }
+  errors:
+    InterlocutorOperationError: as startDiscordBot
+  effects: [http]
+  requires: [Database.Service, EdgeHttpClientService]
+  note: GET.
+```
+
+## Skills
+
+```mdl
+skill InterlocutorSkill
+  key: org.dxos.skill.interlocutor
+  desc: Bound to every interlocutor agent's first chat; the conversational role.
+  contributes:
+    - op:createAgent
+    - op:ensureThreadChat
+    - op:listAgents
+  instructions: >
+    Authored in `src/skills/InterlocutorSkill.ts`: reply in the conversation (which may mirror a
+    Discord thread), address the latest message, be concise.
+```
+
+```mdl
+skill InterviewSkill
+  key: org.dxos.skill.interview
+  desc: Interviews a person to learn their role, goals, team and preferences, and records it.
+  contributes:
+    - op:resolveEntity
+    - op:recordMemory
+    - op:retrieveMemories
+    - op:suggestGoal
+    - op:setGoalStatus
+    - op:updateProfile
+  instructions: >
+    Authored in `src/skills/InterviewSkill.ts`. Start: state the purpose, resolve the person (name and
+    handles), recall what is known and do not re-ask it, and — only if a checklist tool is available —
+    track four topics (role, goals, team, preferences). During: one open question at a time, reflect
+    back, probe each goal (why, by when, obstacles, who), remember one claim per call with stated or
+    inferred origin, supersede contradictions, propose each goal. End: read the goals back, set each
+    answer's status (dropped for rejections), update the person's and any team's profile, summarise.
+```
+
+Both are contributed as `SkillDefinition`s; createAgent puts the Interview skill in every new agent's
+Instructions.
+
+## App graph
+
+```mdl
+node AgentsSection
+  desc: |
+    A type section for `Agent` under the space's AI group (`root/<spaceId>/ai/org.dxos.type.agent`),
+    contributed here because plugin-assistant renders Agent articles but lists no section. One child
+    node per Agent in the space (URL key `agent`); the section header's + ("Add agent") invokes
+    op:createAgent with name '', so the new agent shows the placeholder "New agent".
+  source: node:SpaceRoot
+  subject: type:Agent
+  actions: [op:createAgent]
+```
+
+## Components
+
+```mdl
+component DiscordBindingForm
+  desc: Schema form over DiscordBinding.Properties; the token field is a picker over AccessTokens in `db`.
+  props:
+    db?: Database
+    label?: string
+    description?: string
+    values?: Partial<DiscordBinding.Properties>
+    autoSave?: boolean              # true once a binding exists: save on blur, no Save button
+  emits:
+    onSave(values: DiscordBinding.Properties)
+```
+
+```mdl
+component DiscordBotStatus
+  desc: |
+    A banner for the gateway state. With `error` (EDGE unreachable or a bad response): error valence,
+    title "Could not reach EDGE", the message as body. With no status yet: "Checking bot status".
+    Otherwise the gateway label (Stopped | Connecting | Connected | Disconnected | Failed), the thread
+    count ("No threads" / "N threads"), and `lastError` as a second body line, in which case the
+    valence is warning regardless of the gateway state.
+  props:
+    status?: BotStatus
+    error?: string
+```
+
+```mdl
+component ProfileGraph
+  desc: |
+    Two labelled regions, "Goals" (title; horizon · status) and "Memories" (content; kind · origin ·
+    date), or "Nothing recorded yet." when both are empty.
+  props:
+    goals: Goal[]
+    memories: Memory[]
+```
+
+```mdl
+component InterlocutorProperties
+  desc: |
+    The agent's Discord binding. Finds the DiscordBinding child of the agent; with none, the form has
+    a Save button and saving adds a new binding parented to the agent (no operation — `db.add`). With
+    one, the form auto-saves edits into it, and the bot controls appear below: an ActionToolbar
+    ("Discord bot") with Start bot (Restart bot while running), Stop bot (disabled unless running) and
+    Refresh status, all disabled while a call is in flight, then DiscordBotStatus. Status is fetched
+    on mount.
+  props:
+    subject: Agent
+  state:
+    status?: BotStatus
+    error?: string
+    busy: boolean
+  actions:
+    start() → op:startDiscordBot
+    stop() → op:stopDiscordBot, then op:getDiscordBotStatus
+    refresh() → op:getDiscordBotStatus
+```
+
+```mdl
+component ProfileProperties
+  desc: |
+    ProfileGraph over the subject's live goals (owner refers to the subject; not dropped) and active
+    memories (HasSubject targets the subject), newest first. Subscribes to every Memory and Goal atom
+    so status changes (confirmed, superseded) re-render without a membership change.
+  props:
+    subject: Person | Organization
+```
+
+## Surfaces
+
+```mdl
+surface AgentDiscordBinding
+  role: objectProperties
+  subject: type:Agent
+  component: component:InterlocutorProperties
+  position: last                    # beside plugin-assistant's Agent properties, not replacing them
+```
+
+```mdl
+surface PersonProfileGraph
+  role: objectProperties
+  subject: type:Person
+  component: component:ProfileProperties
+  position: last
+```
+
+```mdl
+surface OrganizationProfileGraph
+  role: objectProperties
+  subject: type:Organization
+  component: component:ProfileProperties
+  position: last
+```
+
+## Features
+
+```mdl
+feat F-1: Agents
+
+  req F-1.1: The space's AI group lists every Agent in an Agents section; + creates an interlocutor agent.
+  req F-1.2:
+    when: op:createAgent runs
+    then: an Agent exists with Instructions holding the Interview skill and a first chat bound to the Interlocutor skill
+  req F-1.3: op:listAgents reports each Agent with the number of chats parented to it.
+```
+
+```mdl
+feat F-2: Discord threads
+
+  req F-2.1:
+    when: op:ensureThreadChat is called twice for the same agent and thread
+    then: the same chat and feed are returned
+  req F-2.2:
+    when: a new thread arrives
+    then: a new chat is parented to the agent, named after the thread, sharing the agent's Instructions, keyed by thread and channel
+  req F-2.3: The same thread id bridged to two agents yields two chats.
+```
+
+```mdl
+feat F-3: Discord binding and bot control
+
+  req F-3.1: An Agent's properties show the Discord binding form; the first save creates a binding parented to the agent.
+  req F-3.2: The binding is deleted with its agent and found from it by DiscordBinding.loadForAgent.
+  req F-3.3:
+    when: a binding exists
+    then: the Start/Stop/Refresh toolbar and the gateway status banner appear
+  req F-3.4: Start PUTs, Stop DELETEs and status GETs `/compute/discord/bots/<applicationId>`; Start sends the space id and the binding URI.
+  req F-3.5:
+    when: the gateway reports lastError
+    then: the banner shows it, in warning valence
+  req F-3.6:
+    when: EDGE cannot be reached or answers something that is not a BotStatus
+    then: the operation fails and the banner reads "Could not reach EDGE"
+```
+
+```mdl
+feat F-4: Memory graph
+
+  req F-4.1: op:resolveEntity matches a Person by handle first, then case-insensitively by name, and creates one only when nothing matches.
+  req F-4.2: op:recordMemory links the memory to every subject by HasSubject and rejects an empty subject list.
+  req F-4.3:
+    when: a memory is recorded with supersedes
+    then: the old memory becomes superseded and is no longer recalled
+  req F-4.4: op:retrieveMemories returns active memories only, filtered by subject and query, and the subject's live goals.
+  req F-4.5: op:suggestGoal creates a proposed goal and rejects owners that are not people or organizations.
+  req F-4.6: op:setGoalStatus confirms a goal by default.
+  req F-4.7: op:updateProfile keeps one profile document per subject and rewrites it in place.
+```
+
+```mdl
+feat F-5: Interview and profile panel
+
+  req F-5.1: An agent with the Interview skill resolves the interviewee, records memories and proposes goals as the conversation runs, and confirms goals at the end.
+  req F-5.2: A Person's or Organization's properties list its live goals and active memories.
+  req F-5.3:
+    when: a goal's status or a memory's status changes
+    then: the properties panel updates without reopening
+```
+
+## Acceptance
+
+Derived criteria, each executed by a vitest case or a storybook play function.
+
+```mdl
+scenario T-1: Thread chats are idempotent per thread   # ensure-thread-chat.test.ts
+  # covers [F-2.1, F-2.2]
+  given: an agent created by op:createAgent
+  when: ensureThreadChat for thread-1 (title Hello, channel-1), again for thread-1, then for thread-2
+  then:
+    - both thread-1 calls return the same chat and feed; thread-2 returns another
+    - the thread chat is not the agent's first chat, is named Hello and is parented to the agent
+    - it shares the agent's Instructions; its meta keys are the thread key then the channel key
+```
+
+```mdl
+scenario T-2: Threads are separate per agent   # ensure-thread-chat.test.ts
+  # covers [F-2.3, F-1.3]
+  given: agents First and Second
+  when: each ensures a chat for thread "shared"
+  then:
+    - the two chats differ
+    - listAgents reports First and Second with 2 chats each
+```
+
+```mdl
+scenario T-3: Binding belongs to its agent   # ensure-thread-chat.test.ts
+  # covers [F-3.2]
+  given: an agent and an AccessToken
+  when: DiscordBinding.make for the agent is added
+  then: its parent is the agent and DiscordBinding.loadForAgent returns it
+```
+
+```mdl
+scenario T-4: An interview builds the graph   # interview.test.ts
+  # covers [F-4.1, F-4.2, F-4.3, F-4.4, F-4.5, F-4.6, F-4.7]
+  when: resolve "Rich Burdon" with a discord handle, then by handle, then by "rich burdon"; resolve the
+    organization "Composer team"; remember three claims; propose two goals and confirm one; supersede
+    one memory; recall; update the profile twice
+  then:
+    - the first resolve creates a Person; the other two return it
+    - the superseded memory is superseded; recall returns the three active claims and both goals (confirmed, proposed)
+    - recall with query "STANDUPS" returns only the matching memory; the team recalls only the shared memory and no goals
+    - both updateProfile calls return the same document, with exactly one ProfileOf
+    - the profile contains the name, the confirmed goal and the new claim, and not the superseded one
+```
+
+```mdl
+scenario T-5: Invalid memory and goal input is rejected   # interview.test.ts
+  # covers [F-4.2, F-4.5]
+  then:
+    - recordMemory with no subjects fails with "at least one subject"
+    - suggestGoal owned by a Memory fails with "people or organizations"
+```
+
+```mdl
+scenario T-6: Start, status and stop address the bot route   # discord-bot.test.ts (mocked EDGE)
+  # covers [F-3.4, F-3.5]
+  then:
+    - start PUTs /compute/discord/bots/app-1 with { spaceId, binding: echo://<space>/<binding> } and returns the status
+    - status GETs the route and returns the gateway's lastError
+    - stop DELETEs the route and returns {}
+```
+
+```mdl
+scenario T-7: A malformed EDGE response fails   # discord-bot.test.ts
+  # covers [F-3.6]
+  when: EDGE answers { unexpected: true }
+  then: getDiscordBotStatus fails
+```
+
+```mdl
+scenario T-8: Scripted interview fills the profile panel
+  # covers [F-5.1, F-5.2, F-5.3]
+  # stories-assistant Interview › TestInterviewScripted (ScriptedLanguageModel, four turns)
+  given: the agent's Chat beside the interviewee's profile panel, with a scripted model
+  when: Rich introduces himself, states two goals, names the blocker, confirms both goals
+  then:
+    - the Goals region lists both goals and reads "Confirmed" twice
+    - the Memories region lists the three recorded claims
+    - the space holds one Person, two confirmed goals and at least three memories
+```
+
+## Not built
+
+Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does not implement:
+
+- The EDGE gateway Durable Object, the agent turn on EDGE and the `SendDiscordMessage` reply path
+  live outside this package (EDGE repo); this plugin only stores the binding and calls the bot routes.
+- Real per-agent HALO identity, joined spaces, relay tasks, and multiple bindings per agent.
+- Runtime-assembled memory context at the start of each turn; consolidation (dedupe, promotion of
+  inferred memories); editing or retracting memories in the UI (`retracted` exists as a status only).
+- Required provenance: `Memory.source` is optional as built.
+- The interview checklist on `Chat.tasks`: the skill uses a checklist only if a tool for it is bound.
+- `paths.ts` exports `getAgentPath` / `getAgentsPath`, which nothing uses yet.
+
+## QA
+
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
+
+```mdl
+test QA-1: Create an interlocutor agent, bind it to Discord, start the bot
+  desc: |
+    The primary journey: an agent from the Agents section, its Discord binding, and the bot control
+    round-trip to EDGE. Run against a local EDGE with a deliberately invalid bot token, so the gateway
+    cannot connect and the status must carry the gateway's lastError — a "Connected" banner here is a
+    defect, not a pass.
+  actors: human
+  covers: [F-1.1, F-3.1, F-3.3, F-3.4, F-3.5]
+  status: unverified         # never run against the app
+  given:
+    - an identity exists
+    - space: a space is open and SPACE_READY
+    - plugin-interlocutor is enabled (it is tagged labs) and Composer points at a local EDGE
+    - no Agent named "QA: Interlocutor $runId" and no DiscordBinding with applicationId "qa-app-$runId" exist
+    - binding: the DiscordBinding the human saves in step 3 — resolved by the runner after that step as
+      the one `org.dxos.type.interlocutor.discordBinding` whose applicationId is "qa-app-$runId"; the
+      form writes it with `db.add`, so there is no operation to `capture` it from
+  before:
+    - name: Add a bot token
+      do: Add an access token with source "discord.com", account "QA: bot $runId" and value "qa-invalid-token".
+      invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.accessToken", source: "discord.com", account: "QA: bot $runId", token: "qa-invalid-token" } }
+      capture: token
+      expect: the token exists in the space and is offered by the binding form's Bot token picker
+  steps:
+    - name: Create the agent
+      do: |
+        In the navtree, open the space's AI group, click + on the Agents section ("Add agent"), and
+        rename the new "New agent" to "QA: Interlocutor $runId".
+      invoke: [op:createAgent] { name: "QA: Interlocutor $runId" }
+      capture: agent
+      expect: the agent appears under Agents with that name
+      assert: |
+        const { agents } = await composer.invoke('org.dxos.operation.interlocutor.listAgents', {}, { spaceId: $given.space.id });
+        const mine = agents.filter((row) => JSON.stringify(row.agent) === JSON.stringify($agent.agent));
+        return mine.length === 1 && mine[0].name === `QA: Interlocutor ${$runId}` && mine[0].chats === 1;
+      note: |
+        The human path is two gestures (+ then rename) because the section's + passes name ''; the
+        agent path is one operation. `chats === 1` holds because createAgent makes the first chat.
+    - name: Open the agent and its properties
+      do: Click the agent in the navtree, then open its Properties panel.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/ai/org.dxos.type.agent/$agent.agent.objectId"] }
+      expect: |
+        below plugin-assistant's agent properties, a "Discord" fieldset ("Connect the agent to a
+        Discord bot.") shows Bot token, Application ID, Server ID and Channels with a Save button, and
+        no bot toolbar
+      assert: return $snapshot.surfaces.some((surface) => surface.id?.includes('agentDiscordBinding')) && $stepErrors.length === 0
+      note: The properties panel is a companion; if `open` mounts only the article, the runner opens the properties companion too.
+    - name: Save a binding
+      do: |
+        Pick "QA: bot $runId" as Bot token, enter Application ID "qa-app-$runId", add channel
+        "qa-channel-$runId", and click Save.
+      expect: |
+        the Save button disappears (the form now auto-saves), and a "Discord bot" toolbar appears with
+        Start bot, Stop bot (disabled) and Refresh status, followed by a status banner
+      note: |
+        NO `invoke` — the container adds the binding with `db.add`, parented to the agent; no operation
+        creates a binding. This step is why the test is `actors: human`.
+    - name: Start the bot
+      do: Click Start bot.
+      invoke: [op:startDiscordBot] { binding: Ref($given.binding) }
+      expect: the toolbar is briefly disabled, then the banner shows a gateway state other than Connected
+      assert: return $result.status.gateway !== 'ready' && $stepErrors.length === 0
+      note: |
+        An invocation failure (EDGE not running) is not a pass: the banner then reads "Could not reach
+        EDGE", which means the fixture is wrong, not the plugin — report the step as blocked.
+    - name: Read the status
+      do: Click Refresh status.
+      invoke: [op:getDiscordBotStatus] { binding: Ref($given.binding) }
+      expect: |
+        the banner title reads "Failed" (or "Connecting" while EDGE retries), it is in warning valence,
+        and its second line shows the gateway's lastError (an authentication failure); it never reads
+        "Connected"
+      assert: |
+        const { status } = $result;
+        return status.gateway !== 'ready'
+          && typeof status.lastError === 'string' && status.lastError.length > 0
+          && status.config?.applicationId === `qa-app-${$runId}`;
+      note: |
+        The applicationId check ties the status to this run's bot; a lastError left on another bot's
+        route by an earlier run cannot satisfy it (Rule 5). If EDGE has not yet failed the handshake,
+        refresh again before judging.
+  after:
+    - name: Stop the bot
+      do: Click Stop bot (if enabled).
+      invoke: [op:stopDiscordBot] { binding: Ref($given.binding) }
+      expect: the banner reads Stopped or Disconnected
+    - name: Delete the agent
+      do: Right-click "QA: Interlocutor $runId" in the navtree and choose Delete agent.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($agent.agent)] }
+      expect: the agent leaves the Agents section; its binding and chats go with it (they are its children)
+    - name: Delete the token
+      do: Remove the "QA: bot $runId" access token.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($token.object)] }
+      expect: no access token with account "QA: bot $runId" remains
+```
+
+```mdl
+test QA-2: Interview a person and confirm their goals
+  desc: |
+    The interview skill against a live model: the agent resolves the interviewee, records memories
+    and proposes goals while the conversation runs, and confirming the read-back flips the goals to
+    Confirmed in the Person's properties. The deterministic counterpart is the storybook play
+    `stories-assistant` › Interview › TestInterviewScripted (scenario T-8), which scripts the model;
+    it is a story, not a Playwright spec, so it is not listed under `automated:`.
+  actors: human
+  covers: [F-5.1, F-5.2, F-5.3, F-4.6]
+  status: unverified         # pending — needs a live model key; never run against the app
+  given:
+    - an identity exists
+    - space: a space is open and SPACE_READY
+    - plugin-interlocutor is enabled
+    - a live model is available to the assistant (an Anthropic API key, or the EDGE AI service) — ABORT
+      without one; a scripted model is the storybook's job, not this test's
+    - no Person whose fullName contains "QA-$runId" exists
+    - person: the Person the agent resolves in step 2 — resolved by the runner after that step as the
+      one `org.dxos.type.person` whose fullName contains "QA-$runId"; the model creates it, so there is
+      no invocation to `capture` it from
+  before:
+    - name: Create the interviewer
+      do: Click + on the Agents section and rename the new agent "QA: Interviewer $runId".
+      invoke: [op:createAgent] { name: "QA: Interviewer $runId" }
+      capture: agent
+      expect: the agent appears under Agents
+  steps:
+    - name: Open the agent's chat
+      do: Click "QA: Interviewer $runId", then open its chat in the Assistant companion.
+      invoke: org.dxos.operation.appToolkit.open { subject: ["root/$given.space.id/ai/org.dxos.type.agent/$agent.agent.objectId"] }
+      expect: an empty chat with the agent is ready for input
+    - name: Introduce yourself
+      do: Send "Hi, I am Quinn QA-$runId."
+      expect: |
+        the agent states the purpose of the interview in a sentence and asks one open question; the
+        trace shows a resolveEntity call
+      note: NO `invoke` — the model chooses the tool calls. Human-only.
+    - name: State two goals
+      do: |
+        Send "I want the QA demo working by Friday, and to hire one designer this year." Answer any
+        follow-up question briefly until the agent reads the goals back and asks you to confirm them.
+      expect: |
+        each turn asks one question and reflects back what it heard; the read-back names both goals
+      note: NO `invoke` — model-driven.
+    - name: See the proposed goals and memories
+      do: Open Quinn's Properties panel.
+      invoke: [op:retrieveMemories] { subject: Ref($given.person) }
+      capture: proposed
+      expect: |
+        the panel has a "Goals" region listing the two goals, each "Proposed", and a "Memories" region
+        with at least one memory marked Stated
+      assert: |
+        return $result.goals.length >= 2
+          && $result.goals.every((goal) => goal.status === 'proposed')
+          && $result.memories.some((memory) => memory.origin === 'stated');
+      note: Scoped to `$given.person`, whose name carries `$runId`, so goals left by an earlier run cannot count.
+    - name: Confirm the goals
+      do: Send "Yes, both are right."
+      expect: the agent says it confirmed the goals and summarises what it recorded
+      note: NO `invoke` — model-driven.
+    - name: See the goals confirmed
+      do: Look at Quinn's Properties panel again, without reopening it.
+      invoke: [op:retrieveMemories] { subject: Ref($given.person) }
+      capture: final
+      expect: every goal in the Goals region now reads "Confirmed", and the same goals are listed
+      assert: |
+        const titles = (goals) => goals.map((goal) => goal.title).sort().join('\n');
+        return $result.goals.length === $proposed.goals.length
+          && titles($result.goals) === titles($proposed.goals)
+          && $result.goals.every((goal) => goal.status === 'confirmed');
+      note: The panel must update in place (F-5.3); a refresh only after reopening is a failure of this step.
+  after:
+    - name: Delete the interview's goals and memories
+      do: Delete the goals and memories listed in Quinn's properties.
+      invoke: org.dxos.operation.space.removeObjects { objects: [...$final.goals.map((row) => Obj(row.goal)), ...$final.memories.map((row) => Obj(row.memory))] }
+      expect: Quinn's properties read "Nothing recorded yet."
+      note: Superseded memories are not recalled; the runner also removes any Memory whose HasSubject targets `$given.person`.
+    - name: Delete the person
+      do: Delete Quinn.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($given.person)] }
+      expect: no Person whose fullName contains "QA-$runId" remains; the profile document goes with it (it is a child)
+    - name: Delete the interviewer
+      do: Right-click "QA: Interviewer $runId" and choose Delete agent.
+      invoke: org.dxos.operation.space.removeObjects { objects: [Obj($agent.agent)] }
+      expect: the agent and its chat leave the navtree
+```
+
+---
+
+## Appendix: Extension Definitions
+
+Extension block types used in this document are defined below using the core `ext` primitive. `op`,
+`test` and `step` are defined in `lang/qa.mdl`, `node` and `surface` in `lang/app.mdl`, and `skill`
+in `plugin-crm/PLUGIN.mdl`.
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap        # name[?]: TypeExpr  (# inline comment)
+    literals?: UnionList     # a | b | c
+    extends?: TypeRef[]
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self              # feat blocks may contain feat blocks
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap            # external inputs (immutable inside component)
+    state?: FieldMap            # internal reactive state
+    slots?: FieldMap            # named ReactNode injection points
+    actions?: ActionMap         # methods the component exposes or handles
+    emits?: EventMap            # events the component raises to its parent
+    layout?: CodeBlock          # ASCII sketch of visual structure (non-normative)
+```
