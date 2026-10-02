@@ -10,6 +10,7 @@ import { DXN } from '@dxos/keys';
 
 import { createAnnotationHelper } from '../Annotation/util.ts';
 import { type AnyProperties } from '../common/types/index.ts';
+import { setValue as setObjectValue } from '../Obj/set-value.ts';
 
 export const PropertyTypeId = '~@dxos/echo/Property' as const;
 export type PropertyTypeId = typeof PropertyTypeId;
@@ -238,6 +239,12 @@ export const setWithSchema = <T>(
     return false;
   }
 
-  SchemaEx.setValue(object, jsonPath, value);
+  const segments = SchemaEx.splitJsonPath(jsonPath);
+  if (segments.length === 1) {
+    object[segments[0]] = value;
+  } else {
+    // Absent parents are built from the schema; a bare `{}` would fail validation of their required fields.
+    setObjectValue(object, segments, value);
+  }
   return true;
 };

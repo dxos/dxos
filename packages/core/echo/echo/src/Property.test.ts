@@ -39,6 +39,12 @@ const RootPath = Type.makeObject(DXN.make('com.example.type.propertyRootPath', '
   ),
 );
 
+const Nested = Type.makeObject(DXN.make('com.example.type.propertyNested', '0.1.0'))(
+  Schema.Struct({
+    meta: Schema.optional(Schema.Struct({ title: Schema.optional(Schema.String), kind: Schema.String })),
+  }).pipe(Property.implement(Property.Title, { path: 'meta.title' })),
+);
+
 const Plain = Type.makeObject(DXN.make('com.example.type.propertyPlain', '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }),
 );
@@ -79,6 +85,15 @@ describe('Property', () => {
     });
     expect(note.heading).toBe('Plan');
     expect(Property.get(note, Property.Title)).toBe('Plan');
+  });
+
+  test('writes through a nested path build absent parents from the schema', ({ expect }) => {
+    const obj = Obj.make(Nested, {});
+    Obj.update(obj, (obj) => {
+      expect(Property.set(obj, Property.Title, 'Deep')).toBe(true);
+    });
+    expect(obj.meta?.title).toBe('Deep');
+    expect(Obj.getLabel(obj)).toBe('Deep');
   });
 
   test('title falls back to LabelAnnotation, then name', ({ expect }) => {
