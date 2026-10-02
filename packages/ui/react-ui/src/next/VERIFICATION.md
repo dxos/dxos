@@ -56,6 +56,16 @@ Grouped by screen or component; IDs are global and never reused.
 | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------ | ------ | --- |
 | V038 | JSON toolbar overflows/scrolls horizontally: the JSONPath input is cut off at the start and the depth NumberInput's value is not visible (only −/+ show) | `V038-debug-json-toolbar.png` | app: README → companion Debug tab; JSON viewer story: toolbar fits, input shrinks, depth value visible | open   |     |
 
+### Card popovers (preview)
+
+| ID   | Bug                                                                                                | Screenshot              | Repro                                                                                 | Status | Fix |
+| ---- | -------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------- | ------ | --- |
+| V040 | Card in the preview popover has no grid (rails/gutters) — should be a gridded Next Card as on main | `V040-card-popover.png` | app: README, hover/activate an inline object link (e.g. "New document"); Card stories | open   |     |
+| V041 | Card popover needs a min width                                                                     | `V040-card-popover.png` | same; assert popover width ≥ card min width                                           | open   |     |
+| V042 | Card popover needs a min height                                                                    | `V040-card-popover.png` | same; assert popover height ≥ card min height                                         | open   |     |
+| V043 | Card popover is missing its menu (card actions menu)                                               | `V040-card-popover.png` | same; assert the card menu trigger exists and opens                                   | open   |     |
+| V044 | Card in the popover is scaled; scaling must only apply when cards are in the companion             | `V040-card-popover.png` | same; assert no transform/scale on the popover card; companion card still scales      | open   |     |
+
 ### Plugin registry
 
 | ID   | Bug                                                               | Screenshot                                          | Repro                                        | Status | Fix        |
