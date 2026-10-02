@@ -183,7 +183,7 @@ export const Test: Story = {
     await expect(getComputedStyle(byTestId(md, 'save-labelled-md')).backgroundColor).not.toBe(
       getComputedStyle(byTestId(md, 'cancel-labelled-md')).backgroundColor,
     );
-    await waitFor(() => expect(iconHref(byTestId(md, 'save-md'))).toContain('ph--check--regular'));
+    await waitFor(() => expect(iconHref(byTestId(md, 'save-md'))).toContain('ph--check--regular'), { timeout: 10_000 });
     await waitFor(() => expect(iconHref(byTestId(md, 'cancel-md'))).toContain('ph--x--regular'));
 
     const star = byTestId(md, 'star-md');
@@ -250,7 +250,7 @@ export const Test: Story = {
       await userEvent.click(copy);
       await waitFor(() => expect(written).toEqual(['Copied at md']));
       await waitFor(() => expect(copy).toHaveAccessibleName('Copied'));
-      await waitFor(() => expect(iconHref(copy)).toContain('ph--check--regular'));
+      await waitFor(() => expect(iconHref(copy)).toContain('ph--check--regular'), { timeout: 10_000 });
       await expect(copy).toHaveAttribute('data-icon-valence', 'success');
       await waitFor(() => expect(copy).toHaveAccessibleName('Copy'), { timeout: 3_000 });
     } finally {

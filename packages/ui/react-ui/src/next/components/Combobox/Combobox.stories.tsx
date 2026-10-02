@@ -568,7 +568,10 @@ export const TestMultiple: Story = {
     // 3. The create row has the Root's label and icon, and creating adds a chip.
     await userEvent.keyboard('Someday');
     const create = await within(popup).findByRole('option', { name: 'Add tag “Someday”' });
-    await waitFor(() => expect(create.querySelector('use')?.getAttribute('href')).toBe('#ph--tag--regular'));
+    // Icons resolve from the sprite asynchronously, which a cold run can take seconds over.
+    await waitFor(() => expect(create.querySelector('use')?.getAttribute('href')).toBe('#ph--tag--regular'), {
+      timeout: 10_000,
+    });
     await userEvent.click(create);
     await waitFor(() => expect(within(control).getByText('Someday')).toBeVisible());
     await userEvent.keyboard('{Escape}');

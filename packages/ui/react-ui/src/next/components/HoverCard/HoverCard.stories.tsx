@@ -103,14 +103,18 @@ export const Test: Story = {
     await realUnhover(small);
     await waitFor(() => expect(body.queryByTestId('profile-sm')).toBeNull(), { timeout: 2_000 });
 
-    // The lowest row has room above it, where the card opens by default.
+    // The lowest row's card opens above it, or below when the test viewport leaves no room above; never over it.
     const large = byTestId(canvasElement, 'profile-xl-trigger');
     await realHover(large);
     const open = await body.findByTestId('profile-xl', {}, { timeout: 2_000 });
     await expect(open).toHaveAttribute('data-surface', 'popup');
     await expect(open).toHaveAttribute('data-size', 'xl');
     await expect(getComputedStyle(open).getPropertyValue('--nx-level').trim()).toBe('5');
-    await waitFor(() => expect(open.getBoundingClientRect().bottom).toBeLessThan(large.getBoundingClientRect().top));
+    await waitFor(() => {
+      const card = open.getBoundingClientRect();
+      const trigger = large.getBoundingClientRect();
+      expect(card.bottom <= trigger.top || card.top >= trigger.bottom, `card ${card.top}-${card.bottom}`).toBe(true);
+    });
     await expectArrow(large, open);
   },
 };
