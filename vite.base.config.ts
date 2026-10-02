@@ -555,7 +555,11 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((browser) => createBrowserProject(browser));
-  const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
+  // Vitest 5 sets up every project even when `--project` filters it out, and the workers pool rejects
+  // the v8 coverage provider at setup, so register it only for runs that can select it.
+  const workerdSelectable = [undefined, 'workerd'].includes(resolveProjectType());
+  const workerdProject =
+    workerd && workerdSelectable ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
     test: {
@@ -1102,7 +1106,11 @@ const buildTestConfig = (
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((b) => createBrowserProject({ jsx: outerJsx, ...b }));
-  const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
+  // Vitest 5 sets up every project even when `--project` filters it out, and the workers pool rejects
+  // the v8 coverage provider at setup, so register it only for runs that can select it.
+  const workerdSelectable = [undefined, 'workerd'].includes(resolveProjectType());
+  const workerdProject =
+    workerd && workerdSelectable ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
     ...resolveReporterConfig(dirname),
