@@ -162,7 +162,8 @@ jobs:
       # One score per night, so it runs once after every iteration has written its batch — unlike the
       # stage rows it cannot be published per iteration, since the night's value is the median across
       # them. A run that died partway still scores the iterations it finished; a stage that failed in
-      # all of them scores the floor. Never fails the job: a low score is a measurement, not a verdict.
+      # all of them scores the floor. A low score never fails the job — it is a measurement, not a verdict —
+      # but a scorer error does, since a malformed batch or budget would otherwise lose the night silently.
       - name: Score the flows
         if: always()
         env:
@@ -172,8 +173,7 @@ jobs:
             echo "::warning::No measure batches were written; nothing to score."
             exit 0
           fi
-          node packages/apps/composer-app/scripts/score-perf.ts score --publish --summary "$GITHUB_STEP_SUMMARY" \
-            || echo "::warning::Scoring failed; the stage rows are unaffected."
+          node packages/apps/composer-app/scripts/score-perf.ts score --publish --summary "$GITHUB_STEP_SUMMARY"
 
       # The artifacts — a `.cpuprofile` per stage per realm, one screenshot per stage, and the
       # screencast's first/last frames in `diagnose` — are what a regression is read with. Not

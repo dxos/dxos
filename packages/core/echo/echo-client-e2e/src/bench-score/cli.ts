@@ -24,6 +24,7 @@ import {
   renderReport,
   scoreMeasurements,
   toScoreEvents,
+  validateBudget,
 } from '@dxos/perf-harness/score';
 
 import { BenchJsonReport, proposeBudgets, toMeasurements } from './results.ts';
@@ -112,10 +113,16 @@ if (command === 'score') {
   if (!values.results) {
     throw new Error('--results is required');
   }
-  const proposed = proposeBudgets(readJson(BenchJsonReport, values.results), {
-    headroom: Number(values.headroom),
-    band: Number(values.band),
-  });
+  const headroom = Number(values.headroom);
+  const band = Number(values.band);
+  if (!(headroom > 0 && Number.isFinite(headroom)) || !(band > 1 && Number.isFinite(band))) {
+    throw new Error(`--headroom must be positive and --band greater than 1; got ${values.headroom}, ${values.band}`);
+  }
+  const proposed = proposeBudgets(readJson(BenchJsonReport, values.results), { headroom, band });
+  // The scorer rejects an invalid budget, so a proposal it would reject must never reach budgets.json.
+  for (const [id, budget] of Object.entries(proposed)) {
+    validateBudget(id, budget);
+  }
   if (values.write) {
     writeBudgets(proposed);
     writeFileSync(DOCS_FILE, renderDocs(proposed));

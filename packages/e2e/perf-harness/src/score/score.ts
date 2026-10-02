@@ -95,8 +95,8 @@ export const validateBudget = (id: string, budget: Budget): void => {
   if (direction === 'lower' ? limit <= target : limit >= target) {
     throw new Error(`budget ${id}: limit ${limit} must be worse than target ${target} for direction ${direction}`);
   }
-  if (!(weight > 0)) {
-    throw new Error(`budget ${id}: weight must be positive`);
+  if (!(weight > 0 && Number.isFinite(weight))) {
+    throw new Error(`budget ${id}: weight must be positive and finite`);
   }
 };
 
@@ -109,8 +109,11 @@ const excess = (value: number, { target, limit, direction = 'lower' }: Budget): 
 
 /** The 0–1 score of one value against its budget. */
 export const scoreValue = (value: number, budget: Budget): number => {
+  if (value === 0) {
+    // A measured zero is ideal for a cost and worthless for a throughput; the log scale cannot place it.
+    return (budget.direction ?? 'lower') === 'lower' ? MAX_SCORE : MIN_SCORE;
+  }
   if (!(value > 0) || !Number.isFinite(value)) {
-    // Zero or a missing reading cannot be placed on a log scale; it is not evidence of speed.
     return MIN_SCORE;
   }
   const steps = excess(value, budget);

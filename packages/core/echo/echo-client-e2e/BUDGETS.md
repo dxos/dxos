@@ -26,62 +26,62 @@ further, floored at 0.01. Values are the median time per bench call.
 
 ### property-access
 
-| metric                                                                                                                        |   target |    limit | better | weight |
-| ----------------------------------------------------------------------------------------------------------------------------- | -------: | -------: | ------ | -----: |
-| property access (plain vs echo) > plain object > read x1                                                                      |     0 ms |     0 ms | lower  |    0.1 |
-| property access (plain vs echo) > plain object > read x10                                                                     |     0 ms |     0 ms | lower  |    0.1 |
-| property access (plain vs echo) > plain object > write x1                                                                     |     0 ms |     0 ms | lower  |    0.1 |
-| property access (plain vs echo) > plain object > write x10                                                                    |     0 ms |     0 ms | lower  |    0.1 |
-| property access (plain vs echo) > plain object > make x1                                                                      |     0 ms |     0 ms | lower  |    0.1 |
-| property access (plain vs echo) > plain object > make x10                                                                     |     0 ms |     0 ms | lower  |    0.1 |
-| property access (plain vs echo) > echo object (unpersisted) > read x1                                                         |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (unpersisted) > read x10                                                        |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (unpersisted) > write x1                                                        | 0.006 ms | 0.009 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (unpersisted) > write x10                                                       | 0.067 ms | 0.102 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (unpersisted) > write x10 (batched in one Obj.update)                           | 0.045 ms | 0.067 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (unpersisted) > make x1                                                         | 0.048 ms | 0.072 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (unpersisted) > make x10                                                        | 0.539 ms | 0.808 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (automerge) > read x1                                                           |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (automerge) > read x10                                                          |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (automerge) > write x1                                                          | 0.355 ms | 0.532 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (automerge) > write x10                                                         |  3.44 ms |  5.16 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (automerge) > write x10 (batched in one Obj.update)                             |   2.7 ms |  4.05 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (automerge) > make x1 (Obj.make + db.add)                                       |  4.16 ms |  6.24 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (automerge) > make x10 (Obj.make + db.add)                                      |  40.9 ms |  61.3 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (feed) > read x1                                                                |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (feed) > read x10                                                               |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (feed) > write x1                                                               | 0.006 ms |  0.01 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (feed) > write x10                                                              | 0.078 ms | 0.117 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (feed) > write x10 (batched in one Obj.update)                                  | 0.048 ms | 0.071 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (feed) > make x1 (Obj.make + db.add to feed)                                    | 0.091 ms | 0.136 ms | lower  |      1 |
-| property access (plain vs echo) > echo object (feed) > make x10 (Obj.make + db.add to feed)                                   |  1.12 ms |  1.68 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > plain object > read x1                                            |     0 ms |     0 ms | lower  |    0.1 |
-| property access (plain vs echo) — wide object, 250 fields > plain object > read x10                                           |     0 ms |     0 ms | lower  |    0.1 |
-| property access (plain vs echo) — wide object, 250 fields > plain object > write x1                                           |     0 ms |     0 ms | lower  |    0.1 |
-| property access (plain vs echo) — wide object, 250 fields > plain object > write x10                                          |     0 ms |     0 ms | lower  |    0.1 |
-| property access (plain vs echo) — wide object, 250 fields > plain object > make x1                                            | 0.001 ms | 0.001 ms | lower  |    0.1 |
-| property access (plain vs echo) — wide object, 250 fields > plain object > make x10                                           | 0.009 ms | 0.014 ms | lower  |    0.1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > read x1                               |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > read x10                              |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > write x1                              | 0.006 ms |  0.01 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > write x10                             | 0.067 ms |   0.1 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > write x10 (batched in one Obj.update) | 0.047 ms |  0.07 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > make x1                               | 0.614 ms | 0.921 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > make x10                              |  6.28 ms |  9.42 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > read x1                                 |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > read x10                                |     0 ms | 0.001 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > write x1                                | 0.402 ms | 0.603 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > write x10                               |  4.26 ms |  6.39 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > write x10 (batched in one Obj.update)   |   4.1 ms |  6.15 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > make x1 (Obj.make + db.add)             |  19.9 ms |  29.8 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > make x10 (Obj.make + db.add)            |   344 ms |   516 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > read x1                                      |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > read x10                                     |     0 ms |     0 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > write x1                                     | 0.006 ms |  0.01 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > write x10                                    | 0.073 ms |  0.11 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > write x10 (batched in one Obj.update)        | 0.049 ms | 0.073 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > make x1 (Obj.make + db.add to feed)          | 0.953 ms |  1.43 ms | lower  |      1 |
-| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > make x10 (Obj.make + db.add to feed)         |   9.6 ms |  14.4 ms | lower  |      1 |
+| metric                                                                                                                        |       target |        limit | better | weight |
+| ----------------------------------------------------------------------------------------------------------------------------- | -----------: | -----------: | ------ | -----: |
+| property access (plain vs echo) > plain object > read x1                                                                      | 0.0000638 ms | 0.0000957 ms | lower  |    0.1 |
+| property access (plain vs echo) > plain object > read x10                                                                     | 0.0000913 ms |  0.000137 ms | lower  |    0.1 |
+| property access (plain vs echo) > plain object > write x1                                                                     | 0.0000649 ms | 0.0000974 ms | lower  |    0.1 |
+| property access (plain vs echo) > plain object > write x10                                                                    | 0.0000836 ms |  0.000125 ms | lower  |    0.1 |
+| property access (plain vs echo) > plain object > make x1                                                                      | 0.0000682 ms |  0.000102 ms | lower  |    0.1 |
+| property access (plain vs echo) > plain object > make x10                                                                     |  0.000132 ms |  0.000198 ms | lower  |    0.1 |
+| property access (plain vs echo) > echo object (unpersisted) > read x1                                                         | 0.0000825 ms |  0.000124 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (unpersisted) > read x10                                                        |  0.000224 ms |  0.000336 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (unpersisted) > write x1                                                        |   0.00617 ms |   0.00925 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (unpersisted) > write x10                                                       |    0.0672 ms |     0.102 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (unpersisted) > write x10 (batched in one Obj.update)                           |    0.0446 ms |    0.0669 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (unpersisted) > make x1                                                         |    0.0482 ms |    0.0723 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (unpersisted) > make x10                                                        |     0.539 ms |     0.808 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (automerge) > read x1                                                           |  0.000099 ms |  0.000148 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (automerge) > read x10                                                          |  0.000305 ms |  0.000458 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (automerge) > write x1                                                          |     0.355 ms |     0.532 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (automerge) > write x10                                                         |      3.44 ms |      5.16 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (automerge) > write x10 (batched in one Obj.update)                             |       2.7 ms |      4.05 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (automerge) > make x1 (Obj.make + db.add)                                       |      4.16 ms |      6.24 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (automerge) > make x10 (Obj.make + db.add)                                      |      40.9 ms |      61.3 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (feed) > read x1                                                                | 0.0000946 ms |  0.000142 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (feed) > read x10                                                               |  0.000296 ms |  0.000444 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (feed) > write x1                                                               |   0.00647 ms |   0.00971 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (feed) > write x10                                                              |    0.0779 ms |     0.117 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (feed) > write x10 (batched in one Obj.update)                                  |    0.0476 ms |    0.0714 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (feed) > make x1 (Obj.make + db.add to feed)                                    |    0.0907 ms |     0.136 ms | lower  |      1 |
+| property access (plain vs echo) > echo object (feed) > make x10 (Obj.make + db.add to feed)                                   |      1.12 ms |      1.68 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > plain object > read x1                                            | 0.0000737 ms |  0.000111 ms | lower  |    0.1 |
+| property access (plain vs echo) — wide object, 250 fields > plain object > read x10                                           |  0.000144 ms |  0.000216 ms | lower  |    0.1 |
+| property access (plain vs echo) — wide object, 250 fields > plain object > write x1                                           | 0.0000649 ms | 0.0000974 ms | lower  |    0.1 |
+| property access (plain vs echo) — wide object, 250 fields > plain object > write x10                                          |  0.000088 ms |  0.000132 ms | lower  |    0.1 |
+| property access (plain vs echo) — wide object, 250 fields > plain object > make x1                                            |  0.000799 ms |    0.0012 ms | lower  |    0.1 |
+| property access (plain vs echo) — wide object, 250 fields > plain object > make x10                                           |   0.00925 ms |    0.0139 ms | lower  |    0.1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > read x1                               | 0.0000957 ms |  0.000144 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > read x10                              |  0.000327 ms |   0.00049 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > write x1                              |   0.00634 ms |   0.00951 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > write x10                             |    0.0665 ms |    0.0998 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > write x10 (batched in one Obj.update) |    0.0467 ms |    0.0701 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > make x1                               |     0.614 ms |     0.921 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (unpersisted) > make x10                              |      6.28 ms |      9.42 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > read x1                                 |  0.000106 ms |  0.000159 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > read x10                                |  0.000335 ms |  0.000503 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > write x1                                |     0.402 ms |     0.603 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > write x10                               |      4.26 ms |      6.39 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > write x10 (batched in one Obj.update)   |       4.1 ms |      6.15 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > make x1 (Obj.make + db.add)             |      19.9 ms |      29.8 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (automerge) > make x10 (Obj.make + db.add)            |       344 ms |       516 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > read x1                                      | 0.0000979 ms |  0.000147 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > read x10                                     |  0.000319 ms |  0.000478 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > write x1                                     |   0.00646 ms |   0.00969 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > write x10                                    |    0.0734 ms |      0.11 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > write x10 (batched in one Obj.update)        |    0.0488 ms |    0.0732 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > make x1 (Obj.make + db.add to feed)          |     0.953 ms |      1.43 ms | lower  |      1 |
+| property access (plain vs echo) — wide object, 250 fields > echo object (feed) > make x10 (Obj.make + db.add to feed)         |       9.6 ms |      14.4 ms | lower  |      1 |
 
 ### query-executor
 
@@ -113,19 +113,19 @@ further, floored at 0.01. Values are the median time per bench call.
 
 ### sqlite
 
-| metric                                                   |   target |    limit | better | weight |
-| -------------------------------------------------------- | -------: | -------: | ------ | -----: |
-| sqlite benchmarks (raw) > insert                         | 0.204 ms | 0.306 ms | lower  |      1 |
-| sqlite benchmarks (raw) > select (point, by primary key) | 0.016 ms | 0.023 ms | lower  |      1 |
-| sqlite benchmarks (raw) > select (filtered range scan)   | 0.141 ms | 0.211 ms | lower  |      1 |
-| sqlite benchmarks (raw) > update (point, by primary key) | 0.169 ms | 0.254 ms | lower  |      1 |
-| sqlite benchmarks (raw) > delete (point, by primary key) | 0.166 ms | 0.249 ms | lower  |      1 |
+| metric                                                   |    target |     limit | better | weight |
+| -------------------------------------------------------- | --------: | --------: | ------ | -----: |
+| sqlite benchmarks (raw) > insert                         |  0.204 ms |  0.306 ms | lower  |      1 |
+| sqlite benchmarks (raw) > select (point, by primary key) | 0.0155 ms | 0.0232 ms | lower  |      1 |
+| sqlite benchmarks (raw) > select (filtered range scan)   |  0.141 ms |  0.211 ms | lower  |      1 |
+| sqlite benchmarks (raw) > update (point, by primary key) |  0.169 ms |  0.254 ms | lower  |      1 |
+| sqlite benchmarks (raw) > delete (point, by primary key) |  0.166 ms |  0.249 ms | lower  |      1 |
 
 ### parent
 
-| metric                                             |   target |    limit | better | weight |
-| -------------------------------------------------- | -------: | -------: | ------ | -----: |
-| parent edges > Obj.getParent x10 (sub-task → task) | 0.015 ms | 0.022 ms | lower  |      1 |
-| parent edges > Obj.getParent x10 (root task → set) | 0.013 ms |  0.02 ms | lower  |      1 |
-| parent edges > Task.orderTree (200 tasks)          |   2.6 ms |   3.9 ms | lower  |      1 |
-| parent edges > Task.childIndex walk (200 tasks)    |  1.29 ms |  1.94 ms | lower  |      1 |
+| metric                                             |    target |     limit | better | weight |
+| -------------------------------------------------- | --------: | --------: | ------ | -----: |
+| parent edges > Obj.getParent x10 (sub-task → task) | 0.0146 ms | 0.0219 ms | lower  |      1 |
+| parent edges > Obj.getParent x10 (root task → set) |  0.013 ms | 0.0195 ms | lower  |      1 |
+| parent edges > Task.orderTree (200 tasks)          |    2.6 ms |    3.9 ms | lower  |      1 |
+| parent edges > Task.childIndex walk (200 tasks)    |   1.29 ms |   1.94 ms | lower  |      1 |

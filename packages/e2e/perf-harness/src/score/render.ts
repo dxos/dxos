@@ -6,7 +6,7 @@ import { type Budget, type ScoreReport, type Status } from './score.ts';
 
 /** Three significant figures, with the unit; byte values in binary multiples. */
 export const formatValue = (value: number, unit: Budget['unit']): string => {
-  const round = (number: number) => Number(number.toPrecision(3)).toLocaleString('en-US');
+  const round = (number: number) => number.toLocaleString('en-US', { maximumSignificantDigits: 3 });
   if (unit === 'bytes') {
     const steps = ['B', 'KiB', 'MiB', 'GiB'];
     let scaled = value;

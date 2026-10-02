@@ -52,9 +52,11 @@ describe('scoreValue', () => {
     expect(statusOf(400, throughput)).toBe('over');
   });
 
-  test('scores a missing or zero reading at the floor', ({ expect }) => {
-    expect(scoreValue(0, budget)).toBe(MIN_SCORE);
+  test('scores a missing reading at the floor and a measured zero by direction', ({ expect }) => {
     expect(scoreValue(Number.NaN, budget)).toBe(MIN_SCORE);
+    expect(scoreValue(-1, budget)).toBe(MIN_SCORE);
+    expect(scoreValue(0, budget)).toBe(MAX_SCORE);
+    expect(scoreValue(0, { target: 100, limit: 50, unit: 'ops/s', direction: 'higher' })).toBe(MIN_SCORE);
   });
 });
 
@@ -71,6 +73,12 @@ describe('validateBudget', () => {
     expect(() => validateBudget('x', { target: 100, limit: 100, unit: 'ms' })).toThrow(/worse than target/);
     expect(() => validateBudget('x', { target: 100, limit: 50, unit: 'ms' })).toThrow(/worse than target/);
     expect(() => validateBudget('x', { target: 0, limit: 50, unit: 'ms' })).toThrow(/positive/);
+  });
+
+  test('rejects a non-finite weight', ({ expect }) => {
+    expect(() =>
+      validateBudget('x', { target: 100, limit: 150, unit: 'ms', weight: Number.POSITIVE_INFINITY }),
+    ).toThrow(/weight/);
   });
 });
 
