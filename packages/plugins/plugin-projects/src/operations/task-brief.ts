@@ -87,9 +87,10 @@ export const renderDelegationBrief = ({ tasks, project, context }: BriefInput): 
     '## How to work',
     '',
     concat`
-      Work through the tasks in order, in your current working directory. Commit your work as you go,
-      and do not push or merge unless the project instructions say to. When you finish, say what you
-      did and what is left: the person who assigned the tasks reviews them in this conversation.
+      Work through the tasks in order, in your current working directory. Follow the repository's own
+      conventions for branches and commits, and do not push or merge unless the project instructions
+      say to. When you finish, say what you did and what is left: the person who assigned the tasks
+      reviews them in this conversation.
     `,
   );
 
