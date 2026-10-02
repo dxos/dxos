@@ -5,7 +5,7 @@
 import React, { Fragment, useState } from 'react';
 
 import { type QueryMetrics } from '@dxos/echo-client';
-import { Grid, IconButton, Next } from '@dxos/react-ui';
+import { Grid, Next } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
@@ -37,7 +37,7 @@ export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardPro
         info={`${active.toLocaleString()} active · ${queries.length.toLocaleString()}`}
         action={
           onOpen && (
-            <IconButton
+            <Next.Button
               iconOnly
               variant='ghost'
               icon='ph--arrow-square-out--regular'

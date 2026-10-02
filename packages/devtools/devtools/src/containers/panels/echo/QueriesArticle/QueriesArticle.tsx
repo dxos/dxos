@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Panel } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui';
 
 import { useQueryMetrics } from '../../../../hooks/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -15,10 +15,10 @@ export const QueriesArticle = ({ role }: ArticleProps) => {
   const { queries, reset } = useQueryMetrics();
 
   return (
-    <Panel.Root role={role}>
-      <Panel.Content>
+    <Next.Panel.Root role={role}>
+      <Next.Panel.Body>
         <QueryMetricsTable queries={queries} onReset={reset} />
-      </Panel.Content>
-    </Panel.Root>
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   );
 };
