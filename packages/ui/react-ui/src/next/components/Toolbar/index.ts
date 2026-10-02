@@ -3,3 +3,4 @@
 //
 
 export * from './Toolbar.tsx';
+export * from './toolbar-context.ts';

@@ -30,6 +30,9 @@ describe('Composer Plugin project template', () => {
     const { db } = await builder.createDatabase({
       types: [Project.Project, Instructions.Instructions, Text.Text, TaskSet.TaskSet, Task.Task],
     });
+    if (!composerPlugin) {
+      throw new Error('the browser build must offer the template');
+    }
     const project = db.add(
       await EffectEx.runPromise(
         composerPlugin.scaffold({}).pipe(Effect.provideService(Database.Service, Database.makeService(db))),
@@ -49,7 +52,7 @@ describe('Composer Plugin project template', () => {
     expect(subtasks.map((task) => task.title)).toEqual([
       'Read the plugin guide',
       'Write the plugin in TypeScript',
-      'Typecheck and build',
+      'Typecheck and check the dev server',
       'Offer the plugin to load',
     ]);
     expect(subtasks.every((task) => task.status === 'todo')).toBe(true);
@@ -62,6 +65,8 @@ describe('Composer Plugin project template', () => {
     }
 
     const instructions = await project.instructions?.load();
-    expect(instructions?.skills).toHaveLength(1);
+    expect(instructions?.skills.map((skill) => skill.uri.toString())).toEqual([
+      expect.stringContaining('org.dxos.skill.computer'),
+    ]);
   });
 });

@@ -71,7 +71,9 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
       role='group'
       column
       gap='sm'
-      classNames='my-2 p-3 border border-subdued-separator rounded-sm'
+      // Inline-size containment: rendered as a CodeMirror widget, whose line sizes to its widest child, the card
+      // otherwise grows to the URL's unwrapped width and pushes its Load button out of the chat.
+      classNames='my-2 p-3 border border-subdued-separator rounded-sm [contain:inline-size]'
       data-testid='assistant.pluginUrlPrompt'
     >
       <Flex gap='sm' align='center'>

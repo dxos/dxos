@@ -40,6 +40,7 @@ const SPEC_FILES = {
   'github': 'packages/plugins/plugin-github/PLUGIN.mdl',
   'inbox': 'packages/plugins/plugin-inbox/PLUGIN.mdl',
   'markdown': 'packages/plugins/plugin-markdown/PLUGIN.mdl',
+  'presenter': 'packages/plugins/plugin-presenter/PLUGIN.mdl',
 };
 
 /**

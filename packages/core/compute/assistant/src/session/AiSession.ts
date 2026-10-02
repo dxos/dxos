@@ -4,16 +4,16 @@
 
 // @import-as-namespace
 
+import type * as Tool from 'effect/ai/Tool';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import { pipe } from 'effect/Function';
 import * as Layer from 'effect/Layer';
 import * as Order from 'effect/Order';
+import type * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Record from 'effect/Record';
 import type * as Scope from 'effect/Scope';
-import type * as Tool from 'effect/unstable/ai/Tool';
-import type * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 
 import { AiTelemetry, type OpaqueToolkit, type ToolExecutionService, type ToolResolverService } from '@dxos/ai';
 import type * as Instructions from '@dxos/compute/Instructions';

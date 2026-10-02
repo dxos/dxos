@@ -23,19 +23,25 @@ import {
   type ContainerGap as NextContainerGap,
   type ContainerProps as NextContainerProps,
   DateInput as NextDateInput,
+  type DateInputGranularity as NextDateInputGranularity,
   type DateInputProps as NextDateInputProps,
   type DateInputType as NextDateInputType,
   Dialog as NextDialog,
   DragHandle as NextDragHandle,
   type DragHandleProps as NextDragHandleProps,
+  type DragMoveDirection as NextDragMoveDirection,
+  DragPreview as NextDragPreview,
+  DropIndicator as NextDropIndicator,
   Field as NextField,
-  FieldSet as NextFieldSet,
+  Fieldset as NextFieldset,
   type FieldValence as NextFieldValence,
   Group as NextGroup,
   type GroupProps as NextGroupProps,
   type Gutter as NextGutter,
   Icon as NextIcon,
+  type IconHue as NextIconHue,
   type IconProps as NextIconProps,
+  type IconValence as NextIconValence,
   Image as NextImage,
   type ImageProps as NextImageProps,
   Input as NextInput,
@@ -43,7 +49,19 @@ import {
   Label as NextLabel,
   type LabelProps as NextLabelProps,
   type Level as NextLevel,
+  Listbox as NextListbox,
+  type ListboxOption as NextListboxOption,
+  type ListboxSelectionMode as NextListboxSelectionMode,
   Menu as NextMenu,
+  type MenuOption as NextMenuOption,
+  NumberInput as NextNumberInput,
+  type NumberInputProps as NextNumberInputProps,
+  Panel as NextPanel,
+  type PanelRootProps as NextPanelRootProps,
+  PasswordInput as NextPasswordInput,
+  type PasswordInputProps as NextPasswordInputProps,
+  PinInput as NextPinInput,
+  type PinInputProps as NextPinInputProps,
   Popover as NextPopover,
   ScrollArea as NextScrollArea,
   Select as NextSelect,
@@ -52,6 +70,8 @@ import {
   type SeparatorProps as NextSeparatorProps,
   Switch as NextSwitch,
   type SwitchProps as NextSwitchProps,
+  SystemButton as NextSystemButton,
+  type SystemButtonProps as NextSystemButtonProps,
   Tag as NextTag,
   type TagHue as NextTagHue,
   type TagProps as NextTagProps,
@@ -67,6 +87,7 @@ import {
   Tooltip as NextTooltip,
   Typography as NextTypography,
   type TypographyProps as NextTypographyProps,
+  dragScope as nextDragScope,
 } from './components/index.ts';
 
 /** Parallel namespace for the next primitives (decision 1); its rules ship separately as `@dxos/react-ui/next/theme.css`. */
@@ -82,7 +103,9 @@ export namespace Next {
   export const Toolbar = NextToolbar;
   export type ToolbarRootProps = NextToolbarRootProps;
   export const Icon = NextIcon;
+  export type IconHue = NextIconHue;
   export type IconProps = NextIconProps;
+  export type IconValence = NextIconValence;
   export const Typography = NextTypography;
   export type TypographyProps = NextTypographyProps;
   export const Group = NextGroup;
@@ -107,14 +130,21 @@ export namespace Next {
   export const AlertDialog = NextAlertDialog;
   export const Switch = NextSwitch;
   export type SwitchProps = NextSwitchProps;
-  export const FieldSet = NextFieldSet;
+  export const SystemButton = NextSystemButton;
+  export type SystemButtonProps = NextSystemButtonProps;
+  export const Fieldset = NextFieldset;
   export const Image = NextImage;
   export type ImageProps = NextImageProps;
   export const Card = NextCard;
   export const DragHandle = NextDragHandle;
   export type DragHandleProps = NextDragHandleProps;
+  export type DragMoveDirection = NextDragMoveDirection;
+  export const DropIndicator = NextDropIndicator;
+  export const DragPreview = NextDragPreview;
+  export const dragScope = nextDragScope;
   export const Collapsible = NextCollapsible;
   export const Menu = NextMenu;
+  export type MenuOption = NextMenuOption;
   export const Tooltip = NextTooltip;
   export const TextTooltip = NextTextTooltip;
   export type TextTooltipProps = NextTextTooltipProps;
@@ -123,6 +153,13 @@ export namespace Next {
   export const DateInput = NextDateInput;
   export type DateInputProps = NextDateInputProps;
   export type DateInputType = NextDateInputType;
+  export type DateInputGranularity = NextDateInputGranularity;
+  export const PinInput = NextPinInput;
+  export type PinInputProps = NextPinInputProps;
+  export const NumberInput = NextNumberInput;
+  export type NumberInputProps = NextNumberInputProps;
+  export const PasswordInput = NextPasswordInput;
+  export type PasswordInputProps = NextPasswordInputProps;
   export const Popover = NextPopover;
   export const Combobox = NextCombobox;
   export type ComboboxOption = NextComboboxOption;
@@ -133,6 +170,11 @@ export namespace Next {
   export const Toggle = NextToggle;
   export type ToggleProps = NextToggleProps;
   export const ToggleGroup = NextToggleGroup;
+  export const Listbox = NextListbox;
+  export type ListboxOption = NextListboxOption;
+  export type ListboxSelectionMode = NextListboxSelectionMode;
+  export const Panel = NextPanel;
+  export type PanelRootProps = NextPanelRootProps;
   export const Separator = NextSeparator;
   export type SeparatorProps = NextSeparatorProps;
 }

@@ -3,8 +3,8 @@
 //
 
 import type * as Effect from 'effect/Effect';
+import type * as HttpClient from 'effect/http/HttpClient';
 import * as Schema from 'effect/Schema';
-import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';

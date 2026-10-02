@@ -26,9 +26,9 @@ export const JoinDialog = (props: JoinPanelProps) => {
       if (result?.identityKey) {
         await Promise.all([
           invokePromise(LayoutOperation.UpdateDialog, { state: false }),
-          invokePromise(ObservabilityOperation.SendEvent, {
-            name: props.initialDisposition === 'recover-identity' ? 'identity.recover' : 'identity.join',
-          }),
+          // A device join is reported by the client when its invitation succeeds; recovery uses no invitation.
+          props.initialDisposition === 'recover-identity' &&
+            invokePromise(ObservabilityOperation.SendEvent, { name: 'identity.recover' }),
         ]);
       }
     },

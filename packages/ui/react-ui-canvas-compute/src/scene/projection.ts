@@ -9,7 +9,7 @@
 // compute node declares input / output schemas gets one port per property.
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { DefaultInput, DefaultOutput } from '@dxos/conductor';
 import { toEffectSchema } from '@dxos/echo/JsonSchema';

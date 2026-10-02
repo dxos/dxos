@@ -40,6 +40,12 @@ middleware, not by the developer.
 2. Enable the **Coding (Dev)** plugin in Composer's settings (it is registered only in dev/labs
    builds and is off by default), then enable the **Coding (Dev)** skill in the conversation.
 
+## In the desktop app
+
+The desktop app has no vite server, so the two tools have no host there, and this plugin offers its
+**Composer Plugin** project template only in a browser. The desktop app gets plugin-projects' own version of
+it, which builds in a local sandbox from public sources instead (plugin-projects' `PLUGIN.mdl` QA-1).
+
 ## Packaging
 
 | Entry                                  | Realm   | Contents                                              |

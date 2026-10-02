@@ -5,7 +5,7 @@
 import * as A from '@automerge/automerge';
 import { type DocumentId } from '@automerge/automerge-repo';
 import type * as Effect from 'effect/Effect';
-import type * as SqlClient from 'effect/unstable/sql/SqlClient';
+import type * as SqlClient from 'effect/sql/SqlClient';
 
 import { type Context } from '@dxos/context';
 import { type QueryAST } from '@dxos/echo-protocol';

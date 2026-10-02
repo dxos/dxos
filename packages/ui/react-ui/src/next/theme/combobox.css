@@ -52,6 +52,10 @@
     color: inherit;
     cursor: pointer;
   }
+  /* The clear trigger is `hidden` while there is no value, which the grid display above would otherwise override. */
+  .nx-combobox-trigger[hidden] {
+    display: none;
+  }
   .nx-combobox-trigger:hover:not(:disabled) {
     background: var(--color-hover-surface);
   }

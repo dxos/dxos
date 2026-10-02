@@ -138,6 +138,7 @@ export const RegistrySettings = ({
               description={t('dev-plugin.toggle.description')}
             >
               <Button
+                data-testid='registrySettings.devPluginToggle'
                 variant={enabled ? undefined : 'primary'}
                 disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
                 onClick={() => void handleToggle()}

@@ -78,6 +78,9 @@ step, so a dimension can be read, moved or deleted without touching anything els
   function over its results.
 - **`Scorer.toolCalls({ name, score })`** — `score` is a plain function over the run's
   `ToolInvocation[]` (`Scorer.invocations` is the same effect, for composing into a larger one).
+- **`Scorer.toolCallSuccess()`** — the fraction of the run's tool calls that succeeded. A call
+  failed if the tool path reported an error, or if the tool returned `{ ok: false }` (code mode's
+  `eval`, which hands a failed program back as output); `Scorer.failedCall` is that predicate.
 - **`Scorer.duration({ name, targetMinutes, budgetMinutes, delivered })`** — grades the session's
   wall clock, gated on `delivered` (an effect) proving the run produced the thing being timed.
   `Scorer.Run` is the service carrying `durationMillis` for a scorer that wants it directly.

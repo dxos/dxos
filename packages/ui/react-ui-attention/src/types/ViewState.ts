@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import type * as Schema from 'effect/Schema';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
 /**
  * Persistence backend identifier. `personal` (ECHO/personal-space) is reserved for a future backend.

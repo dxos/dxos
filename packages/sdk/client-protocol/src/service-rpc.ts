@@ -6,13 +6,13 @@ import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import type * as EffectRpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as RpcSchema from 'effect/rpc/RpcSchema';
+import * as RpcServer from 'effect/rpc/RpcServer';
+import * as RpcTest from 'effect/rpc/RpcTest';
 import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import type * as EffectRpc from 'effect/unstable/rpc/Rpc';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
-import * as RpcSchema from 'effect/unstable/rpc/RpcSchema';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
-import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 
 import { Stream as PbStream } from '@dxos/async';
 import { EffectEx } from '@dxos/effect';

@@ -481,6 +481,28 @@ describe('EdgeHttpClient api key', () => {
     expect((uploadCall![1]?.headers as Record<string, string>).Authorization).toBe('Bearer secret-key');
   });
 
+  test('uploadPrivatePluginBundle posts to the private route with the key as a Bearer header', async ({ expect }) => {
+    const fetchMock = vi.fn(
+      async (_input: any, _init?: RequestInit) =>
+        new Response(JSON.stringify({ success: true, data: { moduleUrl: 'url' } }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const client = new EdgeHttpClient('https://edge.example.com', { apiKey: 'dx-api01-token' });
+    const { moduleUrl } = await client.uploadPrivatePluginBundle(Context.default(), {
+      slug: 'x',
+      version: '1',
+      files: [],
+    });
+
+    expect(moduleUrl).toBe('url');
+    const uploadCall = fetchMock.mock.calls.find((call) => String(call[0]).endsWith('/registry/private/upload'));
+    expect(uploadCall?.[1]?.headers).toMatchObject({ Authorization: 'Bearer dx-api01-token' });
+  });
+
   test('a rejected api key is terminal — no retry on the auth 401', async ({ expect }) => {
     const fetchMock = vi.fn(
       async (_input: any, _init?: RequestInit) =>

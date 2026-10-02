@@ -8,8 +8,8 @@
 // snapshot is opaque to the view; each projection knows how to take and restore its own.
 //
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type Projection } from '../model/projection.ts';
 

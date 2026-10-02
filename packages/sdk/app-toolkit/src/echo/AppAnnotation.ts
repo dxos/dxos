@@ -6,17 +6,20 @@
 
 import * as Schema from 'effect/Schema';
 
-import { Annotation, Collection, Obj, Ref } from '@dxos/echo';
+import { Annotation, Collection, type Database, Obj, Ref } from '@dxos/echo';
 
 // The module, not the barrel: the barrel pulls in `AppNode`, which imports this file back, and the
 // annotation below reads the schema at module-init time.
-import * as DeckSpec from '../app-graph/DeckSpec.ts';
 import * as AppSettings from '../types/AppSettings.ts';
 /** Root navigation collection for a space. */
 export const RootCollectionAnnotation = Annotation.make({
   id: 'org.dxos.space.rootCollection',
   schema: Ref.Ref(Collection.Collection),
 });
+
+/** Adds a space's root collection as a `system` write: it is scaffolding, never a person's action. */
+export const addRootCollection = (db: Database.Database): Collection.Collection =>
+  db.add(Collection.make(), { origin: 'system' });
 
 /** The settings space's settings object. */
 export const AppSettingsAnnotation = Annotation.make({
@@ -46,16 +49,6 @@ export const DefaultSpaceAnnotation = Annotation.make({
 export const GraphPropsAnnotation = Annotation.make<{ managesAutofocus?: boolean }>({
   id: 'org.dxos.annotation.graph-props',
   schema: Schema.Struct({ managesAutofocus: Schema.optional(Schema.Boolean) }),
-});
-
-/**
- * How the deck should behave when an object of this type is its root — which planks it opens and what
- * chain of levels it supports. On the type rather than the node because the shape belongs to the type:
- * every Collection opens its children, every Mailbox has the same rungs.
- */
-export const DeckAnnotation = Annotation.make<DeckSpec.DeckSpec>({
-  id: 'org.dxos.annotation.deck',
-  schema: DeckSpec.DeckSpec,
 });
 
 /** Per-type object ordering stored on space.properties, keyed by typename. */

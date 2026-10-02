@@ -7,8 +7,8 @@
 // an ECHO-backed store (phase 3) can replace the in-memory one without touching the surface.
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type Scene, type SceneId } from './types.ts';
 

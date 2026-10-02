@@ -6,10 +6,10 @@
 
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Schema from 'effect/Schema';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import * as SandboxService from '../types/SandboxService.ts';
 import { ExecResult, FileEntry, SandboxRecord } from './SandboxClient.ts';
@@ -73,6 +73,13 @@ export const make = (url: string, token: string): SandboxService.Backend => {
     listFiles: (spaceId, sandboxId, path) =>
       call('list', { spaceId, sandboxId, path }, Schema.Struct({ entries: Schema.Array(FileEntry) })).pipe(
         Effect.map(({ entries }) => entries),
+      ),
+    // The sidecar listens on loopback only, so there is no public address to hand out.
+    exposePort: () =>
+      Effect.fail(new SandboxService.SandboxError({ message: 'Local sandboxes cannot expose ports; use EDGE.' })),
+    publish: (spaceId, sandboxId, path) =>
+      call('publish', { spaceId, sandboxId, path }, Schema.Struct({ path: Schema.String })).pipe(
+        Effect.map(({ path: served }) => `${url.replace(/\/$/, '')}${served}`),
       ),
   };
 };

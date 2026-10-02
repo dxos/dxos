@@ -2,46 +2,170 @@
 // Copyright 2026 DXOS.org
 //
 
-import { existsSync, readFileSync } from 'node:fs';
-import { rm, writeFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { existsSync, openSync, readFileSync } from 'node:fs';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 /**
- * An agent works the Composer Plugin project template's parent task and four subtasks to build the World
- * Clock plugin, then the reader loads it, finds it in the registry, opens its Clocks page from the navtree
- * group it adds, and adds two timezones. Everything happens in the first space in the rail (My Space on a fresh profile).
+ * An agent works the Composer Plugin project template's parent task and four subtasks to write the World
+ * Clock plugin, then the reader loads it from the plugin's dev server through Plugins → Dev Server, opens its
+ * Clocks page from the navtree group it adds, and adds two timezones. Everything happens in the first space
+ * in the rail (My Space on a fresh profile).
  *
  * @mdl packages/plugins/plugin-computer/PLUGIN.mdl test QA-2
- * @app composer-app bundled dev build, served by `vite preview` on :4173, talking to EDGE preview
+ * @app composer-app bundled dev build, served by `vite preview` on :4173, talking to EDGE preview; the plugin's
+ *   own Vite dev server on :3967, which step 3 starts
  *
- * Built and served from `packages/apps/composer-app`. Loading a plugin by URL needs the bundle's import
+ * Built and served from `packages/apps/composer-app`. The plugin's bare imports need the bundle's import
  * map, and the Computer shell only mounts in a vite server; EDGE production rejects the AI requests:
  *
  *   export DX_EDGE_BASE_URL=https://preview.dxos.network/ DX_ENVIRONMENT=dev DX_PWA=false VITE_DX_DISABLE_ANIMATIONS=true
  *   moon run composer-app:bundle
  *   pnpm exec vite preview --configLoader native --port 4173 --strictPort
  *
- * Steps 1 and 2 are off-camera prep and persist in the profile. They also clear the last take: the World Clock
- * plugin is uninstalled and its source and build folders are deleted, so the agent starts from nothing.
+ * Steps 1 to 3 are off-camera prep. They clear the last take (its dev server, plugin folder, project and
+ * Dev Server setting), then seed the plugin's three config files and start its dev server, which the Computer
+ * shell cannot host. The agent writes the plugin's source from nothing.
  */
 
-const TWENTY_MIN = 20 * 60_000;
+export const TWENTY_MIN = 20 * 60_000;
 
 /** The Assistant's remote model; Composer's default (Claude Sonnet 5) left the delegated chat silent. */
 const MODEL = 'DeepSeek V4 Pro';
 
 /** The plugin the agent builds, as the template's tasks name it. */
-const PLUGIN_NAME = 'World Clock';
+export const PLUGIN_NAME = 'World Clock';
 
-/** A beat for the viewer to read the registry card, which is the one shot that proves the load. */
-const LINGER = 2_500;
+/** The template's last subtask; the agent finishes it once it has told the reader the plugin is ready. */
+const OFFER_TASK = 'Offer the plugin to load';
 
-/** The last take's source and build, relative to this file (`plugin-computer/autocue/`). */
-const LEFTOVERS = [
-  '../../../apps/composer-app/temp/plugins/world-clock/',
-  '../../../../out/composer/plugins/world-clock/',
-];
+/** Statuses that mean a task is finished: an agent may leave it for the reader to review rather than done. */
+const FINISHED = ['done', 'review'];
+
+/** A beat for the viewer to take in the result of a step. */
+export const LINGER = 2_500;
+
+/** The Composer app directory, where the dev server runs as the template's command does. */
+const COMPOSER_APP = fileURLToPath(new URL('../../../apps/composer-app/', import.meta.url));
+
+/** The plugin's folder under the app's gitignored `temp/`, as the template names it. */
+const PLUGIN_DIR = join(COMPOSER_APP, 'temp/plugins/world-clock');
+
+/** Written by the agent, so its presence means the take is under way and a replay must keep it. */
+const SOURCE = join(PLUGIN_DIR, 'src');
+
+/** `composerPlugin`'s default dev port, which Plugins → Dev Server loads from by default. */
+const DEV_MANIFEST = 'http://localhost:3967/manifest.json';
+
+/** The plugin's entry, which the dev server compiles on request: 404 until written, 500 while it does not parse. */
+const DEV_ENTRY = 'http://localhost:3967/src/plugin.tsx';
+
+/** The dev server outlives the driver, so the next take finds it by pid. Outside the repo. */
+const DEV_SERVER_PID = join(tmpdir(), 'autocue-composer-plugin.vite.pid');
+const DEV_SERVER_LOG = join(tmpdir(), 'autocue-composer-plugin.vite.log');
+
+/**
+ * The plugin's config as the guide gives it, so the dev server can start before the agent writes any source.
+ * The agent writes these files again; Vite restarts on a changed `vite.config.ts`.
+ */
+const SEED = {
+  'dx.config.ts': `import { Config2 } from '@dxos/app-framework/config';
+
+export default Config2.make({
+  plugin: {
+    key: 'org.example.plugin.worldClock',
+    name: 'World Clock',
+    icon: { key: 'ph--globe-hemisphere-west--regular', hue: 'sky' },
+    tags: ['labs'],
+    dependsOn: ['org.dxos.plugin.map'],
+  },
+});
+`,
+  'vite.config.ts': `import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+
+import { composerPlugin } from '@dxos/app-framework/vite-plugin';
+
+export default defineConfig({
+  plugins: [...composerPlugin({ entry: 'src/plugin.tsx' }), react()],
+});
+`,
+  'tsconfig.json': `{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "types": []
+  },
+  "include": ["src", "dx.config.ts"]
+}
+`,
+};
+
+const answers = (url) =>
+  fetch(url, { signal: AbortSignal.timeout(2_000) }).then(
+    (response) => response.ok,
+    () => false,
+  );
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Stops the dev server an earlier take started, by its process group, and waits for the port to free. */
+const stopDevServer = async () => {
+  if (existsSync(DEV_SERVER_PID)) {
+    try {
+      process.kill(-Number(readFileSync(DEV_SERVER_PID, 'utf8')), 'SIGTERM');
+    } catch (error) {
+      // Already gone, e.g. after a reboot.
+      if (error.code !== 'ESRCH') {
+        throw error;
+      }
+    }
+    await rm(DEV_SERVER_PID, { force: true });
+  }
+  for (let attempt = 0; attempt < 20 && (await answers(DEV_MANIFEST)); attempt++) {
+    await sleep(500);
+  }
+  if (await answers(DEV_MANIFEST)) {
+    throw new Error(`${DEV_MANIFEST} is served by a process this flow did not start; stop it first`);
+  }
+};
+
+/**
+ * Starts the template's dev server command, detached so it survives the driver, and waits for its manifest.
+ * Under the driver's own Node rather than the first one on PATH, which can be too old for Vite.
+ */
+const startDevServer = async () => {
+  const log = openSync(DEV_SERVER_LOG, 'w');
+  const vite = join(COMPOSER_APP, 'node_modules/vite/bin/vite.js');
+  const child = spawn(process.execPath, [vite, 'temp/plugins/world-clock'], {
+    cwd: COMPOSER_APP,
+    detached: true,
+    stdio: ['ignore', log, log],
+  });
+  child.unref();
+  await writeFile(DEV_SERVER_PID, String(child.pid));
+  for (let attempt = 0; attempt < 60; attempt++) {
+    if (child.exitCode !== null) {
+      break;
+    }
+    if (await answers(DEV_MANIFEST)) {
+      return;
+    }
+    await sleep(1_000);
+  }
+  // Stopped here rather than left for the next take, so a failed start leaves nothing holding the port.
+  await stopDevServer().catch(() => {});
+  throw new Error(`the plugin's dev server did not serve ${DEV_MANIFEST}; see ${DEV_SERVER_LOG}`);
+};
 
 /**
  * The id of the project this take created, so a replay can tell it from a project an earlier take left
@@ -50,7 +174,7 @@ const LEFTOVERS = [
 const TAKE_PROJECT = join(tmpdir(), 'autocue-composer-plugin.project');
 
 /** A plugin card in the registry list, by its display name. */
-const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
+export const card = (name) => `li[data-testid^="pluginList."]:has(span:text-is("${name}"))`;
 
 /** The first space in the rail, where the take runs. */
 const SPACE = '[data-testid="spacePlugin.space"] >> nth=0';
@@ -68,22 +192,54 @@ const LEFTOVER_PROJECTS = [PROJECT_TITLE, 'Clock Plugin', 'Composer Plugin'];
 const TASK_ROW = '[data-testid="deck.plank"] [data-testid="taskList.item"]';
 const COMPANION_TAB = (name) => `[data-testid="deck.companion"] >> role=tab[name="${name}"]`;
 
-/** A narrow window collapses the navtree into an overlay; open it before clicking an item in it. */
-const showSidebar = async ({ demo, page }, testId, label) => {
+/**
+ * A narrow window collapses the navtree into an overlay; open it before clicking an item in it. A workspace
+ * that has just opened can collapse it a beat later, after the check, so a click that misses checks again.
+ */
+export const showSidebar = async ({ demo, page }, testId, label) => {
   // A beat for the tree to render first: the button toggles, so pressing it over an open sidebar closes it.
   // Checked by position, not `isVisible`: the collapsed overlay keeps its items laid out, just off screen.
   const item = page.getByTestId(testId).first();
   await item.waitFor({ state: 'visible', timeout: 2_000 }).catch(() => {});
-  const box = await item.boundingBox().catch(() => null);
-  if (!box || box.x < 0) {
-    await demo.click({
-      selector: 'button:visible:has-text("Open sidebar")',
-      label: 'Open sidebar',
-      hud: label !== undefined,
-    });
+  for (let attempt = 0; ; attempt++) {
+    const box = await item.boundingBox().catch(() => null);
+    if (!box || box.x < 0) {
+      await demo.click({
+        selector: 'button:visible:has-text("Open sidebar")',
+        label: 'Open sidebar',
+        hud: label !== undefined,
+      });
+    }
+    try {
+      await demo.click({
+        selector: `[data-testid="${testId}"]`,
+        ...(label ? { label } : { hud: false }),
+        ...(attempt < 2 ? { timeout: 2_000 } : {}),
+      });
+      return;
+    } catch (error) {
+      if (attempt >= 2) {
+        throw error;
+      }
+    }
   }
-  await demo.click({ selector: `[data-testid="${testId}"]`, ...(label ? { label } : { hud: false }) });
 };
+
+/** Opens a plugin's page in Plugin Settings. With a `label` the clicks show on camera. */
+const openPluginSettings = async ({ demo, page }, plugin, { label } = {}) => {
+  await demo.click({
+    selector: '[data-testid="treeView.appSettings"]',
+    ...(label ? { label: 'Plugin Settings' } : { hud: false }),
+  });
+  await page.waitForURL(/dxos:settings/, { timeout: 10_000 });
+  await showSidebar({ demo, page }, `settings.${plugin}`, label);
+};
+
+/** Plugins → Dev Server's one button, which reads Enable or Disable. */
+const DEV_TOGGLE = '[data-testid="registrySettings.devPluginToggle"]';
+
+/** Plugins → Dev Server's Manifest URL field. */
+const DEV_URL = '[data-testid="registrySettings.devPluginUrl"]';
 
 /** The type the plugin stores its timezones in, as the guide defines it. */
 const CLOCK_TYPE = 'org.example.type.worldClock';
@@ -94,6 +250,112 @@ const TIMEZONES = ['Asia/Tokyo', 'Europe/London'];
 /** Contributed by plugin-computer's `src/templates/composer-plugin.ts`. */
 const TEMPLATE_ID = 'org.dxos.project.composerPlugin';
 
+/**
+ * Off-camera prep shared with plugin-projects' desktop and registry flows: dismiss the notice, enable Coding (Dev)
+ * and turn off Dev Server when the take needs the browser template, uninstall an earlier take's plugin, pick the
+ * model, and open the space's Home. Every action is idempotent, so a replay simply re-applies it.
+ */
+export const prepare = async ({ demo, page }, { codingDev }) => {
+  // The toast mounts a few seconds after boot, so wait briefly for it rather than checking once.
+  const notice = page.locator('[data-testid="org.dxos.plugin.observability.notice"] button:not(:has-text("Settings"))');
+  if (
+    await notice
+      .first()
+      .waitFor({ state: 'visible', timeout: 8_000 })
+      .then(
+        () => true,
+        () => false,
+      )
+  ) {
+    await notice.first().click();
+  }
+  // An earlier take leaves Dev Server on, loading its plugin at boot; turning it off removes that plugin.
+  // Only before the agent has started: a replay after it has written the plugin must keep it loaded.
+  const underway = existsSync(SOURCE);
+  if (codingDev && !underway) {
+    await openPluginSettings({ demo, page }, 'org.dxos.plugin.registry');
+    await page.locator(DEV_TOGGLE).waitFor({ state: 'visible', timeout: 10_000 });
+    if ((await page.locator(DEV_TOGGLE).textContent())?.trim() === 'Disable') {
+      await demo.click({ selector: DEV_TOGGLE, hud: false });
+      await page.locator(`${DEV_TOGGLE}:text-is("Enable")`).waitFor();
+    }
+    // The URL persists in the profile, so a take must not inherit one an earlier session changed.
+    if ((await page.locator(DEV_URL).inputValue()) !== DEV_MANIFEST) {
+      await demo.fill({ selector: DEV_URL, value: DEV_MANIFEST, hud: false });
+    }
+  }
+
+  if (codingDev) {
+    // Coding (Dev) contributes the template in a browser.
+    // On a fresh profile the first click can land while the navtree is still settling; retry it.
+    const filter = page.locator('input[placeholder="Filter…"]').first();
+    // The registry reopens on whatever it last showed, which can be a plugin's page with no filter; Bundled
+    // lists every bundled plugin, Coding (Dev) among them.
+    for (let attempt = 0; attempt < 3; attempt++) {
+      await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
+      if (attempt > 0) {
+        await showSidebar({ demo, page }, 'pluginRegistry.bundled');
+      }
+      if (
+        await filter.waitFor({ state: 'visible', timeout: 5_000 }).then(
+          () => true,
+          () => false,
+        )
+      ) {
+        break;
+      }
+    }
+    await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Coding (Dev)', hud: false });
+    const toggle = page.locator('input[id="org.dxos.plugin.computer-input"]');
+    await toggle.waitFor({ state: 'visible', timeout: 10_000 });
+    if (!(await toggle.isChecked())) {
+      await toggle.click();
+    }
+    await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
+  }
+
+  // A take from before Dev Server loaded the plugin by URL, which persists in the profile, enabled
+  // (Enabled) or not (Labs, by its tag); uninstall it from its detail page, under the same guard.
+  // Skipped when nothing is loaded under that name, which also keeps a clean take off the sidebar.
+  const loaded = await page.evaluate((name) => composer.plugins().some((plugin) => plugin.name === name), PLUGIN_NAME);
+  for (const category of underway || !loaded ? [] : ['installed', 'labs']) {
+    const tab = page.getByTestId(`pluginRegistry.${category}`);
+    if ((await tab.count()) === 0) {
+      continue;
+    }
+    await showSidebar({ demo, page }, `pluginRegistry.${category}`);
+    await page.waitForTimeout(500);
+    if ((await page.locator(card(PLUGIN_NAME)).count()) > 0) {
+      await demo.click({ selector: `${card(PLUGIN_NAME)} >> text=${PLUGIN_NAME}`, hud: false });
+      await demo.click({ selector: 'button:has-text("Uninstall")', hud: false });
+      await page.locator(card(PLUGIN_NAME)).waitFor({ state: 'detached', timeout: 10_000 });
+    }
+  }
+
+  // A delegated chat runs on the settings' default model, not the chat picker's, so set it here.
+  // The rail's settings button rather than ⌘, which the filter input swallows while it has focus.
+  const model = page.locator('role=combobox[name="Remote language model"]').first();
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await openPluginSettings({ demo, page }, 'org.dxos.plugin.assistant');
+    if (
+      await model.waitFor({ state: 'visible', timeout: 5_000 }).then(
+        () => true,
+        () => false,
+      )
+    ) {
+      break;
+    }
+  }
+  await demo.click({ selector: 'role=combobox[name="Remote language model"]', hud: false });
+  await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
+  await page.locator('role=combobox[name="Remote language model"]', { hasText: MODEL }).waitFor();
+
+  // The take opens on the space's Home screen.
+  await demo.click({ selector: SPACE, hud: false });
+  await showSidebar({ demo, page }, 'spacePlugin.spaceHome');
+  await page.locator('[data-testid="deck.plank"][data-attendable-id$="/home"]').first().waitFor({ timeout: 15_000 });
+};
+
 export const steps = [
   {
     // Destructive, so replay-guarded. The driver consults `done` only when replaying the steps before a
@@ -101,11 +363,10 @@ export const steps = [
     // agent has written its source the take is under way, and a replay must not delete that work.
     name: 'Prep (off camera): clear the last take',
     setup: true,
-    done: () => existsSync(new URL(LEFTOVERS[0], import.meta.url)),
+    done: () => existsSync(SOURCE),
     run: async ({ page }) => {
-      for (const folder of LEFTOVERS) {
-        await rm(new URL(folder, import.meta.url), { recursive: true, force: true });
-      }
+      await stopDevServer();
+      await rm(PLUGIN_DIR, { recursive: true, force: true });
       await rm(TAKE_PROJECT, { force: true });
 
       // Earlier takes' projects (and the chats filed under them) go too, so the navtree shows only this
@@ -137,94 +398,25 @@ export const steps = [
     },
   },
   {
-    // No `done`: every action here is idempotent, so a replay simply re-applies it.
-    name: 'Prep (off camera): enable Coding (Dev), pick the model, dismiss notices',
+    name: 'Prep (off camera): enable Coding (Dev), turn off Dev Server, pick the model, dismiss notices',
     setup: true,
-    run: async ({ demo, page }) => {
-      // The toast mounts a few seconds after boot, so wait briefly for it rather than checking once.
-      const notice = page.locator(
-        '[data-testid="org.dxos.plugin.observability.notice"] button:not(:has-text("Settings"))',
-      );
-      if (
-        await notice
-          .first()
-          .waitFor({ state: 'visible', timeout: 8_000 })
-          .then(
-            () => true,
-            () => false,
-          )
-      ) {
-        await notice.first().click();
-      }
-      // On a fresh profile the first click can land while the navtree is still settling; retry it.
-      const filter = page.locator('input[placeholder="Filter…"]').first();
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', hud: false });
-        if (
-          await filter.waitFor({ state: 'visible', timeout: 5_000 }).then(
-            () => true,
-            () => false,
-          )
-        ) {
-          break;
+    run: (context) => prepare(context, { codingDev: true }),
+  },
+  {
+    // Before the take, so the agent's check of the dev server finds it running. A replay keeps a running
+    // server and the agent's files; Vite restarts itself when the agent rewrites `vite.config.ts`.
+    name: "Prep (off camera): seed the plugin's config and start its dev server",
+    setup: true,
+    done: () => answers(DEV_MANIFEST),
+    run: async () => {
+      await mkdir(PLUGIN_DIR, { recursive: true });
+      for (const [file, content] of Object.entries(SEED)) {
+        if (!existsSync(join(PLUGIN_DIR, file))) {
+          await writeFile(join(PLUGIN_DIR, file), content);
         }
       }
-      await demo.fill({ selector: 'input[placeholder="Filter…"]', value: 'Coding (Dev)', hud: false });
-      const toggle = page.locator('input[id="org.dxos.plugin.computer-input"]');
-      await toggle.waitFor({ state: 'visible', timeout: 10_000 });
-      if (!(await toggle.isChecked())) {
-        await toggle.click();
-      }
-      await demo.fill({ selector: 'input[placeholder="Filter…"]', value: '', hud: false });
-
-      // A plugin loaded in an earlier take persists in the profile, enabled (Enabled) or not (Labs, by
-      // its tag); uninstall it from its detail page. Only before the agent has started: a replay after
-      // it has built must keep the plugin it offered.
-      // Skipped when nothing is loaded under that name, which also keeps a clean take off the sidebar.
-      const underway = existsSync(new URL(LEFTOVERS[0], import.meta.url));
-      const loaded = await page.evaluate(
-        (name) => composer.plugins().some((plugin) => plugin.name === name),
-        PLUGIN_NAME,
-      );
-      for (const category of underway || !loaded ? [] : ['installed', 'labs']) {
-        const tab = page.getByTestId(`pluginRegistry.${category}`);
-        if ((await tab.count()) === 0) {
-          continue;
-        }
-        await showSidebar({ demo, page }, `pluginRegistry.${category}`);
-        await page.waitForTimeout(500);
-        if ((await page.locator(card(PLUGIN_NAME)).count()) > 0) {
-          await demo.click({ selector: `${card(PLUGIN_NAME)} >> text=${PLUGIN_NAME}`, hud: false });
-          await demo.click({ selector: 'button:has-text("Uninstall")', hud: false });
-          await page.locator(card(PLUGIN_NAME)).waitFor({ state: 'detached', timeout: 10_000 });
-        }
-      }
-
-      // A delegated chat runs on the settings' default model, not the chat picker's, so set it here.
-      // The rail's settings button rather than ⌘, which the filter input swallows while it has focus.
-      const model = page.locator('role=combobox[name="Remote language model"]').first();
-      for (let attempt = 0; attempt < 3; attempt++) {
-        await demo.click({ selector: '[data-testid="treeView.appSettings"]', hud: false });
-        if (
-          await model.waitFor({ state: 'visible', timeout: 5_000 }).then(
-            () => true,
-            () => false,
-          )
-        ) {
-          break;
-        }
-      }
-      await demo.click({ selector: 'role=combobox[name="Remote language model"]', hud: false });
-      await demo.click({ selector: `role=option[name="${MODEL}"]`, hud: false });
-      await page.locator('role=combobox[name="Remote language model"]', { hasText: MODEL }).waitFor();
-
-      // The take opens on the space's Home screen.
-      await demo.click({ selector: SPACE, hud: false });
-      await showSidebar({ demo, page }, 'spacePlugin.spaceHome');
-      await page
-        .locator('[data-testid="deck.plank"][data-attendable-id$="/home"]')
-        .first()
-        .waitFor({ timeout: 15_000 });
+      await stopDevServer();
+      await startDevServer();
     },
   },
   {
@@ -373,29 +565,49 @@ export const steps = [
     },
   },
   {
+    // The last subtask is the agent telling the reader the plugin is ready; its status is the signal.
     name: 'Wait for the agent to offer the plugin',
     run: async ({ page }) => {
-      await page.getByTestId('assistant.pluginUrlPrompt').waitFor({ state: 'visible', timeout: TWENTY_MIN });
-    },
-  },
-  {
-    // The prompt loads without enabling, so the plugin is turned on in the registry, on camera.
-    name: 'Load the plugin',
-    run: async ({ demo, page }) => {
-      await demo.click({ selector: '[data-testid="assistant.pluginUrlPrompt.load"]', label: 'Load' });
-      await page.waitForFunction((name) => composer.plugins().some((plugin) => plugin.name === name), PLUGIN_NAME, {
-        timeout: 30_000,
-      });
+      const project = readFileSync(TAKE_PROJECT, 'utf8').trim();
+      // Polled from here rather than with `waitForFunction`, which takes a returned promise as truthy; a failed
+      // read (the page reloading, say) counts as not yet.
+      const offered = () =>
+        page
+          .evaluate(
+            async ({ tab, project, title, finished }) => {
+              const spaceId = document.querySelector(tab).dataset.value.split('/').pop();
+              const projects = await dxos
+                .spaces(spaceId)
+                .db.query(dxos.Filter.type(dxos.DXN.make('org.dxos.type.project')))
+                .run();
+              const taskSet = await projects.find((candidate) => candidate.id === project)?.taskSet?.load();
+              const [parent] = await Promise.all((taskSet?.tasks ?? []).map((ref) => ref.load()));
+              const subtasks = await Promise.all((parent?.subtasks ?? []).map((ref) => ref.load()));
+              return subtasks.some((task) => task.title === title && finished.includes(task.status));
+            },
+            { tab: SPACE_TAB, project, title: OFFER_TASK, finished: FINISHED },
+          )
+          .catch(() => false);
+      const deadline = Date.now() + TWENTY_MIN;
+      while (!(await offered())) {
+        if (Date.now() > deadline) {
+          throw new Error(`the agent did not finish "${OFFER_TASK}" within twenty minutes`);
+        }
+        await page.waitForTimeout(2_000);
+      }
       await page.waitForTimeout(LINGER);
     },
   },
   {
-    // The registry shot is the one that proves the load, so the side panels close first and the take
-    // slows down: Labs after a beat, then the card, then the toggle.
-    name: 'Enable the plugin in the registry',
+    // A dev plugin is loaded and enabled in one click, and loads again on every reload while Dev Server is on.
+    name: 'Load the plugin from the dev server',
     done: async ({ page }) =>
-      page.evaluate((name) => composer.plugins().some((plugin) => plugin.name === name && plugin.enabled), PLUGIN_NAME),
+      page.evaluate((name) => composer.plugins().some((plugin) => plugin.name === name && plugin.active), PLUGIN_NAME),
     run: async ({ demo, page }) => {
+      // A failed import makes Composer reload itself as if a deploy had moved its chunks, so check first.
+      if (!(await answers(DEV_ENTRY))) {
+        throw new Error(`the dev server does not compile ${DEV_ENTRY} yet; the agent has not written a working plugin`);
+      }
       for (const label of ['Close companion', 'Close context sidebar']) {
         const button = page.locator(`button:has-text("${label}")`).first();
         if (await button.isVisible().catch(() => false)) {
@@ -403,22 +615,14 @@ export const steps = [
           await page.waitForTimeout(LINGER / 5);
         }
       }
-      await demo.click({ selector: '[data-testid="treeView.pluginRegistry"]', label: 'Plugins' });
-      await page.waitForTimeout(1_000);
-      await showSidebar({ demo, page }, 'pluginRegistry.labs', 'Labs');
-      const plugin = page.locator(card(PLUGIN_NAME));
-      await plugin.waitFor({ state: 'visible', timeout: 10_000 });
-      await plugin.scrollIntoViewIfNeeded();
-      await demo.hover({ selector: card(PLUGIN_NAME), label: PLUGIN_NAME });
+      await openPluginSettings({ demo, page }, 'org.dxos.plugin.registry', { label: 'Plugins' });
+      await page.locator(DEV_TOGGLE).waitFor({ state: 'visible', timeout: 10_000 });
       await page.waitForTimeout(LINGER);
-      const toggle = `${card(PLUGIN_NAME)} input[type="checkbox"]`;
-      if (!(await page.locator(toggle).isChecked())) {
-        await demo.click({ selector: toggle, label: 'Enable' });
-      }
+      await demo.click({ selector: DEV_TOGGLE, label: 'Enable' });
       await page.waitForFunction(
         (name) => composer.plugins().some((plugin) => plugin.name === name && plugin.active),
         PLUGIN_NAME,
-        { timeout: 15_000 },
+        { timeout: 30_000 },
       );
       await page.waitForTimeout(LINGER);
     },

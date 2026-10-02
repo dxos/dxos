@@ -28,18 +28,26 @@ export const Connector = Capability.lazyModule(
 // Browser-only: the editor it decorates and the popover it answers render nowhere else.
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
-  { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start, environments: [] },
+  {
+    provides: [MarkdownCapabilities.ExtensionProvider],
+    activatesOn: MarkdownEvents.Start,
+    environments: ['browser', 'tauri'],
+  },
   () => import('./markdown-extension.ts'),
 );
 export const LinkResolver = Capability.lazyModule(
   'LinkResolver',
-  { provides: [PreviewCapabilities.LinkResolver], activatesOn: PreviewEvents.Start, environments: [] },
+  {
+    provides: [PreviewCapabilities.LinkResolver],
+    activatesOn: PreviewEvents.Start,
+    environments: ['browser', 'tauri'],
+  },
   () => import('./link-resolver.ts'),
 );
 // Narrower than the `appGraphBuilder` family default: the action opens a dialog, which means
 // nothing without an app shell.
 export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 export const PageActionProvider = Capability.lazyModule(
   'PageActionProvider',

@@ -14,11 +14,13 @@ const MIN_ROWS = 3;
 export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
   /** Grow with the content from `rows` lines (at least 3) instead of scrolling. */
   autoResize?: boolean;
+  /** `subdued` drops the well, as Input's. */
+  variant?: 'default' | 'subdued';
 };
 
 /** Multi-line text at control width; inside a `Field.Root` it takes the field's id, label and description wiring. */
 export const Textarea = composable<HTMLTextAreaElement, TextareaProps>(
-  ({ rows = MIN_ROWS, autoResize = false, ...props }, forwardedRef) => {
+  ({ rows = MIN_ROWS, autoResize = false, variant = 'default', ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props, { classNames: recipes.textarea() });
     return (
       <FieldPrimitive.Textarea
@@ -28,6 +30,7 @@ export const Textarea = composable<HTMLTextAreaElement, TextareaProps>(
         autoresize={autoResize}
         data-scope='textarea'
         data-part='root'
+        data-variant={variant}
         className={className}
         ref={forwardedRef}
       />

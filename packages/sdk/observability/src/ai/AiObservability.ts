@@ -18,7 +18,7 @@ import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
  * AI telemetry capture — data policy.
  *
  * The AI stack already annotates every model call with the OTel GenAI conventions (`gen_ai.*`,
- * emitted by the `effect/unstable/ai` provider layers) plus the `dxos.ai.*` attributes those
+ * emitted by the `effect/ai` provider layers) plus the `dxos.ai.*` attributes those
  * conventions have no room for. This reads the finished spans, applies the capture policy, and
  * hands each surviving call to a sink as a {@link ObservabilityExtension.Inference} — a shape
  * that follows the GenAI conventions, not any vendor's schema. Mapping onto a backend's own
@@ -103,7 +103,7 @@ export type Options = {
   allowContent: (spaceId: string) => boolean;
 };
 
-/** The span `effect/unstable/ai` names for a streamed call; anything else is a single response. */
+/** The span `effect/ai` names for a streamed call; anything else is a single response. */
 const STREAM_SPAN_NAME = 'LanguageModel.streamText';
 
 /** Marker attributes identifying a GenAI span (per OTel GenAI semantic conventions). */

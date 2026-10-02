@@ -10,11 +10,11 @@ import { expect } from 'storybook/test';
 
 import { random } from '@dxos/random';
 
-import { withTheme } from '../../../testing/index.ts';
+import { withLayout, withTheme } from '../../../testing/index.ts';
 import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { type SizeArgs, withSizes } from '../../stories.tsx';
 import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
+import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
 
 random.seed(123);
 
@@ -47,9 +47,11 @@ const DefaultStory = ({ size }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/typography',
+  title: 'ui/react-ui-core/next/components/Typography',
   render: DefaultStory,
-  decorators: [withSizes(), withTheme()],
+  decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
+  args: { size: 'md' },
+  argTypes: SIZE_ARG_TYPES,
   parameters: { layout: 'centered' },
 } satisfies Meta<SizeArgs>;
 
@@ -64,6 +66,7 @@ export const Default: Story = {};
  * keeps one block-tall line ending in an ellipsis; `tone='description'` takes the secondary text colour.
  */
 export const Test: Story = {
+  args: { allSizes: true },
   play: async ({ canvasElement }) => {
     for (const size of SIZES) {
       const icon = byTestId(canvasElement, `icon-${size}`).getBoundingClientRect();
@@ -82,8 +85,9 @@ export const Test: Story = {
       await expect(getComputedStyle(truncated).textOverflow).toBe('ellipsis');
       const description = byTestId(canvasElement, `description-${size}`);
       await expect(getComputedStyle(description).color).not.toBe(getComputedStyle(truncated).color);
-      await expect(description.getBoundingClientRect().right).toBeLessThanOrEqual(
-        sizeRow(canvasElement, size).getBoundingClientRect().right,
+      // The row keeps both columns inside the content track, clear of the end rail.
+      await expect(description.getBoundingClientRect().right, size).toBeLessThanOrEqual(
+        sizeRow(canvasElement, size).getBoundingClientRect().right - GEOMETRY[size].block + 0.5,
       );
     }
 

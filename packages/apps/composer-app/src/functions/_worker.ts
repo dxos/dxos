@@ -144,13 +144,18 @@ const handleRssProxy = async (request: Request): Promise<Response> => {
     return new Response('Invalid url protocol', { status: 400 });
   }
 
+  const userAgent = request.headers.get('User-Agent');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), RSS_FETCH_TIMEOUT_MS);
   try {
     // Forward the original method so HEAD probes don't download the full body upstream.
     const upstream = await fetch(parsedFeedUrl.toString(), {
       method: request.method,
-      headers: { Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*' },
+      headers: {
+        Accept: 'application/rss+xml, application/atom+xml, application/xml, text/xml, */*',
+        // Feed hosts' WAFs reject a request with no User-Agent (The Guardian answers 406), and a Worker's fetch adds none.
+        ...(userAgent ? { 'User-Agent': userAgent } : {}),
+      },
       signal: controller.signal,
     });
 

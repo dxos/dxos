@@ -111,14 +111,16 @@ const mergeBase = (a: string, b: string, cwd?: string): string | null =>
   git(['merge-base', a, b], { allowFail: true, cwd });
 
 /**
- * Newest commit reachable from `ref` that touched `path`, or null if none. Used
+ * Newest commit reachable from `ref` that added `path`, or null if none. Used
  * as a same-history fallback when a review's recorded `commit:` no longer
  * resolves as a real ancestor — its origin branch was squashed or rebased away
  * under a new SHA (or, in a shallow clone, was simply never fetched) — even
- * though the review's own files are plainly present in `ref`'s history.
+ * though the review's own files are plainly present in `ref`'s history. The
+ * adding commit, not the last edit, since a later status flip or format
+ * migration of the file says nothing about when the review landed.
  */
-export const lastCommitTouching = (path: string, ref: string = 'HEAD'): string | null => {
-  const commit = git(['log', '-1', '--format=%H', ref, '--', path], { allowFail: true });
+export const commitAdding = (path: string, ref: string = 'HEAD'): string | null => {
+  const commit = git(['log', '-1', '--diff-filter=A', '--format=%H', ref, '--', path], { allowFail: true });
   return commit || null;
 };
 

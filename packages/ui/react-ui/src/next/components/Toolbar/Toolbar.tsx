@@ -4,25 +4,16 @@
 
 import { ark } from '@ark-ui/react/factory';
 import { useMachine } from '@zag-js/react';
-import React, { type AnchorHTMLAttributes, createContext, forwardRef, useContext, useId } from 'react';
+import React, { type AnchorHTMLAttributes, type HTMLAttributes, forwardRef, useContext, useId } from 'react';
 
 import { composable, composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
 import { Separator, type SeparatorProps } from '../Separator/index.ts';
 import { ToggleGroup, type ToggleGroupRootProps } from '../ToggleGroup/index.ts';
+import { ToolbarContext, useToolbarItem } from './toolbar-context.ts';
 import * as toolbar from './toolbar-machine.ts';
-
-// Optional by design: a control outside a toolbar renders without roving props.
-const ToolbarContext = createContext<toolbar.ToolbarApi | undefined>(undefined);
-
-/** Roving-focus props for a control inside a Toolbar; empty outside one. */
-export const useToolbarItem = (disabled?: boolean) => {
-  const api = useContext(ToolbarContext);
-  const value = useId();
-  return api?.getItemProps({ value, disabled });
-};
 
 //
 // Root
@@ -37,7 +28,18 @@ type ToolbarRootProps = {
   disabled?: boolean;
 };
 
-/** `role=toolbar` with the roving focus that role promises (decision 9). */
+/**
+ * The toolbar element as a composable part, so the ScrollArea viewport slot merges onto it (a plain `ark.div` gets the
+ * dev warning wrapper, which breaks the frame's child rules).
+ */
+const ToolbarElement = composable<HTMLDivElement, HTMLAttributes<HTMLDivElement> & { asChild?: boolean }>(
+  (props, forwardedRef) => <ark.div {...composableProps(props)} ref={forwardedRef} />,
+);
+
+/**
+ * `role=toolbar` with the roving focus that role promises (decision 9); items that overflow scroll along its axis in a
+ * thin ScrollArea whose bar shows on hover, the toolbar itself being the viewport.
+ */
 const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
   ({ children, asChild, size, orientation = 'horizontal', loop = true, disabled, ...props }, forwardedRef) => {
     const service = useMachine(toolbar.machine, { id: useId(), orientation, loop, disabled });
@@ -45,16 +47,26 @@ const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
     const { className, ...rest } = composableProps(props, { classNames: recipes.toolbar() });
     return (
       <ToolbarContext.Provider value={api}>
-        <ark.div
-          asChild={asChild}
-          {...rest}
-          {...api.getRootProps()}
-          data-size={size}
-          className={className}
-          ref={forwardedRef}
+        <ScrollArea.Root
+          size={size}
+          width='thin'
+          orientation={orientation}
+          autoHide
+          classNames={recipes.toolbarScroll()}
         >
-          {children}
-        </ark.div>
+          <ScrollArea.Viewport asChild>
+            <ToolbarElement
+              asChild={asChild}
+              {...rest}
+              {...api.getRootProps()}
+              data-size={size}
+              classNames={className}
+              ref={forwardedRef}
+            >
+              {children}
+            </ToolbarElement>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
       </ToolbarContext.Provider>
     );
   },
@@ -143,40 +155,6 @@ const ToolbarLink = composable<HTMLAnchorElement, ToolbarLinkProps>(
 ToolbarLink.displayName = 'Next.Toolbar.Link';
 
 //
-// DragHandle
-//
-
-type DragHandleProps = {
-  /** Names the handle for assistive tech; required, since Next ships no translated defaults (AUDIT 2.10). */
-  'label': string;
-  'data-testid'?: string;
-};
-
-/**
- * A ghost icon-only Button with the six-dot grip for a drag-and-drop source to bind (`Toolbar.DragHandle`,
- * `Card.DragHandle`). It never joins a toolbar's roving focus (dragging is a pointer gesture) and shows no Tooltip.
- */
-export const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
-  ({ label, 'data-testid': testId }, forwardedRef) => (
-    <ToolbarContext.Provider value={undefined}>
-      <Button
-        icon='ph--dots-six-vertical--regular'
-        label={label}
-        iconOnly
-        showTooltip={false}
-        variant='ghost'
-        tabIndex={-1}
-        data-drag-handle=''
-        data-testid={testId}
-        ref={forwardedRef}
-      />
-    </ToolbarContext.Provider>
-  ),
-);
-
-DragHandle.displayName = 'Next.DragHandle';
-
-//
 // ToggleGroup
 //
 
@@ -193,17 +171,8 @@ export const Toolbar = {
   Root: ToolbarRoot,
   Text: ToolbarText,
   Link: ToolbarLink,
-  DragHandle,
   Separator: ToolbarSeparator,
   ToggleGroup: ToolbarToggleGroup,
-  ToggleGroupItem: ToggleGroup.Item,
 };
 
-export type {
-  DragHandleProps,
-  ToolbarLinkProps,
-  ToolbarRootProps,
-  ToolbarSeparatorProps,
-  ToolbarTextProps,
-  ToolbarToggleGroupProps,
-};
+export type { ToolbarLinkProps, ToolbarRootProps, ToolbarSeparatorProps, ToolbarTextProps, ToolbarToggleGroupProps };

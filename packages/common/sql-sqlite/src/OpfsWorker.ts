@@ -14,7 +14,7 @@ import * as Effect from 'effect/Effect';
  * @since 1.0.0
  */
 /// <reference lib="webworker" />
-import * as SqlError from 'effect/unstable/sql/SqlError';
+import * as SqlError from 'effect/sql/SqlError';
 
 import { log } from '@dxos/log';
 // @ts-ignore

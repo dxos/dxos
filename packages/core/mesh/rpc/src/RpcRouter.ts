@@ -9,12 +9,12 @@ import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Queue from 'effect/Queue';
+import type * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
+import * as RpcMessage from 'effect/rpc/RpcMessage';
+import * as RpcServer from 'effect/rpc/RpcServer';
 import * as Scope from 'effect/Scope';
-import type * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
-import * as RpcMessage from 'effect/unstable/rpc/RpcMessage';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
 
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';

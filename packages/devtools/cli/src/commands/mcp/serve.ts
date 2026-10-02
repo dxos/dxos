@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as McpProtocol from 'effect/ai/McpProtocol';
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as References from 'effect/References';
-import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -79,10 +79,19 @@ const devPluginPaths = Effect.gen(function* () {
   );
 });
 
+/**
+ * Off by default: scripts run in this process with its authority, which an agent driving this
+ * server over stdio already holds, but a caller should still choose to hand it a code interpreter.
+ */
+const codeModeOption = Options.Boolean('code-mode').pipe(
+  Options.withDescription('Also serve runScript, which runs agent-written Effect programs against the operations.'),
+  Options.withDefault(false),
+);
+
 export const serve = Command.make(
   'serve',
-  { watch: watchOption },
-  Effect.fn(function* ({ watch }) {
+  { watch: watchOption, codeMode: codeModeOption },
+  Effect.fn(function* ({ watch, codeMode }) {
     if (watch) {
       // Imported here rather than at the top so the supervisor is absent from the module graph of
       // the child it supervises, which would otherwise reload itself on every one of its own edits.
@@ -142,7 +151,10 @@ export const serve = Command.make(
 
     return yield* Layer.launch(
       Layer.mergeAll(
-        McpServer.layer({ reservedToolNames: STATIC_TOOL_NAMES }).pipe(
+        McpServer.layer({
+          reservedToolNames: STATIC_TOOL_NAMES,
+          script: codeMode ? { sandbox: McpServer.inProcessScriptSandbox } : undefined,
+        }).pipe(
           Layer.provide(
             Layer.mergeAll(
               Layer.succeed(Registry.Service, server.registry),

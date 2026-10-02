@@ -8,14 +8,14 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import type * as Exit from 'effect/Exit';
 import * as Option from 'effect/Option';
+import type * as Atom from 'effect/reactivity/Atom';
+import * as Rpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Rpc from 'effect/unstable/rpc/Rpc';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import { Annotation, type Type } from '@dxos/echo';
 import { SchemaAST } from '@dxos/effect';

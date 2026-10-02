@@ -20,7 +20,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { queries },
+  args: { queries, onOpen: () => {} },
 };
 
 export const Empty: Story = {};

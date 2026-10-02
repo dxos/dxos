@@ -32,11 +32,7 @@ import { Journal } from '#types';
 const OutlineSection: Role.Role<AppSurface.SectionData<Outline.Outline, { taskSet?: TaskSetType.TaskSet }>> =
   Role.make('org.dxos.role.section');
 
-/**
- * The section role, typed for an embedded task set: the host says where a row opens its task, since
- * only the host knows whether it contributes a companion to open into.
- */
-const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { detail?: 'plank' | 'companion' }>> =
+const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { showDescription?: boolean }>> =
   Role.make('org.dxos.role.section');
 
 export default Capability.makeModule(() =>
@@ -86,7 +82,7 @@ export default Capability.makeModule(() =>
         id: 'article.task',
         filter: AppSurface.object(AppSurface.Article, Task.Task),
         component: TaskArticle,
-        props: ({ role, data: { subject } }) => ({ role, subject }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
         id: 'article.taskSet',
@@ -94,13 +90,16 @@ export default Capability.makeModule(() =>
         component: TaskSetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      // Embedded in a host (the project's Tasks tab), which also says where a row opens its task:
-      // only the host knows whether it contributes a companion to open into.
       Surface.create({
         id: 'section.taskSet',
         filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),
         component: TaskSetArticle,
-        props: ({ role, data: { subject, attendableId, detail } }) => ({ role, subject, attendableId, detail }),
+        props: ({ role, data: { subject, attendableId, showDescription } }) => ({
+          role,
+          subject,
+          attendableId,
+          showDescription,
+        }),
       }),
       Surface.create({
         id: 'card.outline',
