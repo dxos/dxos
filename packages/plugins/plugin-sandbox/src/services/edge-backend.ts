@@ -51,8 +51,6 @@ export const makeEdgeBackend = (resolve: () => EdgeContext): SandboxService.Back
       request((sandboxClient) => sandboxClient.exposePort(spaceId, sandboxId, port, options)),
     setRepositories: (spaceId, sandboxId, repositories) =>
       request((sandboxClient) => sandboxClient.setRepositories(spaceId, sandboxId, repositories)),
-    terminal: (spaceId, sandboxId, size) =>
-      request((sandboxClient) => sandboxClient.terminalEndpoint(spaceId, sandboxId, size)),
   };
 };
 

@@ -42,10 +42,6 @@ export const translations = [
         'history-more.button': 'Load more',
         'no-file-selected.message': 'Select a file',
         'binary-file.message': 'Binary file ({{size}} bytes).',
-        'terminal-connecting.message': 'Connecting…',
-        'terminal-connected.message': 'Connected',
-        'terminal-reconnecting.message': 'Reconnecting…',
-        'terminal-exited.message': 'Shell exited',
         'repository-empty.message':
           'Nothing has been pushed yet. Push a sandbox directory to this repository to see it here.',
       },

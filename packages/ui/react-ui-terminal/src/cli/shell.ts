@@ -27,20 +27,25 @@ export type ShellOptions<Name extends string, Input, ContextInput, E, R> = {
   banner?: string;
 };
 
+export type ReplOptions<R> = {
+  prompt: string;
+  banner?: string;
+  /**
+   * Runs one non-empty line. Its failures are the caller's to report: the loop survives only what
+   * this lets through as success.
+   */
+  evaluate: (line: string) => Effect.Effect<void, never, R>;
+};
+
 /**
- * Runs a read-eval-print loop against an Effect CLI command tree.
- *
- * Each line is tokenized and dispatched through the same `Command.runWith` the binary uses. The
- * command tree and its layer are built once, so every command reuses the already-activated
- * services.
+ * Runs a read-eval-print loop: the line editor with history, `exit`/`quit`, and the spacing that
+ * sets each response apart from the next prompt. What a line means is up to `evaluate`.
  */
-export const runShell = <Name extends string, Input, ContextInput, E, R>(
+export const runRepl = <R>(
   bridge: TerminalBridge,
-  options: ShellOptions<Name, Input, ContextInput, E, R>,
-): Effect.Effect<void, never, R | CliEnvironment> =>
+  { prompt, banner, evaluate }: ReplOptions<R>,
+): Effect.Effect<void, never, R> =>
   Effect.gen(function* () {
-    const { command, name = 'dx', version = '0.0.0', prompt = `${name}> `, banner } = options;
-    const run = Command.runWith(command, { version });
     const history: string[] = [];
 
     if (banner) {
@@ -69,16 +74,44 @@ export const runShell = <Name extends string, Input, ContextInput, E, R>(
       }
 
       history.push(line);
+      const writtenBefore = bridge.written;
+      yield* evaluate(line);
+
+      // A blank line after a response sets it apart from the next prompt; a command that printed
+      // nothing gets none, or every silent command would leave a gap.
+      if (bridge.written > writtenBefore) {
+        bridge.write(bridge.atLineStart ? '\n' : '\n\n');
+      }
+    }
+
+    bridge.write('\n');
+  });
+
+/**
+ * Runs a read-eval-print loop against an Effect CLI command tree.
+ *
+ * Each line is tokenized and dispatched through the same `Command.runWith` the binary uses. The
+ * command tree and its layer are built once, so every command reuses the already-activated
+ * services.
+ */
+export const runShell = <Name extends string, Input, ContextInput, E, R>(
+  bridge: TerminalBridge,
+  options: ShellOptions<Name, Input, ContextInput, E, R>,
+): Effect.Effect<void, never, R | CliEnvironment> => {
+  const { command, name = 'dx', version = '0.0.0', prompt = `${name}> `, banner } = options;
+  const run = Command.runWith(command, { version });
+  return runRepl(bridge, {
+    prompt,
+    banner,
+    evaluate: (line) => {
       const tokens = rewriteHelpAliases(tokenize(line));
       if (tokens.length === 0) {
-        continue;
+        return Effect.void;
       }
-
-      const writtenBefore = bridge.written;
 
       // Failures are reported rather than propagated so the shell survives to the next prompt.
       // CLI errors are skipped because the parser has already rendered them.
-      yield* run(tokens).pipe(
+      return run(tokens).pipe(
         Effect.catchCause((cause) => {
           if (Cause.hasInterruptsOnly(cause)) {
             return Effect.void;
@@ -94,13 +127,6 @@ export const runShell = <Name extends string, Input, ContextInput, E, R>(
           return Console.error(Cause.pretty(cause));
         }),
       );
-
-      // A blank line after a response sets it apart from the next prompt; a command that printed
-      // nothing gets none, or every silent command would leave a gap.
-      if (bridge.written > writtenBefore) {
-        bridge.write(bridge.atLineStart ? '\n' : '\n\n');
-      }
-    }
-
-    bridge.write('\n');
+    },
   });
+};

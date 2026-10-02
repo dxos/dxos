@@ -80,6 +80,10 @@ export const Exec = Operation.make({
       description:
         'Start the command and return at once without its output, leaving it running — for a server. EDGE sandboxes only.',
     }),
+    session: Schema.optional(Schema.String).annotate({
+      description:
+        'Run in this named shell (lowercase letters, digits, - and _), so cd and export carry to the next command in it. Commands in one session run one at a time; omit it to run alongside everything else. EDGE sandboxes only.',
+    }),
   }),
   output: Schema.Struct({
     stdout: Schema.String,
@@ -196,29 +200,6 @@ export const PublishFiles = Operation.make({
     error: Schema.optional(Schema.String).annotate({
       description: 'Why the directory could not be served; set iff url is empty.',
     }),
-  }),
-  services: [Database.Service, SandboxService.Service],
-});
-
-/**
- * Where the article's terminal opens the sandbox's interactive shell. Not a tool: the endpoint
- * carries a credential, minted per call for one connection.
- */
-export const OpenTerminal = Operation.make({
-  meta: {
-    key: DXN.make('org.dxos.operation.sandbox.openTerminal'),
-    name: 'OpenTerminal',
-    description: "Opens a connection to the sandbox's persistent interactive shell.",
-    icon: 'ph--terminal-window--regular',
-  },
-  input: Schema.Struct({
-    sandbox: Ref.Ref(Sandbox.Sandbox).annotate({ description: 'The sandbox object ID.' }),
-    cols: Schema.optional(Schema.Number),
-    rows: Schema.optional(Schema.Number),
-  }),
-  output: Schema.Struct({
-    url: Schema.String,
-    protocols: Schema.Array(Schema.String),
   }),
   services: [Database.Service, SandboxService.Service],
 });

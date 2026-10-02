@@ -148,6 +148,7 @@ export class LocalSandboxBackend implements SandboxService.Backend {
           new SandboxService.SandboxError({ message: 'Local sandboxes cannot run background commands.' }),
         );
       }
+      // A `session` is not honoured: each command is its own process, so `cd` does not carry to the next.
       const entry = yield* this.#open(spaceId, sandboxId);
       const cwd = request.cwd ? yield* this.#resolve(entry, request.cwd) : entry.workspaceDir;
       return yield* this.#run(entry, request, cwd);

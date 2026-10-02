@@ -90,8 +90,6 @@ const NO_PUBLISH = 'Publishing files needs a local sandbox in the desktop app.';
 
 const NO_REPOSITORIES = 'Repositories can be attached only to EDGE sandboxes.';
 
-const NO_TERMINAL = 'An interactive shell needs an EDGE sandbox.';
-
 /** Reads the client's config and identity per call: both arrive once the client has initialized. */
 const edgeContext = (capabilities: CapabilityManager.CapabilityManager) => (): EdgeContext => {
   const [config] = capabilities.getAll(ClientCapabilities.Config);
@@ -151,12 +149,6 @@ const selecting = ({
         backend.publish
           ? backend.publish(...args)
           : Effect.fail(new SandboxService.SandboxError({ message: NO_PUBLISH })),
-      ),
-    terminal: (...args) =>
-      Effect.flatMap(select, (backend) =>
-        backend.terminal
-          ? backend.terminal(...args)
-          : Effect.fail(new SandboxService.SandboxError({ message: NO_TERMINAL })),
       ),
   };
 };

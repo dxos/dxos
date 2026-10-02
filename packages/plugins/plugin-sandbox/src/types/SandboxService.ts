@@ -17,8 +17,6 @@ import type {
   ExposePortOptions,
   FileEntry,
   SandboxRecord,
-  TerminalEndpoint,
-  TerminalSize,
 } from '../services/SandboxClient.ts';
 
 /**
@@ -65,11 +63,6 @@ export interface Backend {
     sandboxId: string,
     repositories: readonly AttachedRepository[],
   ): Effect.Effect<SandboxRecord, SandboxError>;
-  /**
-   * Where to open the sandbox's interactive shell, which outlives each connection to it. Only EDGE
-   * sandboxes have one; absent on every other backend.
-   */
-  terminal?(spaceId: string, sandboxId: string, size?: TerminalSize): Effect.Effect<TerminalEndpoint, SandboxError>;
   /**
    * Serves a directory of the sandbox read-only over HTTP on this machine and answers its base URL,
    * ending in `/`. Only the desktop app's helper can; absent on every other backend.

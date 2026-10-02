@@ -12,8 +12,6 @@ import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import type * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Schema from 'effect/Schema';
 
-import { EdgeCredentialsHeaderCodec } from '@dxos/protocols';
-
 import { EXEC_STREAM_CONTENT_TYPE, foldExecStream } from './exec-stream.ts';
 
 /** A repository attached to a sandbox, and the git remote name commands in it address it by. */
@@ -59,22 +57,6 @@ export const FileEntry = Schema.Struct({
 export type FileEntry = Schema.Schema.Type<typeof FileEntry>;
 
 /**
- * Subprotocol a terminal socket is opened with. The service answers with it, which a browser requires
- * once any subprotocol is offered — and one is, since the credential travels as another.
- */
-export const TERMINAL_PROTOCOL = 'dxos.sandbox.terminal.v1';
-
-/** Where to open a sandbox's interactive shell: a WebSocket URL and the subprotocols to offer it. */
-export const TerminalEndpoint = Schema.Struct({
-  url: Schema.String,
-  protocols: Schema.Array(Schema.String),
-});
-export type TerminalEndpoint = Schema.Schema.Type<typeof TerminalEndpoint>;
-
-/** The grid a terminal opens with; it is resized over the socket from then on. */
-export type TerminalSize = { cols?: number; rows?: number };
-
-/**
  * Wire encoding of a file's `content`: `utf-8` carries text verbatim, `base64` carries bytes. The
  * service picks one per file from its MIME type when the caller names none.
  */
@@ -100,6 +82,11 @@ export type ExecRequest = {
   timeout?: number;
   /** Start the command and return at once, for a server that must outlive the request. */
   background?: boolean;
+  /**
+   * Run in this named shell, so `cd` and `export` carry to its next command. A session runs one
+   * command at a time; plain commands, and other sessions, run alongside it.
+   */
+  session?: string;
 };
 
 export type ExposePortOptions = {
@@ -293,29 +280,6 @@ export class SandboxClient {
       METADATA_TIMEOUT,
       this._authHeader,
     ).pipe(Effect.map((body) => body.entries));
-  }
-
-  /**
-   * Where to open the sandbox's shell. A browser cannot put `Authorization` on a WebSocket upgrade, so
-   * the presentation is carried as a subprotocol instead; it is minted here, per connection, because
-   * its challenge nonce is single-use.
-   */
-  terminalEndpoint(spaceId: string, sandboxId: string, size: TerminalSize = {}): Effect.Effect<TerminalEndpoint> {
-    return Effect.promise(this._authHeader).pipe(
-      Effect.map((header) => {
-        const url = new URL(this.#url(`/spaces/${spaceId}/sandboxes/${sandboxId}/terminal`));
-        url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-        size.cols && url.searchParams.set('cols', String(size.cols));
-        size.rows && url.searchParams.set('rows', String(size.rows));
-        const presentation = EdgeCredentialsHeaderCodec.decode(header);
-        return {
-          url: url.toString(),
-          protocols: presentation
-            ? [TERMINAL_PROTOCOL, EdgeCredentialsHeaderCodec.encodeWebSocketProtocol(presentation)]
-            : [TERMINAL_PROTOCOL],
-        };
-      }),
-    );
   }
 
   /**

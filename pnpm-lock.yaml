@@ -15151,9 +15151,6 @@ importers:
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
-      '@dxos/protocols':
-        specifier: workspace:*
-        version: link:../../core/protocols
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../../ui/react-ui
