@@ -55,6 +55,7 @@ const PaneToolbar = slottable<HTMLDivElement>(({ children, asChild, ...props }, 
   return (
     <ark.div
       asChild={asChild}
+      data-tauri-drag-region='deep'
       {...composableProps(props, {
         style: iconSize(5),
         // `nx-scope` with `data-size`: the toolbar's controls take the large size, whatever the pane's.
