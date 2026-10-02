@@ -4,13 +4,19 @@
 
 import * as Schema from 'effect/Schema';
 import { rmSync } from 'node:fs';
-import { afterAll, bench, describe } from 'vitest';
+import { type BenchFn, type BenchRunOptions, afterAll, describe, test } from 'vitest';
 
 import { Feed, Obj, Type } from '@dxos/echo';
 import { EchoTestBuilder, createTmpPath } from '@dxos/echo-client/testing';
 import { DXN } from '@dxos/keys';
 
 import { blackhole } from './testing/bench-util.ts';
+
+/** Registers a benchmark as a test: vitest 5 exposes `bench` only as a test-context fixture. */
+const benchmark = (name: string, fn: BenchFn, options?: BenchRunOptions) =>
+  test(name, async ({ bench }) => {
+    await bench(name, fn).run(options);
+  });
 
 //
 // Property-access cost of an ECHO object relative to a plain JS object, across the three object
@@ -174,7 +180,7 @@ await feedWideDb.flush();
 // warmup plus run, which the drain of the next row carries.
 const flushing = (db: typeof automergeDb, options: typeof BENCH_OPTIONS) => ({
   ...options,
-  setup: (_task: unknown, mode: 'warmup' | 'run') => (mode === 'warmup' ? db.flush() : undefined),
+  setup: (_task?: unknown, mode?: 'warmup' | 'run') => (mode === 'warmup' ? db.flush() : undefined),
 });
 
 // Generated at runtime so the written value is not a literal V8 can constant-fold into the store.
@@ -236,7 +242,7 @@ afterAll(async () => {
 
 describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000 }, () => {
   describe('plain object', () => {
-    bench(
+    benchmark(
       'read x1',
       () => {
         checksum += plainPool[cursor++ & OBJECT_POOL_MASK].value;
@@ -244,7 +250,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       `read x${BATCH}`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -254,7 +260,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       'write x1',
       () => {
         plainPool[cursor++ & OBJECT_POOL_MASK].value = valuePool[cursor & VALUE_POOL_MASK];
@@ -262,7 +268,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       `write x${BATCH}`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -272,7 +278,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       'make x1',
       () => {
         const index = cursor++ & VALUE_POOL_MASK;
@@ -281,7 +287,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       MAKE_BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       `make x${BATCH}`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -294,7 +300,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
   });
 
   describe('echo object (unpersisted)', () => {
-    bench(
+    benchmark(
       'read x1',
       () => {
         checksum += unpersistedPool[cursor++ & OBJECT_POOL_MASK].value;
@@ -302,7 +308,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       `read x${BATCH}`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -312,7 +318,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       'write x1',
       () => {
         Obj.update(unpersistedPool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -322,7 +328,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       `write x${BATCH}`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -334,7 +340,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       `write x${BATCH} (batched in one Obj.update)`,
       () => {
         Obj.update(unpersistedPool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -346,7 +352,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       'make x1',
       () => {
         const index = cursor++ & VALUE_POOL_MASK;
@@ -358,7 +364,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       MAKE_BENCH_OPTIONS,
     );
 
-    bench(
+    benchmark(
       `make x${BATCH}`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -374,7 +380,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
   });
 
   describe('echo object (automerge)', () => {
-    bench(
+    benchmark(
       'read x1',
       () => {
         checksum += automergePool[cursor++ & OBJECT_POOL_MASK].value;
@@ -382,7 +388,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(automergeDb, BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       `read x${BATCH}`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -392,7 +398,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(automergeDb, BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       'write x1',
       () => {
         Obj.update(automergePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -402,7 +408,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(automergeDb, BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       `write x${BATCH}`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -414,7 +420,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(automergeDb, BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       `write x${BATCH} (batched in one Obj.update)`,
       () => {
         Obj.update(automergePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -428,7 +434,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
 
     // `make` here is construction plus `db.add` — the object has to reach the database for the row
     // to mean anything, and the proxy alone is already priced by the unpersisted row above.
-    bench(
+    benchmark(
       'make x1 (Obj.make + db.add)',
       () => {
         const index = cursor++ & VALUE_POOL_MASK;
@@ -439,7 +445,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(automergeDb, MAKE_BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       `make x${BATCH} (Obj.make + db.add)`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -454,7 +460,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
   });
 
   describe('echo object (feed)', () => {
-    bench(
+    benchmark(
       'read x1',
       () => {
         checksum += feedPool[cursor++ & OBJECT_POOL_MASK].value;
@@ -462,7 +468,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(feedDb, BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       `read x${BATCH}`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -472,7 +478,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(feedDb, BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       'write x1',
       () => {
         Obj.update(feedPool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -482,7 +488,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(feedDb, BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       `write x${BATCH}`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -494,7 +500,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(feedDb, BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       `write x${BATCH} (batched in one Obj.update)`,
       () => {
         Obj.update(feedPool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -506,7 +512,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(feedDb, BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       'make x1 (Obj.make + db.add to feed)',
       () => {
         const index = cursor++ & VALUE_POOL_MASK;
@@ -518,7 +524,7 @@ describe('property access (plain vs echo)', { tags: ['manual'], timeout: 300_000
       flushing(feedDb, MAKE_BENCH_OPTIONS),
     );
 
-    bench(
+    benchmark(
       `make x${BATCH} (Obj.make + db.add to feed)`,
       () => {
         for (let n = 0; n < BATCH; n++) {
@@ -542,7 +548,7 @@ describe(
   { tags: ['manual'], timeout: 300_000 },
   () => {
     describe('plain object', () => {
-      bench(
+      benchmark(
         'read x1',
         () => {
           checksum += plainWidePool[cursor++ & OBJECT_POOL_MASK].value;
@@ -550,7 +556,7 @@ describe(
         BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         `read x${BATCH}`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -560,7 +566,7 @@ describe(
         BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         'write x1',
         () => {
           plainWidePool[cursor++ & OBJECT_POOL_MASK].value = valuePool[cursor & VALUE_POOL_MASK];
@@ -568,7 +574,7 @@ describe(
         BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         `write x${BATCH}`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -578,7 +584,7 @@ describe(
         BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         'make x1',
         () => {
           const index = cursor++ & VALUE_POOL_MASK;
@@ -587,7 +593,7 @@ describe(
         MAKE_BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         `make x${BATCH}`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -600,7 +606,7 @@ describe(
     });
 
     describe('echo object (unpersisted)', () => {
-      bench(
+      benchmark(
         'read x1',
         () => {
           checksum += unpersistedWidePool[cursor++ & OBJECT_POOL_MASK].value;
@@ -608,7 +614,7 @@ describe(
         BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         `read x${BATCH}`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -618,7 +624,7 @@ describe(
         BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         'write x1',
         () => {
           Obj.update(unpersistedWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -628,7 +634,7 @@ describe(
         BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         `write x${BATCH}`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -640,7 +646,7 @@ describe(
         BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         `write x${BATCH} (batched in one Obj.update)`,
         () => {
           Obj.update(unpersistedWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -652,7 +658,7 @@ describe(
         BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         'make x1',
         () => {
           const index = cursor++ & VALUE_POOL_MASK;
@@ -665,7 +671,7 @@ describe(
         MAKE_BENCH_OPTIONS,
       );
 
-      bench(
+      benchmark(
         `make x${BATCH}`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -682,7 +688,7 @@ describe(
     });
 
     describe('echo object (automerge)', () => {
-      bench(
+      benchmark(
         'read x1',
         () => {
           checksum += automergeWidePool[cursor++ & OBJECT_POOL_MASK].value;
@@ -690,7 +696,7 @@ describe(
         flushing(automergeWideDb, BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         `read x${BATCH}`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -700,7 +706,7 @@ describe(
         flushing(automergeWideDb, BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         'write x1',
         () => {
           Obj.update(automergeWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -710,7 +716,7 @@ describe(
         flushing(automergeWideDb, BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         `write x${BATCH}`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -722,7 +728,7 @@ describe(
         flushing(automergeWideDb, BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         `write x${BATCH} (batched in one Obj.update)`,
         () => {
           Obj.update(automergeWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -734,7 +740,7 @@ describe(
         flushing(automergeWideDb, BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         'make x1 (Obj.make + db.add)',
         () => {
           const index = cursor++ & VALUE_POOL_MASK;
@@ -745,7 +751,7 @@ describe(
         flushing(automergeWideDb, MAKE_BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         `make x${BATCH} (Obj.make + db.add)`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -760,7 +766,7 @@ describe(
     });
 
     describe('echo object (feed)', () => {
-      bench(
+      benchmark(
         'read x1',
         () => {
           checksum += feedWidePool[cursor++ & OBJECT_POOL_MASK].value;
@@ -768,7 +774,7 @@ describe(
         flushing(feedWideDb, BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         `read x${BATCH}`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -778,7 +784,7 @@ describe(
         flushing(feedWideDb, BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         'write x1',
         () => {
           Obj.update(feedWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -788,7 +794,7 @@ describe(
         flushing(feedWideDb, BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         `write x${BATCH}`,
         () => {
           for (let n = 0; n < BATCH; n++) {
@@ -800,7 +806,7 @@ describe(
         flushing(feedWideDb, BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         `write x${BATCH} (batched in one Obj.update)`,
         () => {
           Obj.update(feedWidePool[cursor++ & OBJECT_POOL_MASK], (obj) => {
@@ -812,7 +818,7 @@ describe(
         flushing(feedWideDb, BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         'make x1 (Obj.make + db.add to feed)',
         () => {
           const index = cursor++ & VALUE_POOL_MASK;
@@ -824,7 +830,7 @@ describe(
         flushing(feedWideDb, MAKE_BENCH_OPTIONS),
       );
 
-      bench(
+      benchmark(
         `make x${BATCH} (Obj.make + db.add to feed)`,
         () => {
           for (let n = 0; n < BATCH; n++) {

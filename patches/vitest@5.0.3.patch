@@ -1,8 +1,8 @@
-diff --git a/dist/chunks/console.3WNpx0tS.js b/dist/chunks/console.3WNpx0tS.js
-index b3e71e4..4f64836 100644
---- a/dist/chunks/console.3WNpx0tS.js
-+++ b/dist/chunks/console.3WNpx0tS.js
-@@ -70,6 +70,14 @@ function createCustomConsole(defaultState) {
+diff --git a/dist/chunks/console.RBA5x-0t.js b/dist/chunks/console.RBA5x-0t.js
+index 3b625e2..e153da6 100644
+--- a/dist/chunks/console.RBA5x-0t.js
++++ b/dist/chunks/console.RBA5x-0t.js
+@@ -71,6 +71,14 @@ function createCustomConsole(defaultState) {
  	function sendLog(type, taskId, content, size, origin) {
  		const timer = timers.get(taskId);
  		const time = type === "stderr" ? timer.stderrTime : timer.stdoutTime;
@@ -17,12 +17,12 @@ index b3e71e4..4f64836 100644
  		state().rpc.onUserConsoleLog({
  			type,
  			content: content || "<empty line>",
-@@ -77,7 +85,7 @@ function createCustomConsole(defaultState) {
+@@ -78,7 +86,7 @@ function createCustomConsole(defaultState) {
  			time: time || RealDate.now(),
  			size,
  			origin
 -		});
 +		}).catch(() => {});
  	}
- 	return new Console({
- 		stdout: new Writable({ write(data, encoding, callback) {
+ 	const stdout = new Writable({ write(data, encoding, callback) {
+ 		const s = state();

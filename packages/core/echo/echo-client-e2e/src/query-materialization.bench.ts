@@ -4,7 +4,7 @@
 
 import * as Schema from 'effect/Schema';
 import { rmSync } from 'node:fs';
-import { afterAll, bench, describe } from 'vitest';
+import { type BenchFn, type BenchRunOptions, afterAll, describe, test } from 'vitest';
 
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
@@ -12,6 +12,12 @@ import { EchoTestBuilder, type EchoTestPeer, createTmpPath } from '@dxos/echo-cl
 import { DXN } from '@dxos/keys';
 
 import { blackhole } from './testing/bench-util.ts';
+
+/** Registers a benchmark as a test: vitest 5 exposes `bench` only as a test-context fixture. */
+const benchmark = (name: string, fn: BenchFn, options?: BenchRunOptions) =>
+  test(name, async ({ bench }) => {
+    await bench(name, fn).run(options);
+  });
 
 //
 // What it costs to bring a database's objects back into memory: a peer is reloaded from storage before
@@ -174,7 +180,7 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
       checksum += sum;
     };
 
-    bench(
+    benchmark(
       'reload + open',
       async () => {
         await reopen();
@@ -182,7 +188,7 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
       COLD_OPTIONS,
     );
 
-    bench(
+    benchmark(
       'reload + open + query',
       async () => {
         const db = await reopen();
@@ -191,7 +197,7 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
       COLD_OPTIONS,
     );
 
-    bench(
+    benchmark(
       'reload + open + query + read one field per result',
       async () => {
         const db = await reopen();
@@ -200,7 +206,7 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
       COLD_OPTIONS,
     );
 
-    bench(
+    benchmark(
       'query (warm)',
       async () => {
         blackhole(await query(state.db, 'query (warm)'));
@@ -208,7 +214,7 @@ const defineRows = (label: string, state: Populated, type: typeof BenchObject | 
       WARM_OPTIONS,
     );
 
-    bench(
+    benchmark(
       'query + read one field per result (warm)',
       async () => {
         readAll(await query(state.db, 'query (warm, before read)'), 'read one field per result (warm)');

@@ -3,7 +3,7 @@
 //
 
 import { rmSync } from 'node:fs';
-import { bench, describe } from 'vitest';
+import { type BenchFn, type BenchRunOptions, describe, test } from 'vitest';
 
 import { Feed, Filter, Obj, Query } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
@@ -11,6 +11,12 @@ import { EchoTestBuilder, createTmpPath } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
 import { parseBenchCount } from './testing/bench-util.ts';
+
+/** Registers a benchmark as a test: vitest 5 exposes `bench` only as a test-context fixture. */
+const benchmark = (name: string, fn: BenchFn, options?: BenchRunOptions) =>
+  test(name, async ({ bench }) => {
+    await bench(name, fn).run(options);
+  });
 
 // Same 5 operations as `sqlite.bench.ts`, run through the ECHO API instead of raw SQL, over the
 // two object storage kinds: automerge objects (`db.add`) and feed objects (`db.add(obj, { to:
@@ -68,7 +74,7 @@ const defineOperationBenches = (
     return seedPromise;
   };
 
-  bench(
+  benchmark(
     'insert',
     async () => {
       const { db, feed } = await ensureEcho();
@@ -79,7 +85,7 @@ const defineOperationBenches = (
 
   // hz below is batches/sec (one invocation inserts BATCH_SIZE objects), not items/sec — divide
   // the reported mean by BATCH_SIZE to compare against `insert`'s per-item latency.
-  bench(
+  benchmark(
     `insert (batched x${BATCH_SIZE}, single flush)`,
     async () => {
       const { db, feed } = await ensureEcho();
@@ -91,7 +97,7 @@ const defineOperationBenches = (
     BENCH_OPTIONS,
   );
 
-  bench(
+  benchmark(
     'select (point, by id)',
     async () => {
       const { db, feed } = await ensureEcho();
@@ -102,7 +108,7 @@ const defineOperationBenches = (
     BENCH_OPTIONS,
   );
 
-  bench(
+  benchmark(
     'select (filtered scan)',
     async () => {
       const { db, feed } = await ensureEcho();
@@ -117,7 +123,7 @@ const defineOperationBenches = (
     BENCH_OPTIONS,
   );
 
-  bench(
+  benchmark(
     'update (point, by id)',
     async () => {
       const { db } = await ensureEcho();
@@ -131,7 +137,7 @@ const defineOperationBenches = (
     BENCH_OPTIONS,
   );
 
-  bench(
+  benchmark(
     'delete (point, by id)',
     async () => {
       const { db, feed } = await ensureEcho();

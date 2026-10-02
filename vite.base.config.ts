@@ -17,7 +17,12 @@ import { defineConfig as viteDefineConfig, type Plugin, type UserConfig } from '
 import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
-import { type UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
+import {
+  type TestProjectInlineConfiguration,
+  type UserWorkspaceConfig,
+  type ViteUserConfig,
+  defineProject,
+} from 'vitest/config';
 import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
@@ -550,15 +555,17 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((browser) => createBrowserProject(browser));
-  const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
+  // Vitest 5 sets up every project even when `--project` filters it out, and the workers pool rejects
+  // the v8 coverage provider at setup, so register it only for runs that can select it.
+  const workerdSelectable = [undefined, 'workerd'].includes(resolveProjectType());
+  const workerdProject =
+    workerd && workerdSelectable ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
     test: {
       ...resolveReporterConfig(dirname),
       tags: TEST_TAGS,
-      projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
-        (project): project is UserWorkspaceConfig => project !== undefined,
-      ),
+      projects: withoutRootInheritance([nodeProject, storybookProject, ...browserProjects, workerdProject]),
     },
   };
 };
@@ -584,6 +591,15 @@ const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
       },
     }
   : {};
+
+/**
+ * Drops unset projects and opts each one out of inheriting the root config, which vitest 5 does by
+ * default: every project declares its own plugins, and the root's would duplicate or conflict with them.
+ */
+const withoutRootInheritance = (projects: (UserWorkspaceConfig | undefined)[]): TestProjectInlineConfiguration[] =>
+  projects
+    .filter((project): project is UserWorkspaceConfig => project !== undefined)
+    .map((project) => ({ ...project, extends: false }));
 
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
@@ -734,7 +750,6 @@ const createBrowserProject = ({
         headless: !isDebug,
         provider: playwright({ ...SANDBOX_LAUNCH_OPTIONS }),
         instances: [{ browser: browserName }],
-        isolate: false,
       },
 
       setupFiles: [VITEST_BROWSER_LOG_SETUP],
@@ -1091,16 +1106,18 @@ const buildTestConfig = (
     ? createStorybookProject(dirname, typeof storybook === 'boolean' ? undefined : storybook)
     : undefined;
   const browserProjects = normalizeBrowserOptions(browser).map((b) => createBrowserProject({ jsx: outerJsx, ...b }));
-  const workerdProject = workerd ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
+  // Vitest 5 sets up every project even when `--project` filters it out, and the workers pool rejects
+  // the v8 coverage provider at setup, so register it only for runs that can select it.
+  const workerdSelectable = [undefined, 'workerd'].includes(resolveProjectType());
+  const workerdProject =
+    workerd && workerdSelectable ? createWorkerdProject(typeof workerd === 'boolean' ? undefined : workerd) : undefined;
 
   return {
     ...resolveReporterConfig(dirname),
     tags: TEST_TAGS,
     // Never set `dangerouslyIgnoreUnhandledErrors`: suppressing unhandled rejections hides real
     // teardown failures — surface and fix them at the source. See the `code-style` skill.
-    projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
-      (project): project is UserWorkspaceConfig => project !== undefined,
-    ),
+    projects: withoutRootInheritance([nodeProject, storybookProject, ...browserProjects, workerdProject]),
   };
 };
 
