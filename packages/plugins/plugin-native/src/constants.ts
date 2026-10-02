@@ -6,6 +6,7 @@
  * Ports the Tauri localhost asset server binds, one per release channel — each channel installs as its
  * own app and needs its own origin, since a shared port let whichever app bound it first serve its code
  * to the others.
- * Must match `ReleaseChannel::localhost_port` in `src-tauri/src/channel.rs`.
+ * Must match `ReleaseChannel::localhost_port` in `src-tauri/src/channel.rs`, except the test channel's 26781:
+ * an automation build must not update itself into a shipped one.
  */
 export const TAURI_LOCALHOST_PORTS = ['26777', '26778', '26779', '26780'];

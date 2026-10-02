@@ -18,6 +18,7 @@
 import { createHash } from 'node:crypto';
 import { writeFile } from 'node:fs/promises';
 
+import { installInput } from './input.mjs';
 import { installSelectors } from './selectors.mjs';
 
 /** Longest single in-page wait; longer waits are several slices, each surviving a navigation. */
@@ -64,16 +65,18 @@ const keyValue = (name) => {
   throw new Error(`unsupported key: ${name}`);
 };
 
-/** `ControlOrMeta` is Playwright's portable modifier; Tauri on Linux is Control. */
-const chordKeys = (chord) =>
+/** `ControlOrMeta` is Playwright's portable modifier: Meta on macOS, Control elsewhere. */
+const chordNames = (chord) =>
   chord
     .split(/\+(?!$)/)
-    .map((part) => keyValue(part === 'ControlOrMeta' ? (process.platform === 'darwin' ? 'Meta' : 'Control') : part));
+    .map((part) => (part === 'ControlOrMeta' ? (process.platform === 'darwin' ? 'Meta' : 'Control') : part));
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** Where a locator's steps are resolved to elements, in the page; installs the selector engine first. */
 const ENGINE = installSelectors.toString();
+
+const INPUT = installInput.toString();
 
 const RESOLVE = `
   (${ENGINE})(${JSON.stringify(createHash('sha1').update(ENGINE).digest('hex'))});
@@ -104,14 +107,15 @@ const RESOLVE = `
 
 /**
  * Wraps `body` (which sees `arg`, `resolve` and must return a value or a promise) as an async WebDriver
- * script. Values come back JSON-cloned, except elements, which WebDriver turns into references.
+ * script. Values come back JSON-cloned; a DOM node comes back as a truthy `{ node }` stand-in.
  */
 const asyncScript = (body) => `
   const done = arguments[arguments.length - 1];
   const arg = arguments[0];
   ${RESOLVE}
   const clone = (value) => {
-    if (value instanceof Element) return value;
+    // A node does not cross back on every driver (the macOS one drops it silently), and callers only test it.
+    if (value instanceof Node) return { node: value.nodeName.toLowerCase() };
     if (value === undefined) return null;
     try { return JSON.parse(JSON.stringify(value)); } catch { return String(value); }
   };
@@ -139,9 +143,16 @@ const POLL = `
 class EvaluateError extends Error {}
 
 /**
- * @param {{ session: Awaited<ReturnType<typeof import('./webdriver.mjs').createSession>> }} options
+ * `input` picks how gestures reach the page: `webdriver` sends W3C actions, which WebKitWebDriver delivers as
+ * trusted platform events; `script` dispatches them in the page through `input.mjs`, for a driver whose actions
+ * are bare mouse events (the macOS embedded server).
+ *
+ * @param {{
+ *   session: Awaited<ReturnType<typeof import('./webdriver.mjs').createSession>>,
+ *   input?: 'webdriver' | 'script',
+ * }} options
  */
-export const createTauriPage = ({ session }) => {
+export const createTauriPage = ({ session, input = 'webdriver' }) => {
   let defaultTimeout = 5_000;
   let lastPointer = { x: 0, y: 0 };
 
@@ -171,31 +182,74 @@ export const createTauriPage = ({ session }) => {
     }
   };
 
-  const pointer = (actions) =>
-    session.performActions([{ type: 'pointer', id: 'mouse', parameters: { pointerType: 'mouse' }, actions }]);
-  const keys = (actions) => session.performActions([{ type: 'key', id: 'keyboard', actions }]);
-  const typeText = async (text, delay = 0) => {
-    const actions = [];
-    for (const char of text) {
-      // As Playwright types them: a newline is Enter and a tab is Tab, not the raw control characters.
-      const value = char === '\n' ? KEYS.Enter : char === '\t' ? KEYS.Tab : char;
-      actions.push({ type: 'keyDown', value }, { type: 'keyUp', value });
-      if (delay > 0) {
-        actions.push({ type: 'pause', duration: delay });
-      }
-    }
-    if (actions.length > 0) {
-      await keys(actions);
-    }
-  };
+  const buttonCode = (button = 'left') => ({ left: 0, middle: 1, right: 2 })[button] ?? 0;
+
+  const actions = (actions) => session.performActions(actions);
+  const keyActions = (list) => actions([{ type: 'key', id: 'keyboard', actions: list }]);
+  const pointerActions = (list) =>
+    actions([{ type: 'pointer', id: 'mouse', parameters: { pointerType: 'mouse' }, actions: list }]);
+  const inPage = (body, arg) =>
+    run(
+      `(${INPUT})(${JSON.stringify(createHash('sha1').update(INPUT).digest('hex'))});
+      const input = window.__autocueInput;
+      ${body}`,
+      arg,
+    );
+
+  /** The gestures, one implementation per `input` mode; everything above them is shared. */
+  const gestures =
+    input === 'script'
+      ? {
+          move: (point, duration) =>
+            inPage('return input.move(arg.x, arg.y, arg.options);', {
+              ...point,
+              options: { steps: duration > 0 ? Math.max(2, Math.round(duration / 16)) : 1, duration },
+            }),
+          down: (button) => inPage('input.down(arg.button);', { button }),
+          up: (button) => inPage('input.up(arg.button);', { button }),
+          click: (button) => inPage('input.down(arg.button); input.up(arg.button);', { button }),
+          press: (names) => inPage('input.press(arg.names);', { names }),
+          type: (text, delay) => inPage('return input.type(arg.text, arg.delay);', { text, delay }),
+        }
+      : {
+          move: (point, duration) => pointerActions([{ type: 'pointerMove', origin: 'viewport', duration, ...point }]),
+          down: (button) => pointerActions([{ type: 'pointerDown', button }]),
+          up: (button) => pointerActions([{ type: 'pointerUp', button }]),
+          click: (button) =>
+            pointerActions([
+              { type: 'pointerDown', button },
+              { type: 'pointerUp', button },
+            ]),
+          press: (names) => {
+            const values = names.map(keyValue);
+            return keyActions([
+              ...values.map((value) => ({ type: 'keyDown', value })),
+              ...values.toReversed().map((value) => ({ type: 'keyUp', value })),
+            ]);
+          },
+          type: async (text, delay) => {
+            const list = [];
+            for (const char of text) {
+              // As Playwright types them: a newline is Enter and a tab is Tab, not the raw control characters.
+              const value = char === '\n' ? KEYS.Enter : char === '\t' ? KEYS.Tab : char;
+              list.push({ type: 'keyDown', value }, { type: 'keyUp', value });
+              if (delay > 0) {
+                list.push({ type: 'pause', duration: delay });
+              }
+            }
+            if (list.length > 0) {
+              await keyActions(list);
+            }
+          },
+        };
+
+  const typeText = (text, delay = 0) => gestures.type(text, delay);
 
   const moveTo = async ({ x, y }, duration = 0) => {
     const point = { x: Math.round(x), y: Math.round(y) };
-    await pointer([{ type: 'pointerMove', origin: 'viewport', duration, ...point }]);
+    await gestures.move(point, duration);
     lastPointer = point;
   };
-
-  const buttonCode = (button = 'left') => ({ left: 0, middle: 1, right: 2 })[button] ?? 0;
 
   class Locator {
     constructor(steps) {
@@ -335,10 +389,7 @@ export const createTauriPage = ({ session }) => {
     async click({ timeout, button } = {}) {
       const point = await this.#actionable(timeout);
       await moveTo(point);
-      await pointer([
-        { type: 'pointerDown', button: buttonCode(button) },
-        { type: 'pointerUp', button: buttonCode(button) },
-      ]);
+      await gestures.click(buttonCode(button));
     }
 
     async hover({ timeout } = {}) {
@@ -367,10 +418,7 @@ export const createTauriPage = ({ session }) => {
     async fill(value, { timeout } = {}) {
       await this.#focusAndSelect(timeout);
       if (value === '') {
-        await keys([
-          { type: 'keyDown', value: KEYS.Backspace },
-          { type: 'keyUp', value: KEYS.Backspace },
-        ]);
+        await gestures.press(['Backspace']);
       } else {
         await typeText(value);
       }
@@ -410,6 +458,11 @@ export const createTauriPage = ({ session }) => {
     async textContent({ timeout } = {}) {
       await this.waitFor({ state: 'attached', timeout });
       return run('return resolve(arg.steps)[0].textContent;', { steps: this.steps });
+    }
+
+    async inputValue({ timeout } = {}) {
+      await this.waitFor({ state: 'attached', timeout });
+      return run('return resolve(arg.steps)[0].value;', { steps: this.steps });
     }
 
     async getAttribute(name, { timeout } = {}) {
@@ -491,6 +544,22 @@ export const createTauriPage = ({ session }) => {
         }
       }
     },
+    /** Polls the page's own location, since the adapter receives no navigation events. */
+    async waitForURL(url, { timeout = 30_000 } = {}) {
+      const matches = (href) =>
+        url instanceof RegExp ? url.test(href) : typeof url === 'function' ? url(new URL(href)) : href === url;
+      const deadline = Date.now() + timeout;
+      for (;;) {
+        const href = await run('return location.href;').catch(() => page.currentUrl);
+        if (matches(href)) {
+          return;
+        }
+        if (Date.now() >= deadline) {
+          throw new Error(`Timeout ${timeout}ms exceeded waiting for URL ${url}`);
+        }
+        await sleep(100);
+      }
+    },
     waitForTimeout: (ms) => sleep(ms),
     async screenshot({ path } = {}) {
       const png = Buffer.from(await session.screenshot(), 'base64');
@@ -503,25 +572,16 @@ export const createTauriPage = ({ session }) => {
     getByTestId: (id) => root.getByTestId(id),
     getByText: (text, options) => root.getByText(text, options),
     keyboard: {
-      async press(chord) {
-        const values = chordKeys(chord);
-        await keys([
-          ...values.map((value) => ({ type: 'keyDown', value })),
-          ...values.toReversed().map((value) => ({ type: 'keyUp', value })),
-        ]);
-      },
+      press: (chord) => gestures.press(chordNames(chord)),
       type: (text, { delay } = {}) => typeText(text, delay),
     },
     mouse: {
       move: (x, y, { steps = 1 } = {}) => moveTo({ x, y }, steps > 1 ? steps * 16 : 0),
-      down: ({ button } = {}) => pointer([{ type: 'pointerDown', button: buttonCode(button) }]),
-      up: ({ button } = {}) => pointer([{ type: 'pointerUp', button: buttonCode(button) }]),
+      down: ({ button } = {}) => gestures.down(buttonCode(button)),
+      up: ({ button } = {}) => gestures.up(buttonCode(button)),
       click: async (x, y, { button } = {}) => {
         await moveTo({ x, y });
-        await pointer([
-          { type: 'pointerDown', button: buttonCode(button) },
-          { type: 'pointerUp', button: buttonCode(button) },
-        ]);
+        await gestures.click(buttonCode(button));
       },
     },
     get pointer() {

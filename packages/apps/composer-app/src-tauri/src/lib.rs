@@ -97,6 +97,16 @@ pub fn run() {
     // rewrote for this channel — the only thing a running build knows about which channel it is.
     let context = tauri::generate_context!();
 
+    // App data and WebKit storage are keyed by the identifier, so an automation build under a shipped
+    // channel's identifier would drive that channel's real profile.
+    #[cfg(feature = "webdriver")]
+    assert_eq!(
+        channel::ReleaseChannel::from_identifier(&context.config().identifier),
+        channel::ReleaseChannel::Test,
+        "the webdriver feature needs the test identifier (`--config src-tauri/tauri.test.conf.json`), not {}",
+        context.config().identifier,
+    );
+
     #[cfg(all(not(debug_assertions), desktop))]
     let release_channel = channel::ReleaseChannel::from_identifier(&context.config().identifier);
     #[cfg(all(not(debug_assertions), desktop))]
@@ -131,6 +141,10 @@ pub fn run() {
                 .build(),
         )
     };
+
+    // Listens on `TAURI_WEBDRIVER_PORT` (default 4445) on loopback.
+    #[cfg(feature = "webdriver")]
+    let builder = builder.plugin(tauri_plugin_wdio_webdriver::init());
 
     // Only include updater plugin for non-mobile targets.
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -316,6 +330,13 @@ pub fn run() {
                 let window_builder = window_builder
                     .hidden_title(true)
                     .title_bar_style(tauri::TitleBarStyle::Overlay);
+                // An unbundled binary shares WebKit's container (named after the executable) with every other
+                // one, so an automation build keeps its web storage in a store of its own that a reset can
+                // delete: `WebsiteDataStore/6175746f-6375-6500-0000-000000000001` there.
+                #[cfg(all(feature = "webdriver", target_os = "macos"))]
+                let window_builder = window_builder.data_store_identifier([
+                    0x61, 0x75, 0x74, 0x6f, 0x63, 0x75, 0x65, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+                ]);
                 let main_window = window_builder
                     // Disable the native drag-drop handler so HTML5 drag events (dragover, dragenter, drop)
                     // reach page JavaScript. Without this, WKWebView's NSDraggingDestination intercepts
