@@ -33,6 +33,7 @@ Grouped by screen or component; IDs are global and never reused.
 | V024 | Navtree section labels (CONTENT, SYSTEM) should look like `Field.Label` (size, case, colour, weight) instead of large tracked uppercase | `V024-navtree.png`             | app home; Tree `Groups` story; compare computed font with `Field.Label`                                                                     | open   |            |
 | V025 | Navtree icons look more muted (or smaller) than on main; compare hue intensity and icon size with the previous version                  | `V024-navtree.png`             | app home vs preview.composer.space; measure icon size and computed colour                                                                   | open   |            |
 | V031 | Article menus are not visible (dropdowns opened from an article/plank toolbar)                                                          | —                              | app: open README, open each toolbar dropdown (paragraph style, view mode, more) and the plank menu; check the popup renders above the plank | open   |            |
+| V032 | R0 (right rail) sidebar open/close button is not horizontally centred in the rail (the icons above it are)                              | `V032-r0-sidebar.png`          | app: measure the toggle's centre vs the rail's centre and vs the other rail icons                                                           | open   |            |
 
 ### Plugin registry
 
