@@ -1,5 +1,265 @@
 # @dxos/plugin-navtree
 
+## 0.12.0
+
+### Minor Changes
+
+- 329faa0: The URL is now the deck's only record of what is open, and the relationship between the two is one-way: an operation computes a target and pushes the URL, the URL is projected into deck state, the deck renders. Nothing else writes what is open. This replaces a bidirectional sync between the address bar and persisted deck state that needed five separate guards to referee it, and whose failures cleared the URL on reload.
+
+  A URL resolves asynchronously, so the projection applies it twice: once synchronously by the pairs themselves, so the planks the URL names render their chrome immediately, and again once each pair has resolved to a graph node. Per-plank preferences and the closed-plank record hang off a plank's URL segment rather than its id, so they survive that refinement. A plank whose node has no URL binding cannot be opened and is logged with the extension that produced it.
+
+  `AppGraphBuilder` no longer stamps `properties.urlSegment` onto nodes, and the `BuilderNode` type that described the stamped shape is gone. A node's URL representation comes from `PathResolution.representNode`, which reads the producing extension's binding and so still works for a node whose subtree has momentarily left the graph.
+
+  What is open is no longer persisted. `active` and `inactive` moved out of the deck's stored state into `EphemeralDeckState.open`, keyed by workspace, and `DeckCapabilities.getDeck` merges them with the workspace's persisted preferences so nothing downstream has to know which atom a field came from. A workspace's open planks are remembered for the session and no longer: the URL records only the workspace you are in, so a reload seeds any other workspace from its first child as it does on a first visit. The persisted-state migration is deleted along with them, since a stored blob now carries only preferences and dropping a field the deck no longer knows costs nothing.
+
+  Breaking for plugin authors: `LayoutOperation.Open`'s `navigation` option is no longer read, a node needs a `url` binding on its graph-builder extension to be openable as a plank, and the pinned workspaces lost their `!` id prefix. A plugin's own workspace is now named the way a plugin should name one, by its namespace: `dxos:settings`, `dxos:registry` and `dxos:account`. No space id can collide with a name of that shape, so the namespace is what keeps two plugins from claiming the same workspace.
+
+- 8efc4f1: A navtree drop between containers that share a move scope moves the item, a drop onto a target that takes links links it, and the indicator is dashed when the item will end up listed with its parent elsewhere; rearranged rows land under the drop line, which now sits in the gap between rows. App-graph applies updates to nodes already in the graph on a microtask while the frame's budget lasts and defers the rest to its scheduler, so a small edit renders in the frame it was made. `ContainerModel` replaces `CollectionModel`, `Obj.parentAtom` follows an object's parent reactively, and `Tree` takes `getDropKind`. Breaking: `CollectionModel` is renamed `ContainerModel`, `Tree`'s `blockInstruction` becomes `getDropKind`, and navtree nodes use `onMoveOut`, `onMoveIn` and `onLink` in place of `onTransferEnd`, `onTransferStart` and `onCopy`.
+- 5662dfc: Render avatar fallbacks whose emoji rely on a variation selector (☀️, ⚙️, ♻️ …) instead of a coloured circle with no symbol. Spaces that are listed but not yet open now hold a place in the sidebar rail, and the account corner holds a plain circle while the client initialises.
+
+### Patch Changes
+
+- b63506b: `SessionConfig` (`@dxos/ai`) describes how an AI session runs — for now its model. **Breaking:** `Chat.model` (a ref whose URI was the model DXN) is replaced by `Chat.session: SessionConfig`, and `AgentService.Conversation.model` by `Conversation.session`; a model stored on an existing chat is not carried over, so that chat starts on the default once. `Project.session` sets the default for the sessions a project starts: a chat it creates, or one it delegates tasks to, is seeded from it (`Chat.seedSession`), and a model later picked in the chat stays the chat's own.
+
+  `Tree` takes `indentGuides`, a vertical line down each open branch's children under the branch's chevron; a windowed tree draws it as per-row segments. The task list always shows them. **Changed geometry:** every tree indents each level by one block (`TREE_BLOCK`, 1.5rem — the icon plus a compact `IconButton`'s padding), which is also the width of the chevron column and the icon cell, so a child's chevron is centred under its parent's icon (previously an 8px step). A windowed tree now animates disclosure: opened rows fade in, and a close conceals the children before the branch collapses. A branch's count badge centres its number.
+
+  The debug console's `report` command sends the title as the issue body when `--body` is omitted. `SystemIconButton.Clipboard` keeps a visible label through a copy, so a chip naming what it copies no longer changes size. A task's mnemonic chip renders in the monospace face, and a file card fits its image inside the card by default. Registry plugin cards carry a shadow, and the neutral surface (neutral tags, callouts, badges) is lighter in light mode.
+
+- 9e449df: Fix the L0 rail insetting its items by the scrollbar strip, which narrowed the space around the
+  workspace avatars and pushed the active-tab indicator underneath them.
+- efdcf61: A navtree drop no longer paints a frame with the moved item still in its old place. Graph update flushes share a 5 ms per-frame budget, and under load the drop's own work used it up, so the move landed a frame late. Each app graph builder now owns its frame budget, and `AppGraphBuilder.flushBeforePaint(builder)` lifts it until the current task ends and flushes any updates an earlier flush left waiting. The navtree drop handler calls it before moving the item, so the first frame after a drop shows the result.
+
+  A dragged tree row's drag image is now translucent. The browser snapshots the row while it is hovered, so the image used to carry the solid hover fill and hide the drop indicator. The fill is 25% opaque while the snapshot is taken.
+
+- 59a1fa2: Opening an item from the navtree no longer expands it. `Expose` now opens only the item's
+  ancestors, as its spec says. It used to open the item's own row as well, so selecting a project
+  also showed its children. The chevron, `Space` and option-click still expand a row.
+- 3214dcf: **Breaking:** `Graph.expand` is renamed to `Graph.expandSync`, and `Graph.expand` now returns an `Effect` that runs the expansion off the paint-critical path. Both overloads (direct and curried) are preserved on `expandSync`, so migrating is a rename. Interrupting the new `expand` cancels a still-pending expansion, which makes superseding one scheduled expansion with another a matter of interrupting the previous fiber.
+
+  Expanding a node also no longer blocks the main thread on stack-trace capture. `Atom.withLabel` records a stack trace on every call, and the graph labelled an atom per node, per connection key and per extension, so a single expansion cost hundreds of captures — measured at 17ms with 40 registered extensions. Labels are now opt-in via `VITE_ATOM_LABELS` under the dev server.
+
+  The nav-tree's hover prefetch uses the new scheduled `expand` behind a 150ms settle delay, so moving the cursor across rows only expands the row it stops on.
+
+  The tooltip context is split so that pointing at a trigger no longer re-renders every `Tooltip.Trigger` in the app, and the open tooltip's `data-state`/`aria-describedby` are applied to the active trigger alone rather than to all of them.
+
+- a04ab6e: Navigating to a collection in the navtree highlights the collection rather than the documents its deck
+  opened in its place (`@dxos/plugin-deck/DeckSeed.sourceOf`), and choosing one of those documents
+  selects it (`NavTreeCapabilities.State.pick`); a flattened deck opens the collection itself instead of
+  showing its documents as a breadcrumb trail. `Tree` leaves a dragged row in place at half opacity
+  (`hideDragSource` restores removal) and declares drags a move, so the cursor no longer flickers to a
+  copy "+". `Gantt.Chart` opens scrolled to its newest events.
+
+  Task list rows show a task's pull requests in their own column on the title line, left of the
+  assignee; the assignee picker offers the space's members, the owner included (`TaskProperties` takes
+  `members`); the assignee chip opens its session card on click rather than hover, which had left it
+  stuck open. `tasks.create` and `tasks.update` reject an assignee that names no one — it must carry a
+  contact, a member's `identityDid`, or an agent session. Copy-to-clipboard buttons use
+  `SystemIconButton.Clipboard`, so they share one icon and the "Copied" confirmation.
+
+- 1a3de22: Fix the command palette and search dialog keyboard contract. Both now focus their input on open
+  (so Enter runs the highlighted entry instead of the dialog's Close button), keep the first result
+  highlighted as the query changes, and close on Escape rather than only clearing the query.
+  `Picker.Input`/`SearchList.Input` gain `escapeBehavior`, `SearchList.Root` gains
+  `resetSelectionOnChange`, and `resolveKeyBinding` in `@dxos/util` applies the platform fallbacks
+  everywhere a shortcut hint is rendered — shortcuts were blank on Linux despite firing.
+- 605455c: `Tree` rows treat cursor, selection and collapse as one gesture each.
+
+  The pointer now belongs to rows a click selects, rather than to every row: a row that can only be
+  dragged takes the open hand, and a draggable row shows `grabbing` for the press that starts the
+  drag. Selection no longer discloses — a branch that `canSelect` refuses discloses on click (it
+  previously did nothing), and a selectable one only ever selects, with the chevron, `Space` and
+  option-click still disclosing either way.
+
+  A selected row could not be re-selected: the row reported the flip of its own state, deselecting it,
+  and the machine selected it again on the same click. Re-activation now reports the row as staying
+  current, matching `Enter`, and `selectNode`'s `current` argument is required — the flipping default
+  also read a machine event for an already-current row as a deselect. Single selection still has no
+  deselect-by-click gesture.
+
+  A collapse commits on the gesture instead of waiting out its animation, and the conceal rides the
+  machine's own `data-state`. The chevron, the model and the machine no longer disagree for the
+  length of the animation, and a click arriving mid-collapse reopens the branch rather than being
+  swallowed.
+
+  In the navtree, a graph node with no data is reported as unselectable, matching the select handler,
+  which already ignored it: synthetic sections such as the Collections row now disclose on click and
+  offer no pointer.
+
+- Updated dependencies [0280a6a]
+- Updated dependencies [86d1482]
+- Updated dependencies [6a457ac]
+- Updated dependencies [4ececc6]
+- Updated dependencies [96f94c2]
+- Updated dependencies [3c7b013]
+- Updated dependencies [f4e481a]
+- Updated dependencies [c020513]
+- Updated dependencies [1a8043c]
+- Updated dependencies [6d52561]
+- Updated dependencies [520c34f]
+- Updated dependencies [28b7621]
+- Updated dependencies [9714c75]
+- Updated dependencies [4a0b78b]
+- Updated dependencies [2d58ea5]
+- Updated dependencies [34a8433]
+- Updated dependencies [bd6ba8e]
+- Updated dependencies [b8762ef]
+- Updated dependencies [2d4107f]
+- Updated dependencies [5262408]
+- Updated dependencies [d194929]
+- Updated dependencies [557e243]
+- Updated dependencies [864cd0d]
+- Updated dependencies [b4a84e6]
+- Updated dependencies [5305365]
+- Updated dependencies [9a36b1e]
+- Updated dependencies [a3d45c4]
+- Updated dependencies [b63506b]
+- Updated dependencies [dd17e57]
+- Updated dependencies [bb22f38]
+- Updated dependencies [513cac6]
+- Updated dependencies [6d28380]
+- Updated dependencies [57d460a]
+- Updated dependencies [6af89f4]
+- Updated dependencies [329faa0]
+- Updated dependencies [d770fe7]
+- Updated dependencies [318d610]
+- Updated dependencies [ab56cfe]
+- Updated dependencies [7ec1738]
+- Updated dependencies [df295b2]
+- Updated dependencies [4dccfd3]
+- Updated dependencies [2643a00]
+- Updated dependencies [362fd0f]
+- Updated dependencies [dbff1e4]
+- Updated dependencies [497caab]
+- Updated dependencies [2e4c299]
+- Updated dependencies [b02fe16]
+- Updated dependencies [f0d3620]
+- Updated dependencies [548e82c]
+- Updated dependencies [cafa240]
+- Updated dependencies [813069c]
+- Updated dependencies [8cb5553]
+- Updated dependencies [26e31c1]
+- Updated dependencies [8c20ee2]
+- Updated dependencies [251f586]
+- Updated dependencies [3c85350]
+- Updated dependencies [967b130]
+- Updated dependencies [2c06e2e]
+- Updated dependencies [098a0bb]
+- Updated dependencies [3ea0b0f]
+- Updated dependencies [4e4c25d]
+- Updated dependencies [9c86066]
+- Updated dependencies [608a172]
+- Updated dependencies [5180720]
+- Updated dependencies [3294b3d]
+- Updated dependencies [bf4f1e6]
+- Updated dependencies [cc45381]
+- Updated dependencies [ce194c0]
+- Updated dependencies [818a096]
+- Updated dependencies [4aa6a33]
+- Updated dependencies [4f760ce]
+- Updated dependencies [9d2466a]
+- Updated dependencies [557e243]
+- Updated dependencies [29543ca]
+- Updated dependencies [e26af7e]
+- Updated dependencies [ab79741]
+- Updated dependencies [08cddf6]
+- Updated dependencies [c0e5651]
+- Updated dependencies [efdcf61]
+- Updated dependencies [07531e0]
+- Updated dependencies [3214dcf]
+- Updated dependencies [8efc4f1]
+- Updated dependencies [a04ab6e]
+- Updated dependencies [61fe676]
+- Updated dependencies [d4b4919]
+- Updated dependencies [63e500b]
+- Updated dependencies [b72c1a2]
+- Updated dependencies [7c426d4]
+- Updated dependencies [5662dfc]
+- Updated dependencies [d308bf8]
+- Updated dependencies [07514c2]
+- Updated dependencies [987f7e1]
+- Updated dependencies [1ab4bb8]
+- Updated dependencies [32468c3]
+- Updated dependencies [0a3e9dd]
+- Updated dependencies [e2b04f6]
+- Updated dependencies [256f286]
+- Updated dependencies [306f50d]
+- Updated dependencies [8f372ce]
+- Updated dependencies [b7822a7]
+- Updated dependencies [c8b65f3]
+- Updated dependencies [9feee5e]
+- Updated dependencies [f2d8a92]
+- Updated dependencies [d005fd9]
+- Updated dependencies [0e44f24]
+- Updated dependencies [cef0a3b]
+- Updated dependencies [bd06669]
+- Updated dependencies [1d6f730]
+- Updated dependencies [dea5df9]
+- Updated dependencies [fc83abd]
+- Updated dependencies [178bc6d]
+- Updated dependencies [efa7836]
+- Updated dependencies [678ba58]
+- Updated dependencies [8904184]
+- Updated dependencies [e680b16]
+- Updated dependencies [a805212]
+- Updated dependencies [7263241]
+- Updated dependencies [6fed038]
+- Updated dependencies [0a27bde]
+- Updated dependencies [56276cd]
+- Updated dependencies [886453b]
+- Updated dependencies [582fc22]
+- Updated dependencies [892b718]
+- Updated dependencies [63629c5]
+- Updated dependencies [6a1ec57]
+- Updated dependencies [82a9c4e]
+- Updated dependencies [e3d7a8c]
+- Updated dependencies [0c92b44]
+- Updated dependencies [5dedae9]
+- Updated dependencies [32584c9]
+- Updated dependencies [631df48]
+- Updated dependencies [d205e96]
+- Updated dependencies [e8088ea]
+- Updated dependencies [bb94124]
+- Updated dependencies [928e0b2]
+- Updated dependencies [1a3de22]
+- Updated dependencies [4c5b2c7]
+- Updated dependencies [f9816c0]
+- Updated dependencies [78523d2]
+- Updated dependencies [6fd2a5d]
+- Updated dependencies [525aee0]
+- Updated dependencies [a20d4d9]
+- Updated dependencies [f112c37]
+- Updated dependencies [8048e42]
+- Updated dependencies [520c34f]
+- Updated dependencies [4ae2005]
+- Updated dependencies [605455c]
+- Updated dependencies [ff93962]
+- Updated dependencies [9d8fcbd]
+- Updated dependencies [a1d42c4]
+- Updated dependencies [4a10672]
+- Updated dependencies [ee180f6]
+- Updated dependencies [11de244]
+  - @dxos/app-framework@0.12.0
+  - @dxos/app-toolkit@0.12.0
+  - @dxos/ui-theme@0.12.0
+  - @dxos/compute@0.12.0
+  - @dxos/react-ui@0.12.0
+  - @dxos/app-graph@0.12.0
+  - @dxos/graph@0.12.0
+  - @dxos/react-ui-attention@0.12.0
+  - @dxos/plugin-deck@0.12.0
+  - @dxos/react-ui-list@0.12.0
+  - @dxos/lit-ui@0.12.0
+  - @dxos/react-focus@0.12.0
+  - @dxos/util@0.12.0
+  - @dxos/async@0.12.0
+  - @dxos/log@0.12.0
+  - @dxos/react-ui-menu@0.12.0
+  - @dxos/plugin-graph@0.12.0
+  - @dxos/debug@0.12.0
+  - @dxos/react-ui-search@0.12.0
+  - @dxos/plugin-attention@0.12.0
+  - @dxos/keys@0.12.0
+
 ## 0.11.1
 
 ### Patch Changes
