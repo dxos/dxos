@@ -15,11 +15,18 @@ import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.
 
 const DEVICES = ['Built-in microphone', 'USB headset'];
 
+const VIEW_ICONS: Record<string, string> = {
+  List: 'ph--list--regular',
+  Grid: 'ph--squares-four--regular',
+  Board: 'ph--kanban--regular',
+};
+
 /** The microphone options caret: two headed radio runs, a separator, and a checkbox, beside an action of its own. */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [mode, setMode] = useState<'toggle' | 'hold'>('toggle');
   const [device, setDevice] = useState('');
   const [extraction, setExtraction] = useState(false);
+  const [view, setView] = useState('List');
   const items: Next.MenuButtonItem[] = [
     { type: 'group', label: 'Record mode' },
     { type: 'option', label: 'Toggle', selected: mode === 'toggle', onSelect: () => setMode('toggle') },
@@ -54,6 +61,20 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         label='Recording options'
         items={items}
         data-testid={`options-${size}`}
+      />
+      {/* The picker form: a default-variant button whose icon keeps its square's padding beside a half-cell caret. */}
+      <Next.MenuButton
+        icon={VIEW_ICONS[view]}
+        iconOnly
+        caretDown
+        label='View'
+        items={Object.keys(VIEW_ICONS).map((label) => ({
+          type: 'option',
+          label,
+          selected: view === label,
+          onSelect: () => setView(label),
+        }))}
+        data-testid={`view-${size}`}
       />
       <Next.Typography
         data-testid={`state-${size}`}

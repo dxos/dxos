@@ -20,6 +20,7 @@
      * `--nx-arrow-border` to continue it along those edges: an inset shadow rather than a border, since border widths
      * snap to device pixels and would shrink below the box's 1px after the 1/√2 scale.
      */
-    box-shadow: inset 1.4142px 1.4142px 0 0 var(--nx-arrow-border, transparent);
+    --nx-arrow-stroke: calc(var(--nx-arrow-border-width, 1px) * 1.4142);
+    box-shadow: inset var(--nx-arrow-stroke) var(--nx-arrow-stroke) 0 0 var(--nx-arrow-border, transparent);
   }
 }

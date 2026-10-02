@@ -725,6 +725,11 @@
     outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
     outline-offset: calc(-1 * var(--nx-focus-ring-width));
   }
+  /* The arrow continues the focus ring, so the ring outlines the popup and its arrow as one shape. */
+  .nx-popup:is(:focus-visible, :has(> .nx-scroll-viewport:focus-visible)) {
+    --nx-arrow-border: var(--nx-focus-ring-color);
+    --nx-arrow-border-width: var(--nx-focus-ring-width);
+  }
   /* A small caption naming the Menu or Select group that follows. */
   .nx-popup-group-label {
     display: flex;
