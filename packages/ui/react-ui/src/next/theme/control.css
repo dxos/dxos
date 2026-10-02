@@ -678,7 +678,12 @@
     border-radius: var(--radius-sm, 0.25rem);
     font-size: var(--nx-font-size);
     line-height: var(--nx-line-height);
-    box-shadow: var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+    /* Ringed with the separator, as the current popovers are, so the popup reads against a surface of near its tone; a
+       shadow ring rather than a border keeps the popup's box (and so its placement) unchanged. */
+    box-shadow:
+      0 0 0 1px var(--color-separator),
+      var(--shadow-lg, 0 10px 15px -3px rgb(0 0 0 / 0.1));
+    --nx-arrow-border: var(--color-separator);
   }
   /* An outline, not the shared inset ring: outlines paint after descendants, so item highlights cannot cover it. */
   .nx-popup:focus {
@@ -821,6 +826,7 @@
     container-type: normal;
   }
   .nx-toolbar > .nx-control:not([data-square]),
+  .nx-toolbar > .nx-field > .nx-control,
   .nx-toolbar > .nx-select > .nx-control {
     margin-inline: var(--nx-control-inset);
   }

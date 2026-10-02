@@ -37,6 +37,9 @@ const getInitials = (label: string): string[] =>
     .map((word) => word[0].toUpperCase());
 
 /** Up to two initials of a name; an emoji or symbol with no letters is shown as given. */
+/** A fallback that is a pictograph rather than a name, drawn larger than initials. */
+const EMOJI = /^\p{Extended_Pictographic}/u;
+
 export const getAvatarGlyph = (fallback = ''): string => {
   const initials = getInitials(fallback);
   return initials.length > 0 ? initials.join('') : fallback;
@@ -110,7 +113,9 @@ const AvatarRoot = forwardRef<HTMLDivElement, AvatarRootProps>(
       {children ?? (
         <>
           {src && <AvatarImage src={src} />}
-          <AvatarFallback>{icon ? <Icon icon={icon} /> : getAvatarGlyph(fallback)}</AvatarFallback>
+          <AvatarFallback data-emoji={!icon && EMOJI.test(fallback) ? '' : undefined}>
+            {icon ? <Icon icon={icon} /> : getAvatarGlyph(fallback)}
+          </AvatarFallback>
         </>
       )}
     </AvatarPrimitive.Root>

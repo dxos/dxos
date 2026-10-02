@@ -110,6 +110,10 @@
     line-height: 1;
     font-weight: 500;
   }
+  /* An emoji fills more of the frame than initials: text-2xl in an xl avatar. */
+  .nx-avatar-fallback[data-emoji] {
+    font-size: 50cqi;
+  }
   .nx-avatar-fallback[hidden] {
     display: none;
   }

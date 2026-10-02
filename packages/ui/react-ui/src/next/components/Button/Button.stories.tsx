@@ -353,8 +353,18 @@ export const Test: Story = {
       const [leading, trailing] = Array.from(iconCaret.querySelectorAll('svg')).map((svg) =>
         svg.getBoundingClientRect(),
       );
-      // With no label the caret sits an inset from the icon, not a full gap.
-      await expect(trailing.left - leading.right, `icon-caret-${size} gap`).toBeCloseTo(inset, 0);
+      // With no label the icon keeps its square's padding and the caret takes a half-block cell after it (a menu button).
+      const box = iconCaret.getBoundingClientRect();
+      const halfBlock = (controlSize(size) + 2 * inset) / 2;
+      await expect(leading.left - box.left, `icon-caret-${size} padding`).toBeCloseTo(
+        (controlSize(size) - leading.width) / 2,
+        0,
+      );
+      await expect(box.right - leading.right, `icon-caret-${size} caret cell`).toBeCloseTo(halfBlock, 0);
+      await expect((trailing.left + trailing.right) / 2, `icon-caret-${size} caret centre`).toBeCloseTo(
+        box.right - halfBlock / 2,
+        0,
+      );
       await expect(iconCaret.getBoundingClientRect().height, `icon-caret-${size}`).toBeCloseTo(controlSize(size), 0);
       await expect(iconCaret.getBoundingClientRect().width).toBeGreaterThan(iconCaret.getBoundingClientRect().height);
       await expect(iconCaret).toHaveAttribute('aria-label', 'Style');

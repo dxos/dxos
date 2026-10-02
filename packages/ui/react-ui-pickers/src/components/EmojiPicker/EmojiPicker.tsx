@@ -120,16 +120,17 @@ export const EmojiPickerBlock = ({
         positioning={{ placement: 'right', gutter: isMd ? 0 : -310, overflowPadding: 8 }}
       >
         <Next.Popover.Trigger asChild>
-          <Next.Button variant={triggerVariant} classNames='grow gap-2 text-2xl' disabled={disabled}>
+          <Next.Button variant={triggerVariant} classNames='text-xl' disabled={disabled}>
             <span className='sr-only'>{t('select-emoji.label')}</span>
             <span>{emojiValue}</span>
-            <Next.Icon icon='ph--caret-down--bold' size='xs' classNames='mx-0.5' />
+            <Next.Icon icon='ph--caret-down--bold' size='xs' />
           </Next.Button>
         </Next.Popover.Trigger>
         {/* Portalled, like `EmojiPickerToolbarButton` above and `PickerButton` (which is why the hue
             picker never had this problem): rendered in place, a 300px panel is clipped by the first
             scrolling ancestor — in the profile page, the settings panel's own overflow. */}
         <Next.Popover.Content
+          classNames='p-0'
           onKeyDownCapture={(event) => {
             if (event.key === 'Escape') {
               event.stopPropagation();
