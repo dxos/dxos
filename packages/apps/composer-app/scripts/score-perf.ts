@@ -11,22 +11,11 @@
 // Run once after every iteration has written its batch: a night's score is the median across them.
 // A low score never fails the job; only broken inputs do.
 
-import * as Schema from 'effect/Schema';
-import { appendFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
-import {
-  type Budget,
-  parseBudgets,
-  publishPosthogBatch,
-  renderBudgetTables,
-  renderReport,
-  scoreMeasurements,
-  toScoreEvents,
-} from '@dxos/perf-harness/score';
-
-import { StageEvent, groupOfId, toMeasurements } from '../src/playwright/perf/score.ts';
+import { type Budget, groupOfId, parseBudgets, renderBudgetTables, scoreStageRun } from '@dxos/perf-harness/score';
 
 const APP_ROOT = path.resolve(import.meta.dirname, '..');
 const WORKSPACE_ROOT = path.resolve(APP_ROOT, '../../..');
@@ -85,48 +74,17 @@ const { positionals, values } = parseArgs({
 const [command] = positionals;
 
 if (command === 'score') {
-  const dir = path.resolve(values.dir);
-  // Only the per-iteration `measure` batches: the spec writes nothing else with this suffix.
-  const files = readdirSync(dir).filter(
-    (file) => file.startsWith(`${FLOW}-measure-`) && file.endsWith('.events.ndjson'),
-  );
-  if (files.length === 0) {
-    throw new Error(`no ${FLOW} measure batches in ${dir}; did the flow reach a stage?`);
-  }
-  const decode = Schema.decodeUnknownSync(StageEvent);
-  const events = files.flatMap((file) =>
-    readFileSync(path.join(dir, file), 'utf8')
-      .split('\n')
-      .filter((line) => line.trim())
-      .map((line) => decode(JSON.parse(line))),
-  );
-
-  const report = scoreMeasurements(toMeasurements(events), readBudgets(), { scoreMissing: { groupOf: groupOfId } });
-  const markdown = renderReport('Composer performance', report);
-  console.log(markdown);
-  if (values.summary) {
-    appendFileSync(values.summary, markdown + '\n');
-  }
-  for (const { id } of report.unbudgeted) {
-    console.log(`::warning::metric "${id}" has no budget in src/playwright/perf/budgets.json`);
-  }
-
-  // The comparability fields every stage row carries, so a score tile can pin the same run shape.
-  const first = events[0].properties;
-  const pinned = Object.fromEntries(
-    ['flow', 'scale', 'servingMode', 'pluginSet', 'profileState', 'instruments']
-      .map((key) => [key, first[key]] as const)
-      .filter((entry): entry is readonly [string, string | number | boolean] => entry[1] !== undefined),
-  );
-  const out = path.join(WORKSPACE_ROOT, 'test-results', 'perf-score');
-  mkdirSync(out, { recursive: true });
-  const eventsFile = path.join(out, 'composer.events.ndjson');
-  const scoreEvents = toScoreEvents(report, { suite: 'composer', properties: pinned });
-  writeFileSync(eventsFile, scoreEvents.map((event) => JSON.stringify(event)).join('\n') + '\n');
-  if (values.publish) {
-    const published = publishPosthogBatch(WORKSPACE_ROOT, eventsFile);
-    console.log(published ? `published ${scoreEvents.length} score events` : '::warning::score events NOT published');
-  }
+  scoreStageRun({
+    workspaceRoot: WORKSPACE_ROOT,
+    dir: path.resolve(values.dir),
+    flow: FLOW,
+    suite: 'composer',
+    title: 'Composer performance',
+    budgets: readBudgets(),
+    budgetsFile: 'src/playwright/perf/budgets.json',
+    publish: values.publish,
+    summary: values.summary,
+  });
 } else if (command === 'docs') {
   const markdown = renderDocs(readBudgets());
   if (values.write) {

@@ -4414,9 +4414,21 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
     devDependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/perf-harness':
+        specifier: workspace:*
+        version: link:../../../e2e/perf-harness
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../../common/test-utils
       '@effect/vitest':
         specifier: 'catalog:'
         version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.63.0
       effect:
         specifier: 4.0.0
         version: 4.0.0
@@ -18012,6 +18024,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
@@ -20105,6 +20120,9 @@ importers:
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/compute/assistant-toolkit
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/compute-runtime
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
