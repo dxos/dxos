@@ -89,11 +89,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
               <Field.Root>
                 <Field.Label>{t('related-actions.label')}</Field.Label>
               </Field.Root>
-              <Surface.Surface
-                type={SpaceSurface.Prompts}
-                data={{ subject, attendableId: subject.id }}
-                limit={1}
-              />
+              <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
             </Flex.Root>
 
             {/* Gated on the unfiltered set so hiding every type does not remove the filter itself. */}
