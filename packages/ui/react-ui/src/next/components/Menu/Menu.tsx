@@ -14,6 +14,7 @@ import React, {
   useId,
 } from 'react';
 
+import { invariant } from '@dxos/invariant';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
@@ -183,6 +184,10 @@ const useItem = (part: string) => {
   return context;
 };
 
+/** An item part's row data comes from its caller, so a missing `item` names the part rather than failing deep inside it. */
+const assertItem = (part: string, item: MenuItemData | undefined) =>
+  invariant(item, `Next.Menu.${part} requires an \`item\``);
+
 type MenuItemProps = ThemedClassName<Omit<MenuPrimitive.ItemProps, 'value' | 'children'>> & {
   item: MenuOption;
   /** Replaces the whole row, composed from `ItemIcon`, `ItemText`, `ItemShortcut` and any trailing control. */
@@ -191,25 +196,28 @@ type MenuItemProps = ThemedClassName<Omit<MenuPrimitive.ItemProps, 'value' | 'ch
 
 /** A block-tall row: without children, the option's leading icon, its label and its trailing shortcut. */
 const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
-  ({ classNames, item, disabled, children, ...props }, forwardedRef) => (
-    <ItemContext.Provider value={{ data: item, trigger: false }}>
-      <MenuPrimitive.Item
-        {...props}
-        value={item.value}
-        disabled={disabled ?? item.disabled}
-        className={mx(recipes.menuItem(), classNames)}
-        ref={forwardedRef}
-      >
-        {children ?? (
-          <>
-            {item.icon && <MenuItemIcon />}
-            <MenuItemText />
-            {item.shortcut && <MenuItemShortcut />}
-          </>
-        )}
-      </MenuPrimitive.Item>
-    </ItemContext.Provider>
-  ),
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => {
+    assertItem('Item', item);
+    return (
+      <ItemContext.Provider value={{ data: item, trigger: false }}>
+        <MenuPrimitive.Item
+          {...props}
+          value={item.value}
+          disabled={disabled ?? item.disabled}
+          className={mx(recipes.menuItem(), classNames)}
+          ref={forwardedRef}
+        >
+          {children ?? (
+            <>
+              {item.icon && <MenuItemIcon />}
+              <MenuItemText />
+              {item.shortcut && <MenuItemShortcut />}
+            </>
+          )}
+        </MenuPrimitive.Item>
+      </ItemContext.Provider>
+    );
+  },
 );
 
 MenuItem.displayName = 'Next.Menu.Item';
@@ -322,25 +330,28 @@ type MenuCheckboxItemProps = ThemedClassName<Omit<MenuPrimitive.CheckboxItemProp
 
 /** A `menuitemcheckbox` row: without children, a check cell, the label and the shortcut; selecting it toggles `checked`. */
 const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
-  ({ classNames, item, disabled, children, ...props }, forwardedRef) => (
-    <ItemContext.Provider value={{ data: item, trigger: false }}>
-      <MenuPrimitive.CheckboxItem
-        {...props}
-        value={item.value}
-        disabled={disabled ?? item.disabled}
-        className={mx(recipes.menuItem(), classNames)}
-        ref={forwardedRef}
-      >
-        {children ?? (
-          <>
-            <MenuItemIndicator />
-            <MenuItemText />
-            {item.shortcut && <MenuItemShortcut />}
-          </>
-        )}
-      </MenuPrimitive.CheckboxItem>
-    </ItemContext.Provider>
-  ),
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => {
+    assertItem('CheckboxItem', item);
+    return (
+      <ItemContext.Provider value={{ data: item, trigger: false }}>
+        <MenuPrimitive.CheckboxItem
+          {...props}
+          value={item.value}
+          disabled={disabled ?? item.disabled}
+          className={mx(recipes.menuItem(), classNames)}
+          ref={forwardedRef}
+        >
+          {children ?? (
+            <>
+              <MenuItemIndicator />
+              <MenuItemText />
+              {item.shortcut && <MenuItemShortcut />}
+            </>
+          )}
+        </MenuPrimitive.CheckboxItem>
+      </ItemContext.Provider>
+    );
+  },
 );
 
 MenuCheckboxItem.displayName = 'Next.Menu.CheckboxItem';
@@ -372,26 +383,29 @@ type MenuRadioItemProps = ThemedClassName<Omit<MenuPrimitive.RadioItemProps, 'va
 
 /** A `menuitemradio` row: without children, a dot in the indicator cell while it holds its group's value, and the label. */
 const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
-  ({ classNames, item, disabled, children, ...props }, forwardedRef) => (
-    <ItemContext.Provider value={{ data: item, trigger: false }}>
-      <MenuPrimitive.RadioItem
-        {...props}
-        value={item.value}
-        disabled={disabled ?? item.disabled}
-        className={mx(recipes.menuItem(), classNames)}
-        ref={forwardedRef}
-      >
-        {children ?? (
-          <>
-            <MenuItemIndicator>
-              <Icon icon='ph--dot-outline--fill' />
-            </MenuItemIndicator>
-            <MenuItemText />
-          </>
-        )}
-      </MenuPrimitive.RadioItem>
-    </ItemContext.Provider>
-  ),
+  ({ classNames, item, disabled, children, ...props }, forwardedRef) => {
+    assertItem('RadioItem', item);
+    return (
+      <ItemContext.Provider value={{ data: item, trigger: false }}>
+        <MenuPrimitive.RadioItem
+          {...props}
+          value={item.value}
+          disabled={disabled ?? item.disabled}
+          className={mx(recipes.menuItem(), classNames)}
+          ref={forwardedRef}
+        >
+          {children ?? (
+            <>
+              <MenuItemIndicator>
+                <Icon icon='ph--dot-outline--fill' />
+              </MenuItemIndicator>
+              <MenuItemText />
+            </>
+          )}
+        </MenuPrimitive.RadioItem>
+      </ItemContext.Provider>
+    );
+  },
 );
 
 MenuRadioItem.displayName = 'Next.Menu.RadioItem';
@@ -450,6 +464,7 @@ type MenuTriggerItemProps = ThemedClassName<Omit<MenuPrimitive.TriggerItemProps,
 const MenuTriggerItem = forwardRef<HTMLDivElement, MenuTriggerItemProps>(
   ({ classNames, item, disabled, children, onSelect, ...props }, forwardedRef) => {
     const value = useId();
+    assertItem('TriggerItem', item);
     const row = children ?? (
       <>
         {item.icon && <MenuItemIcon />}

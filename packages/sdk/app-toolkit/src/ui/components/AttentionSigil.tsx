@@ -2,13 +2,20 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type ComponentPropsWithoutRef, Fragment, type PropsWithChildren, forwardRef, useState } from 'react';
+import React, {
+  type ComponentPropsWithoutRef,
+  Fragment,
+  type MouseEvent,
+  type PropsWithChildren,
+  forwardRef,
+  useState,
+} from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { keySymbols } from '@dxos/react-focus';
 import { Next, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
-import { mx, osTranslations } from '@dxos/ui-theme';
+import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
 export type KeyBinding = {
@@ -131,38 +138,34 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
                 {separator}
                 {actions.map((action) => {
                   const shortcut = resolveKeyBinding(action.properties.keyBinding);
+                  const item: Next.MenuOption = {
+                    value: action.id,
+                    label: toLocalizedString(action.properties.label ?? '', t),
+                    icon: action.properties.icon ?? 'ph--circle-dashed--regular',
+                    shortcut: shortcut ? keySymbols(shortcut).join('') : undefined,
+                    disabled: action.properties.disabled,
+                  };
+                  const handleClick = (event: MouseEvent) => {
+                    if (action.properties.disabled) {
+                      return;
+                    }
+                    event.stopPropagation();
+                    // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
+                    setOptionsMenuOpen(false);
+                    onAction?.(action);
+                  };
+                  const testId = action.properties?.testId && { 'data-testid': action.properties.testId };
 
-                  const menuItemType = action.properties.menuItemType;
-                  const Root = menuItemType === 'toggle' ? Next.Menu.CheckboxItem : Next.Menu.Item;
-
-                  return (
-                    <Root
+                  return action.properties.menuItemType === 'toggle' ? (
+                    <Next.Menu.CheckboxItem
                       key={action.id}
-                      onClick={(event) => {
-                        if (action.properties.disabled) {
-                          return;
-                        }
-                        event.stopPropagation();
-                        // TODO(thure): Why does Dialog’s modal-ness cause issues if we don’t explicitly close the menu here?
-                        setOptionsMenuOpen(false);
-                        onAction?.(action);
-                      }}
-                      classNames='gap-2'
-                      disabled={action.properties.disabled}
-                      checked={menuItemType === 'toggle' ? action.properties.isChecked : undefined}
-                      {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-                    >
-                      <Next.Icon icon={action.properties.icon ?? 'ph--circle-dashed--regular'} size='md' />
-                      <span className='grow truncate'>{toLocalizedString(action.properties.label ?? '', t)}</span>
-                      {menuItemType === 'toggle' && (
-                        <Next.Menu.ItemIndicator asChild>
-                          <Next.Icon icon='ph--check--regular' size='md' />
-                        </Next.Menu.ItemIndicator>
-                      )}
-                      {shortcut && (
-                        <span className={mx('shrink-0', 'text-description')}>{keySymbols(shortcut).join('')}</span>
-                      )}
-                    </Root>
+                      item={item}
+                      checked={!!action.properties.isChecked}
+                      onClick={handleClick}
+                      {...testId}
+                    />
+                  ) : (
+                    <Next.Menu.Item key={action.id} item={item} onClick={handleClick} {...testId} />
                   );
                 })}
               </Fragment>
