@@ -57,8 +57,15 @@ export const scoreStageRun = ({
     .flatMap((file) =>
       readFileSync(path.join(dir, file), 'utf8')
         .split('\n')
-        .filter((line) => line.trim())
-        .map((line) => parseStageEvent(JSON.parse(line))),
+        .map((line, index) => ({ line, lineNumber: index + 1 }))
+        .filter(({ line }) => line.trim())
+        .map(({ line, lineNumber }) => {
+          try {
+            return parseStageEvent(JSON.parse(line));
+          } catch (error) {
+            throw new Error(`malformed stage event at ${file}:${lineNumber}`, { cause: error });
+          }
+        }),
     )
     .filter(({ properties }) => scale === undefined || properties.scale === scale);
   if (events.length === 0) {
