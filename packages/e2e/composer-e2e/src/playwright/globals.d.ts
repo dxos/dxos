@@ -11,6 +11,9 @@
 // keep their own (profiler, long tasks, the boot loader, `dxos.spaces`) in composer-app, so neither
 // package declares a hook it does not use.
 
+// Loaded explicitly: augmenting a module outside the program would declare a new ambient module instead.
+import '@dxos/app-framework/Devtools';
+
 // `globalThis.composer` itself is declared by `@dxos/app-framework/Devtools`; a second `var composer` here
 // would collide with it and resolve every member to `{}`. Merge the app-only hooks onto its
 // interface instead.
