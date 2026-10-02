@@ -326,6 +326,30 @@ jobs:
             --entitlements packages/apps/composer-app/src-tauri/SandboxHelper.entitlements.plist \
             packages/apps/composer-app/src-tauri/sandbox/dx-sandbox
 
+      # plugin-code's coding-agent helper and the agents plugins ship for it (plugin-claude's Claude Code
+      # adapter), bundled like the sandbox helper (see plugin-code's capabilities/agent-launcher.ts).
+      - name: Build agent helper
+        run: proto run bun -- ./scripts/build-agent-helper.ts
+        working-directory: ./packages/plugins/plugin-code
+
+      - name: Build Claude Code agent
+        run: proto run bun -- ./scripts/build-agent.ts
+        working-directory: ./packages/plugins/plugin-claude
+
+      - name: Stage agent helper
+        run: node scripts/stage-agent-helper.mjs --required
+        working-directory: ./packages/apps/composer-app
+
+      # Signed like the sandbox helper: a Bun executable's JIT needs `allow-jit`, never the app's
+      # restricted entitlements.
+      - name: Sign agent helper
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          codesign --force --options runtime --sign "$CERT_ID" \
+            --entitlements src-tauri/SandboxHelper.entitlements.plist \
+            src-tauri/agent/dx-agent
+        working-directory: ./packages/apps/composer-app
+
       - name: Build Tauri app
         run: pnpm exec tauri build
         working-directory: ./packages/apps/composer-app
@@ -403,6 +427,20 @@ jobs:
           if [ "$listed" != true ]; then
             echo "::error::the embedded profile does not list the signing certificate; regenerate the channel profiles" && exit 1
           fi
+
+      - name: Verify agent helper signature
+        if: matrix.os == 'depot-macos-latest'
+        run: |
+          app=$(ls -d src-tauri/target/release/bundle/macos/*.app)
+          helper="$app/Contents/Resources/dx-agent"
+          codesign --verify --strict "$helper"
+          entitlements=$(codesign -d --entitlements - --xml "$helper" 2>/dev/null)
+          for restricted in application-identifier associated-domains team-identifier keychain-access-groups; do
+            if echo "$entitlements" | grep -q "$restricted"; then
+              echo "::error::dx-agent is signed with restricted entitlement $restricted" && exit 1
+            fi
+          done
+        working-directory: ./packages/apps/composer-app
 
       - name: Upload assets
         timeout-minutes: 30

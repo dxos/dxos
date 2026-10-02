@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import { useCallback } from 'react';
+import { useAtomValue } from '@effect/atom-react/Hooks';
+import * as Atom from 'effect/unstable/reactivity/Atom';
+import { useCallback, useMemo } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
+import { type MenuItem, createLineSeparator, createMenuAction } from '@dxos/react-ui-menu';
 import { type Task } from '@dxos/types';
 
 import { TasksCapabilities } from '#types';
@@ -22,6 +24,12 @@ import { TasksCapabilities } from '#types';
 export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => {
   const invoker = useOperationInvoker();
   const actions = useCapabilities(TasksCapabilities.TaskAction);
+  const unavailable = useAtomValue(
+    useMemo(
+      () => Atom.make((get) => actions.map((action) => action.unavailable && get(action.unavailable))),
+      [actions],
+    ),
+  );
 
   return useCallback(
     (task: Task.Task) => {
@@ -30,14 +38,22 @@ export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => {
         return [];
       }
 
-      return actions.flatMap((action) => {
+      const items: MenuItem[] = [];
+      let group: string | undefined;
+      actions.forEach((action, index) => {
         const invocations = action.createInvocations(task);
         // An empty list means the action does not apply to this task, so it earns no menu item.
         if (invocations.length === 0) {
-          return [];
+          return;
         }
 
-        return [
+        if (items.length > 0 && action.group !== group) {
+          items.push(createLineSeparator(`${action.id}-separator`).nodes[0]);
+        }
+        group = action.group;
+
+        const reason = unavailable[index];
+        items.push(
           createMenuAction(
             action.id,
             () => {
@@ -64,12 +80,19 @@ export const useTaskActions = (): ((task: Task.Task) => MenuItem[]) => {
 
               void run.catch((err) => log.warn('task action failed', { id: action.id, err }));
             },
-            { label: action.label, icon: action.icon, testId: `tasks.task.${action.id}` },
+            {
+              label: reason ? `${action.label} (${reason})` : action.label,
+              icon: action.icon,
+              disabled: reason !== undefined,
+              testId: `tasks.task.${action.id}`,
+            },
           ),
-        ];
+        );
       });
+
+      return items;
     },
-    [actions, invoker],
+    [actions, invoker, unavailable],
   );
 };
 

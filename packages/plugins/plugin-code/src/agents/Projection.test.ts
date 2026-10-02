@@ -88,6 +88,32 @@ describe('TurnProjection', () => {
     ]);
   });
 
+  test('a completion that reports no content keeps what the call reported before', ({ expect }) => {
+    const projection = new Projection.TurnProjection();
+    projection.apply({
+      sessionUpdate: 'tool_call',
+      toolCallId: 't3',
+      title: 'Write a.txt',
+      name: 'Write',
+      status: 'pending',
+    });
+    projection.apply({
+      sessionUpdate: 'tool_call_update',
+      toolCallId: 't3',
+      content: [{ type: 'diff', path: '/repo/a.txt', newText: 'hi' }],
+    });
+    const done = projection.apply({
+      sessionUpdate: 'tool_call_update',
+      toolCallId: 't3',
+      status: 'completed',
+      content: [],
+    });
+    expect(blocks(done).at(-1)).toEqual([
+      'tool',
+      { _tag: 'toolResult', toolCallId: 't3', name: 'Write', providerExecuted: false, result: 'Edited /repo/a.txt' },
+    ]);
+  });
+
   test('reveals the call a permission request is about, before the request', ({ expect }) => {
     const projection = new Projection.TurnProjection();
     projection.apply({

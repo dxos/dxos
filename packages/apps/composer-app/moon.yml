@@ -103,6 +103,7 @@ tasks:
           DX_TAURI: 'true'
       - fetch-ollama
       - stage-sandbox-helper
+      - stage-agent-helper
   # The desktop app for automation (autocue's `--target tauri` on macOS): the embedded frontend, an
   # embedded WebDriver server (the `webdriver` feature) and the test identifier, so it never opens a
   # shipped channel's profile. `--no-bundle` leaves the binary at `src-tauri/target/release/app`. The
@@ -128,6 +129,7 @@ tasks:
           DX_TAURI: 'true'
       - fetch-ollama
       - stage-sandbox-helper
+      - stage-agent-helper
     options:
       cache: false
   # iOS counterpart of `tauri-build`; no ollama (its runtime is desktop-only). Embeds the
@@ -176,6 +178,16 @@ tasks:
       - scripts/stage-sandbox-helper.mjs
     outputs:
       - src-tauri/sandbox
+  # Stages plugin-code's coding-agent helper and the agents plugins ship for it.
+  stage-agent-helper:
+    command: node scripts/stage-agent-helper.mjs --required
+    deps:
+      - plugin-code:compile-agent-helper
+      - plugin-claude:compile-agent
+    inputs:
+      - scripts/stage-agent-helper.mjs
+    outputs:
+      - src-tauri/agent
   # Regenerates `src/vite/optimize-deps.ts` from a cold dependency scan. Not cacheable — the point
   # is to re-derive the list from the current source graph, and it rewrites a checked-in file.
   gen-optimize-deps:

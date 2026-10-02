@@ -2,8 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/unstable/reactivity/Atom';
 import { describe, test } from 'vitest';
 
+import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
@@ -11,6 +14,7 @@ import * as Skill from '@dxos/compute/Skill';
 import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
+import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
@@ -39,6 +43,8 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
 
     // The chat is named for the task, so the conversation is findable by what it is about.
     expect(chat.name).toBe('Ship the release');
+    // Named even when it is Composer's own, so no reader has to treat an unset agent as a default.
+    expect(chat.session?.harness).toBe('composer');
 
     const [ref] = chat.tasks;
     invariant(ref, 'Expected the task in the chat checklist.');
@@ -271,6 +277,72 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
       ),
     ).rejects.toThrow();
   });
+
+  test('runs the chat on the agent asked for, opening with the task brief', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    const agent = contributeAgent(harness);
+
+    const task = space.db.add(Task.make({ title: 'Fix the flaky test', description: 'It times out.', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(
+        ProjectOperation.DelegateTaskToChat,
+        { tasks: [Ref.make(task)], harness: agent.id },
+        { spaceId: space.id },
+      ),
+    );
+
+    expect(chat.session?.harness).toBe(agent.id);
+    // The agent cannot read the chat's checklist, so the brief carries the task itself.
+    const prompt = await agent.prompt;
+    expect(prompt).toContain('## Fix the flaky test');
+    expect(prompt).toContain('It times out.');
+    expect(prompt).toContain(Obj.getURI(task));
+  });
+
+  test("runs on the reader's default agent while it is available, else on Composer", async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    const agent = contributeAgent(harness);
+    await harness.fire(ActivationEvents.Idle);
+    const settings = await harness.waitForCapability(AssistantCapabilities.Settings);
+    harness.registry.set(settings, { ...harness.registry.get(settings), defaultAgent: agent.id });
+
+    const delegate = async (title: string) => {
+      const task = space.db.add(Task.make({ title, status: 'todo' }));
+      await space.db.flush();
+      const { chat } = await harness.runPromise(
+        Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+      );
+      return chat.session?.harness;
+    };
+
+    expect(await delegate('Available')).toBe(agent.id);
+    harness.registry.set(agent.availability, { available: false, reason: 'not installed' });
+    expect(await delegate('Unavailable')).toBe('composer');
+  });
+
+  test('refuses an agent nobody registered', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+    const task = space.db.add(Task.make({ title: 'Orphan', status: 'todo' }));
+    await space.db.flush();
+
+    await expect(
+      harness.runPromise(
+        Operation.invoke(
+          ProjectOperation.DelegateTaskToChat,
+          { tasks: [Ref.make(task)], harness: 'nobody' },
+          { spaceId: space.id },
+        ),
+      ),
+    ).rejects.toThrow();
+  });
 });
 
 const setup = async () => {
@@ -291,4 +363,34 @@ const setup = async () => {
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
   await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return harness;
+};
+
+/** Registers an agent that records the text of the first prompt it is given and answers with nothing. */
+const contributeAgent = (harness: Awaited<ReturnType<typeof setup>>) => {
+  let received!: (prompt: string) => void;
+  const prompt = new Promise<string>((resolve) => {
+    received = resolve;
+  });
+  const availability = Atom.make<AssistantCapabilities.AgentAvailability>({ available: true }).pipe(Atom.keepAlive);
+  const agent: AssistantCapabilities.Agent = {
+    id: 'test-agent',
+    label: 'Test agent',
+    icon: 'ph--robot--regular',
+    availability,
+    makeTurnProducer: () =>
+      Effect.succeed({
+        runTurn: ({ prompt }) =>
+          Effect.sync(() => {
+            received(
+              typeof prompt === 'string'
+                ? prompt
+                : prompt.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n'),
+            );
+            return [];
+          }),
+        getSkills: () => [],
+      }),
+  };
+  harness.capabilities.contribute({ module: 'test', interface: AssistantCapabilities.Agent, implementation: agent });
+  return { id: agent.id, availability, prompt };
 };

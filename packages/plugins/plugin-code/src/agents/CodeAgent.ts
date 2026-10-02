@@ -45,8 +45,8 @@ export const make = (
     const sessions = yield* AcpAgent.Sessions.make();
     const availability = Atom.make<AssistantCapabilities.AgentAvailability>(
       isTauri()
-        ? { available: false, reason: 'Looking for it on this computer…' }
-        : { available: false, reason: 'Needs the Composer desktop app.' },
+        ? { available: false, reason: 'looking for it on this computer' }
+        : { available: false, reason: 'needs the Composer desktop app' },
     );
 
     const helper = () => manager.getAll(CodeCapabilities.AgentHelper).at(0);
@@ -124,7 +124,7 @@ const probe = (
                 const status = statuses.find((status) => status.id === id);
                 return status?.available
                   ? { available: true }
-                  : { available: false, reason: status?.reason ?? 'The desktop app does not include this agent.' };
+                  : { available: false, reason: status?.reason ?? 'not included in this desktop app' };
               },
             }),
           ),
@@ -133,5 +133,5 @@ const probe = (
       }
       yield* Effect.sleep(HELPER_WAIT.interval);
     }
-    set({ available: false, reason: 'The agent helper did not start.' });
+    set({ available: false, reason: 'the agent helper did not start' });
   });

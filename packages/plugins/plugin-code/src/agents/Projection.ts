@@ -17,6 +17,8 @@ type Tool = {
   name: string;
   title: string;
   input: unknown;
+  /** The latest content the agent reported; a completion often reports none of its own. */
+  content: acp.ToolCallContent[];
   /** Whether the call's block has been emitted; a call is emitted once, before its result. */
   emitted: boolean;
 };
@@ -60,6 +62,7 @@ export class TurnProjection {
           name: update.name ?? update.title,
           title: update.title,
           input: update.rawInput,
+          content: update.content ?? [],
           emitted: false,
         });
         return [
@@ -78,6 +81,9 @@ export class TurnProjection {
         }
         if (update.rawInput !== undefined && update.rawInput !== null) {
           tool.input = update.rawInput;
+        }
+        if (update.content && update.content.length > 0) {
+          tool.content = update.content;
         }
         return [
           ...this.#flush(),
@@ -143,7 +149,7 @@ export class TurnProjection {
     const messages = tool.emitted ? [] : [this.#call(toolCallId, tool)];
     if (status === 'completed' || status === 'failed') {
       this.#tools.delete(toolCallId);
-      const output = describe(content ?? []);
+      const output = describe(content && content.length > 0 ? content : tool.content);
       const result: ContentBlock.ToolResult = {
         _tag: 'toolResult',
         toolCallId,

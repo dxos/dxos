@@ -25,3 +25,16 @@ tasks:
       - /pnpm-lock.yaml
     options:
       timeout: 60
+  # The Claude Code agent the desktop app's agent helper runs (the ACP adapter, bundled). Not part of
+  # `build`: only composer-app's Tauri build consumes it, and it installs the pinned adapter from npm.
+  compile-agent:
+    command: bun
+    args:
+      - ./scripts/build-agent.ts
+    inputs:
+      - scripts/build-agent.ts
+      - /.prototools
+    outputs:
+      - dist/agent/
+    options:
+      timeout: 300

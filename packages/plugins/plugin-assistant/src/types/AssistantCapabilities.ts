@@ -76,7 +76,10 @@ export const AgentTurnProducer = Capability.make<MakeTurnProducer>()(
   'org.dxos.plugin.assistant.capability.agentTurnProducer',
 );
 
-/** Whether an agent can run on this device; one that cannot is still listed, with the reason. */
+/**
+ * Whether an agent can run on this device; one that cannot is still listed, with the reason as a
+ * short lowercase phrase shown after its name.
+ */
 export type AgentAvailability = { readonly available: true } | { readonly available: false; readonly reason: string };
 
 /** A person's answer to a request block an agent added to a chat. */
