@@ -323,7 +323,8 @@ export const RequiredSchema: StoryObj = {
     // character into dx-grid's `initialContent` and races the editor mount. The empty value
     // fails validation; the editor must stay open so the value below can be entered.
     await userEvent.keyboard('{Enter}');
-    await canvas.findByTestId('grid.cell-editor');
+    // The form editor mounts lazily, which outlasts the default 1s under load.
+    await canvas.findByTestId('grid.cell-editor', undefined, { timeout: 10_000 });
 
     // The editor is focused (autoFocus); type the required value and commit.
     await userEvent.keyboard('Alice');
