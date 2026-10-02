@@ -52,6 +52,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@types/topojson-specification": "catalog:",
     "d3": "catalog:",
     "geojson": "catalog:",
@@ -65,7 +66,6 @@
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/d3": "catalog:",
     "@types/geojson": "catalog:",

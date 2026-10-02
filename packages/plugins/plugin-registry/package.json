@@ -133,6 +133,7 @@
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-markdown": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
     "yaml": "catalog:"
@@ -142,7 +143,6 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

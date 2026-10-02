@@ -28,12 +28,12 @@
   "dependencies": {
     "@ark-ui/react": "catalog:",
     "@dxos/react-hooks": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*"
   },
   "devDependencies": {
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/ui-types": "workspace:*",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
