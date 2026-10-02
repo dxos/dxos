@@ -132,13 +132,15 @@ export type TargetInfo = {
   webSocketDebuggerUrl?: string;
 };
 
-const MEASURED: ReadonlySet<string> = new Set<TargetKind>(['page', 'shared_worker', 'worker', 'service_worker']);
+const MEASURED: readonly TargetKind[] = ['page', 'shared_worker', 'worker', 'service_worker'];
+
+const isMeasured = (type: string): type is TargetKind => MEASURED.some((kind) => kind === type);
 
 /** Targets worth measuring, discovered over the debug port's HTTP endpoint. */
 export const listTargets = async (port: number): Promise<TargetInfo[]> => {
   const response = await fetch(`http://127.0.0.1:${port}/json/list`);
   const targets: TargetInfo[] = await response.json();
-  return targets.filter((target) => MEASURED.has(target.type) && target.webSocketDebuggerUrl);
+  return targets.filter((target) => isMeasured(target.type) && target.webSocketDebuggerUrl);
 };
 
 /** The browser-level target, which is the only one that answers `SystemInfo.*`. */
@@ -181,14 +183,18 @@ export type Attached = {
 };
 
 const attach = async (info: TargetInfo): Promise<Attached | undefined> => {
+  const { type, webSocketDebuggerUrl } = info;
+  if (!webSocketDebuggerUrl || !isMeasured(type)) {
+    return undefined;
+  }
   try {
-    const cdp = await Cdp.connect(info.webSocketDebuggerUrl!);
+    const cdp = await Cdp.connect(webSocketDebuggerUrl);
     await cdp.trySend('HeapProfiler.enable');
     const performance = await cdp.trySend('Performance.enable');
     return {
       info,
       name: targetName(info),
-      kind: info.type as TargetKind,
+      kind: type,
       cdp,
       hasPerformanceDomain: performance !== undefined,
     };
