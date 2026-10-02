@@ -4,8 +4,8 @@
 
 import { AiContext } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import * as Trace from '@dxos/compute/Trace';
 import { FeedTraceSink } from '@dxos/compute-runtime';
+import * as Trace from '@dxos/compute/Trace';
 import { type Database, Feed, Obj, Ref } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Client } from '@dxos/react-client';
