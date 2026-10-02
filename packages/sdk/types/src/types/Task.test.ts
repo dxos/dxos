@@ -179,6 +179,19 @@ describe('collectSubtree', () => {
       expect(Task.subtree([root], root).map((task) => task.id)).toEqual([root.id]);
     }).pipe(Effect.provide(testLayer())),
   );
+
+  it.effect('falls back to the listed sub-tasks when the index rejects the parent-edge query', () =>
+    Effect.gen(function* () {
+      const { root, child, grandchild } = yield* seedTree();
+      const { db } = yield* Database.Service;
+
+      const subtree = yield* Task.collectSubtree(root).pipe(
+        Effect.provideService(Database.Service, Database.makeService(rejectingQueries(db))),
+      );
+
+      expect(subtree.map((task) => task.id)).toEqual([root.id, child.id, grandchild.id]);
+    }).pipe(Effect.provide(testLayer())),
+  );
 });
 
 describe('collectRoot', () => {
@@ -517,6 +530,18 @@ describe('history', () => {
 });
 
 const testLayer = () => TestDatabaseLayer({ types: [Blob.Blob, File.File, Milestone.Milestone, Task.Task] });
+
+/** `db` whose queries reject on `run`, as the EDGE query service does for `child-of` ("Query too complex"). */
+const rejectingQueries = (db: Database.Database): Database.Database =>
+  new Proxy(db, {
+    get: (target, property) => {
+      if (property === 'query') {
+        return () => ({ run: () => Promise.reject(new Error('Query too complex')) });
+      }
+      const value = Reflect.get(target, property, target);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+  });
 
 const seedTree = () =>
   Effect.gen(function* () {
