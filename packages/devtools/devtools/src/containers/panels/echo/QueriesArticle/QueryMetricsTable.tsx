@@ -164,23 +164,28 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
             return (
               <Fragment key={query.query}>
                 <Grid
+                  asChild
                   cols={TRACKS}
                   gap='sm'
                   align='center'
                   grow={false}
-                  role='row'
                   classNames={[
-                    'px-2 py-0.5 font-mono text-xs tabular-nums text-end cursor-pointer hover:bg-hover-surface',
+                    'w-full px-2 py-0.5 font-mono text-xs tabular-nums text-end hover:bg-hover-surface',
                     open && 'bg-hover-surface',
                   ]}
-                  onClick={() => setExpanded(open ? undefined : query.query)}
                 >
-                  <Tooltip.Trigger asChild content={query.query}>
-                    <span className='truncate text-start'>{query.query}</span>
-                  </Tooltip.Trigger>
-                  {COLUMNS.slice(1).map((column) => (
-                    <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
-                  ))}
+                  <button
+                    type='button'
+                    aria-expanded={open}
+                    onClick={() => setExpanded(open ? undefined : query.query)}
+                  >
+                    <Tooltip.Trigger asChild content={query.query}>
+                      <span className='truncate text-start'>{query.query}</span>
+                    </Tooltip.Trigger>
+                    {COLUMNS.slice(1).map((column) => (
+                      <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
+                    ))}
+                  </button>
                 </Grid>
                 {open && (
                   <div className='px-2 py-1 text-xs border-y border-subdued-separator'>
