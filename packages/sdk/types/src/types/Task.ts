@@ -1115,26 +1115,22 @@ export class PullRequestConflictError extends BaseError.extend(
  * conflict, since a sub-task that was fixed on its own carries the PR that fixed it, while a
  * parent's PR still reads as covering every sub-task that has none of its own.
  */
-export const checkArtifact = (
-  task: Task,
-  artifact: Obj.Unknown,
-): Effect.Effect<void, PullRequestConflictError, Database.Service> =>
-  Effect.gen(function* () {
-    if (!PullRequest.instanceOf(artifact)) {
-      return;
+export const checkArtifact = Effect.fnUntraced(function* (task: Task, artifact: Obj.Unknown) {
+  if (!PullRequest.instanceOf(artifact)) {
+    return;
+  }
+  for (const ref of task.artifacts ?? []) {
+    if (refEntityId(ref) === artifact.id) {
+      continue;
     }
-    for (const ref of task.artifacts ?? []) {
-      if (refEntityId(ref) === artifact.id) {
-        continue;
-      }
-      const existing = yield* loadOrUndefined(ref);
-      if (PullRequest.instanceOf(existing) && existing.state === 'open') {
-        const url = existing.url ?? PullRequest.reference(existing);
-        return yield* Effect.fail(
-          new PullRequestConflictError({
-            message: `Task "${task.title}" already has open PR ${url}; attach another PR to the sub-task it fixes.`,
-          }),
-        );
-      }
+    const existing = yield* loadOrUndefined(ref);
+    if (PullRequest.instanceOf(existing) && existing.state === 'open') {
+      const url = existing.url ?? PullRequest.reference(existing);
+      return yield* Effect.fail(
+        new PullRequestConflictError({
+          message: `Task "${task.title}" already has open PR ${url}; attach another PR to the sub-task it fixes.`,
+        }),
+      );
     }
-  });
+  }
+});
