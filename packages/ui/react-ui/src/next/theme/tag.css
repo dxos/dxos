@@ -194,8 +194,75 @@
     --nx-hue-fill: var(--color-rose-bg);
   }
 
+  /*
+   * A bare glyph takes its hue's text colour (light on dark, dark on light), as the current icons' `text-<hue>-text`;
+   * the Tag foreground (`--nx-hue-fg`) is tuned for text on the hue's fill and reads muted on a plain surface.
+   */
   .nx-icon[data-hue] {
     color: var(--nx-hue-fg);
+  }
+  .nx-icon[data-hue='red'] {
+    color: var(--color-red-text);
+  }
+  .nx-icon[data-hue='orange'] {
+    color: var(--color-orange-text);
+  }
+  .nx-icon[data-hue='amber'] {
+    color: var(--color-amber-text);
+  }
+  .nx-icon[data-hue='yellow'] {
+    color: var(--color-yellow-text);
+  }
+  .nx-icon[data-hue='lime'] {
+    color: var(--color-lime-text);
+  }
+  .nx-icon[data-hue='green'] {
+    color: var(--color-green-text);
+  }
+  .nx-icon[data-hue='emerald'] {
+    color: var(--color-emerald-text);
+  }
+  .nx-icon[data-hue='teal'] {
+    color: var(--color-teal-text);
+  }
+  .nx-icon[data-hue='cyan'] {
+    color: var(--color-cyan-text);
+  }
+  .nx-icon[data-hue='sky'] {
+    color: var(--color-sky-text);
+  }
+  .nx-icon[data-hue='blue'] {
+    color: var(--color-blue-text);
+  }
+  .nx-icon[data-hue='indigo'] {
+    color: var(--color-indigo-text);
+  }
+  .nx-icon[data-hue='violet'] {
+    color: var(--color-violet-text);
+  }
+  .nx-icon[data-hue='purple'] {
+    color: var(--color-purple-text);
+  }
+  .nx-icon[data-hue='fuchsia'] {
+    color: var(--color-fuchsia-text);
+  }
+  .nx-icon[data-hue='pink'] {
+    color: var(--color-pink-text);
+  }
+  .nx-icon[data-hue='rose'] {
+    color: var(--color-rose-text);
+  }
+  .nx-icon[data-hue='info'] {
+    color: var(--color-cyan-text);
+  }
+  .nx-icon[data-hue='success'] {
+    color: var(--color-emerald-text);
+  }
+  .nx-icon[data-hue='warning'] {
+    color: var(--color-amber-text);
+  }
+  .nx-icon[data-hue='error'] {
+    color: var(--color-rose-text);
   }
 
   /* After the hue rule, so a valence wins when both are set. */

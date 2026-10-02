@@ -187,11 +187,11 @@
     padding-block-end: 0.125rem;
     user-select: none;
   }
+  /* A section heading reads like a field label (`Field.Label`): the size's label step, in the subdued colour. */
   .nx-tree-group-label {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    color: var(--color-description);
+    font-size: var(--nx-label-font-size);
+    line-height: var(--nx-label-line-height);
+    color: var(--color-subdued);
   }
 
   /* The end strip (`dropAtEnd`): one block below the last row that takes "append at the end". */
