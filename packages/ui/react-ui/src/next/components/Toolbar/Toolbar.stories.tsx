@@ -100,6 +100,18 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+/** A search-style toolbar at every size: an input taking the remaining width, a text button and an icon button. */
+export const InputAndButton: Story = {
+  args: { allSizes: true },
+  render: ({ size = 'md' }) => (
+    <Next.Toolbar.Root data-testid={`input-toolbar-${size}`}>
+      <Next.Input placeholder={`Search (${size})`} aria-label='Search' />
+      <Next.Button>Go</Next.Button>
+      <Next.Button icon='ph--magnifying-glass--regular' label='Search' iconOnly />
+    </Next.Toolbar.Root>
+  ),
+};
+
 /**
  * A toolbar is one block tall and every control in it is control-tall and centred (decision 12). The toolbar role comes
  * from the machine that implements its keyboard contract (decision 9): arrow keys, Home and End rove across its items,
