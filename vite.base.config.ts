@@ -17,7 +17,12 @@ import { defineConfig as viteDefineConfig, type Plugin, type UserConfig } from '
 import Inspect from 'vite-plugin-inspect';
 import solid from 'vite-plugin-solid';
 import WasmPlugin from 'vite-plugin-wasm';
-import { type UserWorkspaceConfig, type ViteUserConfig, defineProject } from 'vitest/config';
+import {
+  type TestProjectInlineConfiguration,
+  type UserWorkspaceConfig,
+  type ViteUserConfig,
+  defineProject,
+} from 'vitest/config';
 import type { Reporter, TestModule, TestRunEndReason } from 'vitest/node';
 
 import { FixGracefulFsPlugin, NodeExternalPlugin } from '@dxos/esbuild-plugins';
@@ -556,9 +561,7 @@ export const createConfig = (options: ConfigOptions): ViteUserConfig => {
     test: {
       ...resolveReporterConfig(dirname),
       tags: TEST_TAGS,
-      projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
-        (project): project is UserWorkspaceConfig => project !== undefined,
-      ),
+      projects: withoutRootInheritance([nodeProject, storybookProject, ...browserProjects, workerdProject]),
     },
   };
 };
@@ -584,6 +587,15 @@ const SANDBOX_LAUNCH_OPTIONS = process.env.CLAUDE_CODE_REMOTE
       },
     }
   : {};
+
+/**
+ * Drops unset projects and opts each one out of inheriting the root config, which vitest 5 does by
+ * default: every project declares its own plugins, and the root's would duplicate or conflict with them.
+ */
+const withoutRootInheritance = (projects: (UserWorkspaceConfig | undefined)[]): TestProjectInlineConfiguration[] =>
+  projects
+    .filter((project): project is UserWorkspaceConfig => project !== undefined)
+    .map((project) => ({ ...project, extends: false }));
 
 const createStorybookProject = (dirname: string, options?: StorybookOptions) =>
   defineProject({
@@ -1097,9 +1109,7 @@ const buildTestConfig = (
     tags: TEST_TAGS,
     // Never set `dangerouslyIgnoreUnhandledErrors`: suppressing unhandled rejections hides real
     // teardown failures — surface and fix them at the source. See the `code-style` skill.
-    projects: [nodeProject, storybookProject, ...browserProjects, workerdProject].filter(
-      (project): project is UserWorkspaceConfig => project !== undefined,
-    ),
+    projects: withoutRootInheritance([nodeProject, storybookProject, ...browserProjects, workerdProject]),
   };
 };
 
