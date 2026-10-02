@@ -19,7 +19,7 @@ import type { ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation, SandboxType } from './Dialect.ts';
-import { makeEvalToolkit } from './eval-tool.ts';
+import { describeEvalCall, makeEvalToolkit } from './eval-tool.ts';
 import { describeTypes } from './fields.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -140,7 +140,11 @@ const runCodeModeTurn = ({
         instructions,
       }).pipe(Effect.orDie);
 
-      const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
+      const { done, finishReason } = yield* request.runAgentTurn({
+        system,
+        toolkit,
+        enrichToolCall: describeEvalCall(operations),
+      });
       if (done) {
         break;
       }

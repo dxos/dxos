@@ -138,6 +138,11 @@ export type BeginProps = {
 export type TurnProps<R = never> = {
   system: string;
   toolkit?: OpaqueToolkit.OpaqueToolkit<R>;
+  /**
+   * Names a tool call the toolkit alone cannot attribute to an operation — a code-mode `eval`, whose
+   * operations are inside its input rather than behind the tool.
+   */
+  enrichToolCall?: (block: ContentBlock.ToolCall) => ContentBlock.ToolCall;
 };
 
 export type TurnResult = {
@@ -320,6 +325,7 @@ export class Request {
   runAgentTurn = <const R = never>({
     system,
     toolkit: opaqueToolkit,
+    enrichToolCall,
   }: TurnProps<R>): Effect.Effect<TurnResult, RunError, RunRequirements | R> =>
     Effect.gen({ self: this }, function* () {
       log('request', {
@@ -375,6 +381,7 @@ export class Request {
           onEnd: (summary) => observer.onEnd(summary),
         }),
         Stream.map((block) => enrichToolCallBlock(block, toolkit)),
+        Stream.map((block) => (enrichToolCall && block._tag === 'toolCall' ? enrichToolCall(block) : block)),
         Stream.mapEffect(
           (block) =>
             Effect.gen({ self: this }, function* () {

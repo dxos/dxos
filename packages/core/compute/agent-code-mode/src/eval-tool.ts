@@ -14,7 +14,9 @@ import { OpaqueToolkit } from '@dxos/ai';
 import type * as Operation from '@dxos/compute/Operation';
 import type { Database } from '@dxos/echo';
 import { log } from '@dxos/log';
+import type { ContentBlock } from '@dxos/types';
 
+import { camelCase } from './dialect-plain.ts';
 import type { Dialect, SandboxOperation } from './Dialect.ts';
 import * as Sandbox from './Sandbox.ts';
 
@@ -104,6 +106,67 @@ export const makeEvalToolkit = ({
       }),
     }),
   );
+
+/**
+ * Names an `eval` call after the operations its code invokes, so the call reads as what it does
+ * rather than as the one tool every code-mode call goes through.
+ *
+ * An operation is found by any name a dialect binds it under — the tool name, its camelCase form, or
+ * its key. The raw input stands in for the code while it is still streaming and not yet JSON.
+ */
+export const describeEvalCall =
+  (operations: readonly SandboxOperation[]) =>
+  (block: ContentBlock.ToolCall): ContentBlock.ToolCall => {
+    if (block.name !== EVAL_TOOL_NAME || !block.input) {
+      return block;
+    }
+
+    const code = evalCode(block.input);
+    const invoked = operations
+      .map((operation) => ({ operation, index: firstMention(code, operationNames(operation)) }))
+      .filter(({ index }) => index >= 0)
+      .sort((left, right) => left.index - right.index)
+      .map(({ operation }) => operation);
+    if (invoked.length === 0) {
+      return block;
+    }
+
+    const meta = invoked.length === 1 ? invoked[0].definition?.meta : undefined;
+    // Key and icon only for a lone operation: a call spanning several has no one operation to name.
+    return {
+      ...block,
+      operationName: invoked.map(({ name, definition }) => definition?.meta.name ?? name).join(', '),
+      ...(meta && { operationKey: String(meta.key) }),
+      ...(meta?.icon && { operationIcon: meta.icon }),
+    };
+  };
+
+const operationNames = ({ name, definition }: SandboxOperation): string[] => [
+  name,
+  camelCase(name),
+  ...(definition ? [String(definition.meta.key)] : []),
+];
+
+/** The `code` argument of an eval call. */
+const evalCode = (input: string): string => {
+  try {
+    const parsed: unknown = JSON.parse(input);
+    if (typeof parsed === 'object' && parsed !== null && 'code' in parsed && typeof parsed.code === 'string') {
+      return parsed.code;
+    }
+  } catch {}
+  return input;
+};
+
+/** Earliest index at which one of `names` appears as a whole token, or -1. */
+const firstMention = (text: string, names: readonly string[]): number => {
+  // A hyphen extends a token, so `create-task` must not match inside `create-task-list`; a trailing
+  // dot or colon does too, so a key does not match as the prefix of a longer one.
+  const pattern = new RegExp(`(?<![\\w-])(?:${names.map(escapeRegExp).join('|')})(?![\\w.:-])`);
+  return text.search(pattern);
+};
+
+const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Collects the lines the model's code printed, truncating once the budget is spent. */
 const makePrinter = (maxOutput: number) => {
