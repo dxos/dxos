@@ -56,19 +56,19 @@ const ExampleSurfacesPlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.Root.create({
+          Surface.create({
             id: 'panelA',
-            filter: Surface.Root.makeFilter(PanelA),
+            filter: Surface.makeFilter(PanelA),
             component: () => <ExamplePanel label='Panel A' />,
           }),
-          Surface.Root.create({
+          Surface.create({
             id: 'panelB',
-            filter: Surface.Root.makeFilter(PanelB),
+            filter: Surface.makeFilter(PanelB),
             component: () => <ExamplePanel label='Panel B' />,
           }),
-          Surface.Root.create({
+          Surface.create({
             id: 'panelC',
-            filter: Surface.Root.makeFilter(PanelC),
+            filter: Surface.makeFilter(PanelC),
             component: () => <ExamplePanel label='Panel C' />,
           }),
         ]),

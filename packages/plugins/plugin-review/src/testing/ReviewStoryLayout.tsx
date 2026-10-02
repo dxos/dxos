@@ -53,14 +53,14 @@ export const ReviewStoryLayout = ({ panels = ['comments', 'history'], attendable
 
   return (
     <Grid.Root cols={[3, 2]} {...attentionAttrs}>
-      <Surface.Root.Surface type={AppSurface.Article} data={articleData} limit={1} />
+      <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
       <Grid.Root
         rows={companionData.map(() => 'minmax(0, 1fr)')}
         grow={false}
         classNames='min-h-0 divide-y divide-subdued-separator'
       >
         {companionData.map((data) => (
-          <Surface.Root.Surface key={data.subject} type={AppSurface.Article} data={data} limit={1} />
+          <Surface.Surface key={data.subject} type={AppSurface.Article} data={data} limit={1} />
         ))}
       </Grid.Root>
     </Grid.Root>

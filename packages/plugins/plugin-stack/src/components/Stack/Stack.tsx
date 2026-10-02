@@ -278,7 +278,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
             <h2 className='flex items-center font-medium'>{title}</h2>
           </div>
         ) : (
-          <Surface.Root.Surface type={AppSurface.Section} data={surfaceData} limit={1} />
+          <Surface.Surface type={AppSurface.Section} data={surfaceData} limit={1} />
         )}
       </div>
     </Mosaic.Tile>

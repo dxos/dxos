@@ -15,8 +15,8 @@ import * as AppCapability from './AppCapability.ts';
 const Empty = () => null;
 
 const surfaces = Capability.contribute(Capabilities.ReactSurface, [
-  Surface.Root.create({ id: 'article', filter: Surface.Root.makeFilter(AppSurface.Article), component: Empty }),
-  Surface.Root.create({ id: 'grid', filter: Surface.Root.makeFilter(AppSurface.CardMasonry), component: Empty }),
+  Surface.create({ id: 'article', filter: Surface.makeFilter(AppSurface.Article), component: Empty }),
+  Surface.create({ id: 'grid', filter: Surface.makeFilter(AppSurface.CardMasonry), component: Empty }),
 ]);
 
 describe('AppCapability.undeclaredSurfaceRoles', () => {

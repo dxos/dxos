@@ -62,7 +62,7 @@ export const SpotlightLayout = () => {
   return (
     <div className='grid inset-0 overflow-hidden' data-spotlight>
       <Dialog.Root open={state.dialogOpen} modal={false}>
-        <Surface.Root.Surface type={AppSurface.Dialog} data={dialogContent} limit={1} fallback={ErrorFallback.Root} />
+        <Surface.Surface type={AppSurface.Dialog} data={dialogContent} limit={1} fallback={ErrorFallback.Root} />
       </Dialog.Root>
     </div>
   );

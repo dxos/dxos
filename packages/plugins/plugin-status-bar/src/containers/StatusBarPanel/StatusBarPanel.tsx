@@ -16,7 +16,7 @@ export const StatusBarPanel = (_props: StatusBarPanelProps) => {
     <>
       <StatusBarActionsDefault />
       <span role='separator' className='grow' />
-      <Surface.Root.Surface type={DeckRole.StatusBar} />
+      <Surface.Surface type={DeckRole.StatusBar} />
     </>
   );
 };

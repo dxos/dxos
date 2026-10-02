@@ -121,7 +121,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
             onChange={handleQueryChange}
           />
           {explorerGraph && !dragging && (
-            <Surface.Root.Surface
+            <Surface.Surface
               type={AppSurface.Section}
               limit={1}
               data={{ subject: explorerGraph, attendableId: cell.id }}

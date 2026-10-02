@@ -132,7 +132,7 @@ const SurfaceStory = () => {
     return <Loading />;
   }
 
-  return <Surface.Root.Surface type={AppSurface.CardMasonry} data={{ objects: owner.artifacts ?? [] }} limit={1} />;
+  return <Surface.Surface type={AppSurface.CardMasonry} data={{ objects: owner.artifacts ?? [] }} limit={1} />;
 };
 
 export const ViaSurface: Story = {

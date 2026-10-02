@@ -17,9 +17,9 @@ export default Capability.makeModule(() =>
     Capability.contribute(Capabilities.ReactContext, {
       id: meta.profile.key,
       context: ({ children }) => (
-        <Surface.Root.ProfilerProvider>
+        <Surface.ProfilerProvider>
           <DevtoolsContextProvider>{children}</DevtoolsContextProvider>
-        </Surface.Root.ProfilerProvider>
+        </Surface.ProfilerProvider>
       ),
     }),
   ),

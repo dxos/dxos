@@ -24,18 +24,18 @@ import { CONNECTIONS_SECTION_TYPE, PROVIDER_FORM_DIALOG, SYNC_TARGETS_DIALOG } f
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'connectionsSectionArticle',
         filter: AppSurface.literal(AppSurface.Article, CONNECTIONS_SECTION_TYPE),
         component: ConnectionSettingsArticle,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'connectionArticle',
         filter: AppSurface.object(AppSurface.Article, Connection.Connection),
         component: ConnectionArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'connectorCompanion',
         filter: AppSurface.allOf(
           AppSurface.object(AppSurface.Article, Cursor.Cursor),
@@ -44,13 +44,13 @@ export default Capability.makeModule(() =>
         component: ConnectorCompanion,
         props: ({ role, data }) => ({ ...data, role }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'syncTargetsDialog',
         filter: AppSurface.component<ComponentProps<typeof SyncTargetsDialog>>(AppSurface.Dialog, SYNC_TARGETS_DIALOG),
         component: SyncTargetsDialog,
         props: ({ data: { props } }) => ({ ...props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'customTokenDialog',
         filter: AppSurface.component<ComponentProps<typeof CustomTokenDialog>>(AppSurface.Dialog, PROVIDER_FORM_DIALOG),
         component: CustomTokenDialog,

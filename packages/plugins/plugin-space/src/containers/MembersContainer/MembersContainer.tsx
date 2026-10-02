@@ -129,7 +129,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
   );
 
   const contacts = useContacts();
-  const isSurfaceAvailable = Surface.Root.useIsAvailable();
+  const isSurfaceAvailable = Surface.useIsAvailable();
   const contactPickerData = useMemo(
     (): AppSurface.ContactPickerData => ({
       space,
@@ -183,7 +183,7 @@ export const MembersContainer = ({ space, createInvitationUrl }: MembersContaine
             </Form.FieldSet>
             {showContactPicker && (
               <Form.FieldSet appearance='section' label={t('add-known-people.label')}>
-                <Surface.Root.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
+                <Surface.Surface type={AppSurface.ContactPicker} data={contactPickerData} limit={1} />
               </Form.FieldSet>
             )}
             <Form.FieldSet

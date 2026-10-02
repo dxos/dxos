@@ -160,14 +160,14 @@ const toStoryItemNode = (item: StoryItem, index: number, depth: number): AppGrap
 const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Capabilities.ReactSurface] }, () =>
   Effect.succeed([
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'storyNavigation',
-        filter: Surface.Root.makeFilter(AppSurface.Navigation),
+        filter: Surface.makeFilter(AppSurface.Navigation),
         component: ({ data, ref }) => <NavContainer current={data.current} ref={ref as React.Ref<HTMLDivElement>} />,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'storyArticle',
-        filter: Surface.Root.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo == null),
         component: ({ data }) => {
           const subject = (data as any)?.subject;
           const attendableId = (data as any)?.attendableId as string | undefined;
@@ -192,9 +192,9 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
           );
         },
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'storyArticleCompanion',
-        filter: Surface.Root.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.companionTo != null),
         component: ({ data: { subject, companionTo, properties, variant } }) => {
           if (companionTo == null) {
             return <Loading />;

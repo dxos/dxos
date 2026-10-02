@@ -15,7 +15,7 @@ import { Score } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'article',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Score.Score),

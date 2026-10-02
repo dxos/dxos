@@ -19,18 +19,18 @@ import { SearchCompanionSurface, SearchDialogSurface, SearchInputSurface } from 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: SEARCH_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof SearchDialog>>(AppSurface.Dialog, SEARCH_DIALOG),
         component: SearchDialogSurface,
         props: ({ data: { props } }) => ({ props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: `${SEARCH_DIALOG}.searchInput`,
-        filter: Surface.Root.makeFilter(AppSurface.SearchInput),
+        filter: Surface.makeFilter(AppSurface.SearchInput),
         component: SearchInputSurface,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: `${SEARCH_DIALOG}.search`,
         filter: AppSurface.subject(AppSurface.deckCompanion('search'), isSpace),
         component: SearchCompanionSurface,

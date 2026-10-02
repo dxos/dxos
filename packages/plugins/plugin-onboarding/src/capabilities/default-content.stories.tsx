@@ -70,7 +70,7 @@ const DefaultStory = () => {
 
   return (
     <div className='contents'>
-      <Surface.Root.Surface type={AppSurface.Article} data={{ subject: doc, attendableId: id ?? 'story' }} limit={1} />
+      <Surface.Surface type={AppSurface.Article} data={{ subject: doc, attendableId: id ?? 'story' }} limit={1} />
     </div>
   );
 };

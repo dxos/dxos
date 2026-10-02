@@ -15,7 +15,7 @@ import { Segment, Trip } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.trip',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Trip.Trip),
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
       // with subject = segment, companionTo = trip. When no segment is
       // selected the graph builder's 'segment' sentinel falls through and
       // the surface simply doesn't render.
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.segment',
         filter: AppSurface.allOf(
           AppSurface.object(AppSurface.Article, Segment.Segment),

@@ -294,7 +294,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   if (!showStatus) {
     return (
       <div className='contents' {...attentionAttrs}>
-        <Surface.Root.Surface type={AppSurface.Article} data={data} limit={1} />
+        <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
     );
   }
@@ -302,7 +302,7 @@ const DefaultStory = ({ stages, seed }: StoryArgs) => {
   return (
     <div className='dx-expand grid grid-cols-[1fr_20rem] gap-2' {...attentionAttrs}>
       <div className='dx-expand'>
-        <Surface.Root.Surface type={AppSurface.Article} data={data} limit={1} />
+        <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
       </div>
       <PipelineStatus
         phase={stages ? 'idle' : (status?.phase ?? 'idle')}

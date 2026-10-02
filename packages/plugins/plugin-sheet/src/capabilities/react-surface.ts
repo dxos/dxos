@@ -16,7 +16,7 @@ import { Sheet } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'sheet',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -26,7 +26,7 @@ export default Capability.makeModule(() =>
         component: SheetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'objectProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Sheet.Sheet),
         component: RangeList,

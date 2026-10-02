@@ -45,7 +45,7 @@ export const PostArticle = ({ role, attendableId, subject }: PostArticleProps) =
     return null;
   }
 
-  return <Surface.Root.Surface role={role} type={AppSurface.Article} data={contentData} limit={1} />;
+  return <Surface.Surface role={role} type={AppSurface.Article} data={contentData} limit={1} />;
 };
 
 PostArticle.displayName = 'PostArticle';

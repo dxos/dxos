@@ -94,7 +94,7 @@ const DefaultStory = () => {
 
   return (
     <div className='contents' {...attentionAttrs}>
-      <Surface.Root.Surface type={AppSurface.Article} data={data} limit={1} />
+      <Surface.Surface type={AppSurface.Article} data={data} limit={1} />
     </div>
   );
 };

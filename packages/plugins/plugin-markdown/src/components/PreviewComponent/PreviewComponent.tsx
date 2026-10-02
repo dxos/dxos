@@ -71,7 +71,7 @@ export type PreviewComponentProps = WidgetProps<
     suggest?: boolean;
     onOpen?: (eid: URI.URI) => void;
     /** Checks whether the linked object has a contributed surface for a role; defaults to `Surface.useIsAvailable()`. */
-    isSurfaceAvailable?: ReturnType<typeof Surface.Root.useIsAvailable>;
+    isSurfaceAvailable?: ReturnType<typeof Surface.useIsAvailable>;
   } & LinkWidgetState
 >;
 
@@ -102,7 +102,7 @@ export const PreviewComponent = ({
   const invokePromise = invoker?.invokePromise;
 
   // Fall back to the app's surface registry unless a caller injects a check (e.g. from a story).
-  const defaultIsSurfaceAvailable = Surface.Root.useIsAvailable();
+  const defaultIsSurfaceAvailable = Surface.useIsAvailable();
   const isSurfaceAvailable = isSurfaceAvailableProp ?? defaultIsSurfaceAvailable;
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -357,7 +357,7 @@ export const PreviewComponent = ({
             )}
             inert={hasAttention ? undefined : true}
           >
-            <Surface.Root.Surface type={AppSurface.Section} data={data} limit={1} />
+            <Surface.Surface type={AppSurface.Section} data={data} limit={1} />
           </div>
 
           <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
@@ -401,7 +401,7 @@ export const PreviewComponent = ({
                 <Card.Title>{objectLabel}</Card.Title>
               </Card.Header>
               <Card.Body>
-                <Surface.Root.Surface type={AppSurface.CardContent} data={data} limit={1} />
+                <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
               </Card.Body>
             </Card.Root>
           </div>

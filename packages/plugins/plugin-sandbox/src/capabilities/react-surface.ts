@@ -15,7 +15,7 @@ import { Repository } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'repositoryArticle',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Repository.Repository),

@@ -15,7 +15,7 @@ import { Game } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'game',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Game.Game),
@@ -24,7 +24,7 @@ export default Capability.makeModule(() =>
         component: GameArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'gameCard',
         filter: AppSurface.object(AppSurface.CardContent, Game.Game),
         component: GameCard,

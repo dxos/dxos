@@ -103,7 +103,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
                 </ActionMenu>
               </Card.Block>
             </Card.Header>
-            <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: result.object }} limit={1} />
+            <Surface.Surface type={AppSurface.CardContent} data={{ subject: result.object }} limit={1} />
           </Card.Root>
         </Focus.Item>
       </Mosaic.Tile>

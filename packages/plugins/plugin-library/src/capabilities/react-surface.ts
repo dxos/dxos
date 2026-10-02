@@ -18,14 +18,14 @@ import { NOTES_COMPANION_VARIANT } from './app-graph-builder.ts';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'bookArticle',
         // The main article only — not a companion plank (which carries a `variant`).
         filter: AppSurface.object(AppSurface.Article, Book.Book, (data) => !data.variant),
         component: BookArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'bookNotesCompanion',
         // Bound to its own companion variant (`notes`), distinct from the atproto publishing
         // companion of the same book.
@@ -36,7 +36,7 @@ export default Capability.makeModule(() =>
         component: BookNotesCompanion,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'bookCard',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, Book.Book),

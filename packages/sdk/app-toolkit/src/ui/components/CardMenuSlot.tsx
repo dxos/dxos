@@ -21,7 +21,7 @@ export type CardMenuSlotProps = {
  * contribution for the subject, each of which calls `useMenuContribution(menu, …)` and renders nothing.
  */
 export const CardMenuSlot = ({ subject, menu }: CardMenuSlotProps) => (
-  <Surface.Root.Surface type={AppSurface.CardMenu} data={{ subject, menu }} />
+  <Surface.Surface type={AppSurface.CardMenu} data={{ subject, menu }} />
 );
 
 CardMenuSlot.displayName = 'CardMenuSlot';

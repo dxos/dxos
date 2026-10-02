@@ -18,7 +18,7 @@ export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(
       Capabilities.ReactSurface,
-      Surface.Root.create({
+      Surface.create({
         id: 'sidekickDashboard',
         filter: AppSurface.object(AppSurface.Article, Sidekick.Profile),
         component: SidekickArticle,

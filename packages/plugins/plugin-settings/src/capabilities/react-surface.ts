@@ -18,7 +18,7 @@ import { DefaultSettings } from '#containers';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'defaultPluginSettings',
         position: Position.last,
         filter: AppSurface.settings(AppSurface.Article),

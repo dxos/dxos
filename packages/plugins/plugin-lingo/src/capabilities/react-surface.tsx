@@ -15,14 +15,14 @@ import { Vocabulary } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'vocabularyArticle',
         filter: AppSurface.object(AppSurface.Article, Vocabulary.Vocabulary),
         component: VocabularyArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
       // Companion surfaces bind to `companionTo`; `subject` is the variant literal from the graph.
-      Surface.Root.create({
+      Surface.create({
         id: 'flashcardsArticle',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'flashcards'),
@@ -31,7 +31,7 @@ export default Capability.makeModule(() =>
         component: FlashcardsArticle,
         props: ({ role, data: { attendableId, companionTo } }) => ({ role, attendableId, subject: companionTo }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'readerArticle',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'reader'),

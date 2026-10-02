@@ -15,13 +15,13 @@ import { TestPlan, TestRun } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'testPlanArticle',
         filter: AppSurface.object(AppSurface.Article, TestPlan.TestPlan),
         component: TestPlanArticle,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'testRunArticle',
         filter: AppSurface.object(AppSurface.Article, TestRun.TestRun),
         component: TestRunArticle,

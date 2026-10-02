@@ -19,11 +19,11 @@ import { type DevtoolsCardData, isDebugSurface } from '../../capabilities/Devtoo
  */
 export const DevtoolsOverviewContainer = () => {
   const [stats, refreshStats] = useStats();
-  const getProfilerStats = Surface.Root.useProfilerSnapshot();
-  const clearSurfaceProfiler = Surface.Root.useProfilerClear();
+  const getProfilerStats = Surface.useProfilerSnapshot();
+  const clearSurfaceProfiler = Surface.useProfilerClear();
   // Resampled as surfaces mount and unmount: with a restored layout this container mounts at boot,
   // before most of the app, so a single sample on mount would list only what existed then.
-  const mounted = Surface.Root.useMounted();
+  const mounted = Surface.useMounted();
   const [surfaceProfilerStats, setSurfaceProfilerStats] = useState<SurfaceProfilerStats[]>([]);
 
   // One row per surface mounted right now (the profiler records renders, not mounts), with its
@@ -31,7 +31,7 @@ export const DevtoolsOverviewContainer = () => {
   // The debug tooling's own surfaces are left out so the panel does not measure itself.
   const sampleProfiler = useCallback(() => {
     const timings = new Map(getProfilerStats().map((stat) => [stat.id, stat]));
-    const metrics = new Map(Surface.Root.getMetrics().map((metric) => [metric.id, metric]));
+    const metrics = new Map(Surface.getMetrics().map((metric) => [metric.id, metric]));
     setSurfaceProfilerStats(
       mounted
         .filter((surface) => !isDebugSurface(surface))
@@ -73,7 +73,7 @@ export const DevtoolsOverviewContainer = () => {
   // The profiler card joins profiler stats with dispatch metrics, so reset must clear both.
   const handleClearSurfaceProfiler = useCallback(() => {
     clearSurfaceProfiler?.();
-    Surface.Root.clearMetrics();
+    Surface.clearMetrics();
     sampleProfiler();
   }, [clearSurfaceProfiler, sampleProfiler]);
 
@@ -84,7 +84,7 @@ export const DevtoolsOverviewContainer = () => {
 
   return (
     <StatsPanel onRefresh={handleRefresh}>
-      <Surface.Root.Surface type={AppSurface.DevtoolsOverview} data={data} />
+      <Surface.Surface type={AppSurface.DevtoolsOverview} data={data} />
     </StatsPanel>
   );
 };

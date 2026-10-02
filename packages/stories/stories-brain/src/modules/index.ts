@@ -36,45 +36,45 @@ export const StoryRole = {
 };
 
 /** React surfaces for the stories-brain modules, one per `StoryRole` token. */
-export const moduleSurfaces: Surface.Root.Definition[] = [
-  Surface.Root.create({
+export const moduleSurfaces: Surface.Definition[] = [
+  Surface.create({
     id: 'brain.crawl',
-    filter: Surface.Root.makeFilter(StoryRole.Crawl),
+    filter: Surface.makeFilter(StoryRole.Crawl),
     component: CrawlModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'brain.query',
-    filter: Surface.Root.makeFilter(StoryRole.Query),
+    filter: Surface.makeFilter(StoryRole.Query),
     component: QueryModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'brain.questions',
-    filter: Surface.Root.makeFilter(StoryRole.Questions),
+    filter: Surface.makeFilter(StoryRole.Questions),
     component: QuestionsModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'brain.facts',
-    filter: Surface.Root.makeFilter(StoryRole.Facts),
+    filter: Surface.makeFilter(StoryRole.Facts),
     component: FactsModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'brain.entities',
-    filter: Surface.Root.makeFilter(StoryRole.Entities),
+    filter: Surface.makeFilter(StoryRole.Entities),
     component: EntitiesModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'brain.input',
-    filter: Surface.Root.makeFilter(StoryRole.Input),
+    filter: Surface.makeFilter(StoryRole.Input),
     component: InputModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'brain.pipeline',
-    filter: Surface.Root.makeFilter(StoryRole.Pipeline),
+    filter: Surface.makeFilter(StoryRole.Pipeline),
     component: PipelineModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'brain.output',
-    filter: Surface.Root.makeFilter(StoryRole.Output),
+    filter: Surface.makeFilter(StoryRole.Output),
     component: OutputModule,
   }),
 ];

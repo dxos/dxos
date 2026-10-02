@@ -11,7 +11,7 @@ import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/r
 import * as Field from '@dxos/react-ui/Field';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope; `type` comes from the field AST. */
-export type PivotColumnFieldProps = Surface.Root.ComponentProps<AppSurface.FormInputData> &
+export type PivotColumnFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &
   Omit<FormFieldRendererProps, 'type'>;
 
 /**

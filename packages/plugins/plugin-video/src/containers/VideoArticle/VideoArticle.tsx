@@ -103,7 +103,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
-        <Surface.Root.Surface
+        <Surface.Surface
           type={AppSurface.Section}
           data={{
             subject,
@@ -219,14 +219,14 @@ const TranscriptTabs = ({
         <Panel.Content asChild>
           <Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>
             <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Root.Surface
+              <Surface.Surface
                 type={AppSurface.Tabpanel}
                 data={{ subject, attendableId, part: 'transcript' }}
                 limit={1}
               />
             </Tabs.Panel>
             <Tabs.Panel value='summary' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Root.Surface
+              <Surface.Surface
                 type={AppSurface.Tabpanel}
                 data={{ subject, attendableId, part: 'summary' }}
                 limit={1}

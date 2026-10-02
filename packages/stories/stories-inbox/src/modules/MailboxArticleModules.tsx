@@ -151,7 +151,7 @@ export const AttachmentModule = ({ data }: { data?: { attendableId?: string } })
   }
 
   return (
-    <Surface.Root.Surface
+    <Surface.Surface
       type={AppSurface.Article}
       data={{ subject: { message, index: attachment.index }, attendableId: data?.attendableId }}
       limit={1}

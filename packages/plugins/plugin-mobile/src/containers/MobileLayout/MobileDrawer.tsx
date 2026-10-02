@@ -64,7 +64,7 @@ export const MobileDrawer = () => {
       <Panel.Content>
         {/* A drawer opened on a plank that contributes no companion would otherwise read as broken. */}
         {data ? (
-          <Surface.Root.Surface
+          <Surface.Surface
             type={AppSurface.Article}
             data={data}
             limit={1}

@@ -173,7 +173,7 @@ export const PopoverContent = () => {
             /*
              * Base popover: a plugin-provided component (e.g., editor link preview).
              */
-            <Surface.Root.Surface type={AppSurface.Popover} data={content} limit={1} />
+            <Surface.Surface type={AppSurface.Popover} data={content} limit={1} />
           ) : (
             /*
              * Card popover (default). Rendered for any open popover that isn't an explicit
@@ -208,7 +208,7 @@ export const PopoverContent = () => {
 
               {content && 'subject' in content ? (
                 /** CardContent must render the Card.Body. */
-                <Surface.Root.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
+                <Surface.Surface type={AppSurface.CardContent} data={content} limit={1} fallback={CardFallback} />
               ) : (
                 <Card.Body classNames='min-h-8'>
                   <Card.Row>

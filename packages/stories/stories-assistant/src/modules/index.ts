@@ -40,47 +40,47 @@ export const StoryRole = {
  * (the harness chat and space-scoped debug views), each registered under a `StoryRole` token and
  * referenced as a bare token in a story layout. Generic diagnostics come from `commonSurfaces`.
  */
-export const moduleSurfaces: Surface.Root.Definition[] = [
+export const moduleSurfaces: Surface.Definition[] = [
   ...commonSurfaces,
 
-  Surface.Root.create({
+  Surface.create({
     id: 'role.agent',
-    filter: Surface.Root.makeFilter(StoryRole.Agent),
+    filter: Surface.makeFilter(StoryRole.Agent),
     component: AgentModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.chat',
-    filter: Surface.Root.makeFilter(StoryRole.Chat),
+    filter: Surface.makeFilter(StoryRole.Chat),
     component: ChatModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.context',
-    filter: Surface.Root.makeFilter(StoryRole.Context),
+    filter: Surface.makeFilter(StoryRole.Context),
     component: ContextModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.graph',
-    filter: Surface.Root.makeFilter(StoryRole.Graph),
+    filter: Surface.makeFilter(StoryRole.Graph),
     component: GraphModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.project',
-    filter: Surface.Root.makeFilter(StoryRole.Project),
+    filter: Surface.makeFilter(StoryRole.Project),
     component: ProjectModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.researchInput',
-    filter: Surface.Root.makeFilter(StoryRole.ResearchInput),
+    filter: Surface.makeFilter(StoryRole.ResearchInput),
     component: ResearchInputModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.researchOutput',
-    filter: Surface.Root.makeFilter(StoryRole.ResearchOutput),
+    filter: Surface.makeFilter(StoryRole.ResearchOutput),
     component: ResearchOutputModule,
   }),
-  Surface.Root.create({
+  Surface.create({
     id: 'role.tasks',
-    filter: Surface.Root.makeFilter(StoryRole.Tasks),
+    filter: Surface.makeFilter(StoryRole.Tasks),
     component: TasksModule,
   }),
 ];

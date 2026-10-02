@@ -33,7 +33,7 @@ import { Devtools } from '#types';
 const DEBUG_HOSTS = new Set(['devtoolsOverview', 'debugDrawer']);
 
 /** Whether a mounted surface is part of the debug tooling rather than the app being inspected. */
-export const isDebugSurface = ({ id, role, ancestors }: Surface.Root.Mounted): boolean =>
+export const isDebugSurface = ({ id, role, ancestors }: Surface.Mounted): boolean =>
   role.endsWith('.devtoolsOverview') ||
   (id !== undefined && DEBUG_HOSTS.has(id)) ||
   ancestors.some((ancestor) => DEBUG_HOSTS.has(ancestor));
@@ -52,7 +52,7 @@ export const isDevtoolsCardData = (data: unknown): data is DevtoolsCardData =>
  * The card role narrowed to the stack's data. `Surface.makeFilter` types its data by the token, so
  * the binding is built directly, as `AppSurface.subject` does.
  */
-export const devtoolsCard: Surface.Root.Filter<DevtoolsCardData> = {
+export const devtoolsCard: Surface.Filter<DevtoolsCardData> = {
   bindings: [{ role: AppSurface.DevtoolsOverview.role, guard: isDevtoolsCardData }],
 };
 
@@ -81,20 +81,20 @@ export const SurfaceProfilerCardSurface = ({
   surfaceProfilerStats,
   onClearSurfaceProfiler,
 }: SurfaceProfilerCardSurfaceProps) => {
-  const [debug, setDebug] = useState(() => Surface.Root.isDebugEnabled());
+  const [debug, setDebug] = useState(() => Surface.isDebugEnabled());
   const handleDebugChange = useCallback((enabled: boolean) => {
-    Surface.Root.setDebug(enabled);
+    Surface.setDebug(enabled);
     setDebug(enabled);
   }, []);
 
   // The selected role's surfaces with their data and dispatch metrics, following mounts and unmounts.
-  const selected = Surface.Root.useSelected();
-  const mounted = Surface.Root.useMounted();
+  const selected = Surface.useSelected();
+  const mounted = Surface.useMounted();
   const detail = useMemo(() => {
     if (!selected) {
       return undefined;
     }
-    const metrics = new Map(Surface.Root.getMetrics().map((metric) => [metric.id, metric]));
+    const metrics = new Map(Surface.getMetrics().map((metric) => [metric.id, metric]));
     return mounted
       .filter((surface) => surface.role === selected && !isDebugSurface(surface))
       .map(({ id, role, data }) => ({ id, data, metric: metrics.get(`surface/${id}/${role}`) }));
@@ -107,7 +107,7 @@ export const SurfaceProfilerCardSurface = ({
       onDebugChange={handleDebugChange}
       onClear={onClearSurfaceProfiler}
       selected={selected}
-      onSelect={Surface.Root.select}
+      onSelect={Surface.select}
       detail={detail}
     />
   );

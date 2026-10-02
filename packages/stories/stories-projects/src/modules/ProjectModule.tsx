@@ -79,6 +79,6 @@ export const ProjectModule = ({ data }: { data: ProjectModuleProps }) => {
   }
 
   return (
-    <Surface.Root.Surface type={AppSurface.Article} data={{ subject: project, attendableId: project.id }} limit={1} />
+    <Surface.Surface type={AppSurface.Article} data={{ subject: project, attendableId: project.id }} limit={1} />
   );
 };

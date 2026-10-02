@@ -32,7 +32,7 @@ import { SHORTCUTS_DIALOG } from '../constants.ts';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'supportTicket',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Support.Ticket),
@@ -41,19 +41,19 @@ export default Capability.makeModule(() =>
         component: SupportArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'feedback',
-        filter: Surface.Root.makeFilter(AppSurface.deckCompanion('help')),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('help')),
         component: FeedbackPanel,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'discord',
-        filter: Surface.Root.makeFilter(AppSurface.deckCompanion('discord')),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('discord')),
         component: DiscordPanel,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'helpMenu',
-        filter: Surface.Root.makeFilter(AppSurface.StatusIndicator),
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         position: Position.last,
         component: HelpMenu,
       }),
@@ -61,7 +61,7 @@ export default Capability.makeModule(() =>
       // owns the open article's typename. Matches any article via
       // `companion(Article)` with no schema filter; the resolver inside the
       // panel maps `companionTo` → owning plugin → `meta.description`.
-      Surface.Root.create({
+      Surface.create({
         id: 'helpCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'help'),
@@ -70,7 +70,7 @@ export default Capability.makeModule(() =>
         component: SupportCompanion,
         props: ({ data: { companionTo, attendableId } }) => ({ companionTo, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'homeHelpCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'help'),
@@ -78,22 +78,22 @@ export default Capability.makeModule(() =>
         ),
         component: SupportHomeCompanion,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'hints',
-        filter: Surface.Root.makeFilter(DeckRole.Hints),
+        filter: Surface.makeFilter(DeckRole.Hints),
         component: ShortcutsHints,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'keyshortcuts',
-        filter: Surface.Root.makeFilter(DeckRole.Keyshortcuts),
+        filter: Surface.makeFilter(DeckRole.Keyshortcuts),
         component: ShortcutsList,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: SHORTCUTS_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, SHORTCUTS_DIALOG),
         component: ShortcutsDialogContent,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'settings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: SupportSettings,

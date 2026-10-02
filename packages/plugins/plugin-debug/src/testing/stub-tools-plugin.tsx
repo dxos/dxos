@@ -75,7 +75,7 @@ const stubSurfaces = Capability.inlineModule('stub-tools-surfaces', { provides: 
     Capability.contribute(
       Capabilities.ReactSurface,
       STUB_TOOL_PAGES.map((page) =>
-        Surface.Root.create({
+        Surface.create({
           id: `stubTool.${page.id}`,
           filter: AppSurface.literal(DebugSurface.Page, page.data),
           component: () => <div data-testid={`stubTool.${page.id}`}>{page.label}</div>,

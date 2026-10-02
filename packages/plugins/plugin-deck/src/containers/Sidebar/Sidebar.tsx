@@ -33,7 +33,7 @@ export const Sidebar = () => {
       label={label}
       classNames={['grid', topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
-      <Surface.Root.Surface type={AppSurface.Navigation} data={navigationData} limit={1} />
+      <Surface.Surface type={AppSurface.Navigation} data={navigationData} limit={1} />
     </Main.NavigationSidebar>
   );
 };

@@ -18,13 +18,13 @@ import { isPluginSpecSubject } from '../plugin-spec.ts';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'pluginSpec',
         filter: AppSurface.subject(AppSurface.Article, isPluginSpecSubject),
         component: SpecArticle,
         props: ({ role, data: { subject } }) => ({ role, content: subject.content }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'specArticle',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Spec.Spec),
@@ -33,7 +33,7 @@ export default Capability.makeModule(() =>
         component: SpecArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'codeArticle',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, CodeProject.CodeProject),
@@ -42,7 +42,7 @@ export default Capability.makeModule(() =>
         component: CodeArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'codeSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: CodeSettings,

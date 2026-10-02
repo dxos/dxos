@@ -36,9 +36,9 @@ declare global {
 export const capabilities: Capability.AnyContribution[] = [
   Capability.contribute(
     Capabilities.ReactSurface,
-    Surface.Root.create({
+    Surface.create({
       id: 'pluginDefault',
-      filter: Surface.Root.makeFilter(AppSurface.CardContent),
+      filter: Surface.makeFilter(AppSurface.CardContent),
       position: Position.last,
       component: ({ data }) => (
         <Card.Body>

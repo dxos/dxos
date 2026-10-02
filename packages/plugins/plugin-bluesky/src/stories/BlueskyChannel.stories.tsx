@@ -42,7 +42,7 @@ const DefaultStory = () => {
   }
 
   return (
-    <Surface.Root.Surface type={AppSurface.Article} data={{ subject: channel, attendableId: 'story' }} limit={1} />
+    <Surface.Surface type={AppSurface.Article} data={{ subject: channel, attendableId: 'story' }} limit={1} />
   );
 };
 

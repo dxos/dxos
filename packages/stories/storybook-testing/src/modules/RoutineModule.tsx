@@ -41,7 +41,7 @@ const RoutineModuleContainer = ({ space }: { space: Space }) => {
       </Panel.Toolbar>
       <Panel.Content classNames='p-2 min-h-0'>
         <Card.Root>
-          <Surface.Root.Surface type={AppSurface.CardContent} limit={1} data={{ subject: instructions }} />
+          <Surface.Surface type={AppSurface.CardContent} limit={1} data={{ subject: instructions }} />
         </Card.Root>
       </Panel.Content>
     </Panel.Root>

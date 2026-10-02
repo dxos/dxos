@@ -179,7 +179,7 @@ const BindingDebug = ({ role, data }: { role: string; data: Record<string, any> 
  * lands.
  */
 const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string, any> }) => {
-  const isAvailable = Surface.Root.useIsAvailable();
+  const isAvailable = Surface.useIsAvailable();
   const surfaceManager = Surface.useSurfaceManager();
   useAtomValue(surfaceManager.candidatesAtom(type.role));
   const pending = useAtomValue(surfaceManager.pendingAtom(type.role));
@@ -193,7 +193,7 @@ const SurfaceCell = ({ type, data }: { type: Role.Role<any>; data: Record<string
     return <BindingDebug role={type.role} data={data} />;
   }
 
-  return <Surface.Root.Surface type={type} data={data} limit={1} />;
+  return <Surface.Surface type={type} data={data} limit={1} />;
 };
 
 /**

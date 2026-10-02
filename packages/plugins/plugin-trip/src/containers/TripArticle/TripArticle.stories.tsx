@@ -217,7 +217,7 @@ const MapStory = () => {
 
   return (
     <AttendableContainer id={ATTENDABLE_ID} classNames='contents'>
-      <Surface.Root.Surface type={MapRole.MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
+      <Surface.Surface type={MapRole.MapInline} data={{ subject: trip, attendableId: ATTENDABLE_ID }} limit={1} />
     </AttendableContainer>
   );
 };

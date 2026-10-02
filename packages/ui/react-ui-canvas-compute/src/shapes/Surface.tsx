@@ -23,7 +23,7 @@ export const SurfaceComponent = ({ shape }: ShapeComponentProps<SurfaceShape>) =
   return (
     <Box shape={shape}>
       <Card.Root>
-        {value !== null && <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: value }} limit={1} />}
+        {value !== null && <Surface.Surface type={AppSurface.CardContent} data={{ subject: value }} limit={1} />}
       </Card.Root>
     </Box>
   );

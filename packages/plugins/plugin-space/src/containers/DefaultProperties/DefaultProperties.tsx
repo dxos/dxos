@@ -65,7 +65,7 @@ export const DefaultProperties = forwardRef<HTMLDivElement, DefaultPropertiesPro
         <Panel.Content asChild>
           <ObjectProperties object={object} resolveCreateEntry={resolveCreateEntry}>
             {/* TODO(burdon): Ambiguous naming since providers only replace parts; can't update Toolbar, etc. Consider DefaultSettings pattern. */}
-            <Surface.Root.Surface type={AppSurface.ObjectProperties} data={data} />
+            <Surface.Surface type={AppSurface.ObjectProperties} data={data} />
           </ObjectProperties>
         </Panel.Content>
       </Panel.Root>

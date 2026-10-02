@@ -32,12 +32,12 @@ export const Banner = ({ variant, classNames }: Util.ThemedClassName<{ variant?:
       {variant === 'topbar' && (
         <div className='dx-fullscreen pointer-events-none'>
           <div className='grid h-full pointer-fine:p-1 max-w-md mx-auto pointer-events-auto'>
-            <Surface.Root.Surface type={AppSurface.SearchInput} limit={1} />
+            <Surface.Surface type={AppSurface.SearchInput} limit={1} />
           </div>
         </div>
       )}
       <span className='grow' />
-      <Surface.Root.Surface type={DeckRole.VersionInfo} limit={1} />
+      <Surface.Surface type={DeckRole.VersionInfo} limit={1} />
     </header>
   );
 };

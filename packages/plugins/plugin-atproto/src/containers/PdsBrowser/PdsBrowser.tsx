@@ -221,7 +221,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
                     </Card.Block>
                     <Card.Title>{Obj.getLabel(preview)}</Card.Title>
                   </Card.Header>
-                  <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: preview }} limit={1} />
+                  <Surface.Surface type={AppSurface.CardContent} data={{ subject: preview }} limit={1} />
                 </Card.Root>
               )}
               {alreadyImported ? (

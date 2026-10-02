@@ -126,12 +126,12 @@ export const MeetingArticle = ({ role, subject: meeting, attendableId }: Meeting
 
       {tab === 'call' && callData && (
         <Panel.Content>
-          <Surface.Root.Surface type={AppSurface.Article} data={callData} limit={1} />
+          <Surface.Surface type={AppSurface.Article} data={callData} limit={1} />
         </Panel.Content>
       )}
       {tab !== 'call' && articleData && (
         <Panel.Content>
-          <Surface.Root.Surface type={AppSurface.Article} data={articleData} limit={1} />
+          <Surface.Surface type={AppSurface.Article} data={articleData} limit={1} />
         </Panel.Content>
       )}
     </Panel.Root>

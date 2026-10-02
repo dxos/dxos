@@ -38,7 +38,7 @@ const TaskSetSection: Role.Role<AppSurface.SectionData<TaskSetType.TaskSet, { sh
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'article.journal',
         // TODO(wittjosiah): Split into multiple surfaces if this filter proves too strict for non-article roles.
         filter: AppSurface.oneOf(
@@ -48,20 +48,20 @@ export default Capability.makeModule(() =>
         component: JournalArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'card.remoteSession',
         position: Position.first,
         filter: AppSurface.object(AppSurface.CardContent, RemoteSession.RemoteSession),
         component: RemoteSessionCard,
         props: ({ role, data: { subject } }) => ({ role, subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'article.outline',
         filter: AppSurface.object(AppSurface.Article, Outline.Outline),
         component: OutlineArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         // Its own surface rather than a second filter on the article: only the embedded (section) case
         // carries `taskSet`, and a union data type could not destructure it.
         id: 'section.outline',
@@ -77,20 +77,20 @@ export default Capability.makeModule(() =>
           toolbar: false,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         // A single task's detail: the plank a row opens, reused as the reader moves down a list.
         id: 'article.task',
         filter: AppSurface.object(AppSurface.Article, Task.Task),
         component: TaskArticle,
         props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'article.taskSet',
         filter: AppSurface.object(AppSurface.Article, TaskSet.TaskSet),
         component: TaskSetArticle,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'section.taskSet',
         filter: AppSurface.object(TaskSetSection, TaskSet.TaskSet),
         component: TaskSetArticle,
@@ -101,13 +101,13 @@ export default Capability.makeModule(() =>
           showDescription,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'card.outline',
         filter: AppSurface.object(AppSurface.CardContent, Outline.Outline),
         component: OutlineCard,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: QUICK_ENTRY_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, QUICK_ENTRY_DIALOG),
         component: QuickEntryDialog,

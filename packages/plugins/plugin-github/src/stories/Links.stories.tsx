@@ -65,7 +65,7 @@ const PreviewCard = () => {
                 <Card.ActionIconButton action='close' />
               </Popover.Close>
             </Card.Header>
-            <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: target.object }} limit={1} />
+            <Surface.Surface type={AppSurface.CardContent} data={{ subject: target.object }} limit={1} />
           </Card.Root>
         </Popover.Viewport>
         <Popover.Arrow />

@@ -35,7 +35,7 @@ export const CollectionArticle = ({ role, subject: collection }: CollectionArtic
               <Pager index={slide} count={liveCollection.objects.length} keys={running} onChange={setSlide} />
             }
           >
-            <Surface.Root.Surface
+            <Surface.Surface
               type={AppSurface.Slide}
               data={{
                 subject: liveCollection.objects[slide],

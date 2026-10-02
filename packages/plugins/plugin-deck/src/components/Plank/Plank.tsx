@@ -38,7 +38,7 @@ const PLANK_LOADING = <PlankLoading />;
 const PENDING_DELAY = '1s';
 const pendingStyle = { animationDelay: PENDING_DELAY, animationFillMode: 'backwards' } as const;
 
-type SurfaceProps = ComponentProps<typeof Surface.Root.Surface>;
+type SurfaceProps = ComponentProps<typeof Surface.Surface>;
 
 /**
  * What a plank renders: its identity plus whatever chrome it can offer. A plank the URL names but
@@ -218,7 +218,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
             // so the plank does not change under the reader on the way there.
             PLANK_LOADING
           ) : (
-            <Surface.Root.Surface
+            <Surface.Surface
               key={node.id}
               type={AppSurface.Article}
               data={data}

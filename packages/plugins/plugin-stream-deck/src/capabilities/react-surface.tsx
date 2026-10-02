@@ -14,14 +14,14 @@ import { StreamDeckDashboardSurface, StreamDeckStatusSurface } from './StreamDec
 export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'deckCompanion',
-        filter: Surface.Root.makeFilter(AppSurface.deckCompanion('streamDeck')),
+        filter: Surface.makeFilter(AppSurface.deckCompanion('streamDeck')),
         component: StreamDeckDashboardSurface,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'statusIndicator',
-        filter: Surface.Root.makeFilter(AppSurface.StatusIndicator),
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: StreamDeckStatusSurface,
       }),
     ]),

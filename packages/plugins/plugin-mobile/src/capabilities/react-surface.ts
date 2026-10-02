@@ -23,15 +23,15 @@ export default Capability.makeModule(
     // Mobile projects the graph root and branch/workspace nodes onto their own full-screen
     // surfaces instead of the desktop deck's plank rendering.
     return Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'home',
-        filter: Surface.Root.makeFilter(AppSurface.Article, (data) => data.attendableId === GraphNode.RootId),
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === GraphNode.RootId),
         component: Home,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'navBranch',
         position: Position.last,
-        filter: Surface.Root.makeFilter(
+        filter: Surface.makeFilter(
           AppSurface.Article,
           (data) => ALLOWED_DISPOSITIONS.includes(data.properties?.disposition) || data.properties?.role === 'branch',
         ),

@@ -18,21 +18,21 @@ import { CompanionViewState } from '#types';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: DeckSettings,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'detailCompanion',
         filter: AppSurface.subject(AppSurface.Article, CompanionViewState.isDetailData),
         component: DetailCompanion,
         props: ({ role, data: { subject, attendableId } }) => ({ role, attendableId, detail: subject.detail }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'notFound',
-        filter: Surface.Root.makeFilter(AppSurface.Article, (data) => data.attendableId === NotFound.NOT_FOUND_PATH),
+        filter: Surface.makeFilter(AppSurface.Article, (data) => data.attendableId === NotFound.NOT_FOUND_PATH),
         component: NotFoundArticle.Root,
       }),
     ]);

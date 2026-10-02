@@ -202,7 +202,7 @@ export const MediaArtifactVariants = ({
               {t('generating.label')}
             </Flex.Root>
           ) : (
-            <Surface.Root.Surface
+            <Surface.Surface
               type={VariantRenderer}
               data={{
                 variant: {

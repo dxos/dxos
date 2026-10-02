@@ -18,7 +18,7 @@ export type OrganizationCardContentProps = AppSurface.ObjectCardData<Organizatio
 export const OrganizationCardContent = ({ role, ...data }: OrganizationCardContentProps) => (
   <>
     <OrganizationCard role={role} subject={data.subject} />
-    <Surface.Root.Surface type={AppSurface.Related} data={data} limit={1} />
+    <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
   </>
 );
 
@@ -30,6 +30,6 @@ export type PersonCardContentProps = AppSurface.ObjectCardData<Person.Person> & 
 export const PersonCardContent = ({ role, ...data }: PersonCardContentProps) => (
   <>
     <PersonCard role={role} subject={data.subject} />
-    <Surface.Root.Surface type={AppSurface.Related} data={data} limit={1} />
+    <Surface.Surface type={AppSurface.Related} data={data} limit={1} />
   </>
 );

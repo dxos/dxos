@@ -17,7 +17,7 @@ import { ObjectHistory } from '#containers';
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'companion.objectHistory',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'history'),
@@ -27,7 +27,7 @@ export default Capability.makeModule(
           <ObjectHistory role={role} attendableId={data.attendableId} subject={data.companionTo} ref={ref} />
         ),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.markdownProperties',
         filter: AppSurface.object(AppSurface.ObjectProperties, Markdown.Document),
         component: ({ data, role }) => <MarkdownProperties role={role} subject={data.subject} />,

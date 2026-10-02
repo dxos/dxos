@@ -219,7 +219,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
                       layout={itemLayout}
                       title={<Card.Title>{Obj.getLabel(artifact)}</Card.Title>}
                     >
-                      <Surface.Root.Surface type={AppSurface.CardContent} data={{ subject: artifact }} limit={1} />
+                      <Surface.Surface type={AppSurface.CardContent} data={{ subject: artifact }} limit={1} />
                     </Board.Cell>
                   ) : null;
                 })}

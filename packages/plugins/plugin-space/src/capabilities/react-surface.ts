@@ -71,7 +71,7 @@ type ReactSurfaceOptions = {
 export default Capability.makeModule(
   Effect.fnUntraced(function* ({ createInvitationUrl }: ReactSurfaceOptions) {
     return Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'spaceHome',
         filter: AppSurface.literal(AppSurface.Article, SPACE_HOME_NODE_TYPE),
         component: SpaceHomeArticle,
@@ -81,26 +81,26 @@ export default Capability.makeModule(
           space: properties?.space,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'spaceHomeRecent',
-        filter: Surface.Root.makeFilter(SpaceHomeContent),
+        filter: Surface.makeFilter(SpaceHomeContent),
         component: SpaceHomeRecentSurface,
         props: ({ data: { space } }) => ({ space }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'spaceHomeDashboard',
-        filter: Surface.Root.makeFilter(SpaceHomeContent),
+        filter: Surface.makeFilter(SpaceHomeContent),
         component: SpaceHomeDashboardSurface,
         props: ({ data: { space } }) => ({ space }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'collectionFallback',
         position: Position.last,
         filter: AppSurface.object(AppSurface.Article, Collection.Collection),
         component: CollectionArticle,
         props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'recordArticle',
         position: Position.last,
         filter: AppSurface.subject(AppSurface.Article, Obj.isObject),
@@ -109,7 +109,7 @@ export default Capability.makeModule(
         // contributed actions from and renders empty.
         props: ({ data: { subject, attendableId } }) => ({ subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'typeCollection',
         filter: AppSurface.subject(AppSurface.Article, Type.isType),
         component: TypeArticleSurface,
@@ -120,13 +120,13 @@ export default Capability.makeModule(
           properties,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'pluginSettings',
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: SpaceSettingsSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'companion.objectProperties',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'settings'),
@@ -135,7 +135,7 @@ export default Capability.makeModule(
         component: DefaultProperties,
         props: ({ role, ref, data: { companionTo } }) => ({ role, subject: companionTo, ref }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'companion.related',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'related'),
@@ -144,24 +144,24 @@ export default Capability.makeModule(
         component: RelatedArticle,
         props: ({ role, data: { companionTo } }) => ({ role, companionTo }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'spaceSettingsProperties',
         filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.general`),
         component: SpaceSettingsPropertiesSurface,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'spaceSettingsMembers',
         position: Position.first,
         filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.members`),
         component: SpaceMembersSurface,
         props: () => ({ createInvitationUrl }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'spaceSettingsSchema',
         filter: AppSurface.literal(AppSurface.Article, `${meta.profile.key}.schema`),
         component: SpaceSchemaSurface,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'selectedObjects',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'selected-objects'),
@@ -173,88 +173,88 @@ export default Capability.makeModule(
         component: SelectedObjectsSurface,
         props: ({ ref, data: { companionTo } }) => ({ companionTo, ref }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: JOIN_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof JoinDialog>>(AppSurface.Dialog, JOIN_DIALOG),
         component: JoinDialog,
         props: ({ data: { props } }) => ({ ...props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: CREATE_SPACE_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, CREATE_SPACE_DIALOG),
         component: CreateSpaceDialog,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: IMPORT_SPACE_DIALOG,
         filter: AppSurface.component(AppSurface.Dialog, IMPORT_SPACE_DIALOG),
         component: ImportSpaceDialog,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: ADD_TO_COLLECTION_DIALOG,
         filter: AppSurface.component<AddToCollectionDialogProps>(AppSurface.Dialog, ADD_TO_COLLECTION_DIALOG),
         component: AddToCollectionDialog,
         props: ({ data: { props } }) => ({ ...props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: OBJECT_FORM_DIALOG,
         filter: AppSurface.component<ComponentProps<typeof ObjectFormDialog>>(AppSurface.Dialog, OBJECT_FORM_DIALOG),
         component: ObjectFormDialog,
         props: ({ data: { props } }) => ({ ...props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'createInitialSpaceFormHue',
         filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, HueAnnotationId)),
         component: HueField,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'createInitialSpaceFormIcon',
         filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, IconAnnotationId)),
         component: IconField,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'typenameFormInput',
         filter: AppSurface.formInput(
           (data) => data.prop === 'typename' && Option.isSome(getTypeInputOptions(data.schema.ast)),
         ),
         component: TypenameField,
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'objectProperties',
-        filter: Surface.Root.makeFilter(
+        filter: Surface.makeFilter(
           AppSurface.ObjectProperties,
           (data) => Obj.isObject(data.subject) && !!tryGetViewForObject(data.subject),
         ),
         component: ViewEditorSurface,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: RENAME_POPOVER,
         filter: AppSurface.component<RenameSubject>(AppSurface.Popover, RENAME_POPOVER),
         component: RenamePopover,
         props: ({ data: { props } }) => ({ subject: props }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'navtreePresence',
         filter: AppSurface.subject(AppSurface.NavtreeItemEnd, Obj.isObject),
         component: NavtreePresenceSurface,
         props: ({ data: { id, open } }) => ({ id, open }),
       }),
       // TODO(wittjosiah): Attention glyph for non-echo items should be handled elsewhere.
-      Surface.Root.create({
+      Surface.create({
         id: 'navtreePresenceFallback',
         position: Position.last,
-        filter: Surface.Root.makeFilter(AppSurface.NavtreeItemEnd),
+        filter: Surface.makeFilter(AppSurface.NavtreeItemEnd),
         component: SmallPresenceLive,
         props: ({ data: { id, open } }) => ({ id, open }),
       }),
       // TODO(wittjosiah): Broken?
-      Surface.Root.create({
+      Surface.create({
         id: 'navtreeSyncStatus',
         filter: AppSurface.subject(AppSurface.NavtreeItemEnd, isSpace),
         component: InlineSyncStatus,
         props: ({ data: { subject, open } }) => ({ space: subject, open }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'navbarPresence',
         position: Position.first,
         filter: AppSurface.subject(
@@ -266,9 +266,9 @@ export default Capability.makeModule(
       }),
       // Role-only: one generic stack serves every host, since the host supplies the objects rather
       // than the surface deriving them from a subject it would have to match on.
-      Surface.Root.create({
+      Surface.create({
         id: 'cardMasonry',
-        filter: Surface.Root.makeFilter(AppSurface.CardMasonry),
+        filter: Surface.makeFilter(AppSurface.CardMasonry),
         component: CardMasonry,
         props: ({ data: { objects, size, inline, CardMenu, pending } }) => ({
           objects,
@@ -278,15 +278,15 @@ export default Capability.makeModule(
           pending,
         }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'collectionSection',
         filter: AppSurface.object(AppSurface.Section, Collection.Collection),
         component: CollectionSection,
         props: ({ data: { subject } }) => ({ subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'syncStatus',
-        filter: Surface.Root.makeFilter(AppSurface.StatusIndicator),
+        filter: Surface.makeFilter(AppSurface.StatusIndicator),
         component: SyncStatus,
       }),
     ]);

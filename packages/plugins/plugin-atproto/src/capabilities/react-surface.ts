@@ -19,7 +19,7 @@ import { ATPROTO_COMPANION_VARIANT } from './app-graph-builder.ts';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'atprotoCompanion',
         // Bound to its own companion variant (`atproto`) so it does not also match other companions
         // of the same object (e.g. a book's notes).
@@ -29,12 +29,12 @@ export default Capability.makeModule(() =>
             (subject): subject is Obj.Unknown => Obj.isObject(subject) && !!getRecordAnnotation(subject),
           ),
           AppSurface.companion(AppSurface.Article),
-          Surface.Root.makeFilter(AppSurface.Article, (data) => data.variant === ATPROTO_COMPANION_VARIANT),
+          Surface.makeFilter(AppSurface.Article, (data) => data.variant === ATPROTO_COMPANION_VARIANT),
         ),
         component: AtprotoCompanion,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'pdsBrowser',
         filter: AppSurface.subject(AppSurface.Article, isPdsSubject),
         component: PdsBrowser,

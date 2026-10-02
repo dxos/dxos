@@ -15,14 +15,14 @@ export const Layout = () => {
   return (
     <div className='flex flex-col gap-2'>
       <div className='flex gap-2'>
-        <Surface.Root.Surface type={PlaygroundRoles.Toolbar} />
+        <Surface.Surface type={PlaygroundRoles.Toolbar} />
       </div>
       <div className='flex gap-2'>
         <div className='flex-1'>
-          <Surface.Root.Surface type={PlaygroundRoles.Primary} limit={1} />
+          <Surface.Surface type={PlaygroundRoles.Primary} limit={1} />
         </div>
         <div className='flex-1'>
-          <Surface.Root.Surface type={PlaygroundRoles.Secondary} limit={1} />
+          <Surface.Surface type={PlaygroundRoles.Secondary} limit={1} />
         </div>
       </div>
     </div>

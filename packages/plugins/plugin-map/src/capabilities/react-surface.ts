@@ -22,7 +22,7 @@ import { LocationField } from './LocationField.tsx';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.map',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Map.Map),
@@ -33,21 +33,21 @@ export default Capability.makeModule(() =>
       }),
       // Generic inline map for any subject a MarkerProvider matches; requested explicitly by
       // role (e.g. TripArticle renders `<Surface.Surface type={MapInline} data={{ subject, attendableId }} />`).
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.mapInline',
         filter: AppSurface.subject(MapInline, Obj.isObject),
         component: MapSurface,
         props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.worldMap',
-        filter: Surface.Root.makeFilter(World),
+        filter: Surface.makeFilter(World),
         component: WorldMapSurface,
         props: ({ data: { markers, subject, view } }) => ({ markers, subject, view }),
       }),
       // Companion surface for any object that has markers (gated by app-graph-builder, which only
       // emits the `map` companion node when a MarkerProvider matches the primary object).
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.mapCompanion',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'map'),
@@ -56,14 +56,14 @@ export default Capability.makeModule(() =>
         component: MapSurface,
         props: ({ role, data: { companionTo, attendableId } }) => ({ role, subject: companionTo, attendableId }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'surface.objectProperties',
         position: Position.first,
         filter: AppSurface.object(AppSurface.ObjectProperties, Map.Map),
         component: MapViewEditor,
         props: ({ data: { subject } }) => ({ object: subject }),
       }),
-      Surface.Root.create({
+      Surface.create({
         // TODO(burdon): Why this title?
         id: 'surface.createInitialSchemaForm',
         filter: AppSurface.formInputBySchema((ast) => !!SchemaEx.findAnnotation<boolean>(ast, LocationAnnotationId)),

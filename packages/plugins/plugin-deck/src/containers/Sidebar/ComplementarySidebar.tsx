@@ -115,7 +115,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
             className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
             style={iconSize(4)}
           >
-            <Surface.Root.Surface type={AppSurface.StatusIndicator} />
+            <Surface.Surface type={AppSurface.StatusIndicator} />
           </div>
           <div className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
             <ToggleComplementarySidebarButton />
@@ -179,7 +179,7 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='dx-r1-surface'>
-        <Surface.Root.Surface
+        <Surface.Surface
           type={AppSurface.deckCompanion(Attention.getLinkedVariant(companion.id))}
           data={data}
           fallback={PlankErrorFallback}

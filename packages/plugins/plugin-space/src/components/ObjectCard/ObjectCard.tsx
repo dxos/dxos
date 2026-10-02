@@ -94,7 +94,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
         </Card.Block>
       </Card.Header>
       <Card.Body>
-        <Surface.Root.Surface type={AppSurface.CardContent} data={data} limit={1} />
+        <Surface.Surface type={AppSurface.CardContent} data={data} limit={1} />
       </Card.Body>
     </Card.Root>
   );

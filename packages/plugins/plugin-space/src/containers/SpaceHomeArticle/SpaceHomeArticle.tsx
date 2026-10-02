@@ -54,12 +54,12 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
           <ScrollArea.Root orientation='vertical' centered padding>
             <ScrollArea.Viewport>
               <Flex.Root column gap='lg' classNames='dx-document pb-trim-2xl'>
-                <Surface.Root.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
+                <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
               </Flex.Root>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <Column.Center classNames='dx-document pb-4'>
-            <Surface.Root.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
+            <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
           </Column.Center>
         </Column.Root>
       </Panel.Content>

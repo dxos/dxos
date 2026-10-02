@@ -237,9 +237,9 @@ const StoryExtractMessagePlugin = Plugin.define(
     activate: () =>
       Effect.succeed([
         Capability.contribute(Capabilities.ReactSurface, [
-          Surface.Root.create({
+          Surface.create({
             id: 'inbox.extractMessage',
-            filter: Surface.Root.makeFilter(ExtractMessageRole),
+            filter: Surface.makeFilter(ExtractMessageRole),
             component: ExtractMessageModule,
           }),
           ...moduleSurfaces,

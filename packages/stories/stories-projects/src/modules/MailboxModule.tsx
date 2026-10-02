@@ -28,6 +28,6 @@ export const MailboxModule = () => {
   }
 
   return (
-    <Surface.Root.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: mailbox.id }} limit={1} />
+    <Surface.Surface type={AppSurface.Article} data={{ subject: mailbox, attendableId: mailbox.id }} limit={1} />
   );
 };

@@ -34,7 +34,7 @@ const ConnectorModuleContainer = ({ space, attendableId }: { space: Space; atten
       )
     : undefined;
   return binding ? (
-    <Surface.Root.Surface
+    <Surface.Surface
       type={AppSurface.Article}
       data={{ subject: binding, companionTo: mailbox, attendableId }}
       limit={1}

@@ -15,7 +15,7 @@ import { Drawing } from '#types';
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
-      Surface.Root.create({
+      Surface.create({
         id: 'drawing',
         filter: AppSurface.oneOf(
           AppSurface.object(AppSurface.Article, Drawing.Drawing),
@@ -25,7 +25,7 @@ export default Capability.makeModule(() =>
         component: DrawingArticle,
         props: ({ role, data: { subject, attendableId, extrinsic } }) => ({ role, subject, attendableId, extrinsic }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'companion.scores',
         filter: AppSurface.allOf(
           AppSurface.literal(AppSurface.Article, 'scores'),
@@ -34,7 +34,7 @@ export default Capability.makeModule(() =>
         component: DrawingScores,
         props: ({ role, data: { companionTo } }) => ({ role, drawing: companionTo }),
       }),
-      Surface.Root.create({
+      Surface.create({
         id: 'drawingCard',
         filter: AppSurface.object(AppSurface.CardContent, Drawing.Drawing),
         component: DrawingCard,

@@ -108,7 +108,7 @@ const ObjectTile: ObjectTileComponent = ({ subject }) => {
   const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{subject.id}</span>, [subject]);
   return (
     <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
-      <Surface.Root.Surface
+      <Surface.Surface
         type={AppSurface.CardContent}
         limit={1}
         data={{ subject } satisfies AppSurface.ObjectCardData}

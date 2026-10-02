@@ -126,7 +126,7 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
             <Tag.Root classNames='justify-self-start'>{t('archived.label')}</Tag.Root>
           </Card.Row>
         )}
-        {showCardContent && <Surface.Root.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
+        {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}
       </Card.Root>
     </Focus.Item>
   );

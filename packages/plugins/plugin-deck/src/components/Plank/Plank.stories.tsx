@@ -37,9 +37,9 @@ const TestPlugin = Plugin.define<DeckCapabilities.DeckPluginOptions>(pluginMeta)
 
 const TestExtension = Capability.contribute(
   Capabilities.ReactSurface,
-  Surface.Root.create({
+  Surface.create({
     id: 'storyArticle',
-    filter: Surface.Root.makeFilter(AppSurface.Article),
+    filter: Surface.makeFilter(AppSurface.Article),
     component: ({ data: { subject } }) => (subject ? <JsonHighlighter data={subject} /> : <Loading />),
   }),
 );
