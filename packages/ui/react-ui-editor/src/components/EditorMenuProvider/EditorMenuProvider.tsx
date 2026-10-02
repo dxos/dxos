@@ -194,7 +194,7 @@ export const EditorMenuProvider = ({
     >
       {/* Menu. */}
       <Next.Popover.Content
-        classNames={['flex flex-col', !search && !menuGroups.length && 'hidden']}
+        classNames={!search && !menuGroups.length ? 'hidden' : undefined}
         style={{
           // The search input shares the box, so `numItems` keeps meaning "items visible".
           maxBlockSize: 36 * numItems + 10 + (search ? 36 : 0),
@@ -216,7 +216,7 @@ export const EditorMenuProvider = ({
             />
           </Next.Field.Root>
         )}
-        <Next.Popover.Body classNames='dx-expand'>
+        <Next.Popover.Body>
           <Menu groups={menuGroups} currentItem={currentItem} onSelect={handleSelect} />
         </Next.Popover.Body>
       </Next.Popover.Content>
