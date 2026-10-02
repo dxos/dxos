@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-higgsfield",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "Higgsfield image/video-generation provider for Composer.",
   "homepage": "https://dxos.org",
