@@ -4,6 +4,9 @@
 
 // @import-as-namespace
 
+import * as Duration from 'effect/Duration';
+import * as Effect from 'effect/Effect';
+
 import { BaseError, type Cancellation, isCancellation } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -25,27 +28,67 @@ export class Rejected extends BaseError.extend('PasskeyRejectedError', 'Passkey 
 /** Passkey login failed before an assertion could be checked (service unreachable, unusable authenticator response). */
 export class LoginFailed extends BaseError.extend('PasskeyLoginError', 'Passkey login failed') {}
 
-/** Every way a passkey login can fail, as `ConfigError.ConfigError` names its own union. */
-export type PasskeyError = Dismissed | Rejected | LoginFailed;
+/** Creating a passkey failed for a reason other than the user dismissing the prompt. */
+export class RegistrationFailed extends BaseError.extend('PasskeyRegistrationError', 'Passkey could not be created') {}
 
-/** Discriminates a passkey login failure so callers can pick a message without matching on error names. */
+/** The native prompt never answered. The bridge cannot cancel it, so its sheet may still be on screen. */
+export class TimedOut extends BaseError.extend('PasskeyTimedOutError', 'The passkey prompt did not respond') {}
+
+/** This host cannot complete a passkey request, so none was started. */
+export class Unavailable extends BaseError.extend(
+  'PasskeyUnavailableError',
+  'Passkeys are not available in this build',
+) {}
+
+/** Every way a passkey ceremony can fail, as `ConfigError.ConfigError` names its own union. */
+export type PasskeyError = Dismissed | Rejected | LoginFailed | RegistrationFailed | TimedOut | Unavailable;
+
+/** Longest a native prompt may stay unanswered; the WebAuthn ceremony ceiling. */
+export const NATIVE_PROMPT_TIMEOUT = Duration.minutes(5);
+
+/** Abandon a native passkey call that never answers. */
+export const timeoutNativePrompt = <A, E, R>(
+  effect: Effect.Effect<A, E, R>,
+  duration: Duration.Input = NATIVE_PROMPT_TIMEOUT,
+): Effect.Effect<A, E | TimedOut, R> =>
+  Effect.timeoutOrElse(effect, { duration, orElse: () => Effect.fail(new TimedOut()) });
+
+/** Discriminates a passkey failure so callers can pick a message without matching on error names. */
 export type Failure = 'dismissed' | 'rejected' | 'failed';
 
 /**
- * Classify a rejection from the authenticator. WebAuthn reports a dismissed prompt and
- * "no credential for this site" as the same `NotAllowedError`, so both map to dismissal;
- * the native (Tauri) bridge rejects with a plain string rather than a `DOMException`.
+ * What the native (Tauri) bridge rejects with for every `ASAuthorizationError`, a cancel included: it
+ * collapses each into one plain string per ceremony, so a cancel cannot be told apart from a failure.
  */
-export const fromAssertion = (error: unknown): Dismissed | LoginFailed => {
-  const name = error instanceof DOMException ? error.name : undefined;
-  if (name === 'NotAllowedError' || name === 'AbortError' || /cancell?ed/i.test(String(error))) {
-    return new Dismissed({ cause: error });
-  }
-  return new LoginFailed({ cause: error });
-};
+// TODO(wittjosiah): Patch tauri-plugin-macos-passkey to pass `ASAuthorizationError.code` through so only a
+//   cancel (1001) reads as a dismissal; today a domain-association failure is silenced along with it.
+const NATIVE_BRIDGE_REJECTIONS = ['Registration failed', 'Login failed'];
 
 /**
- * Classify an error returned by the `RedeemPasskey` operation.
+ * Whether the authenticator rejected because the prompt was dismissed. WebAuthn reports a dismissed
+ * prompt and "no credential for this site" as the same `NotAllowedError`; the native bridge's generic
+ * rejections are just as ambiguous, so both read as dismissals.
+ */
+const isDismissal = (error: unknown): boolean => {
+  const name = error instanceof DOMException ? error.name : undefined;
+  return (
+    name === 'NotAllowedError' ||
+    name === 'AbortError' ||
+    NATIVE_BRIDGE_REJECTIONS.includes(String(error)) ||
+    /cancell?ed/i.test(String(error))
+  );
+};
+
+/** Classify a rejection from the authenticator while logging in. */
+export const fromAssertion = (error: unknown): Dismissed | LoginFailed =>
+  isDismissal(error) ? new Dismissed({ cause: error }) : new LoginFailed({ cause: error });
+
+/** Classify a rejection from the authenticator while creating a passkey. */
+export const fromRegistration = (error: unknown): Dismissed | RegistrationFailed =>
+  isDismissal(error) ? new Dismissed({ cause: error }) : new RegistrationFailed({ cause: error });
+
+/**
+ * Classify an error returned by the `RedeemPasskey` or `CreatePasskey` operation.
  * Anything unrecognized is reported as a generic failure rather than swallowed.
  */
 export const classify = (error: unknown): Failure => {
