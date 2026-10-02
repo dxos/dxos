@@ -385,7 +385,7 @@ jobs:
           if [ "$signed" != "$granted" ]; then
             echo "::error::app is signed as $signed but its profile grants $granted" && exit 1
           fi
-          codesign -d --extract-certificates="$RUNNER_TEMP/signing-cert" "$app" 2>/dev/null
+          codesign -d --extract-certificates="$RUNNER_TEMP/signing-cert" "$app"
           if [ ! -s "$RUNNER_TEMP/signing-cert0" ]; then
             echo "::error::app carries no signing certificate" && exit 1
           fi
