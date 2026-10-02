@@ -43,5 +43,11 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface.
 });
 export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
+  provides: [CodeCapabilities.Settings],
 });
+export const AgentLauncher = Capability.lazyModule(
+  'AgentLauncher',
+  { provides: [CodeCapabilities.AgentHelper], activatesOn: ActivationEvents.Startup, environments: ['tauri'] },
+  () => import('./agent-launcher.ts'),
+);
 export const Translations = AppCapability.translations(translations);

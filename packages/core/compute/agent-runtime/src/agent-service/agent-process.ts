@@ -183,7 +183,12 @@ export const AgentProcess = (options: AgentProcessOptions) =>
         const runtime = yield* Effect.context<Database.Service>();
         const makeTurnProducer = options.makeTurnProducer ?? makeAiSessionTurnProducer;
         // Scoped acquisition: the producer's teardown registers with this process's scope.
-        const session = yield* makeTurnProducer({ feed, runtime, instructions: instructions ? [instructions] : [] });
+        const session = yield* makeTurnProducer({
+          chat,
+          feed,
+          runtime,
+          instructions: instructions ? [instructions] : [],
+        });
         const sessionStore = new SessionStore();
         // KV holds only undelivered tool results; queued prompts and alarms live in the feed via
         // `sessionStore`.

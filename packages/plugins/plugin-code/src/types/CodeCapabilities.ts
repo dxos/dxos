@@ -4,11 +4,34 @@
 
 // @import-as-namespace
 
+import type * as acp from '@agentclientprotocol/sdk';
+import type * as Effect from 'effect/Effect';
 import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 
 import { meta } from '#meta';
+
+import type * as Protocol from '../agents/Protocol.ts';
+import type { AgentError } from '../errors.ts';
+import type * as SettingsModule from './Settings.ts';
+
+export const Settings = Capability.makeSingleton<Atom.Writable<SettingsModule.Settings>>()(
+  `${meta.profile.key}.capability.settings`,
+);
+
+/**
+ * The desktop app's agent helper (`dx-agent`): the only way the webview can start a coding agent,
+ * since it cannot spawn processes itself. Contributed only in the desktop app.
+ */
+export type AgentHelper = {
+  /** The agents the helper can launch, and whether each can run on this machine. */
+  readonly agents: Effect.Effect<readonly Protocol.AgentStatus[], AgentError>;
+  /** Starts an agent working in `cwd` and returns its ACP connection. */
+  readonly connect: (agent: string, cwd: string) => Effect.Effect<acp.Stream, AgentError>;
+};
+
+export const AgentHelper = Capability.makeSingleton<AgentHelper>()(`${meta.profile.key}.capability.agentHelper`);
 
 /**
  * Diagnostic shape mirroring `compiler.Diagnostic`. Re-declared here (rather

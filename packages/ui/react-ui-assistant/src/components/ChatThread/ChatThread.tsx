@@ -162,12 +162,27 @@ const ChatThreadViewport = ({ children, classNames, overlay, ...props }: ChatThr
 
   const handleClick = useCallback(
     (event: React.MouseEvent) => {
-      const action = (event.target as HTMLElement).closest<HTMLElement>('[data-action="submit"]');
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      const action = target.closest<HTMLElement>('[data-action="submit"]');
       const text = action?.getAttribute('data-value');
       if (text) {
         event.preventDefault();
         event.stopPropagation();
         onEvent?.({ type: 'submit', text });
+        return;
+      }
+
+      const response = target.closest<HTMLElement>('[data-action="respond"]');
+      const messageId = response?.getAttribute('data-message');
+      const requestId = response?.getAttribute('data-request');
+      const optionId = response?.getAttribute('data-option');
+      if (messageId && requestId && optionId) {
+        event.preventDefault();
+        event.stopPropagation();
+        onEvent?.({ type: 'respond', messageId, requestId, optionId });
       }
     },
     [onEvent],

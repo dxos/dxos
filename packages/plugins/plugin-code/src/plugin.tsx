@@ -5,6 +5,7 @@
 import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
+  AgentLauncher,
   AppGraphBuilder,
   BuildRunState,
   CreateObject,
@@ -20,6 +21,7 @@ import {
 import { meta } from '#meta';
 
 export const CodePlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(AgentLauncher),
   Plugin.addModule(AppGraphBuilder),
   Plugin.addModule(BuildRunState),
   Plugin.addModule(CreateObject),

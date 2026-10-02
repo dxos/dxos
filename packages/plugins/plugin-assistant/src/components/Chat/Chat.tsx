@@ -192,6 +192,22 @@ const ChatRoot = ({
   }, [event, dump, onEvent, feed, messages]);
 
   useEffect(() => {
+    return event.on((ev) => {
+      if (ev.type !== 'respond' || !chat) {
+        return;
+      }
+      const { messageId, requestId, optionId } = ev;
+      void invokePromise(AssistantOperation.RespondToRequest, { chat, messageId, requestId, optionId }).then(
+        ({ error }) => {
+          if (error) {
+            event.emit({ type: 'error', error });
+          }
+        },
+      );
+    });
+  }, [event, chat, invokePromise]);
+
+  useEffect(() => {
     if (!processor) {
       return;
     }
