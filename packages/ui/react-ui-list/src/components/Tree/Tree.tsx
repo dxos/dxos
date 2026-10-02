@@ -1291,7 +1291,8 @@ const TreeItemCount = () => {
       </Next.Tag>
     );
   }
-  return null;
+  // Holds the count's track even when empty, so the cells after it (actions, item end) keep their own columns.
+  return <span role='none' />;
 };
 
 TreeItemCount.displayName = 'Tree.ItemCount';
