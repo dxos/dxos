@@ -13,9 +13,11 @@
     --nx-disclosure-ease-open: ease-out;
     --nx-disclosure-ease-close: ease-in;
     /*
-     * Portalled layers stack above the app shell (Main's sidebars and drawer use 6–8): dialogs, then popups (so a menu
-     * opened inside a dialog shows), then the Tour, which spotlights anything.
+     * Portalled layers stack above the app shell (Main's sidebars and drawer use 6–8): toasts, then dialogs (a modal
+     * dialog is not covered by a notification), then popups (so a menu opened inside a dialog shows), then the Tour,
+     * which spotlights anything.
      */
+    --nx-layer-toast: 30;
     --nx-layer-dialog: 40;
     --nx-layer-popup: 50;
     --nx-layer-tour: 60;

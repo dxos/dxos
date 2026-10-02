@@ -15,6 +15,11 @@
     }
   }
 
+  /* zag writes the region's z-index inline as the maximum; `!important` is the only way to place it below dialogs. */
+  [data-scope='toast'][data-part='group'] {
+    z-index: var(--nx-layer-toast) !important;
+  }
+
   .nx-toast {
     display: grid;
     grid-template-columns: var(--nx-block-size) minmax(0, 1fr) var(--nx-block-size);
