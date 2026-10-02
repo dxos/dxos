@@ -64,10 +64,8 @@
     "@zag-js/core": "catalog:",
     "@zag-js/react": "catalog:",
     "date-fns": "catalog:",
-    "dompurify": "catalog:",
     "error-stack-parser": "catalog:",
     "i18next": "catalog:",
-    "react-aria-components": "catalog:",
     "react-error-boundary": "catalog:",
     "react-i18next": "catalog:"
   },
@@ -76,7 +74,6 @@
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@phosphor-icons/react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tanstack/react-virtual": "catalog:",
     "@testing-library/react": "catalog:",
@@ -86,6 +83,7 @@
     "@zag-js/react": "catalog:",
     "effect": "catalog:",
     "react": "catalog:",
+    "react-aria-components": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"
   },

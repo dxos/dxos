@@ -27,9 +27,6 @@
       "path": "../../common/log"
     },
     {
-      "path": "../../common/random"
-    },
-    {
       "path": "../../common/util"
     },
     {
@@ -67,15 +64,6 @@
     },
     {
       "path": "../react-ui-list"
-    },
-    {
-      "path": "../react-ui-markdown"
-    },
-    {
-      "path": "../react-ui-pickers"
-    },
-    {
-      "path": "../react-ui-search"
     },
     {
       "path": "../react-ui-syntax-highlighter"
