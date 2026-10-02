@@ -7,12 +7,12 @@
 import * as BunRuntime from '@effect/platform-bun/BunRuntime';
 import * as BunServices from '@effect/platform-bun/BunServices';
 import * as Cause from 'effect/Cause';
+import * as Command from 'effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Layer from 'effect/Layer';
 import * as Logger from 'effect/Logger';
 import * as Option from 'effect/Option';
-import * as Command from 'effect/unstable/cli/Command';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';

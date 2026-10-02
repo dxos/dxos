@@ -60,3 +60,27 @@ moon run assistant-e2e:test
 # Live, regenerating conversations (requires credentials)
 DX_UPDATE_MODEL_FIXTURES=1 moon run assistant-e2e:test -- src/testing/sandbox.test.ts
 ```
+
+## Chat performance
+
+`src/playwright/perf-chat.spec.ts` measures the chat stack in a browser with `@dxos/perf-harness`
+(the harness behind `composer-app`'s `perf-*.spec.ts`). It drives the `stories-assistant`
+`Chat` / `PerfScripted` story on Storybook (:9009, reused if already running): a 20-turn calculator
+loop over a scripted model, so no live LLM is involved. Stages are `boot`, `assistant-turns`,
+`scroll-thread` and `idle`; each writes one row of CPU, memory, DOM, network, disk and
+responsiveness metrics under `test-results/perf/`.
+
+```bash
+moon run assistant-e2e:e2e-perf
+```
+
+`DX_PERF_SCALES` picks the spaces (`blank`, `busy`; both by default) and `DX_PERF_ITERATIONS` repeats
+the flow. With `DX_POSTHOG_API_KEY` set, each iteration publishes its rows as `ci.perf-stage`.
+
+The `chat-bench` job in `.depot/workflows/perf-nightly.yml` runs the blank space nightly and scores
+the median of its iterations against `src/playwright/perf/budgets.json`, publishing `ci.perf-score`
+with `ciSuite = 'chat'`:
+
+```bash
+node scripts/score-perf.ts score [--dir test-results/perf] [--publish]
+```

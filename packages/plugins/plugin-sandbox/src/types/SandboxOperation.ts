@@ -76,12 +76,53 @@ export const Exec = Operation.make({
     timeout: Schema.optional(Schema.Union([Schema.Number, Schema.NumberFromString])).annotate({
       description: 'Timeout in milliseconds. Defaults to five minutes.',
     }),
+    background: Schema.optional(Schema.Boolean).annotate({
+      description:
+        'Start the command and return at once without its output, leaving it running — for a server. EDGE sandboxes only.',
+    }),
   }),
   output: Schema.Struct({
     stdout: Schema.String,
     stderr: Schema.String,
     exitCode: Schema.Number,
     success: Schema.Boolean,
+    processId: Schema.optional(Schema.String).annotate({
+      description: 'Id of the process a background command started.',
+    }),
+  }),
+  services: [Database.Service, SandboxService.Service],
+});
+
+export const ExposePort = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.sandbox.exposePort'),
+    name: 'ExposePort',
+    description:
+      'Publishes a port the sandbox listens on at a public HTTPS URL that a browser can load without credentials, with CORS for any origin. EDGE sandboxes only.',
+    icon: 'ph--globe--regular',
+  },
+  input: Schema.Struct({
+    sandbox: Ref.Ref(Sandbox.Sandbox).annotate({ description: 'The sandbox object ID.' }),
+    port: Schema.Union([Schema.Number, Schema.NumberFromString])
+      .check(
+        Schema.isInt(),
+        Schema.isBetween({ minimum: 1024, maximum: 65535 }),
+        // The container's own control plane answers on 3000; the service refuses to expose it.
+        Schema.makeFilter((port: number) => port !== 3000, { message: 'Port 3000 is reserved.' }),
+      )
+      .annotate({
+        description: 'Port a process in the sandbox listens on: 1024-65535, except 3000.',
+      }),
+    command: Schema.optional(Schema.String).annotate({
+      description:
+        'Command that serves the port, e.g. a static file server. The service starts it if it is not running and again whenever the container has restarted, so the URL keeps working after the sandbox sleeps.',
+    }),
+    cwd: Schema.optional(Schema.String).annotate({ description: 'Working directory of `command`.' }),
+  }),
+  output: Schema.Struct({
+    url: Schema.String.annotate({
+      description: 'Public URL of the port, ending in `/`; append a path to reach a file the server serves.',
+    }),
   }),
   services: [Database.Service, SandboxService.Service],
 });
@@ -131,7 +172,9 @@ export const DownloadFile = Operation.make({
       description: 'The ECHO object ID of the File containing the downloaded content.',
     }),
   }),
-  services: [Database.Service, SandboxService.Service],
+  // The capability manager carries the `DefaultParent` rule that files a new File into the root
+  // collection; an undeclared service is not provided, so without it the file is never filed.
+  services: [Capability.Service, Database.Service, SandboxService.Service],
 });
 
 export const PublishFiles = Operation.make({

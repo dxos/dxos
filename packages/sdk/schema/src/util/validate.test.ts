@@ -56,7 +56,7 @@ describe('validate', () => {
 
   test('Schema to/from AST', ({ expect }) => {
     const TestSchema = Schema.Struct({
-      name: Schema.String.pipe(Schema.check(Schema.isPattern(/^\w+$/))),
+      name: Schema.String.pipe(Schema.check(Schema.isPattern(/^\w+$/u))),
     }).mapFields(Struct.map(Schema.mutableKey));
 
     type TestType = Schema.Schema.Type<typeof TestSchema>;

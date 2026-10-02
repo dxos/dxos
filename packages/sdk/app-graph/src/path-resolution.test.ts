@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';

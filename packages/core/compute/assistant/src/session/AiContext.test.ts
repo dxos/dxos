@@ -112,6 +112,54 @@ describe('AiContext.Binder', () => {
       .pipe(Effect.runPromise);
   });
 
+  // `bindChatContext` re-binds on every companion open; a ref whose target does not resolve here (a
+  // registry skill bound by URI) used to read as new each time and append a duplicate binding.
+  test('re-binding an unchanged ref appends nothing', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const a = yield* Database.add(Obj.make(TypeA, {}));
+      const skill: Ref.Ref<Skill.Skill> = Ref.fromURI(Skill.registryURI('org.dxos.skill.unresolved'));
+      const props = () => ({ skills: [skill], objects: [Ref.make(a)] });
+
+      for (let round = 0; round < 3; round++) {
+        const binder = new AiContext.Binder({ feed, runtime });
+        yield* Effect.promise(() => binder.use((binder: AiContext.Binder) => binder.bind(props())));
+      }
+
+      const binder = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.bind(props()));
+      yield* Effect.promise(() => binder.bind(props()));
+      yield* Effect.promise(() => binder.close());
+
+      const bindings = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
+      expect(bindings).toHaveLength(1);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
+  test('re-binding after an unbind appends again', async ({ expect }) => {
+    await Effect.gen(function* () {
+      const feed = yield* Database.add(Feed.make());
+      const runtime = yield* Effect.context<Database.Service>();
+      const skill: Ref.Ref<Skill.Skill> = Ref.fromURI(Skill.registryURI('org.dxos.skill.unresolved'));
+
+      const binder = new AiContext.Binder({ feed, runtime });
+      yield* Effect.promise(() => binder.open());
+      yield* Effect.promise(() => binder.bind({ skills: [skill] }));
+      yield* Effect.promise(() => binder.unbind({ skills: [skill] }));
+      yield* Effect.promise(() => binder.bind({ skills: [skill] }));
+      yield* Effect.promise(() => binder.close());
+
+      const bindings = yield* Feed.query(feed, Query.type(AiContext.Binding)).run;
+      expect(bindings).toHaveLength(3);
+    })
+      .pipe(Effect.provide(TestLayer))
+      .pipe(Effect.runPromise);
+  });
+
   test('should handle bind with Ref', async () => {
     await Effect.gen(function* () {
       const feed = yield* Database.add(Feed.make());

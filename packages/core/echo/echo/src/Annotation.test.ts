@@ -3,8 +3,8 @@
 //
 
 import * as Option from 'effect/Option';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { SchemaAST } from '@dxos/effect';

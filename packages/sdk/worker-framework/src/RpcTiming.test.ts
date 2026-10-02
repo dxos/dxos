@@ -4,10 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as EffectRpc from 'effect/rpc/Rpc';
+import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
-import * as EffectRpc from 'effect/unstable/rpc/Rpc';
-import * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';

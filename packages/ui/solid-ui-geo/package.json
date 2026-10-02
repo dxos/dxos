@@ -1,6 +1,6 @@
 {
   "name": "@dxos/solid-ui-geo",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Geo components for SolidJS.",
   "homepage": "https://github.com/dxos",
   "bugs": "https://github.com/dxos/issues",

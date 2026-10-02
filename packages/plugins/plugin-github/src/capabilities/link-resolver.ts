@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Database, Filter } from '@dxos/echo';

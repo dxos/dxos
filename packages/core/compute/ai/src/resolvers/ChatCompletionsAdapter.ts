@@ -4,22 +4,22 @@
 
 // @import-as-namespace
 
+import * as AiError from 'effect/ai/AiError';
+import * as IdGenerator from 'effect/ai/IdGenerator';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import type * as Prompt from 'effect/ai/Prompt';
+import type * as Response from 'effect/ai/Response';
+import * as Telemetry from 'effect/ai/Telemetry';
+import * as Tool from 'effect/ai/Tool';
 import * as Context from 'effect/Context';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
 import * as Stream from 'effect/Stream';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as IdGenerator from 'effect/unstable/ai/IdGenerator';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import type * as Prompt from 'effect/unstable/ai/Prompt';
-import type * as Response from 'effect/unstable/ai/Response';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { log } from '@dxos/log';
 

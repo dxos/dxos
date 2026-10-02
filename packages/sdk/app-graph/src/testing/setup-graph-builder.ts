@@ -3,7 +3,7 @@
 //
 
 import * as Option from 'effect/Option';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import * as Graph from '../AppGraph.ts';
 import * as GraphBuilder from '../AppGraphBuilder.ts';

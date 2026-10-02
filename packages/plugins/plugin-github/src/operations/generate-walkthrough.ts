@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { AiService } from '@dxos/ai';
 import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';

@@ -4,12 +4,12 @@
 
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
-import * as Migrator from 'effect/unstable/sql/Migrator';
+import * as Migrator from 'effect/sql/Migrator';
 import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
-import { SqlMigrations } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import agentRegistryInit from './agent-registry/0001_init.sql?raw';
 import { MIGRATIONS as AGENT_REGISTRY, MIGRATIONS_TABLE as AGENT_REGISTRY_TABLE } from './agent-registry/index.ts';

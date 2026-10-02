@@ -4,9 +4,9 @@
 
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
+import * as RpcTest from 'effect/rpc/RpcTest';
 import * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
-import * as RpcTest from 'effect/unstable/rpc/RpcTest';
 import { describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';

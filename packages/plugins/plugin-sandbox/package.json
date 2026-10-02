@@ -1,6 +1,6 @@
 {
   "name": "@dxos/plugin-sandbox",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "private": true,
   "description": "DXOS Sandbox plugin for running isolated shell environments",
   "homepage": "https://dxos.org",
@@ -193,6 +193,7 @@
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
@@ -205,7 +206,9 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
+    "@dxos/schema": "workspace:*",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

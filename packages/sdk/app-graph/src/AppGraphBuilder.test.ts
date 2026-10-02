@@ -6,8 +6,8 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
@@ -92,6 +92,41 @@ describe('GraphBuilder', () => {
       registry.set(state, 1);
       await GraphBuilder.flush(builder);
       expect(count).to.equal(3);
+    });
+
+    test('flushBeforePaint flushes a connector an exhausted budget left dirty', async () => {
+      const registry = Registry.make();
+      const builder = GraphBuilder.make({ registry });
+      const state = Atom.make(0);
+      GraphBuilder.addExtension(
+        builder,
+        GraphBuilder.createExtensionRaw({
+          id: 'connector',
+          connector: () => Atom.make((get) => [{ id: EXAMPLE_ID, type: EXAMPLE_TYPE, data: get(state) }]),
+        }),
+      );
+      const graph = builder.graph;
+      Graph.expandSync(graph, GraphNode.RootId, 'child');
+      await GraphBuilder.flush(builder);
+      const data = () => registry.get(graph.connections(GraphNode.RootId, 'child'))[0]?.data;
+      expect(data()).to.equal(0);
+
+      let granted = false;
+      builder._frameBudget = () => ({
+        hasTime: () => granted,
+        spend: () => {},
+        flushBeforePaint: () => (granted = true),
+      });
+      builder._schedule = () => new Promise(() => {});
+      registry.set(state, 1);
+      await Promise.resolve();
+      registry.set(state, 2);
+      await Promise.resolve();
+      expect(data()).to.equal(0);
+
+      GraphBuilder.flushBeforePaint(builder);
+      await Promise.resolve();
+      expect(data()).to.equal(2);
     });
 
     test('updates with new extensions', async () => {

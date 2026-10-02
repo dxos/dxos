@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Args from 'effect/cli/Argument';
+import * as Command from 'effect/cli/Command';
+import * as Flag from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Args from 'effect/unstable/cli/Argument';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Flag from 'effect/unstable/cli/Flag';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';

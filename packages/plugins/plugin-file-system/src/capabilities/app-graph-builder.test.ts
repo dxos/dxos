@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';

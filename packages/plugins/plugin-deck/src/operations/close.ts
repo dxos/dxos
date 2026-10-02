@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { DeckCapabilities } from '#types';
 
 import { currentNavigation, navigateDeck } from '../url/index.ts';
-import { closeEntry } from '../util/index.ts';
+import { closeEntry, detailChain } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOperation.Close.pipe(
   Operation.withHandler(
@@ -18,7 +18,8 @@ const handler: Operation.WithHandler<typeof LayoutOperation.Close> = LayoutOpera
       const deck = yield* DeckCapabilities.getDeck();
       const { workspace } = yield* currentNavigation();
 
-      const active = input.subject.reduce((acc, id) => closeEntry(acc, id), deck.active);
+      const closing = input.subject.flatMap((id) => [id, ...detailChain(deck.plankNames, id)]);
+      const active = closing.reduce((acc, id) => closeEntry(acc, id), deck.active);
       // No intent: the write focuses whichever plank attention falls to.
       yield* navigateDeck({ workspace, active, companionPlanks: deck.companionPlanks });
     }),

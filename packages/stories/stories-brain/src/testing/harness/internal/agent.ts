@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { type TestContext } from 'vitest';
 
 import { AgentService } from '@dxos/agent-runtime';

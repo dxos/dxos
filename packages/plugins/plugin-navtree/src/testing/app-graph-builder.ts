@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { type BuilderExtensions } from '@dxos/app-graph';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';

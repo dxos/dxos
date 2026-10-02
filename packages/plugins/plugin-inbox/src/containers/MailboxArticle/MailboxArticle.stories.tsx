@@ -50,7 +50,7 @@ const MockDeckOperations = Capability.inlineModule(
     Effect.succeed([
       Capability.contribute(
         Capabilities.OperationHandler,
-        OperationHandlerSet.make(Operation.withHandler(LayoutOperation.UpdateCompanion, () => Effect.void)),
+        OperationHandlerSet.make(Operation.withHandler(LayoutOperation.Open, () => Effect.succeed([]))),
       ),
     ]),
 );

@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { beforeAll, describe, test } from 'vitest';
 
 import { Aggregate, Filter, Query } from '@dxos/echo';
