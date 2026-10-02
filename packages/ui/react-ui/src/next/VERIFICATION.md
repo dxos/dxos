@@ -50,6 +50,12 @@ Grouped by screen or component; IDs are global and never reused.
 | V036 | Article toolbars should be 40px tall (`lg`?) — check against main's toolbar height                                                              | —                           | app: README toolbar height; ActionToolbar story at the article size | open   |     |
 | V037 | Mic button + chevron (split/dropdown button): no gap between the icon button and its chevron; also a stray arrow tip shows under the mic button | `V036-mic-split-button.png` | app: README toolbar mic control; story for the split-button pattern | open   |     |
 
+### Debug panel (companion)
+
+| ID   | Bug                                                                                                                                                      | Screenshot                    | Repro                                                                                                  | Status | Fix |
+| ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------ | ------ | --- |
+| V038 | JSON toolbar overflows/scrolls horizontally: the JSONPath input is cut off at the start and the depth NumberInput's value is not visible (only −/+ show) | `V038-debug-json-toolbar.png` | app: README → companion Debug tab; JSON viewer story: toolbar fits, input shrinks, depth value visible | open   |     |
+
 ### Plugin registry
 
 | ID   | Bug                                                               | Screenshot                                          | Repro                                        | Status | Fix        |
