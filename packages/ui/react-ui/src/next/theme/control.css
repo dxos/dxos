@@ -12,6 +12,13 @@
     --nx-disclosure-duration: var(--duration-tree-disclosure, 200ms);
     --nx-disclosure-ease-open: ease-out;
     --nx-disclosure-ease-close: ease-in;
+    /*
+     * Portalled layers stack above the app shell (Main's sidebars and drawer use 6–8): dialogs, then popups (so a menu
+     * opened inside a dialog shows), then the Tour, which spotlights anything.
+     */
+    --nx-layer-dialog: 40;
+    --nx-layer-popup: 50;
+    --nx-layer-tour: 60;
   }
   @media (prefers-reduced-motion: reduce) {
     :root {
@@ -645,7 +652,9 @@
   }
 
   /* Portalled content leaves every sized scope, so it sets its own metrics and level. */
+  /* zag copies the content's z-index onto its positioner, so setting it here lifts the whole popup. */
   .nx-popup {
+    z-index: var(--nx-layer-popup);
     min-width: var(--reference-width, 8rem);
     padding-block: var(--nx-control-inset);
     border-radius: var(--radius-sm, 0.25rem);

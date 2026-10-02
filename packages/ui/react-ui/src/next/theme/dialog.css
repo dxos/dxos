@@ -5,12 +5,14 @@
 
 @layer dx-components {
   .nx-dialog-backdrop {
+    z-index: var(--nx-layer-dialog);
     position: fixed;
     inset: 0;
     background: var(--color-scrim-surface);
   }
 
   .nx-dialog-positioner {
+    z-index: var(--nx-layer-dialog);
     position: fixed;
     inset: 0;
     display: flex;

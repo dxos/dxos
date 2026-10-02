@@ -9,7 +9,7 @@
   .nx-tour-backdrop,
   .nx-tour-spotlight,
   .nx-tour-positioner {
-    --tour-z-index: 50;
+    --tour-z-index: var(--nx-layer-tour);
     z-index: calc(var(--tour-layer) + var(--tour-z-index));
   }
 
