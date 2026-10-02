@@ -260,6 +260,16 @@ export const runTurn = (
 
           const { update } = event;
           yield* append(projection.apply(update));
+          // The client derives "generating" from streamed text; a running tool call, named by its latest title, is
+          // what this turn has to report itself.
+          if (
+            (update.sessionUpdate === 'tool_call' || update.sessionUpdate === 'tool_call_update') &&
+            update.title &&
+            update.status !== 'completed' &&
+            update.status !== 'failed'
+          ) {
+            yield* Trace.emitRequestPhase('calling-tool', { detail: update.title });
+          }
           // Streamed under the id the finished message will carry, so the thread swaps one for the other.
           const partial = projection.partial;
           if (

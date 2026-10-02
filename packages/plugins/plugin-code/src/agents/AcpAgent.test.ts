@@ -98,6 +98,7 @@ describe('AcpAgent', () => {
 
   it.live('runs a turn into the chat: prompt, tool call, reply, stats', () =>
     Effect.gen(function* () {
+      written.length = 0;
       const { feed, chat, options } = yield* setup();
       yield* AcpAgent.runTurn(options, { chat, feed }, { prompt: 'tool please' });
       expect(yield* transcript(feed)).toEqual([
@@ -106,6 +107,10 @@ describe('AcpAgent', () => {
         ['tool', 'result:wrote 1 line'],
         ['assistant', 'text:echo: tool please'],
         ['assistant', 'stats'],
+      ]);
+      expect(written.filter(({ key }) => key === Trace.RequestPhase.key).map(({ payload }) => payload)).toMatchObject([
+        { phase: 'calling-tool', detail: 'Preparing file…' },
+        { phase: 'calling-tool', detail: 'Write note.txt' },
       ]);
       expect(AcpAgent.sessionIdOf(chat, 'fake')).toBe('fake-1');
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
