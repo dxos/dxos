@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import { readdirSync } from 'node:fs';
+import path from 'node:path';
 import { describe, expect, test } from 'vitest';
 
 import handler from './_worker.ts';
@@ -102,19 +104,21 @@ describe('feedback logs', () => {
 });
 
 describe('apple-app-site-association', () => {
-  // DX-1324: a prerelease channel signed under its own App ID gets passkeys only when the domain names it.
-  test('passkeys are shared with the prerelease channels, universal links are not', async () => {
+  // DX-1324: a channel signed under its own App ID gets passkeys only when the domain names it, so every
+  // committed channel profile needs an entry here.
+  test('passkeys are shared with every channel that has a profile, universal links are not', async () => {
+    const channels = readdirSync(new URL('../../src-tauri/provisioning/', import.meta.url))
+      .filter((file) => file.endsWith('.provisionprofile'))
+      .map((file) => `TEAM.org.dxos.composer.${path.basename(file, '.provisionprofile')}`);
+    expect(channels).not.toHaveLength(0);
+
     const response = await fetch(
       new Request('https://composer.test/.well-known/apple-app-site-association'),
       { ...env, APPLE_TEAM_ID: 'TEAM' },
       {} as never,
     );
     const document = await response.json();
-    expect(document.webcredentials.apps).toEqual([
-      'TEAM.org.dxos.composer',
-      'TEAM.org.dxos.composer.dev',
-      'TEAM.org.dxos.composer.preview',
-    ]);
+    expect([...document.webcredentials.apps].sort()).toEqual(['TEAM.org.dxos.composer', ...channels].sort());
     expect(document.applinks.details[0].appIDs).toEqual(['TEAM.org.dxos.composer']);
   });
 });

@@ -57,13 +57,24 @@ export const timeoutNativePrompt = <A, E, R>(
 export type Failure = 'dismissed' | 'rejected' | 'failed';
 
 /**
+ * What the native (Tauri) bridge rejects with for every `ASAuthorizationError`, a cancel included: it
+ * collapses each into one plain string per ceremony, so a cancel cannot be told apart from a failure.
+ */
+const NATIVE_BRIDGE_REJECTIONS = ['Registration failed', 'Login failed'];
+
+/**
  * Whether the authenticator rejected because the prompt was dismissed. WebAuthn reports a dismissed
- * prompt and "no credential for this site" as the same `NotAllowedError`; the native (Tauri) bridge
- * rejects with a plain string rather than a `DOMException`.
+ * prompt and "no credential for this site" as the same `NotAllowedError`; the native bridge's generic
+ * rejections are just as ambiguous, so both read as dismissals.
  */
 const isDismissal = (error: unknown): boolean => {
   const name = error instanceof DOMException ? error.name : undefined;
-  return name === 'NotAllowedError' || name === 'AbortError' || /cancell?ed/i.test(String(error));
+  return (
+    name === 'NotAllowedError' ||
+    name === 'AbortError' ||
+    NATIVE_BRIDGE_REJECTIONS.includes(String(error)) ||
+    /cancell?ed/i.test(String(error))
+  );
 };
 
 /** Classify a rejection from the authenticator while logging in. */
