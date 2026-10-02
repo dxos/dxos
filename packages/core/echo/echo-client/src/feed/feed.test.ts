@@ -805,6 +805,47 @@ describe('Feed', () => {
       ).toBe(0);
     });
 
+    test('a live query over a trace feed follows appends without the index', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const testLayer = Database.layer(db);
+
+      let traceFeed!: Feed.Feed;
+      await Effect.gen(function* () {
+        traceFeed = yield* Database.add(Feed.make({ name: 'trace-feed', namespace: 'trace' }));
+        yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'alice' })]);
+      }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+
+      const queryResult = db.query(Query.type(TestSchema.Person).from(traceFeed));
+      const unsubscribe = queryResult.subscribe(() => {}, { fire: true });
+      onTestFinished(unsubscribe);
+      await waitForCondition({ condition: () => queryResult.results.length === 1, timeout: 2_500 });
+
+      await Effect.gen(function* () {
+        yield* Feed.append(traceFeed, [Obj.make(TestSchema.Person, { name: 'bob' })]);
+      }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+      await waitForCondition({ condition: () => queryResult.results.length === 2, timeout: 2_500 });
+      expect(queryResult.results.map((person) => person.name).sort()).toEqual(['alice', 'bob']);
+
+      // The index never ingests the trace namespace, so a space-wide feed query does not see its items.
+      await db.flush({ indexes: true });
+      const indexed = await db.query(Query.type(TestSchema.Person).from(db, { includeFeeds: true })).run();
+      expect(indexed).toEqual([]);
+    });
+
+    test('a query over a trace feed with an empty feed answers rather than staying pending', async ({ expect }) => {
+      await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
+      const db = await peer.createDatabase();
+      const traceFeed = db.add(Feed.make({ name: 'trace-feed', namespace: 'trace' }));
+
+      const queryResult = db.query(Query.type(TestSchema.Person).from(traceFeed));
+      const answered = new Trigger();
+      const unsubscribe = queryResult.subscribe(() => answered.wake());
+      onTestFinished(unsubscribe);
+      await answered.wait({ timeout: 2_500 });
+      expect(queryResult.results).toEqual([]);
+    });
+
     test('queue service reads trace feed items from trace namespace', async ({ expect }) => {
       await using peer = await builder.createPeer({ types: [Feed.Feed, TestSchema.Person] });
       const db = await peer.createDatabase();

@@ -491,7 +491,7 @@ export const query: {
   const feedUri = getFeedUri(feed);
   invariant(feedUri, 'Feed must be stored in the database before accessing its contents');
   const query = Query.is(queryOrFilter) ? queryOrFilter : Query.select(queryOrFilter);
-  return Database.query(query.from(Scope.feed(feedUri.toString())));
+  return Database.query(query.from(Scope.feed(feedUri.toString(), { namespace: feed.namespace })));
 });
 
 /**

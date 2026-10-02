@@ -683,6 +683,11 @@ export interface SpaceScope extends Schema.Schema.Type<typeof SpaceScope> {}
  */
 export const FeedScope = Schema.TaggedStruct('feed', {
   feedUri: Schema.String,
+  /**
+   * The feed's namespace, when the caller knows it. A namespace the index does not ingest is read
+   * from the feed itself, so a reader must know it before asking the index.
+   */
+  namespace: Schema.optional(Schema.String),
 });
 export interface FeedScope extends Schema.Schema.Type<typeof FeedScope> {}
 

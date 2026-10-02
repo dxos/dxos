@@ -8,7 +8,7 @@ import { Event } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { FeedProtocol } from '@dxos/protocols';
 
-import { type IndexPassResult, IndexScheduler, TRACE_INDEX_DELAY_MS } from './index-scheduler.ts';
+import { type IndexPassResult, IndexScheduler } from './index-scheduler.ts';
 
 describe('IndexScheduler', () => {
   beforeEach(() => {
@@ -23,7 +23,12 @@ describe('IndexScheduler', () => {
     const feedBlocks = new Event<{ spaceId: string; feedNamespace?: string }>();
     const documentsSaved = new Event();
     const runPass = vi.fn(async (_ctx: Context, _reasons: Record<string, number>) => result);
-    const scheduler = new IndexScheduler({ feedBlocks, documentsSaved, runPass });
+    const scheduler = new IndexScheduler({
+      feedBlocks,
+      isIndexedNamespace: FeedProtocol.isIndexedNamespace,
+      documentsSaved,
+      runPass,
+    });
     await scheduler.open(Context.default());
     onTestFinished(async () => {
       await scheduler.close();
@@ -37,16 +42,17 @@ describe('IndexScheduler', () => {
   };
 
   // An agent turn appends trace messages continuously; a pass per append kept the worker saturated.
-  test('coalesces a burst of trace appends into one delayed pass', async () => {
-    const { runPass, emitBlocks } = await setup();
+  test('starts no pass for appends to a namespace the index does not read', async () => {
+    const { scheduler, runPass, emitBlocks } = await setup();
     for (let i = 0; i < 5; i++) {
       emitBlocks(FeedProtocol.WellKnownNamespaces.trace);
     }
-    await vi.advanceTimersByTimeAsync(TRACE_INDEX_DELAY_MS - 1);
+    await vi.runAllTimersAsync();
     expect(runPass).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(TRACE_INDEX_DELAY_MS);
-    expect(runPass).toHaveBeenCalledTimes(1);
-    expect(runPass.mock.calls[0][1]).toEqual({ 'trace-blocks': 5 });
+
+    // Nor are they inputs a caller waits for.
+    await scheduler.waitForIndexed('feed-scoped-query');
+    expect(runPass).not.toHaveBeenCalled();
   });
 
   test('runs data appends and saves without delay', async () => {
@@ -56,16 +62,6 @@ describe('IndexScheduler', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(runPass).toHaveBeenCalledTimes(1);
     expect(runPass.mock.calls[0][1]).toEqual({ 'feed-blocks': 1, 'documents-saved': 1 });
-  });
-
-  test('waitForIndexed does not wait out the trace delay', async () => {
-    const { scheduler, runPass, emitBlocks } = await setup();
-    emitBlocks(FeedProtocol.WellKnownNamespaces.trace);
-    const waited = scheduler.waitForIndexed('feed-scoped-query');
-    await vi.advanceTimersByTimeAsync(0);
-    await waited;
-    expect(runPass).toHaveBeenCalled();
-    expect(runPass.mock.calls[0][1]).toMatchObject({ 'trace-blocks': 1, 'feed-scoped-query': 1 });
   });
 
   test('continues a pass that left a backlog', async () => {

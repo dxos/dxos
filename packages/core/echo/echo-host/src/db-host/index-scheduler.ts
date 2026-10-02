@@ -2,16 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { DeferredTask, type ReadOnlyEvent, scheduleTask } from '@dxos/async';
+import { DeferredTask, type ReadOnlyEvent } from '@dxos/async';
 import { type Context, Resource } from '@dxos/context';
-import { FeedProtocol } from '@dxos/protocols';
-
-/**
- * Longest a trace append waits for the background pass that indexes it. An agent turn appends trace
- * messages continuously, and starting a pass per append kept the worker saturated for the whole turn;
- * a reader that needs them sooner (a feed-scoped query, `flush`) drives the pass itself.
- */
-export const TRACE_INDEX_DELAY_MS = 1_000;
 
 /**
  * Every path that can start an indexing run. Logged on each run so an idle-churn loop is
@@ -21,7 +13,6 @@ export const TRACE_INDEX_DELAY_MS = 1_000;
 export type IndexRunReason =
   | 'open'
   | 'feed-blocks'
-  | 'trace-blocks'
   | 'documents-saved'
   | 'batch-continuation'
   | 'rpc-update-indexes'
@@ -42,6 +33,8 @@ export type IndexPassResult = {
 export type IndexSchedulerProps = {
   /** `FeedStore.onNewBlocks`. */
   feedBlocks: ReadOnlyEvent<{ spaceId: string; feedNamespace?: string }>;
+  /** Whether blocks of a feed namespace feed the index; appends to any other namespace start no pass. */
+  isIndexedNamespace: (feedNamespace: string) => boolean;
   /** `AutomergeHost.documentsSaved`. */
   documentsSaved: ReadOnlyEvent;
   /** Runs one pass over every data source, given the reasons that accumulated since the last one. */
@@ -54,6 +47,7 @@ export type IndexSchedulerProps = {
  */
 export class IndexScheduler extends Resource {
   readonly #feedBlocks: IndexSchedulerProps['feedBlocks'];
+  readonly #isIndexedNamespace: IndexSchedulerProps['isIndexedNamespace'];
   readonly #documentsSaved: IndexSchedulerProps['documentsSaved'];
   readonly #runPass: IndexSchedulerProps['runPass'];
 
@@ -78,12 +72,10 @@ export class IndexScheduler extends Resource {
   /** Whether the last pass found nothing to index. */
   #lastPassIdle = false;
 
-  /** Whether a throttled trace-triggered run is already waiting to start. */
-  #traceRunPending = false;
-
-  constructor({ feedBlocks, documentsSaved, runPass }: IndexSchedulerProps) {
+  constructor({ feedBlocks, isIndexedNamespace, documentsSaved, runPass }: IndexSchedulerProps) {
     super();
     this.#feedBlocks = feedBlocks;
+    this.#isIndexedNamespace = isIndexedNamespace;
     this.#documentsSaved = documentsSaved;
     this.#runPass = runPass;
   }
@@ -91,9 +83,9 @@ export class IndexScheduler extends Resource {
   protected override async _open(): Promise<void> {
     this.#task = new DeferredTask(this._ctx, this.#run);
     this.#feedBlocks.on(this._ctx, ({ feedNamespace }) => {
-      if (feedNamespace === FeedProtocol.WellKnownNamespaces.trace) {
-        this.#scheduleTraceRun();
-      } else {
+      // An agent turn appends trace blocks continuously; a pass per append that indexes nothing
+      // would keep the worker busy for the whole turn.
+      if (feedNamespace === undefined || this.#isIndexedNamespace(feedNamespace)) {
         this.schedule('feed-blocks');
       }
     });
@@ -148,28 +140,6 @@ export class IndexScheduler extends Resource {
     if (!this.#lastPassIdle) {
       await task.runBlocking();
     }
-  }
-
-  /**
-   * Starts at most one trace-triggered run per {@link TRACE_INDEX_DELAY_MS}. The input generation is
-   * bumped at once, so {@link waitForIndexed} callers still wait for these blocks; only the
-   * background trigger is coalesced.
-   */
-  #scheduleTraceRun(): void {
-    this.#inputGeneration++;
-    this.#noteReason('trace-blocks');
-    if (this.#traceRunPending) {
-      return;
-    }
-    this.#traceRunPending = true;
-    scheduleTask(
-      this._ctx,
-      () => {
-        this.#traceRunPending = false;
-        this.#task?.schedule();
-      },
-      TRACE_INDEX_DELAY_MS,
-    );
   }
 
   /** Records why a run is wanted without scheduling it — for callers that drive the task directly. */
