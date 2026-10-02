@@ -302,6 +302,8 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(prompt).toContain('Title: Fix the flaky test');
     expect(prompt).toContain('It times out.');
     expect(prompt).toContain(Obj.getURI(task));
+    // Written by the system, not typed by the reader.
+    expect(agent.dispositions).toEqual(['synthetic']);
   });
 
   test("runs on the reader's default agent while it is available, else on Composer", async ({ expect }) => {
@@ -369,6 +371,7 @@ const setup = async () => {
 /** Registers an agent that records the text of each prompt it is given and answers with nothing. */
 const contributeAgent = (harness: Awaited<ReturnType<typeof setup>>) => {
   const prompts: string[] = [];
+  const dispositions: (string | undefined)[] = [];
   const availability = Atom.make<AssistantCapabilities.AgentAvailability>({ available: true }).pipe(Atom.keepAlive);
   const agent: AssistantCapabilities.Agent = {
     id: 'test-agent',
@@ -384,11 +387,14 @@ const contributeAgent = (harness: Awaited<ReturnType<typeof setup>>) => {
                 ? prompt
                 : prompt.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n'),
             );
+            dispositions.push(
+              typeof prompt === 'string' ? undefined : prompt.find((block) => block._tag === 'text')?.disposition,
+            );
             return [];
           }),
         getSkills: () => [],
       }),
   };
   harness.capabilities.contribute({ module: 'test', interface: AssistantCapabilities.Agent, implementation: agent });
-  return { id: agent.id, availability, prompts };
+  return { id: agent.id, availability, prompts, dispositions };
 };

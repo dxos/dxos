@@ -176,7 +176,13 @@ const handler: Operation.WithHandler<typeof ProjectOperation.DelegateTaskToChat>
                 project,
                 context: project ? yield* projectContext(project) : undefined,
               });
-        const started = yield* Operation.invoke(AssistantOperation.RunPromptInChat, { chat, prompt }).pipe(Effect.exit);
+        // Another agent's brief is the system writing on the reader's behalf, so it shows as context
+        // rather than as words the reader typed.
+        const started = yield* Operation.invoke(AssistantOperation.RunPromptInChat, {
+          chat,
+          prompt,
+          ...(harness !== SessionConfig.COMPOSER_HARNESS && { disposition: 'synthetic' as const }),
+        }).pipe(Effect.exit);
         if (Exit.isFailure(started)) {
           log.warn('delegated chat did not start its turn', { cause: Cause.pretty(started.cause) });
         }

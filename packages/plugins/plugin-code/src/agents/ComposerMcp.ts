@@ -4,22 +4,29 @@
 
 // @import-as-namespace
 
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as McpProtocol from 'effect/unstable/ai/McpProtocol';
 import * as McpServer$ from 'effect/unstable/ai/McpServer';
+import * as Tool from 'effect/unstable/ai/Tool';
 import * as HttpRouter from 'effect/unstable/http/HttpRouter';
 
 import { DXOS_VERSION } from '@dxos/client';
 import type * as Operation from '@dxos/compute/Operation';
-import { Registry } from '@dxos/echo';
+import { Database, Registry } from '@dxos/echo';
 import { SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
 
 /** The name an agent knows Composer's MCP server by. */
 export const SERVER_NAME = 'composer';
+
+/** The server's tools that only read. */
+export const READ_ONLY_TOOLS: readonly string[] = Object.values(McpServer.ServerToolkit.tools)
+  .filter((tool) => Context.get(tool.annotations, Tool.Readonly))
+  .map((tool) => tool.name);
 
 export type HostOptions = {
   /** Every operation the app can run, by the handler that runs it. */
@@ -28,13 +35,15 @@ export type HostOptions = {
   invoke: (operation: Operation.Definition.Any, input: unknown, spaceId: SpaceId | undefined) => Effect.Effect<unknown>;
   /** The only spaces the agent may address: the chat's. */
   spaceIds: readonly SpaceId[];
+  /** The database of a space, which references in an operation's input resolve against. */
+  database: (spaceId: SpaceId) => Database.Database | undefined;
 };
 
 /**
  * The MCP host over the app's own operations, the page's counterpart to `dx mcp serve`: an operation
  * named by key is decoded against its live schema and run through the app's invoker.
  */
-export const host = ({ handlers, invoke, spaceIds }: HostOptions): McpServer.HostShape => ({
+export const host = ({ handlers, invoke, spaceIds, database }: HostOptions): McpServer.HostShape => ({
   spaceIds,
   invoke: ({ key, input, spaceId }) =>
     Effect.gen(function* () {
@@ -47,7 +56,10 @@ export const host = ({ handlers, invoke, spaceIds }: HostOptions): McpServer.Hos
       if (!handler) {
         return yield* Effect.fail(McpServer.hostError(`Operation not found: ${key}`));
       }
-      const decoded = yield* Schema.decodeUnknownEffect(handler.input)(input).pipe(
+      // Arguments arrive in wire form; a reference among them decodes to a ref in the target space.
+      const decode = Schema.decodeUnknownEffect(handler.input)(input);
+      const db = spaceId ? database(spaceId) : undefined;
+      const decoded = yield* (db ? decode.pipe(Effect.provide(Database.layer(db))) : decode).pipe(
         Effect.mapError(McpServer.hostError),
       );
       return McpServer.snapshot(yield* invoke(handler, decoded, spaceId ?? undefined));

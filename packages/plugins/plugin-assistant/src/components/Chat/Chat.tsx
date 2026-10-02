@@ -198,13 +198,17 @@ const ChatRoot = ({
         return;
       }
       const { messageId, requestId, optionId } = ev;
-      void invokePromise(AssistantOperation.RespondToRequest, { chat, messageId, requestId, optionId }).then(
-        ({ error }) => {
-          if (error) {
-            event.emit({ type: 'error', error });
-          }
-        },
-      );
+      // The operation reads the chat's feed, so it runs in the chat's space.
+      const spaceId = Obj.getDatabase(chat)?.spaceId;
+      void invokePromise(
+        AssistantOperation.RespondToRequest,
+        { chat, messageId, requestId, optionId },
+        spaceId ? { spaceId } : undefined,
+      ).then(({ error }) => {
+        if (error) {
+          event.emit({ type: 'error', error });
+        }
+      });
     });
   }, [event, chat, invokePromise]);
 

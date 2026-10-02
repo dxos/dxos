@@ -15,7 +15,15 @@ export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(
       AssistantCapabilities.Agent,
-      yield* CodeAgent.make({ id: CLAUDE_CODE_AGENT, label: 'Claude Code', icon: 'px--anthropic--regular' }),
+      yield* CodeAgent.make({
+        id: CLAUDE_CODE_AGENT,
+        label: 'Claude Code',
+        icon: 'px--anthropic--regular',
+        // Read by the ACP adapter as Agent SDK options: Composer's lookups run without a permission card each.
+        sessionMeta: ({ server, readOnlyTools }) => ({
+          claudeCode: { options: { allowedTools: readOnlyTools.map((tool) => `mcp__${server}__${tool}`) } },
+        }),
+      }),
     );
   }),
 );

@@ -144,6 +144,8 @@ export type AgentOptions = {
   workspace: (chat: Chat.Chat) => Effect.Effect<string, AgentError>;
   /** Permission mode a new session starts in. */
   mode?: () => string | undefined;
+  /** Agent-specific options every session opens with (ACP `_meta`). */
+  sessionMeta?: Record<string, unknown>;
   /** Composer's MCP tools for the chat, and the token the agent presents for them; fresh for each session. */
   tools?: (chat: Chat.Chat) => Effect.Effect<{ servers: acp.McpServer[]; token: string } | undefined>;
   /** This device's key: a chat runs only on the device that first ran it, since the agent's state lives there. */
@@ -226,6 +228,7 @@ export const runTurn = (
             resume,
             mcpServers: tools?.servers ?? [],
             mode: options.mode?.(),
+            meta: options.sessionMeta,
           });
         }),
       );

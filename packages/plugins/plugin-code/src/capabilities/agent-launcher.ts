@@ -24,6 +24,12 @@ const START_TIMEOUT_MS = 15_000;
 /** Under the app's data folder: where delegated chats get their git worktrees. */
 const WORKTREES_DIR = 'agent-worktrees';
 
+/**
+ * Session storage key for the pid of the helper this window started. The app owns the process, so a reload of
+ * the page leaves it running; the next start stops it rather than leaving one behind per reload.
+ */
+const HELPER_PID_KEY = 'org.dxos.plugin.code.agent-helper.pid';
+
 const HelperRefusal = Schema.Struct({ error: Schema.String });
 
 type Helper = { child: Child; port: number; token: string };
@@ -46,12 +52,20 @@ export default Capability.makeModule(
       if (!isTauri()) {
         throw new Error('coding agents need the desktop app');
       }
-      const [{ Command }, { appDataDir, join }] = await Promise.all([
+      const [shell, { appDataDir, join }] = await Promise.all([
         import('@tauri-apps/plugin-shell'),
         import('@tauri-apps/api/path'),
       ]);
+      // The shell plugin kills only processes it started itself, so a pid that outlived the app is never touched.
+      const stale = readPid();
+      if (stale !== undefined) {
+        await new shell.Child(stale)
+          .kill()
+          .catch((error) => log.info('no earlier dx-agent to stop', { pid: stale, error }));
+      }
+
       const token = randomToken();
-      const command = Command.create('dx-agent', [], {
+      const command = shell.Command.create('dx-agent', [], {
         env: { DX_AGENT_WORKTREES: await join(await appDataDir(), WORKTREES_DIR) },
       });
       const port = new Promise<number>((resolve, reject) => {
@@ -79,6 +93,7 @@ export default Capability.makeModule(
       command.stderr.on('data', (data) => log.info('dx-agent', { output: data }));
 
       const child = await command.spawn();
+      writePid(child.pid);
       try {
         await child.write(`${token}\n`);
         const ready = await Promise.race([
@@ -191,6 +206,7 @@ export default Capability.makeModule(
         stopping = true;
         const running = await current?.catch(() => undefined);
         await running?.child.kill().catch((error) => log.warn('dx-agent kill failed', { error }));
+        writePid(undefined);
       }),
     );
 
@@ -210,6 +226,28 @@ export const parseReadyLine = (line: string): number => {
     return parsed.port;
   }
   throw new Error(`unexpected first line from dx-agent: ${line.trim()}`);
+};
+
+const readPid = (): number | undefined => {
+  try {
+    const pid = Number(sessionStorage.getItem(HELPER_PID_KEY));
+    return Number.isInteger(pid) && pid > 0 ? pid : undefined;
+  } catch (error) {
+    log.warn('could not read the earlier dx-agent pid', { error });
+    return undefined;
+  }
+};
+
+const writePid = (pid: number | undefined): void => {
+  try {
+    if (pid === undefined) {
+      sessionStorage.removeItem(HELPER_PID_KEY);
+    } else {
+      sessionStorage.setItem(HELPER_PID_KEY, String(pid));
+    }
+  } catch (error) {
+    log.warn('could not record the dx-agent pid', { error });
+  }
 };
 
 /** 256 random bits as hex: what the helper checks every request against. */

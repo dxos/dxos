@@ -46,6 +46,15 @@ export type Definition = {
   id: string;
   label: string;
   icon: string;
+  /** Agent-specific options every session opens with (ACP `_meta`), given the Composer tools it is offered. */
+  sessionMeta?: (composer: ComposerTools) => Record<string, unknown>;
+};
+
+/** The MCP server a session gets Composer's tools from. */
+export type ComposerTools = {
+  server: string;
+  /** Tools that only read, which an agent may be let call without asking. */
+  readOnlyTools: readonly string[];
 };
 
 /**
@@ -118,6 +127,7 @@ export const make = (
               invoke: (operation, input, target) =>
                 invoker.invoke(operation, input, target ? { spaceId: target } : undefined).pipe(Effect.orDie),
               spaceIds: [spaceId],
+              database: (id) => client.spaces.get(id)?.db,
             }),
             path: `${Protocol.MCP_PATH}/${server}`,
           });
@@ -144,6 +154,10 @@ export const make = (
     const options: AcpAgent.AgentOptions = {
       id: definition.id,
       sessions,
+      sessionMeta: definition.sessionMeta?.({
+        server: ComposerMcp.SERVER_NAME,
+        readOnlyTools: ComposerMcp.READ_ONLY_TOOLS,
+      }),
       connect: (cwd, toolsToken) => {
         const current = helper();
         return current

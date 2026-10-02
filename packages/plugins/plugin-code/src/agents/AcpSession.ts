@@ -27,6 +27,8 @@ export type OpenOptions = {
   mcpServers?: acp.McpServer[];
   /** Permission mode to start in, when the agent offers it. */
   mode?: string;
+  /** Agent-specific session options, sent as the session's `_meta`. */
+  meta?: Record<string, unknown>;
 };
 
 /** One agent process and the ACP session it hosts. */
@@ -54,7 +56,14 @@ export const requestId = (request: acp.RequestPermissionRequest): string => requ
  * replays the agent's history as updates, which no turn is listening to, so they are dropped here:
  * the chat already holds that transcript. A session the agent no longer has starts over.
  */
-export const open = ({ stream, cwd, resume, mcpServers = [], mode }: OpenOptions): Effect.Effect<Session, AgentError> =>
+export const open = ({
+  stream,
+  cwd,
+  resume,
+  mcpServers = [],
+  mode,
+  meta,
+}: OpenOptions): Effect.Effect<Session, AgentError> =>
   Effect.gen(function* () {
     let sink: TurnSink | undefined;
     const pending = new Map<string, (response: acp.RequestPermissionResponse) => void>();
@@ -93,7 +102,7 @@ export const open = ({ stream, cwd, resume, mcpServers = [], mode }: OpenOptions
       });
 
     const fresh = request('session/new', () =>
-      connection.agent.request(acp.methods.agent.session.new, { cwd, mcpServers }),
+      connection.agent.request(acp.methods.agent.session.new, { cwd, mcpServers, _meta: meta }),
     ).pipe(Effect.map((created) => ({ ...created, resumed: false })));
 
     const started = yield* Effect.gen(function* () {
@@ -106,7 +115,12 @@ export const open = ({ stream, cwd, resume, mcpServers = [], mode }: OpenOptions
       const opened =
         resume !== undefined && initialized.agentCapabilities?.loadSession === true
           ? yield* request('session/load', () =>
-              connection.agent.request(acp.methods.agent.session.load, { sessionId: resume, cwd, mcpServers }),
+              connection.agent.request(acp.methods.agent.session.load, {
+                sessionId: resume,
+                cwd,
+                mcpServers,
+                _meta: meta,
+              }),
             ).pipe(
               Effect.map((loaded) => ({ sessionId: resume, modes: loaded?.modes ?? undefined, resumed: true })),
               Effect.catch((error) => (isMissing(error.cause) ? fresh : Effect.fail(error))),

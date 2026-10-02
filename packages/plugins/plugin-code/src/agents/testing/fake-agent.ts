@@ -9,8 +9,9 @@ import * as acp from '@agentclientprotocol/sdk';
  * `tool` makes a tool call, `permission` asks to run one and reports the answer, `slow` waits until
  * cancelled, `crash` asks to run one and fails without waiting, and every turn ends by echoing the
  * prompt in two chunks of one message. Reloading a session it never hosted fails as Claude Code's does.
+ * Each session's `_meta`, from opening or reloading it, is pushed to `opened`.
  */
-export const makeFakeAgent = (): acp.AgentApp => {
+export const makeFakeAgent = ({ opened = [] }: { opened?: unknown[] } = {}): acp.AgentApp => {
   let sessions = 0;
   const history = new Map<string, string[]>();
   const cancellers = new Map<string, () => void>();
@@ -21,7 +22,8 @@ export const makeFakeAgent = (): acp.AgentApp => {
       protocolVersion: acp.PROTOCOL_VERSION,
       agentCapabilities: { loadSession: true },
     }))
-    .onRequest(acp.methods.agent.session.new, () => {
+    .onRequest(acp.methods.agent.session.new, ({ params }) => {
+      opened.push(params._meta);
       const sessionId = `fake-${++sessions}`;
       history.set(sessionId, []);
       return {
@@ -36,6 +38,7 @@ export const makeFakeAgent = (): acp.AgentApp => {
       };
     })
     .onRequest(acp.methods.agent.session.load, async ({ params, client }) => {
+      opened.push(params._meta);
       const lines = history.get(params.sessionId);
       if (!lines) {
         throw acp.RequestError.resourceNotFound(params.sessionId);

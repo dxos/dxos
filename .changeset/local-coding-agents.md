@@ -20,3 +20,5 @@ An agent's permission requests arrive as a `request` content block (`ContentBloc
 A project overview has a settings slot, `ProjectView.Settings`, where other plugins add settings. `plugin-code` uses it for the project's repository folder on this device, and a delegated chat works in its own git worktree of that folder.
 
 A coding agent gets Composer's operations as the `composer` MCP server, scoped to its chat's space. The page serves the same surface as `dx mcp serve`, and the agent helper relays the agent's requests to it.
+
+`CodeAgent.make` takes `sessionMeta`, agent-specific ACP session options built from the Composer tools on offer. Claude Code uses it to call Composer's read-only tools without asking each time. The Claude plugin now depends on the Code plugin, which runs the agent helper.

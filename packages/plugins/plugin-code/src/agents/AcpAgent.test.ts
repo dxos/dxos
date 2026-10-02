@@ -191,6 +191,23 @@ describe('AcpAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
+  it.live("opens and reloads every session with the agent's own options", () =>
+    Effect.gen(function* () {
+      const { feed, chat, options } = yield* setup();
+      const opened: unknown[] = [];
+      const app = makeFakeAgent({ opened });
+      const meta = { fake: { allowedTools: ['read'] } };
+      const withMeta = { ...options, sessionMeta: meta, connect: () => Effect.succeed(inMemory(app)) };
+      yield* AcpAgent.runTurn(withMeta, { chat, feed }, { prompt: 'first' });
+      yield* AcpAgent.runTurn(
+        { ...withMeta, sessions: yield* AcpAgent.Sessions.make() },
+        { chat, feed },
+        { prompt: 'second' },
+      );
+      expect(opened).toEqual([meta, meta]);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
   it.live('starts over when the agent no longer has the session the chat recorded', () =>
     Effect.gen(function* () {
       const { feed, chat, options } = yield* setup();

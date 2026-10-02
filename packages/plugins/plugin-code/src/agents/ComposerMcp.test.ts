@@ -9,9 +9,12 @@ import { describe, test } from 'vitest';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
+import { Database, Obj, Ref } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
+import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { DXN, SpaceId } from '@dxos/keys';
 import { McpServer } from '@dxos/mcp-server';
+import { Task } from '@dxos/types';
 
 import * as ComposerMcp from './ComposerMcp.ts';
 
@@ -47,6 +50,7 @@ const setup = () => {
         return { id: 'note-1' };
       }),
     spaceIds: [SPACE],
+    database: () => undefined,
   });
   return { invocations, ...ComposerMcp.handler({ registry, host, path: '/mcp/server-1' }) };
 };
@@ -106,6 +110,70 @@ describe('ComposerMcp', () => {
     } finally {
       await dispose();
     }
+  });
+
+  test('resolves a reference in the input against the space it names', async ({ expect }) => {
+    const ReviewTask = Operation.make({
+      meta: { key: DXN.make('com.example.operation.tasks.review'), name: 'Review Task' },
+      input: Schema.Struct({ task: Ref.Ref(Task.Task) }),
+      output: Schema.Struct({ title: Schema.String }),
+    }).pipe(Operation.mutation('write'));
+    const registry = makeRegistry({
+      initial: [
+        ...Operation.serializable([ReviewTask]),
+        Skill.make({
+          key: SKILL,
+          name: 'tasks',
+          description: 'Tasks workflow.',
+          mcpPrompt: true,
+          instructions: Template.make({ source: 'Review tasks.' }),
+          tools: Skill.toolDefinitions({ operations: [ReviewTask] }),
+        }),
+      ],
+    });
+
+    await Effect.gen(function* () {
+      const { db } = yield* Database.Service;
+      const task = db.add(Task.make({ title: 'Ship it', status: 'todo' }));
+      const { handle, dispose } = ComposerMcp.handler({
+        registry,
+        path: '/mcp/server-1',
+        host: ComposerMcp.host({
+          handlers: Effect.succeed([ReviewTask.pipe(Operation.withHandler(() => Effect.succeed({ title: '' })))]),
+          // What the app's invoker would hand the handler: the loaded task behind the reference.
+          invoke: (_operation, input) =>
+            Effect.promise(async () => {
+              const ref = typeof input === 'object' && input !== null && 'task' in input ? input.task : undefined;
+              const loaded = Ref.isRef(ref) ? await ref.load() : undefined;
+              return { title: Obj.instanceOf(Task.Task, loaded) ? loaded.title : 'unresolved' };
+            }),
+          spaceIds: [db.spaceId],
+          database: (spaceId) => (spaceId === db.spaceId ? db : undefined),
+        }),
+      });
+      try {
+        const loaded = yield* Effect.promise(() =>
+          call(handle, 'tools/call', { name: 'loadSkill', arguments: { skill: SKILL } }),
+        );
+        const invoked = yield* Effect.promise(() =>
+          call(handle, 'tools/call', {
+            name: 'invokeOperation',
+            arguments: {
+              key: 'com.example.operation.tasks.review',
+              input: { task: { '/': Obj.getURI(task) } },
+              skillToken: loaded.result.structuredContent.skillToken,
+            },
+          }),
+        );
+        expect(JSON.stringify(invoked.result)).toContain('Ship it');
+      } finally {
+        yield* Effect.promise(() => dispose());
+      }
+    }).pipe(Effect.scoped, Effect.provide(TestDatabaseLayer({ types: [Task.Task] })), Effect.runPromise);
+  });
+
+  test('names the tools that only read', ({ expect }) => {
+    expect([...ComposerMcp.READ_ONLY_TOOLS].sort()).toEqual(['loadSkill', 'queryOperations']);
   });
 
   test('declines a subscription, whose stream the relay could never finish', async ({ expect }) => {
