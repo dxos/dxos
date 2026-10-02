@@ -7,6 +7,9 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
 import { SearchOperation } from '#types';
 
+import openSearch from './open-search.ts';
+
 export const SearchOperationHandlerSet = OperationHandlerSet.lazy([
-  SearchOperation.OpenSearch.pipe(Operation.lazyHandler(() => import('./open-search.ts'))),
+  // Bundled with the set: search opens on a keystroke, which must not wait on this handler's chunk.
+  SearchOperation.OpenSearch.pipe(Operation.lazyHandler(async () => ({ default: openSearch }))),
 ]);

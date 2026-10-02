@@ -31,15 +31,14 @@ test.describe('Command palette and search', () => {
 
   test('palette opens from the keyboard with the caret in its input', { tag: ['@QA-11'] }, async () => {
     const { page } = host;
-    await Commands.waitForScriptsSettled(page);
-
-    // Preloaded at idle: opening it must not wait on a chunk.
-    const scripts = await Commands.scriptsRequestedWhile(
+    // Preloaded at idle: once it is, opening the palette must not wait on a chunk.
+    await Commands.waitForPreload(page, 'CommandsDialogContent');
+    const chunks = await Commands.dialogChunksRequestedWhile(
       page,
       () => Commands.openPalette(page),
       () => expect(Commands.paletteInput(page)).toBeFocused(),
     );
-    expect(scripts).toEqual([]);
+    expect(chunks).toEqual([]);
     await expect(Commands.highlighted(page)).toHaveCount(1);
   });
 
@@ -81,14 +80,13 @@ test.describe('Command palette and search', () => {
 
   test('search opens from the keyboard and escape closes it', { tag: ['@QA-11'] }, async () => {
     const { page } = host;
-    await Commands.waitForScriptsSettled(page);
-
-    const scripts = await Commands.scriptsRequestedWhile(
+    await Commands.waitForPreload(page, 'SearchDialog');
+    const chunks = await Commands.dialogChunksRequestedWhile(
       page,
       () => Commands.openSearch(page),
       () => expect(Commands.searchInput(page)).toBeFocused(),
     );
-    expect(scripts).toEqual([]);
+    expect(chunks).toEqual([]);
 
     await page.keyboard.type('readme');
     await expect(Commands.searchInput(page)).toHaveValue('readme');

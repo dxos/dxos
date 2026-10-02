@@ -4,11 +4,15 @@
 
 import { type Page, type Request, expect } from '@playwright/test';
 
-/** How long no script may be requested before the idle wave's preloads count as finished. */
-const SCRIPTS_QUIET_PERIOD = 1_000;
+/** Upper bound on the idle wave, which carries the preloads: `whenIdle` itself backstops at 15s. */
+const PRELOAD_TIMEOUT = 30_000;
 
-/** Upper bound on the idle wave: `whenIdle` itself backstops at 15s. */
-const SCRIPTS_SETTLED_TIMEOUT = 30_000;
+/**
+ * The chunks the two dialogs and the search handler are built into, named after their modules. Only
+ * these are asserted on: the app loads unrelated chunks on its own schedule (onboarding provisions an
+ * EDGE agent after boot), which says nothing about whether opening a dialog waits on a fetch.
+ */
+const DIALOG_CHUNK = /\/assets\/(CommandsDialogContent|SearchDialog|open-search)-[\w-]+\.js$/;
 
 /** The command palette (`navtree`) and the search dialog (`search`), both driven from the keyboard. */
 export const Commands = {
@@ -44,32 +48,26 @@ export const Commands = {
     throw new Error(`palette never highlighted ${testId}`);
   },
 
-  /**
-   * Resolves once no script has been requested for {@link SCRIPTS_QUIET_PERIOD}: boot and the idle
-   * wave, which carries the dialog preloads, are then done.
-   */
-  waitForScriptsSettled: async (page: Page) => {
-    let last = Date.now();
-    const onRequest = (request: Request) => {
-      if (request.resourceType() === 'script') {
-        last = Date.now();
-      }
-    };
-    page.on('request', onRequest);
-    try {
-      await expect
-        .poll(() => Date.now() - last >= SCRIPTS_QUIET_PERIOD, { timeout: SCRIPTS_SETTLED_TIMEOUT })
-        .toBe(true);
-    } finally {
-      page.off('request', onRequest);
-    }
+  /** Resolves once the page has fetched the chunk built from `module` — the idle preload, for a dialog. */
+  waitForPreload: async (page: Page, module: 'CommandsDialogContent' | 'SearchDialog') => {
+    await expect
+      .poll(
+        () =>
+          page.evaluate(
+            (prefix) =>
+              performance.getEntriesByType('resource').some(({ name }) => new URL(name).pathname.startsWith(prefix)),
+            `/assets/${module}-`,
+          ),
+        { timeout: PRELOAD_TIMEOUT },
+      )
+      .toBe(true);
   },
 
-  /** Runs `open` and returns the URL of every script the page requested until `ready` resolved. */
-  scriptsRequestedWhile: async (page: Page, open: () => Promise<void>, ready: () => Promise<void>) => {
+  /** Runs `open` and returns the URL of every dialog chunk the page requested until `ready` resolved. */
+  dialogChunksRequestedWhile: async (page: Page, open: () => Promise<void>, ready: () => Promise<void>) => {
     const scripts: string[] = [];
     const onRequest = (request: Request) => {
-      if (request.resourceType() === 'script') {
+      if (request.resourceType() === 'script' && DIALOG_CHUNK.test(request.url())) {
         scripts.push(request.url());
       }
     };

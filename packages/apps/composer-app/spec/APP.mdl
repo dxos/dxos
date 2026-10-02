@@ -709,13 +709,13 @@ test QA-11: Command palette and search from the keyboard
     - composer-e2e:commands.spec.ts#Command palette and search › a command that opens a form focuses its first field
     - composer-e2e:commands.spec.ts#Command palette and search › search opens from the keyboard and escape closes it
   given:
-    - a booted app with an identity, left idle until it stops loading scripts
+    - a booted app with an identity, left idle until it has preloaded both dialogs' code
   steps:
     - name: Open the palette
       do: Press shift+meta+k (ctrl+shift+k off macOS).
       expect: |
         the palette appears with the caret in its input and the first command highlighted, without
-        fetching any script — its code was preloaded while the app was idle
+        fetching its code — that was preloaded while the app was idle
     - name: Dismiss it
       do: Press Escape; open it again, type "space" and press Escape.
       expect: it closes both times — Escape dismisses rather than clearing the query
@@ -727,7 +727,7 @@ test QA-11: Command palette and search from the keyboard
       expect: the create-space dialog closes and no space is created
     - name: Search
       do: Press meta+k (ctrl+k), type "readme", press Escape; then open it and press Escape again.
-      expect: search opens with the caret in its input without fetching any script, and Escape closes it each time
+      expect: search opens with the caret in its input without fetching its code, and Escape closes it each time
   then:
     - no error is logged, and focus is never left outside an open dialog
 ```
