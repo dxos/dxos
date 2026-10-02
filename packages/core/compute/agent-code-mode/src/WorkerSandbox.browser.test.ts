@@ -199,9 +199,8 @@ const setup = async () => {
           input: JSON.stringify({ code }),
           providerExecuted: false,
         });
-        expect(result.error).toBeUndefined();
-        return Schema.decodeUnknownSync(Schema.Struct({ output: Schema.String }))(JSON.parse(String(result.result)))
-          .output;
+        // A failed call's text is what the model is shown in place of a result.
+        return result.error ?? Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result)));
       }),
     );
 

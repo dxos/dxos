@@ -105,6 +105,19 @@ export const callTool: <Tools extends Record<string, Tool.Any>>(
       }),
       Effect.catchCause((cause) =>
         Effect.sync(() => {
+          // A tool that fails with a string has already written the text the model should see.
+          const failure = Option.getOrUndefined(Cause.findErrorOption(cause));
+          if (typeof failure === 'string') {
+            log.info('tool failed', { tool: toolCall.name, message: failure });
+            return {
+              _tag: 'toolResult',
+              toolCallId: toolCall.toolCallId,
+              name: toolCall.name,
+              error: failure,
+              providerExecuted: false,
+            } satisfies ContentBlock.ToolResult;
+          }
+
           const errors = Cause.prettyErrors(cause);
           // A serialized error can carry no readable text, so name the tool and message separately.
           log.warn('tool failed', { tool: toolCall.name, message: errors[0]?.message, err: errors[0] });
