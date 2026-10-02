@@ -597,7 +597,9 @@ export class AppManager {
   }
 
   getObjectByName(name: string): Locator {
-    return this.getObjectLinks().filter({ has: this.page.locator(`span:has-text("${name}")`) });
+    return this.getObjectLinks().filter({
+      has: this.page.getByTestId('treeItem.heading').getByText(name, { exact: true }),
+    });
   }
 
   getSpaceItems(): Locator {
