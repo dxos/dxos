@@ -31,6 +31,12 @@ const Legacy = Type.makeObject(DXN.make('com.example.type.propertyLegacy', '0.1.
   Schema.Struct({ subject: Schema.optional(Schema.String) }).pipe(Annotation.LabelAnnotation.set(['subject'])),
 );
 
+const RootPath = Type.makeObject(DXN.make('com.example.type.propertyRootPath', '0.1.0'))(
+  Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(
+    Annotation.LabelAnnotation.set(['$.name', 'not a path']),
+  ),
+);
+
 const Plain = Type.makeObject(DXN.make('com.example.type.propertyPlain', '0.1.0'))(
   Schema.Struct({ name: Schema.optional(Schema.String) }),
 );
@@ -79,6 +85,23 @@ describe('Property', () => {
     const plain = Obj.make(Plain, { name: 'Plain' });
     expect(Obj.getLabel(plain)).toBe('Plain');
     expect(Obj.labelProperty(plain)).toBe('name');
+  });
+
+  test('root-prefixed paths resolve and invalid paths read as absent', ({ expect }) => {
+    const obj = Obj.make(RootPath, { name: 'Root' });
+    expect(Obj.getLabel(obj)).toBe('Root');
+    Obj.update(obj, (obj) => {
+      Obj.setLabel(obj, 'Renamed');
+    });
+    expect(obj.name).toBe('Renamed');
+
+    const invalid = Obj.make(
+      Type.makeObject(DXN.make('com.example.type.propertyInvalidPath', '0.1.0'))(
+        Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(Annotation.LabelAnnotation.set(['not a path'])),
+      ),
+      { name: 'Ignored' },
+    );
+    expect(Obj.getLabel(invalid)).toBeUndefined();
   });
 
   test('unimplemented property resolves to nothing', ({ expect }) => {

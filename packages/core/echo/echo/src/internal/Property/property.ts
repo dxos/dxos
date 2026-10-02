@@ -6,7 +6,6 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { assertArgument } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { createAnnotationHelper } from '../Annotation/util.ts';
@@ -149,9 +148,16 @@ export const isWritable = <T>(implementation: Implementation<T>): boolean =>
 
 const isRecord = (value: unknown): value is AnyProperties => typeof value === 'object' && value !== null;
 
+// Root-prefixed paths (`$.name`) predate `JsonPath` validation and may sit in persisted schemas.
+const toJsonPath = (path: string): SchemaEx.JsonPath | undefined => {
+  const relative = path.startsWith('$.') ? path.slice(2) : path;
+  return SchemaEx.isJsonPath(relative) ? relative : undefined;
+};
+
+// An unreadable path counts as absent so a bad annotation cannot throw from a label render.
 const readPath = (object: AnyProperties, path: string): unknown => {
-  assertArgument(SchemaEx.isJsonPath(path), 'path', `Invalid property path: ${path}`);
-  return SchemaEx.getField(object, path);
+  const jsonPath = toJsonPath(path);
+  return jsonPath === undefined ? undefined : SchemaEx.getField(object, jsonPath);
 };
 
 /**
@@ -200,7 +206,11 @@ export const setWithSchema = <T>(
   }
 
   const [path] = toPaths(implementation.value.path);
-  assertArgument(SchemaEx.isJsonPath(path), 'path', `Invalid property path: ${path}`);
-  SchemaEx.setValue(object, path, value);
+  const jsonPath = toJsonPath(path);
+  if (jsonPath === undefined) {
+    return false;
+  }
+
+  SchemaEx.setValue(object, jsonPath, value);
   return true;
 };
