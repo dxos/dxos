@@ -12,10 +12,10 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { expect } from 'vitest';
 
 import { LanguageModelFixture } from '@dxos/ai/testing';

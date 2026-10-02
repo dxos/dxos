@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren } from 'react';
 
 import { Next, type ThemedClassName, useTranslation } from '@dxos/react-ui';

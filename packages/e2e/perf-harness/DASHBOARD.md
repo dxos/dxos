@@ -300,6 +300,26 @@ columns are therefore setup's cost rather than the app's, and it is the one phas
 absorber rather than a measurement — it is nonetheless summed into the run totals, so a run
 compared across the change it was added in moves on every total.
 
+## Scores and budget lines
+
+Every metric the nightly scores has a budget — a target and a limit — in
+[`composer-app/src/playwright/perf/budgets.json`](../../apps/composer-app/src/playwright/perf/budgets.json),
+listed with its rationale in [`composer-app/spec/PERF-BUDGETS.md`](../../apps/composer-app/spec/PERF-BUDGETS.md).
+The ECHO benchmarks carry the same in
+[`echo-client-e2e/BUDGETS.md`](../../core/echo/echo-client-e2e/BUDGETS.md) and score on their own
+dashboard, **[ECHO benchmarks (nightly)](https://eu.posthog.com/project/126171/dashboard/991193)**.
+
+- **Goal lines on every distribution tile mirror `budgets.json`** in each tile's own unit; a run-total tile's lines
+  are the sum of its stages' budgets. They are copied, not derived, so a budget change must be
+  re-applied to the tile. The two stacked tiles carry none: they include the backing store, which no
+  budget covers.
+- **`ci.perf-score`** is written once a night by `scripts/score-perf.ts` (and `bench-score` for
+  ECHO), one row per metric, group and overall, each carrying the target and limit it was scored
+  against. Scores run 0-1: 1 at or under target, 0.5 at the limit, floored at 0.01; the curve and the
+  geometric-mean roll-up are in `src/score/score.ts`.
+- **Budget-position tiles** plot `ln(value/target) / ln(limit/target)` per metric, so every metric
+  shares one axis: 0 is the target, 1 the limit.
+
 ## Two things to know before reading a tile
 
 - **Tiles are dated by run, not by commit.** A nightly can run hours after the commit it measures,

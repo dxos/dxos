@@ -5,8 +5,8 @@
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
-import * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as AsyncResult from 'effect/reactivity/AsyncResult';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { assertArgument } from '@dxos/invariant';
 

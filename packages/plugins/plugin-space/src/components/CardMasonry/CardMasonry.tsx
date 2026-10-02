@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { createContext, useContext, useMemo } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
@@ -17,12 +17,14 @@ import { ObjectCard } from '../ObjectCard/index.ts';
 /** Scales a `compact` grid's cards to three quarters: enough for two columns in a companion-width host. */
 const COMPACT_ZOOM = '[zoom:0.75]';
 
-export type CardMasonryProps = Pick<AppSurface.CardMasonryData, 'objects' | 'size' | 'inline' | 'CardMenu' | 'pending'>;
+export type CardMasonryProps = Pick<
+  AppSurface.CardMasonryData,
+  'objects' | 'size' | 'inline' | 'CardMenu' | 'detailOf' | 'pending'
+>;
 
 type Tile = { kind: 'object'; object: Obj.Unknown } | { kind: 'pending'; pending: AppSurface.CardMasonryPending };
 
-/** The masonry fixes a tile's props to its own signature, so the host's card menu reaches tiles this way. */
-const CardMenuContext = createContext<AppSurface.CardMasonryData['CardMenu']>(undefined);
+const CardOptionsContext = createContext<Pick<AppSurface.CardMasonryData, 'CardMenu' | 'detailOf'>>({});
 
 /**
  * Several objects as cards, laid out in as many columns as the host gives it room for.
@@ -38,7 +40,14 @@ const CardMenuContext = createContext<AppSurface.CardMasonryData['CardMenu']>(un
  * measures a width a third wider and lays out full-size cards in the columns that fit it — two in a
  * companion — which then paint at three quarters of their size.
  */
-export const CardMasonry = ({ objects: refs, size = 'default', inline, CardMenu, pending = [] }: CardMasonryProps) => {
+export const CardMasonry = ({
+  objects: refs,
+  size = 'default',
+  inline,
+  CardMenu,
+  detailOf,
+  pending = [],
+}: CardMasonryProps) => {
   // Resolved reactively rather than through `ref.target`: on a cold load the targets are not in
   // memory yet, and a synchronous read would leave the grid permanently empty. `ref.atom` tracks
   // loading without tracking mutations — a rename re-renders only its card, which subscribes itself.
@@ -52,6 +61,8 @@ export const CardMasonry = ({ objects: refs, size = 'default', inline, CardMenu,
     [objects, pending],
   );
 
+  const cardOptions = useMemo(() => ({ CardMenu, detailOf }), [CardMenu, detailOf]);
+
   // Nothing to show is nothing at all, not an empty region: the host decides whether its absence
   // needs saying, and a grid with no cards would otherwise hold open a gap under the content.
   if (tiles.length === 0) {
@@ -60,7 +71,7 @@ export const CardMasonry = ({ objects: refs, size = 'default', inline, CardMenu,
 
   const zoom = size === 'compact' ? COMPACT_ZOOM : undefined;
   return (
-    <CardMenuContext.Provider value={CardMenu}>
+    <CardOptionsContext.Provider value={cardOptions}>
       {/* In flow the grid starts at the host's edge like the rows around it; in its own scroller it
           centres, since nothing beside it sets an edge. */}
       <Masonry.Root Tile={CardMasonryTile} centered={!inline}>
@@ -83,7 +94,7 @@ export const CardMasonry = ({ objects: refs, size = 'default', inline, CardMenu,
           </Masonry.Content>
         )}
       </Masonry.Root>
-    </CardMenuContext.Provider>
+    </CardOptionsContext.Provider>
   );
 };
 
@@ -93,11 +104,11 @@ const getTileId = (tile: Tile): string =>
   tile.kind === 'object' ? Obj.getURI(tile.object).toString() : `pending:${tile.pending.id}`;
 
 const CardMasonryTile = ({ data: tile }: { data: Tile }) => {
-  const CardMenu = useContext(CardMenuContext);
+  const { CardMenu, detailOf } = useContext(CardOptionsContext);
   return tile.kind === 'pending' ? (
     <PendingCard label={tile.pending.label} />
   ) : (
-    <ObjectCard data={tile.object} CardMenu={CardMenu} />
+    <ObjectCard data={tile.object} CardMenu={CardMenu} detailOf={detailOf} />
   );
 };
 

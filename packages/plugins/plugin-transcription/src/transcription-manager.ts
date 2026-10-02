@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { synchronized } from '@dxos/async';
 import { Resource } from '@dxos/context';

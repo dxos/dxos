@@ -3,7 +3,7 @@
 //
 
 import { fireEvent, render, waitFor } from '@solidjs/testing-library';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { beforeEach, describe, expect, test } from 'vitest';
 
 import { defaultRegistry } from '../registry.ts';

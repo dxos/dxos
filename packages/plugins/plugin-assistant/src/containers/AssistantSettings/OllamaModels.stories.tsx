@@ -4,8 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { Form } from '@dxos/react-ui-form';

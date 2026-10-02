@@ -4,8 +4,8 @@
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { ReactNode } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';

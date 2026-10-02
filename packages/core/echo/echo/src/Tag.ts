@@ -21,6 +21,11 @@ export class Tag extends Type.makeObject<Tag>(internal.TagTypeDXN)(
   }).pipe(internal.LabelAnnotation.set(['label'])),
 ) {}
 
+/**
+ * Creates a new tag object.
+ *
+ * @performance O(1); allocates an in-memory tag object.
+ */
 export const make = (props: Obj.MakeProps<typeof Tag>) => Obj.make(Tag, props);
 
 export type Map = Record<string, Type.InstanceType<typeof Tag>>;
@@ -45,11 +50,17 @@ export const CANONICAL_ORIGIN = 'org.dxos.tag';
  * Read from the tag's first foreign key, which is where {@link findOrCreate} records it; a tag never
  * carries more than one origin. Requires a live entity or snapshot — a spread copy (e.g. from
  * {@link createTagList}) has no metadata and throws rather than reporting a false `undefined`.
+ *
+ * @performance O(1) meta read.
  */
 export const getOrigin = (tag: Type.InstanceType<typeof Tag> | Obj.Snapshot<Type.InstanceType<typeof Tag>>) =>
   Obj.getMeta(tag).keys[0]?.source;
 
-/** Whether the user created this tag (and so may edit and apply it freely). See {@link getOrigin}. */
+/**
+ * Whether the user created this tag (and so may edit and apply it freely). See {@link getOrigin}.
+ *
+ * @performance O(1) meta read.
+ */
 export const isUserTag = (tag: Type.InstanceType<typeof Tag> | Obj.Snapshot<Type.InstanceType<typeof Tag>>) =>
   getOrigin(tag) === undefined;
 
@@ -57,20 +68,37 @@ export const isUserTag = (tag: Type.InstanceType<typeof Tag> | Obj.Snapshot<Type
  * Whether a foreign provider owns this tag, making it read-only in the app: it cannot be renamed,
  * recoloured, or attached to / detached from an object by hand. Canonical DXOS tags are **not**
  * provider tags — they stay locally toggleable. See {@link getOrigin}.
+ *
+ * @performance O(1) meta read.
  */
 export const isProviderTag = (tag: Type.InstanceType<typeof Tag> | Obj.Snapshot<Type.InstanceType<typeof Tag>>) => {
   const origin = getOrigin(tag);
   return origin !== undefined && origin !== CANONICAL_ORIGIN;
 };
 
+/**
+ * Comparator that orders tags by label.
+ *
+ * @performance O(label length) locale comparison.
+ */
 export const sortTags = ({ label: a }: Type.InstanceType<typeof Tag>, { label: b }: Type.InstanceType<typeof Tag>) =>
   a.localeCompare(b);
 
+/**
+ * Convert a tag map into a list sorted by label.
+ *
+ * @performance O(n log n) in tags; copies and sorts them.
+ */
 export const createTagList = (tags: Map): Type.InstanceType<typeof Tag>[] =>
   Object.entries(tags)
     .map(([id, tag]) => ({ ...tag, id }))
     .sort(sortTags);
 
+/**
+ * Find a tag by case-insensitive label.
+ *
+ * @performance O(n) linear scan of the map.
+ */
 export const findTagByLabel = (tags: Map | undefined, name: string): Type.InstanceType<typeof Tag> | undefined => {
   const entry = Object.entries(tags ?? {}).find(([_, tag]) => tag.label.toLowerCase() === name.toLowerCase());
   return entry ? { ...entry[1], id: entry[0] } : undefined;
@@ -120,6 +148,9 @@ const adoptLegacyKey = async (
  * key misses, they are tried in order and the first match is rewritten to `key` in place. Without it
  * a rename silently creates a parallel tag on the next sync, while objects keep pointing at the old
  * one. Drop the legacy key once the rename has shipped.
+ *
+ * @performance Async; a keyed lookup is one foreign-key query, but a label lookup queries and scans every tag in the
+ * space (O(n)).
  */
 export const findOrCreate = async (
   db: Pick<Database.Database, 'query' | 'add'>,

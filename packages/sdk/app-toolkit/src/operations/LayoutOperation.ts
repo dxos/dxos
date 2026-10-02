@@ -323,26 +323,11 @@ export const Open = Operation.make({
     name: Schema.optional(
       Schema.String.annotate({
         description:
-          'Optional name for the plank, which behaves like a browser tab: opening under a name that ' +
-          'is already taken reuses that plank in place rather than adding another. Callers that open ' +
-          'a stream of one-at-a-time items (a message from a mailbox, say) pass a constant name so the ' +
-          'deck does not grow an entry per item.',
-      }),
-    ),
-    root: Schema.optional(
-      Schema.String.annotate({
-        description:
-          'The deck root this open is relative to, whose type declares the chain of levels (see ' +
-          '`level`). Only meaningful together with `level`.',
-      }),
-    ),
-    level: Schema.optional(
-      Schema.String.annotate({
-        description:
-          "Open at this level of the root's declared chain (e.g. `message` in `mailbox / message / " +
-          "attachment`). The level supplies the plank name, so the level's plank is reused rather " +
-          'than added to, and opening at a level closes every level below it — reading a second ' +
-          "message drops the first one's attachment. Prefer this to hand-building `name`.",
+          'Optional name for the plank, which behaves like a browser tab: adding a plank under a name ' +
+          'that is already taken reuses that plank in place rather than adding another (a `solo` ' +
+          'navigation replaces the deck anyway, and shift asks for a new plank). Callers that open ' +
+          'a stream of one-at-a-time items pass a constant name so the deck does not grow an entry per ' +
+          'item. A `detail` open needs no name: the deck names it after its pivot.',
       }),
     ),
     workspace: Schema.optional(Schema.String.annotate({ description: 'The workspace to open the items in.' })),
@@ -361,15 +346,18 @@ export const Open = Operation.make({
     ),
     pivotId: Schema.optional(Schema.String.annotate({ description: 'The id of the item to place new items next to.' })),
     disposition: Schema.optional(
-      Schema.Literals(['solo', 'add', 'auto']).annotate({
+      Schema.Literals(['solo', 'add', 'auto', 'detail']).annotate({
         description:
           'How the deck should place the opened items. `solo` (the default) navigates: the deck becomes ' +
           'just the opened items, unless they are all already open (the existing plank scrolls into view). ' +
           '`add` inserts the items as new planks — immediately after `pivotId` when provided (in-plank ' +
           'navigation anchors at its origin), else at the end of the deck. `auto` follows the deck: ' +
           'when already sliding (2+ planks) it adds beside its origin (`pivotId`, falling back to the ' +
-          'attended plank); when solo it navigates. Holding shift (via `modifiers`) forces any ' +
-          'disposition into `add`.',
+          'attended plank); when solo it navigates. `detail` opens the item as the detail of `pivotId` ' +
+          "(a list's selected row), a named open under a name the deck derives from `pivotId`: it " +
+          'replaces whatever `pivotId` last opened as its detail, and that ' +
+          "detail's own details close with it; a flattened deck shows it in the companion beside " +
+          'its pivot. Holding shift (via `modifiers`) forces any disposition into `add`.',
       }),
     ),
     modifiers: Schema.optional(

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryContext, type StoryObj } from '@storybook/react-vite';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { Feed, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';

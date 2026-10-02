@@ -3,9 +3,9 @@
 //
 
 import type * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 import type { ComponentType } from 'react';
 
 import * as Capability from '@dxos/app-framework/Capability';

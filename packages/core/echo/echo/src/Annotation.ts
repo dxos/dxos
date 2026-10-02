@@ -85,10 +85,14 @@ export interface Annotation<T> {
    * entity, unwrap it first with `Type.getSchema(entity)`. This keeps the
    * annotation pipeline single-shaped and forces annotations to live on the
    * source schema, not on the post-construction Type entity.
+   *
+   * @performance O(1) annotation lookup, but decodes the value against `schema` on every call (not cached).
    */
   get: (schema: Schema.Top) => Option.Option<T>;
   /**
    * Get the annotation value from the AST.
+   *
+   * @performance O(1) annotation lookup, but decodes the value against `schema` on every call (not cached).
    */
   getFromAst: (ast: SchemaAST.AST) => Option.Option<T>;
   /**
@@ -97,6 +101,8 @@ export interface Annotation<T> {
    * Only accepts `Schema.Top` — annotations must be applied to the
    * source schema BEFORE wrapping it with `Type.makeObject` / `Type.makeRelation`.
    * In a pipe, place every `Annotation.X.set(...)` before the `Type.make...` step.
+   *
+   * @performance O(value size) encode, once at schema-definition time.
    */
   set: (value: T) => <S extends Schema.Top>(schema: S) => S;
 }
@@ -125,6 +131,8 @@ interface MakeProps<T> {
  *
  * const schema = Schema.String.annotate(ColorAnnotation.set('red'));
  * ```
+ *
+ * @performance O(1) at definition time; validates the id format.
  */
 export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotations.makeUserAnnotation;
 
@@ -137,6 +145,8 @@ export const make: <T>(props: MakeProps<T>) => Annotation<T> = internalAnnotatio
  * in-place array splices) use `Annotation.update` or `Annotation.set`, which open a change transaction.
  * A read-only return is sound regardless of context — the reactive proxy rejects mutation outside an
  * `Obj.update`.
+ *
+ * @performance O(1) meta-dictionary read; returns the stored value without decoding or copying.
  */
 export const get: {
   <T>(annotation: Annotation<T>): (target: Entity.Unknown | Entity.Snapshot) => Option.Option<T>;
@@ -152,6 +162,8 @@ export const get: {
  * Set the value of an annotation on an entity instance.
  * For schema-level writes use the annotation instance method (e.g. `ColorAnnotation.set('red')`).
  * For setting an annotation value on a dictionary, use `setDictionary`.
+ *
+ * @performance O(value size) schema validation, then an O(1) meta-dictionary write.
  */
 export const set: {
   <T>(annotation: Annotation<T>, value: T): (target: Entity.Mutable<Entity.Unknown>) => void;
@@ -168,6 +180,8 @@ export const set: {
  * transaction (like `Obj.update`). The result is validated against the annotation's schema. Use when
  * only an annotation needs to change; to mutate it alongside other changes (unvalidated), call
  * `Annotation.get` inside an existing `Obj.update` instead. No-op when absent.
+ *
+ * @performance O(value size) schema validation after the mutator, inside one change.
  */
 export const update = <T>(
   target: Entity.Unknown,
@@ -175,6 +189,11 @@ export const update = <T>(
   mutator: (value: Entity.Mutable<T>) => void,
 ): void => internalAnnotations.update(target, annotation, mutator);
 
+/**
+ * Get the value of an annotation from a schema AST.
+ *
+ * @performance O(1) annotation lookup, but decodes the value on every call (not cached).
+ */
 export const getFromAst: {
   <T>(annotation: Annotation<T>): (ast: SchemaAST.AST) => Option.Option<T>;
   <T>(ast: SchemaAST.AST, annotation: Annotation<T>): Option.Option<T>;
@@ -188,12 +207,16 @@ export const getFromAst: {
 /**
  * Reactive atom for an annotation value on an entity instance.
  * Fires only when the annotation value changes (mirrors `Obj.atom`, scoped to one annotation).
+ *
+ * @performance O(1) memoized atom-family lookup; re-reads the annotation on every entity change.
  */
 export const atom = annotationAtoms.makeAtom;
 
 /**
  * Reactive atom for a single key of a record-valued annotation on an entity instance.
  * Reactivity is scoped to that key, and the value type is preserved (mirrors `Obj.atomProperty`).
+ *
+ * @performance O(1) memoized atom-family lookup; re-reads the key on every entity change.
  */
 export const atomProperty = annotationAtoms.makeProperty;
 
@@ -214,6 +237,8 @@ export interface Dictionary extends Schema.Schema.Type<typeof Dictionary> {}
 
 /**
  * Get the value of an annotation from a Dictionary.
+ *
+ * @performance O(value size); decodes the stored value on every call.
  */
 export const getDictionary: {
   <T>(annotation: Annotation<T>): (values: Dictionary) => Option.Option<T>;
@@ -235,6 +260,8 @@ export const getDictionary: {
  *   Annotation.setDictionary(obj.annotations, ColorAnnotation, 'red');
  * });
  * ```
+ *
+ * @performance O(value size); encodes the value on every call.
  */
 export const setDictionary: {
   <T>(annotation: Annotation<T>, value: T): (values: Dictionary) => void;
@@ -256,6 +283,8 @@ export const setDictionary: {
  *   Annotation.setDictionary(dictionary, SizeAnnotation, '10px');
  * });
  * ```
+ *
+ * @performance O(1) setup plus the cost of the builder callback.
  */
 export const buildDictionary = (build: (dictionary: Types.Mutable<Dictionary>) => void): Dictionary => {
   const dictionary = Schema.encodeSync(Dictionary)({});

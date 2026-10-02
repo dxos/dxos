@@ -163,44 +163,44 @@ catalogs:
       specifier: ^0.2.1
       version: 0.2.1
     '@effect/ai-anthropic':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/ai-openai':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/atom-react':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/language-service':
       specifier: ^0.87.2
       version: 0.87.3
     '@effect/opentelemetry':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/platform-browser':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/platform-bun':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/platform-node':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/sql-sqlite-bun':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/sql-sqlite-node':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/sql-sqlite-wasm':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/tsgo':
       specifier: ^0.36.5
       version: 0.36.5
     '@effect/vitest':
-      specifier: 4.0.0-rc.117
-      version: 4.0.0-rc.117
+      specifier: 4.0.0
+      version: 4.0.0
     '@effect/wa-sqlite':
       specifier: ^0.1.2
       version: 0.1.2
@@ -434,10 +434,10 @@ catalogs:
       version: 2.11.4
     '@tauri-apps/plugin-deep-link':
       specifier: ^2.4.10
-      version: 2.6.1
+      version: 2.6.0
     '@tauri-apps/plugin-dialog':
       specifier: ^2.7.3
-      version: 2.8.1
+      version: 2.8.0
     '@tauri-apps/plugin-fs':
       specifier: ^2.5.2
       version: 2.6.0
@@ -1627,7 +1627,7 @@ overrides:
   devalue: '>=5.6.3'
   diff: '>=5.2.2'
   dompurify: '>=3.2.4'
-  effect: 4.0.0-rc.117
+  effect: 4.0.0
   esbuild: '>=0.28.0'
   fast-xml-parser: '>=5.3.6'
   glob: '>=10.5.0'
@@ -1670,6 +1670,9 @@ patchedDependencies:
   '@zag-js/presence@1.43.3':
     hash: 724f6c5627fd9aad233fda4bfddc2accd0c9751bd1395affac5beee6b05e9f58
     path: patches/@zag-js__presence@1.43.3.patch
+  dfx@1.0.15:
+    hash: 4897179d9f91b09100d74728fdca0db2f7d33a64e06f2b3dbd2fa4fb061b5325
+    path: patches/dfx@1.0.15.patch
   js-clipper@1.0.1:
     hash: 6e8fe7b88ba3126ee7a494d4017254238f1096e1b213e331bb151f1bac54bf3f
     path: patches/js-clipper@1.0.1.patch
@@ -1765,7 +1768,7 @@ importers:
         version: 0.36.5
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@moonrepo/cli':
         specifier: 'catalog:'
         version: 2.5.2
@@ -1884,8 +1887,8 @@ importers:
         specifier: 'catalog:'
         version: 1.4.7
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       esbuild:
         specifier: '>=0.28.0'
         version: 0.28.1
@@ -2142,6 +2145,9 @@ importers:
       '@atproto/api':
         specifier: 'catalog:'
         version: 0.19.11
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../packages/sdk/app-framework
       '@dxos/client':
         specifier: workspace:*
         version: link:../packages/sdk/client
@@ -2627,13 +2633,13 @@ importers:
         version: link:../../common/util
       '@effect/ai-anthropic':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/ai-openai':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@opentelemetry/api':
         specifier: 'catalog:'
         version: 1.9.1
@@ -2668,8 +2674,8 @@ importers:
         specifier: 'catalog:'
         version: 1.2.2
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       isomorphic-fetch:
         specifier: 'catalog:'
         version: 3.0.0
@@ -2760,7 +2766,7 @@ importers:
         version: link:../../sdk/worker-framework
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -2916,8 +2922,8 @@ importers:
         specifier: 'catalog:'
         version: 2.1.2
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       ws:
         specifier: '>=8.17.1'
         version: 8.18.3
@@ -2957,7 +2963,7 @@ importers:
         version: link:../../../tools/vite-plugin-shutdown
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -3057,16 +3063,16 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@ngneat/falso':
         specifier: 'catalog:'
         version: 7.1.1
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -3136,13 +3142,13 @@ importers:
         version: link:../../../tools/vite-plugin-shutdown
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       classnames:
         specifier: 'catalog:'
         version: 2.3.2
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -3239,8 +3245,8 @@ importers:
   packages/common/crx-protocol:
     dependencies:
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/typings':
         specifier: workspace:*
@@ -3316,8 +3322,8 @@ importers:
         specifier: 'catalog:'
         version: 4.25.2(@codemirror/language@6.12.4)(@codemirror/state@6.7.6)(@codemirror/view@6.43.13)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       tsx:
         specifier: 'catalog:'
         version: 4.21.0
@@ -3347,7 +3353,7 @@ importers:
         version: link:../util
       '@effect/opentelemetry':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(@opentelemetry/api-logs@0.222.0)(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.222.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-node@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-web@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(effect@4.0.0-rc.117)
+        version: 4.0.0(@opentelemetry/api-logs@0.222.0)(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.222.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-node@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-web@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(effect@4.0.0)
       '@opentelemetry/api':
         specifier: 'catalog:'
         version: 1.9.1
@@ -3360,7 +3366,7 @@ importers:
         version: link:../log
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@opentelemetry/api-logs':
         specifier: 'catalog:'
         version: 0.222.0
@@ -3383,8 +3389,8 @@ importers:
         specifier: 'catalog:'
         version: 1.43.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/common/effect-atom-solid:
     dependencies:
@@ -3396,8 +3402,8 @@ importers:
         specifier: 'catalog:'
         version: 0.8.10(solid-js@1.9.11)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
@@ -3408,8 +3414,8 @@ importers:
   packages/common/effect-zod:
     dependencies:
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       zod:
         specifier: 'catalog:'
         version: 4.3.6
@@ -3495,8 +3501,8 @@ importers:
         specifier: workspace:*
         version: link:../../../vendor/hypercore
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -3543,8 +3549,8 @@ importers:
         version: link:../util
     devDependencies:
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       fast-check:
         specifier: 'catalog:'
         version: 3.23.2
@@ -3631,8 +3637,8 @@ importers:
         specifier: 'catalog:'
         version: 2.0.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/common/lock-file:
     dependencies:
@@ -3839,17 +3845,17 @@ importers:
         version: 0.2.1
       '@effect/sql-sqlite-bun':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@effect/sql-sqlite-wasm':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(@effect/wa-sqlite@0.1.2)(effect@4.0.0-rc.117)
+        version: 4.0.0(@effect/wa-sqlite@0.1.2)(effect@4.0.0)
       '@effect/wa-sqlite':
         specifier: 'catalog:'
         version: 0.1.2
@@ -3988,7 +3994,7 @@ importers:
         version: 1.1.2
       '@tauri-apps/plugin-dialog':
         specifier: 'catalog:'
-        version: 2.8.1
+        version: 2.8.0
       '@tauri-apps/plugin-fs':
         specifier: 'catalog:'
         version: 2.6.0
@@ -4072,10 +4078,10 @@ importers:
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -4117,10 +4123,10 @@ importers:
         version: link:../../../common/util
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@cloudflare/vitest-pool-workers':
         specifier: 'catalog:'
@@ -4130,7 +4136,7 @@ importers:
         version: link:../assistant
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -4177,8 +4183,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/assistant':
         specifier: workspace:*
@@ -4188,7 +4194,7 @@ importers:
         version: link:../../../common/errors
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -4224,13 +4230,13 @@ importers:
         version: link:../../../common/util
       '@effect/ai-anthropic':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/ai-openai':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/platform-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       parsimmon:
         specifier: 'catalog:'
         version: 1.18.1
@@ -4254,8 +4260,8 @@ importers:
         specifier: '>=5.2.2'
         version: 8.0.3
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       json-stable-stringify:
         specifier: 'catalog:'
         version: 1.3.0
@@ -4336,8 +4342,8 @@ importers:
         specifier: 'catalog:'
         version: 4.6.7
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/compute/assistant-e2e:
     dependencies:
@@ -4408,12 +4414,24 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
     devDependencies:
+      '@dxos/log':
+        specifier: workspace:*
+        version: link:../../../common/log
+      '@dxos/perf-harness':
+        specifier: workspace:*
+        version: link:../../../e2e/perf-harness
+      '@dxos/test-utils':
+        specifier: workspace:*
+        version: link:../../../common/test-utils
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.63.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -4572,8 +4590,8 @@ importers:
         specifier: 'catalog:'
         version: 1.4.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       evalite:
         specifier: ^0.19.0
         version: 0.19.0
@@ -4660,8 +4678,8 @@ importers:
         specifier: workspace:*
         version: link:../../../ui/ui-theme
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -4712,8 +4730,8 @@ importers:
         specifier: workspace:*
         version: link:../../echo/echo-client
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -4754,8 +4772,8 @@ importers:
         specifier: workspace:*
         version: link:../../../../vendor/hyperformula
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -4819,10 +4837,10 @@ importers:
         version: link:../../../common/util
       '@effect/ai-anthropic':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       jsonata:
         specifier: 'catalog:'
         version: 2.1.0
@@ -4832,7 +4850,7 @@ importers:
         version: link:../../../sdk/types
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -4888,8 +4906,8 @@ importers:
         specifier: 'catalog:'
         version: 4.1.2
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       jsonpath-plus:
         specifier: 'catalog:'
         version: 10.4.0
@@ -4921,13 +4939,13 @@ importers:
     devDependencies:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -4983,8 +5001,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       esbuild:
         specifier: '>=0.28.0'
         version: 0.28.1
@@ -5030,8 +5048,8 @@ importers:
         specifier: workspace:*
         version: link:../../echo/echo-client
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/compute/extractor-lib:
     dependencies:
@@ -5055,8 +5073,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/effect
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -5097,8 +5115,8 @@ importers:
         specifier: workspace:*
         version: link:../../protocols
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@cloudflare/workers-types':
         specifier: 'catalog:'
@@ -5167,8 +5185,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/compute-runtime':
         specifier: workspace:*
@@ -5196,8 +5214,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/effect
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -5220,8 +5238,8 @@ importers:
         specifier: '>=1.26.0'
         version: 1.27.1(@cfworker/json-schema@4.1.1)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/compute/mcp-server:
     dependencies:
@@ -5244,8 +5262,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/effect':
         specifier: workspace:*
@@ -5258,8 +5276,8 @@ importers:
         version: link:../ai
     devDependencies:
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/compute/operation:
     dependencies:
@@ -5284,10 +5302,10 @@ importers:
         version: link:../../../common/errors
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -5311,8 +5329,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/errors
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -5358,13 +5376,13 @@ importers:
         version: link:../../../common/effect
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -5421,8 +5439,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/effect
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       hyparquet:
         specifier: 'catalog:'
         version: 1.26.2
@@ -5477,10 +5495,10 @@ importers:
     devDependencies:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@types/n3':
         specifier: 'catalog:'
         version: 1.26.1
@@ -5488,8 +5506,8 @@ importers:
         specifier: 'catalog:'
         version: 3.1.12
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -5537,8 +5555,8 @@ importers:
         specifier: workspace:*
         version: link:../../echo/echo-client
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/compute/progress:
     devDependencies:
@@ -5598,8 +5616,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       semver:
         specifier: 'catalog:'
         version: 7.8.1
@@ -5671,8 +5689,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       eventemitter3:
         specifier: 'catalog:'
         version: 5.0.1
@@ -5731,6 +5749,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../../common/log
+      '@dxos/perf-harness':
+        specifier: workspace:*
+        version: link:../../../e2e/perf-harness
       '@dxos/protocols':
         specifier: workspace:*
         version: link:../../protocols
@@ -5753,8 +5774,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/echo/echo-doc:
     dependencies:
@@ -5777,8 +5798,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/echo/echo-generator:
     dependencies:
@@ -5807,8 +5828,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
@@ -5896,13 +5917,13 @@ importers:
         version: link:../../../common/util
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       bs58check:
         specifier: 'catalog:'
         version: 4.0.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       fast-deep-equal:
         specifier: 'catalog:'
         version: 3.1.3
@@ -5929,8 +5950,8 @@ importers:
         specifier: 'catalog:'
         version: 0.56.1
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -5966,8 +5987,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/echo/echo-query:
     dependencies:
@@ -6001,7 +6022,7 @@ importers:
         version: link:../echo
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -6074,18 +6095,18 @@ importers:
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../../common/effect
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
 
   packages/core/echo/feed:
     dependencies:
@@ -6121,14 +6142,14 @@ importers:
         version: link:../../../common/util
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
 
   packages/core/echo/index-core:
     dependencies:
@@ -6154,12 +6175,12 @@ importers:
         specifier: workspace:*
         version: link:../../../common/sql-sqlite
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
 
   packages/core/halo/credentials:
     dependencies:
@@ -6221,8 +6242,8 @@ importers:
         specifier: workspace:*
         version: link:../../protocols
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/halo/halo-adapter-client:
     dependencies:
@@ -6263,8 +6284,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/halo/halo-e2e:
     dependencies:
@@ -6281,12 +6302,12 @@ importers:
         specifier: workspace:*
         version: link:../../../common/keys
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
 
   packages/core/halo/halo-react:
     dependencies:
@@ -6298,7 +6319,7 @@ importers:
         version: link:../../../common/keys
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
     devDependencies:
       react:
         specifier: ~19.2.7
@@ -6343,8 +6364,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/core/mesh/edge-client:
     dependencies:
@@ -6440,8 +6461,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/credentials':
         specifier: workspace:*
@@ -6492,15 +6513,15 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       node-datachannel:
         specifier: 'catalog:'
         version: 0.32.3
     devDependencies:
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       fetch-mock:
         specifier: 'catalog:'
         version: 11.1.0(node-fetch@2.7.0)
@@ -6538,8 +6559,8 @@ importers:
         specifier: workspace:*
         version: link:../../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/effect':
         specifier: workspace:*
@@ -6807,8 +6828,8 @@ importers:
         specifier: 'catalog:'
         version: 2.11.0(@bufbuild/protobuf@2.11.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/devtools/cli:
     dependencies:
@@ -6979,7 +7000,7 @@ importers:
         version: link:../../common/util
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@lezer/common':
         specifier: ^1.5.2
         version: 1.5.2
@@ -6993,8 +7014,8 @@ importers:
         specifier: 'catalog:'
         version: 0.1.61(solid-js@1.9.11)(web-tree-sitter@0.25.10)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       esbuild:
         specifier: '>=0.28.0'
         version: 0.28.1
@@ -7082,14 +7103,14 @@ importers:
         version: link:../../common/util
       '@effect/platform-bun':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       get-port-please:
         specifier: 'catalog:'
         version: 3.1.1
     devDependencies:
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -7212,7 +7233,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@robloche/chartjs-plugin-streaming':
         specifier: 'catalog:'
         version: 3.1.0(chart.js@4.5.0)
@@ -7235,8 +7256,8 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       localforage:
         specifier: 'catalog:'
         version: 1.10.0
@@ -7480,8 +7501,8 @@ importers:
         specifier: 'catalog:'
         version: 5.0.0(chart.js@4.5.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       esbuild:
         specifier: '>=0.28.0'
         version: 0.28.1
@@ -7709,8 +7730,8 @@ importers:
         version: link:../../common/log
     devDependencies:
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -7927,16 +7948,16 @@ importers:
         version: link:../../common/util
       '@effect/ai-anthropic':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/ai-openai':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-chess':
         specifier: workspace:*
@@ -8057,10 +8078,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/client':
         specifier: workspace:*
@@ -8120,8 +8141,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -8232,8 +8253,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/agent-runtime':
         specifier: workspace:*
@@ -8323,8 +8344,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/echo-react':
         specifier: workspace:*
@@ -8412,10 +8433,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-preview':
         specifier: workspace:*
@@ -8520,8 +8541,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-client':
         specifier: workspace:*
@@ -8612,10 +8633,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -8727,7 +8748,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@peermetrics/webrtc-stats':
         specifier: 'catalog:'
         version: 5.7.1
@@ -8757,8 +8778,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -8800,10 +8821,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-client':
         specifier: workspace:*
@@ -8885,13 +8906,13 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/agent-runtime':
         specifier: workspace:*
@@ -8984,8 +9005,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/agent-runtime':
         specifier: workspace:*
@@ -9048,8 +9069,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/assistant':
         specifier: workspace:*
@@ -9166,8 +9187,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       yaml:
         specifier: 'catalog:'
         version: 2.8.2
@@ -9183,7 +9204,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))
@@ -9233,8 +9254,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       vite:
         specifier: '>=8.2.1'
@@ -9336,8 +9357,8 @@ importers:
         specifier: 'catalog:'
         version: 1.6.2
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       esbuild-wasm:
         specifier: 'catalog:'
         version: 0.28.0
@@ -9350,7 +9371,7 @@ importers:
         version: link:../plugin-testing
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -9439,8 +9460,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       node-html-parser:
         specifier: 'catalog:'
         version: 7.1.0
@@ -9474,7 +9495,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -9512,8 +9533,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -9573,8 +9594,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -9711,7 +9732,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -9722,8 +9743,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -9821,8 +9842,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -9844,7 +9865,7 @@ importers:
         version: link:../plugin-testing
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -9903,15 +9924,15 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/random':
         specifier: workspace:*
         version: link:../../common/random
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -10091,7 +10112,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -10131,7 +10152,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -10142,8 +10163,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -10230,10 +10251,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@tauri-apps/plugin-deep-link':
         specifier: 'catalog:'
-        version: 2.6.1
+        version: 2.6.0
       immer:
         specifier: 'catalog:'
         version: 10.1.1
@@ -10278,8 +10299,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -10326,8 +10347,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       vitest:
         specifier: 'catalog:'
@@ -10428,7 +10449,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -10439,8 +10460,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -10521,10 +10542,10 @@ importers:
         version: link:../../common/util
       dfx:
         specifier: 'catalog:'
-        version: 1.0.15(effect@4.0.0-rc.117)
+        version: 1.0.15(patch_hash=4897179d9f91b09100d74728fdca0db2f7d33a64e06f2b3dbd2fa4fb061b5325)(effect@4.0.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/effect':
         specifier: workspace:*
@@ -10534,7 +10555,7 @@ importers:
         version: link:../plugin-testing
       '@effect/sql-sqlite-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -10590,8 +10611,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@types/react':
         specifier: ~19.2.17
@@ -10636,8 +10657,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@types/react':
         specifier: ~19.2.17
@@ -10692,13 +10713,13 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@excalidraw/excalidraw':
         specifier: 'catalog:'
         version: 0.18.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/agent-runtime':
         specifier: workspace:*
@@ -10723,7 +10744,7 @@ importers:
         version: link:../../ui/react-ui-form
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -10801,7 +10822,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@observablehq/plot':
         specifier: 'catalog:'
         version: 0.6.11
@@ -10809,8 +10830,8 @@ importers:
         specifier: 'catalog:'
         version: 7.9.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       force-graph:
         specifier: 'catalog:'
         version: 1.49.5
@@ -10939,8 +10960,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       pdfjs-dist:
         specifier: 'catalog:'
         version: 6.2.108
@@ -11052,13 +11073,13 @@ importers:
         version: 2.11.1
       '@tauri-apps/plugin-dialog':
         specifier: 'catalog:'
-        version: 2.8.1
+        version: 2.8.0
       '@tauri-apps/plugin-fs':
         specifier: 'catalog:'
         version: 2.6.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       localforage:
         specifier: 'catalog:'
         version: 1.10.0
@@ -11103,8 +11124,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/echo-react':
         specifier: workspace:*
@@ -11129,7 +11150,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -11188,8 +11209,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/ui-theme':
         specifier: workspace:*
@@ -11321,8 +11342,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -11450,10 +11471,10 @@ importers:
         version: link:../../common/random
       '@effect/opentelemetry':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(@opentelemetry/api-logs@0.222.0)(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.222.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-node@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-web@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(effect@4.0.0-rc.117)
+        version: 4.0.0(@opentelemetry/api-logs@0.222.0)(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.222.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-node@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-web@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(effect@4.0.0)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@opentelemetry/api':
         specifier: 'catalog:'
         version: 1.9.1
@@ -11473,8 +11494,8 @@ importers:
         specifier: 'catalog:'
         version: 3.4.6
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       mailparser:
         specifier: 'catalog:'
         version: 3.9.15
@@ -11514,7 +11535,7 @@ importers:
     devDependencies:
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@types/react':
         specifier: ~19.2.17
         version: 19.2.17
@@ -11522,8 +11543,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -11564,8 +11585,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -11619,8 +11640,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@types/react':
         specifier: ~19.2.17
@@ -11704,8 +11725,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/compute-runtime':
         specifier: workspace:*
@@ -11774,8 +11795,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/plugins/plugin-illustrator:
     dependencies:
@@ -11837,8 +11858,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@codemirror/language':
         specifier: 'catalog:'
@@ -12043,7 +12064,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -12080,7 +12101,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -12091,8 +12112,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -12133,8 +12154,8 @@ importers:
         specifier: workspace:*
         version: link:../../ui/react-ui
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -12229,10 +12250,10 @@ importers:
         version: link:../../common/random
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -12292,10 +12313,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/keys':
         specifier: workspace:*
@@ -12388,15 +12409,15 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -12432,13 +12453,13 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@tauri-apps/plugin-http':
         specifier: 'catalog:'
         version: 2.8.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@storybook/react-vite':
         specifier: 'catalog:'
@@ -12511,10 +12532,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       foliate-js:
         specifier: 'catalog:'
         version: 1.0.1
@@ -12577,8 +12598,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -12672,10 +12693,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -12790,7 +12811,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       defuddle:
         specifier: 'catalog:'
         version: 0.18.1(canvas@3.2.0)
@@ -12844,8 +12865,8 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -12921,7 +12942,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -12932,8 +12953,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -12975,8 +12996,8 @@ importers:
         version: 1.9.11
     devDependencies:
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/plugins/plugin-markdown:
     dependencies:
@@ -13099,7 +13120,7 @@ importers:
         version: link:../../sdk/versioning
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       react-dropzone:
         specifier: 'catalog:'
         version: 14.2.3(react@19.2.7)
@@ -13141,8 +13162,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -13225,8 +13246,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -13314,8 +13335,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -13378,7 +13399,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -13399,8 +13420,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -13436,7 +13457,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.1
@@ -13463,8 +13484,8 @@ importers:
         specifier: ~19.2.17
         version: 19.2.17
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -13555,7 +13576,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -13566,8 +13587,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -13617,8 +13638,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/errors':
         specifier: workspace:*
@@ -13637,7 +13658,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -13799,8 +13820,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -13826,8 +13847,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/plugins/plugin-payments:
     dependencies:
@@ -13868,15 +13889,15 @@ importers:
         specifier: 'catalog:'
         version: 2.17.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       viem:
         specifier: 'catalog:'
         version: 2.54.1(zod@4.3.6)
     devDependencies:
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -13953,8 +13974,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-inbox':
         specifier: workspace:*
@@ -13979,7 +14000,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -14088,7 +14109,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -14102,8 +14123,8 @@ importers:
         specifier: 'catalog:'
         version: 5.0.3
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -14184,8 +14205,8 @@ importers:
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -14223,8 +14244,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -14347,8 +14368,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/agent-runtime':
         specifier: workspace:*
@@ -14379,7 +14400,7 @@ importers:
         version: link:../../sdk/schema
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -14411,8 +14432,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -14482,10 +14503,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@types/react':
         specifier: ~19.2.17
@@ -14579,7 +14600,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       yaml:
         specifier: 'catalog:'
         version: 2.8.2
@@ -14606,8 +14627,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -14736,7 +14757,7 @@ importers:
         version: link:../../sdk/versioning
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
     devDependencies:
       '@dxos/agent-runtime':
         specifier: workspace:*
@@ -14778,8 +14799,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -14936,7 +14957,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -14947,8 +14968,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -14995,8 +15016,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/plugins/plugin-sample:
     dependencies:
@@ -15058,8 +15079,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-client':
         specifier: workspace:*
@@ -15164,8 +15185,8 @@ importers:
         specifier: 'catalog:'
         version: 2.4.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/agent-runtime':
         specifier: workspace:*
@@ -15181,7 +15202,7 @@ importers:
         version: link:../../sdk/schema
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -15376,7 +15397,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@lezer/common':
         specifier: ^1.5.2
         version: 1.5.2
@@ -15439,8 +15460,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -15543,7 +15564,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -15557,8 +15578,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -15609,10 +15630,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react-resize-detector:
         specifier: 'catalog:'
         version: 11.0.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -15682,8 +15703,8 @@ importers:
         specifier: ~19.2.17
         version: 19.2.17
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -15825,7 +15846,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@lezer/generator':
         specifier: 'catalog:'
         version: 1.8.0
@@ -15839,8 +15860,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -15884,8 +15905,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-client':
         specifier: workspace:*
@@ -15960,8 +15981,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -16127,7 +16148,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       react-drag-drop-files:
         specifier: 'catalog:'
         version: 2.3.8(react-dom@19.2.7(react@19.2.7))(react-is@17.0.2)(react@19.2.7)
@@ -16149,7 +16170,7 @@ importers:
         version: link:../../common/random
       '@effect/platform-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -16160,8 +16181,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -16224,13 +16245,13 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       babylonjs-gltf2interface:
         specifier: 'catalog:'
         version: 7.54.3
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       manifold-3d:
         specifier: 'catalog:'
         version: 3.4.1(esbuild-wasm@0.28.0)
@@ -16297,7 +16318,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.1
@@ -16315,8 +16336,8 @@ importers:
         specifier: ~19.2.17
         version: 19.2.17
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -16358,10 +16379,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/echo-react':
         specifier: workspace:*
@@ -16436,8 +16457,8 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -16510,13 +16531,13 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@tauri-apps/api':
         specifier: 'catalog:'
         version: 2.11.1
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -16634,10 +16655,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/compute-runtime':
         specifier: workspace:*
@@ -16770,13 +16791,13 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       html-to-image:
         specifier: 'catalog:'
         version: 1.11.13
@@ -16883,7 +16904,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -16891,8 +16912,8 @@ importers:
         specifier: ~19.2.17
         version: 19.2.17
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -17037,7 +17058,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -17048,8 +17069,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -17084,8 +17105,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -17154,8 +17175,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       seedrandom:
         specifier: 'catalog:'
         version: 3.0.5
@@ -17222,7 +17243,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -17237,8 +17258,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -17274,10 +17295,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -17362,7 +17383,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
     devDependencies:
       '@dxos/echo-react':
         specifier: workspace:*
@@ -17398,8 +17419,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -17476,8 +17497,8 @@ importers:
         specifier: 'catalog:'
         version: 3.0.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       lodash.defaultsdeep:
         specifier: 'catalog:'
         version: 4.6.1
@@ -17502,10 +17523,10 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -17615,8 +17636,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@codemirror/state':
         specifier: 'catalog:'
@@ -17653,7 +17674,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -17694,8 +17715,8 @@ importers:
         specifier: 'catalog:'
         version: 2.17.2
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-testing':
         specifier: workspace:*
@@ -17770,8 +17791,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -17885,8 +17906,8 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/markdown':
         specifier: workspace:*
@@ -17964,8 +17985,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -18000,6 +18021,9 @@ importers:
       '@dxos/invariant':
         specifier: workspace:*
         version: link:../../common/invariant
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
@@ -18016,8 +18040,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       vitest:
         specifier: 'catalog:'
@@ -18104,8 +18128,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-client':
         specifier: workspace:*
@@ -18171,8 +18195,8 @@ importers:
         specifier: 'catalog:'
         version: 9.5.0(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(three@0.178.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       three:
         specifier: 'catalog:'
         version: 0.178.0
@@ -18268,8 +18292,8 @@ importers:
         specifier: 'catalog:'
         version: 2.2.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       idb-keyval:
         specifier: 'catalog:'
         version: 6.2.1
@@ -18350,8 +18374,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/plugin-client':
         specifier: workspace:*
@@ -18446,8 +18470,8 @@ importers:
         specifier: ~19.2.17
         version: 19.2.17
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -18470,8 +18494,8 @@ importers:
         specifier: '>=1.26.0'
         version: 1.27.1(@cfworker/json-schema@4.1.1)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       zod:
         specifier: 'catalog:'
         version: 4.3.6
@@ -18501,8 +18525,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@types/node':
         specifier: 22.10.2
@@ -18618,10 +18642,10 @@ importers:
         version: link:../../ui/react-ui-list
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -18635,8 +18659,8 @@ importers:
         specifier: 'catalog:'
         version: 6.0.2
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -18700,7 +18724,7 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -18711,8 +18735,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -18745,8 +18769,8 @@ importers:
         specifier: 'catalog:'
         version: 0.8.10(solid-js@1.9.11)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       solid-js:
         specifier: 'catalog:'
         version: 1.9.11
@@ -18876,7 +18900,7 @@ importers:
         version: link:../../core/echo/echo-client
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -18884,8 +18908,8 @@ importers:
         specifier: ~19.2.17
         version: 19.2.17
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -18996,10 +19020,10 @@ importers:
         version: link:../worker-framework
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       jwt-decode:
         specifier: 'catalog:'
         version: 4.0.0
@@ -19127,13 +19151,13 @@ importers:
         version: link:../worker-framework
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       base-x:
         specifier: 'catalog:'
         version: 3.0.11
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/sdk/client-services:
     dependencies:
@@ -19267,8 +19291,8 @@ importers:
         specifier: 'catalog:'
         version: 1.2.2
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       platform:
         specifier: 'catalog:'
         version: 1.3.6
@@ -19278,7 +19302,7 @@ importers:
         version: link:../../common/test-utils
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@types/platform':
         specifier: 'catalog:'
         version: 1.3.5
@@ -19316,8 +19340,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       localforage:
         specifier: 'catalog:'
         version: 1.10.0
@@ -19339,7 +19363,7 @@ importers:
         version: link:../../common/effect
       '@effect/platform-node':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       '@types/lodash.defaultsdeep':
         specifier: 'catalog:'
         version: 4.6.7
@@ -19435,8 +19459,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
 
   packages/sdk/observability:
     dependencies:
@@ -19715,8 +19739,8 @@ importers:
         specifier: 'catalog:'
         version: 3.6.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@automerge/automerge':
         specifier: 3.5.0
@@ -19862,8 +19886,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/client-protocol':
         specifier: workspace:*
@@ -19873,7 +19897,7 @@ importers:
         version: link:../../common/effect
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       vite:
         specifier: '>=8.2.1'
         version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
@@ -19896,8 +19920,8 @@ importers:
         specifier: '>=5.2.2'
         version: 8.0.3
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/typings':
         specifier: workspace:*
@@ -19934,10 +19958,10 @@ importers:
         version: link:../../common/util
       '@effect/platform-browser':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)
+        version: 4.0.0(effect@4.0.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/node-std':
         specifier: workspace:*
@@ -20078,8 +20102,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -20093,6 +20117,9 @@ importers:
       '@dxos/assistant-toolkit':
         specifier: workspace:*
         version: link:../../core/compute/assistant-toolkit
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/compute-runtime
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
@@ -20292,8 +20319,8 @@ importers:
         specifier: 'catalog:'
         version: 4.1.2
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -20441,10 +20468,10 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -20567,8 +20594,8 @@ importers:
         specifier: ^1.6.3
         version: 1.6.3
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       prosemirror-commands:
         specifier: 'catalog:'
         version: 1.7.1
@@ -20646,8 +20673,8 @@ importers:
         specifier: workspace:*
         version: link:../storybook-testing
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -20691,6 +20718,9 @@ importers:
       '@dxos/plugin-tasks':
         specifier: workspace:*
         version: link:../../plugins/plugin-tasks
+      '@dxos/react-ui-attention':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-attention
       '@dxos/react-ui-form':
         specifier: workspace:*
         version: link:../../ui/react-ui-form
@@ -20810,10 +20840,10 @@ importers:
         version: link:../../ui/ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -20952,7 +20982,7 @@ importers:
         version: link:../../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       alea:
         specifier: 'catalog:'
         version: 1.0.1
@@ -21084,7 +21114,7 @@ importers:
         version: link:../ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@phosphor-icons/react':
         specifier: 'catalog:'
         version: 2.1.10(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -21104,8 +21134,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -21155,8 +21185,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/effect':
         specifier: workspace:*
@@ -21208,10 +21238,10 @@ importers:
         version: link:../ui-types
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/react-ui':
         specifier: workspace:*
@@ -21305,8 +21335,8 @@ importers:
         specifier: 'catalog:'
         version: 12.8.1(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/ui-theme':
         specifier: workspace:*
@@ -21410,7 +21440,7 @@ importers:
         version: link:../ui-types
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       bind-event-listener:
         specifier: 'catalog:'
         version: 3.0.0
@@ -21449,8 +21479,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -21559,7 +21589,7 @@ importers:
         version: link:../ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@playwright/test':
         specifier: 'catalog:'
         version: 1.63.0
@@ -21573,8 +21603,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -21649,7 +21679,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       bind-event-listener:
         specifier: 'catalog:'
         version: 3.0.0
@@ -21697,8 +21727,8 @@ importers:
         specifier: 'catalog:'
         version: 12.8.1(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -21755,8 +21785,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -21819,8 +21849,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -21879,8 +21909,8 @@ importers:
         specifier: '>=3.2.4'
         version: 3.3.1
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       json5:
         specifier: 'catalog:'
         version: 2.2.3
@@ -21914,7 +21944,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -22032,8 +22062,8 @@ importers:
         specifier: 'catalog:'
         version: 12.8.1(@types/react@19.2.17)(immer@10.1.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/react-ui-editor':
         specifier: workspace:*
@@ -22195,7 +22225,7 @@ importers:
         version: link:../ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -22209,8 +22239,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       happy-dom:
         specifier: 'catalog:'
         version: 20.7.0
@@ -22280,7 +22310,7 @@ importers:
         version: link:../ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -22455,7 +22485,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -22491,8 +22521,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -22525,7 +22555,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       chess.js:
         specifier: 'catalog:'
         version: 1.4.0
@@ -22696,7 +22726,7 @@ importers:
         version: link:../ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -22814,8 +22844,8 @@ importers:
         specifier: '>=1.26.0'
         version: 1.27.1(@cfworker/json-schema@4.1.1)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@storybook/react-vite':
         specifier: 'catalog:'
@@ -22879,7 +22909,7 @@ importers:
         version: link:../ui-types
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
     devDependencies:
       '@dxos/echo':
         specifier: workspace:*
@@ -22906,8 +22936,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -22960,8 +22990,8 @@ importers:
         specifier: workspace:*
         version: link:../../common/util
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react-markdown:
         specifier: 'catalog:'
         version: 10.1.0(@types/react@19.2.17)(react@19.2.7)
@@ -22980,7 +23010,7 @@ importers:
         version: link:../../common/random
       '@effect/vitest':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -23055,8 +23085,8 @@ importers:
         specifier: workspace:*
         version: link:../ui-theme
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -23112,7 +23142,7 @@ importers:
         version: link:../ui-theme
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -23126,8 +23156,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -23224,7 +23254,7 @@ importers:
         version: link:../../common/test-utils
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -23238,8 +23268,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -23483,7 +23513,7 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
     devDependencies:
       '@dxos/echo-react':
         specifier: workspace:*
@@ -23525,8 +23555,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -23580,7 +23610,7 @@ importers:
         version: link:../ui-types
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
@@ -23604,8 +23634,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -23640,8 +23670,8 @@ importers:
         specifier: 'catalog:'
         version: 5.5.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@storybook/react-vite':
         specifier: 'catalog:'
@@ -23787,13 +23817,13 @@ importers:
         version: link:../../common/util
       '@effect/atom-react':
         specifier: 'catalog:'
-        version: 4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
       date-fns:
         specifier: 'catalog:'
         version: 3.6.0
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@dxos/echo-client':
         specifier: workspace:*
@@ -23881,8 +23911,8 @@ importers:
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -23902,8 +23932,8 @@ importers:
         specifier: workspace:*
         version: link:../ui-theme
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
     devDependencies:
       '@storybook/react-vite':
         specifier: 'catalog:'
@@ -24143,8 +24173,8 @@ importers:
         specifier: 'catalog:'
         version: 4.7.7
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       happy-dom:
         specifier: 'catalog:'
         version: 20.7.0
@@ -24249,8 +24279,8 @@ importers:
         specifier: 'catalog:'
         version: 1.43.3
       effect:
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117
+        specifier: 4.0.0
+        version: 4.0.0
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -27164,20 +27194,20 @@ packages:
   '@dxos/wa-sqlite@0.2.1':
     resolution: {integrity: sha512-RVktTCzwJ1ix1MP/LWDjpO1HOOP0JpnAtjB/Zp/csbrlBEhhYYpwIlgDJzCi1Ri4cWHOo04iy+YtlnjfshM1Zw==}
 
-  '@effect/ai-anthropic@4.0.0-rc.117':
-    resolution: {integrity: sha512-UENH5wxqQud9NLlX2WqauiWuJ+Q9dBW2bOxMOsUJalZ0YdjbcK3LgNTZjrOR+0jPGTlBR9OIgF9qqFPZg6J0AA==}
+  '@effect/ai-anthropic@4.0.0':
+    resolution: {integrity: sha512-/xZYmvRE9yDLKiz1pOIx0CVaB+o0zdJd6sTG9KQbFSkM+Ule0U/6yeN+Q6KD9I7Z73t3WxhK9Xmg1eqU6+IVmQ==}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/ai-openai@4.0.0-rc.117':
-    resolution: {integrity: sha512-EGQtI0Y8B/PgEQ3ObZ8RYfIwTL5f5gXegO386aoskR4S5XrDr42mJk+7gJ/86SQ1mc38eYD4zEHz8f4Q3RkUgg==}
+  '@effect/ai-openai@4.0.0':
+    resolution: {integrity: sha512-WjLvyFW4urzXkNy+Ki1YQE912yOxMYHps5gbiPfiUDghuHz0hfA+jzprGL8vj4fTwZI56TIwkviKRqfQNwka7w==}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/atom-react@4.0.0-rc.117':
-    resolution: {integrity: sha512-e6swZzC+2sPY9LfICB1YQBdn6DvnNmS1p4KwppzfHjT9lv+fyDVI9IxymUQ/Oduc58rOV/4jBhZv1tu7vgx47w==}
+  '@effect/atom-react@4.0.0':
+    resolution: {integrity: sha512-VPP2oOjj56iwOpL5aIGbu7Qhb4+1sFNdU16aI5of3JqToqWWX9eJPBfeiPyQ1eTYof1hnNX1auyRiTORSfLT6g==}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
       react: ~19.2.7
       scheduler: '>=0.25.0 <0.28.0'
 
@@ -27185,8 +27215,8 @@ packages:
     resolution: {integrity: sha512-g1OmRBZF5chbW9QMNoirPo5Bb4zzU2HfP88tR7/VSZEUxHJ1/qVb8AQ0kUh2ggctLH1I715yCwP4gkw56PTjpQ==}
     hasBin: true
 
-  '@effect/opentelemetry@4.0.0-rc.117':
-    resolution: {integrity: sha512-IWAn2rU/RZLStkXfcdF1nGxcKQ7kbHct7N98T/5yOmSYiXvD8ZIxsGZhuAcRPPjc0NbNU2Ay8DZLPesyhJhUgA==}
+  '@effect/opentelemetry@4.0.0':
+    resolution: {integrity: sha512-vXVhqlcADHtmKlw2gIqRRlXFve4ms4JJ5ykAqzNe37QQ/5N5A5gJ9VOXkMBORHZC5O4gdHZwxhAzGZb0zvFf/Q==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       '@opentelemetry/api': '>=1.9.0 <2.0.0'
@@ -27198,7 +27228,7 @@ packages:
       '@opentelemetry/sdk-trace-node': '>=2.0.0 <3.0.0'
       '@opentelemetry/sdk-trace-web': '>=2.0.0 <3.0.0'
       '@opentelemetry/semantic-conventions': '>=1.33.0 <2.0.0'
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
     peerDependenciesMeta:
       '@opentelemetry/api':
         optional: true
@@ -27217,44 +27247,44 @@ packages:
       '@opentelemetry/sdk-trace-web':
         optional: true
 
-  '@effect/platform-browser@4.0.0-rc.117':
-    resolution: {integrity: sha512-0ztUOWemk+MiEyPOXdijoghlzsvhie6tUpNPLBhDG+BRAPDaLjAIWf0QxSD7pg/Ly37FSnPb0R5qD+/h3C18Wg==}
+  '@effect/platform-browser@4.0.0':
+    resolution: {integrity: sha512-OHo7EPpF3RVPiI+mjoU9yd05LdCdKPjzDXqs5wRgF9CsdVvwN76B0zgt54DxPUcvMYri1tVJOtLCVnK0tRkNQQ==}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/platform-bun@4.0.0-rc.117':
-    resolution: {integrity: sha512-jyvoxPjT9562z5Tc2gib9GB16jcgh43jhpsuNQxs9B8WJ7RB2doPBQdrYLSSWRodGPLJBKJGzToRRbJiaGblsw==}
+  '@effect/platform-bun@4.0.0':
+    resolution: {integrity: sha512-g9O41Sub/+JKfLjvBNEoqR1Pg6wtc2bbYzv7Kw8YsMihbt/ypCn7ZoydEXaHvTTUvbVrXOQbVFlfplyo84Clug==}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/platform-node-shared@4.0.0-rc.117':
-    resolution: {integrity: sha512-GyRkEfLBG49MwJe+/XDPiXYcQ44RA9p2z0AurlsWhR1cd1PqOUMEZU1pORL+/R5hR8aH6ZuqoJYD8lAc6h+wlA==}
+  '@effect/platform-node-shared@4.0.0':
+    resolution: {integrity: sha512-VBXHJU9UXVZPdQGGDRjGXpo+TpOzRwZuMrdKAtIxi1qwcRftmacZ1zTgIrzBa0Z2RA2KVkoOecQUsTlt/nJZhw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/platform-node@4.0.0-rc.117':
-    resolution: {integrity: sha512-WbPcvQDkqXFnCeG6LohJ9eVNapCDhZbCpezhYKxm0IsZEk7swakRh7RkC1t2CXzd3hGmszTv2k9e/pXyZuL+wQ==}
+  '@effect/platform-node@4.0.0':
+    resolution: {integrity: sha512-/L+4MUbl8FejPKLHLROYSOebvHnfixkP8KiblSD/DE5uH5xENZBHaux4nH6XMnRP+lr8ajpEJFS8sUrmmxFJeQ==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
       redis: '>=5.0.0 <7.0.0'
 
-  '@effect/sql-sqlite-bun@4.0.0-rc.117':
-    resolution: {integrity: sha512-UjgkEmR+s5Rc870sDsDzu/8AA5KQqcBeq5qgH6AFe5OYfv3GCMfoQTkIvnl+Q3M5KaZosYgwwEy9uij/J2HOJw==}
+  '@effect/sql-sqlite-bun@4.0.0':
+    resolution: {integrity: sha512-tUDqqNq4lZMLQkp8YDQej2uuy8BBjmqfMXcJU/KOmrK/WWbzudC8oabZ1TEs1lLSuKzhBEPhnE0cRtAOYe05ew==}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/sql-sqlite-node@4.0.0-rc.117':
-    resolution: {integrity: sha512-/u0ShTwVKltYZPpulckLV6ZUkMjSr/Kc+bpipX1Ac/OyLtZH6ScOL2AeBTLDiIq5ATnvXABzFSheydzoudBxgQ==}
+  '@effect/sql-sqlite-node@4.0.0':
+    resolution: {integrity: sha512-xyUSLY7v55iMgGxrjFrTo5ngixgQ3jLmOQ+AX8CCazO/caxuMM0oq8zb974FAcvQHRrpMEWU7Vnoo+rxct7PAQ==}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/sql-sqlite-wasm@4.0.0-rc.117':
-    resolution: {integrity: sha512-kbqNoXaEYZRve/QnLZSyoFXhq/qzprJHC76mZuRMDfSrhpAp0CP26qW1C9vRhIqr2HISSA/c3CAmsybmE5t4/g==}
+  '@effect/sql-sqlite-wasm@4.0.0':
+    resolution: {integrity: sha512-kYnf0wSDrm1BHnQJl9GGkJPtX1UGmZuvHPQPxvyvumTT7uwp3zV47CVdBR/YOPMVRdgsnIHFaPDtk3O32/QbAw==}
     peerDependencies:
       '@effect/wa-sqlite': '>=0.1.2 <0.2.0'
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
   '@effect/tsgo-darwin-arm64@0.36.5':
     resolution: {integrity: sha512-+JPS65Ekod5NS41Kg9OIyuUsygNcSw5/4Y+UNbY6Wob6dvP+CkEa51pGBAmHKQp3Z/D3g/A9GNE66ndu9kz8dw==}
@@ -27295,10 +27325,10 @@ packages:
     resolution: {integrity: sha512-BHxVjeRK1/XlqYHWXkbT4W9JpOrT3sNA2wrfwQPBTojD5OSyxI2TUIltobYhWudyfuCrn770qP6uOpDjdrmghA==}
     hasBin: true
 
-  '@effect/vitest@4.0.0-rc.117':
-    resolution: {integrity: sha512-jJg9M7T3OhTcvoD9Zi28S5+0H+axlSHAYjXM8TYeLJy/FVlPe0B/Vc3ZfaqUF0rwkfQ6ziyCdjiBS46+182H1Q==}
+  '@effect/vitest@4.0.0':
+    resolution: {integrity: sha512-kGElCPFGtP+CgMCwV/HjJWqtE3zYo6I1+8MSA54l+EI24lPU9p2Efa+TBp1jfkg9j711KKzEqgSAy3VzTsb76Q==}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
       vitest: '>=5.0.0 <6.0.0'
 
   '@effect/wa-sqlite@0.1.2':
@@ -31928,8 +31958,8 @@ packages:
   '@tauri-apps/api@2.11.1':
     resolution: {integrity: sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA==}
 
-  '@tauri-apps/api@2.12.1':
-    resolution: {integrity: sha512-DeyFHa3wynpyoqTDikDEDGTJIq4LQ5USfolQGRmGIWT6JMADyxZBTDa5cAdT3tDg73rUXufPaCwN7aXBos4OnQ==}
+  '@tauri-apps/api@2.12.0':
+    resolution: {integrity: sha512-fUSxFX8VABYe9W9K5ROdEaKVkNUFRcMSRofjruvaxztXA+I0XnQHcYHF8m/a6iExRUxsUf0HsFWhPBuH9IgzJw==}
 
   '@tauri-apps/cli-darwin-arm64@2.11.4':
     resolution: {integrity: sha512-1ryOF3ZhpZ/nemHV5zVwBQBz9jDGKmKPvWPADOhc83ig0P4bMc2iER4NbC6r9sjeIZ6RVQ4g3RZIYvezhcl4TQ==}
@@ -32007,11 +32037,11 @@ packages:
     engines: {node: '>= 10'}
     hasBin: true
 
-  '@tauri-apps/plugin-deep-link@2.6.1':
-    resolution: {integrity: sha512-yomIOIoiiDwXW3Bgy/V5c4frWo9sfWM9WZQew2s7vr7hXtDdbLDCLzvytIMCjMxbnln9O0oJsTI3XdDd2T9XlA==}
+  '@tauri-apps/plugin-deep-link@2.6.0':
+    resolution: {integrity: sha512-41rOuYUZjxcEz71qLh1k9m7M2W6gQdWfvyYHuoKRTv1NMYQURTw+v2eItCa/efk+5PlEjtkjtTsoJQ2R9U5MCA==}
 
-  '@tauri-apps/plugin-dialog@2.8.1':
-    resolution: {integrity: sha512-/DtE3B62JgpYuWFL5ATXM6KOXUq7pca7cJWOgSqULhZsgyjLk0PWKek1dbRDvhNBW6flNsOfWphsKnb+738Dmw==}
+  '@tauri-apps/plugin-dialog@2.8.0':
+    resolution: {integrity: sha512-HSSD5C8UFE9ijD1wue84F7jjaIReFmj8AAPtS+xyjYRltJafIc4BiWHY7SJ6vbbew6u+YljEJHfyNfy5VwywXg==}
 
   '@tauri-apps/plugin-fs@2.6.0':
     resolution: {integrity: sha512-MhBAZ4rryd+h9fijd/GWDfArqiAeGI0ZNduV4wuRyUVI6wDZ+oDBY7atqtoXKDwlTUVSvpvmWJAY0ehQd/v6Uw==}
@@ -35574,7 +35604,7 @@ packages:
   dfx@1.0.15:
     resolution: {integrity: sha512-LqHeOZLcOJB5D0+BUiy6XkthunolbJoSAAIOjXEiux5P6CzXPbJl0EkaWSDXTbkj/F/pdW9lk1zCC4XAl8yG+w==}
     peerDependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
   did-resolver@4.1.0:
     resolution: {integrity: sha512-S6fWHvCXkZg2IhS4RcVHxwuyVejPR7c+a4Go0xbQ9ps5kILa8viiYQgrM4gfTyeTjJ0ekgJH9gk/BawTpmkbZA==}
@@ -35718,8 +35748,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  effect@4.0.0-rc.117:
-    resolution: {integrity: sha512-UUyi9QiOW4nySFIBM3KnYbNMd9EZliOdKfBcyLD0mPMPheO2fkuXS5y0opjWc9oqzlJxPQICEGm8gGw3kh9j/w==}
+  effect@4.0.0:
+    resolution: {integrity: sha512-ooc1TG5t+FfzgYnFz2ff6BBKyZ7EwBRVXC7c4RhQUAD6/TZ2gTXXMeb4WX7a19ozQo4J73/QW+S00YAIresoMQ==}
 
   ejs@3.1.10:
     resolution: {integrity: sha512-UeJmFfOrAQS8OJWPZ4qtgHyWExa088/MtK5UEyoJGFH67cDEXkZSviOiKRCZ4Xij0zxI3JECgYs3oKx+AizQBA==}
@@ -48662,26 +48692,26 @@ snapshots:
 
   '@dxos/wa-sqlite@0.2.1': {}
 
-  '@effect/ai-anthropic@4.0.0-rc.117(effect@4.0.0-rc.117)':
+  '@effect/ai-anthropic@4.0.0(effect@4.0.0)':
     dependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/ai-openai@4.0.0-rc.117(effect@4.0.0-rc.117)':
+  '@effect/ai-openai@4.0.0(effect@4.0.0)':
     dependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/atom-react@4.0.0-rc.117(effect@4.0.0-rc.117)(react@19.2.7)(scheduler@0.27.0)':
+  '@effect/atom-react@4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)':
     dependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
       react: 19.2.7
       scheduler: 0.27.0
 
   '@effect/language-service@0.87.3': {}
 
-  '@effect/opentelemetry@4.0.0-rc.117(@opentelemetry/api-logs@0.222.0)(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.222.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-node@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-web@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(effect@4.0.0-rc.117)':
+  '@effect/opentelemetry@4.0.0(@opentelemetry/api-logs@0.222.0)(@opentelemetry/api@1.9.1)(@opentelemetry/resources@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-logs@0.222.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-metrics@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-node@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-web@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/semantic-conventions@1.43.0)(effect@4.0.0)':
     dependencies:
       '@opentelemetry/semantic-conventions': 1.43.0
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
       '@opentelemetry/api-logs': 0.222.0
@@ -48692,48 +48722,48 @@ snapshots:
       '@opentelemetry/sdk-trace-node': 2.11.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-web': 2.11.0(@opentelemetry/api@1.9.1)
 
-  '@effect/platform-browser@4.0.0-rc.117(effect@4.0.0-rc.117)':
+  '@effect/platform-browser@4.0.0(effect@4.0.0)':
     dependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/platform-bun@4.0.0-rc.117(effect@4.0.0-rc.117)':
+  '@effect/platform-bun@4.0.0(effect@4.0.0)':
     dependencies:
-      '@effect/platform-node-shared': 4.0.0-rc.117(effect@4.0.0-rc.117)
-      effect: 4.0.0-rc.117
+      '@effect/platform-node-shared': 4.0.0(effect@4.0.0)
+      effect: 4.0.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node-shared@4.0.0-rc.117(effect@4.0.0-rc.117)':
+  '@effect/platform-node-shared@4.0.0(effect@4.0.0)':
     dependencies:
       '@types/ws': 8.18.1
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
       ws: 8.18.3
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@4.0.0-rc.117(effect@4.0.0-rc.117)':
+  '@effect/platform-node@4.0.0(effect@4.0.0)':
     dependencies:
-      '@effect/platform-node-shared': 4.0.0-rc.117(effect@4.0.0-rc.117)
-      effect: 4.0.0-rc.117
+      '@effect/platform-node-shared': 4.0.0(effect@4.0.0)
+      effect: 4.0.0
       undici: 7.22.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
 
-  '@effect/sql-sqlite-bun@4.0.0-rc.117(effect@4.0.0-rc.117)':
+  '@effect/sql-sqlite-bun@4.0.0(effect@4.0.0)':
     dependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/sql-sqlite-node@4.0.0-rc.117(effect@4.0.0-rc.117)':
+  '@effect/sql-sqlite-node@4.0.0(effect@4.0.0)':
     dependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
-  '@effect/sql-sqlite-wasm@4.0.0-rc.117(@effect/wa-sqlite@0.1.2)(effect@4.0.0-rc.117)':
+  '@effect/sql-sqlite-wasm@4.0.0(@effect/wa-sqlite@0.1.2)(effect@4.0.0)':
     dependencies:
       '@effect/wa-sqlite': 0.1.2
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
 
   '@effect/tsgo-darwin-arm64@0.36.5':
     optional: true
@@ -48766,9 +48796,9 @@ snapshots:
       '@effect/tsgo-win32-arm64': 0.36.5
       '@effect/tsgo-win32-x64': 0.36.5
 
-  '@effect/vitest@4.0.0-rc.117(effect@4.0.0-rc.117)(vitest@4.1.10)':
+  '@effect/vitest@4.0.0(effect@4.0.0)(vitest@4.1.10)':
     dependencies:
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
       vitest: 4.1.10(patch_hash=cd5269e90ad2a4447bb2266e101250c008959a6c1168a57c132f6b50281f651b)(@opentelemetry/api@1.9.1)(@types/node@22.10.2)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(@vitest/ui@4.1.10)(esbuild@0.28.1)(happy-dom@20.7.0)(jiti@2.7.0)(jsdom@29.1.1(@noble/hashes@1.8.0)(canvas@3.2.0))(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
   '@effect/wa-sqlite@0.1.2': {}
@@ -49726,7 +49756,7 @@ snapshots:
 
   '@jridgewell/gen-mapping@0.3.12':
     dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
       '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/remapping@2.3.5':
@@ -49748,12 +49778,12 @@ snapshots:
   '@jridgewell/trace-mapping@0.3.31':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
 
   '@jridgewell/trace-mapping@0.3.9':
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
-      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/sourcemap-codec': 1.6.0
 
   '@js-sdsl/ordered-map@4.4.2': {}
 
@@ -53142,7 +53172,7 @@ snapshots:
 
   '@tauri-apps/api@2.11.1': {}
 
-  '@tauri-apps/api@2.12.1': {}
+  '@tauri-apps/api@2.12.0': {}
 
   '@tauri-apps/cli-darwin-arm64@2.11.4':
     optional: true
@@ -53191,25 +53221,25 @@ snapshots:
       '@tauri-apps/cli-win32-ia32-msvc': 2.11.4
       '@tauri-apps/cli-win32-x64-msvc': 2.11.4
 
-  '@tauri-apps/plugin-deep-link@2.6.1':
+  '@tauri-apps/plugin-deep-link@2.6.0':
     dependencies:
-      '@tauri-apps/api': 2.12.1
+      '@tauri-apps/api': 2.12.0
 
-  '@tauri-apps/plugin-dialog@2.8.1':
+  '@tauri-apps/plugin-dialog@2.8.0':
     dependencies:
-      '@tauri-apps/api': 2.12.1
+      '@tauri-apps/api': 2.12.0
 
   '@tauri-apps/plugin-fs@2.6.0':
     dependencies:
-      '@tauri-apps/api': 2.12.1
+      '@tauri-apps/api': 2.12.0
 
   '@tauri-apps/plugin-http@2.8.0':
     dependencies:
-      '@tauri-apps/api': 2.12.1
+      '@tauri-apps/api': 2.12.0
 
   '@tauri-apps/plugin-opener@2.7.0':
     dependencies:
-      '@tauri-apps/api': 2.12.1
+      '@tauri-apps/api': 2.12.0
 
   '@tauri-apps/plugin-os@2.3.2':
     dependencies:
@@ -53221,11 +53251,11 @@ snapshots:
 
   '@tauri-apps/plugin-shell@2.4.0':
     dependencies:
-      '@tauri-apps/api': 2.12.1
+      '@tauri-apps/api': 2.12.0
 
   '@tauri-apps/plugin-updater@2.13.1':
     dependencies:
-      '@tauri-apps/api': 2.12.1
+      '@tauri-apps/api': 2.12.0
 
   '@testing-library/dom@10.4.1':
     dependencies:
@@ -57581,10 +57611,10 @@ snapshots:
 
   devtools-protocol@0.0.981744: {}
 
-  dfx@1.0.15(effect@4.0.0-rc.117):
+  dfx@1.0.15(patch_hash=4897179d9f91b09100d74728fdca0db2f7d33a64e06f2b3dbd2fa4fb061b5325)(effect@4.0.0):
     dependencies:
       discord-api-types: 0.38.53
-      effect: 4.0.0-rc.117
+      effect: 4.0.0
     optionalDependencies:
       discord-verify: 1.2.0
 
@@ -57760,7 +57790,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  effect@4.0.0-rc.117: {}
+  effect@4.0.0: {}
 
   ejs@3.1.10:
     dependencies:

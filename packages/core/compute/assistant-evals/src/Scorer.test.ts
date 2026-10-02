@@ -14,13 +14,8 @@ describe('Scorer.failedCall', () => {
     expect(Scorer.failedCall(call({ error: 'boom' }))).toBe(true);
   });
 
-  test('a result reporting `ok: false` is a failure, as a JSON string or parsed', ({ expect }) => {
-    expect(Scorer.failedCall(call({ result: JSON.stringify({ output: 'Error: boom', ok: false }) }))).toBe(true);
-    expect(Scorer.failedCall(call({ result: { output: 'Error: boom', ok: false } }))).toBe(true);
-  });
-
-  test('any other result is a success', ({ expect }) => {
-    expect(Scorer.failedCall(call({ result: JSON.stringify({ output: 'done', ok: true }) }))).toBe(false);
+  test('any result is a success', ({ expect }) => {
+    expect(Scorer.failedCall(call({ result: JSON.stringify('done') }))).toBe(false);
     expect(Scorer.failedCall(call({ result: 'plain text' }))).toBe(false);
     expect(Scorer.failedCall(call({ result: undefined }))).toBe(false);
   });

@@ -10,8 +10,9 @@ import { Surface } from '@dxos/app-framework/ui';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { AppSurface, NotFoundArticle } from '@dxos/app-toolkit/ui';
 
-import { DeckSettings } from '#containers';
+import { DeckSettings, DetailCompanion } from '#containers';
 import { meta } from '#meta';
+import { CompanionViewState } from '#types';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -21,6 +22,12 @@ export default Capability.makeModule(
         filter: AppSurface.settings(AppSurface.Article, meta.profile.key),
         component: DeckSettings,
         props: ({ data: { subject } }) => ({ subject }),
+      }),
+      Surface.create({
+        id: 'detailCompanion',
+        filter: AppSurface.subject(AppSurface.Article, CompanionViewState.isDetailData),
+        component: DetailCompanion,
+        props: ({ role, data: { subject, attendableId } }) => ({ role, attendableId, detail: subject.detail }),
       }),
       Surface.create({
         id: 'notFound',

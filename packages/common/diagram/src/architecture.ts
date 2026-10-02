@@ -9,10 +9,10 @@
 // so grading a diagram costs one request however many rules there are.
 //
 
+import * as Decision from 'effect/ai/Decision';
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Decision from 'effect/unstable/ai/Decision';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 
 import type * as Mermaid from './mermaid.ts';
 import type * as Score from './score.ts';

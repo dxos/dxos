@@ -3,8 +3,8 @@
 //
 
 import { describe, it, test } from '@effect/vitest';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
 

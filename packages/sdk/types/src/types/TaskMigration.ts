@@ -6,7 +6,7 @@
 
 import * as Schema from 'effect/Schema';
 
-import { type Database, DXN, Filter, Migration, Obj, Ref, Type } from '@dxos/echo';
+import { type Database, DXN, EID, Filter, Migration, Obj, Ref, Type } from '@dxos/echo';
 import { Format } from '@dxos/echo/Format';
 
 import * as Actor from './Actor.ts';
@@ -99,7 +99,11 @@ const buildPlan = async (db: Database.Database): Promise<Plan> => {
   // `parentTask` cycle keeps its earliest-listed link and is broken at the next.
   const accepted = new Map<string, Obj.Unknown>();
   for (const task of ordered) {
-    const parent = task.parentTask ? (task.parentTask.target ?? (await task.parentTask.tryLoad())) : undefined;
+    // A tree lives in one space, so a parent in another space is dropped and the task kept as a root.
+    const parent =
+      task.parentTask && isSameSpace(db, task.parentTask)
+        ? (task.parentTask.target ?? (await task.parentTask.tryLoad()))
+        : undefined;
     // A parent in another set still wins: the task follows it into that set, since a tree now lives
     // in exactly one set.
     if (!parent || Obj.getTypename(parent) !== Type.getTypename(Task.Task)) {
@@ -144,6 +148,12 @@ const buildPlan = async (db: Database.Database): Promise<Plan> => {
   }
 
   return { pending, children, late };
+};
+
+const isSameSpace = (db: Database.Database, ref: Ref.Ref<Obj.Unknown>): boolean => {
+  const eid = EID.tryParse(ref.uri);
+  const spaceId = eid && !EID.isLocal(eid) ? EID.getSpaceId(eid) : undefined;
+  return spaceId === undefined || spaceId === db.spaceId;
 };
 
 /**

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';

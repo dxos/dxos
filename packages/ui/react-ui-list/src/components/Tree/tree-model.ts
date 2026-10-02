@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import { type Label } from '@dxos/react-ui';
 

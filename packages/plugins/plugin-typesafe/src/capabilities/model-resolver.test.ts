@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AiError from 'effect/ai/AiError';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
-import * as AiError from 'effect/unstable/ai/AiError';
 import { describe, test } from 'vitest';
 
 import * as Credential from '@dxos/compute/Credential';

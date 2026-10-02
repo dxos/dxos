@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { isNonNullable } from '@dxos/util';
 

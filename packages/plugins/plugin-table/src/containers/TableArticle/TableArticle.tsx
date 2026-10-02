@@ -4,7 +4,7 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import * as Match from 'effect/Match';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useContext, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';

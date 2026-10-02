@@ -3,7 +3,7 @@
 //
 
 import { act, render, screen } from '@testing-library/react';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useLayoutEffect } from 'react';
 import { describe, test } from 'vitest';
 

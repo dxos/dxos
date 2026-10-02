@@ -8,9 +8,9 @@ import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Order from 'effect/Order';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import React from 'react';
 

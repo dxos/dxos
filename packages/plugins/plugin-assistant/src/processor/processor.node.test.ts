@@ -3,10 +3,10 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as AiError from 'effect/ai/AiError';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as AiError from 'effect/unstable/ai/AiError';
 import { test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';

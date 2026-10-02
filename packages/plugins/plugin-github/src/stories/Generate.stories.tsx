@@ -3,9 +3,9 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import React, { useCallback, useState } from 'react';
 
 import { AiService } from '@dxos/ai';

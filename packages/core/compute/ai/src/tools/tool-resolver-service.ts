@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Array from 'effect/Array';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import type * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { log } from '@dxos/log';
 

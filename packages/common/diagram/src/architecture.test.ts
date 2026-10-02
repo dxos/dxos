@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as AiError from 'effect/ai/AiError';
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as AiError from 'effect/unstable/ai/AiError';
-import * as DecisionModel from 'effect/unstable/ai/DecisionModel';
 import { describe, test } from 'vitest';
 
 import { RULES, contentOf, judge } from './architecture.ts';

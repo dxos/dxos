@@ -27,7 +27,7 @@ import * as SchemaAST from './internal/schema-ast.ts';
 
 const ZipCode = Schema.String.pipe(
   Schema.check(
-    Schema.isPattern(/^\d{5}$/, {
+    Schema.isPattern(/^\d{5}$/u, {
       identifier: 'ZipCode',
       title: 'ZIP code',
       description: 'Simple 5 digit zip code',
@@ -133,7 +133,7 @@ describe('AST', () => {
   });
 
   test('findAnnotation', ({ expect }) => {
-    const TestSchema = Schema.NonEmptyString.pipe(Schema.check(Schema.isPattern(/^\d{5}$/))).annotate({
+    const TestSchema = Schema.NonEmptyString.pipe(Schema.check(Schema.isPattern(/^\d{5}$/u))).annotate({
       title: 'original title',
     });
 

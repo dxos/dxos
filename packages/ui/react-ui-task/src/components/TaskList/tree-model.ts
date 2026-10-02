@@ -73,11 +73,12 @@ export const TASK_TREE_ROOT_ID = 'tasks';
  * skipped, so a corrupt set renders short rather than hanging.
  */
 export const buildTaskForest = (tasks: readonly Task.Task[]): TaskNode => {
+  const childrenOf = Task.childIndex(tasks);
   const seen = new Set<string>();
 
   const visit = (task: Task.Task): TaskNode => {
     seen.add(task.id);
-    const children = Task.subTasks(tasks, task).filter((child) => !seen.has(child.id));
+    const children = childrenOf(task).filter((child) => !seen.has(child.id));
     return { id: task.id, task, children: children.map(visit) };
   };
 

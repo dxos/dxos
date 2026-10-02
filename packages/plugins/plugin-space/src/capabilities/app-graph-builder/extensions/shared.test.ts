@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { type Space, SpaceState } from '@dxos/client/echo';

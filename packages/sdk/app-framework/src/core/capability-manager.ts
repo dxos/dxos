@@ -4,8 +4,8 @@
 
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { EffectEx } from '@dxos/effect';
 import { log } from '@dxos/log';

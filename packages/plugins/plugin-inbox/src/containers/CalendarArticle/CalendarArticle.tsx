@@ -115,15 +115,9 @@ export const CalendarArticle = ({ role, subject, attendableId }: CalendarArticle
     [id, invokePromise],
   );
 
-  // The same reading gesture as the mailbox and the task ledger: selecting the event is what drives
-  // `activeEvent` (which selects and scrolls the grid, below), and the detail opens in the event's
-  // own companion where there is room for one — the calendar contributes one companion per event —
-  // or as a plank at the `event` rung otherwise.
   const handleNavigate = useDetailNavigation({
     contextId: id,
     getPath: (eventId) => getFeedObjectPath(id, eventId),
-    level: 'event',
-    companion: (eventId) => eventId,
   });
 
   // The active event drives the grid's selection: set + scroll it once whenever the active event changes

@@ -5,9 +5,9 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { type ReactNode, memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapability, useOperationInvoker } from '@dxos/app-framework/ui';
@@ -23,7 +23,7 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/components';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
-import { Flex, Next, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Flex, Next, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
@@ -86,9 +86,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const [milestoneRefs = []] = useObject(taskSet, 'milestones');
   // The rows the embedded `TaskSetArticle` has checked; the toolbar arms its delegate action on them.
   const { tasks, delegatableTasks, clearChecked } = useCheckedTasks(taskSet);
-  // `md` is the breakpoint plugin-deck calls "not mobile": below it the deck shows one plank at a
-  // time, so a companion beside the project would be a pane the reader cannot see.
-  const [isNotMobile] = useMediaQuery('md');
   const settings = useAtomValue(useCapability(ProjectCapabilities.Settings));
 
   // The tabs are a toolbar item like any other, so the one action graph owns the bar's order:
@@ -160,8 +157,6 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
   const openTask = useDetailNavigation({
     contextId: attendableId,
     getPath: (id) => `${attendableId}/${id}`,
-    level: 'task',
-    companion: isNotMobile ? 'task' : undefined,
   });
 
   const handleSelectChat = useCallback(
@@ -314,15 +309,11 @@ export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticlePr
             >
               <Next.Splitter.Panel position='start'>
                 {/* TODO(burdon): Inline component for more control? */}
-                {/* A wide viewport opens the task in this project's `~task` companion, so the ledger
-                    stays in front of the reader; a narrow one has no room beside the plank, so the
-                    task opens as a plank of its own there. */}
                 <Surface.Surface
                   type={AppSurface.Section}
                   data={{
                     subject: taskSet,
                     attendableId,
-                    detail: isNotMobile ? 'companion' : 'plank',
                     // Unset means shown: settings saved before the preference existed hold no key.
                     showDescription: settings.showTaskDescriptions ?? true,
                   }}
