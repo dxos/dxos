@@ -18,7 +18,6 @@ import {
   expectNonScrollingPopup,
   expectPopupSize,
   expectScrollingPopup,
-  expectThumbReserve,
   popupFrame,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
@@ -290,8 +289,10 @@ export const Test: Story = {
     const trigger = byTestId(canvasElement, 'trigger-md');
     await expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
     let menu = await open(canvasElement);
-    // The full menu overflows at this size, so it reserves the thumb's strip clear of the shortcut column.
-    await expectThumbReserve(menu);
+    // A menu grows to the space available before it scrolls, so the full menu fits and reserves no thumb strip; the
+    // long menu below covers the overflowing case.
+    await waitFor(() => expect(menu.scrollHeight).toBeLessThanOrEqual(menu.clientHeight));
+    await expect(popupFrame(menu)).not.toHaveAttribute('data-overflow-y');
     await expect(trigger).toHaveAttribute('aria-expanded', 'true');
     // The ScrollArea frame is the surface; the menu itself is its viewport.
     await expect(popupFrame(menu)).toHaveAttribute('data-surface', 'popup');
