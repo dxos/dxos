@@ -604,8 +604,8 @@ export {
   DRAWER_DEFAULT_HEIGHT as MAIN_DRAWER_DEFAULT_HEIGHT,
   DRAWER_MAX_HEIGHT as MAIN_DRAWER_MAX_HEIGHT,
   DRAWER_MIN_HEIGHT as MAIN_DRAWER_MIN_HEIGHT,
-  useSidebars as useMainSidebars,
   useMainLandmark,
+  useSidebars as useMainSidebars,
 };
 
 export type {
