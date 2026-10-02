@@ -67,6 +67,12 @@ Grouped by screen or component; IDs are global and never reused.
 | V043 | Card popover is missing its menu (card actions menu)                                               | `V040-card-popover.png` | same; assert the card menu trigger exists and opens                                   | open   |     |
 | V044 | Card in the popover is scaled; scaling must only apply when cards are in the companion             | `V040-card-popover.png` | same; assert no transform/scale on the popover card; companion card still scales      | open   |     |
 
+### Search companion
+
+| ID   | Bug                                                                                                         | Screenshot              | Repro                                                                                 | Status | Fix |
+| ---- | ----------------------------------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------- | ------ | --- |
+| V047 | Search panel toolbar input should be full width, with a search icon as its end adornment (Input `end` slot) | `V047-search-panel.png` | app: R0 rail → Search; plugin-search story: input spans the toolbar, end icon present | open   |     |
+
 ### Plugin registry
 
 | ID   | Bug                                                               | Screenshot                                          | Repro                                        | Status | Fix        |
