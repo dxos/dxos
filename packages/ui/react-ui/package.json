@@ -72,6 +72,8 @@
     "@dxos/util": "workspace:*",
     "@internationalized/date": "catalog:",
     "@zag-js/core": "catalog:",
+    "@zag-js/dismissable": "catalog:",
+    "@zag-js/focus-trap": "catalog:",
     "@zag-js/react": "catalog:",
     "date-fns": "catalog:",
     "dompurify": "catalog:",

@@ -11,12 +11,14 @@
 import { Dialog as DialogPrimitive, useDialog } from '@ark-ui/react/dialog';
 import { ark } from '@ark-ui/react/factory';
 import { Portal } from '@ark-ui/react/portal';
+import { trackDismissableElement } from '@zag-js/dismissable';
+import { trapFocus } from '@zag-js/focus-trap';
 import React, {
   type ComponentPropsWithRef,
   type FC,
   type ReactNode,
+  type RefObject,
   forwardRef,
-  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -115,34 +117,9 @@ const DialogRootImpl = ({
     defaultProp: defaultOpen,
     onChange: onOpenChange,
   });
-  // Bumped to rebuild the machine when content mounted too late for it; see `DialogMachine`.
-  const [generation, setGeneration] = useState(0);
-  const handleRearm = useCallback(() => setGeneration((value) => value + 1), []);
-  return (
-    <DialogMachine key={generation} open={open} setOpen={setOpen} modal={modal} role={role} onRearm={handleRearm}>
-      {children}
-    </DialogMachine>
-  );
-};
-
-type DialogMachineProps = Pick<DialogRootImplProps, 'children' | 'role'> & {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-  modal: boolean;
-  onRearm: () => void;
-};
-
-/**
- * Owns the Ark machine. The machine looks for the content once, a microtask and a frame after it
- * opens, to attach dismissal (Escape, outside clicks), the focus trap and the initial focus — and
- * never looks again. Content behind a lazy boundary (every plugin dialog surface) arrives later than
- * that, so the root mirrors the machine's look and, if the content was missing, rebuilds the machine
- * once the content does mount; by then the content's code is loaded and it remounts in the same commit.
- */
-const DialogMachine = ({ children, open, setOpen, modal, role, onRearm }: DialogMachineProps) => {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const handlersRef = useRef<DialogContentHandlers>({});
-  const missedRef = useRef(false);
+  const settledRef = useRef(false);
 
   // The content vetoes its own auto focus with `preventDefault()`, asked at render so the machine
   // reads the answer when it opens.
@@ -166,21 +143,23 @@ const DialogMachine = ({ children, open, setOpen, modal, role, onRearm }: Dialog
     onEscapeKeyDown: (event) => handlersRef.current.onEscapeKeyDown?.(event),
   });
 
+  // The machine looks for the content once, a microtask and a frame after opening, to attach
+  // dismissal, the focus trap and the initial focus, and never looks again. Content behind a lazy
+  // boundary (every plugin dialog surface) mounts later, and a surface may remount it while open;
+  // this marks when that lookup is over, so content mounting after it attaches them itself.
   useEffect(() => {
-    missedRef.current = false;
+    settledRef.current = false;
     if (!open) {
       return;
     }
-    // Same schedule as the machine's own `whenNode` lookup.
     let frame: number | undefined;
     let cancelled = false;
     queueMicrotask(() => {
-      if (cancelled || contentRef.current) {
-        return;
+      if (!cancelled) {
+        frame = requestAnimationFrame(() => {
+          settledRef.current = true;
+        });
       }
-      frame = requestAnimationFrame(() => {
-        missedRef.current = !contentRef.current;
-      });
     });
     return () => {
       cancelled = true;
@@ -188,16 +167,9 @@ const DialogMachine = ({ children, open, setOpen, modal, role, onRearm }: Dialog
     };
   }, [open]);
 
-  const handleContentMount = useCallback(() => {
-    if (missedRef.current) {
-      missedRef.current = false;
-      onRearm();
-    }
-  }, [onRearm]);
-
   const context = useMemo(
-    () => ({ open, modal, onOpenChange: setOpen, contentRef, handlersRef, onContentMount: handleContentMount }),
-    [open, modal, setOpen, handleContentMount],
+    () => ({ open, modal, role, onOpenChange: setOpen, contentRef, handlersRef, settledRef }),
+    [open, modal, role, setOpen],
   );
 
   return (
@@ -285,6 +257,61 @@ type DialogContentProps = ThemedClassName<ComponentPropsWithRef<typeof DialogPri
     elevation?: ElevationLevel;
   };
 
+/**
+ * Attaches what the machine would have — Escape and outside-interaction dismissal, the focus trap and
+ * the initial focus — to content that mounted after the machine looked for it (see `settledRef`). The same zag
+ * primitives the machine uses, so the content joins the shared layer stack: Escape in a nested
+ * popover still closes only the popover.
+ */
+const useLateContent = (contentRef: RefObject<HTMLDivElement | null>) => {
+  const { modal, role, onOpenChange, handlersRef, settledRef } = useDialogContext(DIALOG_CONTENT_NAME);
+  const [late, setLate] = useState(false);
+  useLayoutEffect(() => {
+    if (settledRef.current) {
+      setLate(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    const content = contentRef.current;
+    if (!late || !content) {
+      return;
+    }
+    const initialFocus = () =>
+      getInitialFocusEl(content, prevents(handlersRef.current.onOpenAutoFocus)) ??
+      content.querySelector<HTMLElement>(TABBABLE) ??
+      content;
+    const untrack = trackDismissableElement(content, {
+      type: 'dialog',
+      pointerBlocking: modal,
+      onEscapeKeyDown: (event) => handlersRef.current.onEscapeKeyDown?.(event),
+      onPointerDownOutside: (event) => handlersRef.current.onPointerDownOutside?.(event),
+      onFocusOutside: (event) => handlersRef.current.onFocusOutside?.(event),
+      onInteractOutside: (event) => {
+        handlersRef.current.onInteractOutside?.(event);
+        if (role !== 'dialog') {
+          event.preventDefault();
+        }
+      },
+      onDismiss: () => onOpenChange(false),
+    });
+    if (!modal) {
+      initialFocus().focus({ preventScroll: true });
+      return untrack;
+    }
+    const untrap = trapFocus(content, {
+      initialFocus,
+      preventScroll: true,
+      returnFocusOnDeactivate: !prevents(handlersRef.current.onCloseAutoFocus),
+      getShadowRoot: true,
+    });
+    return () => {
+      untrap();
+      untrack();
+    };
+  }, [late, modal, role, onOpenChange, contentRef, handlersRef]);
+};
+
 const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   (
     {
@@ -305,9 +332,8 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   ) => {
     const { tx } = useThemeContext();
     const { inOverlayLayout } = useOverlayLayoutContext(DIALOG_CONTENT_NAME);
-    const { contentRef, handlersRef, onContentMount } = useDialogContext(DIALOG_CONTENT_NAME);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    useLayoutEffect(() => onContentMount(), []);
+    const { contentRef, handlersRef } = useDialogContext(DIALOG_CONTENT_NAME);
+    useLateContent(contentRef);
     // The handlers are read at event time; nothing re-renders on their account.
     handlersRef.current = {
       onOpenAutoFocus,

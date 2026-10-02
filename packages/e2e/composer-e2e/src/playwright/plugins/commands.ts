@@ -4,6 +4,8 @@
 
 import { type Page, type Request, expect } from '@playwright/test';
 
+import { type AppManager } from '../app-manager.ts';
+
 /** Upper bound on the idle wave, which carries the preloads: `whenIdle` itself backstops at 15s. */
 const PRELOAD_TIMEOUT = 30_000;
 
@@ -48,16 +50,11 @@ export const Commands = {
     throw new Error(`palette never highlighted ${testId}`);
   },
 
-  /** Resolves once the page has fetched the chunk built from `module` — the idle preload, for a dialog. */
-  waitForPreload: async (page: Page, module: 'CommandsDialogContent' | 'SearchDialog') => {
+  /** Resolves once the app has fetched the chunk built from `module` — the idle preload, for a dialog. */
+  waitForPreload: async (host: AppManager, module: 'CommandsDialogContent' | 'SearchDialog') => {
     await expect
       .poll(
-        () =>
-          page.evaluate(
-            (prefix) =>
-              performance.getEntriesByType('resource').some(({ name }) => new URL(name).pathname.startsWith(prefix)),
-            `/assets/${module}-`,
-          ),
+        () => host.requestedScripts().some((url) => new URL(url).pathname.startsWith(`/assets/${module}-`)),
         { timeout: PRELOAD_TIMEOUT },
       )
       .toBe(true);

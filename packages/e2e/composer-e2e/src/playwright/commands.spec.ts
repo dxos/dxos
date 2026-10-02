@@ -32,7 +32,7 @@ test.describe('Command palette and search', () => {
   test('palette opens from the keyboard with the caret in its input', { tag: ['@QA-11'] }, async () => {
     const { page } = host;
     // Preloaded at idle: once it is, opening the palette must not wait on a chunk.
-    await Commands.waitForPreload(page, 'CommandsDialogContent');
+    await Commands.waitForPreload(host, 'CommandsDialogContent');
     const chunks = await Commands.dialogChunksRequestedWhile(
       page,
       () => Commands.openPalette(page),
@@ -80,7 +80,7 @@ test.describe('Command palette and search', () => {
 
   test('search opens from the keyboard and escape closes it', { tag: ['@QA-11'] }, async () => {
     const { page } = host;
-    await Commands.waitForPreload(page, 'SearchDialog');
+    await Commands.waitForPreload(host, 'SearchDialog');
     const chunks = await Commands.dialogChunksRequestedWhile(
       page,
       () => Commands.openSearch(page),

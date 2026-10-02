@@ -34,9 +34,10 @@ export type DialogContextValue = {
   modal: boolean;
   onOpenChange(open: boolean): void;
   contentRef: RefObject<HTMLDivElement | null>;
+  role: 'dialog' | 'alertdialog';
   handlersRef: RefObject<DialogContentHandlers>;
-  /** Called by the content as it mounts, so the root can re-arm a machine that missed it. */
-  onContentMount(): void;
+  /** Set once the machine has made its one lookup for the content; content mounting later attaches its own behaviour. */
+  settledRef: RefObject<boolean>;
 };
 
 export const [DialogProvider, useDialogContext] = createContext<DialogContextValue>(DIALOG_NAME);

@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { Suspense, lazy, useMemo } from 'react';
+import React, { Suspense, lazy, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { invariant } from '@dxos/invariant';
@@ -394,6 +394,50 @@ export const TestLazyContent: StoryObj = {
     await waitFor(async () => expect(document.activeElement?.getAttribute('placeholder')).toBe('Late field'), {
       timeout: 3_000,
     });
+    await userEvent.keyboard('{Escape}');
+    await waitFor(async () => expect(dialogElement()).toBeNull());
+  },
+};
+
+const RemountingContent = () => {
+  const [generation, setGeneration] = useState(0);
+  return (
+    <Dialog.Content key={generation}>
+      <Dialog.Header>
+        <Dialog.Title>Remounting dialog</Dialog.Title>
+      </Dialog.Header>
+      <Dialog.Body>
+        <Field.Root>
+          <Field.Input placeholder={`Generation ${generation}`} {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }} />
+        </Field.Root>
+      </Dialog.Body>
+      <Dialog.ActionBar>
+        <Button onClick={() => setGeneration((value) => value + 1)}>Remount</Button>
+      </Dialog.ActionBar>
+    </Dialog.Content>
+  );
+};
+
+/** Content a surface remounts while the dialog stays open keeps its focus and still closes on Escape. */
+export const TestRemountedContent: StoryObj = {
+  render: () => (
+    <Dialog.Root defaultOpen>
+      <Dialog.Overlay>
+        <RemountingContent />
+      </Dialog.Overlay>
+    </Dialog.Root>
+  ),
+  play: async () => {
+    await waitFor(async () => expect(document.activeElement?.getAttribute('placeholder')).toBe('Generation 0'));
+    const remount = await waitFor(async () => {
+      const button = Array.from(document.querySelectorAll('button')).find(
+        ({ textContent }) => textContent === 'Remount',
+      );
+      invariant(button);
+      return button;
+    });
+    await userEvent.click(remount);
+    await waitFor(async () => expect(document.activeElement?.getAttribute('placeholder')).toBe('Generation 1'));
     await userEvent.keyboard('{Escape}');
     await waitFor(async () => expect(dialogElement()).toBeNull());
   },
