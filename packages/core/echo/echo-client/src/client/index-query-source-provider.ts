@@ -576,6 +576,9 @@ export class IndexQuerySource implements QuerySource {
         id,
         group.flatMap(({ documentId }) => (documentId === undefined ? [] : [documentId])),
       );
+      if (preferred === undefined) {
+        continue;
+      }
       for (const record of group) {
         if (record.documentId !== preferred) {
           dropped.add(record);

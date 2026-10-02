@@ -226,6 +226,94 @@ describe('version runner', () => {
     expect(store.state()).toBe(before);
   });
 
+  test('branch version documents two devices create concurrently merge, keeping edits made in either', async () => {
+    const store = MemoryStore.make({ title: 'Plan', tags: [] });
+    // A user branch of the object, opened before the upgrade.
+    const originUrl = store.root.doc().links?.[OBJECT_ID]?.toString();
+    const origin = originUrl && store.docs.get(originUrl);
+    invariant(origin, 'no origin');
+    const memberUrl = generateAutomergeUrl();
+    store.docs.set(memberUrl, A.clone(origin, freshActor()));
+    store.root.change((root) => {
+      root.branches = { [OBJECT_ID]: { b1: { members: { [OBJECT_ID]: new A.RawString(memberUrl) } } } };
+    });
+    const other = store.fork();
+    const edges = [edgeOf(false)];
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    await syncVersionDocuments(other, edges, [OBJECT_ID]);
+    const branchV2 = (device: MemoryStore) => {
+      const url = device.root.doc().branches?.[OBJECT_ID]?.b1?.versions?.[OBJECT_ID]?.['0.2.0']?.toString();
+      invariant(url, 'no branch v2');
+      return url;
+    };
+    for (const [device, tag] of [
+      [store, 'one'],
+      [other, 'two'],
+    ] as const) {
+      const url = branchV2(device);
+      const doc = device.docs.get(url);
+      invariant(doc, 'no branch v2 document');
+      device.docs.set(
+        url,
+        A.change(doc, (draft) => {
+          draft.objects?.[OBJECT_ID]?.data.tags.push(tag);
+        }),
+      );
+    }
+
+    store.exchange(other);
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    const merged = store.docs.get(branchV2(store));
+    expect(merged && JSON.parse(JSON.stringify(merged.objects?.[OBJECT_ID]?.data.tags)).sort()).toEqual(['one', 'two']);
+  });
+
+  test("another device's branch of the same name stays out of this branch's version documents", async () => {
+    const store = MemoryStore.make({ title: 'Plan', tags: [] });
+    store.root.change((root) => {
+      root.branches = { [OBJECT_ID]: {} };
+    });
+    const other = store.fork();
+    const edges = [edgeOf(false)];
+    // Each device opens its own `b1` while apart, so the two records conflict under one name.
+    for (const device of [store, other]) {
+      const originUrl = device.root.doc().links?.[OBJECT_ID]?.toString();
+      const origin = originUrl && device.docs.get(originUrl);
+      invariant(origin, 'no origin');
+      const memberUrl = generateAutomergeUrl();
+      device.docs.set(memberUrl, A.clone(origin, freshActor()));
+      device.root.change((root) => {
+        const branches = root.branches?.[OBJECT_ID];
+        invariant(branches, 'no branches');
+        branches.b1 = { members: { [OBJECT_ID]: new A.RawString(memberUrl) } };
+      });
+      await syncVersionDocuments(device, edges, [OBJECT_ID]);
+    }
+    const branchV2 = (device: MemoryStore) => {
+      const url = device.root.doc().branches?.[OBJECT_ID]?.b1?.versions?.[OBJECT_ID]?.['0.2.0']?.toString();
+      invariant(url, 'no branch v2');
+      return url;
+    };
+    for (const [device, tag] of [
+      [store, 'one'],
+      [other, 'two'],
+    ] as const) {
+      const url = branchV2(device);
+      const doc = device.docs.get(url);
+      invariant(doc, 'no branch v2 document');
+      device.docs.set(
+        url,
+        A.change(doc, (draft) => {
+          draft.objects?.[OBJECT_ID]?.data.tags.push(tag);
+        }),
+      );
+    }
+
+    store.exchange(other);
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    const visible = store.docs.get(branchV2(store));
+    expect(visible && JSON.parse(JSON.stringify(visible.objects?.[OBJECT_ID]?.data.tags))).toHaveLength(1);
+  });
+
   test('a pair with two different stored lenses derives no new versions', async () => {
     const store = MemoryStore.make({ title: 'Plan', tags: [] });
     await syncVersionDocuments(store, [edgeOf(false), edgeOf(true)], [OBJECT_ID]);

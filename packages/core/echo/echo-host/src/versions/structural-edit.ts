@@ -200,6 +200,9 @@ export const applyStructuralEdit = (
     const map = getDeep(draft, [...path]);
     invariant(isRecord(map), 'edit target is not a map');
     for (const key of new Set([...Object.keys(previous), ...Object.keys(next)])) {
+      if (encodedValuesEqual(previous[key], next[key])) {
+        continue;
+      }
       if (!Object.hasOwn(next, key)) {
         delete map[key];
       } else if (Object.hasOwn(current, key)) {

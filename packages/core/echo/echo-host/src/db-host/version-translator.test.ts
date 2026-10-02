@@ -134,7 +134,7 @@ class TestSpace {
   }
 }
 
-const setup = async (spaceCount = 1) => {
+const setup = async (spaceCount = 1, { onReferrers }: { onReferrers?: () => Promise<void> } = {}) => {
   const { runtime, dispose } = createTestSqliteRuntime();
   onTestFinished(() => dispose());
   const host = new AutomergeHost({ runtime });
@@ -149,6 +149,10 @@ const setup = async (spaceCount = 1) => {
     queryType: async (spaceId, typeDXN) => spaces.find((space) => space.spaceId === spaceId)?.rows.get(typeDXN) ?? [],
     loadDoc: (ctx, documentId, opts) => host.loadDoc<DatabaseDirectory>(ctx, documentId, opts),
     createDoc: (doc) => host.createDoc<DatabaseDirectory>(doc, { preserveHistory: true }),
+    queryReferrers: async () => {
+      await onReferrers?.();
+      return [];
+    },
   });
   const ctx = new Context();
   onTestFinished(async () => {
@@ -225,5 +229,43 @@ describe('version translator', () => {
 
     await translator.schedule(ctx);
     expect(await space.versionUrls(PERSON_ID)).toEqual({});
+  });
+
+  test('an edit that lands while an object syncs is translated by the next pass', async () => {
+    let edit: (() => Promise<void>) | undefined;
+    const { host, spaces, translator, ctx } = await setup(1, {
+      // Runs after the pass translated the object, as a replicated edit arriving mid-pass would.
+      onReferrers: async () => {
+        const pending = edit;
+        edit = undefined;
+        await pending?.();
+      },
+    });
+    const [space] = spaces;
+    await space.storeLens(absorbing);
+    await space.add(ADDRESS_ID, entity(Address, { line1: '1 Main', city: 'London' }));
+    const personDocumentId = await space.add(PERSON_ID, entity(PersonV1, { name: 'Ada', address: refTo(ADDRESS_ID) }));
+    await translator.schedule(ctx);
+
+    edit = async () => {
+      using person = await host.loadDoc<DatabaseDirectory>(Context.default(), personDocumentId);
+      person?.change((doc) => {
+        const data = doc.objects?.[PERSON_ID]?.data;
+        if (data) {
+          data.name = 'Ada Lovelace';
+        }
+      });
+    };
+    // A pass that finds the edit: the object changed since it was synced.
+    using person = await host.loadDoc<DatabaseDirectory>(Context.default(), personDocumentId);
+    person?.change((doc) => {
+      const data = doc.objects?.[PERSON_ID]?.data;
+      if (data) {
+        data.address = refTo(ADDRESS_ID);
+      }
+    });
+    await translator.schedule(ctx);
+    await translator.schedule(ctx);
+    expect(await space.dataAt(PERSON_ID, '0.2.0')).toMatchObject({ name: 'Ada Lovelace' });
   });
 });

@@ -49,4 +49,13 @@ describe('applyStructuralEdit', () => {
     expect(result[0]).to.eq('first');
     expect(result[600]).to.eq('edited');
   });
+
+  test('a map edit writes only the keys the change moved, so a key the target removed stays removed', () => {
+    type Entry = { entry: Record<string, string> };
+    const target = A.from<Entry>({ entry: { kept: 'k' } });
+    const edited = A.change(target, (doc) =>
+      applyStructuralEdit(doc, ['entry'], { kept: 'k', gone: 'g' }, { kept: 'k2', gone: 'g' }, { kept: 'k' }),
+    );
+    expect(edited.entry).to.deep.eq({ kept: 'k2' });
+  });
 });

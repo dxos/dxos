@@ -92,8 +92,8 @@ const alternatives = ({ value: parent, live }: Alternative, key: string): Altern
   ];
 };
 
-/** The values along `path` from the space root, through every alternative at each step. */
-const alternativesAlong = (root: DatabaseDirectory, path: readonly string[]): unknown[] =>
+/** The values along `path` from `root`, a live document value, through every alternative at each step. */
+const alternativesAlong = (root: unknown, path: readonly string[]): unknown[] =>
   path
     .reduce<Alternative[]>(
       (level, key) => level.flatMap((alternative) => alternatives(alternative, key)),
@@ -373,8 +373,24 @@ const syncBranches = async (
         continue;
       }
       const held = new Map<string, Held>([[memberVersion, { version: memberVersion, handle: member }]]);
-      for (const [version, url] of Object.entries(record.versions?.[objectId] ?? {})) {
-        held.set(version, { version, handle: await store.load(url.toString()) });
+      // As on main: the visible document of each version wins, and every duplicate a concurrent write hid merges into it.
+      // From the visible record: a hidden value above it is another device's branch of the same name, not a duplicate.
+      const visible = root.doc().branches?.[rootId]?.[name];
+      const path = ['versions', objectId];
+      const versions = new Set(
+        alternativesAlong(visible, path).flatMap((byVersion) => (isRecord(byVersion) ? Object.keys(byVersion) : [])),
+      );
+      for (const version of versions) {
+        const [winnerUrl, ...losers] = [...new Set(alternativesAlong(visible, [...path, version]).map(String))];
+        if (!winnerUrl) {
+          continue;
+        }
+        const winner = await store.load(winnerUrl);
+        await mergeLosers(store, winner, losers);
+        held.set(version, { version, handle: winner });
+        if (record.versions?.[objectId]?.[version]?.toString() !== winnerUrl) {
+          recordBranchVersion(root, rootId, name, objectId, version, winnerUrl);
+        }
       }
       for (const version of conflicted ? [] : Lens.versionsOf(edges, typename)) {
         if (held.has(version) || !origin) {
@@ -385,14 +401,7 @@ const syncBranches = async (
         if (!handle || !url) {
           continue;
         }
-        root.change((doc: DatabaseDirectory) => {
-          const branch = doc.branches?.[rootId]?.[name];
-          if (branch) {
-            branch.versions ??= {};
-            branch.versions[objectId] ??= {};
-            branch.versions[objectId][version] = new A.RawString(url);
-          }
-        });
+        recordBranchVersion(root, rootId, name, objectId, version, url);
         held.set(version, { version, handle });
       }
       for (const { handle } of held.values()) {
@@ -401,6 +410,25 @@ const syncBranches = async (
       translateAll([...held.values()], objectId, typename, edges, settledFor(settled, `${objectId} ${rootId}/${name}`));
     }
   }
+};
+
+/** Records `url` as branch `name`'s document for `version` of `objectId`. */
+const recordBranchVersion = (
+  root: VersionDocHandle,
+  rootId: string,
+  name: string,
+  objectId: string,
+  version: string,
+  url: string,
+): void => {
+  root.change((doc: DatabaseDirectory) => {
+    const branch = doc.branches?.[rootId]?.[name];
+    if (branch) {
+      branch.versions ??= {};
+      branch.versions[objectId] ??= {};
+      branch.versions[objectId][version] = new A.RawString(url);
+    }
+  });
 };
 
 /** Translates between every pair of held versions until a round writes nothing. */

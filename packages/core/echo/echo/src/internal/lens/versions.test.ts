@@ -109,6 +109,16 @@ describe('lenses between versions', () => {
       Schema.Struct({ name: Schema.String, done: Schema.Boolean }),
     );
     expect(Lens.make(TaskV1, Drifted, { name: 'title' }, { defaults: { done: false } }).digest).not.toBe(v1v2.digest);
+
+    // The older version gains a property the lens drops: the stored step no longer carries it, so a different digest.
+    const Extended = Type.makeObject(DXN.make(TYPENAME, '0.1.0'))(
+      Schema.Struct({
+        title: Schema.String,
+        notes: Schema.optional(Schema.String),
+        legacy: Schema.optional(Schema.String),
+      }),
+    );
+    expect(Lens.make(Extended, TaskV2, { name: 'title' }, { defaults: { done: false } }).digest).not.toBe(v1v2.digest);
   });
 
   test('a stored lens runs the same step without the schemas it connects', () => {

@@ -14,11 +14,12 @@ import { type Entity, type Hypergraph, Scope } from '@dxos/echo';
 import { type QueryAST } from '@dxos/echo-protocol';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
-import { DXN, EntityId, type SpaceId, SpaceId as SpaceId$ } from '@dxos/keys';
+import { DXN, EntityId, PublicKey, type SpaceId, SpaceId as SpaceId$ } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
 import { QueryReactivity } from '@dxos/protocols/buf/dxos/echo/query_pb';
 import { QueryService } from '@dxos/protocols/rpc';
 
+import { EchoTestBuilder } from '../testing/index.ts';
 import { type ObjectUpdate } from './index-query-source-provider.ts';
 import { IndexQuerySource } from './index-query-source-provider.ts';
 
@@ -123,6 +124,50 @@ describe('IndexQuerySource', () => {
     expect(results).toEqual([]);
     expect(calls).toHaveLength(1);
     expect(calls[0].reactivity).toBe(QueryReactivity.ONE_SHOT);
+  });
+
+  test('rows for one object in several documents reach a database that is not open yet without failing', async () => {
+    const builder = await new EchoTestBuilder().open();
+    onTestFinished(async () => {
+      await builder.close();
+    });
+    const client = await (await builder.createPeer()).createClient();
+    const spaceId = SpaceId$.random();
+    // Registered with the graph, as a database is before it opens.
+    client.constructDatabase({ spaceId, spaceKey: PublicKey.random() });
+    const id = EntityId.random();
+
+    const service = await makeQueryClient({
+      'QueryService.setConfig': () => Effect.void,
+      'QueryService.execQuery': (request) =>
+        EffectEx.streamFromEmitter<QueryService.QueryResponse>((emit) => {
+          // A host that was named no versions returns the object once per version document.
+          queueMicrotask(
+            () =>
+              void emit.single({
+                queryId: request.queryId,
+                results: [
+                  { id, spaceId, documentId: 'version-1', rank: 0 },
+                  { id, spaceId, documentId: 'version-2', rank: 0 },
+                ],
+              }),
+          );
+        }),
+      'QueryService.reindex': () => Effect.void,
+    });
+
+    const source = new IndexQuerySource({
+      service,
+      runtime: EffectContext.empty(),
+      objectLoader: {
+        loadObject: async () => undefined,
+        updateEvent: noopUpdateEvent,
+      },
+      graph: client.graph,
+    });
+    onTestFinished(() => source.close());
+
+    expect(await source.run(Context.default(), makeQuery(spaceId))).toEqual([]);
   });
 
   // Regression: a registry-only query forwarded to the remote QueryService fails the whole

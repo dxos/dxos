@@ -194,6 +194,22 @@ export const DatabaseDirectory = Object.freeze({
     return urls;
   },
 
+  /**
+   * @returns The urls of user-branch documents, whose changes duplicate main's. Version documents, recorded under
+   * reserved names, hold edits of their own and are not among them.
+   */
+  getUserBranchDocUrls: (doc: DatabaseDirectory): string[] =>
+    Object.values(doc.branches ?? {}).flatMap((byName) =>
+      Object.entries(byName).flatMap(([name, record]) =>
+        name.startsWith(RESERVED_BRANCH_PREFIX)
+          ? []
+          : [
+              ...Object.values(record.members ?? {}),
+              ...Object.values(record.versions ?? {}).flatMap((byVersion) => Object.values(byVersion)),
+            ].map((url) => url.toString()),
+      ),
+    ),
+
   /** The reserved branch name recording an object's version document for schema `version`. */
   versionBranchName: (version: string): string => `${VERSION_BRANCH_PREFIX}${version}`,
 

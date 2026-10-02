@@ -236,7 +236,8 @@ export class VersionTranslator {
             synced.delete(objectId);
             continue;
           }
-          synced.set(objectId, await stateOf(objectId));
+          // The state read before the pass: one read after may hold edits that landed mid-pass, unread.
+          synced.set(objectId, before);
         } catch (err) {
           reading = undefined;
           synced.delete(objectId);

@@ -39,6 +39,15 @@ export type MergeDocumentRef = {
   [Symbol.dispose]?: () => void;
 };
 
+/** Whether `value` is a list or map, rather than a value written whole. */
+const isContainer = (value: unknown): boolean =>
+  Array.isArray(value) ||
+  (typeof value === 'object' &&
+    value !== null &&
+    !isEncodedReference(value) &&
+    !(value instanceof Uint8Array) &&
+    !(value instanceof A.RawString));
+
 /**
  * A referrer document is loaded on the index's say-so alone, so the rewrite path never waits on
  * the network: a document that is not locally available has no local references to rewrite, and a
@@ -137,10 +146,19 @@ export class ConvergenceKeyMerger {
       }
 
       const groups = new Map<string, { objectId: EntityId; documentId: string }[]>();
+      // Duplicates held at several schema versions are left pending: merge markers are not translated between
+      // versions, so no single version document can carry the merge.
+      const versioned = new Set<string>();
+      const typesOf = new Map<string, string>();
       for (const row of rows) {
         if (!row.convergenceKey || !row.documentId) {
           continue;
         }
+        const type = typesOf.get(row.convergenceKey);
+        if (type !== undefined && type !== String(row.typeDXN)) {
+          versioned.add(row.convergenceKey);
+        }
+        typesOf.set(row.convergenceKey, String(row.typeDXN));
         const group = groups.get(row.convergenceKey) ?? [];
         if (!group.some(({ objectId }) => objectId === row.objectId)) {
           group.push({ objectId: row.objectId, documentId: row.documentId });
@@ -151,6 +169,10 @@ export class ConvergenceKeyMerger {
       const servicedKeys = new Set<string>();
       serviced.set(spaceId, servicedKeys);
       for (const convergenceKey of keys) {
+        if (versioned.has(convergenceKey)) {
+          log.debug('convergence-key merge: duplicates are held at several versions; left pending', { convergenceKey });
+          continue;
+        }
         const group = groups.get(convergenceKey);
         if (group === undefined || group.length < 2) {
           // A lone row, or rows that no longer carry the key — nothing to merge.
@@ -483,7 +505,16 @@ export class ConvergenceKeyMerger {
       return;
     }
 
+    // A whole-value write supersedes a list or map the winner edited in place, so those stay with the flat merge.
     const loserData = loser.entity.data ?? {};
+    for (const field of editedFields) {
+      if (isContainer(loserData[field])) {
+        editedFields.delete(field);
+      }
+    }
+    if (editedFields.size === 0) {
+      return;
+    }
     winner.handle.changeAt(
       encodeHeads(winnerCreationHeads),
       (doc: DatabaseDirectory) => {

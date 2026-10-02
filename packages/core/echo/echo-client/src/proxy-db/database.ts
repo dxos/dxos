@@ -899,8 +899,14 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   /** The document holding version `type` of `obj`, when it is not the one `obj` reads. */
   #versionUrl(obj: Entity.Unknown, type: string): AutomergeUrl | undefined {
+    // Only a versioned object has a url, so feed items, which have no core, return before the core is read.
     const url = this._entityManager.versionDocumentUrlOfType(obj.id, type);
-    return url !== undefined && url !== getObjectCore(obj).docHandle?.url ? url : undefined;
+    if (url === undefined) {
+      return undefined;
+    }
+    const core = getObjectCore(obj);
+    const own = core.getType();
+    return url !== core.docHandle?.url && !(own && EncodedReference.toURI(own) === type) ? url : undefined;
   }
 
   /**
@@ -911,9 +917,13 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
   async _loadVersionBinding(objectId: string, url: AutomergeUrl): Promise<Entity.Unknown> {
     if (this._entityManager.routedDocumentUrl(objectId) === url) {
       // The routed document can change before the live core moves onto it, which happens once the document loads.
-      await this._entityManager.reroute(objectId);
+      await this._entityManager.rerouteWhenReady(objectId, url);
       const live = await this._loadObjectById(objectId);
-      if (live && getObjectCore(live).docHandle?.url === url) {
+      // The live object reads `url`, or reads what replaced it, which `url` may never arrive to supersede.
+      if (
+        live &&
+        (getObjectCore(live).docHandle?.url === url || this._entityManager.routedDocumentUrl(objectId) !== url)
+      ) {
         return live;
       }
     }

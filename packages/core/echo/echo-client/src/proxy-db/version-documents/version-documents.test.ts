@@ -3,11 +3,11 @@
 //
 
 import { next as A } from '@automerge/automerge';
-import { isValidAutomergeUrl } from '@automerge/automerge-repo';
+import { type AutomergeUrl, generateAutomergeUrl, isValidAutomergeUrl } from '@automerge/automerge-repo';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { waitForCondition } from '@dxos/async';
+import { asyncTimeout, waitForCondition } from '@dxos/async';
 import { Filter, Lens, Obj, Query, Ref, Type } from '@dxos/echo';
 import { type EchoHost } from '@dxos/echo-host';
 import { DatabaseDirectory } from '@dxos/echo-protocol';
@@ -15,7 +15,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { toDocumentId } from '../../automerge/index.ts';
-import { createBranch, mergeBranch, switchBranch } from '../../echo-handler/index.ts';
+import { createBranch, getObjectCore, mergeBranch, switchBranch } from '../../echo-handler/index.ts';
 import { EchoTestBuilder } from '../../testing/index.ts';
 import { type EchoDatabase } from '../database.ts';
 
@@ -150,6 +150,134 @@ describe('version documents', () => {
     await settle(host, db);
     expect(dataOf(v1.doc(), task.id)).toEqual({ title: 'Plan B', tags: ['a', 'b'] });
     expect(dataOf(v2.doc(), task.id)).toEqual({ name: 'Plan B', tags: ['a', 'b'] });
+  });
+
+  test('a version document that has not arrived holds back no other object', async () => {
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
+    const waiting = db.add(Obj.make(TaskV1, { title: 'Waiting', tags: [] }));
+    const other = db.add(Obj.make(TaskV1, { title: 'Other', tags: [] }));
+    await db.flush();
+    await settle(host, db);
+    const versions = (id: string) => DatabaseDirectory.getVersionDocUrls(db._getSpaceRootDocHandle().doc(), id);
+    const v3Name = DatabaseDirectory.versionBranchName('0.3.0');
+
+    // The registry names a v3 document no peer has delivered yet.
+    db._getSpaceRootDocHandle().change((doc: DatabaseDirectory) => {
+      const record = doc.branches?.[waiting.id]?.[v3Name];
+      invariant(record, 'no v3 record');
+      record.members[waiting.id] = new A.RawString(generateAutomergeUrl());
+    });
+    // Then the other object moves to its v2 document, as it would were its v3 one dropped from the registry.
+    const otherV2 = versions(other.id)['0.2.0'];
+    db._getSpaceRootDocHandle().change((doc: DatabaseDirectory) => {
+      delete doc.branches?.[other.id]?.[v3Name];
+    });
+    const current = await asyncTimeout(db.version(other, TaskV2), 5_000);
+    // The live object itself, moved onto its v2 document, not a second copy bound beside it.
+    expect(current).toBe(other);
+    expect(getObjectCore(other).docHandle?.url).toBe(otherV2);
+  });
+
+  /**
+   * Leaves the task reading v2, then records v3 at `url`, a document this device lacks; returns v3's bytes to
+   * deliver later and a function that moves v3 to another document.
+   */
+  const routeV3Elsewhere = async (db: EchoDatabase, task: Obj.Unknown, url: AutomergeUrl) => {
+    const v3Name = DatabaseDirectory.versionBranchName('0.3.0');
+    const bytes = A.save((await versionDoc(db, task.id, '0.3.0')).doc());
+    const v3Type = db._getSpaceRootDocHandle().doc().branches?.[task.id]?.[v3Name]?.type;
+    invariant(v3Type, 'no v3 record');
+    db._getSpaceRootDocHandle().change((doc: DatabaseDirectory) => {
+      delete doc.branches?.[task.id]?.[v3Name];
+    });
+    const v2 = DatabaseDirectory.getVersionDocUrls(db._getSpaceRootDocHandle().doc(), task.id)['0.2.0'];
+    await waitForCondition({ condition: () => getObjectCore(task).docHandle?.url === v2, timeout: 5_000 });
+    const route = (target: AutomergeUrl) =>
+      db._getSpaceRootDocHandle().change((doc: DatabaseDirectory) => {
+        const byName = doc.branches?.[task.id];
+        invariant(byName, 'no registry');
+        byName[v3Name] = { members: { [task.id]: new A.RawString(target) }, type: v3Type };
+      });
+    route(url);
+    expect(await db._repo.find<DatabaseDirectory>(url).whenSettledOnDisk()).toBe(false);
+    return { bytes, route };
+  };
+
+  test('a version read waits for the routed document to arrive and returns the live object on it', async () => {
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
+    const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    await db.flush();
+    await settle(host, db);
+
+    const pending = generateAutomergeUrl();
+    const { bytes } = await routeV3Elsewhere(db, task, pending);
+    // This device has looked for the document and been told no peer has it.
+    db._repo.find<DatabaseDirectory>(pending)._markUnavailable(toDocumentId(pending));
+    const read = db.version(task, TaskV3);
+    using _arrived = await host.automergeHost.createDoc(bytes, {
+      preserveHistory: true,
+      documentId: toDocumentId(pending),
+    });
+    expect(await asyncTimeout(read, 5_000)).toBe(task);
+    expect(getObjectCore(task).docHandle?.url).toBe(pending);
+  });
+
+  test('a version read waiting on a document that never arrives settles once the version moves elsewhere', async () => {
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
+    const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    await db.flush();
+    await settle(host, db);
+
+    const { bytes, route } = await routeV3Elsewhere(db, task, generateAutomergeUrl());
+    const read = db.version(task, TaskV3);
+    const later = generateAutomergeUrl();
+    route(later);
+    using _arrived = await host.automergeHost.createDoc(bytes, {
+      preserveHistory: true,
+      documentId: toDocumentId(later),
+    });
+    expect(await asyncTimeout(read, 5_000)).toBe(task);
+    expect(getObjectCore(task).docHandle?.url).toBe(later);
+  });
+
+  test('a version read whose document failed for a reason other than its absence rejects', async () => {
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
+    const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    await db.flush();
+    await settle(host, db);
+
+    const pending = generateAutomergeUrl();
+    await routeV3Elsewhere(db, task, pending);
+    db._repo.find<DatabaseDirectory>(pending)._failReady(new Error('creation failed'));
+    await expect(asyncTimeout(db.version(task, TaskV3), 5_000)).rejects.toThrow('creation failed');
+  });
+
+  test('an object whose routed document never arrives moves onto the next one routed once it arrives', async () => {
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
+    const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    await db.flush();
+    await settle(host, db);
+
+    const v3Name = DatabaseDirectory.versionBranchName('0.3.0');
+    const bytes = A.save((await versionDoc(db, task.id, '0.3.0')).doc());
+    const route = (url: string) =>
+      db._getSpaceRootDocHandle().change((doc: DatabaseDirectory) => {
+        const record = doc.branches?.[task.id]?.[v3Name];
+        invariant(record, 'no v3 record');
+        record.members[task.id] = new A.RawString(url);
+      });
+    // v3 moves to a document no peer delivers, then to another that arrives later.
+    const lost = generateAutomergeUrl();
+    route(lost);
+    expect(await db._repo.find<DatabaseDirectory>(lost).whenSettledOnDisk()).toBe(false);
+    const later = generateAutomergeUrl();
+    route(later);
+    expect(await db._repo.find<DatabaseDirectory>(later).whenSettledOnDisk()).toBe(false);
+    using _arrived = await host.automergeHost.createDoc(bytes, {
+      preserveHistory: true,
+      documentId: toDocumentId(later),
+    });
+    await waitForCondition({ condition: () => getObjectCore(task).docHandle?.url === later, timeout: 5_000 });
   });
 
   test('an object reads at the newest version the client knows, and a query returns it once', async () => {
@@ -345,6 +473,9 @@ describe('version documents on branches', () => {
     return dataOf(handle.doc(), objectId);
   };
 
+  const versionDocUrlOf = (db: EchoDatabase, objectId: string, version: string) =>
+    DatabaseDirectory.getVersionDocUrls(db._getSpaceRootDocHandle().doc(), objectId)[version];
+
   const mainData = async (db: EchoDatabase, objectId: string, version: string) =>
     dataOf((await versionDoc(db, objectId, version)).doc(), objectId);
 
@@ -373,6 +504,27 @@ describe('version documents on branches', () => {
     await settle(host, db);
     expect((await mainData(db, id, '0.3.0')).labels).toEqual(['branch']);
     expect((await mainData(db, id, '0.1.0')).tags).toEqual(['branch']);
+  });
+
+  test('a version read on a switched branch reads the branch, and the live version is the object itself', async () => {
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
+    db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    await db.flush();
+    await settle(host, db);
+    const [task] = await db.query(Filter.type(TaskV3)).run();
+
+    await createBranch(task, 'b1');
+    await switchBranch(task, 'b1');
+    Obj.update(task, (task) => {
+      task.labels.push('branch');
+    });
+    await db.flush();
+    await settle(host, db);
+
+    expect(await db.version(task, TaskV3)).toBe(task);
+    const older = await db.version(task, TaskV1);
+    expect(older?.tags).toEqual(['branch']);
+    expect((await mainData(db, task.id, '0.1.0')).tags).toEqual([]);
   });
 
   test("a versioned object that is a member of another root's branch binds to that branch", async () => {
@@ -412,5 +564,31 @@ describe('version documents on branches', () => {
     await settle(host, db);
     expect((await mainData(db, task.id, '0.1.0')).tags).toEqual(['branch']);
     expect((await mainData(db, task.id, '0.3.0')).labels).toEqual(['branch']);
+  });
+
+  test('a branch of an object created at a newer version merges back into that version after the upgrade', async () => {
+    const { db, host } = await builder.createDatabase({ types });
+    const task = db.add(Obj.make(TaskV3, { name: 'Plan', labels: [], done: false }));
+    await db.flush();
+    await createBranch(task, 'b1');
+    await switchBranch(task, 'b1');
+    Obj.update(task, (task) => {
+      task.labels.push('branch');
+    });
+    await db.flush();
+
+    // The upgrade: `links` moves to the derived oldest version, while the branch still holds v3.
+    db.graph.registry.add(lenses);
+    await settle(host, db);
+    expect(versionDocUrlOf(db, task.id, '0.1.0')).toBe(db._getSpaceRootDocHandle().doc().links?.[task.id]?.toString());
+
+    await mergeBranch(task, 'b1');
+    await settle(host, db);
+    expect((await mainData(db, task.id, '0.3.0')).labels).toEqual(['branch']);
+    expect((await mainData(db, task.id, '0.1.0')).tags).toEqual(['branch']);
+    // Each branch document merged into main's document of its own version, never into an unrelated one.
+    for (const version of ['0.1.0', '0.2.0', '0.3.0']) {
+      expect(A.getConflicts((await versionDoc(db, task.id, version)).doc(), 'objects')).toBeUndefined();
+    }
   });
 });

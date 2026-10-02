@@ -43,6 +43,7 @@ export const canonical = (value: unknown): string =>
 const describePlan = (plan: Plan) => ({
   entries: plan.entries.map(describe).sort((left, right) => (canonical(left) < canonical(right) ? -1 : 1)),
   overlays: [...plan.overlays].sort(),
+  dropped: [...plan.coverage.dropped].sort(),
   defaults: plan.defaults,
 });
 
@@ -69,8 +70,8 @@ const describe = (entry: ResolvedEntry): unknown =>
         };
 
 /**
- * The digest of a declarative lens: its endpoints, every resolved entry (nested plans included) and the
- * defaults it starts at, as canonical JSON. Whatever records it hashes it to the length it needs.
+ * The digest of a declarative lens: its endpoints, every resolved entry (nested plans included), the source
+ * properties it drops and the defaults it starts at, as canonical JSON. Whatever records it hashes it to the length it needs.
  */
 export const planDigest = (source: Type.AnyObj, target: Type.AnyObj | Schema.Top, plan: Plan): string =>
   canonical({ source: Type.getURI(source), target: endpointOf(target), ...describePlan(plan) });
