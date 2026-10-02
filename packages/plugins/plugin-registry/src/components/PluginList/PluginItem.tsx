@@ -2,12 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { Next, useTranslation } from '@dxos/react-ui';
-import { Listbox } from '@dxos/react-ui-list';
 import { ACCENT_HUES } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -95,64 +94,77 @@ export const PluginItem = ({
   const showInstallButton = !!onInstall && !isInstalled;
   const showUpdateButton = !!onUpdate && isInstalled && !!hasUpdate;
   const hasSettings = hasSettingsProp?.(id) ?? false;
+  const titleId = `${id}-title`;
   const handleClick = useCallback(() => onClick?.(id), [id, onClick]);
   const handleSettings = useCallback(() => onSettings?.(id), [id, onSettings]);
-  const handleInstall = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onInstall?.(id);
-    },
-    [id, onInstall],
-  );
-  const handleUpdate = useCallback(
-    (event: MouseEvent) => {
-      event.stopPropagation();
-      onUpdate?.(id);
-    },
-    [id, onUpdate],
-  );
+  const handleInstall = useCallback(() => onInstall?.(id), [id, onInstall]);
+  const handleUpdate = useCallback(() => onUpdate?.(id), [id, onUpdate]);
 
   return (
-    <Listbox.Item id={id} data-testid={`pluginList.${id}`}>
-      <Listbox.ItemIcon icon={icon} hue={hue} />
-      <Listbox.ItemText />
-      {description && <Listbox.ItemDescription>{description}</Listbox.ItemDescription>}
-      {failure && <PluginFailureBadge failure={failure} />}
-      {deviceOnly && <Next.Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' />}
-      {displayTags.map((tag) => (
-        <Next.Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
-          {tag}
-        </Next.Tag>
-      ))}
-      <Next.Button variant='ghost' iconOnly icon='ph--info--regular' label={t('details.label')} onClick={handleClick} />
-      <Next.Button
-        variant='ghost'
-        iconOnly
-        icon='ph--gear--regular'
-        label={t('plugin-settings.label')}
-        disabled={!hasSettings}
-        onClick={handleSettings}
-      />
-      {isUpdating ? (
-        <Next.Button variant='primary' disabled label={t('updating.label')} />
-      ) : showUpdateButton ? (
-        <Next.Button variant='primary' label={t('update.label')} onClick={handleUpdate} />
-      ) : showInstallButton ? (
-        <Next.Button
-          variant='primary'
-          disabled={isInstalling}
-          label={isInstalling ? t('installing.label') : t('install.label')}
-          onClick={handleInstall}
-        />
-      ) : (
-        <Next.Switch
-          aria-label={name ?? id}
-          checked={isEnabled}
-          disabled={readOnly}
-          onCheckedChange={({ checked }) => onChange?.(id, checked)}
-        />
-      )}
-    </Listbox.Item>
+    <Next.Card.Root role='listitem' aria-labelledby={titleId} data-testid={`pluginList.${id}`}>
+      <Next.Card.Tile icon={icon} hue={hue} aria-label={t('details.label')} onClick={handleClick} />
+      <Next.Card.Body>
+        <Next.Card.Header>
+          <Next.Card.Title id={titleId} truncate>
+            {name ?? id}
+          </Next.Card.Title>
+          {failure && <PluginFailureBadge failure={failure} />}
+          {deviceOnly && (
+            <Next.Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' tone='description' />
+          )}
+        </Next.Card.Header>
+        {description && (
+          <Next.Typography tone='description' lines={4}>
+            {description}
+          </Next.Typography>
+        )}
+        {displayTags.length > 0 && (
+          <Next.Group>
+            {displayTags.map((tag) => (
+              <Next.Tag key={tag} hue={tagColors[tag as RegistryTagType]}>
+                {tag.toUpperCase()}
+              </Next.Tag>
+            ))}
+          </Next.Group>
+        )}
+        <Next.Card.Footer justify='between'>
+          <Next.Group>
+            <Next.Button
+              variant='ghost'
+              iconOnly
+              icon='ph--gear--regular'
+              label={t('plugin-settings.label')}
+              disabled={!hasSettings}
+              onClick={handleSettings}
+            />
+            <Next.Link asChild variant='neutral'>
+              <button type='button' onClick={handleClick}>
+                {t('details.label')}
+              </button>
+            </Next.Link>
+          </Next.Group>
+          {isUpdating ? (
+            <Next.Button variant='primary' disabled label={t('updating.label')} />
+          ) : showUpdateButton ? (
+            <Next.Button variant='primary' label={t('update.label')} onClick={handleUpdate} />
+          ) : showInstallButton ? (
+            <Next.Button
+              variant='primary'
+              disabled={isInstalling}
+              label={isInstalling ? t('installing.label') : t('install.label')}
+              onClick={handleInstall}
+            />
+          ) : (
+            <Next.Switch
+              aria-label={name ?? id}
+              checked={isEnabled}
+              disabled={readOnly}
+              onCheckedChange={({ checked }) => onChange?.(id, checked)}
+            />
+          )}
+        </Next.Card.Footer>
+      </Next.Card.Body>
+    </Next.Card.Root>
   );
 };
 

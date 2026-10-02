@@ -736,6 +736,11 @@
     padding-block: var(--nx-gap-size);
     min-height: var(--nx-block-size);
   }
+  /* A nested group is one cell of its parent's row, which already carries the padding. */
+  .nx-group > .nx-group {
+    padding-block: 0;
+    min-height: 0;
+  }
   .nx-group[data-justify='end'] {
     justify-content: flex-end;
   }

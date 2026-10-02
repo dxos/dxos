@@ -45,6 +45,44 @@
     border-start-end-radius: calc(var(--radius-md, 0.375rem) - 1px);
   }
 
+  /*
+   * Tile: a leading full-height hue block with a large icon. The card becomes a row with no start or block padding, so
+   * the tile meets the border on three sides, and the column after it takes the block padding instead.
+   */
+  .nx-card:has(> .nx-card-tile:first-child) {
+    flex-direction: row;
+    gap: var(--nx-card-inset);
+    padding-block: 0;
+    padding-inline-start: 0;
+    overflow: hidden;
+  }
+  .nx-card:has(> .nx-card-tile:first-child) > :not(.nx-card-tile) {
+    flex: 1;
+    padding-block: var(--nx-gap-size);
+  }
+  .nx-card-tile {
+    --nx-hue-bg: var(--color-neutral-surface);
+    --nx-hue-fg: var(--color-neutral-fg);
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--nx-card-tile-size, 5rem);
+    padding-block-start: var(--nx-block-size);
+    background: var(--nx-hue-bg);
+  }
+  .nx-card-tile > .nx-icon {
+    width: calc(var(--nx-card-tile-size, 5rem) * 0.7);
+    height: calc(var(--nx-card-tile-size, 5rem) * 0.7);
+    color: var(--nx-hue-fg);
+  }
+  .nx-card-tile-clickable {
+    cursor: pointer;
+  }
+  /* A Body beside a Tile ends with its Footer, whatever the description's length. */
+  .nx-card:has(> .nx-card-tile:first-child) > .nx-card-body > .nx-card-footer {
+    margin-block-start: auto;
+  }
+
   /* Body and Section: flex columns, or subgrids across a grid card's rails whose children sit in the content track. */
   .nx-card-body,
   .nx-card-section {

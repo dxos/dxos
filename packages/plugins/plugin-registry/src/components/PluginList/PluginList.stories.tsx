@@ -60,7 +60,7 @@ const DefaultStory = () => {
       <Next.Panel.Body asChild>
         <Next.ScrollArea.Root>
           <Next.ScrollArea.Viewport asChild>
-            <Next.Container gutter='rail'>
+            <Next.Container gutter='md' padBlock>
               <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
             </Next.Container>
           </Next.ScrollArea.Viewport>
@@ -98,8 +98,7 @@ export const FullScreen: Story = {
 };
 
 /**
- * Each row's icon takes the plugin's hue; the row's controls leave the tab order to the list, and its switch still
- * toggles from a click.
+ * Each card's tile takes the plugin's hue, its tags read in capitals, and its switch toggles from a click.
  */
 export const Test: Story = {
   decorators: [withTheme(), withLayout({ layout: 'column', classNames: 'dx-deck-surface' })],
@@ -108,11 +107,13 @@ export const Test: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const list = await canvas.findByRole('listbox', { name: 'plugins' });
-    const [row] = within(list).getAllByRole('option');
-    await expect(row.querySelector('[data-part="item-icon"] svg')?.getAttribute('data-hue')).toBeTruthy();
-    const toggle = within(row).getByRole('switch');
-    await expect(toggle).toHaveAttribute('tabindex', '-1');
+    const list = await canvas.findByRole('list', { name: 'plugins' });
+    const [card] = within(list).getAllByRole('listitem');
+    await expect(card.querySelector('[data-part="tile"]')?.getAttribute('data-hue')).toBeTruthy();
+    for (const tag of card.querySelectorAll('[data-scope="tag"]')) {
+      await expect(tag.textContent).toBe(tag.textContent?.toUpperCase());
+    }
+    const toggle = within(card).getByRole('switch');
     await userEvent.click(toggle);
     await waitFor(() => expect(toggle).toBeChecked());
   },

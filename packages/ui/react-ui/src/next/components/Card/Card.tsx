@@ -13,8 +13,8 @@ import { type Size } from '../../sizes.ts';
 import { Block } from '../Block/index.ts';
 import { Button, type ButtonProps } from '../Button/index.ts';
 import { Container } from '../Container/index.ts';
-import { Group } from '../Group/index.ts';
-import { Icon } from '../Icon/index.ts';
+import { Group, type GroupProps } from '../Group/index.ts';
+import { Icon, type IconHue } from '../Icon/index.ts';
 import { Image, type ImageProps } from '../Image/index.ts';
 import { Menu } from '../Menu/index.ts';
 import { SystemButton } from '../SystemButton/index.ts';
@@ -90,6 +90,38 @@ const CardPoster = forwardRef<HTMLDivElement, CardPosterProps>(({ classNames, ..
 ));
 
 CardPoster.displayName = 'Next.Card.Poster';
+
+//
+// Tile
+//
+
+type CardTileProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'div'>, 'children'>> & {
+  icon: string;
+  /** Fills the tile with the hue's surface and colours the icon with its foreground. */
+  hue?: IconHue;
+};
+
+/**
+ * A full-height leading tile of the card's hue holding a large icon; first in the card, it lays the card out as a row,
+ * so the parts after it (a Body) form the column beside it. With `onClick` it is a button (Enter and Space activate it).
+ */
+const CardTile = forwardRef<HTMLDivElement, CardTileProps>(
+  ({ classNames, icon, hue, onClick, onKeyDown, ...props }, forwardedRef) => (
+    <div
+      {...props}
+      {...clickableProps(onClick, onKeyDown)}
+      data-scope='card'
+      data-part='tile'
+      data-hue={hue}
+      className={mx(recipes.cardTile(), onClick && recipes.cardTileClickable(), classNames)}
+      ref={forwardedRef}
+    >
+      <Icon icon={icon} hue={hue} />
+    </div>
+  ),
+);
+
+CardTile.displayName = 'Next.Card.Tile';
 
 //
 // Header
@@ -174,14 +206,25 @@ CardBody.displayName = 'Next.Card.Body';
 // Footer
 //
 
-type CardFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+type CardFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
+  /** `between` splits leading actions (a nested Group) from a trailing control. */
+  justify?: GroupProps['justify'];
+};
 
-/** An end-justified `Next.Group` of actions in the content track. */
-const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(({ classNames, ...props }, forwardedRef) => (
-  <Group asChild justify='end'>
-    <div {...props} data-scope='card' data-part='footer' className={mx(classNames)} ref={forwardedRef} />
-  </Group>
-));
+/** A `Next.Group` of actions in the content track, end-justified unless `justify` says otherwise. */
+const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
+  ({ classNames, justify = 'end', ...props }, forwardedRef) => (
+    <Group asChild justify={justify}>
+      <div
+        {...props}
+        data-scope='card'
+        data-part='footer'
+        className={mx(recipes.cardFooter(), classNames)}
+        ref={forwardedRef}
+      />
+    </Group>
+  ),
+);
 
 CardFooter.displayName = 'Next.Card.Footer';
 
@@ -420,6 +463,7 @@ CardMenu.displayName = 'Next.Card.Menu';
 export const Card = {
   Root: CardRoot,
   Poster: CardPoster,
+  Tile: CardTile,
   Header: CardHeader,
   Title: CardTitle,
   Description: CardDescription,
@@ -446,5 +490,6 @@ export type {
   CardRowProps,
   CardSectionProps,
   CardTextProps,
+  CardTileProps,
   CardTitleProps,
 };

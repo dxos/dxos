@@ -215,6 +215,80 @@ export const Sized: Story = {
   },
 };
 
+const TILES = [
+  { icon: 'ph--kanban--regular', hue: 'indigo', title: 'Kanban', text: 'Boards of cards in columns.' },
+  {
+    icon: 'ph--table--regular',
+    hue: 'green',
+    title: 'Sheet',
+    text: 'Spreadsheets with formulas, ranges and charts, shared live with everyone in the space, and a much longer description that clamps to three lines however wide the card is.',
+  },
+  { icon: 'ph--compass--regular', hue: 'amber', title: 'Explorer', text: 'Browse the graph.' },
+] as const;
+
+const TileGridStory = () => {
+  const [opened, setOpened] = useState('');
+  return (
+    <Next.Container gutter='md' padBlock data-testid='tile-root'>
+      <Next.Container
+        layout='row'
+        columns='repeat(auto-fill, minmax(14rem, 1fr))'
+        gap='lg'
+        align='stretch'
+        data-testid='tile-grid'
+      >
+        {TILES.map(({ icon, hue, title, text }) => (
+          <Next.Card.Root key={title} data-testid={`tile-card-${title}`}>
+            <Next.Card.Tile icon={icon} hue={hue} onClick={() => setOpened(title)} data-testid={`tile-${title}`} />
+            <Next.Card.Body>
+              <Next.Card.Header>
+                <Next.Card.Title truncate>{title}</Next.Card.Title>
+              </Next.Card.Header>
+              <Next.Typography tone='description' lines={3}>
+                {text}
+              </Next.Typography>
+              <Next.Card.Footer justify='between' data-testid={`tile-footer-${title}`}>
+                <Next.Tag hue='purple'>labs</Next.Tag>
+                <Next.Switch aria-label={title} />
+              </Next.Card.Footer>
+            </Next.Card.Body>
+          </Next.Card.Root>
+        ))}
+      </Next.Container>
+      <Next.Typography data-testid='tile-opened'>{opened}</Next.Typography>
+    </Next.Container>
+  );
+};
+
+/**
+ * A responsive grid of tile cards: a `row` Container whose columns auto-fill, `align='stretch'` so a row's cards share
+ * the tallest's height, and `padBlock` on the template root so the grid starts a gutter below its top edge.
+ */
+export const TileGrid: Story = {
+  render: () => <TileGridStory />,
+  play: async ({ canvasElement }) => {
+    const card = byTestId(canvasElement, 'tile-card-Kanban').getBoundingClientRect();
+    const tile = byTestId(canvasElement, 'tile-Kanban');
+    const tileRect = tile.getBoundingClientRect();
+    // The tile fills the card's start edge and full height, inside its border.
+    await expect(tileRect.left - card.left).toBeCloseTo(1, 0);
+    await expect(tileRect.height).toBeCloseTo(card.height - 2, 0);
+    await expect(getComputedStyle(tile).backgroundColor).not.toBe(
+      getComputedStyle(byTestId(canvasElement, 'tile-card-Kanban')).backgroundColor,
+    );
+    // Cards of a row stretch to the tallest, and each footer ends at its card's bottom.
+    const sheet = byTestId(canvasElement, 'tile-card-Sheet').getBoundingClientRect();
+    await expect(sheet.height).toBeCloseTo(card.height, 0);
+    const footer = byTestId(canvasElement, 'tile-footer-Kanban').getBoundingClientRect();
+    await expect(card.bottom - footer.bottom).toBeLessThan(12);
+    // `padBlock` starts the grid a gutter below the root's edge.
+    const root = byTestId(canvasElement, 'tile-root').getBoundingClientRect();
+    await expect(card.top - root.top).toBeGreaterThan(0);
+    await userEvent.click(tile);
+    await waitFor(() => expect(byTestId(canvasElement, 'tile-opened')).toHaveTextContent('Kanban'));
+  },
+};
+
 /** A Row's `leading` content (here an avatar) takes the icon's Block in the start rail. */
 export const LeadingRow: Story = {
   render: () => (

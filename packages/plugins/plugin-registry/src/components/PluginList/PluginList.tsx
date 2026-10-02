@@ -2,11 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import React, { useMemo } from 'react';
+import React from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Listbox } from '@dxos/react-ui-list';
+import { Next } from '@dxos/react-ui';
 
 import { PluginItem, type PluginItemProps } from './PluginItem.tsx';
 
@@ -39,29 +39,26 @@ export const PluginList = ({
   deviceOnlyIds,
   ...props
 }: PluginListProps) => {
-  const items = useMemo(
-    () =>
-      plugins.map((plugin) => ({
-        value: plugin.meta.profile.key,
-        label: plugin.meta.profile.name ?? plugin.meta.profile.key,
-      })),
-    [plugins],
-  );
   return (
-    <Listbox.Root items={items}>
-      <Listbox.Content aria-label='plugins' scroll={false}>
-        {plugins.map((plugin) => (
-          <PluginItem
-            key={plugin.meta.profile.key}
-            plugin={plugin}
-            extraTags={extraTagsById?.[plugin.meta.profile.key]}
-            hasUpdate={updateAvailableIds?.has(plugin.meta.profile.key)}
-            failure={failuresById?.[plugin.meta.profile.key]}
-            deviceOnly={deviceOnlyIds?.has(plugin.meta.profile.key)}
-            {...props}
-          />
-        ))}
-      </Listbox.Content>
-    </Listbox.Root>
+    <Next.Container
+      layout='row'
+      columns='repeat(auto-fill, minmax(18rem, 1fr))'
+      gap='lg'
+      align='stretch'
+      role='list'
+      aria-label='plugins'
+    >
+      {plugins.map((plugin) => (
+        <PluginItem
+          key={plugin.meta.profile.key}
+          plugin={plugin}
+          extraTags={extraTagsById?.[plugin.meta.profile.key]}
+          hasUpdate={updateAvailableIds?.has(plugin.meta.profile.key)}
+          failure={failuresById?.[plugin.meta.profile.key]}
+          deviceOnly={deviceOnlyIds?.has(plugin.meta.profile.key)}
+          {...props}
+        />
+      ))}
+    </Next.Container>
   );
 };

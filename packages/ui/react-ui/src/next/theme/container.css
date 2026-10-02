@@ -46,6 +46,10 @@
     justify-self: center;
   }
 
+  .nx-grid[data-pad-block]:not([data-gutter='inherit']) {
+    padding-block: var(--nx-gutter);
+  }
+
   .nx-grid[data-gutter='inherit'] {
     grid-column: full;
     grid-template-columns: subgrid;
@@ -100,6 +104,9 @@
   }
   .nx-grid[data-layout='row'][data-align='start'] {
     align-items: start;
+  }
+  .nx-grid[data-layout='row'][data-align='stretch'] {
+    align-items: stretch;
   }
   .nx-grid[data-layout='row'] > :not([data-rail]) {
     grid-column: auto;

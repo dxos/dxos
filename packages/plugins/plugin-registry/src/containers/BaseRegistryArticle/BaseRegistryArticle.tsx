@@ -152,7 +152,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
         <Next.Panel.Body asChild>
           <Next.ScrollArea.Root>
             <Next.ScrollArea.Viewport asChild>
-              <Next.Container gutter='rail'>
+              <Next.Container gutter='md' padBlock>
                 {filtered.length > 0 ? (
                   <PluginList
                     plugins={filtered}

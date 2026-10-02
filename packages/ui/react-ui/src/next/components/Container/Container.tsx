@@ -54,13 +54,16 @@ export type ContainerProps = {
   gap?: ContainerGap;
   /**
    * Block alignment of a `row`'s cells: `center` (default) centres controls in a one-block row; `start` tops cells of
-   * differing heights (e.g. two forms side by side), which centring would offset against the tallest.
+   * differing heights (e.g. two forms side by side), which centring would offset against the tallest; `stretch` makes
+   * every cell of a row as tall as its tallest (a grid of cards).
    */
-  align?: 'center' | 'start';
+  align?: 'center' | 'start' | 'stretch';
   /** Tracks the container spans in a parent Container (e.g. a cell across two columns of a `row`). */
   span?: Span;
   /** `document` caps a template root at the reading width and centres it (the current `dx-document`). */
   width?: 'document';
+  /** Pads the block axis by the gutter too, so content scrolled in a template root starts and ends a gutter inside. */
+  padBlock?: boolean;
 };
 
 /**
@@ -79,6 +82,7 @@ export const containerAttributes = ({
   align,
   span,
   width,
+  padBlock,
 }: ContainerProps) => {
   const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
   const style: CSSProperties & CSSVariables = columns ? { ...spanStyle, '--nx-columns': columns } : spanStyle;
@@ -90,8 +94,9 @@ export const containerAttributes = ({
     'data-place': place,
     'data-surface': level,
     'data-gap': gap,
-    'data-align': align === 'start' ? align : undefined,
+    'data-align': align === 'center' ? undefined : align,
     'data-width': width,
+    'data-pad-block': padBlock ? '' : undefined,
     'data-columns': columns ? '' : undefined,
     style,
   };
@@ -113,6 +118,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       align,
       span,
       width,
+      padBlock,
       ...props
     },
     forwardedRef,
@@ -143,6 +149,7 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
       align,
       span,
       width,
+      padBlock,
     });
     return (
       <ark.div
