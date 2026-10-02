@@ -7,7 +7,7 @@ import { afterEach, describe, test, vi } from 'vitest';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { DeckPlugin } from '#plugin';
 import { DeckCapabilities } from '#types';

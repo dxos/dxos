@@ -11,7 +11,7 @@ import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query } from '@dxos/echo';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { useTriggerRuntimeControls } from '@dxos/plugin-routine/hooks';
+import { useTriggerRuntimeControls } from '@dxos/plugin-routine/Hooks';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Button, Field, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';

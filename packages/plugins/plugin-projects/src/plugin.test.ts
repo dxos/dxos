@@ -14,7 +14,7 @@ import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { ProjectsPlugin } from '#plugin';

@@ -11,7 +11,7 @@ import { Database, Obj, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { scaffoldProject } from '@dxos/plugin-projects/templates';
+import { scaffoldProject } from '@dxos/plugin-projects/Templates';
 import { makeRoutine } from '@dxos/plugin-routine';
 import { trim } from '@dxos/util';
 

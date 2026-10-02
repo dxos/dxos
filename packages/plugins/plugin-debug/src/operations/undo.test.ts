@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { DebugPlugin } from '#plugin';
 import { DebugOperation } from '#types';

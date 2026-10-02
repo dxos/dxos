@@ -11,7 +11,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj, Order, Query, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { MessageArticle } from '@dxos/plugin-inbox/containers';
+import { MessageArticle } from '@dxos/plugin-inbox/Containers';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';

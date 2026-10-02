@@ -39,7 +39,7 @@ import * as StagedUpload from '@dxos/plugin-file/StagedUpload';
 import * as InboxPlugin from '@dxos/plugin-inbox/InboxPlugin';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import {
   EdgeStatus_ConnectionState,

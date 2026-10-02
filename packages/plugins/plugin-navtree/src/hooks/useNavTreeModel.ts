@@ -5,7 +5,7 @@
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { useGraphTreeModel } from '@dxos/plugin-graph/hooks';
+import { useGraphTreeModel } from '@dxos/plugin-graph/Hooks';
 import { type TreeModel } from '@dxos/react-ui-list';
 
 import { NavTreeNode } from '#types';

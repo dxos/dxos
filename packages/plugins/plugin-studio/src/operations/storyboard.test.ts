@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { configuredCredentialsLayer } from '@dxos/compute-runtime';
-import { type NoHandlerError } from '@dxos/compute/errors';
+import { type NoHandlerError } from '@dxos/compute/Errors';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';

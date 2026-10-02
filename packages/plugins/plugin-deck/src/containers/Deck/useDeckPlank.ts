@@ -11,7 +11,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
 import { type AttentionSigilAction } from '@dxos/app-toolkit/ui';
 import { useAppGraph, useNavigationPresence } from '@dxos/app-toolkit/ui';
-import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/hooks';
+import { useActionRunner, useActions, useNode } from '@dxos/plugin-graph/Hooks';
 
 import { useBreakpoints, useCompanions, useDeckSettings, useDeckState } from '#hooks';
 import { meta } from '#meta';

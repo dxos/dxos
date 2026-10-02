@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import { Type } from '@dxos/echo';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 import { Task, TaskMigration, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';

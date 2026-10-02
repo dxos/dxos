@@ -9,7 +9,7 @@ import { EffectEx } from '@dxos/effect';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { SpacePlugin } from '#plugin';
 import { SpaceEvents, SpaceOperation } from '#types';

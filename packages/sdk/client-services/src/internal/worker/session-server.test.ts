@@ -15,7 +15,7 @@ import { Rpc, makeClientServicesRpc } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { EffectEx } from '@dxos/effect';
 import { RTCService } from '@dxos/protocols/rpc';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
 
 import { makeWorkerRuntime } from './worker-runtime.ts';
 

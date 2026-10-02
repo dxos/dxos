@@ -12,7 +12,7 @@ import * as Project from '@dxos/compute/Project';
 import { Feed } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { scaffoldProject } from '@dxos/plugin-projects/templates';
+import { scaffoldProject } from '@dxos/plugin-projects/Templates';
 import { Outline, TaskSet } from '@dxos/types';
 import { trim } from '@dxos/util';
 

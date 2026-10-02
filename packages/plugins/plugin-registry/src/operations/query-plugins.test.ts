@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { RegistryOperation } from '#operations';

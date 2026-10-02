@@ -17,7 +17,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { DXN } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 import { hotkeyStore, setHotkeyScope } from '@dxos/react-focus/store';
 
 import { NavTreePlugin } from '#plugin';

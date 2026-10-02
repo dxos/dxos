@@ -14,7 +14,7 @@ import { log } from '@dxos/log';
 import { Stage } from '@dxos/pipeline';
 import { EmailStage } from '@dxos/pipeline-email';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { MailSyncError, type MailSyncItem, MailSyncProvider, type MailSyncSource } from '@dxos/plugin-inbox/sync';
+import { MailSyncError, type MailSyncItem, MailSyncProvider, type MailSyncSource } from '@dxos/plugin-inbox/MailSync';
 import type * as SyncStreamConfig from '@dxos/plugin-inbox/SyncStreamConfig';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { TagIndex } from '@dxos/schema';

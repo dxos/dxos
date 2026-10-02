@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
-import { githubReferences, referenceUrl } from '@dxos/plugin-github/extensions';
+import { githubReferences, referenceUrl } from '@dxos/plugin-github/Extensions';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';

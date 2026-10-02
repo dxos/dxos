@@ -8,8 +8,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Query } from '@dxos/echo';
 import { QueryBuilder } from '@dxos/echo-query';
-import { ForceGraph } from '@dxos/plugin-explorer/components';
-import { useGraphModel } from '@dxos/plugin-explorer/hooks';
+import { ForceGraph } from '@dxos/plugin-explorer/ForceGraph';
+import { useGraphModel } from '@dxos/plugin-explorer/Hooks';
 import { type Space, useFlush, useQuery } from '@dxos/react-client/echo';
 import { IconButton, Panel, Toolbar, composable, composableProps } from '@dxos/react-ui';
 import { type ChatEditorProps } from '@dxos/react-ui-chat';

@@ -84,17 +84,22 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
+    "./Chat": {
+      "source": "./src/components/Chat/index.ts",
+      "types": "./dist/types/src/components/Chat/index.d.ts",
+      "import": "./dist/lib/Chat.mjs"
     },
-    "./extensions": {
+    "./TracePanel": {
+      "source": "./src/containers/TracePanel/TracePanel.tsx",
+      "types": "./dist/types/src/containers/TracePanel/TracePanel.d.ts",
+      "import": "./dist/lib/TracePanel.mjs"
+    },
+    "./Extensions": {
       "source": "./src/extensions/index.ts",
       "types": "./dist/types/src/extensions/index.d.ts",
       "import": "./dist/lib/extensions.mjs"
     },
-    "./hooks": {
+    "./Hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
       "import": "./dist/lib/hooks.mjs"

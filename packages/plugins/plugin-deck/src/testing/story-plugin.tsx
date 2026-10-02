@@ -20,7 +20,7 @@ import { AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
-import { useConnections } from '@dxos/plugin-graph/hooks';
+import { useConnections } from '@dxos/plugin-graph/Hooks';
 import { random } from '@dxos/random';
 import { Panel } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';

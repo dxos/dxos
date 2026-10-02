@@ -102,11 +102,6 @@
       "types": "./dist/types/src/Binding.d.ts",
       "import": "./dist/lib/Binding.mjs"
     },
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
-    },
     "./ConnectorsSkill": {
       "source": "./src/skills/ConnectorsSkill.ts",
       "types": "./dist/types/src/skills/ConnectorsSkill.d.ts",

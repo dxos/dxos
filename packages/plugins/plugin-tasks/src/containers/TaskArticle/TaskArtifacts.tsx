@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { CardMasonry } from '@dxos/plugin-space/components';
+import { CardMasonry } from '@dxos/plugin-space/CardMasonry';
 import { Column, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 

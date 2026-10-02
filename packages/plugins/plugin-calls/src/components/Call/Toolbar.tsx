@@ -9,8 +9,8 @@ import { useCapability } from '@dxos/app-framework/ui';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
-import { useActions, useNode } from '@dxos/plugin-graph/hooks';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import { useActions, useNode } from '@dxos/plugin-graph/Hooks';
+import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import {
   Icon,
   IconButton,

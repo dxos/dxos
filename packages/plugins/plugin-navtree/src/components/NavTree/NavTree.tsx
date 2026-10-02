@@ -7,7 +7,7 @@ import React, { forwardRef, useMemo } from 'react';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
+import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/Hooks';
 import { Tabs } from '@dxos/react-ui';
 import { type MenuItem } from '@dxos/react-ui-menu';
 import { Position } from '@dxos/util';

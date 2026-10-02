@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type Shortcut } from '@dxos/plugin-space/dashboard';
+import { type Shortcut } from '@dxos/plugin-space/Dashboard';
 
 import { renderEmptyKey, renderKey } from './key.ts';
 

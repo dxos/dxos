@@ -20,7 +20,7 @@ import { Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { McpServer } from '@dxos/mcp-server';
 import * as LocalUpload from '@dxos/mcp-server/LocalUpload';
-import { FileSkill } from '@dxos/plugin-file/skills';
+import { FileSkill } from '@dxos/plugin-file/Skills';
 import * as StagedUpload from '@dxos/plugin-file/StagedUpload';
 import * as ObservabilityCapabilities from '@dxos/plugin-observability/ObservabilityCapabilities';
 import * as ProjectsEvents from '@dxos/plugin-projects/ProjectsEvents';

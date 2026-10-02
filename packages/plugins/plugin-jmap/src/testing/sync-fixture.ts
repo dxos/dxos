@@ -14,7 +14,7 @@ import { type Resolver } from '@dxos/extractor';
 import { type Connection } from '@dxos/link';
 import { type ConnectionAuthExpiredError } from '@dxos/plugin-connector';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { type MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
+import { type MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/MailSync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
 import { type JmapDataset, JmapMailApi } from '#services';

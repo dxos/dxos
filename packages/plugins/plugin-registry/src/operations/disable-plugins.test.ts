@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { RegistryOperation } from '#operations';
 import { RegistryPlugin } from '#plugin';

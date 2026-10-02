@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useRef, useState, useSyncExternalStore }
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
 import {
   FloatingPanel,

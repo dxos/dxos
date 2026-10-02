@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type MetricSpec } from '@dxos/plugin-space/dashboard';
+import { type MetricSpec } from '@dxos/plugin-space/Dashboard';
 
 import type * as Protocol from '#protocol';
 

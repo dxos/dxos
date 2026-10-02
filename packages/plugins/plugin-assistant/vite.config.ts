@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    Chat: 'src/components/Chat/index.ts',
+    TracePanel: 'src/containers/TracePanel/TracePanel.tsx',
     AssistantSkill: 'src/skills/assistant/AssistantSkill.ts',
     index: 'src/index.ts',
     AssistantPlugin: 'src/AssistantPlugin.ts',

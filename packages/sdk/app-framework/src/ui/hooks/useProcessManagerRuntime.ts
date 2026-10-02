@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import { type DependencyList, use, useCallback, useMemo } from 'react';
 
-import type { ServiceNotAvailableError } from '@dxos/compute/errors';
+import type { ServiceNotAvailableError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { EffectEx } from '@dxos/effect';

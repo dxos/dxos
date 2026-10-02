@@ -13,7 +13,7 @@ import { Context, Resource } from '@dxos/context';
 import { RuntimeProvider } from '@dxos/effect';
 import { type SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 
 import { FeedStore } from '../feed-store.ts';

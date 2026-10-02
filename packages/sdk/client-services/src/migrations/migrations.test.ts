@@ -8,7 +8,7 @@ import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import hypercoreInit from './hypercore/0001_init.sql?raw';

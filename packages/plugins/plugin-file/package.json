@@ -110,7 +110,7 @@
       "types": "./dist/types/src/types/Settings.d.ts",
       "import": "./dist/lib/Settings.mjs"
     },
-    "./skills": {
+    "./Skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
       "import": "./dist/lib/skills.mjs"
@@ -142,7 +142,7 @@
       "StagedUpload": [
         "dist/types/src/StagedUpload.d.ts"
       ],
-      "skills": [
+      "Skills": [
         "dist/types/src/skills/index.d.ts"
       ]
     }

@@ -13,7 +13,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj, Ref } from '@dxos/echo';
 import type * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { makeRoutine } from '@dxos/plugin-routine/util';
+import { makeRoutine } from '@dxos/plugin-routine/Wire';
 import { Outline, type TaskSet } from '@dxos/types';
 
 import { type DrawingsResult } from './drawings.ts';

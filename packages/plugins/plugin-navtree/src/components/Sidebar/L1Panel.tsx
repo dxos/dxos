@@ -9,7 +9,7 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
+import { useActionRunner, useEdges } from '@dxos/plugin-graph/Hooks';
 import {
   Banner,
   DensityProvider,

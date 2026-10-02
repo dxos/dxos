@@ -14,6 +14,7 @@ so `warn` and `error` both fail CI; the distinction is documentary.
 
 | Rule | Enforces | Severity | Fix |
 | --- | --- | --- | --- |
+| `dxos-subpath-entrypoints` | A package with namespace subpaths declares no other entry points beyond the conventional ones | error | no |
 | `dxos-subpath-exports` | A package's root barrel agrees with the per-namespace subpaths in its `exports` map | warn | partial |
 | `dxos-subpath-imports` | Namespace subpath imports for designated `@dxos` packages | warn | yes |
 | `dxos-package-imports` | A package's own `imports` aliases over relative paths to the same file | warn | yes |
@@ -41,6 +42,12 @@ checked and passed:
   migration itself rather than a defect. It lints only the root barrel, following bare `export *`
   into nested barrels — so `export * from './types'` with the namespaces a directory down satisfies
   the same contract as declaring them all at the root.
+- **`dxos-subpath-entrypoints` engages on the same packages as `dxos-subpath-exports`** and reports
+  on the root barrel, since the exports map itself is not linted. Beside PascalCase namespace
+  subpaths a package may declare only `.`, `./package.json`, `./plugin`, `./translations`,
+  `./vite-plugin`, `./testing` and `./testing/*`, `./assets/*`, and a Storybook addon's `./manager`
+  and `./preview`. A `./hooks` becomes `./Hooks`, a `./components` one subpath per component set.
+  The few entry points still pending a migration of their own are listed in the rule.
 - **`dxos-subpath-imports` applies to a fixed list**, currently `@dxos/app-framework`,
   `@dxos/app-graph`, `@dxos/app-toolkit`, `@dxos/assistant-toolkit`, `@dxos/compute`. Adding a
   package to that list requires the package to export `./package.json`, or the rule silently finds

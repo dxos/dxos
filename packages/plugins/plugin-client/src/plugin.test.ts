@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 // #plugin resolves to ClientPlugin.node.ts under the source condition used by vitest.
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 

@@ -8,7 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
-import { toMetrics } from '@dxos/plugin-space/dashboard';
+import { toMetrics } from '@dxos/plugin-space/Dashboard';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 
 import * as LaMetric from '#protocol';

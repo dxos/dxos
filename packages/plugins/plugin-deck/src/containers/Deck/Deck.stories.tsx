@@ -27,7 +27,7 @@ import * as UrlPath from '@dxos/app-toolkit/UrlPath';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
-import { useConnections } from '@dxos/plugin-graph/hooks';
+import { useConnections } from '@dxos/plugin-graph/Hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';

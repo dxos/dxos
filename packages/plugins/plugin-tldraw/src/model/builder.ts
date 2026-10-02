@@ -16,7 +16,7 @@ import {
   applyCommands as applyContentCommands,
   nextIndex,
 } from '@dxos/diagram';
-import { makeBuilder } from '@dxos/plugin-illustrator/model';
+import { makeBuilder } from '@dxos/plugin-illustrator/IllustratorModel';
 
 import { Tldraw } from '#types';
 

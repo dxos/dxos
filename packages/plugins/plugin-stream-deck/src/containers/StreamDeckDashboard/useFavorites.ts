@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { type Database, Filter, Obj, Tag } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { type Shortcut, findFavoriteTag, toShortcuts } from '@dxos/plugin-space/dashboard';
+import { type Shortcut, findFavoriteTag, toShortcuts } from '@dxos/plugin-space/Dashboard';
 
 /**
  * Live shortcuts for the space's favorites.

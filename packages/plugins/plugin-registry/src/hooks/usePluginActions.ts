@@ -12,7 +12,7 @@ import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import { EffectEx } from '@dxos/effect';
-import { useNode } from '@dxos/plugin-graph/hooks';
+import { useNode } from '@dxos/plugin-graph/Hooks';
 
 import { getPluginPath, getPluginSpecPath } from '../paths.ts';
 import { useDisableConfirmation } from './useDisableConfirmation.ts';

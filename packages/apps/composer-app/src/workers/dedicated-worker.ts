@@ -11,7 +11,7 @@ import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as ObservabilityClientProvider from '@dxos/observability/ObservabilityClientProvider';
 import * as ObservabilityExtension from '@dxos/observability/ObservabilityExtension';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import { isTauri } from '@dxos/util';
 
 import { initEchoHostWasm } from '../util/automerge-wasm.ts';

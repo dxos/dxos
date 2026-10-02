@@ -9,7 +9,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 import { BaseError } from '@dxos/errors';
 import { DXN } from '@dxos/keys';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { RegistryOperation } from '#operations';

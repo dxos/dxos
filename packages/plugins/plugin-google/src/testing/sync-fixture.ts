@@ -15,7 +15,7 @@ import { Database, type Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
 import { Connection } from '@dxos/link';
-import { MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/sync';
+import { MailSyncError, type RunMailSyncOptions, runMailSync } from '@dxos/plugin-inbox/MailSync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
 import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '#services';

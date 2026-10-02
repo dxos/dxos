@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Shortcut } from '@dxos/plugin-space/dashboard';
+import { type Shortcut } from '@dxos/plugin-space/Dashboard';
 
 import { deviceColors, hueColor } from './palette.ts';
 import { escapeXml, wrapText } from './text.ts';

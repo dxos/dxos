@@ -14,7 +14,7 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { type AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import { Panel } from '@dxos/react-ui';
 import {
   type ActionExecutor,

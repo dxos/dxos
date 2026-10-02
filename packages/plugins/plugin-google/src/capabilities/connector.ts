@@ -19,7 +19,7 @@ import { ConnectionTestError } from '@dxos/plugin-connector';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/sync';
+import { MAIL_AUTO_SYNC, MAIL_REMOTE_SYNC, MAIL_SYNC_CRON } from '@dxos/plugin-inbox/MailSync';
 import * as SyncOptions from '@dxos/plugin-inbox/SyncOptions';
 import { OAuthProvider } from '@dxos/protocols';
 

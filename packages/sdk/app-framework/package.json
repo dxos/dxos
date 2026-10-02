@@ -107,7 +107,7 @@
       "types": "./dist/types/src/vite-plugin/index.d.ts",
       "import": "./dist/lib/vite-plugin.mjs"
     },
-    "./cli": {
+    "./Cli": {
       "source": "./src/cli/index.ts",
       "types": "./dist/types/src/cli/index.d.ts",
       "import": "./dist/lib/cli.mjs"
@@ -117,7 +117,7 @@
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
     },
-    "./testing-react": {
+    "./testing/react": {
       "source": "./src/testing/react.tsx",
       "types": "./dist/types/src/testing/react.d.ts",
       "import": "./dist/lib/testing/react.mjs"

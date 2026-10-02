@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { useOptionalAtomCapability, usePluginManager } from '@dxos/app-framework/ui';
 import { type AppSurface, useProgressMonitors } from '@dxos/app-toolkit/ui';
 import { useQuery } from '@dxos/echo-react';
-import { SPACE_STATS_QUERY, toMetrics, toSpaceStats } from '@dxos/plugin-space/dashboard';
+import { SPACE_STATS_QUERY, toMetrics, toSpaceStats } from '@dxos/plugin-space/Dashboard';
 import { Panel } from '@dxos/react-ui';
 
 import { VirtualStreamDeck } from '#components';

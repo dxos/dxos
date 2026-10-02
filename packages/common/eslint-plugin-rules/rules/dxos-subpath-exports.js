@@ -16,7 +16,7 @@ const NAMESPACE_DIRECTIVE = /^\s*\/\/\s*@import-as-namespace\s*$/m;
 // Namespace subpaths are PascalCase by convention; lowercase keys (`plugin`, `translations`,
 // `testing`) are module entrypoints whose named exports are flat, so they carry no namespace
 // contract. `dxos-subpath-imports` splits consumers' imports on the same test.
-const isNamespaceName = (name) => /^[A-Z]/.test(name);
+export const isNamespaceName = (name) => /^[A-Z]/.test(name);
 
 // The plugin instance belongs to the `./plugin` subpath: the root entry is types/operations only,
 // so importing it must not drag the plugin's component graph in.
@@ -193,7 +193,7 @@ const analyzeBarrel = (entryFile, readFile, pkg) => {
 };
 
 /** Reads the package.json governing a file, with its directory. */
-const findPackage = (fromFile, cache) => {
+export const findPackage = (fromFile, cache) => {
   let dir = path.dirname(fromFile);
   while (dir !== path.dirname(dir)) {
     if (cache.has(dir)) {
@@ -219,7 +219,7 @@ const findPackage = (fromFile, cache) => {
  * output), so recover it from `types` the way the toolbox does — without this the rule silently
  * skips every such package, and its barrel could drift from the subpaths consumers are rewritten to.
  */
-const sourceOf = (entry, pkgDir) => {
+export const sourceOf = (entry, pkgDir) => {
   if (typeof entry === 'string') {
     return entry;
   }

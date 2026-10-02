@@ -8,7 +8,7 @@ import React, { useCallback } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { getEnvString } from '@dxos/config';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
 import { useConfig } from '@dxos/react-client';
 import { Flex, Icon, IconButton, Menu, useTranslation } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';

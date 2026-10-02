@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
-import { type SpaceDashboard, toMetrics, toSlots } from '@dxos/plugin-space/dashboard';
+import { type SpaceDashboard, toMetrics, toSlots } from '@dxos/plugin-space/Dashboard';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { getIconRegistry } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';

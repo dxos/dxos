@@ -9,7 +9,7 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { useConnections } from '@dxos/plugin-graph/hooks';
+import { useConnections } from '@dxos/plugin-graph/Hooks';
 import { type Label } from '@dxos/ui-types/translations';
 import { Position } from '@dxos/util';
 

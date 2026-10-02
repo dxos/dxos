@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { LingoPlugin } from '#plugin';

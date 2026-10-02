@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
 import * as InboxResolver from '@dxos/extractor-lib';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { runMailSync } from '@dxos/plugin-inbox/sync';
+import { runMailSync } from '@dxos/plugin-inbox/MailSync';
 
 import { GoogleCredentials, GoogleMailApi } from '#services';
 import { GoogleOperation } from '#types';

@@ -19,7 +19,7 @@ import { Client } from '@dxos/client';
 import { DXN, Key } from '@dxos/echo';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 import { Attention } from '@dxos/react-ui-attention/types';
 
 import { SearchPlugin } from '#plugin';

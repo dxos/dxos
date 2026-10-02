@@ -13,7 +13,7 @@ import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Field, Flex, Panel, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';

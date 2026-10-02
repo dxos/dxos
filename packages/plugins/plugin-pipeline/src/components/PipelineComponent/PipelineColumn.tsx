@@ -4,7 +4,7 @@
 
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
-import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
+import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';

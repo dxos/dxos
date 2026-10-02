@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
 import { corePlugins } from '@dxos/plugin-testing';
 import { Config } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';

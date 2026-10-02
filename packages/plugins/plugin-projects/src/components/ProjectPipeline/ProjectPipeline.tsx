@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import type * as Chat from '@dxos/assistant/Chat';
 import type * as Project from '@dxos/compute/Project';
-import { useSessionTimeline } from '@dxos/plugin-assistant/hooks';
+import { useSessionTimeline } from '@dxos/plugin-assistant/Hooks';
 import { type Space } from '@dxos/react-client/echo';
 import { Banner, useTranslation } from '@dxos/react-ui';
 import { Gantt, type GanttAxis, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';

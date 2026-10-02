@@ -11,7 +11,7 @@ import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import { useAtomState } from '@dxos/react-hooks';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';

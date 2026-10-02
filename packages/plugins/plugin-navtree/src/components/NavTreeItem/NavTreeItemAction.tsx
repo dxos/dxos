@@ -5,7 +5,7 @@
 import React, { useCallback } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';

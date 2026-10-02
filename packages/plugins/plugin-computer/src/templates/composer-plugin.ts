@@ -12,7 +12,7 @@ import {
   makeComposerPlugin,
   readGuide,
   writePlugin,
-} from '@dxos/plugin-projects/templates';
+} from '@dxos/plugin-projects/Templates';
 import { isTauri } from '@dxos/util';
 
 import { SKILL_KEY } from '../skills/computer-skill.ts';

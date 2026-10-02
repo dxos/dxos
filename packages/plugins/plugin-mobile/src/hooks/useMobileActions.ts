@@ -16,8 +16,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { type DeckStateHook, useDeckState } from '@dxos/plugin-deck/hooks';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import { type DeckStateHook, useDeckState } from '@dxos/plugin-deck/Hooks';
+import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import { useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import {

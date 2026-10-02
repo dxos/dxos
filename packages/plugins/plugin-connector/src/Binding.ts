@@ -13,7 +13,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { RunAgainError } from '@dxos/compute';
-import { ServiceNotAvailableError } from '@dxos/compute/errors';
+import { ServiceNotAvailableError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';

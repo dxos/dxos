@@ -5,7 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { RENAME_POPOVER } from '@dxos/plugin-space/constants';
+import { RENAME_POPOVER } from '@dxos/plugin-space';
 
 import { InboxOperation } from '#types';
 

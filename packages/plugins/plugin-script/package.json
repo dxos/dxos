@@ -84,13 +84,8 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./containers": {
-      "source": "./src/containers/index.ts",
-      "types": "./dist/types/src/containers/index.d.ts",
-      "import": "./dist/lib/containers.mjs"
-    },
     "./package.json": "./package.json",
-    "./templates": {
+    "./Templates": {
       "source": "./src/templates/index.ts",
       "types": "./dist/types/src/templates/index.d.ts",
       "import": "./dist/lib/templates.mjs"

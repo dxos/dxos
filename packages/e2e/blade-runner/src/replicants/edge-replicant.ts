@@ -17,7 +17,7 @@ import { bundleFunction } from '@dxos/edge-compute/bundler';
 import { invariant } from '@dxos/invariant';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { dataGenerator } from '@dxos/plugin-script/templates';
+import { dataGenerator } from '@dxos/plugin-script/Templates';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { type Runtime_Client_StorageSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { type IndexConfig } from '@dxos/protocols/buf/dxos/echo/indexing_pb';

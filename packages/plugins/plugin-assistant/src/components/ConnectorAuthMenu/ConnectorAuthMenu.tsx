@@ -12,7 +12,7 @@ import { useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import { IconButton, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useGraphMenuActions, useMenuGraph } from '@dxos/react-ui-menu';
 

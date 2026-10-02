@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { TracePanel } from '@dxos/plugin-assistant/components';
+import { TracePanel } from '@dxos/plugin-assistant/TracePanel';
 import { type Space } from '@dxos/react-client/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 

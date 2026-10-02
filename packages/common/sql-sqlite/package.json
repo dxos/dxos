@@ -33,7 +33,7 @@
       "types": "./dist/types/src/SqliteMigrator.d.ts",
       "default": "./dist/lib/SqliteMigrator.mjs"
     },
-    "./platform": {
+    "./Platform": {
       "types": "./dist/types/src/platform/browser.d.ts",
       "browser": "./dist/lib/platform/browser.mjs",
       "bun": "./dist/lib/platform/bun.mjs",

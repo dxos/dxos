@@ -85,11 +85,6 @@
       "import": "./dist/lib/LaMetricPlugin.mjs"
     },
     "./package.json": "./package.json",
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    },
     "./LaMetricCapabilities": {
       "source": "./src/types/LaMetricCapabilities.ts",
       "types": "./dist/types/src/types/LaMetricCapabilities.d.ts",

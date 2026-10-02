@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'CardMasonry': 'src/components/CardMasonry/index.ts',
     'index': 'src/index.ts',
     'SpacePlugin': 'src/SpacePlugin.ts',
     'capabilities': 'src/capabilities/index.ts',

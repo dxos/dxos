@@ -9,7 +9,7 @@ import { type Resolver, resolve } from '@dxos/extractor';
 import { log } from '@dxos/log';
 import { normalizeText } from '@dxos/markdown';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { parseFromHeader } from '@dxos/plugin-inbox/sync';
+import { parseFromHeader } from '@dxos/plugin-inbox/MailSync';
 import { ContentBlock, Message, Person } from '@dxos/types';
 
 import { type GoogleMail } from '#apis';

@@ -23,7 +23,7 @@ import {
   batchPushOps,
   parseFromHeader,
   reconcileToChanges,
-} from '@dxos/plugin-inbox/sync';
+} from '@dxos/plugin-inbox/MailSync';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { Person } from '@dxos/types';
 

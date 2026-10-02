@@ -8,7 +8,7 @@ import * as AppActivationEvents from '@dxos/app-toolkit/AppActivationEvents';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import * as GamePlugin from '@dxos/plugin-game/GamePlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { meta } from '#meta';
 import { ChessPlugin } from '#plugin';

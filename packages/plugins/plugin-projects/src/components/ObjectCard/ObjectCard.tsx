@@ -8,7 +8,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useArchiveMenuItem } from '@dxos/plugin-space/hooks';
+import { useArchiveMenuItem } from '@dxos/plugin-space/Hooks';
 import { Card, Icon, Tag, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

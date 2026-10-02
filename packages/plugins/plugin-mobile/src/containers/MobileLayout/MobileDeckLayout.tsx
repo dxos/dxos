@@ -4,8 +4,8 @@
 
 import React, { useLayoutEffect, useState } from 'react';
 
-import { useDeckState } from '@dxos/plugin-deck/hooks';
-import { Dialog, PopoverContent, PopoverRoot, Toaster, type ToasterProps } from '@dxos/plugin-deck/overlays';
+import { useDeckState } from '@dxos/plugin-deck/Hooks';
+import { Dialog, PopoverContent, PopoverRoot, Toaster, type ToasterProps } from '@dxos/plugin-deck/Overlays';
 import { Splitter, type SplitterMode } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
 

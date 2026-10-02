@@ -6,6 +6,9 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    InstructionsEditor: 'src/components/InstructionsEditor/index.ts',
+    TemplateEditor: 'src/components/TemplateEditor/index.ts',
+    Wire: 'src/util/wire.ts',
     index: 'src/index.ts',
     RoutinePlugin: 'src/RoutinePlugin.ts',
     plugin: 'src/plugin.tsx',

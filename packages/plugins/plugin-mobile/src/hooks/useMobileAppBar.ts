@@ -10,8 +10,8 @@ import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { useDeckState } from '@dxos/plugin-deck/hooks';
-import { useActionRunner, useNode } from '@dxos/plugin-graph/hooks';
+import { useDeckState } from '@dxos/plugin-deck/Hooks';
+import { useActionRunner, useNode } from '@dxos/plugin-graph/Hooks';
 import { toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, graphActions } from '@dxos/react-ui-menu';
 

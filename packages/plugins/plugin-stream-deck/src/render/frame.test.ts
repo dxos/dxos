@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type MetricSpec, type Shortcut } from '@dxos/plugin-space/dashboard';
+import { type MetricSpec, type Shortcut } from '@dxos/plugin-space/Dashboard';
 
 import * as Protocol from '#protocol';
 

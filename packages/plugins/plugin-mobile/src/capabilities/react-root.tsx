@@ -7,7 +7,7 @@ import React from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { useDismissToast } from '@dxos/plugin-deck/hooks';
+import { useDismissToast } from '@dxos/plugin-deck/Hooks';
 
 import { MobileDeckLayout } from '#containers';
 import { meta } from '#meta';

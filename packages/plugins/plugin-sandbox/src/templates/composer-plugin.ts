@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Skill from '@dxos/compute/Skill';
 import { Obj, Ref } from '@dxos/echo';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
-import { scaffoldProject } from '@dxos/plugin-projects/templates';
+import { scaffoldProject } from '@dxos/plugin-projects/Templates';
 import { Task, TaskSet } from '@dxos/types';
 
 import { Sandbox } from '#types';

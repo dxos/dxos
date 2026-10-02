@@ -9,7 +9,7 @@ import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
-import { ObjectMasonryArticle } from '@dxos/plugin-space/containers';
+import { ObjectMasonryArticle } from '@dxos/plugin-space/Containers';
 import { useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

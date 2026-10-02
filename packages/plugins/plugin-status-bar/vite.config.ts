@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    StatusBar: 'src/components/StatusBar/index.ts',
     index: 'src/index.ts',
     StatusBarPlugin: 'src/StatusBarPlugin.ts',
     capabilities: 'src/capabilities/index.ts',

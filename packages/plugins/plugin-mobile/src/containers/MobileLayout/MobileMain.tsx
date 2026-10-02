@@ -8,8 +8,8 @@ import { Surface } from '@dxos/app-framework/ui';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { useDeckState } from '@dxos/plugin-deck/hooks';
-import { useNode } from '@dxos/plugin-graph/hooks';
+import { useDeckState } from '@dxos/plugin-deck/Hooks';
+import { useNode } from '@dxos/plugin-graph/Hooks';
 import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 

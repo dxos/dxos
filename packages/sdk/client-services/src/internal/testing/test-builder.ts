@@ -43,7 +43,7 @@ import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
 import { ChainSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { StorageType } from '@dxos/random-access-storage';
 import { RpcRouter } from '@dxos/rpc';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
 
 import * as IdentityContract from '../../contracts/identity.ts';
 import * as InvitationsContract from '../../contracts/invitations.ts';

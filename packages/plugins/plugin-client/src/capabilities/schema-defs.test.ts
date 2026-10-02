@@ -13,7 +13,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { DXN, Type } from '@dxos/echo';
 // Resolves to `plugin.node.ts` under the source condition vitest uses.
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
-import { createComposerTestApp } from '@dxos/plugin-testing/harness';
+import { createComposerTestApp } from '@dxos/plugin-testing/Harness';
 
 import { ClientCapabilities, ClientEvents } from '#types';
 

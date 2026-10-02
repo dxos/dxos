@@ -23,7 +23,7 @@ import { Feed, Filter, Obj, Tag, Type } from '@dxos/echo';
 import { type ObjectExtractor } from '@dxos/extractor';
 import { mockAiService } from '@dxos/extractor/testing';
 import { DXN } from '@dxos/keys';
-import { MessageArticle } from '@dxos/plugin-inbox/containers';
+import { MessageArticle } from '@dxos/plugin-inbox/Containers';
 import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import * as InboxCapabilities from '@dxos/plugin-inbox/InboxCapabilities';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';

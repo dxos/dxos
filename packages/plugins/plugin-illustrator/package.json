@@ -84,12 +84,7 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./model": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "import": "./dist/lib/model.mjs"
-    },
-    "./skills": {
+    "./Skills": {
       "source": "./src/skills/index.ts",
       "types": "./dist/types/src/skills/index.d.ts",
       "import": "./dist/lib/skills.mjs"

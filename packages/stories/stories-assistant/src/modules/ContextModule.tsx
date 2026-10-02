@@ -9,7 +9,7 @@ import { AppSurface, useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
-import { useContextBinder } from '@dxos/plugin-assistant/hooks';
+import { useContextBinder } from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';

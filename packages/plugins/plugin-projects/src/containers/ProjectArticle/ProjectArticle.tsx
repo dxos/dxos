@@ -20,7 +20,7 @@ import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { SchemaAST } from '@dxos/effect';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
-import { InstructionsEditor } from '@dxos/plugin-routine/components';
+import { InstructionsEditor } from '@dxos/plugin-routine/InstructionsEditor';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
 import { Banner, Flex, Icon, Panel, Splitter, Tabs, useTranslation } from '@dxos/react-ui';

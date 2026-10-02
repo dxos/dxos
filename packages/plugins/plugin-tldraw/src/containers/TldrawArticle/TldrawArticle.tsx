@@ -8,7 +8,7 @@ import { useAtomCapabilityState } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { useActions } from '@dxos/plugin-graph/hooks';
+import { useActions } from '@dxos/plugin-graph/Hooks';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as IllustratorCapabilities from '@dxos/plugin-illustrator/IllustratorCapabilities';
 import { Flex, Panel } from '@dxos/react-ui';

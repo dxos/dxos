@@ -23,7 +23,7 @@ import * as Storyboard from '@dxos/plugin-studio/Storyboard';
 import * as StudioCapabilities from '@dxos/plugin-studio/StudioCapabilities';
 import * as StudioOperation from '@dxos/plugin-studio/StudioOperation';
 import * as StudioSkill from '@dxos/plugin-studio/StudioSkill';
-import { STUDIO_TASK_TITLE, studioTemplate } from '@dxos/plugin-studio/templates';
+import { STUDIO_TASK_TITLE, studioTemplate } from '@dxos/plugin-studio/Templates';
 import { type Space } from '@dxos/react-client/echo';
 import { accessTokensFromEnv } from '@dxos/storybook-testing';
 

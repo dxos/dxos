@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    ForceGraph: 'src/components/Graph/index.ts',
     index: 'src/index.ts',
     ExplorerPlugin: 'src/ExplorerPlugin.ts',
     plugin: 'src/plugin.tsx',

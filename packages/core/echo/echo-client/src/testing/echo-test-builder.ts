@@ -23,7 +23,7 @@ import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
-import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
+import { layerFile, layerMemory } from '@dxos/sql-sqlite/Platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
 

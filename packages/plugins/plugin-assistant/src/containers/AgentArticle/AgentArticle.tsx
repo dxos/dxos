@@ -10,7 +10,7 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import * as Agent from '@dxos/assistant/Agent';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { InstructionsEditor } from '@dxos/plugin-routine/components';
+import { InstructionsEditor } from '@dxos/plugin-routine/InstructionsEditor';
 import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';

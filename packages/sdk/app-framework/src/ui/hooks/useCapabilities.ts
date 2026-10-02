@@ -7,7 +7,7 @@ import type * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import { use, useCallback, useLayoutEffect, useRef } from 'react';
 
-import { NoHandlerError } from '@dxos/compute/errors';
+import { NoHandlerError } from '@dxos/compute/Errors';
 import type * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 

@@ -19,7 +19,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { Cursor } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { createSyncProgressKey } from '@dxos/plugin-inbox/sync';
+import { createSyncProgressKey } from '@dxos/plugin-inbox/MailSync';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { ambientSyncServices, seedMailboxBinding, seedSenderOrganizations } from '@dxos/plugin-inbox/testing/sync';
 import { TagIndex } from '@dxos/schema';

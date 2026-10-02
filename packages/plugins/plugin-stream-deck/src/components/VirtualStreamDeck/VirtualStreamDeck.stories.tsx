@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { type MetricSpec, type Shortcut } from '@dxos/plugin-space/dashboard';
+import { type MetricSpec, type Shortcut } from '@dxos/plugin-space/Dashboard';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import * as Protocol from '#protocol';

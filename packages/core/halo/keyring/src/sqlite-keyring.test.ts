@@ -10,7 +10,7 @@ import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { verifySignature } from '@dxos/crypto';
 import { RuntimeProvider } from '@dxos/effect';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
 
 import { SqliteKeyring } from './sqlite-keyring.ts';
 

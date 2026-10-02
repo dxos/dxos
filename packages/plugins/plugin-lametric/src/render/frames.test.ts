@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type MetricSpec } from '@dxos/plugin-space/dashboard';
+import { type MetricSpec } from '@dxos/plugin-space/Dashboard';
 
 import { toFrames } from './frames.ts';
 import { overflows } from './pixels.ts';

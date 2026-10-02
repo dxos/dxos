@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
-import { makeRoutine } from '@dxos/plugin-routine/util';
+import { makeRoutine } from '@dxos/plugin-routine/Wire';
 
 import { FeedOperation, Magazine } from '#types';
 

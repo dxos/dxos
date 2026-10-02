@@ -25,7 +25,7 @@ import {
 import { createRtcTransportFactory } from '@dxos/network-manager';
 import { SystemService } from '@dxos/protocols/rpc';
 import { RpcRouter } from '@dxos/rpc';
-import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/platform';
+import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
 
 import * as IdentityContract from '../../contracts/identity.ts';
 import * as Events from '../../Events.ts';

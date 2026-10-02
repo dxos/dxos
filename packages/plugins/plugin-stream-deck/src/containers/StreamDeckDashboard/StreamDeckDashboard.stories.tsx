@@ -10,7 +10,7 @@ import React from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Annotation, DXN, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { FAVORITE_TAG } from '@dxos/plugin-space/dashboard';
+import { FAVORITE_TAG } from '@dxos/plugin-space/Dashboard';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { type Space, useSpaces } from '@dxos/react-client/echo';

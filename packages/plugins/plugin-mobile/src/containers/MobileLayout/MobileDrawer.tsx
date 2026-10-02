@@ -6,8 +6,8 @@ import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface, useAppGraph } from '@dxos/app-toolkit/ui';
-import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/hooks';
-import { useNode } from '@dxos/plugin-graph/hooks';
+import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/Hooks';
+import { useNode } from '@dxos/plugin-graph/Hooks';
 import { Banner, ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 

@@ -18,7 +18,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface, useAppGraph, useLayout, useNavigationPresence } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import { useMediaQuery, useSidebars } from '@dxos/react-ui';
 import { type DropKind, type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
 import { arrayMove } from '@dxos/util';

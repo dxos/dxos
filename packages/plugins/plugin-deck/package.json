@@ -75,12 +75,12 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
-    "./hooks": {
+    "./Hooks": {
       "source": "./src/hooks/index.ts",
       "types": "./dist/types/src/hooks/index.d.ts",
       "import": "./dist/lib/hooks.mjs"
     },
-    "./overlays": {
+    "./Overlays": {
       "source": "./src/containers/Overlays/index.ts",
       "types": "./dist/types/src/containers/Overlays/index.d.ts",
       "import": "./dist/lib/overlays.mjs"

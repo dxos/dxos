@@ -8,7 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { COMMANDS_DIALOG } from '@dxos/plugin-navtree/meta';
+import { COMMANDS_DIALOG } from '@dxos/plugin-navtree';
 
 import { SpotlightCapabilities } from '#types';
 

@@ -8,7 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { useDeckState } from '@dxos/plugin-deck/hooks';
+import { useDeckState } from '@dxos/plugin-deck/Hooks';
 
 export type MobileStack = {
   /** Panel ids, root (workspace list panel) first; the visible panel is last. */

@@ -8,7 +8,7 @@ import { beforeEach, describe, test, vi } from 'vitest';
 
 import { ProcessManagerPlugin } from '@dxos/app-framework';
 import { createTestApp } from '@dxos/app-framework/testing';
-import { render } from '@dxos/app-framework/testing-react';
+import { render } from '@dxos/app-framework/testing/react';
 import { Toast } from '@dxos/react-ui';
 
 import { ThemePlugin } from '#plugin';

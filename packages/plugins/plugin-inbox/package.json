@@ -88,12 +88,12 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./sync": {
+    "./MailSync": {
       "source": "./src/sync/index.ts",
       "types": "./dist/types/src/sync/index.d.ts",
       "import": "./dist/lib/sync.mjs"
     },
-    "./containers": {
+    "./Containers": {
       "source": "./src/containers/index.ts",
       "types": "./dist/types/src/containers/index.d.ts",
       "import": "./dist/lib/containers.mjs"

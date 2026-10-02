@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { makeBuilder } from '@dxos/plugin-illustrator/model';
+import { makeBuilder } from '@dxos/plugin-illustrator/IllustratorModel';
 
 import { Canvas } from '#types';
 

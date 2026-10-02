@@ -9,9 +9,9 @@ import { evalite } from 'evalite';
 import { Diagnostics, SVG_SCHEMA } from '@dxos/diagram';
 import { Database, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
+import { SvgBuilder } from '@dxos/plugin-illustrator/IllustratorModel';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { SvgBuilder } from '@dxos/plugin-illustrator/model';
-import { UmlSkill } from '@dxos/plugin-illustrator/skills';
+import { UmlSkill } from '@dxos/plugin-illustrator/Skills';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions.ts';

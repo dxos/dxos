@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
+import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
