@@ -2,16 +2,14 @@
 // Copyright 2024 DXOS.org
 //
 
-import { next as A } from '@automerge/automerge';
 import * as Schema from 'effect/Schema';
 import { afterEach, beforeEach, expect, test } from 'vitest';
 
-import { Filter, Lens, Migration, Obj, Type } from '@dxos/echo';
-import { DATA_NAMESPACE } from '@dxos/echo-protocol';
+import { Filter, Obj, Type } from '@dxos/echo';
 import { SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
 
-import { EchoTestBuilder, getObjectCore } from '../testing/index.ts';
+import { EchoTestBuilder } from '../testing/index.ts';
 import { defineObjectMigration } from './object-migration.ts';
 
 let builder: EchoTestBuilder;
@@ -47,7 +45,7 @@ const ContactV3 = Type.makeObject(DXN.make('com.example.type.person', '0.3.0'))(
 const migrationV2 = defineObjectMigration({
   from: ContactV1,
   to: ContactV2,
-  transform: (from) => {
+  transform: async (from) => {
     return { name: `${from.firstName} ${from.lastName}` };
   },
   onMigration: async () => {},
@@ -56,7 +54,7 @@ const migrationV2 = defineObjectMigration({
 const migrationV3 = defineObjectMigration({
   from: ContactV2,
   to: ContactV3,
-  transform: (from) => {
+  transform: async (from) => {
     return { ...from, email: `${from.name.toLocaleLowerCase().replaceAll(' ', '.')}@example.com` };
   },
   onMigration: async () => {},
@@ -132,7 +130,7 @@ test('migration moves data key/version into meta', async () => {
   const migration = defineObjectMigration({
     from: RegistryEntryV1,
     to: RegistryEntryV2,
-    transform: (from) => ({
+    transform: async (from) => ({
       [Obj.Meta]: { key: from.key, version: from.version },
       name: from.name,
     }),
@@ -182,260 +180,6 @@ test('chained migrations', async () => {
   expect(Type.getVersion(Obj.getType(objects[0])!)).to.eq('0.3.0');
   expect(objects[0].name).to.eq('John Doe');
   expect(objects[0].email).to.eq('john.doe@example.com');
-
-  // Both hops are kept, oldest first: an object migrated `@1 -> @2 -> @3` carries both steps, not just
-  // the latest one, so a late `@1`-shaped write can still be folded all the way forward.
-  const steps = Migration.getMigrationSteps(objects[0]).map(({ step }) => step);
-  expect(steps).to.have.length(2);
-  expect(steps[0].from).to.eq(migrationV2.fromType.toString());
-  expect(steps[0].to).to.eq(migrationV2.toType.toString());
-  expect(steps[1].from).to.eq(migrationV3.fromType.toString());
-  expect(steps[1].to).to.eq(migrationV3.toType.toString());
-});
-
-test('applies the write set, the type switch, and the marker in exactly one automerge change, named for the migration', async () => {
-  const { db, graph } = await builder.createDatabase();
-  graph.registry.add([ContactV1, ContactV2]);
-
-  const contact = db.add(Obj.make(ContactV1, { firstName: 'Ada', lastName: 'Lovelace' }));
-  await db.flush();
-  const core = getObjectCore(contact);
-  const historyBefore = A.getHistory(core.getDoc()).length;
-
-  // No `onMigration`, so no effects bookkeeping follows the migration change.
-  const migration = Migration.define({
-    from: ContactV1,
-    to: ContactV2,
-    transform: (from) => ({ name: `${from.firstName} ${from.lastName}` }),
-  });
-  await db.runMigrations([migration]);
-
-  const history = A.getHistory(core.getDoc());
-  // A dependency-free change is a document genesis the host side can contribute late, not an edit.
-  const edits = history.slice(historyBefore).filter((entry) => entry.change.deps.length > 0);
-  expect(edits).to.have.length(1);
-  expect(edits[0].change.message).to.eq(
-    `migration: ${migration.fromType.toString()} -> ${migration.toType.toString()}`,
-  );
-});
-
-test('does not write a data key whose transformed value is unchanged', async () => {
-  const ProfileV1 = Type.makeObject(DXN.make('com.example.type.migrationProfile', '0.1.0'))(
-    Schema.Struct({ handle: Schema.String, bio: Schema.String }),
-  );
-  const ProfileV2 = Type.makeObject(DXN.make('com.example.type.migrationProfile', '0.2.0'))(
-    Schema.Struct({ handle: Schema.String, bio: Schema.String }),
-  );
-  // A pure type bump: every data value is carried over unchanged.
-  const profileMigration = defineObjectMigration({
-    from: ProfileV1,
-    to: ProfileV2,
-    transform: (from) => ({ handle: from.handle, bio: from.bio }),
-  });
-
-  const { db, graph } = await builder.createDatabase();
-  graph.registry.add([ProfileV1, ProfileV2]);
-
-  const profile = db.add(Obj.make(ProfileV1, { handle: '@ada', bio: 'Mathematician' }));
-  await db.flush();
-  const core = getObjectCore(profile);
-  const preHeads = A.getHeads(core.getDoc());
-
-  await db.runMigrations([profileMigration]);
-
-  const touchesDataKey = (key: string): boolean =>
-    A.diff(core.getDoc(), preHeads, A.getHeads(core.getDoc())).some((patch) =>
-      patch.path.some((segment, index) => segment === DATA_NAMESPACE && patch.path[index + 1] === key),
-    );
-  expect(touchesDataKey('handle')).to.eq(false);
-  expect(touchesDataKey('bio')).to.eq(false);
-
-  // The type switch and the marker still land — this is a value-compare guard on individual keys,
-  // not a shortcut that skips the whole change when nothing in the data changed.
-  expect(Obj.getTypeURI(profile)?.toString()).to.eq(DXN.make('com.example.type.migrationProfile', '0.2.0'));
-});
-
-test('retires a field the transform drops instead of deleting it, and marks the object with the pre-migration heads', async () => {
-  const NoteV1 = Type.makeObject(DXN.make('com.example.type.migrationNote', '0.1.0'))(
-    Schema.Struct({ title: Schema.String, body: Schema.String }),
-  );
-  const NoteV2 = Type.makeObject(DXN.make('com.example.type.migrationNote', '0.2.0'))(
-    Schema.Struct({ title: Schema.String }),
-  );
-  const noteMigration = defineObjectMigration({
-    from: NoteV1,
-    to: NoteV2,
-    transform: (from) => ({ title: from.title }),
-  });
-
-  const { db, graph } = await builder.createDatabase();
-  graph.registry.add([NoteV1, NoteV2]);
-
-  const note = db.add(Obj.make(NoteV1, { title: 'Title', body: 'Body' }));
-  await db.flush();
-  const preHeads = A.getHeads(getObjectCore(note).getDoc());
-
-  await db.runMigrations([noteMigration]);
-
-  // Retained, not deleted: `body` has no home in `NoteV2` but stays readable off the raw path.
-  expect(Obj.getValue(note, ['body'])).to.eq('Body');
-  expect(Obj.getTypeURI(note)?.toString()).to.eq(DXN.make('com.example.type.migrationNote', '0.2.0'));
-
-  const [{ step }] = Migration.getMigrationSteps(note);
-  expect(step.from).to.eq(noteMigration.fromType.toString());
-  expect(step.to).to.eq(noteMigration.toType.toString());
-  expect(step.preHeads).to.deep.eq(preHeads);
-  expect(step.retired).to.deep.eq(['body']);
-});
-
-test('re-running a migration after it applied performs no further writes', async () => {
-  const { db, graph } = await builder.createDatabase();
-  graph.registry.add([ContactV1, ContactV2]);
-
-  const contact = db.add(Obj.make(ContactV1, { firstName: 'Grace', lastName: 'Hopper' }));
-  await db.flush();
-  await db.runMigrations([migrationV2]);
-
-  const core = getObjectCore(contact);
-  const migrationMessagesBefore = A.getHistory(core.getDoc()).filter((entry) =>
-    entry.change.message?.startsWith('migration:'),
-  );
-
-  // The object no longer matches `fromType`, so a second run's query finds nothing to migrate — no
-  // second `migration: ...` change lands, whatever unrelated background activity the doc also sees.
-  await db.runMigrations([migrationV2]);
-  const migrationMessagesAfter = A.getHistory(core.getDoc()).filter((entry) =>
-    entry.change.message?.startsWith('migration:'),
-  );
-  expect(migrationMessagesAfter).to.have.length(migrationMessagesBefore.length);
-});
-
-const TaskV1 = Type.makeObject(DXN.make('com.example.type.migrationTask', '0.1.0'))(
-  Schema.Struct({
-    title: Schema.String,
-    status: Schema.optional(Schema.Literals(['todo', 'done'])),
-    legacyEstimate: Schema.optional(Schema.Number),
-  }),
-);
-
-const TaskV2 = Type.makeObject(DXN.make('com.example.type.migrationTask', '0.2.0'))(
-  Schema.Struct({
-    title: Schema.String,
-    done: Schema.optional(Schema.Boolean),
-    // No counterpart on `TaskV1` — overlay-backed until a migration promotes it (DESIGN §10.7 q1).
-    context: Schema.optional(Schema.Literals(['@home', '@work'])),
-  }),
-);
-
-const TASK_LENS_ID = 'com.example.type.migrationTask.lens';
-
-/** `title` matches by name; `done` is a converted view of `status`; `legacyEstimate` is unread. */
-const taskLens = () =>
-  Lens.make(TaskV1, TaskV2, {
-    done: {
-      from: ['status'],
-      get: ({ status }) => status === 'done',
-      put: (done: boolean | undefined, { status }) => ({
-        status: done === true ? ('done' as const) : status === 'done' ? ('todo' as const) : status,
-      }),
-    },
-  });
-
-const NoteV1 = Type.makeObject(DXN.make('com.example.type.migrationLossyNote', '0.1.0'))(
-  Schema.Struct({ title: Schema.String }),
-);
-
-const NoteV2 = Type.makeObject(DXN.make('com.example.type.migrationLossyNote', '0.2.0'))(
-  Schema.Struct({ initial: Schema.optional(Schema.String) }),
-);
-
-/** Reading the first character is not invertible, so `checkLaws` fails against any real title. */
-const lossyLens = () =>
-  Lens.make(NoteV1, NoteV2, {
-    initial: {
-      from: ['title'],
-      get: ({ title }) => title?.[0],
-      put: (initial: string | undefined) => ({ title: initial ?? '' }),
-    },
-  });
-
-test('Migration.fromLens: type switch, converted value, retired drop, and overlay promotion', async () => {
-  const { db, graph } = await builder.createDatabase();
-  graph.registry.add([TaskV1, TaskV2]);
-
-  const lens = taskLens();
-  const task = db.add(Obj.make(TaskV1, { title: 'Ship it', status: 'done', legacyEstimate: 5 }));
-  // Set before the migration runs, on the source object: this is the overlay a migration promotes.
-  Lens.put(task, lens, { context: '@work' });
-  await db.flush();
-
-  await db.runMigrations([Migration.fromLens(lens, { allowDropped: ['legacyEstimate'] })]);
-
-  const objects = await db.query(Filter.type(TaskV2)).run();
-  expect(objects).to.have.length(1);
-  const [migrated] = objects;
-
-  expect(Obj.getTypeURI(migrated)?.toString()).to.eq(DXN.make('com.example.type.migrationTask', '0.2.0'));
-  expect(migrated.title).to.eq('Ship it');
-  // The converted value: `status: 'done'` became `done: true`.
-  expect(migrated.done).to.eq(true);
-  // The overlay value set on the source object landed as a real property on the target.
-  expect(migrated.context).to.eq('@work');
-  // Retired, not deleted: `legacyEstimate` has no home in `TaskV2` but stays readable off the raw path.
-  expect(Obj.getValue(migrated, ['legacyEstimate'])).to.eq(5);
-});
-
-test('Migration.fromLens: a law-violating lens throws before writing', async () => {
-  const { db, graph } = await builder.createDatabase();
-  graph.registry.add([NoteV1, NoteV2]);
-
-  const note = db.add(Obj.make(NoteV1, { title: 'Ada' }));
-  await db.flush();
-  const core = getObjectCore(note);
-  const preHeads = A.getHeads(core.getDoc());
-
-  await expect(db.runMigrations([Migration.fromLens(lossyLens())])).rejects.toThrow(/GetPut/);
-
-  // Nothing was written: still the original type and the original heads.
-  expect(Obj.getTypeURI(note)?.toString()).to.eq(DXN.make('com.example.type.migrationLossyNote', '0.1.0'));
-  expect(A.getHeads(core.getDoc())).to.deep.eq(preHeads);
-});
-
-test('a transform that changes a kept property value is rejected before writing', async () => {
-  const PriceV1 = Type.makeObject(DXN.make('com.example.type.migrationPrice', '0.1.0'))(
-    Schema.Struct({ label: Schema.String, price: Schema.Number }),
-  );
-  const PriceV2 = Type.makeObject(DXN.make('com.example.type.migrationPrice', '0.2.0'))(
-    Schema.Struct({ label: Schema.String, price: Schema.Number }),
-  );
-  const PriceV3 = Type.makeObject(DXN.make('com.example.type.migrationPrice', '0.3.0'))(
-    Schema.Struct({ label: Schema.String, priceDollars: Schema.Number }),
-  );
-  const { db, graph } = await builder.createDatabase();
-  graph.registry.add([PriceV1, PriceV2, PriceV3]);
-
-  const item = db.add(Obj.make(PriceV1, { label: 'Tea', price: 500 }));
-  await db.flush();
-  const core = getObjectCore(item);
-  const preHeads = A.getHeads(core.getDoc());
-
-  const reinterpret = Migration.define({
-    from: PriceV1,
-    to: PriceV2,
-    transform: (from) => ({ label: from.label, price: from.price / 100 }),
-  });
-  await expect(db.runMigrations([reinterpret])).rejects.toThrow(/kept properties \[price\]/);
-  expect(Obj.getTypeURI(item)?.toString()).to.eq(DXN.make('com.example.type.migrationPrice', '0.1.0'));
-  expect(A.getHeads(core.getDoc())).to.deep.eq(preHeads);
-
-  // The same conversion under a new name retires `price`, so late writes to it fold forward.
-  const renamed = Migration.define({
-    from: PriceV1,
-    to: PriceV3,
-    transform: (from) => ({ label: from.label, priceDollars: from.price / 100 }),
-  });
-  await db.runMigrations([renamed]);
-  expect(Obj.getValue(item, ['priceDollars'])).to.eq(5);
 });
 
 // TODO(wittjosiah): Strip down to minimal example. Key thing this is testing is arrays.
@@ -473,43 +217,3 @@ export const FieldSchema = Schema.Struct({
 });
 
 export type FieldType = Schema.Schema.Type<typeof FieldSchema>;
-
-test('a run that fails partway is completed by the next run, each object migrated exactly once', async () => {
-  const { db, graph } = await builder.createDatabase();
-  graph.registry.add([ContactV1, ContactV2]);
-
-  const contacts = ['Ada', 'Grace', 'Katherine'].map((firstName) =>
-    db.add(Obj.make(ContactV1, { firstName, lastName: 'Test' })),
-  );
-  await db.flush();
-
-  // Simulates a crash mid-space: the first run dies on its second object.
-  let failOn: string | undefined = contacts[1].id;
-  const flaky = Migration.define({
-    from: ContactV1,
-    to: ContactV2,
-    transform: (from) => {
-      if (from.id === failOn) {
-        throw new Error('simulated crash');
-      }
-      return { name: `${from.firstName} ${from.lastName}` };
-    },
-  });
-
-  await expect(db.runMigrations([flaky])).rejects.toThrow('simulated crash');
-  const migratedAfterCrash = contacts.filter(
-    (contact) => Obj.getTypeURI(contact)?.toString() === DXN.make('com.example.type.person', '0.2.0'),
-  );
-  expect(migratedAfterCrash.length).to.be.lessThan(contacts.length);
-
-  failOn = undefined;
-  await db.runMigrations([flaky]);
-
-  for (const contact of contacts) {
-    expect(Obj.getTypeURI(contact)?.toString()).to.eq(DXN.make('com.example.type.person', '0.2.0'));
-    const migrationChanges = A.getHistory(getObjectCore(contact).getDoc()).filter((entry) =>
-      entry.change.message?.startsWith('migration:'),
-    );
-    expect(migrationChanges).to.have.length(1);
-  }
-});

@@ -10,8 +10,6 @@ import {
   type Heads,
 } from '@automerge/automerge';
 import { type DocHandleChangePayload } from '@automerge/automerge-repo';
-import { sha256 } from '@noble/hashes/sha2';
-import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 import * as Schema from 'effect/Schema';
 import type { InspectOptionsStylized, inspect } from 'util';
 
@@ -53,9 +51,7 @@ export interface IDatabaseBinding {
 const STRING_CRDT_LIMIT = 300_000;
 
 export const META_NAMESPACE = 'meta';
-// Exported so a caller writing directly on the doc (the migration runner's single-change apply)
-// can address `system.type` without opening a second `change`.
-export const SYSTEM_NAMESPACE = 'system';
+const SYSTEM_NAMESPACE = 'system';
 
 /**
  * Per-document `getUpdatedAt` cache, keyed by heads: inline objects that share a document
@@ -63,54 +59,6 @@ export const SYSTEM_NAMESPACE = 'system';
  * lookup for every object on every call.
  */
 const updatedAtCache = new WeakMap<AutomergeDoc<unknown>, { heads: string; updatedAt: number | undefined }>();
-
-/**
- * This peer's fold identity for `documentId`, narrowed to `scope` (a caller-chosen id stable across
- * a chain of folds that must build on each other, e.g. `` `${objectId}:${stepIndex}` ``): `A.getActorId(doc)`
- * is a fresh random id minted by `DocHandleProxy`'s `A.init()`/`A.from()` every time a document is
- * loaded (never persisted, never reused across a reload, and never shared between two
- * concurrently-open handles on the same document, since each mints its own) -- so it is already
- * unique per writer, and hashing it together with the document id and `scope` gives one fold actor
- * per (peer session, document, scope), with no risk of two writers deriving the same one.
- *
- * `scope` matters because a shared actor's OWN earlier fold can carry heads that reach past what a
- * later, differently-scoped fold is allowed to be concurrent with: fold-forward's own migration marker
- * chain is the case that surfaced it -- step 1's fold, forked at step 1's heads union'd with a step 2
- * fold's fork point (which itself already includes a direct edit made after step 1 but before step 2),
- * would otherwise inherit that direct edit as an ancestor and silently dominate it instead of staying
- * concurrent. Scoping the actor per object AND per step keeps each chain of folds building only on its
- * own scope's history, never another step's or another object's.
- */
-const deriveFoldActorId = (localActorId: string, documentId: string, scope: string): A.ActorId =>
-  bytesToHex(sha256(utf8ToBytes(`${localActorId}:${documentId}:${scope}:fold`))).slice(0, 32);
-
-/** The throwaway actor `sharedChangeAt` authors a probe under, to derive the real actor from its ops. */
-const FOLD_PROBE_ACTOR = '00000000000000000000000000000000';
-
-/** The change message `foldAt` stores: the caller's message tagged with its scope, so any session can find the scope's earlier folds. */
-const scopedFoldMessage = (message: string, scope: string): string => `${message} [${scope}]`;
-
-/**
- * Every earlier fold in `message`'s scope, by any actor, plus `actorId`'s highest-`seq` change (its
- * seq must continue). A fold that forks from all of them is ordered after every earlier fold in the
- * scope, including one a previous session made under a different derived actor.
- */
-const priorFoldChanges = (doc: AutomergeDoc<unknown>, actorId: A.ActorId, message: string): string[] => {
-  const hashes = new Set<string>();
-  let latest: { seq: number; hash: string } | undefined;
-  for (const change of A.getChangesMetaSince(doc, [])) {
-    if (change.message === message) {
-      hashes.add(change.hash);
-    }
-    if (change.actor === actorId && (!latest || change.seq > latest.seq)) {
-      latest = { seq: change.seq, hash: change.hash };
-    }
-  }
-  if (latest) {
-    hashes.add(latest.hash);
-  }
-  return [...hashes];
-};
 
 export type ObjectCoreOptions = {
   type?: EncodedReference;
@@ -420,185 +368,6 @@ export class ObjectCore {
     }
 
     return result;
-  }
-
-  /**
-   * Writes `mutate` on this object's `data` map as it stood at `heads`, rather than at the live
-   * frontier, so a late (fold-forward) value lands as a real Automerge conflict against anything
-   * written since instead of silently overwriting it (DESIGN.md item 6, "conflicts are
-   * history-native"). `Obj.getConflict` is how a caller then resolves the policy winner.
-   *
-   * The write is forked off a VIEW of the whole document taken at {@link forkPointFor}'s fork point
-   * (`heads` plus every earlier fold in this scope, by any session) under that DERIVED fold
-   * actor (`deriveFoldActorId`) -- one per (this peer's session, this document, `options.scope`), never
-   * a fresh random actor per call. A fresh actor per fold (tried and rejected in the M0 migration
-   * research) adds one new actor to the document forever; a shared sentinel across peers risks a
-   * duplicate-`(actor, seq)` merge rejection unless every peer's fold is byte-identical; reusing this
-   * object's OWN working actor collides the same way against a change that actor makes after `heads`
-   * (verified: it is exactly what a later direct edit on this object is); and a SINGLE derived actor
-   * shared across every scope on a peer's document reintroduces a subtler version of the same problem
-   * one level up -- its own earlier fold in a DIFFERENT scope (another object, or another step of the
-   * SAME object's migration chain) can carry heads that already include a direct edit this fold must
-   * stay concurrent with, so forking from that scope's latest change would inherit the edit as an
-   * ancestor and silently dominate it. `options.scope` (stable across a chain of folds that must build
-   * on each other, e.g. `` `${objectId}:${stepIndex}` ``, never shared between unrelated chains) is
-   * exactly what keeps each derived actor's own history free of any OTHER scope's writes.
-   *
-   * Forking at `heads` (rather than the actor's fork point alone, or a plain live-handle `changeAt`,
-   * whose op counter is derived from the CURRENT frontier and so dominates -- wins the ordinary read
-   * over -- any edit made since `heads` regardless of actor) bounds the fold's own counter to that older
-   * history. A later direct edit's counter reflects everything written since, anywhere in the document,
-   * so it typically ties or exceeds the fold's, and the ordinary (Automerge) read keeps showing the
-   * user's edit in the common case. The exact tie-break is not otherwise controlled: `Obj.getConflict`
-   * resolves the policy winner from `A.getConflicts` by change `message`, not by which actor wins a
-   * counter tie.
-   *
-   * Idempotent in effect only when `mutate` and `options.message` are a pure function of `heads` and the
-   * value being folded (time is fixed at `0` for the same reason): a byte-identical re-run produces the
-   * same change hash, which Automerge merges as a no-op. Folding a genuinely different value at the same
-   * `heads` is not a re-run -- it legitimately conflicts with whatever is already there.
-   *
-   * @param heads Frontier the write is made concurrent with; must be ancestors of the current document.
-   * @param mutate Given the object's `data` and `meta` maps as they stood at `heads`, to mutate in place.
-   * @param options.message Deterministic commit message identifying the fold; `Obj.getConflict` reads
-   *   it (a `fold:`/`migration:` prefix) to tell a fold from a direct edit. Stored tagged with `scope`.
-   * @param options.scope Identifies the chain of folds this one belongs to (typically the object id plus
-   *   a migration step index); required, with no default, since guessing one wrong reintroduces exactly
-   *   the cross-scope collision this parameter exists to prevent.
-   * @returns The heads immediately after the fold's own change, or `undefined` if it changed nothing.
-   */
-  foldAt(
-    heads: Heads,
-    mutate: (data: EntityStructure['data'], meta: EntityStructure['meta']) => void,
-    options: { message: string; scope: string },
-  ): Heads | undefined {
-    // Prevent recursive change calls.
-    using _ = defer(docChangeSemaphore(this.docHandle ?? this));
-
-    const mountPath = this.mountPath;
-    const message = scopedFoldMessage(options.message, options.scope);
-    const changeOptions = { message, time: 0 };
-    const applyMutate = (draft: unknown): void => {
-      const data = getDeep<EntityStructure['data']>(draft, [...mountPath, DATA_NAMESPACE]);
-      invariant(data, 'foldAt: object body not present at the recorded heads');
-      const meta = getDeep<EntityStructure['meta']>(draft, [...mountPath, META_NAMESPACE]);
-      invariant(meta, 'foldAt: object meta not present at the recorded heads');
-      mutate(data, meta);
-    };
-
-    if (this.doc) {
-      invariant(A.hasHeads(this.doc, heads), 'foldAt: heads are not an ancestor of the current document');
-      const { foldActorId, forkPoint } = this.#forkPointFor(this.doc, heads, options.scope, message);
-      const view = A.view(this.doc, forkPoint);
-      const clone = A.clone(view, foldActorId);
-      const { newDoc: folded, newHeads } = A.changeAt(clone, forkPoint, changeOptions, applyMutate);
-      if (!newHeads) {
-        return undefined;
-      }
-
-      this.doc = A.merge(this.doc, folded);
-      // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
-      this.notifyUpdate();
-      return newHeads;
-    }
-
-    const docHandle = this.docHandle;
-    invariant(docHandle, 'foldAt: object has no document to fold on');
-    const liveDoc = docHandle.doc();
-    invariant(A.hasHeads(liveDoc, heads), 'foldAt: heads are not an ancestor of the current document');
-    const { foldActorId, forkPoint } = this.#forkPointFor(liveDoc, heads, options.scope, message);
-    const view = A.view(liveDoc, forkPoint);
-    const clone = A.clone(view, foldActorId);
-    const { newDoc: folded, newHeads } = A.changeAt(clone, forkPoint, changeOptions, applyMutate);
-    if (!newHeads) {
-      return undefined;
-    }
-
-    // No manual notification: the DB already processes the `change` event `update` emits.
-    this.#writeAndRefresh(() => docHandle.update((current) => A.merge(current, folded)));
-    return newHeads;
-  }
-
-  /**
-   * Writes one change forked at exactly `heads`, under an actor derived from `actorSeed` and the change's
-   * own ops, with time fixed at `0`. Every peer that makes the same edit from the same `heads` therefore
-   * authors a byte-identical change, which Automerge merges as one: a list insert or text splice folded
-   * on several peers is applied once, and a migration run on several peers creates one set of target
-   * containers. Each such change adds one actor to the document.
-   *
-   * @param heads The exact fork point; must be ancestors of the current document.
-   * @param mutate Given the document draft as it stood at `heads` and this object's mount path.
-   * @param options.message Deterministic change message.
-   * @param options.actorSeed Identifies the change's content; seeds a single-use actor.
-   * @returns The heads immediately after the change, or `undefined` if it changed nothing.
-   */
-  sharedChangeAt(
-    heads: Heads,
-    mutate: (draft: unknown, mountPath: readonly (string | number)[]) => void,
-    options: { message: string; actorSeed: string },
-  ): Heads | undefined {
-    // Prevent recursive change calls.
-    using _ = defer(docChangeSemaphore(this.docHandle ?? this));
-
-    const fold = <T>(doc: AutomergeDoc<T>) => {
-      invariant(A.hasHeads(doc, heads), 'sharedChangeAt: heads are not an ancestor of the current document');
-      const view = A.view(doc, heads);
-      const author = (actorId: A.ActorId) =>
-        A.changeAt(A.clone(view, actorId), heads, { message: options.message, time: 0 }, (draft) =>
-          mutate(draft, this.mountPath),
-        );
-      // The actor is derived from the ops a probe authors, so two builds that fold the same input into
-      // different ops never write one (actor, seq) with two different hashes.
-      const probe = author(FOLD_PROBE_ACTOR);
-      const change = probe.newHeads && A.getLastLocalChange(probe.newDoc);
-      if (!change) {
-        return probe;
-      }
-      const ops = JSON.stringify(A.decodeChange(change).ops).replaceAll(FOLD_PROBE_ACTOR, '');
-      return author(bytesToHex(sha256(utf8ToBytes(`${options.actorSeed}:${ops}:fold-change`))).slice(0, 32));
-    };
-
-    if (this.doc) {
-      const { newDoc: folded, newHeads } = fold(this.doc);
-      if (!newHeads) {
-        return undefined;
-      }
-      this.doc = A.merge(this.doc, folded);
-      // No change event is emitted here since we are not using the doc handle. Notify listeners manually.
-      this.notifyUpdate();
-      return newHeads;
-    }
-
-    const docHandle = this.docHandle;
-    invariant(docHandle, 'sharedChangeAt: object has no document to fold on');
-    const { newDoc: folded, newHeads } = fold(docHandle.doc());
-    if (!newHeads) {
-      return undefined;
-    }
-    // No manual notification: the DB already processes the `change` event `update` emits.
-    this.#writeAndRefresh(() => docHandle.update((current) => A.merge(current, folded)));
-    return newHeads;
-  }
-
-  /**
-   * This peer's derived fold actor for `doc`, narrowed to `scope`, and the heads to fork
-   * {@link foldAt}'s change from: `heads` plus every earlier fold in the scope ({@link priorFoldChanges}),
-   * so a fold always supersedes the scope's previous folds while every other change made after `heads`
-   * -- including this peer's own folds in a DIFFERENT scope -- stays a non-ancestor, so the fold stays
-   * concurrent with it.
-   */
-  #forkPointFor(
-    doc: AutomergeDoc<unknown>,
-    heads: Heads,
-    scope: string,
-    message: string,
-  ): { foldActorId: A.ActorId; forkPoint: Heads } {
-    // Falls back to the mount path only for a not-yet-bound `this.doc` (no `docHandle` assigned yet);
-    // a bound object always has a `documentId` by the time anything is old enough to fold.
-    const documentId = this.docHandle?.documentId ?? this.mountPath.join('/');
-    const foldActorId = deriveFoldActorId(A.getActorId(doc), documentId, scope);
-    const forkPoint = [...new Set([...heads, ...priorFoldChanges(doc, foldActorId, message)])];
-    return { foldActorId, forkPoint };
   }
 
   getDocAccessor(path: Doc.KeyPath = []): Doc.Accessor {

@@ -1,5 +1,14 @@
 # Lens-Backed Migrations — Implementation Plan
 
+> **Superseded (2026-10-02).** ECHO moved from one-off migrations to continuous migration: every
+> version of an object is kept in a document of its own, and the host translates each edit between
+> them through lenses (DESIGN.md §12). The in-place migration code this describes — fold-forward,
+> `Migration.fromLens`, the multi-object migration helpers, `ObjectCore.foldAt`, `Obj.getConflict` and
+> the migration bench — was removed, and main's one-off migration code was restored. It remains in this
+> branch's history: `bfb4ccae39` is the last commit that holds it. The work recorded here is how the
+> continuous design was reached, and much of it carried over into it: deterministic translation, the
+> structural list and text edits, and the convergence-key merge replay.
+
 _2026-09-25, starting point (committed 2026-09-27). Turns [M0-REPORT.md](./M0-REPORT.md) and the decisions in [DESIGN.md](./DESIGN.md) §10.7
 into shippable phases. Supersedes the M1/M2 task lists in [TASKS.md](./TASKS.md) where they
 disagree (those predate the research). Every phase ships on its own and leaves the system strictly
@@ -129,9 +138,8 @@ come later.
 Not yet done:
 
 - Deferred (2026-10-01) pending evaluation: plugin contributions of lenses (the app stays unwired until a
-  plugin registers one). Lenses are meant to replace in-place migrations once steps 2–4 cover what
-  migrations express (lists/maps/text, opaque one-way transforms, multi-object); until then the in-place
-  runner stays.
+  plugin registers one). The in-place lens migration code was removed on 2026-10-02 (see the note at the
+  top); main's one-off migration code stays until lenses replace it in the app.
 - Later: code-only lenses in the client, traversals through lenses in the query DSL, typename renames.
 
 **Carried over from the in-place work:** per-edit translation and list/text rebasing (`fold-edit.ts`),

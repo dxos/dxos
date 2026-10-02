@@ -649,57 +649,6 @@ export function getChanges<T extends Unknown>(obj: T, opts?: GetChangesOptions):
   return db.getChanges(obj, opts);
 }
 
-/**
- * One alternative Automerge kept for a conflicted property — {@link getConflict}.
- */
-export interface ConflictAlternative {
-  /** The alternative's value, decoded like an ordinary property read. */
-  readonly value: unknown;
-  /** Automerge actor that wrote this alternative. */
-  readonly actor: string;
-  /** The writing change's commit message, if it gave one. */
-  readonly message?: string;
-  /** The writing change's timestamp, epoch milliseconds, if the change carries one. */
-  readonly time?: number;
-  /**
-   * Whether the writing change's `message` marks it as a fold-forward write (a `fold:` or `migration:`
-   * prefix) rather than an ordinary direct edit — see {@link getConflict}.
-   */
-  readonly fold: boolean;
-}
-
-/**
- * A property's Automerge conflict, as {@link getConflict} returns it.
- */
-export interface Conflict {
-  /**
-   * The value a policy-aware UI should show: the Automerge winner among the non-fold alternatives when
-   * at least one direct edit is among them (user-wins), otherwise the Automerge winner outright. An
-   * ordinary property read shows Automerge's own winner regardless, which can differ from this when a
-   * fold happens to win the raw CRDT tie-break.
-   */
-  readonly presented: unknown;
-  /** Every concurrent alternative Automerge kept for the property, including the one `presented` picks. */
-  readonly alternatives: readonly ConflictAlternative[];
-}
-
-/**
- * The live Automerge conflict at `property` — several values written concurrently that Automerge could
- * not order causally — or `undefined` when the property has none, including when every concurrent
- * value is equal (e.g. two peers folding the same late write).
- *
- * A fold-forward migration write (`ObjectCore.foldAt`) is deliberately re-keyed into the causal past so
- * a later direct edit conflicts with it instead of being silently overwritten (design: "conflicts are
- * history-native"). `presented` applies that user-wins policy by reading each alternative's `message`;
- * an ordinary property read shows Automerge's own winner instead, which is the right default everywhere
- * except a review UI that needs the policy-aware value.
- */
-export const getConflict = (obj: Unknown, property: string): Conflict | undefined => {
-  const db = getDatabase(obj);
-  invariant(db, 'object is not bound to a database');
-  return db.getConflict(obj, property);
-};
-
 //
 // Meta
 //

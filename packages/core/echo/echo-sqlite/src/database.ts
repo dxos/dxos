@@ -497,10 +497,6 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     throw new UnsupportedOperationError('getChanges');
   }
 
-  getConflict<T extends Obj.Unknown>(_obj: T, _property: string): Obj.Conflict | undefined {
-    throw new UnsupportedOperationError('getConflict');
-  }
-
   async createBranch(): Promise<void> {
     throw new UnsupportedOperationError('createBranch');
   }

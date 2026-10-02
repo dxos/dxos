@@ -50,9 +50,9 @@ export class LegacyTaskSet extends Type.makeObject<LegacyTaskSet>(DXN.make('org.
 ) {}
 
 /**
- * Which legacy tasks become whose sub-tasks, computed once over the whole space on the first task's
- * `onMigration`: the rewrite retires `parentTask`, so a parent migrated after its children could no
- * longer find them through the typed object.
+ * Which legacy tasks become whose sub-tasks, computed once over the whole space before the first
+ * task is rewritten: the rewrite drops `parentTask`, so a parent migrated after its children could
+ * no longer find them.
  */
 type Plan = {
   /** Legacy task ids not yet migrated; a transform for an id outside it means the plan is stale. */
@@ -65,31 +65,18 @@ type Plan = {
 
 const plans = new WeakMap<Database.Database, Plan>();
 
-/** A legacy task as the plan reads it; `parentTask` survives only in pre-migration data. */
-type PlanEntry = { object: Obj.Unknown; parentTask?: Ref.Ref<LegacyTask> };
-
-/**
- * The plan for `current`'s run, built on its first `onMigration`. `current` has already switched
- * type by then, so it joins the still-legacy tasks from its pre-migration data.
- */
-const planFor = async (db: Database.Database, current: PlanEntry): Promise<Plan> => {
+const planFor = async (db: Database.Database, taskId: string): Promise<Plan> => {
   const existing = plans.get(db);
-  if (existing?.pending.has(current.object.id)) {
+  if (existing?.pending.has(taskId)) {
     return existing;
   }
-  const plan = await buildPlan(db, current);
+  const plan = await buildPlan(db);
   plans.set(db, plan);
   return plan;
 };
 
-const buildPlan = async (db: Database.Database, current: PlanEntry): Promise<Plan> => {
-  const legacy: PlanEntry[] = (await db.query(Filter.type(LegacyTask)).run()).map((task) => ({
-    object: task,
-    parentTask: task.parentTask,
-  }));
-  if (!legacy.some((entry) => entry.object.id === current.object.id)) {
-    legacy.push(current);
-  }
+const buildPlan = async (db: Database.Database): Promise<Plan> => {
+  const legacy = await db.query(Filter.type(LegacyTask)).run();
   const sets = await db.query(Filter.type(LegacyTaskSet)).run();
 
   // The flat list is the only record of sibling order, and of which set a task was shown in.
@@ -105,15 +92,14 @@ const buildPlan = async (db: Database.Database, current: PlanEntry): Promise<Pla
     });
   }
   const ordered = [...legacy].sort(
-    (a, b) =>
-      (position.get(a.object.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.object.id) ?? Number.MAX_SAFE_INTEGER),
+    (a, b) => (position.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (position.get(b.id) ?? Number.MAX_SAFE_INTEGER),
   );
 
   // Accepted in flat order, each checked against the links already accepted, so a malformed
   // `parentTask` cycle keeps its earliest-listed link and is broken at the next.
   const accepted = new Map<string, Obj.Unknown>();
-  for (const { object: task, parentTask } of ordered) {
-    const parent = parentTask ? (parentTask.target ?? (await parentTask.tryLoad())) : undefined;
+  for (const task of ordered) {
+    const parent = task.parentTask ? (task.parentTask.target ?? (await task.parentTask.tryLoad())) : undefined;
     // A parent in another set still wins: the task follows it into that set, since a tree now lives
     // in exactly one set.
     if (!parent || Obj.getTypename(parent) !== Type.getTypename(Task.Task)) {
@@ -136,15 +122,13 @@ const buildPlan = async (db: Database.Database, current: PlanEntry): Promise<Pla
 
   // Children from the parent's own set keep their flat-list order; ones joining from another set,
   // whose positions are not comparable, follow them.
-  const siblingOrder = ordered
-    .map((entry) => entry.object)
-    .sort((left, right) => {
-      const parentSet = (task: Obj.Unknown) => setOf.get(accepted.get(task.id)?.id ?? '');
-      const joins = (task: Obj.Unknown) => (setOf.get(task.id) === parentSet(task) ? 0 : 1);
-      return joins(left) - joins(right);
-    });
+  const siblingOrder = [...ordered].sort((left, right) => {
+    const parentSet = (task: Obj.Unknown) => setOf.get(accepted.get(task.id)?.id ?? '');
+    const joins = (task: Obj.Unknown) => (setOf.get(task.id) === parentSet(task) ? 0 : 1);
+    return joins(left) - joins(right);
+  });
 
-  const pending = new Set(legacy.map((entry) => entry.object.id));
+  const pending = new Set(legacy.map((task) => task.id));
   const children = new Map<string, Obj.Unknown[]>();
   const late = new Map<string, Task.Task>();
   for (const task of siblingOrder) {
@@ -171,20 +155,18 @@ const buildPlan = async (db: Database.Database, current: PlanEntry): Promise<Pla
 export const taskMigration = Migration.define({
   from: LegacyTask,
   to: Task.Task,
-  transform: (from) => {
+  transform: async (from, { db }) => {
+    const plan = await planFor(db, from.id);
     const { parentTask: _parentTask, ...rest } = from;
-    return { ...rest, subtasks: [] };
+    return {
+      ...rest,
+      // By URI: a child not yet migrated is still the legacy type, which a typed ref cannot name.
+      subtasks: (plan.children.get(from.id) ?? []).map((child) => Ref.fromURI(Obj.getURI(child))),
+    };
   },
-  onMigration: async ({ before, object, db }) => {
-    const plan = await planFor(db, { object, parentTask: before.parentTask });
-    const children = plan.children.get(object.id) ?? [];
-    if (children.length > 0) {
-      Obj.update(object, (object) => {
-        // By URI: a child not yet migrated is still the legacy type, which a typed ref cannot name.
-        object.subtasks = children.map((child) => Ref.fromURI(Obj.getURI(child)));
-      });
-    }
-    for (const child of children) {
+  onMigration: async ({ object, db }) => {
+    const plan = await planFor(db, object.id);
+    for (const child of plan.children.get(object.id) ?? []) {
       Obj.setParent(child, object);
     }
     const parent = plan.late.get(object.id);
@@ -208,20 +190,18 @@ export const taskMigration = Migration.define({
 export const taskSetMigration = Migration.define({
   from: LegacyTaskSet,
   to: TaskSet.TaskSet,
-  transform: (from) => ({ ...from, tasks: from.tasks.map((ref) => Ref.fromURI(ref.uri)) }),
-  onMigration: async ({ object }) => {
-    const roots: Ref.Ref<Task.Task>[] = [];
-    for (const ref of object.tasks) {
+  transform: async (from) => {
+    const { tasks: flat, ...rest } = from;
+    const tasks: Ref.Ref<Task.Task>[] = [];
+    for (const ref of flat) {
       const task = ref.target ?? (await ref.tryLoad());
       if (!Obj.instanceOf(Task.Task, task) || !isListedSubtask(task)) {
-        roots.push(Ref.fromURI(ref.uri));
+        tasks.push(Ref.fromURI(ref.uri));
       }
     }
-    if (roots.length !== object.tasks.length) {
-      Obj.update(object, (object) => {
-        object.tasks = roots;
-      });
-    }
+    return { ...rest, tasks };
+  },
+  onMigration: async ({ object }) => {
     for (const ref of object.tasks) {
       const task = ref.target ?? (await ref.tryLoad());
       if (task && !isListedSubtask(task) && Obj.getParent(task)?.id !== object.id) {

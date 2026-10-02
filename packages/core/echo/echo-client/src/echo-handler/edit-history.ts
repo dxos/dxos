@@ -7,7 +7,7 @@ import { next as A, type Doc, type Heads, type Prop, type State } from '@automer
 import { type Change, Obj } from '@dxos/echo';
 import { EntityStructure } from '@dxos/echo-protocol';
 import { ATTR_META, ATTR_TYPE } from '@dxos/echo/internal';
-import { assertArgument, invariant } from '@dxos/invariant';
+import { assertArgument } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
 import { ObjectCore } from '../core-db/index.ts';
@@ -230,91 +230,6 @@ export const getObjectChanges = <T extends Obj.Unknown>(
 
   return changes;
 };
-
-/**
- * A conflict alternative before `counter` is stripped for the public {@link Obj.ConflictAlternative}
- * shape — kept internally to rank alternatives the way Automerge itself would.
- */
-type RankedAlternative = Obj.ConflictAlternative & { readonly counter: bigint };
-
-/** A change `message` that marks a fold-forward write rather than an ordinary direct edit. */
-const isFoldMessage = (message: string | undefined): boolean =>
-  message !== undefined && (message.startsWith('fold:') || message.startsWith('migration:'));
-
-/** Automerge's own conflict tie-break: the higher op counter wins; a tied counter goes to the greater actor id. */
-const outranks = (candidate: RankedAlternative, current: RankedAlternative): boolean =>
-  candidate.counter !== current.counter ? candidate.counter > current.counter : candidate.actor > current.actor;
-
-/**
- * @returns The live Automerge conflict at `property`, or `undefined` when it has none -- see
- * `Obj.getConflict`. Op ids from `A.getConflicts` (`counter@actor`) are attributed back to the change
- * that produced them by locating the change whose `[startOp, maxOp]` range contains that counter --
- * the same op-numbering `Obj.getChanges` and `@dxos/echo-doc`'s `AddOnlySet` rely on.
- */
-export const getObjectConflict = (object: Obj.Unknown, property: string): Obj.Conflict | undefined => {
-  assertArgument(isEchoObject(object), 'object', 'expected ECHO object stored in the database');
-
-  const objectCore = getObjectCore(object);
-  const doc = objectCore.getDoc();
-  // `A.getConflicts` needs the object's OWN `data` map, not `getRaw`'s declared (mountPath-agnostic)
-  // union return type, which a generic parameter cannot narrow without a cast.
-  const rawData = getDeep<EntityStructure['data']>(doc, [...objectCore.mountPath, 'data']);
-  invariant(rawData, 'getConflict: object body not present');
-  const rawConflicts = A.getConflicts(rawData, property);
-  if (!rawConflicts) {
-    return undefined;
-  }
-
-  // Peers that independently fold or replay the same value leave several ops holding it; that is
-  // not a disagreement anyone needs to resolve.
-  const rawValues = Object.values(rawConflicts).map(canonicalJson);
-  if (rawValues.every((value) => value === rawValues[0])) {
-    return undefined;
-  }
-
-  const changes = A.getChangesMetaSince(doc, []);
-  const findChange = (actor: string, counter: bigint) =>
-    changes.find(
-      (change) => change.actor === actor && counter >= BigInt(change.startOp) && counter <= BigInt(change.maxOp),
-    );
-
-  const alternatives: RankedAlternative[] = Object.entries(rawConflicts).map(([opId, rawValue]) => {
-    const at = opId.lastIndexOf('@');
-    invariant(at > 0, `malformed Automerge conflict op id: ${opId}`);
-    const counter = BigInt(opId.slice(0, at));
-    const actor = opId.slice(at + 1);
-    const change = findChange(actor, counter);
-    const message = change?.message ?? undefined;
-    return {
-      value: objectCore.decode(rawValue),
-      actor,
-      message,
-      // Automerge stores change time in epoch seconds.
-      time: change ? change.time * 1000 : undefined,
-      fold: isFoldMessage(message),
-      counter,
-    };
-  });
-
-  const nonFold = alternatives.filter((alternative) => !alternative.fold);
-  const presented =
-    nonFold.length > 0
-      ? nonFold.reduce((winner, candidate) => (outranks(candidate, winner) ? candidate : winner)).value
-      : objectCore.getDecoded(['data', property]);
-
-  return {
-    presented,
-    alternatives: alternatives.map(({ counter: _counter, ...alternative }) => alternative),
-  };
-};
-
-/** JSON with object keys sorted, so structurally equal raw Automerge values compare equal as strings. */
-const canonicalJson = (value: unknown): string =>
-  JSON.stringify(value, (_key, nested: unknown) =>
-    nested !== null && typeof nested === 'object' && !Array.isArray(nested) && !(nested instanceof Uint8Array)
-      ? Object.fromEntries(Object.entries(nested).sort(([left], [right]) => left.localeCompare(right)))
-      : nested,
-  );
 
 /** Reconstructs the object over a historical view of its document as an immutable snapshot. */
 const snapshotAt = <T extends Obj.Unknown>(objectCore: ObjectCore, historical: Doc<any>): Obj.Snapshot<T> => {

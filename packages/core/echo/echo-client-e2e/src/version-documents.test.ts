@@ -15,7 +15,7 @@ import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
 
-import { type TestDatabase, createPartitionedPair } from './migration-bench/harness.ts';
+import { type TestDatabase, createPartitionedPair } from './testing/partitioned-pair.ts';
 
 //
 // Version documents across peers (`.agents/projects/lenses/DESIGN.md` §12.5): peers that create an

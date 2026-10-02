@@ -1,5 +1,14 @@
 # M0 Migration Research — Final Report
 
+> **Superseded (2026-10-02).** ECHO moved from one-off migrations to continuous migration: every
+> version of an object is kept in a document of its own, and the host translates each edit between
+> them through lenses (DESIGN.md §12). The in-place migration code this describes — fold-forward,
+> `Migration.fromLens`, the multi-object migration helpers, `ObjectCore.foldAt`, `Obj.getConflict` and
+> the migration bench — was removed, and main's one-off migration code was restored. It remains in this
+> branch's history: `bfb4ccae39` is the last commit that holds it. The work recorded here is how the
+> continuous design was reached, and much of it carried over into it: deterministic translation, the
+> structural list and text edits, and the convergence-key merge replay.
+
 _2026-08-02, updated 2026-09-25 (follow-up spikes against the landed #12412 engine) · The definitive record of the migration research: the final design, the evidence that
 proves it, and the alternatives ruled out along the way. DESIGN.md §10 states outcomes and points
 here for detail. Evidence:

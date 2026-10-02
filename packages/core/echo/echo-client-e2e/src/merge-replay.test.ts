@@ -12,13 +12,11 @@ import { type TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { type PartitionedPair, type TestDatabase, createPartitionedPair, headsOf } from './migration-bench/harness.ts';
+import { type PartitionedPair, type TestDatabase, createPartitionedPair, headsOf } from './testing/partitioned-pair.ts';
 
 //
-// Object-merging project, Phase A item 2: the creation-heads replay landed in
-// `ConvergenceKeyMerger#mergeCandidates` (`echo-host/src/db-host/convergence-key-merge.ts`). This
-// suite ports the essence of `migration-bench/fan-out-engine.test.ts` E5a/E5c/E5d against the REAL
-// engine — no test-side replay call anywhere, unlike that bench's prototype. See
+// The creation-heads replay in `ConvergenceKeyMerger#mergeCandidates` (`echo-host/src/db-host/convergence-key-merge.ts`),
+// against the real engine: an edit made only on a losing duplicate survives the merge. See
 // `.agents/projects/lenses/M0-REPORT.md` "the final design" item 4.
 //
 

@@ -55,26 +55,13 @@ describe('rename migration', () => {
   });
 
   test('object migrations are migrations too', () => {
-    const OperationV2 = Type.makeObject(DXN.make('com.example.type.operation', '0.2.0'))(
-      Schema.Struct({ name: Schema.String }),
-    );
     const migration = Migration.define({
       from: Operation,
-      to: OperationV2,
-      transform: (from) => ({ name: from.name }),
+      to: Operation,
+      transform: async (from) => ({ name: from.name }),
     });
     expect(Migration.isMigration(migration)).to.be.true;
     expect(migration.kind).to.eq('object');
-  });
-
-  test('an object migration whose "from" and "to" are the same type is a definition error', () => {
-    expect(() =>
-      Migration.define({
-        from: Operation,
-        to: Operation,
-        transform: (from) => ({ name: from.name }),
-      }),
-    ).toThrow(/same type/);
   });
 
   test('isMigration rejects unbranded and unknown-kind values', () => {

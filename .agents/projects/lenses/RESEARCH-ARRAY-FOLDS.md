@@ -1,5 +1,14 @@
 # Folding late list, map and text edits across a migration: prior art and options
 
+> **Superseded (2026-10-02).** ECHO moved from one-off migrations to continuous migration: every
+> version of an object is kept in a document of its own, and the host translates each edit between
+> them through lenses (DESIGN.md §12). The in-place migration code this describes — fold-forward,
+> `Migration.fromLens`, the multi-object migration helpers, `ObjectCore.foldAt`, `Obj.getConflict` and
+> the migration bench — was removed, and main's one-off migration code was restored. It remains in this
+> branch's history: `bfb4ccae39` is the last commit that holds it. The work recorded here is how the
+> continuous design was reached, and much of it carried over into it: deterministic translation, the
+> structural list and text edits, and the convergence-key merge replay.
+
 _Research for the fold-forward design on branch `claude/m0-migrations-research-zw15ml`, written 2026-09-30.
 Labels: **[verified]** means I read the source or ran a probe against `@automerge/automerge@3.5.0` (the
 version pinned in this repo). **[inferred]** means my own reasoning, not checked against code. **[doc]**

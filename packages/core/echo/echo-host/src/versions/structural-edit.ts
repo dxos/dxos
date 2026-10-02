@@ -12,8 +12,8 @@ import { getDeep, setDeep } from '@dxos/util';
 import { encodedValuesEqual, isRecord } from './encoded-value.ts';
 
 //
-// The edits a per-change fold writes (`fold-forward.ts#foldLateChanges`): pure functions of the fold's
-// inputs, so every peer that folds the same late change writes the same ops.
+// The edits a translation writes for one original change: pure functions of its inputs, so every device that
+// translates the same change writes the same ops.
 //
 
 /** A record that is a map in the document, not an encoded reference. */
@@ -50,7 +50,7 @@ const commonSubsequence = (
   const rows = from.length - prefix - suffix;
   const columns = to.length - prefix - suffix;
   if (rows * columns > LIST_DIFF_LIMIT) {
-    log.warn('fold: list middle too large to diff', { rows, columns, positional });
+    log.warn('structural edit: list middle too large to diff', { rows, columns, positional });
     if (positional) {
       for (let offset = 0; offset < Math.min(rows, columns); offset++) {
         pairs.push([prefix + offset, prefix + offset]);
@@ -91,7 +91,7 @@ type ListEdit =
 
 /**
  * The edit that turns `previous` into `next`, placed on `current`: each element of `previous` is located
- * in `current` by a common subsequence, so an element a concurrent fold placed elsewhere is edited where
+ * in `current` by a common subsequence, so an element a concurrent change placed elsewhere is edited where
  * it is, and one already gone is skipped.
  */
 const rebaseListEdit = (previous: readonly unknown[], next: readonly unknown[], current: readonly unknown[]) => {
@@ -149,7 +149,7 @@ const rebaseListEdit = (previous: readonly unknown[], next: readonly unknown[], 
 };
 
 /**
- * Applies the edit a late change made, from `previous` to `next`, to the value at `path` in `draft`,
+ * Applies the edit a change made, from `previous` to `next`, to the value at `path` in `draft`,
  * whose value there is `current`, as nested edits rather than one replacement: a map key by key (only
  * keys the change moved), a list by inserts, deletes and element edits placed on `current`'s elements,
  * and text as a text diff (placed on `current`'s characters when it differs from `previous`). A concurrent
@@ -174,12 +174,12 @@ export const applyStructuralEdit = (
     return;
   }
   if (typeof current === 'string' && typeof next === 'string') {
-    invariant(typeof draft === 'object' && draft !== null, 'fold draft is not a document');
+    invariant(typeof draft === 'object' && draft !== null, 'draft is not a document');
     if (typeof previous !== 'string' || previous === current) {
       A.updateText(draft, [...path], next);
       return;
     }
-    // The target text differs from the late change's source (concurrent folds ordered it differently), so
+    // The target text differs from the change's source (concurrent changes ordered it differently), so
     // the change's own edit is placed on it character by character, as a list edit is.
     for (const edit of rebaseListEdit(previous.split(''), next.split(''), current.split(''))) {
       switch (edit.kind) {
@@ -198,7 +198,7 @@ export const applyStructuralEdit = (
   }
   if (isMapValue(previous) && isMapValue(next) && isMapValue(current)) {
     const map = getDeep(draft, [...path]);
-    invariant(isRecord(map), 'fold target is not a map');
+    invariant(isRecord(map), 'edit target is not a map');
     for (const key of new Set([...Object.keys(previous), ...Object.keys(next)])) {
       if (!Object.hasOwn(next, key)) {
         delete map[key];
@@ -212,7 +212,7 @@ export const applyStructuralEdit = (
   }
   if (Array.isArray(previous) && Array.isArray(next) && Array.isArray(current)) {
     const list = getDeep(draft, [...path]);
-    invariant(Array.isArray(list), 'fold target is not a list');
+    invariant(Array.isArray(list), 'edit target is not a list');
     for (const edit of rebaseListEdit(previous, next, current)) {
       switch (edit.kind) {
         case 'update':

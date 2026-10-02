@@ -7,7 +7,8 @@ import type { AutomergeUrl, DocumentId } from '@automerge/automerge-repo';
 import type * as Brand from 'effect/Brand';
 
 import { type EncodedReference } from '@dxos/echo-protocol';
-import type { SpaceId } from '@dxos/keys';
+import type { EntityMeta } from '@dxos/echo-protocol';
+import type { SpaceId, URI } from '@dxos/keys';
 
 import * as Doc from '../automerge/Doc.ts';
 
@@ -120,6 +121,26 @@ export type SpaceDocumentHeads = {
    * DocumentId => Heads.
    */
   heads: Record<DocumentId, Heads>;
+};
+
+export type AtomicReplaceObjectProps = {
+  /**
+   * Update data.
+   * NOTE: This is not merged with the existing data.
+   */
+  data: any;
+
+  /**
+   * Update object type — either a typename DXN or a stored-schema EID
+   * (see `getSchemaURI`).
+   */
+  type?: URI.URI;
+
+  /**
+   * Optional partial meta patch — merged into the existing object meta.
+   * Fields explicitly set to `undefined` overwrite the previous value with `undefined`.
+   */
+  meta?: Partial<EntityMeta>;
 };
 
 /** Options for loading object documents. */

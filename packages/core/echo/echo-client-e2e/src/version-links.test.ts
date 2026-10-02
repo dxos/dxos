@@ -14,7 +14,7 @@ import { DatabaseDirectory } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, PublicKey } from '@dxos/keys';
 
-import { type TestDatabase, createPartitionedPair } from './migration-bench/harness.ts';
+import { type TestDatabase, createPartitionedPair } from './testing/partitioned-pair.ts';
 
 //
 // A struct a newer version keeps in an object of its own (`.agents/projects/lenses/DESIGN.md` §12.10): the

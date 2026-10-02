@@ -9,6 +9,7 @@ export * from './object-core.ts';
 // TODO(wittjosiah): Vitest fails without explicit exports here.
 export {
   type AddCoreOptions,
+  type AtomicReplaceObjectProps,
   type DecodedAutomergePrimaryValue,
   type DocumentChanges,
   type GetObjectCoreByIdOptions,

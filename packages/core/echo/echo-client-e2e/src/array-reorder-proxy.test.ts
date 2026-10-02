@@ -11,11 +11,10 @@ import { type TestReplicationNetwork } from '@dxos/echo-host/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 
-import { type PartitionedPair, type TestDatabase, createPartitionedPair } from './migration-bench/harness.ts';
+import { type PartitionedPair, type TestDatabase, createPartitionedPair } from './testing/partitioned-pair.ts';
 
 //
-// Minimal repro for the echo-handler array proxy staleness found by
-// `migration-bench/array-fan-out.test.ts` A2b: a remote reorder (delete + reinsert, since Automerge
+// Minimal repro for an echo-handler array proxy staleness: a remote reorder (delete + reinsert, since Automerge
 // has no list move) that lands on an array index whose element proxy is cached must invalidate that
 // proxy's OWN fields, not just swap which raw node the index points at.
 //

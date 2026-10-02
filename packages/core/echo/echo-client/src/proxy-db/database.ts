@@ -2,16 +2,14 @@
 // Copyright 2022 DXOS.org
 //
 
-import { next as A, type Heads } from '@automerge/automerge';
+import { type Heads } from '@automerge/automerge';
 import { type AutomergeUrl } from '@automerge/automerge-repo';
-import { sha256 } from '@noble/hashes/sha2';
-import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils';
 import * as EffectContext from 'effect/Context';
 import * as Equal from 'effect/Equal';
 import * as Schema from 'effect/Schema';
 import { inspect } from 'node:util';
 
-import { type CleanupFn, Event, Mutex, type ReadOnlyEvent, synchronized } from '@dxos/async';
+import { type CleanupFn, Event, type ReadOnlyEvent, synchronized } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { inspectObject } from '@dxos/debug';
 import {
@@ -31,7 +29,6 @@ import {
   type Registry,
   Type,
 } from '@dxos/echo';
-import { encodedValuesEqual } from '@dxos/echo-host/versions';
 import {
   DATA_NAMESPACE,
   type DatabaseDirectory,
@@ -54,41 +51,27 @@ import {
   setRefResolver,
 } from '@dxos/echo/internal';
 import { getProxyTarget, isProxy } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
 import { assertArgument, assertState, invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, type PublicKey, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { RpcClosedError, runServiceCall, subscribeStream } from '@dxos/protocols';
 import { type DataService, type FeedService, type QueryService } from '@dxos/protocols/rpc';
-import { setDeep } from '@dxos/util';
 
 import type { SaveStateChangedEvent } from '../automerge/index.ts';
 import { type DocHandleProxy, type RepoProxy } from '../automerge/index.ts';
-import {
-  type BranchStore,
-  EntityManager,
-  type LoadObjectOptions,
-  META_NAMESPACE,
-  SYSTEM_NAMESPACE,
-} from '../core-db/index.ts';
+import { type BranchStore, EntityManager, type LoadObjectOptions } from '../core-db/index.ts';
 import {
   EchoReactiveHandler,
   type ProxyTarget,
   checkoutVersionSnapshot,
   createObject,
   getObjectChanges,
-  getObjectConflict,
   getObjectCore,
   initEchoReactiveObjectRootProxy,
   isEchoObject,
 } from '../echo-handler/index.ts';
 import { FeedHandle } from '../feed/feed-handle.ts';
 import { type HypergraphImpl } from '../hypergraph.ts';
-import { runArrayFanOutMigration, runStampElementIdsMigration } from './array-fan-out.ts';
-import { computeGuardedDataWrites, getDecodedDataWithRefs } from './encoded-value.ts';
-import { runFanInMigration } from './fan-in.ts';
-import { type FoldForwardOptions, foldForwardMigrations } from './fold-forward.ts';
-import { createObjectMigrationContext } from './migration-context.ts';
 
 export interface EchoDatabase extends Database.Database {
   /**
@@ -115,20 +98,6 @@ export interface EchoDatabase extends Database.Database {
    * Run migrations.
    */
   runMigrations(migrations: Migration.Migration[]): Promise<void>;
-
-  /**
-   * Folds a late old-shape write forward into a previously migrated object: for objects of each
-   * migration's `toType` carrying its marker whose retired properties changed since the marker's
-   * checkpoint, recomputes and applies the difference. `runMigrations` calls it at the end of every
-   * run; call it directly to fold without re-running the migrations.
-   */
-  foldForward(migrations: Migration.Migration[], options?: FoldForwardOptions): Promise<void>;
-
-  /**
-   * Folds forward, debounced, whenever objects in this database change — the objects a replicated
-   * late write touches. `getMigrations` is read on each pass so the current set always applies.
-   */
-  watchFoldForward(getMigrations: () => Migration.Migration[], options?: { debounceMs?: number }): CleanupFn;
 
   /**
    * The object at version `type` of its type: the live object when it reads that version, else an object
@@ -314,11 +283,10 @@ const combineSyncState = (
 
 /**
  * The properties `#runObjectMigration` reads/deletes off a migration's `transform` result —
- * `Migration.ObjectMigration.transform` returns `unknown` on the type-erased interface, but its
- * actual shape always matches `Migration.TransformResult<To>`: an `id`/`[MetaId]` envelope around the
- * target type's own data keys (the index signature).
+ * `Migration.ObjectMigration.transform` is declared as `(from: unknown, ...) => Promise<unknown>`
+ * on the type-erased interface, but its actual shape always matches `Migration.TransformResult<To>`.
  */
-type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta>; [key: string]: unknown };
+type MigrationOutput = { id?: unknown; [MetaId]?: Partial<ProtocolEntityMeta> };
 
 /** Whether `value` is an object of exactly version `type`; `Obj.instanceOf` matches any version of a typename. */
 const isAtVersion = <S extends Type.AnyObj>(type: S, value: unknown): value is Type.InstanceType<S> => {
@@ -340,9 +308,6 @@ const versionTypesOf = (lenses: readonly Lens.Any[]): Type.AnyObj[] =>
       Type.getTypename(left).localeCompare(Type.getTypename(right)) ||
       Lens.compareVersions(Lens.versionOf(left), Lens.versionOf(right)),
   );
-
-/** Idle time after the last update before a watched fold-forward pass, so a burst folds once. */
-const FOLD_FORWARD_DEBOUNCE_MS = 2_000;
 
 /**
  * User-facing API for the space database.
@@ -381,8 +346,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
    * Disposals of handles retired by a service swap. A disposal that lost writes is kept until {@link flush} raises it.
    */
   readonly #retiredFeeds = new Set<Promise<void>>();
-  /** Serializes migration and fold-forward passes, which read a checkpoint and write it back. */
-  readonly #migrationLock = new Mutex();
   /** The lens adoption in flight, so adoptions run one at a time. */
   #adoption: Promise<void> = Promise.resolve();
   readonly #versionBindings = new Map<string, Entity.Unknown>();
@@ -853,41 +816,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     ]);
   }
 
-  async runMigrations(migrations: Migration.Migration[]): Promise<void> {
-    await this.#migrationLock.executeSynchronized(() => this.#runMigrations(migrations));
-  }
-
-  async foldForward(migrations: Migration.Migration[], options?: FoldForwardOptions): Promise<void> {
-    await this.#migrationLock.executeSynchronized(() => this.#foldForward(migrations, options));
-  }
-
-  watchFoldForward(getMigrations: () => Migration.Migration[], options?: { debounceMs?: number }): CleanupFn {
-    // Only objects that changed since the last pass can have gained a late write.
-    let changed = new Set<string>();
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const pass = () => {
-      timer = undefined;
-      const objectIds = changed;
-      changed = new Set();
-      void this.foldForward(getMigrations(), { objectIds }).catch((err) => {
-        if (!(err instanceof RpcClosedError)) {
-          log.catch(err);
-        }
-      });
-    };
-    const unsubscribe = this._entityManager._updateEvent.on((event) => {
-      for (const { id } of event.itemsUpdated) {
-        changed.add(id);
-      }
-      clearTimeout(timer);
-      timer = setTimeout(pass, options?.debounceMs ?? FOLD_FORWARD_DEBOUNCE_MS);
-    });
-    return () => {
-      clearTimeout(timer);
-      unsubscribe();
-    };
-  }
-
   async version<S extends Type.AnyObj>(obj: Obj.Unknown, type: S): Promise<Type.InstanceType<S> | undefined> {
     const bound = await this._versionOfType(obj, Type.getURI(type));
     return isAtVersion(type, bound) ? bound : undefined;
@@ -975,7 +903,7 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       });
   }
 
-  async #runMigrations(migrations: Migration.Migration[]): Promise<void> {
+  async runMigrations(migrations: Migration.Migration[]): Promise<void> {
     // Validated up front so a batch containing an unrecognized migration cannot leave the
     // preceding ones half-applied.
     for (const migration of migrations) {
@@ -991,23 +919,8 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
         await this.#runObjectMigration(migration);
       } else if (Migration.isRenameMigration(migration)) {
         await this.#runRenameMigration(migration);
-      } else if (Migration.isFanInMigration(migration)) {
-        await runFanInMigration(this, migration);
-      } else if (Migration.isArrayFanOutMigration(migration)) {
-        await runArrayFanOutMigration(this, migration);
-      } else if (Migration.isStampElementIdsMigration(migration)) {
-        await runStampElementIdsMigration(this, migration);
       }
     }
-    await this.#resumeMigrationEffects(migrations);
-    await this._entityManager.flush();
-
-    // A peer may already hold late old-shape writes to objects this run just migrated.
-    await this.#foldForward(migrations);
-  }
-
-  async #foldForward(migrations: Migration.Migration[], options?: FoldForwardOptions): Promise<void> {
-    await foldForwardMigrations(this, migrations, options);
     await this._entityManager.flush();
   }
 
@@ -1019,33 +932,9 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
       objects: objects.length,
     });
     for (const object of objects) {
-      // The type query reads the index, which can still list an object an earlier run already
-      // migrated; its live type is the authority, so a re-run never migrates an object twice.
-      if (Obj.getTypeURI(object)?.toString() !== migration.fromType.toString()) {
-        continue;
-      }
-      // A concurrent migration on another peer can leave the type register behind the steps it recorded;
-      // an object that already crossed this step is never migrated through it again.
-      if (
-        Migration.getMigrationSteps(object).some(
-          ({ step }) => step.from === migration.fromType.toString() && step.to === migration.toType.toString(),
-        )
-      ) {
-        continue;
-      }
+      const before = JSON.parse(JSON.stringify(object));
 
-      // Read, transformed and written in one synchronous block, so no replicated change can land
-      // between the snapshot the output derives from and the heads the migration change records.
-      const core = getObjectCore(object);
-      const before = { ...getDecodedDataWithRefs(this, core, A.getHeads(core.getDoc())), id: object.id };
-      const result = migration.transform(before);
-      if (result instanceof Promise) {
-        result.catch((err: unknown) => log.catch(err));
-        throw new TypeError(
-          `Migration ${migration.fromType.toString()} -> ${migration.toType.toString()}: transform must be synchronous`,
-        );
-      }
-      const output = result as MigrationOutput | undefined;
+      const output = (await migration.transform(object, { db: this })) as MigrationOutput | undefined;
       const metaPatch = output?.[MetaId];
       if (metaPatch !== undefined && output != null) {
         delete output[MetaId];
@@ -1053,175 +942,18 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
       delete output?.id;
 
-      // An old client keeps writing a kept key in its old meaning, straight into the new field, where
-      // fold-forward cannot tell the two apart; a changed meaning needs a new name.
-      const reinterpreted = [...computeGuardedDataWrites(core, output ?? {}).keys()].filter(
-        (key) => core.getRaw([DATA_NAMESPACE, key]) !== undefined,
-      );
-      if (reinterpreted.length > 0) {
-        throw new Error(
-          `Migration ${migration.fromType.toString()} -> ${migration.toType.toString()}: transform changes the value of kept properties [${reinterpreted.join(', ')}] on object ${object.id}; write a changed value under a new property name`,
-        );
-      }
-
-      // An overlay value lives in the object's meta, which the data-only transform input omits.
-      if (migration.lens && output) {
-        const overlays = Lens.getOverlays(object, migration.lens.overlayKey);
-        for (const property of Lens.coverage(migration.lens).overlaid) {
-          if (output[property] === undefined && overlays[property] !== undefined) {
-            output[property] = overlays[property];
-          }
-        }
-      }
-
-      // Whole-set validation before any write lands: an invalid transform must not half-write the
-      // object. `toSchema` is the target's entity schema (it requires `id`, which the transform
-      // contract omits), so the object's own — unchanging — id stands in for it here.
-      try {
-        Schema.asserts(migration.toSchema, { ...output, id: object.id });
-      } catch (cause) {
-        throw new Error(
-          `Migration ${migration.fromType.toString()} -> ${migration.toType.toString()}: invalid transform output for object ${object.id}`,
-          { cause },
-        );
-      }
-
-      const stepKey = this.#applyObjectMigration(object, migration, output ?? {}, metaPatch);
+      await this._entityManager.atomicReplaceObject(object.id, {
+        data: output,
+        type: migration.toType,
+        meta: metaPatch,
+      });
       const postMigrationType = Obj.getTypeURI(object);
       invariant(postMigrationType != null && postMigrationType.toString() === migration.toType.toString());
 
-      await this.#runMigrationEffects(object, migration, stepKey, before);
-    }
-  }
-
-  /** Runs `onMigration` for one migrated object, then clears its step's `effectsPending` flag. */
-  async #runMigrationEffects(
-    object: Obj.Unknown,
-    migration: Migration.ObjectMigration,
-    stepKey: string,
-    before: Record<string, unknown> & { id: string },
-  ): Promise<void> {
-    if (!migration.onMigration) {
-      return;
-    }
-    await migration.onMigration({ ...createObjectMigrationContext(this), before, object });
-    const core = getObjectCore(object);
-    core.change((doc) => {
-      setDeep(doc, [...core.mountPath, META_NAMESPACE, 'annotations', stepKey, 'effectsPending'], false);
-    });
-  }
-
-  /**
-   * Re-runs `onMigration` for every recorded step whose migration change landed but whose effects never
-   * completed, found by its step rather than by type, since a later migration may have moved it on.
-   */
-  async #resumeMigrationEffects(migrations: readonly Migration.Migration[]): Promise<void> {
-    const withEffects = migrations.filter(
-      (migration): migration is Migration.ObjectMigration =>
-        Migration.isObjectMigration(migration) && migration.onMigration !== undefined,
-    );
-    if (withEffects.length === 0) {
-      return;
-    }
-    const objects = await this._hypergraph.query(Query.select(Filter.everything()).from(this)).run();
-    for (const object of objects) {
-      const core = getObjectCore(object);
-      for (const { key, step } of Migration.getMigrationSteps(object)) {
-        const migration = withEffects.find(
-          (candidate) => candidate.fromType.toString() === step.from && candidate.toType.toString() === step.to,
-        );
-        if (migration && step.effectsPending && A.hasHeads(core.getDoc(), [...step.preHeads])) {
-          const before = { ...getDecodedDataWithRefs(this, core, [...step.preHeads]), id: object.id };
-          await this.#runMigrationEffects(object, migration, key, before);
-        }
+      if (migration.onMigration) {
+        await migration.onMigration({ before, object, db: this });
       }
     }
-  }
-
-  /**
-   * Applies one object migration's write set in a single automerge change on the object's own
-   * `ObjectCore`: data keys the transform's output actually changed (value-compare guarded — an
-   * unchanged key emits no op, and a key the output omits is left untouched as a retired property),
-   * the meta patch (merged key by key, same guard), the type switch, and a new
-   * {@link Migration.MigrationStep} under its own annotation key (post-step heads are this very
-   * change, locatable by its `message`) — the object's PREVIOUS steps are kept: a `@1 -> @2 -> @3`
-   * object carries both, so fold-forward can still find a late `@1`-shaped write against step one.
-   *
-   * @returns The annotation key the step was recorded under.
-   *
-   * Every `ObjectCore` helper (`setDecoded`, `setType`, ...) opens its own `change`, so nesting them
-   * here would produce several changes; every write below instead goes straight onto the doc at
-   * `core.mountPath`, inside one `core.sharedChangeAt` call.
-   */
-  #applyObjectMigration(
-    object: Obj.Unknown,
-    migration: Migration.ObjectMigration,
-    output: MigrationOutput,
-    metaPatch: Partial<ProtocolEntityMeta> | undefined,
-  ): string {
-    const core = getObjectCore(object);
-    const mountPath = core.mountPath;
-    const preHeads = A.getHeads(core.getDoc());
-
-    const dataWrites = computeGuardedDataWrites(core, output);
-
-    const metaWrites = new Map<string, unknown>();
-    for (const [key, value] of Object.entries(metaPatch ?? {})) {
-      if (value === undefined) {
-        continue;
-      }
-      const encoded = core.encode(value);
-      if (!encodedValuesEqual(encoded, core.getRaw([META_NAMESPACE, key]))) {
-        metaWrites.set(key, encoded);
-      }
-    }
-
-    const fromType = migration.fromType.toString();
-    const toType = migration.toType.toString();
-    const index = Migration.getMigrationSteps(object).length;
-    const newStep = core.encode(
-      Schema.encodeSync(Migration.MigrationStepSchema)({
-        index,
-        from: fromType,
-        to: toType,
-        preHeads: [...preHeads],
-        // Every source property the output drops, set or not: an optional one an old client sets for
-        // the first time after the migration is still a late write to fold.
-        retired: [
-          ...new Set([
-            ...SchemaEx.getProperties(migration.fromSchema.ast).map((property) => String(property.name)),
-            ...Object.keys(core.getRaw([DATA_NAMESPACE]) ?? {}),
-          ]),
-        ]
-          .filter((key) => key !== 'id' && !Object.hasOwn(output, key))
-          .sort(),
-        ...(migration.onMigration ? { effectsPending: true } : {}),
-      }),
-    );
-    // Derived from what identifies the step, so two peers recording the same step write the same key.
-    const stepKey = `${Migration.MIGRATION_STEP_KEY_PREFIX}${bytesToHex(
-      sha256(utf8ToBytes(`${fromType}|${toType}|${[...preHeads].sort().join(',')}`)),
-    ).slice(0, 32)}`;
-    const typeRef = EncodedReference.fromURI(migration.toType);
-
-    // Authored identically by every peer that migrates from the same heads, so they share one change
-    // and one set of target containers, and a direct edit inside them made on either peer survives.
-    core.sharedChangeAt(
-      preHeads,
-      (draft, mountPath) => {
-        for (const [key, value] of dataWrites) {
-          setDeep(draft, [...mountPath, DATA_NAMESPACE, key], value);
-        }
-        for (const [key, value] of metaWrites) {
-          setDeep(draft, [...mountPath, META_NAMESPACE, key], value);
-        }
-
-        setDeep(draft, [...mountPath, META_NAMESPACE, 'annotations', stepKey], newStep);
-        setDeep(draft, [...mountPath, SYSTEM_NAMESPACE, 'type'], typeRef);
-      },
-      { message: `migration: ${fromType} -> ${toType}`, actorSeed: stepKey },
-    );
-    return stepKey;
   }
 
   /**
@@ -1409,10 +1141,6 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
     return getObjectChanges(obj, opts);
   }
 
-  getConflict<T extends Obj.Unknown>(obj: T, property: string): Obj.Conflict | undefined {
-    return getObjectConflict(obj, property);
-  }
-
   listBranches(objectId: string): string[] {
     return this._entityManager.listBranches(objectId);
   }
@@ -1466,6 +1194,10 @@ export class DatabaseImpl extends Resource implements EchoDatabase {
 
   batchLoadObjectCores(objectIds: string[], options?: Parameters<EntityManager['batchLoadObjectCores']>[1]) {
     return this._entityManager.batchLoadObjectCores(objectIds, options);
+  }
+
+  atomicReplaceObject(id: string, params: Parameters<EntityManager['atomicReplaceObject']>[1]) {
+    return this._entityManager.atomicReplaceObject(id, params);
   }
 
   allObjectCores() {

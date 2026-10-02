@@ -13,7 +13,7 @@ import { type URI } from '@dxos/keys';
 import { getDeep } from '@dxos/util';
 
 import { encodedValuesEqual, isRecord } from './encoded-value.ts';
-import { applyStructuralEdit } from './fold-edit.ts';
+import { applyStructuralEdit } from './structural-edit.ts';
 import {
   type ChangeGraph,
   creationChange,

@@ -5646,9 +5646,6 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../../common/util
-      '@noble/hashes':
-        specifier: 'catalog:'
-        version: 1.8.0
       effect:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117

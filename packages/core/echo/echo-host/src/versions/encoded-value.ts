@@ -5,8 +5,7 @@
 import { next as A } from '@automerge/automerge';
 
 //
-// Comparing encoded (Automerge-primitive) values, shared by the writers that must not write a value a
-// document already holds: version translation here, and the in-place migration runners in the client.
+// Comparing encoded (Automerge-primitive) values, so a translation never writes a value a document already holds.
 //
 
 export const isRecord = (value: unknown): value is Record<string, unknown> =>
