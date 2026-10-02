@@ -22,7 +22,6 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/reactivity/Atom';
 import React, {
   type ComponentPropsWithoutRef,
   type CSSProperties,

@@ -54,7 +54,7 @@ export const nextTranslations = [
  */
 export const NextJsonLayout = ({ data, children }: PropsWithChildren<{ data: unknown }>) => (
   <div className='grid grid-cols-2 gap-4 h-full min-h-0'>
-    <div className='grid min-h-0 dx-card-surface rounded-sm overflow-hidden'>{children}</div>
+    <div className='grid dx-card-surface rounded-sm overflow-hidden'>{children}</div>
     <JsonHighlighter data={data} testId='values' classNames='dx-card-surface rounded-sm text-sm min-h-0' />
   </div>
 );
