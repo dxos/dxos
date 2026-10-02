@@ -82,9 +82,8 @@
     width: 100%;
     height: 100%;
   }
-  /* A branch with nothing under it: the caret stays for alignment but reads as unavailable. */
-  .nx-tree-branch-trigger[data-disabled] {
-    cursor: default;
+  /* An open branch with nothing under it: the caret stays (it still closes the branch) but reads as empty. */
+  .nx-tree-branch-trigger[data-empty] {
     opacity: 0.4;
   }
   .nx-tree-branch-indicator {

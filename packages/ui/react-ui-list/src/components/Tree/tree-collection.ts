@@ -23,7 +23,7 @@ export type TreeNode<T extends { id: string } = any> = {
   item?: T;
   props: TreeItemDataProps;
   branch: boolean;
-  /** A node that can parent (`parentOf` is set) but has no children: its disclosure shows disabled. */
+  /** An open branch with no children: its caret stays (to close it) but reads as empty. */
   empty: boolean;
   open: boolean;
   current: boolean;
@@ -115,7 +115,9 @@ export const createTreeWalkAtom = <T extends { id: string }>(
           continue;
         }
 
-        const branch = (props.parentOf?.length ?? 0) > 0;
+        // A node that can parent is a branch even before its children load (the app graph reports `parentOf: []` until
+        // then), so it can be opened, which is what loads them.
+        const branch = props.parentOf !== undefined;
         const open = branch && get(model.itemOpen(path));
         const node: TreeNode<T> = {
           id,
@@ -125,7 +127,7 @@ export const createTreeWalkAtom = <T extends { id: string }>(
           item,
           props,
           branch,
-          empty: !branch && props.parentOf !== undefined,
+          empty: false,
           open,
           current: get(model.itemCurrent(path)),
           group: false,
@@ -141,6 +143,7 @@ export const createTreeWalkAtom = <T extends { id: string }>(
         if (open) {
           expanded.push(node.value);
           node.children = walkChildren(id, path, node.indexPath);
+          node.empty = node.children.length === 0;
         }
       }
     };
