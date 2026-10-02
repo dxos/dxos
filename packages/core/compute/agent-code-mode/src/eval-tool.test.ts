@@ -11,7 +11,7 @@ import { DXN } from '@dxos/keys';
 import { type ContentBlock } from '@dxos/types';
 
 import type { SandboxOperation } from './Dialect.ts';
-import { EVAL_TOOL_NAME, describeEvalCall } from './eval-tool.ts';
+import { EVAL_TOOL_NAME, labelEvalCall } from './eval-tool.ts';
 
 const makeOperation = (name: string, key: string, title: string, icon?: string): SandboxOperation => ({
   name,
@@ -38,39 +38,37 @@ const evalCall = (code: string): ContentBlock.ToolCall => ({
   providerExecuted: false,
 });
 
-const describeCall = describeEvalCall(OPERATIONS);
+const labelCall = labelEvalCall(OPERATIONS);
 
-describe('describeEvalCall', () => {
+describe('labelEvalCall', () => {
   test('names a call after the one operation its code invokes', ({ expect }) => {
-    const block = describeCall(evalCall(`await ops["create-task"]({ title: 'x' })`));
-    expect(block.operationName).toBe('Create task');
-    expect(block.operationIcon).toBe('ph--plus--regular');
-    expect(block.operationKey).toBe(String(DXN.make('com.example.operation.createTask')));
+    const label = labelCall(evalCall(`await ops["create-task"]({ title: 'x' })`));
+    expect(label?.displayName).toBe('Create task');
+    expect(label?.displayIcon).toBe('ph--plus--regular');
   });
 
   test('matches the camelCase binding and the key', ({ expect }) => {
-    expect(describeCall(evalCall('await ops.updateTask({})')).operationName).toBe('Update task');
+    expect(labelCall(evalCall('await ops.updateTask({})'))?.displayName).toBe('Update task');
     const key = String(DXN.make('com.example.operation.updateTask'));
-    expect(describeCall(evalCall(`yield* Database.resolve('${key}')`)).operationName).toBe('Update task');
+    expect(labelCall(evalCall(`yield* Database.resolve('${key}')`))?.displayName).toBe('Update task');
   });
 
   test('does not match an operation whose name prefixes another', ({ expect }) => {
-    expect(describeCall(evalCall('await ops["create-task-list"]({})')).operationName).toBe('Create task list');
+    expect(labelCall(evalCall('await ops["create-task-list"]({})'))?.displayName).toBe('Create task list');
   });
 
   test('lists several operations in the order the code invokes them', ({ expect }) => {
-    const block = describeCall(evalCall('await ops.updateTask({}); await ops.createTask({})'));
-    expect(block.operationName).toBe('Update task, Create task');
-    expect(block.operationKey).toBeUndefined();
-    expect(block.operationIcon).toBeUndefined();
+    const label = labelCall(evalCall('await ops.updateTask({}); await ops.createTask({})'));
+    expect(label?.displayName).toBe('Update task, Create task');
+    expect(label?.displayIcon).toBeUndefined();
   });
 
-  test('names a call whose input is still streaming', ({ expect }) => {
-    const block = describeCall({ ...evalCall(''), input: '{"code": "await ops.createTask(' });
-    expect(block.operationName).toBe('Create task');
+  test('falls back to the raw input when it is not JSON', ({ expect }) => {
+    const label = labelCall({ ...evalCall(''), input: '{"code": "await ops.createTask(' });
+    expect(label?.displayName).toBe('Create task');
   });
 
   test('leaves a call that invokes no operation unnamed', ({ expect }) => {
-    expect(describeCall(evalCall(`print(await query('com.example.type.task'))`)).operationName).toBeUndefined();
+    expect(labelCall(evalCall(`print(await query('com.example.type.task'))`))).toBeUndefined();
   });
 });

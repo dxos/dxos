@@ -1,5 +1,6 @@
 ---
-'@dxos/assistant': patch
+'@dxos/types': patch
+'@dxos/react-ui-assistant': patch
 ---
 
-`AiRequest.runAgentTurn` accepts an `enrichToolCall` hook that annotates streamed tool calls the toolkit cannot attribute to an operation. Code mode uses it to show an `eval` call under the names of the operations its code invokes instead of as `eval`.
+`ContentBlock.ToolCall` gains presentational `displayName` and `displayIcon` fields, which the assistant's tool row prefers over the operation name and icon. Code mode sets them on each `eval` call from the operations its code invokes, so the call shows as e.g. "Create task" instead of `eval`.

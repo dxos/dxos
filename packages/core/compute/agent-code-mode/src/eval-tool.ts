@@ -107,18 +107,22 @@ export const makeEvalToolkit = ({
     }),
   );
 
+/** How a tool call is shown, where its tool name alone says nothing about what it does. */
+export type CallLabel = Pick<ContentBlock.ToolCall, 'displayName' | 'displayIcon'>;
+
 /**
- * Names an `eval` call after the operations its code invokes, so the call reads as what it does
- * rather than as the one tool every code-mode call goes through.
+ * Labels an `eval` call after the operations its code invokes, so the call reads as what it does
+ * rather than as the one tool every code-mode call goes through. Only the presentational
+ * `displayName`/`displayIcon`: the `operation*` fields stay unset, since the call is still an eval.
  *
  * An operation is found by any name a dialect binds it under — the tool name, its camelCase form, or
- * its key. The raw input stands in for the code while it is still streaming and not yet JSON.
+ * its key.
  */
-export const describeEvalCall =
+export const labelEvalCall =
   (operations: readonly SandboxOperation[]) =>
-  (block: ContentBlock.ToolCall): ContentBlock.ToolCall => {
+  (block: ContentBlock.ToolCall): CallLabel | undefined => {
     if (block.name !== EVAL_TOOL_NAME || !block.input) {
-      return block;
+      return undefined;
     }
 
     const code = evalCode(block.input);
@@ -128,16 +132,14 @@ export const describeEvalCall =
       .sort((left, right) => left.index - right.index)
       .map(({ operation }) => operation);
     if (invoked.length === 0) {
-      return block;
+      return undefined;
     }
 
-    const meta = invoked.length === 1 ? invoked[0].definition?.meta : undefined;
-    // Key and icon only for a lone operation: a call spanning several has no one operation to name.
+    // An icon only for a lone operation: a call spanning several has no one operation to picture.
+    const icon = invoked.length === 1 ? invoked[0].definition?.meta.icon : undefined;
     return {
-      ...block,
-      operationName: invoked.map(({ name, definition }) => definition?.meta.name ?? name).join(', '),
-      ...(meta && { operationKey: String(meta.key) }),
-      ...(meta?.icon && { operationIcon: meta.icon }),
+      displayName: invoked.map(({ name, definition }) => definition?.meta.name ?? name).join(', '),
+      ...(icon && { displayIcon: icon }),
     };
   };
 

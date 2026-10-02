@@ -316,9 +316,8 @@ export const ToolkitCodeMode: Story = {
     content: toolkit([
       {
         ...call('tc-1', 'eval', { code: "await ops.createTask({ title: 'Ship the release notes' })" }),
-        operationKey: 'dxos.org/operation/create-task',
-        operationName: 'Create task',
-        operationIcon: 'ph--check-square--regular',
+        displayName: 'Create task',
+        displayIcon: 'ph--check-square--regular',
       },
       result('tc-1', 'eval', { output: 'Created task 01J9…', ok: true }),
     ]),
@@ -333,7 +332,7 @@ export const ToolkitCodeModeMultiple: Story = {
         ...call('tc-1', 'eval', {
           code: "const [task] = await query('com.example.type.task');\nawait ops.updateTask({ task, status: 'done' });\nawait ops.createTask({ title: 'Follow up' });",
         }),
-        operationName: 'Update task, Create task',
+        displayName: 'Update task, Create task',
       },
       result('tc-1', 'eval', { output: 'ok', ok: true }),
     ]),
