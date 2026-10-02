@@ -9,6 +9,7 @@ import { SchemaEx } from '@dxos/effect';
 import { type Mutable } from '../common/proxy/index.ts';
 import { EntityKindSchema } from '../common/types/index.ts';
 import { FormatAnnotation, TypeFormat } from '../Format/index.ts';
+import { ImplementationMap } from '../Property/property.ts';
 
 //
 // JSON Schema
@@ -32,6 +33,12 @@ export const JsonSchemaEchoAnnotations = Schema.Struct({
    * Mapped from {@link LabelAnnotationId}.
    */
   labelProp: Schema.optional(Schema.Union([SchemaEx.JsonPath, Schema.Array(SchemaEx.JsonPath)])),
+
+  /**
+   * Property implementations, keyed by property DXN.
+   * Mapped from {@link PropertiesAnnotationId}.
+   */
+  properties: Schema.optional(ImplementationMap),
 
   /**
    * Generator function for this schema.

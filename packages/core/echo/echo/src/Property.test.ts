@@ -9,6 +9,8 @@ import { describe, test } from 'vitest';
 import { DXN } from '@dxos/keys';
 
 import * as Annotation from './Annotation.ts';
+import { toEffectSchema, toJsonSchema } from './internal/JsonSchema/json-schema.ts';
+import { getLabelWithSchema } from './internal/Property/index.ts';
 import * as Obj from './Obj.ts';
 import * as Property from './Property.ts';
 import * as Type from './Type.ts';
@@ -17,7 +19,7 @@ const Contact = Type.makeObject(DXN.make('com.example.type.propertyContact', '0.
   Schema.Struct({
     first: Schema.optional(Schema.String),
     last: Schema.optional(Schema.String),
-  }).pipe(Property.implement(Property.Title, { get: (contact) => [contact.first, contact.last].join(' ').trim() })),
+  }).pipe(Property.implement(Property.Title, { template: '{first} {last}' })),
 );
 
 const Note = Type.makeObject(DXN.make('com.example.type.propertyNote', '0.1.0'))(
@@ -51,9 +53,11 @@ describe('Property', () => {
     expect(Property.isProperty({})).toBe(false);
   });
 
-  test('one-way implementation is computed and read-only', ({ expect }) => {
+  test('template implementation is computed and read-only', ({ expect }) => {
     const contact = Obj.make(Contact, { first: 'Ada', last: 'Lovelace' });
     expect(Property.get(contact, Property.Title)).toBe('Ada Lovelace');
+    expect(Obj.getLabel(Obj.make(Contact, { first: 'Ada' }))).toBe('Ada');
+    expect(Obj.getLabel(Obj.make(Contact, {}))).toBeUndefined();
     expect(Obj.getLabel(contact)).toBe('Ada Lovelace');
     expect(Property.isWritable(contact, Property.Title)).toBe(false);
 
@@ -102,6 +106,17 @@ describe('Property', () => {
       { name: 'Ignored' },
     );
     expect(Obj.getLabel(invalid)).toBeUndefined();
+  });
+
+  test('implementations survive JSON-schema serialization', ({ expect }) => {
+    const jsonSchema = toJsonSchema(Type.getSchema(Contact));
+    expect(JSON.parse(JSON.stringify(jsonSchema)).annotations.properties).toEqual({
+      [Property.Title.dxn]: { template: '{first} {last}' },
+    });
+
+    const decoded = toEffectSchema(jsonSchema);
+    expect(Property.getImplementation(decoded, Property.Title)).toEqual(Option.some({ template: '{first} {last}' }));
+    expect(getLabelWithSchema(decoded, { first: 'Grace', last: 'Hopper' })).toBe('Grace Hopper');
   });
 
   test('unimplemented property resolves to nothing', ({ expect }) => {

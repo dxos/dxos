@@ -19,11 +19,12 @@ import * as internal from './internal/Property/index.ts';
 export type Property<T> = internal.Property<T>;
 
 /**
- * How a type implements a property:
- * - `{ path }` — two-way, serializable; a field accessor or a priority-ordered chain of them.
- * - `{ get, set? }` — computed; one-way (read-only) without `set`. Static schemas only.
+ * How a type implements a property; plain data, stored in (and serialized with) the schema:
+ * - `{ path }` — two-way; a field accessor or a priority-ordered chain of them.
+ * - `{ template }` — one-way (read-only); `{path}` placeholders, e.g. `'{first} {last}'`.
  */
-export type Implementation<T> = internal.Implementation<T>;
+export const Implementation = internal.Implementation;
+export type Implementation = internal.Implementation;
 
 export type MakeProps<T> = internal.MakeProps<T>;
 
@@ -48,7 +49,7 @@ export const isProperty = internal.isProperty;
  * @example
  * ```ts
  * const Person = Schema.Struct({ first: Schema.String, last: Schema.String }).pipe(
- *   Property.implement(Property.Title, { get: (person) => `${person.first} ${person.last}` }),
+ *   Property.implement(Property.Title, { template: '{first} {last}' }),
  *   Type.makeObject(...),
  * );
  * ```
@@ -57,7 +58,7 @@ export const isProperty = internal.isProperty;
  */
 export const implement: <T>(
   property: Property<T>,
-  implementation: Implementation<T>,
+  implementation: Implementation,
 ) => <S extends Schema.Top>(schema: S) => S = internal.implement;
 
 /**
@@ -65,13 +66,13 @@ export const implement: <T>(
  *
  * @performance O(1) annotation lookup.
  */
-export const getImplementation: <T>(schema: Schema.Top, property: Property<T>) => Option.Option<Implementation<T>> =
+export const getImplementation: <T>(schema: Schema.Top, property: Property<T>) => Option.Option<Implementation> =
   internal.getImplementation;
 
 /**
  * Reads a property from an entity (or snapshot) through its type's implementation.
  *
- * @performance O(path accessors) for a path implementation; the cost of `get` for a computed one.
+ * @performance O(path accessors) for a path implementation; O(template length) for a template.
  */
 export const get: {
   <T>(property: Property<T>): (entity: Entity.Unknown | Entity.Snapshot) => T | undefined;
@@ -85,8 +86,8 @@ export const get: {
  * Writes a property onto an entity through its type's implementation.
  * Must be called within an `Obj.update` / `Relation.update` callback.
  *
- * @returns false if the type does not implement the property or implements it one-way.
- * @performance O(path depth) for a path implementation; the cost of `set` for a computed one.
+ * @returns false if the type does not implement the property or implements it with a template.
+ * @performance O(path depth).
  */
 export const set = <T>(entity: Entity.Mutable<Entity.Unknown>, property: Property<T>, value: T): boolean => {
   const schema = getSchema(entity);

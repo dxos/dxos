@@ -43,30 +43,39 @@ export interface Property<T> {
    * Implementation used when the schema carries none for this property, e.g. one derived from a
    * legacy annotation that predates the property.
    */
-  readonly fallback?: (schema: Schema.Top) => Option.Option<Implementation<T>>;
+  readonly fallback?: (schema: Schema.Top) => Option.Option<Implementation>;
 }
 
 /**
- * Two-way, serializable implementation: a field accessor (JSON path), or a chain of accessors tried
- * in priority order on read; writes go to the first accessor.
+ * Two-way implementation: a field accessor (JSON path), or a chain of accessors tried in priority
+ * order on read; writes go to the first accessor.
  */
-export type PathImplementation = {
-  readonly path: string | readonly string[];
-};
+export const PathImplementation = Schema.Struct({
+  path: Schema.Union([Schema.String, Schema.Array(Schema.String)]),
+});
+export interface PathImplementation extends Schema.Schema.Type<typeof PathImplementation> {}
 
 /**
- * Computed implementation: one-way when `set` is omitted (derived/read-only), two-way otherwise.
- * Functions cannot be serialized, so this form is only available to static schemas.
+ * One-way (read-only) implementation: a string template whose `{path}` placeholders are field
+ * accessors, e.g. `'{first} {last}'`.
  */
-export type ComputedImplementation<T> = {
-  readonly get: (object: AnyProperties) => T | undefined;
-  readonly set?: (object: AnyProperties, value: T) => void;
-};
+export const TemplateImplementation = Schema.Struct({
+  template: Schema.String,
+});
+export interface TemplateImplementation extends Schema.Schema.Type<typeof TemplateImplementation> {}
 
 /**
  * How a specific type implements a property: a lens from the object onto the property value.
+ * Plain data, so it is stored in the schema's annotations and survives JSON-schema serialization.
  */
-export type Implementation<T> = PathImplementation | ComputedImplementation<T>;
+export const Implementation = Schema.Union([PathImplementation, TemplateImplementation]);
+export type Implementation = Schema.Schema.Type<typeof Implementation>;
+
+/**
+ * Implementations a type provides, keyed by property DXN.
+ */
+export const ImplementationMap = Schema.Record(Schema.String, Implementation);
+export type ImplementationMap = Schema.Schema.Type<typeof ImplementationMap>;
 
 export type MakeProps<T> = {
   /** Fully qualified name, e.g. `org.dxos.property.title`. */
@@ -75,7 +84,7 @@ export type MakeProps<T> = {
   title?: string;
   description?: string;
   normalize?: (value: unknown) => T | undefined;
-  fallback?: (schema: Schema.Top) => Option.Option<Implementation<T>>;
+  fallback?: (schema: Schema.Top) => Option.Option<Implementation>;
 };
 
 /**
@@ -102,8 +111,6 @@ export const isProperty = (value: unknown): value is Property<unknown> =>
  */
 export const PropertiesAnnotationId = '~@dxos/echo/annotation/Properties';
 
-type ImplementationMap = Readonly<Record<string, Implementation<any>>>;
-
 const PropertiesAnnotation = createAnnotationHelper<ImplementationMap>(PropertiesAnnotationId);
 
 const getImplementations = (ast: SchemaAST.AST): ImplementationMap =>
@@ -114,37 +121,37 @@ const getImplementations = (ast: SchemaAST.AST): ImplementationMap =>
  * Apply to the source schema before `Type.makeObject` / `Type.makeRelation`.
  */
 export const implement =
-  <T>(property: Property<T>, implementation: Implementation<T>) =>
+  <T>(property: Property<T>, implementation: Implementation) =>
   <S extends Schema.Top>(schema: S): S =>
     PropertiesAnnotation.set({ ...getImplementations(schema.ast), [property.dxn]: implementation })(schema);
 
 /**
  * Resolves the implementation of `property` on a schema: explicit, else the property's fallback.
  */
-export const getImplementation = <T>(schema: Schema.Top, property: Property<T>): Option.Option<Implementation<T>> => {
-  const implementation: Implementation<T> | undefined = getImplementations(schema.ast)[property.dxn];
+export const getImplementation = <T>(schema: Schema.Top, property: Property<T>): Option.Option<Implementation> => {
+  const implementation: Implementation | undefined = getImplementations(schema.ast)[property.dxn];
   if (implementation) {
     return Option.some(implementation);
   }
   return property.fallback?.(schema) ?? Option.none();
 };
 
-export const isPathImplementation = <T>(implementation: Implementation<T>): implementation is PathImplementation =>
+export const isPathImplementation = (implementation: Implementation): implementation is PathImplementation =>
   'path' in implementation;
 
 const toPaths = (path: PathImplementation['path']): readonly string[] => (typeof path === 'string' ? [path] : path);
 
 /**
- * Returns the field accessors of a path implementation, or an empty list for a computed one.
+ * Returns the field accessors of a path implementation, or an empty list for a template.
  */
-export const getPaths = <T>(implementation: Implementation<T>): readonly string[] =>
+export const getPaths = (implementation: Implementation): readonly string[] =>
   isPathImplementation(implementation) ? toPaths(implementation.path) : [];
 
 /**
- * Whether the implementation can write the property back onto the object.
+ * Whether the implementation can write the property back onto the object; templates are one-way.
  */
-export const isWritable = <T>(implementation: Implementation<T>): boolean =>
-  isPathImplementation(implementation) ? toPaths(implementation.path).length > 0 : implementation.set != null;
+export const isWritable = (implementation: Implementation): boolean =>
+  isPathImplementation(implementation) && toPaths(implementation.path).length > 0;
 
 const isRecord = (value: unknown): value is AnyProperties => typeof value === 'object' && value !== null;
 
@@ -160,6 +167,25 @@ const readPath = (object: AnyProperties, path: string): unknown => {
   return jsonPath === undefined ? undefined : SchemaEx.getField(object, jsonPath);
 };
 
+const TEMPLATE_PLACEHOLDER = /\{([^{}]+)\}/g;
+
+// Unset placeholders render empty so `'{first} {last}'` still reads `'Ada'` without a last name.
+const renderTemplate = (object: AnyProperties, template: string): string =>
+  template
+    .replace(TEMPLATE_PLACEHOLDER, (_match, path: string) => {
+      const value = readPath(object, path.trim());
+      switch (typeof value) {
+        case 'string':
+        case 'number':
+        case 'boolean':
+        case 'bigint':
+          return String(value);
+        default:
+          return '';
+      }
+    })
+    .trim();
+
 /**
  * Reads `property` from `object` through the schema's implementation.
  */
@@ -170,7 +196,7 @@ export const getWithSchema = <T>(schema: Schema.Top, property: Property<T>, obje
   }
 
   if (!isPathImplementation(implementation.value)) {
-    return property.normalize(implementation.value.get(object));
+    return property.normalize(renderTemplate(object, implementation.value.template));
   }
 
   for (const path of toPaths(implementation.value.path)) {
@@ -187,7 +213,7 @@ export const getWithSchema = <T>(schema: Schema.Top, property: Property<T>, obje
  * Writes `property` onto `object` through the schema's implementation.
  * Must be called within an `Obj.update` / `Relation.update` callback.
  *
- * @returns false if the schema does not implement the property or the implementation is one-way.
+ * @returns false if the schema does not implement the property or implements it with a template.
  */
 export const setWithSchema = <T>(
   schema: Schema.Top,
@@ -196,17 +222,12 @@ export const setWithSchema = <T>(
   value: T,
 ): boolean => {
   const implementation = getImplementation(schema, property);
-  if (Option.isNone(implementation) || !isWritable(implementation.value)) {
+  if (Option.isNone(implementation) || !isPathImplementation(implementation.value)) {
     return false;
   }
 
-  if (!isPathImplementation(implementation.value)) {
-    implementation.value.set?.(object, value);
-    return true;
-  }
-
   const [path] = toPaths(implementation.value.path);
-  const jsonPath = toJsonPath(path);
+  const jsonPath = path === undefined ? undefined : toJsonPath(path);
   if (jsonPath === undefined) {
     return false;
   }
