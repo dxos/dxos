@@ -80,6 +80,12 @@ export class Binder extends Resource {
 
   #bindingsQuery: QueryResult.QueryResult<Binding> | undefined;
 
+  /**
+   * Keys of the refs the feed already binds, whether or not their targets resolve here: a registry
+   * skill bound by URI never matches its resolved target's URI, so the atoms alone cannot tell it is bound.
+   */
+  #bound = { skills: new Set<URI.URI>(), objects: new Set<URI.URI>() };
+
   constructor(options: BinderOptions) {
     super();
     assertArgument(options.feed, 'options.feed', 'Feed is required');
@@ -182,6 +188,10 @@ export class Binder extends Resource {
     }
 
     const bindings = this._reduce(inAppendOrder(items));
+    this.#bound = {
+      skills: new Set([...bindings.skills].map((ref) => refKey(ref.uri))),
+      objects: new Set([...bindings.objects].map((ref) => refKey(ref.uri))),
+    };
 
     log('_updateBindings', {
       items: items.length,
@@ -233,11 +243,17 @@ export class Binder extends Resource {
     const currentSkills = this._registry.get(this._skills);
     const currentObjects = this._registry.get(this._objects);
 
-    const { added: addedSkills, next: nextSkills } = this._processBindings(skills, currentSkills);
-    const { added: addedObjects, next: nextObjects } = this._processBindings(objects, currentObjects);
+    const { added: addedSkills, next: nextSkills } = this._processBindings(skills, currentSkills, this.#bound.skills);
+    const { added: addedObjects, next: nextObjects } = this._processBindings(
+      objects,
+      currentObjects,
+      this.#bound.objects,
+    );
     if (!addedSkills.length && !addedObjects.length) {
       return;
     }
+    addedSkills.forEach((ref) => this.#bound.skills.add(refKey(ref.uri)));
+    addedObjects.forEach((ref) => this.#bound.objects.add(refKey(ref.uri)));
 
     // Atomic updates - subscribers notified automatically.
     this._registry.set(this._skills, nextSkills);
@@ -264,6 +280,9 @@ export class Binder extends Resource {
     if (!skills?.length && !objects?.length) {
       return;
     }
+
+    (skills ?? []).forEach((ref) => this.#bound.skills.delete(refKey(ref.uri)));
+    (objects ?? []).forEach((ref) => this.#bound.objects.delete(refKey(ref.uri)));
 
     // Immediately update atom state so removals are reflected before the queue round-trips.
     const removedSkillDxns = (skills ?? []).map((ref) => ref.uri);
@@ -301,11 +320,13 @@ export class Binder extends Resource {
   }
 
   /**
-   * Process bindings to filter duplicates and determine next state.
+   * Process bindings to filter duplicates (against the resolved targets and the refs already bound) and
+   * determine next state.
    */
   private _processBindings<T extends Obj.Unknown>(
     refs: Ref.Ref<T>[] | undefined,
     current: T[],
+    bound: ReadonlySet<URI.URI>,
   ): { added: Ref.Ref<T>[]; next: T[] } {
     const next = [...current];
     const added: Ref.Ref<T>[] = [];
@@ -313,13 +334,13 @@ export class Binder extends Resource {
       return { added, next };
     }
 
-    const seen = new Set<URI.URI>(current.map((obj) => Obj.getURI(obj)));
+    const seen = new Set<URI.URI>([...bound, ...current.map((obj) => refKey(Obj.getURI(obj)))]);
     for (const ref of refs) {
-      const uri = ref.uri;
-      if (seen.has(uri)) {
+      const key = refKey(ref.uri);
+      if (seen.has(key)) {
         continue;
       }
-      seen.add(uri);
+      seen.add(key);
       added.push(ref);
 
       // Only resolve target if available (has target or resolver).
@@ -407,6 +428,14 @@ export class Binder extends Resource {
       .filter(isNonNullable);
   }
 }
+
+/**
+ * Identity of a bound ref: an ECHO URI compares in its local form, since some carry the space and some do not.
+ */
+const refKey = (uri: URI.URI): URI.URI => {
+  const echoUri = EID.tryParse(uri);
+  return echoUri ? EID.toLocal(echoUri) : uri;
+};
 
 /**
  * Bindings in the order they were appended, which is the order the fold has to see them: a query
