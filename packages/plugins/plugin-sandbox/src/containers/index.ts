@@ -4,5 +4,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
+import { type SandboxArticleProps } from './SandboxArticle/SandboxArticle.tsx';
+
 export const RepositoryArticle: ComponentType<any> = lazy(() => import('./RepositoryArticle/index.ts'));
-export const SandboxArticle: ComponentType<any> = lazy(() => import('./SandboxArticle/index.ts'));
+export const SandboxArticle: ComponentType<SandboxArticleProps> = lazy(() => import('./SandboxArticle/index.ts'));
