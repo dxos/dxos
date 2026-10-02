@@ -31,3 +31,13 @@ export const averageQueryTime = ({ totalTime, executions }: QueryMetrics): numbe
 
 /** Times a query was fired: one-shot runs plus reactive subscriptions. */
 export const queryFiredCount = ({ runs, subscriptions }: QueryMetrics): number => runs + subscriptions;
+
+/**
+ * Query text without the boilerplate every query shares (`Query.select(…)`, `Filter.`), so the part
+ * that tells queries apart survives truncation in a narrow column.
+ */
+export const shortQueryText = (query: string): string =>
+  query
+    .replace(/^Query\.select\(([\s\S]*)\)$/, '$1')
+    .replace(/^Filter\.type\(([^(),]+)\)/, '$1')
+    .replace(/\bFilter\./g, '');

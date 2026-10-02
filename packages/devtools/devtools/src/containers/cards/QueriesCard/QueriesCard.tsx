@@ -10,7 +10,7 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
-import { Unit, averageQueryTime, queryFiredCount, queryTimeClassName } from '../util.tsx';
+import { Unit, averageQueryTime, queryFiredCount, queryTimeClassName, shortQueryText } from '../util.tsx';
 
 export type QueriesCardProps = {
   queries?: QueryMetrics[];
@@ -21,7 +21,7 @@ export type QueriesCardProps = {
 };
 
 /** Query takes the slack; fixed fired, active, items and duration tracks line the figures up across rows. */
-const ROW_TRACKS = ['1fr', '2.5rem', '2rem', '2.5rem', '3.5rem'];
+const ROW_TRACKS = ['minmax(0,1fr)', '2rem', '1.5rem', '2.5rem', '3rem'];
 
 /** The slowest queries, one row per query text: how often it fired, how many run reactively, what it returns. */
 export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardProps) => {
@@ -66,7 +66,7 @@ export const QueriesCard = ({ queries = [], limit = 10, onOpen }: QueriesCardPro
             <StatCard.Row open={open} onToggle={(open) => setExpanded(open ? query.query : undefined)} unit='ms'>
               <Grid cols={ROW_TRACKS} gap='sm' align='center' classNames='font-mono text-end tabular-nums'>
                 <Tooltip.Trigger asChild content={query.query}>
-                  <span className='truncate text-start'>{query.query}</span>
+                  <span className='truncate text-start'>{shortQueryText(query.query)}</span>
                 </Tooltip.Trigger>
                 <span className='text-description'>{queryFiredCount(query).toLocaleString()}</span>
                 <span className={mx(query.active > 0 ? 'text-success-text' : 'text-description')}>{query.active}</span>

@@ -10,7 +10,7 @@ import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 import { Searchbar } from '../../../../components/index.ts';
-import { Unit, averageQueryTime, queryFiredCount, queryTimeClassName } from '../../../cards/util.tsx';
+import { Unit, averageQueryTime, queryFiredCount, queryTimeClassName, shortQueryText } from '../../../cards/util.tsx';
 
 type Column = {
   id: string;
@@ -80,7 +80,7 @@ const COLUMNS: Column[] = [
   },
 ];
 
-const TRACKS = ['minmax(0,1fr)', ...COLUMNS.slice(1).map(() => '4.5rem')];
+const TRACKS = ['minmax(12rem,1fr)', ...COLUMNS.slice(1).map(() => '3.75rem')];
 
 type Sort = { column: string; descending: boolean };
 
@@ -145,7 +145,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           <Tooltip.Trigger key={column.id} asChild content={column.title}>
             <button
               type='button'
-              className={mx('flex items-center gap-1', index > 0 && 'justify-end')}
+              className={mx('flex items-center gap-1 whitespace-nowrap', index > 0 && 'justify-end')}
               onClick={() => handleSort(column.id)}
             >
               {column.label}
@@ -156,7 +156,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           </Tooltip.Trigger>
         ))}
       </Grid>
-      <ScrollArea.Root orientation='vertical' thin classNames='flex-1 min-h-0'>
+      <ScrollArea.Root orientation='vertical' thin classNames='dx-grow'>
         <ScrollArea.Viewport>
           {rows.length === 0 && <p className='p-2 text-xs text-description'>No queries.</p>}
           {rows.map((query) => {
@@ -180,7 +180,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
                     onClick={() => setExpanded(open ? undefined : query.query)}
                   >
                     <Tooltip.Trigger asChild content={query.query}>
-                      <span className='truncate text-start'>{query.query}</span>
+                      <span className='truncate text-start'>{shortQueryText(query.query)}</span>
                     </Tooltip.Trigger>
                     {COLUMNS.slice(1).map((column) => (
                       <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
