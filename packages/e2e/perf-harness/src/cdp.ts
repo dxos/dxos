@@ -15,18 +15,22 @@ import { type TargetKind } from './types.ts';
  * Adopted from `composer-app/scripts/memory/measure.mjs`, which hit the same wall first.
  */
 export class Cdp {
-  #ws!: WebSocket;
+  readonly #ws: WebSocket;
   #id = 0;
   #pending = new Map<number, { resolve: (value: any) => void; reject: (error: Error) => void }>();
   #listeners = new Map<string, Set<(params: any) => void>>();
 
+  private constructor(ws: WebSocket) {
+    this.#ws = ws;
+  }
+
   static async connect(wsUrl: string): Promise<Cdp> {
-    const client = new Cdp();
-    client.#ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(wsUrl);
     await new Promise<void>((resolve, reject) => {
-      client.#ws.addEventListener('open', () => resolve(), { once: true });
-      client.#ws.addEventListener('error', () => reject(new Error(`CDP connect failed: ${wsUrl}`)), { once: true });
+      ws.addEventListener('open', () => resolve(), { once: true });
+      ws.addEventListener('error', () => reject(new Error(`CDP connect failed: ${wsUrl}`)), { once: true });
     });
+    const client = new Cdp(ws);
 
     // Otherwise every in-flight request awaits a socket that will never answer.
     const fail = (reason: string) => {
@@ -78,12 +82,31 @@ export class Cdp {
     });
   }
 
-  /** Send and swallow — for domains a given target type does not implement. */
-  async trySend<T = any>(method: string, params: Record<string, unknown> = {}): Promise<T | undefined> {
+  /**
+   * Send and swallow — for domains a given target type does not implement.
+   *
+   * `timeoutMs` also gives up on a command the target accepts but never answers (a shared worker
+   * leaves `HeapProfiler.collectGarbage` pending forever), resolving `undefined` as a failure does.
+   */
+  async trySend<T = any>(
+    method: string,
+    params: Record<string, unknown> = {},
+    { timeoutMs }: { timeoutMs?: number } = {},
+  ): Promise<T | undefined> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      return await this.send<T>(method, params);
+      const sent = this.send<T>(method, params);
+      if (timeoutMs === undefined) {
+        return await sent;
+      }
+      const expired = new Promise<undefined>((resolve) => {
+        timer = setTimeout(() => resolve(undefined), timeoutMs);
+      });
+      return await Promise.race([sent, expired]);
     } catch {
       return undefined;
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -113,13 +136,15 @@ export type TargetInfo = {
   webSocketDebuggerUrl?: string;
 };
 
-const MEASURED: ReadonlySet<string> = new Set<TargetKind>(['page', 'shared_worker', 'worker', 'service_worker']);
+const MEASURED: readonly TargetKind[] = ['page', 'shared_worker', 'worker', 'service_worker'];
+
+const isMeasured = (type: string): type is TargetKind => MEASURED.some((kind) => kind === type);
 
 /** Targets worth measuring, discovered over the debug port's HTTP endpoint. */
 export const listTargets = async (port: number): Promise<TargetInfo[]> => {
   const response = await fetch(`http://127.0.0.1:${port}/json/list`);
   const targets: TargetInfo[] = await response.json();
-  return targets.filter((target) => MEASURED.has(target.type) && target.webSocketDebuggerUrl);
+  return targets.filter((target) => isMeasured(target.type) && target.webSocketDebuggerUrl);
 };
 
 /** The browser-level target, which is the only one that answers `SystemInfo.*`. */
@@ -162,14 +187,18 @@ export type Attached = {
 };
 
 const attach = async (info: TargetInfo): Promise<Attached | undefined> => {
+  const { type, webSocketDebuggerUrl } = info;
+  if (!webSocketDebuggerUrl || !isMeasured(type)) {
+    return undefined;
+  }
   try {
-    const cdp = await Cdp.connect(info.webSocketDebuggerUrl!);
+    const cdp = await Cdp.connect(webSocketDebuggerUrl);
     await cdp.trySend('HeapProfiler.enable');
     const performance = await cdp.trySend('Performance.enable');
     return {
       info,
       name: targetName(info),
-      kind: info.type as TargetKind,
+      kind: type,
       cdp,
       hasPerformanceDomain: performance !== undefined,
     };

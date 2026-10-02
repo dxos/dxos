@@ -5,6 +5,9 @@
 import { type Attached, type Cdp } from '../cdp.ts';
 import { type FootprintReading, type HeapReading } from '../types.ts';
 
+/** Ample for a full GC of a large realm; a shared worker never answers the call at all. */
+const GC_TIMEOUT_MS = 10_000;
+
 /**
  * Repeated collection with a turn between passes.
  *
@@ -14,7 +17,10 @@ import { type FootprintReading, type HeapReading } from '../types.ts';
  */
 const settle = async (target: Attached): Promise<void> => {
   for (let iteration = 0; iteration < 3; iteration++) {
-    await target.cdp.trySend('HeapProfiler.collectGarbage');
+    // A pass that does not answer will not answer the next one either.
+    if ((await target.cdp.trySend('HeapProfiler.collectGarbage', {}, { timeoutMs: GC_TIMEOUT_MS })) === undefined) {
+      return;
+    }
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
 };

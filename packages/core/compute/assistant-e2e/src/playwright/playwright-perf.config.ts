@@ -3,10 +3,13 @@
 //
 
 import { defineConfig } from '@playwright/test';
+import path from 'node:path';
 
 import { e2ePreset } from '@dxos/test-utils/playwright';
 
 const preset = e2ePreset(import.meta.dirname);
+
+const STORYBOOK_DIR = path.resolve(import.meta.dirname, '../../../../../../tools/storybook-react');
 
 /**
  * Chat performance flow against the Storybook chat story, measured by `@dxos/perf-harness`.
@@ -26,9 +29,12 @@ export default defineConfig({
   // Two flows measured at once would contend for the same cores and measure each other.
   fullyParallel: false,
   webServer: {
-    command: 'pnpm --dir ../../../../../../tools/storybook-react exec storybook dev --port 9009 --no-open --ci',
+    // `cwd`, not a relative `--dir`: the command runs from this config's directory, not the package's.
+    command: 'pnpm exec storybook dev --port 9009 --no-open --ci',
+    cwd: STORYBOOK_DIR,
     port: 9009,
     reuseExistingServer: true,
-    timeout: 300_000,
+    // A cold `storybook dev` on a fresh CI checkout pre-bundles the whole story graph before it answers.
+    timeout: 600_000,
   },
 });
