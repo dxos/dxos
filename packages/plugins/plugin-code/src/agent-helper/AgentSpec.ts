@@ -37,7 +37,13 @@ export type AgentSpec = Omit<Manifest, 'entry'> & { entry: string };
  * so the helper only ever runs files that shipped with the app.
  */
 export const load = async (dir: string): Promise<AgentSpec[]> => {
-  const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
+  // No directory means no agents shipped; any other failure is not an empty list.
+  const entries = await readdir(dir, { withFileTypes: true }).catch((error: unknown) => {
+    if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  });
   const specs: AgentSpec[] = [];
   for (const entry of entries.filter((entry) => entry.isDirectory())) {
     const agentDir = resolve(dir, entry.name);

@@ -43,11 +43,12 @@ export const make = (
   Effect.gen(function* () {
     const manager = yield* Capability.Service;
     const sessions = yield* AcpAgent.Sessions.make();
+    // Kept alive: the probe sets it once, possibly while nothing is subscribed to it.
     const availability = Atom.make<AssistantCapabilities.AgentAvailability>(
       isTauri()
         ? { available: false, reason: 'looking for it on this computer' }
         : { available: false, reason: 'needs the Composer desktop app' },
-    );
+    ).pipe(Atom.keepAlive);
 
     const helper = () => manager.getAll(CodeCapabilities.AgentHelper).at(0);
     const settings = (): Settings.Settings | undefined => {
@@ -73,11 +74,17 @@ export const make = (
       },
       workspace: () => {
         const folder = settings()?.agentWorkspace?.trim();
-        return folder
+        if (!folder) {
+          return Effect.fail(
+            new AgentError({ message: `Choose the folder ${definition.label} works in, in the Code plugin settings.` }),
+          );
+        }
+        // The helper only accepts an absolute path; `~` cannot be expanded from the page.
+        return isAbsolutePath(folder)
           ? Effect.succeed(folder)
           : Effect.fail(
               new AgentError({
-                message: `Choose the folder ${definition.label} works in, in the Code plugin settings.`,
+                message: `The ${definition.label} folder in the Code plugin settings must be a full path, such as /Users/me/code/project.`,
               }),
             );
       },
@@ -102,6 +109,8 @@ export const make = (
         }),
     } satisfies AssistantCapabilities.Agent;
   });
+
+const isAbsolutePath = (path: string): boolean => path.startsWith('/') || /^[A-Za-z]:[\\/]/.test(path);
 
 /** Asks the helper whether the agent's tool is installed, waiting for the helper to start first. */
 const probe = (

@@ -6,12 +6,14 @@
 
 import type * as acp from '@agentclientprotocol/sdk';
 
+import { Obj } from '@dxos/echo';
 import { type ContentBlock, Message } from '@dxos/types';
 
 /** Where a message came from in the agent's own transcript, for de-duplicating a replay. */
 export const ACP_MESSAGE_ID = 'acpMessageId';
 
-type Run = { kind: 'text' | 'reasoning'; messageId?: string; content: string };
+/** Open text or reasoning; `id` is the chat message it becomes, allocated up front so its partials share it. */
+type Run = { id: Obj.ID; kind: 'text' | 'reasoning'; messageId?: string; content: string };
 
 type Tool = {
   name: string;
@@ -51,7 +53,7 @@ export class TurnProjection {
         const messageId = update.messageId ?? undefined;
         const flushed =
           this.#run && (this.#run.kind !== kind || this.#run.messageId !== messageId) ? this.#flush() : [];
-        this.#run ??= { kind, messageId, content: '' };
+        this.#run ??= { id: Obj.ID.random(), kind, messageId, content: '' };
         this.#run.content += text;
         return flushed;
       }
@@ -96,6 +98,12 @@ export class TurnProjection {
     }
   }
 
+  /** The open text or reasoning as a pending block, under the id of the message it will become. */
+  get partial(): { messageId: Obj.ID; block: ContentBlock.Any } | undefined {
+    const run = this.#run;
+    return run?.content ? { messageId: run.id, block: { ...runBlock(run), pending: true } } : undefined;
+  }
+
   /** Emits the call a permission request is about, so its card shows before the request. */
   reveal(toolCallId: string): Message.Message[] {
     const tool = this.#tools.get(toolCallId);
@@ -126,12 +134,11 @@ export class TurnProjection {
     if (!run || !run.content) {
       return [];
     }
-    const block: ContentBlock.Any =
-      run.kind === 'text' ? { _tag: 'text', text: run.content } : { _tag: 'reasoning', reasoningText: run.content };
     return [
       Message.make({
+        id: run.id,
         sender: 'assistant',
-        blocks: [block],
+        blocks: [runBlock(run)],
         properties: run.messageId ? { [ACP_MESSAGE_ID]: run.messageId } : undefined,
       }),
     ];
@@ -203,3 +210,6 @@ const finishReason = (stopReason: acp.StopReason): ContentBlock.FinishReason => 
       return 'other';
   }
 };
+
+const runBlock = (run: Run): ContentBlock.Any =>
+  run.kind === 'text' ? { _tag: 'text', text: run.content } : { _tag: 'reasoning', reasoningText: run.content };

@@ -5,6 +5,7 @@
 import { createWebSocketStream } from '@agentclientprotocol/sdk/experimental/ws-client';
 import type { Child } from '@tauri-apps/plugin-shell';
 import * as Effect from 'effect/Effect';
+import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { log } from '@dxos/log';
@@ -104,8 +105,7 @@ export default Capability.makeModule(
             if (!response.ok) {
               throw new Error(`agent helper answered ${response.status}`);
             }
-            const statuses: Protocol.AgentStatus[] = await response.json();
-            return statuses;
+            return Schema.decodeUnknownSync(Schema.Array(Protocol.AgentStatus))(await response.json());
           },
           catch: (cause) => new AgentError({ message: 'could not list coding agents', cause }),
         }),

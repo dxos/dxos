@@ -70,6 +70,8 @@ type ChatThreadRootProps = PropsWithChildren<
     /** Blank lines kept below the tail at rest — breathing room above the host's composer. */
     tailLines?: number;
     debug?: boolean;
+    /** Offers rewind under each prompt; off for an agent that cannot forget a turn. */
+    rewind?: boolean;
     onEvent?: (event: ChatThreadEvent) => void;
     /** The visible index range, as the reader scrolls — what an outline rail tracks. */
     onRangeChange?: (range: MessageRange) => void;
@@ -93,6 +95,7 @@ const ChatThreadRoot = ({
   userHue,
   tailLines,
   debug,
+  rewind = true,
   onEvent,
   onRangeChange,
   controllerRef,
@@ -116,7 +119,7 @@ const ChatThreadRoot = ({
   return (
     <ChatThreadProvider userHue={userHue} onEvent={onEvent}>
       <MessageChromeProvider
-        onRewind={onEvent ? handleRewind : undefined}
+        onRewind={onEvent && rewind ? handleRewind : undefined}
         streaming={streaming}
         showContext={viewType !== 'summary'}
         debug={debug}

@@ -10,7 +10,7 @@ import * as Layer from 'effect/Layer';
 
 import { Chat } from '@dxos/assistant';
 import * as Trace from '@dxos/compute/Trace';
-import { Database, Feed, Filter, Ref } from '@dxos/echo';
+import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
 import { type ContentBlock, Message } from '@dxos/types';
 
@@ -26,6 +26,11 @@ const inMemory = (app: acp.AgentApp): acp.Stream => {
 };
 
 type Written = { key: string; payload: unknown };
+
+const streamedId = (payload: unknown): string | undefined =>
+  typeof payload === 'object' && payload !== null && 'messageId' in payload && typeof payload.messageId === 'string'
+    ? payload.messageId
+    : undefined;
 
 const streamedText = (payload: unknown): string | undefined =>
   typeof payload === 'object' &&
@@ -106,15 +111,18 @@ describe('AcpAgent', () => {
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
-  it.live('streams the reply before the message completes', () =>
+  it.live('streams the reply under the id of the message it becomes', () =>
     Effect.gen(function* () {
       written.length = 0;
       const { feed, chat, options } = yield* setup();
       yield* AcpAgent.runTurn(options, { chat, feed }, { prompt: 'hi' });
-      const partials = written
-        .filter(({ key }) => key === Trace.PartialBlock.key)
-        .map(({ payload }) => streamedText(payload));
-      expect(partials).toEqual(['echo: ', 'echo: hi']);
+      const partials = written.filter(({ key }) => key === Trace.PartialBlock.key);
+      expect(partials.map(({ payload }) => streamedText(payload))).toEqual(['echo: ', 'echo: hi']);
+
+      // The thread replaces a streamed message with the stored one by id, so they must agree.
+      const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
+      const reply = messages.find((message) => Message.extractText(message) === 'echo: hi');
+      expect(new Set(partials.map(({ payload }) => streamedId(payload)))).toEqual(new Set([reply?.id]));
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 
@@ -180,6 +188,57 @@ describe('AcpAgent', () => {
         ['assistant', 'text:echo: first'],
         ['assistant', 'text:echo: second'],
       ]);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('starts over when the agent no longer has the session the chat recorded', () =>
+    Effect.gen(function* () {
+      const { feed, chat, options } = yield* setup();
+      Obj.update(chat, (chat) => {
+        Obj.getMeta(chat).keys.push({ source: AcpAgent.sessionKeySource('fake'), id: 'removed' });
+      });
+
+      yield* AcpAgent.runTurn(options, { chat, feed }, { prompt: 'hello' });
+      expect(AcpAgent.sessionIdOf(chat, 'fake')).toBe('fake-1');
+      expect((yield* transcript(feed)).at(-2)).toEqual(['assistant', 'text:echo: hello']);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('a turn that fails cancels the requests it left open', () =>
+    Effect.gen(function* () {
+      const { feed, chat, options } = yield* setup();
+      const exit = yield* AcpAgent.runTurn(options, { chat, feed }, { prompt: 'crash' }).pipe(Effect.exit);
+      expect(exit._tag).toBe('Failure');
+      expect(yield* transcript(feed)).toContainEqual(['assistant', 'request:Delete everything:cancelled']);
+    }).pipe(Effect.scoped, Effect.provide(TestLayer)),
+  );
+
+  it.live('an answer nobody is waiting for records the request as cancelled', () =>
+    Effect.gen(function* () {
+      const { feed, chat, sessions } = yield* setup();
+      // As after a restart: the request is in the chat, but no agent holds it any more.
+      const message = Message.make({
+        sender: 'assistant',
+        blocks: [
+          {
+            _tag: 'request',
+            requestId: 'tool-9',
+            title: 'Run make',
+            options: [{ id: 'allow', label: 'Yes', kind: 'allow_once' }],
+          },
+        ],
+      });
+      yield* Feed.append(feed, [message]);
+
+      const answered = yield* AcpAgent.respond(sessions, {
+        chat,
+        feed,
+        message,
+        requestId: 'tool-9',
+        optionId: 'allow',
+      });
+      expect(answered).toBe(false);
+      expect(yield* transcript(feed)).toEqual([['assistant', 'request:Run make:cancelled']]);
     }).pipe(Effect.scoped, Effect.provide(TestLayer)),
   );
 });

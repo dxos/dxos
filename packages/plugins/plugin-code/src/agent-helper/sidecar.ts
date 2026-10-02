@@ -5,6 +5,7 @@
 import { dirname, join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { type Readable, type Writable } from 'node:stream';
+import { pathToFileURL } from 'node:url';
 
 import * as AgentSpec from './AgentSpec.ts';
 import { serve } from './server.ts';
@@ -22,6 +23,22 @@ const desktopPath = (home: string | undefined): string[] => [
 ];
 
 const MIN_TOKEN_LENGTH = 32;
+
+/** Makes the helper run an agent's entry instead of serving. */
+export const AGENT_FLAG = '--agent';
+
+/**
+ * Runs the agent entry named after {@link AGENT_FLAG}. The compiled helper runs its own entry point
+ * whatever its arguments, so it starts agents as itself with this flag rather than as the bun CLI
+ * (`BUN_BE_BUN`), a variable every process the agent starts would inherit.
+ */
+export const runAgent = async (argv: readonly string[]): Promise<void> => {
+  const entry = argv[argv.indexOf(AGENT_FLAG) + 1];
+  if (!entry) {
+    throw new Error(`expected an agent entry after ${AGENT_FLAG}`);
+  }
+  await import(pathToFileURL(entry).href);
+};
 
 export type AgentHelperOptions = {
   input: Readable;
@@ -47,7 +64,12 @@ export const runAgentHelper = async ({ input, output, env }: AgentHelperOptions)
 
   const agents = await AgentSpec.load(env.DX_AGENT_DIR ?? join(dirname(process.execPath), 'agents'));
   const path = [...new Set([...(env.PATH ?? '').split(':').filter(Boolean), ...desktopPath(env.HOME)])];
-  const server = await serve({ token, agents, path });
+  const server = await serve({
+    token,
+    agents,
+    path,
+    launch: (entry) => ({ command: process.execPath, args: [AGENT_FLAG, entry] }),
+  });
   output.write(`${JSON.stringify({ port: server.port })}\n`);
 
   // Drain the rest of the input; it only ever ends.

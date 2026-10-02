@@ -4,6 +4,8 @@
 
 // @import-as-namespace
 
+import * as Schema from 'effect/Schema';
+
 /** WebSocket subprotocol the agent helper speaks; a browser cannot set headers on a WebSocket. */
 export const SUBPROTOCOL = 'dx-agent';
 
@@ -22,14 +24,15 @@ export const AGENTS_PATH = '/agents';
 export const ACP_PATH = '/acp';
 
 /** An agent the helper knows, as the page sees it. */
-export type AgentStatus = {
-  id: string;
-  available: boolean;
+export const AgentStatus = Schema.Struct({
+  id: Schema.String,
+  available: Schema.Boolean,
   /** The command-line tool's version, when it was found. */
-  version?: string;
+  version: Schema.optional(Schema.String),
   /** Why it cannot run, when it cannot. */
-  reason?: string;
-};
+  reason: Schema.optional(Schema.String),
+});
+export type AgentStatus = Schema.Schema.Type<typeof AgentStatus>;
 
 export const acpUrl = ({ port, agent, cwd }: { port: number; agent: string; cwd: string }): string => {
   const url = new URL(`ws://localhost:${port}${ACP_PATH}`);

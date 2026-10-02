@@ -297,8 +297,9 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
 
     expect(chat.session?.harness).toBe(agent.id);
     // The agent cannot read the chat's checklist, so the brief carries the task itself.
-    const prompt = await agent.prompt;
-    expect(prompt).toContain('## Fix the flaky test');
+    await expect.poll(() => agent.prompts.length).toBe(1);
+    const [prompt] = agent.prompts;
+    expect(prompt).toContain('Title: Fix the flaky test');
     expect(prompt).toContain('It times out.');
     expect(prompt).toContain(Obj.getURI(task));
   });
@@ -365,12 +366,9 @@ const setup = async () => {
   return harness;
 };
 
-/** Registers an agent that records the text of the first prompt it is given and answers with nothing. */
+/** Registers an agent that records the text of each prompt it is given and answers with nothing. */
 const contributeAgent = (harness: Awaited<ReturnType<typeof setup>>) => {
-  let received!: (prompt: string) => void;
-  const prompt = new Promise<string>((resolve) => {
-    received = resolve;
-  });
+  const prompts: string[] = [];
   const availability = Atom.make<AssistantCapabilities.AgentAvailability>({ available: true }).pipe(Atom.keepAlive);
   const agent: AssistantCapabilities.Agent = {
     id: 'test-agent',
@@ -381,7 +379,7 @@ const contributeAgent = (harness: Awaited<ReturnType<typeof setup>>) => {
       Effect.succeed({
         runTurn: ({ prompt }) =>
           Effect.sync(() => {
-            received(
+            prompts.push(
               typeof prompt === 'string'
                 ? prompt
                 : prompt.flatMap((block) => (block._tag === 'text' ? [block.text] : [])).join('\n'),
@@ -392,5 +390,5 @@ const contributeAgent = (harness: Awaited<ReturnType<typeof setup>>) => {
       }),
   };
   harness.capabilities.contribute({ module: 'test', interface: AssistantCapabilities.Agent, implementation: agent });
-  return { id: agent.id, availability, prompt };
+  return { id: agent.id, availability, prompts };
 };

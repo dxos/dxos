@@ -11,6 +11,7 @@ import type * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import * as Queue from 'effect/Queue';
 import * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 
 import { type MakeTurnProducer, type TurnRequest } from '@dxos/agent-runtime';
 import { AiAssistantError, type Chat } from '@dxos/assistant';
@@ -41,6 +42,7 @@ type Live = { session: AcpSession.Session; idle?: Fiber.Fiber<void> };
  */
 export class Sessions {
   readonly #live = new Map<string, Live>();
+  readonly #locks = new Map<string, Semaphore.Semaphore>();
   readonly #scope: Scope.Scope;
   readonly #idleTimeout: Duration.Duration;
 
@@ -62,23 +64,26 @@ export class Sessions {
     key: string,
     open: () => Effect.Effect<AcpSession.Session, AgentError>,
   ): Effect.Effect<AcpSession.Session, AgentError> {
-    return Effect.gen({ self: this }, function* () {
-      const existing = this.#live.get(key);
-      if (existing?.idle) {
-        yield* Fiber.interrupt(existing.idle);
-      }
-      const live = existing ?? { session: yield* open() };
-      if (!existing) {
-        this.#live.set(key, live);
-        void live.session.closed.finally(() => {
-          if (this.#live.get(key) === live) {
-            this.#live.delete(key);
-          }
-        });
-      }
-      live.idle = undefined;
-      return live.session;
-    });
+    // One at a time per chat, so two turns never each start an agent and orphan one of them.
+    return this.#lockFor(key).withPermits(1)(
+      Effect.gen({ self: this }, function* () {
+        const existing = this.#live.get(key);
+        if (existing?.idle) {
+          yield* Fiber.interrupt(existing.idle);
+        }
+        const live = existing ?? { session: yield* open() };
+        if (!existing) {
+          this.#live.set(key, live);
+          void live.session.closed.then(() => {
+            if (this.#live.get(key) === live) {
+              this.#live.delete(key);
+            }
+          });
+        }
+        live.idle = undefined;
+        return live.session;
+      }),
+    );
   }
 
   /** Starts the idle clock once a turn is over. */
@@ -102,6 +107,15 @@ export class Sessions {
 
   has(key: string): boolean {
     return this.#live.has(key);
+  }
+
+  #lockFor(key: string): Semaphore.Semaphore {
+    let lock = this.#locks.get(key);
+    if (!lock) {
+      lock = Semaphore.makeUnsafe(1);
+      this.#locks.set(key, lock);
+    }
+    return lock;
   }
 
   #closeAll(): void {
@@ -142,7 +156,7 @@ export const makeTurnProducer =
   (options: AgentOptions): MakeTurnProducer =>
   ({ chat, feed }) =>
     Effect.succeed({
-      // The agent brings its own tools; Composer's operations reach it through MCP.
+      // The agent brings its own tools; none of Composer's are offered to it yet.
       getSkills: () => [],
       runTurn: (request: TurnRequest) =>
         runTurn(options, { chat, feed }, request).pipe(
@@ -173,19 +187,6 @@ export const runTurn = (
 
     const cwd = yield* options.workspace(chat);
     const resume = sessionIdOf(chat, options.id);
-    const session = yield* options.sessions.acquire(chat.id, () =>
-      Effect.gen(function* () {
-        const stream = yield* options.connect(cwd);
-        const mcpServers = options.mcpServers ? yield* options.mcpServers(chat) : [];
-        return yield* AcpSession.open({ stream, cwd, resume, mcpServers, mode: options.mode?.() });
-      }),
-    );
-    if (session.sessionId !== resume) {
-      Obj.update(chat, (chat) => {
-        Obj.getMeta(chat).keys.push({ source: sessionKeySource(options.id), id: session.sessionId });
-      });
-    }
-
     const produced: Message.Message[] = [];
     const append = (messages: Message.Message[]) =>
       Effect.gen(function* () {
@@ -205,76 +206,85 @@ export const runTurn = (
         yield* Feed.append(feed, messages);
       });
 
-    yield* append([Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) })]);
+    return yield* Effect.gen(function* () {
+      const session = yield* options.sessions.acquire(chat.id, () =>
+        Effect.gen(function* () {
+          const stream = yield* options.connect(cwd);
+          const mcpServers = options.mcpServers ? yield* options.mcpServers(chat) : [];
+          return yield* AcpSession.open({ stream, cwd, resume, mcpServers, mode: options.mode?.() });
+        }),
+      );
+      if (session.sessionId !== resume) {
+        Obj.update(chat, (chat) => {
+          Obj.getMeta(chat).keys.push({ source: sessionKeySource(options.id), id: session.sessionId });
+        });
+      }
 
-    const events = yield* Queue.unbounded<TurnEvent>();
-    const projection = new Projection.TurnProjection();
-    const streamingId = Obj.ID.random();
-    let streamed = '';
+      yield* append([Message.make({ sender: 'user', blocks: promptBlocks(request.prompt) })]);
 
-    const handle = (event: Exclude<TurnEvent, { _tag: 'done' }>) =>
-      Effect.gen(function* () {
-        if (event._tag === 'permission') {
-          const toolCallId = event.request.toolCall.toolCallId;
-          const block: ContentBlock.Request = {
-            _tag: 'request',
-            requestId: AcpSession.requestId(event.request),
-            title: event.request.toolCall.title ?? 'Allow this action?',
-            toolCallId,
-            options: event.request.options.map(({ optionId, name, kind }) => ({ id: optionId, label: name, kind })),
-          };
-          yield* append([...projection.reveal(toolCallId), Message.make({ sender: 'assistant', blocks: [block] })]);
-          return;
-        }
+      const events = yield* Queue.unbounded<TurnEvent>();
+      const projection = new Projection.TurnProjection();
 
-        const { update } = event;
-        const completed = projection.apply(update);
-        if (completed.length > 0) {
-          streamed = '';
-        }
-        yield* append(completed);
-        if (update.sessionUpdate === 'agent_message_chunk' && update.content.type === 'text') {
-          streamed += update.content.text;
-          yield* Trace.write(Trace.PartialBlock, {
-            messageId: streamingId,
-            role: 'assistant',
-            block: { _tag: 'text', text: streamed, pending: true },
-          });
+      const handle = (event: Exclude<TurnEvent, { _tag: 'done' }>) =>
+        Effect.gen(function* () {
+          if (event._tag === 'permission') {
+            const toolCallId = event.request.toolCall.toolCallId;
+            const block: ContentBlock.Request = {
+              _tag: 'request',
+              requestId: AcpSession.requestId(event.request),
+              title: event.request.toolCall.title ?? 'Allow this action?',
+              toolCallId,
+              options: event.request.options.map(({ optionId, name, kind }) => ({ id: optionId, label: name, kind })),
+            };
+            yield* append([...projection.reveal(toolCallId), Message.make({ sender: 'assistant', blocks: [block] })]);
+            return;
+          }
+
+          const { update } = event;
+          yield* append(projection.apply(update));
+          // Streamed under the id the finished message will carry, so the thread swaps one for the other.
+          const partial = projection.partial;
+          if (
+            partial &&
+            (update.sessionUpdate === 'agent_message_chunk' || update.sessionUpdate === 'agent_thought_chunk')
+          ) {
+            yield* Trace.write(Trace.PartialBlock, { ...partial, role: 'assistant' });
+          }
+        });
+
+      // The prompt runs beside the loop and reports its end through the same queue, so every update the
+      // agent sent before answering is handled, in order, before the turn closes. Interrupting the turn
+      // interrupts this child, which cancels the turn in the agent.
+      yield* session
+        .prompt(toAcpPrompt(request), {
+          onUpdate: (update) => Queue.offerUnsafe(events, { _tag: 'update', update }),
+          onPermission: (permission) => Queue.offerUnsafe(events, { _tag: 'permission', request: permission }),
+        })
+        .pipe(
+          Effect.exit,
+          Effect.flatMap((exit) => Queue.offer(events, { _tag: 'done', exit })),
+          Effect.forkChild,
+        );
+
+      const response = yield* Effect.gen(function* () {
+        while (true) {
+          const event = yield* Queue.take(events);
+          if (event._tag === 'done') {
+            return yield* event.exit;
+          }
+          yield* handle(event);
         }
       });
 
-    // The prompt runs beside the loop and reports its end through the same queue, so every update the
-    // agent sent before answering is handled, in order, before the turn closes. Interrupting the turn
-    // interrupts this child, which cancels the turn in the agent.
-    yield* session
-      .prompt(toAcpPrompt(request), {
-        onUpdate: (update) => Queue.offerUnsafe(events, { _tag: 'update', update }),
-        onPermission: (permission) => Queue.offerUnsafe(events, { _tag: 'permission', request: permission }),
-      })
-      .pipe(
-        Effect.exit,
-        Effect.flatMap((exit) => Queue.offer(events, { _tag: 'done', exit })),
-        Effect.forkChild,
+      yield* append(
+        projection.finish({ stopReason: response.stopReason, usage: response.usage, durationMs: Date.now() - started }),
       );
-
-    const response = yield* Effect.gen(function* () {
-      while (true) {
-        const event = yield* Queue.take(events);
-        if (event._tag === 'done') {
-          return yield* event.exit;
-        }
-        yield* handle(event);
-      }
+      return produced;
     }).pipe(
-      Effect.onInterrupt(() => cancelOpenRequests(feed, produced)),
+      // However the turn ends, its questions can no longer be answered.
+      Effect.ensuring(Effect.suspend(() => cancelOpenRequests(feed, produced))),
       Effect.ensuring(options.sessions.release(chat.id)),
     );
-
-    yield* append(
-      projection.finish({ stopReason: response.stopReason, usage: response.usage, durationMs: Date.now() - started }),
-    );
-    yield* cancelOpenRequests(feed, produced);
-    return produced;
   });
 
 export type RespondOptions = {
@@ -288,25 +298,24 @@ export type RespondOptions = {
 
 /**
  * Answers a request block: hands the choice to the agent waiting on it, then records it in the
- * transcript. Returns false, recording nothing, when no turn is waiting on that request any more.
+ * transcript. When nothing waits on it any more (the agent exited, the app restarted) the request is
+ * recorded as cancelled instead, and the result is false.
  */
 export const respond = (
   sessions: Sessions,
   { chat, feed, message, requestId, optionId }: RespondOptions,
 ): Effect.Effect<boolean, never, Database.Service> =>
   Effect.gen(function* () {
-    if (!sessions.respond(chat.id, requestId, optionId)) {
-      return false;
-    }
+    const answered = sessions.respond(chat.id, requestId, optionId);
     Obj.update(message, (message) => {
       for (const block of message.blocks) {
-        if (block._tag === 'request' && block.requestId === requestId) {
-          block.resolution = { outcome: 'selected', optionId };
+        if (block._tag === 'request' && block.requestId === requestId && block.resolution === undefined) {
+          block.resolution = answered ? { outcome: 'selected', optionId } : { outcome: 'cancelled' };
         }
       }
     });
     yield* Feed.append(feed, [message]);
-    return true;
+    return answered;
   });
 
 /** Marks requests nobody answered as cancelled: the turn that asked them is over. */

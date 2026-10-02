@@ -34,6 +34,19 @@ describe('TurnProjection', () => {
     ]);
   });
 
+  test('offers the open message as a partial under the id it is stored with', ({ expect }) => {
+    const projection = new Projection.TurnProjection();
+    expect(projection.partial).toBeUndefined();
+    projection.apply(text('m1', 'Hel'));
+    projection.apply(text('m1', 'lo'));
+    const partial = projection.partial;
+    expect(partial?.block).toEqual({ _tag: 'text', text: 'Hello', pending: true });
+
+    const [message] = projection.apply(text('m2', 'Next'));
+    expect(message.id).toBe(partial?.messageId);
+    expect(projection.partial?.messageId).not.toBe(message.id);
+  });
+
   test('keeps thoughts apart from the reply', ({ expect }) => {
     const projection = new Projection.TurnProjection();
     projection.apply({ sessionUpdate: 'agent_thought_chunk', content: { type: 'text', text: 'Thinking' } });

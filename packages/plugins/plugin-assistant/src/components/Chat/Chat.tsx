@@ -8,6 +8,7 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { SessionConfig } from '@dxos/ai';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Alarm } from '@dxos/assistant';
 import { resolveSlashCommand } from '@dxos/assistant-toolkit';
@@ -518,7 +519,8 @@ type ChatThreadProps = ThemedClassName<{
 
 const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { db, debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { chat, db, debug, event, messages, processor, setController, setVisibleRange } =
+    useChatContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
@@ -609,6 +611,8 @@ const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThread
         userHue={userHue}
         tailLines={tailLines}
         debug={debug}
+        // An external agent keeps its own context, which a rewind of the transcript cannot reach.
+        rewind={SessionConfig.harnessOf(chat?.session) === SessionConfig.COMPOSER_HARNESS}
         onEvent={handleEvent}
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}

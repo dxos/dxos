@@ -7,7 +7,8 @@ import * as acp from '@agentclientprotocol/sdk';
 /**
  * A scripted ACP agent for tests, driven by words in the prompt:
  * `tool` makes a tool call, `permission` asks to run one and reports the answer, `slow` waits until
- * cancelled, and every turn ends by echoing the prompt in two chunks of one message.
+ * cancelled, `crash` asks to run one and fails without waiting, and every turn ends by echoing the
+ * prompt in two chunks of one message. Reloading a session it never hosted fails as Claude Code's does.
  */
 export const makeFakeAgent = (): acp.AgentApp => {
   let sessions = 0;
@@ -35,8 +36,10 @@ export const makeFakeAgent = (): acp.AgentApp => {
       };
     })
     .onRequest(acp.methods.agent.session.load, async ({ params, client }) => {
-      const lines = history.get(params.sessionId) ?? [];
-      history.set(params.sessionId, lines);
+      const lines = history.get(params.sessionId);
+      if (!lines) {
+        throw acp.RequestError.resourceNotFound(params.sessionId);
+      }
       for (const line of lines) {
         await client.notify(acp.methods.client.session.update, {
           sessionId: params.sessionId,
@@ -78,6 +81,18 @@ export const makeFakeAgent = (): acp.AgentApp => {
           status: 'completed',
           content: [{ type: 'content', content: { type: 'text', text: 'wrote 1 line' } }],
         });
+      }
+
+      if (text.includes('crash')) {
+        // Asked and abandoned: the turn fails before any answer, which nothing here waits for.
+        void client
+          .request(acp.methods.client.session.requestPermission, {
+            sessionId,
+            toolCall: { toolCallId: 'tool-3', title: 'Delete everything', kind: 'delete', status: 'pending' },
+            options: [{ optionId: 'allow', name: 'Yes', kind: 'allow_once' }],
+          })
+          .catch(() => undefined);
+        throw new Error('agent crashed');
       }
 
       if (text.includes('permission')) {

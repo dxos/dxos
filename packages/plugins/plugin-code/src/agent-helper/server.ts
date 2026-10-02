@@ -26,7 +26,14 @@ export type ServeOptions = {
   path: readonly string[];
   /** Port to listen on; 0 picks a free one. */
   port?: number;
+  /** How an agent's entry is started; by default the running runtime executes it directly. */
+  launch?: Launch;
 };
+
+/** The program and arguments that run an agent's entry. */
+export type Launch = (entry: string) => { command: string; args: string[] };
+
+const runEntry: Launch = (entry) => ({ command: process.execPath, args: [entry] });
 
 export type AgentServer = {
   readonly port: number;
@@ -41,7 +48,13 @@ export type AgentServer = {
  * This is how the Tauri webview, which cannot spawn processes, runs a coding agent: it holds the ACP
  * client and this helper only moves bytes.
  */
-export const serve = async ({ token, agents, path, port = 0 }: ServeOptions): Promise<AgentServer> => {
+export const serve = async ({
+  token,
+  agents,
+  path,
+  port = 0,
+  launch = runEntry,
+}: ServeOptions): Promise<AgentServer> => {
   const children = new Set<ChildProcessWithoutNullStreams>();
   const sockets = new WebSocketServer({
     noServer: true,
@@ -63,7 +76,7 @@ export const serve = async ({ token, agents, path, port = 0 }: ServeOptions): Pr
           return;
         }
         sockets.handleUpgrade(request, socket, head, (ws) => {
-          const child = relay({ ws, path, ...target });
+          const child = relay({ ws, path, launch, ...target });
           children.add(child);
           child.once('exit', () => children.delete(child));
         });
@@ -218,16 +231,27 @@ const relay = ({
   cwd,
   executable,
   path,
-}: UpgradeTarget & { ws: WebSocket; path: readonly string[] }): ChildProcessWithoutNullStreams => {
+  launch,
+}: UpgradeTarget & { ws: WebSocket; path: readonly string[]; launch: Launch }): ChildProcessWithoutNullStreams => {
   const env: NodeJS.ProcessEnv = { ...process.env, PATH: path.join(':') };
-  // A `bun build --compile` executable runs its own entrypoint unless told to behave as the bun CLI.
-  if (process.versions.bun) {
-    env.BUN_BE_BUN = '1';
-  }
   if (spec.executable?.env && executable) {
     env[spec.executable.env] = executable;
   }
-  const child = spawn(process.execPath, [spec.entry], { cwd, env, stdio: ['pipe', 'pipe', 'pipe'] });
+  const { command, args } = launch(spec.entry);
+  const child = spawn(command, args, { cwd, env, stdio: ['pipe', 'pipe', 'pipe'] });
+
+  // Each failure ends this agent's socket only; an unhandled one would take every other agent down too.
+  child.on('error', (error) => {
+    log.warn('agent process failed', { agent: spec.id, error });
+    if (ws.readyState === ws.OPEN) {
+      ws.close(1011, 'agent failed to start');
+    }
+  });
+  child.stdin.on('error', (error) => log.warn('agent input closed', { agent: spec.id, error }));
+  ws.on('error', (error) => {
+    log.warn('agent socket failed', { agent: spec.id, error });
+    child.kill();
+  });
 
   createInterface({ input: child.stdout }).on('line', (line) => {
     if (line.trim() && ws.readyState === ws.OPEN) {
@@ -236,7 +260,9 @@ const relay = ({
   });
   child.stderr.on('data', (chunk) => process.stderr.write(`[${spec.id}] ${chunk}`));
   ws.on('message', (data) => {
-    child.stdin.write(`${data.toString()}\n`);
+    if (child.stdin.writable) {
+      child.stdin.write(`${data.toString()}\n`);
+    }
   });
   ws.on('close', () => child.kill());
   child.on('exit', (code) => {
