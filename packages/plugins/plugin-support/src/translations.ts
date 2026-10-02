@@ -69,6 +69,16 @@ export const translations = [
           'Support is unavailable right now. Your report is still in the form; please try again in a moment.',
         'discord-feedback-toast.label': 'Help thread started in Discord',
         'open-thread.label': 'Open thread',
+        'report-to-project.label': 'Report to project',
+        'report-project.placeholder': 'Select a project',
+        'report-to-project.description':
+          'Files the report as a task in a local project, with logs and screenshot attached.',
+        'project-report-toast.label': 'Report filed in project',
+        'project-report-toast.description': 'A task with the attachments was added to the project.',
+        'project-report-toast-partial.description':
+          'A task was added to the project, but some attachments could not be stored.',
+        'project-report-failed-toast.label': 'Report not filed',
+        'project-report-failed-toast.description': 'The task could not be created. Your report is still in the form.',
         // Welcome tour + keyboard shortcuts (absorbed from plugin-help).
         'open-help-tour.message': 'Show welcome tour',
         'open-shortcuts.label': 'Show shortcuts',

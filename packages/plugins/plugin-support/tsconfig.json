@@ -70,6 +70,9 @@
       "path": "../../sdk/react-client"
     },
     {
+      "path": "../../sdk/types"
+    },
+    {
       "path": "../../ui/brand"
     },
     {
@@ -103,6 +106,9 @@
       "path": "../plugin-deck"
     },
     {
+      "path": "../plugin-file"
+    },
+    {
       "path": "../plugin-observability"
     },
     {
@@ -110,6 +116,9 @@
     },
     {
       "path": "../plugin-status-bar"
+    },
+    {
+      "path": "../plugin-tasks"
     },
     {
       "path": "../plugin-testing"

@@ -48,6 +48,15 @@ export const ObservabilityPlugin = Plugin.define<ObservabilityOptions.Observabil
           : [],
       ),
   })),
+  Plugin.addModule(({ exportLogs }: ObservabilityOptions.ObservabilityPluginOptions) => ({
+    id: 'log-exporter',
+    requires: [],
+    provides: exportLogs !== undefined ? [ObservabilityCapabilities.LogExporter] : [],
+    activate: () =>
+      Effect.succeed(
+        exportLogs !== undefined ? [Capability.contribute(ObservabilityCapabilities.LogExporter, exportLogs)] : [],
+      ),
+  })),
   Plugin.make,
 );
 

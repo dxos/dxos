@@ -35,7 +35,7 @@ import * as SupportPlugin from '@dxos/plugin-support/SupportPlugin';
 import * as ThemePlugin from '@dxos/plugin-theme/ThemePlugin';
 import { isTruthy } from '@dxos/util';
 
-import { downloadLogs } from './util/index.ts';
+import { downloadLogs, exportManualLogDownload } from './util/index.ts';
 
 const APP_LINK_ORIGIN = new URL('https://' + NativePasskey.APP_DOMAIN).origin;
 
@@ -131,6 +131,7 @@ export const getCorePlugins = ({
       namespace: appKey,
       observability: () => observability,
       downloadLogs: () => downloadLogs(logStore),
+      exportLogs: () => exportManualLogDownload(logStore),
     }),
     OnboardingPlugin.make({ generateDemoSpace: !isLocal }),
     isTauri && !isMobile && !isPopover && NativePlugin.make(),

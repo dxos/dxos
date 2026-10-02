@@ -9,3 +9,11 @@ export type FeedbackPluginOption = {
   /** Display name shown above the id in the select. */
   name: string;
 };
+
+/** Option entry for the FeedbackForm's project picker. Sourced from the active space's projects. */
+export type FeedbackProjectOption = {
+  /** Project object id. */
+  id: string;
+  /** Display name shown in the select. */
+  name: string;
+};

@@ -41,6 +41,13 @@ export const Observability = Capability.makeSingleton<ObservabilityNs.Observabil
 export type LogDownloader = () => void | Promise<void>;
 export const LogDownloader = Capability.makeSingleton<LogDownloader>()(`${meta.profile.key}.capability.logDownloader`);
 
+/**
+ * Optional capability — when contributed, the captured logs can be attached to an object (e.g. a reported task).
+ * Resolves to the encoded log bundle; its `type` names the encoding.
+ */
+export type LogExporter = () => Promise<Blob>;
+export const LogExporter = Capability.makeSingleton<LogExporter>()(`${meta.profile.key}.capability.logExporter`);
+
 // NOTE: This is cloned from the client plugin to avoid circular dependencies.
 // TODO(burdon): Figure out how to share defs.
 export const ClientCapability = Capability.makeSingleton<Client>()('org.dxos.plugin.client.capability.client');

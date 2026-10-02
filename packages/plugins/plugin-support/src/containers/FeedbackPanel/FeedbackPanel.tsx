@@ -12,6 +12,7 @@ import { Form } from '@dxos/react-ui-form';
 import { FeedbackForm, type FeedbackPluginOption } from '#components';
 
 import { DownloadLogsAction } from './DownloadLogsAction.tsx';
+import { ReportToProjectAction } from './ReportToProjectAction.tsx';
 import { SupportSubmitAction, useSupportSubmit } from './SupportSubmitAction.tsx';
 
 export const FeedbackPanel = () => {
@@ -42,6 +43,7 @@ export const FeedbackPanel = () => {
               <Form.Fields />
               <DownloadLogsAction />
               <SupportSubmitAction />
+              <ReportToProjectAction />
             </Form.Content>
           </Form.Viewport>
         </FeedbackForm.Root>

@@ -2,19 +2,27 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Option from 'effect/Option';
+import * as Schema from 'effect/Schema';
 import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'react';
 
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';
-import { IconButton, useTranslation } from '@dxos/react-ui';
-import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
+import { IconButton, Select, useTranslation } from '@dxos/react-ui';
+import {
+  Form,
+  type FormFieldRenderer,
+  type FormFieldRendererProps,
+  type FormUpdateMeta,
+  useFormContext,
+} from '@dxos/react-ui-form';
 
 import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';
 import { SupportOperation } from '#types';
 
 import { AreaSelectField } from './AreaSelectField.tsx';
-import type { FeedbackPluginOption } from './types.ts';
+import type { FeedbackPluginOption, FeedbackProjectOption } from './types.ts';
 
 const FEEDBACK_FORM = 'FeedbackForm';
 
@@ -24,8 +32,19 @@ export type FeedbackSubmitHandler = (
   meta: FormUpdateMeta<SupportOperation.SupportRequest>,
 ) => boolean | Promise<boolean>;
 
+/** Resolves to whether the report was filed in the chosen project; the form clears only when it was. */
+export type FeedbackReportToProjectHandler = (
+  projectId: string,
+  values: SupportOperation.SupportRequest,
+) => boolean | Promise<boolean>;
+
 type FeedbackFormContextValue = {
   pending: boolean;
+  /** Runs a submission route with the hidden fields attached, guarding against double submits and clearing on success. */
+  submit: (
+    route: (values: SupportOperation.SupportRequest) => boolean | Promise<boolean>,
+    values: SupportOperation.SupportRequest,
+  ) => Promise<void>;
 };
 
 const [FeedbackFormProvider, useFeedbackFormContext] = createContext<FeedbackFormContextValue>(FEEDBACK_FORM);
@@ -77,8 +96,8 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
     [hidden?.version],
   );
 
-  const handleSave = useCallback(
-    async (values: SupportOperation.SupportRequest, formMeta: FormUpdateMeta<SupportOperation.SupportRequest>) => {
+  const submit = useCallback<FeedbackFormContextValue['submit']>(
+    async (route, values) => {
       // Re-attach hidden fields in case the form ever drops them.
       const submitted: SupportOperation.SupportRequest = {
         ...values,
@@ -86,18 +105,24 @@ const FeedbackFormRoot = ({ children, onSubmit, hidden, plugins }: FeedbackFormR
       };
       setPending(true);
       try {
-        if (await onSubmit(submitted, formMeta)) {
+        if (await route(submitted)) {
           setFormKey((key) => key + 1);
         }
       } finally {
         setPending(false);
       }
     },
-    [onSubmit, hidden?.version],
+    [hidden?.version],
+  );
+
+  const handleSave = useCallback(
+    (values: SupportOperation.SupportRequest, formMeta: FormUpdateMeta<SupportOperation.SupportRequest>) =>
+      submit((submitted) => onSubmit(submitted, formMeta), values),
+    [submit, onSubmit],
   );
 
   return (
-    <FeedbackFormProvider pending={pending}>
+    <FeedbackFormProvider pending={pending} submit={submit}>
       <Form.Root
         key={formKey}
         schema={SupportOperation.SupportRequest}
@@ -177,6 +202,75 @@ const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
 FeedbackFormSubmit.displayName = `${FEEDBACK_FORM}.Submit`;
 
 //
+// ReportToProject
+//
+
+export type FeedbackFormReportToProjectProps = {
+  /** Local projects the report can be filed in; nothing renders when empty. */
+  projects?: ReadonlyArray<FeedbackProjectOption>;
+  onReport?: FeedbackReportToProjectHandler;
+};
+
+/**
+ * Files the report as a task in a chosen local project instead of sending it to support. Validates
+ * the same form as {@link FeedbackFormSubmit} but bypasses its `onSave`, which belongs to the public route.
+ */
+const FeedbackFormReportToProject = ({ projects, onReport }: FeedbackFormReportToProjectProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  const { pending, submit } = useFeedbackFormContext(`${FEEDBACK_FORM}.ReportToProject`);
+  const { form } = useFormContext(`${FEEDBACK_FORM}.ReportToProject`);
+  const [selected, setSelected] = useState<string>();
+
+  // Falls back to the first project so a single-project space needs no extra click, and so a
+  // selection whose project was deleted does not strand the button.
+  const projectId = projects?.some((project) => project.id === selected) ? selected : projects?.[0]?.id;
+
+  const handleClick = useCallback(async () => {
+    // Decoded rather than trusted: the handler holds partial values until every required field is filled.
+    const values = Schema.decodeUnknownOption(SupportOperation.SupportRequest)(form.values);
+    if (!onReport || !projectId || Option.isNone(values)) {
+      return;
+    }
+    await submit((submitted) => onReport(projectId, submitted), values.value);
+  }, [onReport, projectId, form.values, submit]);
+
+  if (!onReport || !projects || projects.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className='flex flex-col w-full gap-form-gap pt-form-padding' data-testid='report-to-project'>
+      <Select.Root value={projectId} onValueChange={setSelected}>
+        <Select.TriggerButton classNames='w-full' disabled={pending} placeholder={t('report-project.placeholder')} />
+        <Select.Portal>
+          <Select.Content>
+            <Select.Viewport>
+              {projects.map((project) => (
+                <Select.Option key={project.id} value={project.id}>
+                  {project.name}
+                </Select.Option>
+              ))}
+            </Select.Viewport>
+          </Select.Content>
+        </Select.Portal>
+      </Select.Root>
+      <IconButton
+        classNames='w-full'
+        type='button'
+        icon={pending ? 'ph--spinner-gap--regular' : 'ph--kanban--regular'}
+        label={t('report-to-project.label')}
+        disabled={pending || !form.isValid || !projectId}
+        onClick={handleClick}
+        data-testid='report-to-project-button'
+      />
+      <p className={noteClassNames}>{t('report-to-project.description')}</p>
+    </div>
+  );
+};
+
+FeedbackFormReportToProject.displayName = `${FEEDBACK_FORM}.ReportToProject`;
+
+//
 // DiscordPresence
 //
 
@@ -219,5 +313,6 @@ export const FeedbackForm = {
   Root: FeedbackFormRoot,
   DownloadLogs: FeedbackFormDownloadLogs,
   Submit: FeedbackFormSubmit,
+  ReportToProject: FeedbackFormReportToProject,
   DiscordPresence: FeedbackFormDiscordPresence,
 };
