@@ -81,7 +81,7 @@ const FTS_FLUSH_MAX_DELAY_MS = 10_000;
  * messages continuously, and starting a pass per append kept the worker saturated for the whole turn;
  * a reader that needs them sooner (a feed-scoped query, `flush`) drives the pass itself.
  */
-const TRACE_INDEX_DELAY_MS = 1_000;
+export const TRACE_INDEX_DELAY_MS = 1_000;
 
 /**
  * Every path that can start an indexing run. Logged on each run so an idle-churn loop is

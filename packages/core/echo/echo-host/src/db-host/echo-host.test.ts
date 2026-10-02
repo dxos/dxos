@@ -5,7 +5,6 @@
 import * as Effect from 'effect/Effect';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { type DatabaseDirectory, EntityStructure, SpaceDocVersion } from '@dxos/echo-protocol';
 import { RuntimeProvider } from '@dxos/effect';
@@ -13,7 +12,7 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 
 import { createTestSqliteRuntime } from '../testing/index.ts';
-import { EchoHost } from './echo-host.ts';
+import { EchoHost, TRACE_INDEX_DELAY_MS } from './echo-host.ts';
 
 describe('EchoHost.updateIndexes', () => {
   test('runs a pass only when something was saved since the last one', async () => {
@@ -66,28 +65,15 @@ describe('EchoHost trace indexing', () => {
   test('coalesces a burst of trace appends into one background pass, but not data appends', async () => {
     const { host, runtime, spaceId } = await setup();
     await host.updateIndexes();
-    const update = vi.spyOn(host.indexEngine, 'update');
-    const append = (feedNamespace: string) =>
-      RuntimeProvider.runPromise(runtime)(
-        host.feedStore.appendLocal([
-          { spaceId, feedId: EntityId.random(), feedNamespace, data: new Uint8Array([123, 125]) },
-        ]),
-      );
-
-    for (let i = 0; i < 5; i++) {
-      await append(FeedProtocol.WellKnownNamespaces.trace);
+    // Restored in the body, not a hook: teardown closes the host, which needs real timers.
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      await assertCoalesced(host, runtime, spaceId);
+    } finally {
+      // A pass parked on a fake timer would never resume, and closing the host waits for it.
+      await vi.runAllTimersAsync();
+      vi.useRealTimers();
     }
-    await sleep(100);
-    expect(update).not.toHaveBeenCalled();
-    await vi.waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 3_000 });
-    await host.updateIndexes();
-    const passes = update.mock.calls.length;
-    await sleep(1_200);
-    expect(update.mock.calls.length).toBe(passes);
-
-    update.mockClear();
-    await append(FeedProtocol.WellKnownNamespaces.data);
-    await vi.waitFor(() => expect(update).toHaveBeenCalled(), { timeout: 500 });
   });
 
   test('updateIndexes does not wait out the trace throttle', async () => {
@@ -108,6 +94,34 @@ describe('EchoHost trace indexing', () => {
     expect(update).toHaveBeenCalled();
   });
 });
+
+const assertCoalesced = async (
+  host: EchoHost,
+  runtime: Awaited<ReturnType<typeof setup>>['runtime'],
+  spaceId: SpaceId,
+) => {
+  const update = vi.spyOn(host.indexEngine, 'update');
+  const append = (feedNamespace: string) =>
+    RuntimeProvider.runPromise(runtime)(
+      host.feedStore.appendLocal([
+        { spaceId, feedId: EntityId.random(), feedNamespace, data: new Uint8Array([123, 125]) },
+      ]),
+    );
+
+  for (let i = 0; i < 5; i++) {
+    await append(FeedProtocol.WellKnownNamespaces.trace);
+  }
+  await vi.advanceTimersByTimeAsync(TRACE_INDEX_DELAY_MS - 1);
+  expect(update).not.toHaveBeenCalled();
+  // One pass runs both data sources, so the whole burst costs exactly two updates.
+  await vi.advanceTimersByTimeAsync(2 * TRACE_INDEX_DELAY_MS);
+  expect(update).toHaveBeenCalledTimes(2);
+
+  update.mockClear();
+  await append(FeedProtocol.WellKnownNamespaces.data);
+  await vi.advanceTimersByTimeAsync(10);
+  expect(update).toHaveBeenCalledTimes(2);
+};
 
 const TEST_TYPE = DXN.make('com.example.type.test', '0.1.0');
 
