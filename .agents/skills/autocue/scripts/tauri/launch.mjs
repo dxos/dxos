@@ -102,8 +102,16 @@ const testProfile = (app) => {
  *   onExit: (reason: string) => void,
  * }} options
  */
-export const launchTauri = async (options) =>
-  process.platform === 'darwin' ? launchEmbedded(options) : launchLinux(options);
+export const launchTauri = async (options) => {
+  switch (process.platform) {
+    case 'darwin':
+      return launchEmbedded(options);
+    case 'linux':
+      return launchLinux(options);
+    default:
+      throw new Error(`--target tauri runs on macOS and Linux, not ${process.platform}`);
+  }
+};
 
 /** macOS: the app's own embedded WebDriver server. */
 const launchEmbedded = async ({ app, width, height, theme, port, log, fresh, onExit }) => {

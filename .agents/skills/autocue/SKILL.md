@@ -353,8 +353,8 @@ node .agents/skills/autocue/scripts/driver.mjs --target tauri --fresh on --out /
 #### Linux (and the cloud sandbox)
 
 `tauri-driver` hands the session to `WebKitWebDriver`, whose pointer and key actions arrive in the page as
-**trusted** platform events (menus open, CodeMirror takes typed text). Windows would work through
-`msedgedriver` but is untested.
+**trusted** platform events (menus open, CodeMirror takes typed text). Windows is not wired up: the launcher
+rejects it, though `tauri-driver` with `msedgedriver` would be the route.
 
 One-time setup:
 
