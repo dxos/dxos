@@ -35,8 +35,7 @@ import { meta } from '../../../meta.ts';
 import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared.ts';
 import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types.ts';
 
-const supportsPasskeys =
-  (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();
+const supportsPasskeys = NativePasskey.getPasskeySupport() !== 'none';
 
 /** Ceiling on the OAuth wait, since a user who closes the provider's page reports nothing. */
 const OAUTH_PENDING_TIMEOUT = 5 * 60 * 1000;

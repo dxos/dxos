@@ -56,6 +56,7 @@ const PaneToolbar = Util.slottable<HTMLDivElement>(({ children, asChild, ...prop
   return (
     <ark.div
       asChild={asChild}
+      data-tauri-drag-region='deep'
       {...Util.composableProps(props, {
         style: iconSize(5),
         classNames: 'flex items-center gap-1 px-1 shrink-0 h-(--dx-rail-content) dx-header-surface',

@@ -185,7 +185,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
 
   return (
     <div
-      data-tauri-drag-region
+      data-tauri-drag-region='deep'
       className='grid w-full items-center dx-app-drag dx-density-lg'
       // Same late item-end surface as the tree rows below, so the header holds the slot too.
       style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
@@ -204,9 +204,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
       ) : (
         <div />
       )}
-      <h2 data-tauri-drag-region className='flex-1 truncate min-w-0'>
-        {title}
-      </h2>
+      <h2 className='flex-1 truncate min-w-0'>{title}</h2>
       <div className='contents dx-app-no-drag'>
         <MenuActions item={item} menuActions={menuActions} onAction={onAction} />
         {ItemEnd && <ItemEnd node={item} open />}
