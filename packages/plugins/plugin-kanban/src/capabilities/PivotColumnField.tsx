@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import { type Surface } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Database, Obj, Type } from '@dxos/echo';
-import { Field } from '@dxos/react-ui';
+import { Next } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';
 
 /** The form renderer's own props ride alongside `data` on the surface envelope; `type` comes from the field AST. */
@@ -55,9 +55,9 @@ export const PivotColumnField = ({ data, ...inputProps }: PivotColumnFieldProps)
 
   // A provided field owns its row, so it carries its own label.
   return (
-    <Field.Root>
-      <Field.Label>{inputProps.label}</Field.Label>
+    <Next.Field.Root>
+      <Next.Field.Label>{inputProps.label}</Next.Field.Label>
       <SelectField {...props} options={singleSelectColumns.map((column) => ({ value: column }))} />
-    </Field.Root>
+    </Next.Field.Root>
   );
 };
