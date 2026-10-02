@@ -59,8 +59,8 @@ const IDLE_MS = 10_000;
 
 const BUDGET_MS = 120_000;
 
-/** Writing the busy space is minutes of feed appends in the browser. */
-const SEED_BUDGET_MS = 900_000;
+/** Seeding the busy space measured 43–50 s on a 4-core sandbox; a seed past this has stalled, not slowed. */
+const SEED_BUDGET_MS = 180_000;
 
 const chatPrompt = (page: Page): Locator =>
   page

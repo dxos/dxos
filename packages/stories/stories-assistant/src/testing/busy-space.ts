@@ -33,9 +33,14 @@ export type BusyScale = {
   chatHistories: readonly number[];
   /** Other spaces on the profile, each queried by every index pass. */
   extraSpaces: number;
+  /** Trace-feed entries in each of those spaces. */
+  siblingTraceMessages: number;
+  /** Tasks in each of those spaces. */
+  siblingTasks: number;
 };
 
-export const BUSY_SCALE: BusyScale = {
+/** The space as the dump saw it; seeding all of it takes the database worker well past ten minutes. */
+export const OBSERVED_BUSY_SCALE: BusyScale = {
   traceMessages: 22_600,
   strayTraceFeeds: 15,
   bindingFeeds: 317,
@@ -45,7 +50,36 @@ export const BUSY_SCALE: BusyScale = {
   documents: 66,
   chatHistories: [446, 309, 176, 134, 115, 93, 75, 70, 69, 68],
   extraSpaces: 7,
+  siblingTraceMessages: 300,
+  siblingTasks: 30,
 };
+
+/**
+ * Every count scaled by `fraction`, keeping at least one of each so no part of the shape drops out.
+ * The mix within each feed is index-driven, so a scaled feed keeps its share of large entries.
+ */
+export const scaleBusy = (scale: BusyScale, fraction: number): BusyScale => {
+  const count = (value: number) => Math.max(1, Math.round(value * fraction));
+  return {
+    traceMessages: count(scale.traceMessages),
+    strayTraceFeeds: count(scale.strayTraceFeeds),
+    bindingFeeds: count(scale.bindingFeeds),
+    hotBindingFeeds: scale.hotBindingFeeds.map(count),
+    tasks: count(scale.tasks),
+    emptyTaskSets: count(scale.emptyTaskSets),
+    documents: count(scale.documents),
+    chatHistories: scale.chatHistories.map(count),
+    extraSpaces: count(scale.extraSpaces),
+    siblingTraceMessages: count(scale.siblingTraceMessages),
+    siblingTasks: count(scale.siblingTasks),
+  };
+};
+
+/**
+ * The fixture the perf flow seeds: the observed shape at a twentieth of its volume. Feed appends run at
+ * tens of entries a second on OPFS, so the full volume cannot be seeded once per nightly iteration.
+ */
+export const BUSY_SCALE: BusyScale = scaleBusy(OBSERVED_BUSY_SCALE, 1 / 20);
 
 /** One feed append per block, so the trace feed lands as ~100-entry blocks like the real one. */
 const BLOCK_SIZE = 100;
@@ -200,46 +234,43 @@ export const seedBusySpace = async ({
   await db.flush();
   endPhase('objects');
 
-  await seedTraceFeed(db, space.id, scale.traceMessages);
-  endPhase('traceFeed');
-  for (let index = 0; index < scale.strayTraceFeeds; index++) {
-    await seedTraceFeed(db, space.id, 2 + (index % 11));
-  }
-  endPhase('strayTraceFeeds');
-
-  // The same binding appended again and again: what a companion chat that kept re-binding left.
-  for (let index = 0; index < scale.bindingFeeds; index++) {
-    const feed = db.add(Feed.make({}));
-    const count = scale.hotBindingFeeds[index] ?? 1 + (index % 2);
-    const target = Ref.make(tasks[index % tasks.length]);
-    const bindings = Array.from({ length: count }, () =>
-      Obj.make(AiContext.Binding, {
-        skills: { added: [], removed: [] },
-        objects: { added: [target], removed: [] },
-      }),
-    );
-    await appendInBlocks(db, feed, bindings);
-  }
-  endPhase('bindingFeeds');
-
-  for (const [chatIndex, count] of scale.chatHistories.entries()) {
-    const feed = db.add(Feed.make({}));
-    db.add(Chat.make({ name: `Earlier chat ${chatIndex + 1}`, feed: Ref.make(feed) }));
-    await appendInBlocks(
-      db,
-      feed,
-      Array.from({ length: count }, (_, index) => chatMessage(chatIndex * 1_000 + index)),
-    );
-  }
-  endPhase('chatHistories');
+  // Distinct feeds are written concurrently: each feed's blocks stay in order, and overlapping the
+  // feeds keeps the database worker busy instead of idle between one feed's round trips.
+  await Promise.all([
+    seedTraceFeed(db, space.id, scale.traceMessages),
+    ...Array.from({ length: scale.strayTraceFeeds }, (_, index) => seedTraceFeed(db, space.id, 2 + (index % 11))),
+    // The same binding appended again and again: what a companion chat that kept re-binding left.
+    ...Array.from({ length: scale.bindingFeeds }, (_, index) => {
+      const feed = db.add(Feed.make({}));
+      const count = scale.hotBindingFeeds[index] ?? 1 + (index % 2);
+      const target = Ref.make(tasks[index % tasks.length]);
+      const bindings = Array.from({ length: count }, () =>
+        Obj.make(AiContext.Binding, {
+          skills: { added: [], removed: [] },
+          objects: { added: [target], removed: [] },
+        }),
+      );
+      return appendInBlocks(db, feed, bindings);
+    }),
+    ...scale.chatHistories.map((count, chatIndex) => {
+      const feed = db.add(Feed.make({}));
+      db.add(Chat.make({ name: `Earlier chat ${chatIndex + 1}`, feed: Ref.make(feed) }));
+      return appendInBlocks(
+        db,
+        feed,
+        Array.from({ length: count }, (_, index) => chatMessage(chatIndex * 1_000 + index)),
+      );
+    }),
+  ]);
+  endPhase('feeds');
   await db.flush({ indexes: true });
   endPhase('indexFlush');
 
   for (let index = 0; index < scale.extraSpaces; index++) {
     const sibling = await client.spaces.create({ name: `Sibling ${index + 1}` });
     await sibling.waitUntilReady();
-    await seedTraceFeed(sibling.db, sibling.id, 300);
-    for (let task = 0; task < 30; task++) {
+    await seedTraceFeed(sibling.db, sibling.id, scale.siblingTraceMessages);
+    for (let task = 0; task < scale.siblingTasks; task++) {
       sibling.db.add(Task.make({ title: `Sibling task ${task + 1}` }));
     }
     await sibling.db.flush({ indexes: true });

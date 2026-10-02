@@ -77,10 +77,16 @@ moon run assistant-e2e:e2e-perf
 `DX_PERF_SCALES` picks the spaces (`blank`, `busy`; both by default) and `DX_PERF_ITERATIONS` repeats
 the flow. With `DX_POSTHOG_API_KEY` set, each iteration publishes its rows as `ci.perf-stage`.
 
-The `chat-bench` job in `.depot/workflows/perf-nightly.yml` runs the blank space nightly and scores
-the median of its iterations against `src/playwright/perf/budgets.json`, publishing `ci.perf-score`
-with `ciSuite = 'chat'`:
+The busy space (`PerfScriptedBusy`) is seeded in the browser by `stories-assistant`'s
+`busy-space.ts`, at a twentieth of the long-lived space it was modelled on (`OBSERVED_BUSY_SCALE`):
+feed appends run at tens of entries a second on OPFS, so the full volume cannot be seeded once per
+iteration. The `seed` stage logs each seeding phase's wall time.
+
+The `chat-bench` job in `.depot/workflows/perf-nightly.yml` runs both spaces nightly and scores the
+median of each one's iterations against its own budgets, publishing `ci.perf-score` with
+`ciSuite = 'chat'` (blank, `src/playwright/perf/budgets.json`) and `ciSuite = 'chat-busy'` (busy,
+`src/playwright/perf/budgets-busy.json`):
 
 ```bash
-node scripts/score-perf.ts score [--dir test-results/perf] [--publish]
+node scripts/score-perf.ts score [--scale blank|busy] [--dir test-results/perf] [--publish]
 ```
