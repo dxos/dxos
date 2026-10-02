@@ -26,8 +26,11 @@
     flex-direction: column;
     min-width: 0;
   }
-  /* An article's toolbar is the app's toolbar height (ui-theme `--dx-toolbar-size`), its controls centred in it. */
-  .nx-panel-header .nx-toolbar {
+  /*
+   * An article's toolbar is the app's toolbar height (ui-theme `--dx-toolbar-size`), its controls centred in it; a panel
+   * given its own size keeps that size's block-tall header.
+   */
+  .nx-panel:not([data-size]) > .nx-panel-header .nx-toolbar {
     min-height: var(--dx-toolbar-size, 2.5rem);
   }
 
