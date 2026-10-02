@@ -20,10 +20,15 @@ describe('passkey errors', () => {
     },
   );
 
-  // The native bridge rejects a failed registration with this plain string, which is not a dismissal.
-  test('a failed registration is classified apart from a login failure', () => {
-    expect(PasskeyError.RegistrationFailed.is(PasskeyError.fromRegistration('Registration failed'))).to.be.true;
-    expect(PasskeyError.Dismissed.is(PasskeyError.fromRegistration('the operation was canceled'))).to.be.true;
+  // The native bridge rejects a cancel and a failure with the same string, so neither may surface as an error.
+  test('the native bridge rejection is a dismissal for both ceremonies', () => {
+    expect(PasskeyError.Dismissed.is(PasskeyError.fromRegistration('Registration failed'))).to.be.true;
+    expect(PasskeyError.Dismissed.is(PasskeyError.fromAssertion('Login failed'))).to.be.true;
+  });
+
+  test('a registration failure that is not a dismissal is classified apart from a login failure', () => {
+    const error = PasskeyError.fromRegistration('Command plugin:macos-passkey|register_passkey not found');
+    expect(PasskeyError.RegistrationFailed.is(error)).to.be.true;
   });
 
   // The bug this guards: a failure the classifier doesn't recognise must still reach the user.

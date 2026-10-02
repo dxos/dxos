@@ -53,9 +53,11 @@ const handler: Operation.WithHandler<typeof CreatePasskey> = CreatePasskey.pipe(
                 }),
               catch: PasskeyError.fromRegistration,
             });
-            const { publicKey, algorithm: alg } = NativePasskey.extractPublicKeyFromAttestation(
-              result.attestation_object,
-            );
+            const { publicKey, algorithm: alg } = yield* Effect.try({
+              try: () => NativePasskey.extractPublicKeyFromAttestation(result.attestation_object),
+              catch: (cause) =>
+                new PasskeyError.RegistrationFailed({ message: 'Unusable attestation from the authenticator.', cause }),
+            });
             return {
               recoveryKey: PublicKey.from(publicKey),
               algorithm: alg === -7 ? 'ES256' : 'ED25519',

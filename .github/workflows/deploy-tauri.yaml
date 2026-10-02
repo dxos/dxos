@@ -246,6 +246,12 @@ jobs:
           app_id=$(security cms -D -i embedded.provisionprofile | plutil -extract Entitlements.com\\.apple\\.application-identifier raw -)
           plutil -replace com\\.apple\\.application-identifier -string "$app_id" Entitlements.plist
           echo "signed identity -> $app_id"
+          # Native passkeys need the signed App ID to name the app's own bundle (DX-1324). Checked before
+          # the build so a missing channel profile fails in seconds; staging has no App ID of its own yet.
+          bundle=$(jq -r .identifier tauri.conf.json)
+          if [ "$ENVIRONMENT" != staging ] && [ "${app_id#*.}" != "$bundle" ]; then
+            echo "::error::$bundle would be signed as $app_id; add provisioning/$ENVIRONMENT.provisionprofile" && exit 1
+          fi
 
       - name: Set environment variables from secrets and env files
         run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
@@ -365,23 +371,35 @@ jobs:
           done
 
       # macOS kills an app at launch when its signed application identifier is not the one its embedded
-      # profile grants. Separately, native passkeys only work when that identifier names the app's own
-      # bundle (DX-1324); staging is the one channel still signed under production's App ID.
+      # profile grants, or when the profile does not list the certificate it was signed with. Committed
+      # channel profiles outlive the certificate, so rotating MACOS_CERTIFICATE means regenerating them.
       - name: Verify app signature matches its provisioning profile
         if: matrix.os == 'depot-macos-latest'
-        env:
-          ENVIRONMENT: ${{ inputs.environment }}
         run: |
           app=$(ls -d packages/apps/composer-app/src-tauri/target/release/bundle/macos/*.app)
+          profile="$RUNNER_TEMP/embedded-profile.plist"
+          security cms -D -i "$app/Contents/embedded.provisionprofile" > "$profile"
           signed=$(codesign -d --entitlements - --xml "$app" 2>/dev/null | plutil -extract com\\.apple\\.application-identifier raw -)
-          granted=$(security cms -D -i "$app/Contents/embedded.provisionprofile" | plutil -extract Entitlements.com\\.apple\\.application-identifier raw -)
-          bundle=$(plutil -extract CFBundleIdentifier raw "$app/Contents/Info.plist")
-          echo "signed: $signed, profile: $granted, bundle: $bundle"
+          granted=$(plutil -extract Entitlements.com\\.apple\\.application-identifier raw "$profile")
+          echo "signed: $signed, profile: $granted"
           if [ "$signed" != "$granted" ]; then
             echo "::error::app is signed as $signed but its profile grants $granted" && exit 1
           fi
-          if [ "$ENVIRONMENT" != staging ] && [ "${signed#*.}" != "$bundle" ]; then
-            echo "::error::app is signed as $signed, which does not name its bundle $bundle, so native passkeys are off" && exit 1
+          codesign -d --extract-certificates="$RUNNER_TEMP/signing-cert" "$app" 2>/dev/null
+          if [ ! -s "$RUNNER_TEMP/signing-cert0" ]; then
+            echo "::error::app carries no signing certificate" && exit 1
+          fi
+          signing=$(shasum -a 256 < "$RUNNER_TEMP/signing-cert0" | cut -d' ' -f1)
+          listed=false
+          i=0
+          while cert=$(plutil -extract "DeveloperCertificates.$i" raw "$profile" 2>/dev/null); do
+            if [ "$(echo "$cert" | base64 --decode | shasum -a 256 | cut -d' ' -f1)" = "$signing" ]; then
+              listed=true
+            fi
+            i=$((i + 1))
+          done
+          if [ "$listed" != true ]; then
+            echo "::error::the embedded profile does not list the signing certificate; regenerate the channel profiles" && exit 1
           fi
 
       - name: Upload assets
