@@ -3,3 +3,10 @@ language: typescript
 tags:
   - ts-test
   - typecheck
+tasks:
+  # Chat performance flow — `perf-*.spec.ts` against the Storybook chat story on :9009, measured by
+  # `@dxos/perf-harness`. Its own task so it never rides on `test` or fails it on a timing flake.
+  e2e-perf:
+    command: pnpm exec playwright test --config=src/playwright/playwright-perf.config.ts
+    options:
+      cache: false
