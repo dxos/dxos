@@ -11,7 +11,8 @@ import * as Struct from 'effect/Struct';
 export const AgentPermissionMode = Schema.Literals(['default', 'acceptEdits', 'auto']);
 export type AgentPermissionMode = Schema.Schema.Type<typeof AgentPermissionMode>;
 
-export const DEFAULT_AGENT_PERMISSION_MODE: AgentPermissionMode = 'acceptEdits';
+/** The agent judges which actions need a person; Claude Code drops to `acceptEdits` for a model without it. */
+export const DEFAULT_AGENT_PERMISSION_MODE: AgentPermissionMode = 'auto';
 
 export const Settings = Schema.Struct({
   endpoint: Schema.optional(
@@ -24,7 +25,7 @@ export const Settings = Schema.Struct({
     AgentPermissionMode.annotate({
       title: 'Coding agent permissions',
       description:
-        'How freely coding agents act without asking: default asks before edits and commands, acceptEdits allows file edits, auto lets the agent decide.',
+        'How freely coding agents act without asking: auto (the default) lets the agent decide and asks only for risky actions, acceptEdits allows file edits but asks before commands, default asks before edits and commands.',
     }),
   ),
 }).mapFields(Struct.map(Schema.mutableKey));
