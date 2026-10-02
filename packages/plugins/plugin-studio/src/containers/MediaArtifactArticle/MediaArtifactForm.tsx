@@ -15,17 +15,22 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Field, Flex, Panel, Select, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 import { type MediaArtifact, StudioCapabilities, StudioOperation, Variant } from '#types';
 
 import { providerFieldMap } from './ProviderOptionsField.tsx';
 
-export type MediaArtifactFormProps = ThemedClassName<{
+export type MediaArtifactFormProps = Util.ThemedClassName<{
   artifact: MediaArtifact.MediaArtifact;
   /** The plank the form is attended through; Generate is live only while it has attention. */
   attendableId?: string;
@@ -51,7 +56,7 @@ export const MediaArtifactForm = ({
   attendableId,
   nodeId = attendableId,
 }: MediaArtifactFormProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(artifact);
@@ -303,7 +308,7 @@ export const MediaArtifactForm = ({
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-[auto_1fr] dx-document overflow-hidden'>
         {/* MediaArtifact-level name (independent of any variant). */}
-        <Flex column gap='xs' classNames='pt-3 px-2'>
+        <Flex.Root column gap='xs' classNames='pt-3 px-2'>
           <Field.Root>
             <Field.Input
               placeholder={t('name.placeholder')}
@@ -311,7 +316,7 @@ export const MediaArtifactForm = ({
               onChange={handleNameChange}
             />
           </Field.Root>
-        </Flex>
+        </Flex.Root>
         {/* Schema-driven request form (prompt + kind-specific knobs, from the generator's
             requestSchema); read-only while a generation is in flight. */}
         {provider && (

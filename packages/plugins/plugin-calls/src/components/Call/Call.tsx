@@ -6,7 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, createContext, useContext } from 'react';
 
 import { useCapability, useOptionalCapability } from '@dxos/app-framework/Hooks';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 
 import { useDebugMode } from '#hooks';
 import { CallsCapabilities } from '#types';
@@ -59,8 +59,8 @@ CallRoot.displayName = CALL_ROOT_NAME;
 const CALL_VIEWPORT_NAME = 'Call.Viewport';
 
 /** Composable container for the call surface (participant grid + overlays). */
-const CallViewport = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
-  <div {...composableProps(props, { classNames: 'relative dx-expand flex flex-col' })} ref={forwardedRef}>
+const CallViewport = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
+  <div {...Util.composableProps(props, { classNames: 'relative dx-expand flex flex-col' })} ref={forwardedRef}>
     {children}
   </div>
 ));

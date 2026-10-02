@@ -6,8 +6,12 @@ import React, { useCallback, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { log } from '@dxos/log';
-import { AlertDialog, Banner, Button, Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { RegistrySettingsSchema, type RegistrySettings as RegistrySettingsType } from '#types';
@@ -46,7 +50,7 @@ export const RegistrySettings = ({
   onPluginScopeLocalChange,
   scope,
 }: RegistrySettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [rejoining, setRejoining] = useState(false);
   const [busy, setBusy] = useState(false);
   const enabled = !!settings.devPluginEnabled;
@@ -137,14 +141,14 @@ export const RegistrySettings = ({
               label={t('dev-plugin.toggle.label')}
               description={t('dev-plugin.toggle.description')}
             >
-              <Button
+              <Button.Root
                 data-testid='registrySettings.devPluginToggle'
                 variant={enabled ? undefined : 'primary'}
                 disabled={!onSettingsChange || busy || (!enabled && !trimmedUrl)}
                 onClick={() => void handleToggle()}
               >
                 {buttonLabel}
-              </Button>
+              </Button.Root>
             </Form.Field>
             {enabled && !loadedDevId && !busy && (
               <Banner.Root valence='warning'>
@@ -166,10 +170,10 @@ export const RegistrySettings = ({
             <AlertDialog.ActionBar>
               <div className='grow' />
               <AlertDialog.Cancel asChild>
-                <Button>{t('plugin-scope.rejoin-dialog.cancel.label')}</Button>
+                <Button.Root>{t('plugin-scope.rejoin-dialog.cancel.label')}</Button.Root>
               </AlertDialog.Cancel>
               <AlertDialog.Action asChild>
-                <Button
+                <Button.Root
                   data-testid='registrySettings.pluginScope.confirm'
                   variant='primary'
                   onClick={() => {
@@ -178,7 +182,7 @@ export const RegistrySettings = ({
                   }}
                 >
                   {t('plugin-scope.rejoin-dialog.confirm.label')}
-                </Button>
+                </Button.Root>
               </AlertDialog.Action>
             </AlertDialog.ActionBar>
           </AlertDialog.Content>

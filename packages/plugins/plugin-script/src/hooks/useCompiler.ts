@@ -4,8 +4,8 @@
 
 import { useCapabilities } from '@dxos/app-framework/Hooks';
 import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
-import { EffectEx } from '@dxos/effect';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { ScriptCapabilities, ScriptEvents } from '#types';
 
@@ -17,7 +17,7 @@ import type { Compiler } from '../compiler/index.ts';
  */
 export const useCompiler = (): Compiler | undefined => {
   const manager = usePluginManager();
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     await manager.activate(ScriptEvents.SetupCompiler).pipe(EffectEx.runAndForwardErrors);
   }, [manager]);
   const [compiler] = useCapabilities(ScriptCapabilities.Compiler);

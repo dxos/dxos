@@ -10,9 +10,12 @@ import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, Select, Tabs, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import * as Tabs from '@dxos/react-ui/Tabs';
 
 import { TelemetryPanel, type TelemetryRow, TerraForm, TerraMap } from '#components';
 import { meta } from '#meta';
@@ -76,7 +79,7 @@ const buildTelemetry = (objects: readonly SimObject[], config: TerraConfigValues
 export const TerraArticle = ({ role, attendableId, subject: terra }: TerraArticleProps) => {
   // The selected view tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const managerRef = useRef<SceneManager | null>(null);
   const objectLayerRef = useRef<ObjectLayer | null>(null);
@@ -407,7 +410,7 @@ type CameraTargetSelectProps = {
 
 /** Picks which object the chase camera rides. */
 const CameraTargetSelect = ({ definitions, value, onChange }: CameraTargetSelectProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Select.Root value={value} onValueChange={onChange}>
       <Select.TriggerButton

@@ -10,7 +10,8 @@ import { CardIconSlot } from '@dxos/app-toolkit/CardIconSlot';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Card, Icon } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
 import { type ObjectLinkProps, type WidgetDef } from '@dxos/ui-editor';
 
 export type ObjectCardProps = {
@@ -42,7 +43,7 @@ export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
       <Card.Header>
         <Card.Block>
           <CardIconSlot subject={subject}>
-            <Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--file--regular'} />
+            <Icon.Root icon={Obj.getIcon(subject)?.icon ?? 'ph--file--regular'} />
           </CardIconSlot>
         </Card.Block>
         <Card.Title classNames='line-clamp-1'>{title}</Card.Title>

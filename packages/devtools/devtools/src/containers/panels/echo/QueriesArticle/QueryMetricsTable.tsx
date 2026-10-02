@@ -5,8 +5,12 @@
 import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type QueryMetrics } from '@dxos/echo-client';
-import { Grid, Icon, ScrollArea, Toolbar, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { mx } from '@dxos/ui-theme';
 
 import { Searchbar } from '../../../../components/index.ts';
@@ -135,7 +139,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           <Toolbar.IconButton icon='ph--arrow-counter-clockwise--regular' iconOnly label='Reset' onClick={onReset} />
         )}
       </Toolbar.Root>
-      <Grid
+      <Grid.Root
         cols={TRACKS}
         gap='sm'
         grow={false}
@@ -150,12 +154,12 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
             >
               {column.label}
               {sort.column === column.id && (
-                <Icon size={3} icon={sort.descending ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} />
+                <Icon.Root size={3} icon={sort.descending ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} />
               )}
             </button>
           </Tooltip.Trigger>
         ))}
-      </Grid>
+      </Grid.Root>
       <ScrollArea.Root orientation='vertical' thin classNames='dx-grow'>
         <ScrollArea.Viewport>
           {rows.length === 0 && <p className='p-2 text-xs text-description'>No queries.</p>}
@@ -163,7 +167,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
             const open = expanded === query.query;
             return (
               <Fragment key={query.query}>
-                <Grid
+                <Grid.Root
                   asChild
                   cols={TRACKS}
                   gap='sm'
@@ -186,7 +190,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
                       <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
                     ))}
                   </button>
-                </Grid>
+                </Grid.Root>
                 {open && (
                   <div className='px-2 py-1 text-xs border-y border-subdued-separator'>
                     <JsonHighlighter data={{ ...query, avgTime: averageQueryTime(query) }} />

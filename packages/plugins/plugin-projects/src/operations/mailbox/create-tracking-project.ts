@@ -12,7 +12,7 @@ import { extractDomain, isFreeMailDomain, normalizeEmail, organizationNameFromDo
 import { log } from '@dxos/log';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { makeRoutine } from '@dxos/plugin-routine';
+import { makeRoutine } from '@dxos/plugin-routine/Wire';
 import { trim } from '@dxos/util';
 
 import { ProjectMailboxOperation } from '#types';

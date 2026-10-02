@@ -5,7 +5,10 @@
 import React, { useState } from 'react';
 import { FileUploader } from 'react-drag-drop-files';
 
-import { Button, Dialog, Icon, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 export type DialogRestoreSpaceProps = {
   handleFile: (backupFile: File) => Promise<void>;
@@ -29,7 +32,7 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
       <Toolbar.Root>
         {!isControlled && (
           <Dialog.Trigger asChild>
-            <Button>Import space</Button>
+            <Button.Root>Import space</Button.Root>
           </Dialog.Trigger>
         )}
       </Toolbar.Root>
@@ -50,7 +53,7 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
               dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
               handleChange={(backupFile: File) => handleFile(backupFile).finally(() => setIsOpen(false))}
             >
-              <Icon icon='ph--file-plus--duotone' size={8} />
+              <Icon.Root icon='ph--file-plus--duotone' size={8} />
               <span>
                 {isImportIntoExisting ? 'Drag JSON file here or click to browse' : 'Drag file here or click to browse'}
               </span>
@@ -58,7 +61,7 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
           </Dialog.Body>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
-              <Button variant='primary'>{'Cancel'}</Button>
+              <Button.Root variant='primary'>{'Cancel'}</Button.Root>
             </Dialog.Close>
           </Dialog.ActionBar>
         </Dialog.Content>

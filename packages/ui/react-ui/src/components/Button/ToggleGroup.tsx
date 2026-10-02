@@ -2,12 +2,13 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ToggleGroup as ToggleGroupPrimitive } from '@ark-ui/react/toggle-group';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
-import { Button, ButtonGroup, type ButtonGroupProps, type ButtonProps } from './Button.tsx';
-import { IconButton, type IconButtonProps } from './IconButton.tsx';
-
+import * as Button from './Button.tsx';
+import * as IconButton from './IconButton.tsx';
 type ToggleGroupCommonProps = Omit<ComponentPropsWithoutRef<'div'>, 'defaultValue' | 'dir' | 'onChange'> & {
   disabled?: boolean;
   /** Arrow keys move focus between the items; off when an enclosing group (e.g. a toolbar) does that. */
@@ -38,7 +39,7 @@ type ToggleGroupProps = ToggleGroupSingleProps | ToggleGroupMultipleProps;
 const toMachineValue = (value: string | string[] | undefined): string[] | undefined =>
   value === undefined ? undefined : Array.isArray(value) ? value : value ? [value] : [];
 
-const ToggleGroup = forwardRef<HTMLDivElement, ToggleGroupProps & ButtonGroupProps>(
+const ToggleGroup = forwardRef<HTMLDivElement, ToggleGroupProps & Button.GroupProps>(
   ({ classNames, children, elevation, ...props }, forwardedRef) => {
     const { type, value, defaultValue, onValueChange, loop, rovingFocus, ...rootProps } = props;
     const handleValueChange = ({ value }: { value: string[] }) => {
@@ -60,7 +61,7 @@ const ToggleGroup = forwardRef<HTMLDivElement, ToggleGroupProps & ButtonGroupPro
         rovingFocus={rovingFocus}
         asChild
       >
-        <ButtonGroup {...{ classNames, children, elevation }} ref={forwardedRef} />
+        <Button.Group {...{ classNames, children, elevation }} ref={forwardedRef} />
       </ToggleGroupPrimitive.Root>
     );
   },
@@ -68,7 +69,7 @@ const ToggleGroup = forwardRef<HTMLDivElement, ToggleGroupProps & ButtonGroupPro
 
 ToggleGroup.displayName = 'ToggleGroup';
 
-type ToggleGroupItemProps = ButtonProps & {
+type ToggleGroupItemProps = Button.RootProps & {
   value: string;
 };
 
@@ -76,7 +77,7 @@ const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(
   ({ value, disabled, variant, elevation, density, classNames, children, ...props }, forwardedRef) => {
     return (
       <ToggleGroupPrimitive.Item value={value} disabled={disabled} asChild>
-        <Button {...props} {...{ variant, elevation, density, classNames, children }} ref={forwardedRef} />
+        <Button.Root {...props} {...{ variant, elevation, density, classNames, children }} ref={forwardedRef} />
       </ToggleGroupPrimitive.Item>
     );
   },
@@ -84,7 +85,7 @@ const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(
 
 ToggleGroupItem.displayName = 'ToggleGroup.Item';
 
-type ToggleGroupIconItemProps = IconButtonProps & {
+type ToggleGroupIconItemProps = IconButton.RootProps & {
   value: string;
 };
 
@@ -92,7 +93,11 @@ const ToggleGroupIconItem = forwardRef<HTMLButtonElement, ToggleGroupIconItemPro
   ({ value, disabled, variant, label, icon, size, elevation, density, classNames, ...props }, forwardedRef) => {
     return (
       <ToggleGroupPrimitive.Item value={value} disabled={disabled} asChild>
-        <IconButton {...props} {...{ variant, elevation, density, classNames, label, icon, size }} ref={forwardedRef} />
+        <IconButton.Root
+          {...props}
+          {...{ variant, elevation, density, classNames, label, icon, size }}
+          ref={forwardedRef}
+        />
       </ToggleGroupPrimitive.Item>
     );
   },
@@ -100,5 +105,9 @@ const ToggleGroupIconItem = forwardRef<HTMLButtonElement, ToggleGroupIconItemPro
 
 ToggleGroupIconItem.displayName = 'ToggleGroup.IconItem';
 
-export { ToggleGroup, ToggleGroupIconItem, ToggleGroupItem };
-export type { ToggleGroupIconItemProps, ToggleGroupItemProps, ToggleGroupProps };
+export { ToggleGroupIconItem as IconItem, ToggleGroupItem as Item, ToggleGroup as Root };
+export type {
+  ToggleGroupIconItemProps as IconItemProps,
+  ToggleGroupItemProps as ItemProps,
+  ToggleGroupProps as RootProps,
+};

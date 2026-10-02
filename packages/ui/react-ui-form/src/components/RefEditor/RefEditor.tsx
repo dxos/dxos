@@ -8,7 +8,6 @@ import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'reac
 
 import { type Database, Filter, Obj, type Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   Editor,
   type EditorController,
@@ -16,6 +15,9 @@ import {
   type EditorViewProps,
   type UseEditorMenuProps,
 } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Util from '@dxos/react-ui/Util';
 import { createBasicExtensions, createThemeExtensions, insertAtCursor, keymap } from '@dxos/ui-editor';
 import { getHashHue, mx } from '@dxos/ui-theme';
 
@@ -31,7 +33,7 @@ import {
   refEditorRedecorate,
 } from './ref-editor-extension.ts';
 
-export type RefEditorProps = ThemedClassName<
+export type RefEditorProps = Util.ThemedClassName<
   {
     /** Database queried for objects of {@link RefEditorProps.type}. */
     db?: Database.Database;
@@ -91,8 +93,8 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(translationKey);
-    const { themeMode } = useThemeContext();
+    const { t } = Hooks.useTranslation(translationKey);
+    const { themeMode } = ThemeProvider.useThemeContext();
     const getObjectLabel = useCallback(
       (object: Obj.Unknown) => getLabel?.(object) ?? Obj.getLabel(object) ?? object.id,
       [getLabel],

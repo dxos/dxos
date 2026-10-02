@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Tag.tsx';
+export * as Tag from './Tag.tsx';

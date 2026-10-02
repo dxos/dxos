@@ -9,8 +9,14 @@ import { useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Context } from '@dxos/context';
 import { useIdentity } from '@dxos/halo-react';
-import { Banner, Button, Field, Flex, Icon, IconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 import { ClientCapabilities } from '#types';
@@ -21,7 +27,7 @@ import { useAccountUrl, useHubHttpClient } from '../../hooks/index.ts';
 type AccountState = 'loading' | 'present' | 'missing' | 'error';
 
 export const AccountContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const identity = useIdentity();
   const { invokePromise } = useOperationInvoker();
   const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);
@@ -37,7 +43,7 @@ export const AccountContainer = () => {
   const hubHttp = useHubHttpClient();
   const { openAccountPage } = useAccountUrl();
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!hubHttp) {
       return;
     }
@@ -141,9 +147,9 @@ export const AccountContainer = () => {
                           classNames='w-64 max-w-full min-w-0'
                         />
                       </Field.Root>
-                      <Button type='submit' density='sm'>
+                      <Button.Root type='submit' density='sm'>
                         {t('request-access.label')}
-                      </Button>
+                      </Button.Root>
                     </form>
                   )}
                 </Form.Field>
@@ -159,23 +165,27 @@ export const AccountContainer = () => {
               <>
                 <Form.Field standalone label={t('email.label')} description={account.email}>
                   {account.emailVerified ? (
-                    <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text justify-self-end' />
+                    <Icon.Root
+                      icon='ph--check-circle--duotone'
+                      size={5}
+                      classNames='text-success-text justify-self-end'
+                    />
                   ) : (
-                    <Flex column gap='xs' align='end'>
-                      <IconButton
+                    <Flex.Root column gap='xs' align='end'>
+                      <IconButton.Root
                         icon='ph--paper-plane-tilt--regular'
                         label={t('resend-verification.label')}
                         onClick={handleResend}
                         density='sm'
                       />
                       {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
-                    </Flex>
+                    </Flex.Root>
                   )}
                 </Form.Field>
                 <Form.Field standalone label={t('delete-account.label')} description={t('delete-account.description')}>
-                  <Button variant='destructive' onClick={handleDeleteAccount}>
+                  <Button.Root variant='destructive' onClick={handleDeleteAccount}>
                     {t('delete-account.label')}
-                  </Button>
+                  </Button.Root>
                 </Form.Field>
               </>
             ) : null}
@@ -187,7 +197,7 @@ export const AccountContainer = () => {
                 label={t('open-account-page.label')}
                 description={t('open-account-page.description')}
               >
-                <IconButton
+                <IconButton.Root
                   icon='ph--arrow-square-out--regular'
                   label={t('open-account-page.label')}
                   variant='default'

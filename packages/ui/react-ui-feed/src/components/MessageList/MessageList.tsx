@@ -14,18 +14,12 @@ import React, {
   useState,
 } from 'react';
 
-import {
-  Column,
-  ColumnRootProps,
-  IconButton,
-  ScrollArea,
-  type ScrollAreaRootProps,
-  composable,
-  composableProps,
-  createContext,
-  setRef,
-} from '@dxos/react-ui';
 import { type WindowController, type WindowState, useFollow, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
+import * as Column from '@dxos/react-ui/Column';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type Message } from '@dxos/types';
 import { type ObjectLinkProps, type WidgetDef, type XmlWidgetRegistry } from '@dxos/ui-editor';
 
@@ -122,7 +116,7 @@ export type ScrollToOptions = {
   behavior?: 'auto' | 'smooth';
 };
 
-const [MessageListProvider, useMessageListContext] = createContext<MessageListContextValue>(MESSAGE_LIST_NAME);
+const [MessageListProvider, useMessageListContext] = Hooks.createContext<MessageListContextValue>(MESSAGE_LIST_NAME);
 
 /**
  * The list's state and scroll controls, for parts that live outside the viewport — a toolbar's
@@ -499,9 +493,9 @@ const MessageListRoot = ({
 
   // The parts are stable identities, so this republishes only when the model itself is replaced.
   useEffect(() => {
-    setRef(controllerRef, { model, scrollToBottom, scrollToIndex, navigation });
+    Hooks.setRef(controllerRef, { model, scrollToBottom, scrollToIndex, navigation });
     return () => {
-      setRef(controllerRef, null);
+      Hooks.setRef(controllerRef, null);
     };
   }, [controllerRef, model, scrollToBottom, scrollToIndex, navigation]);
 
@@ -553,10 +547,10 @@ MessageListRoot.displayName = 'MessageList.Root';
 const MESSAGE_LIST_VIEWPORT_NAME = 'MessageList.Viewport';
 
 type MessageListViewportExtra = Pick<
-  ScrollAreaRootProps,
+  ScrollArea.RootProps,
   'autoHide' | 'centered' | 'native' | 'padding' | 'scrollbars' | 'thin'
 > &
-  Pick<ColumnRootProps, 'gutter'> & {
+  Pick<Column.RootProps, 'gutter'> & {
     /**
      * Chrome pinned over the scroller — a scroll-to-bottom pill, a "new messages" badge.
      *
@@ -583,7 +577,7 @@ const isEmptyContent = (content: ItemContent, hasCustomRenderer: boolean): boole
   (content.kind === 'html' && !content.html.trim()) ||
   (content.kind === 'custom' && !hasCustomRenderer);
 
-const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>(
+const MessageListViewport = Util.composable<HTMLDivElement, MessageListViewportExtra>(
   ({ autoHide, centered, native, padding, scrollbars, thin, gutter = 'md', overlay, ...props }, forwardedRef) => {
     const { model, renderer, Chrome, Custom, windowRef, offset, sizerExtent, first, last, setViewport } =
       useMessageListContext(MESSAGE_LIST_VIEWPORT_NAME);
@@ -594,7 +588,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
     const handleViewportRef = useCallback(
       (element: HTMLDivElement | null) => {
         setViewport(element);
-        setRef(forwardedRef, element);
+        Hooks.setRef(forwardedRef, element);
       },
       [setViewport, forwardedRef],
     );
@@ -636,7 +630,7 @@ const MessageListViewport = composable<HTMLDivElement, MessageListViewportExtra>
 
     return (
       <ScrollArea.Root
-        {...composableProps(props)}
+        {...Util.composableProps(props)}
         orientation='vertical'
         autoHide={autoHide}
         centered={centered}
@@ -686,7 +680,7 @@ type MessageListItemExtra = {
  * One message, rendered by the kind its renderer resolves. Exposed so a host can render a message
  * outside the scrolling window — a pinned message, a preview — through the same path.
  */
-const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
+const MessageListItem = Util.composable<HTMLDivElement, MessageListItemExtra>(({ message, ...props }, forwardedRef) => {
   const { model, renderer, registry, objectImage, Custom, debug, reportWidgets } =
     useMessageListContext(MESSAGE_LIST_ITEM_NAME);
   const content = renderer(message);
@@ -708,7 +702,7 @@ const MessageListItem = composable<HTMLDivElement, MessageListItemExtra>(({ mess
     // The outlines are the item and the block-level children of its document — which is exactly what
     // the virtualizer measures and what a widget's late paint changes.
     <div
-      {...composableProps(props, {
+      {...Util.composableProps(props, {
         classNames: debug
           ? 'outline outline-1 outline-dashed outline-primary-500/50 [&_.cm-content>*]:outline [&_.cm-content>*]:outline-1 [&_.cm-content>*]:outline-dashed [&_.cm-content>*]:outline-neutral-500/40'
           : undefined,
@@ -757,72 +751,74 @@ type MessageListNavExtra = {
  * the same keymap the viewport itself carries, so focus landing on the toolbar does not change
  * what the keys mean.
  */
-const MessageListNav = composable<HTMLDivElement, MessageListNavExtra>(({ ends = true, ...props }, forwardedRef) => {
-  const { navigation } = useMessageListContext(MESSAGE_LIST_NAV_NAME);
+const MessageListNav = Util.composable<HTMLDivElement, MessageListNavExtra>(
+  ({ ends = true, ...props }, forwardedRef) => {
+    const { navigation } = useMessageListContext(MESSAGE_LIST_NAV_NAME);
 
-  const onKeyDown = useCallback(
-    (event: React.KeyboardEvent) => {
-      const delta = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
-      if (!delta || event.altKey || event.shiftKey) {
-        return;
-      }
-
-      event.preventDefault();
-      if (event.metaKey || event.ctrlKey) {
-        if (delta > 0) {
-          navigation.last();
-        } else {
-          navigation.first();
+    const onKeyDown = useCallback(
+      (event: React.KeyboardEvent) => {
+        const delta = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : 0;
+        if (!delta || event.altKey || event.shiftKey) {
+          return;
         }
-        return;
-      }
 
-      navigation.step(delta);
-    },
-    [navigation],
-  );
+        event.preventDefault();
+        if (event.metaKey || event.ctrlKey) {
+          if (delta > 0) {
+            navigation.last();
+          } else {
+            navigation.first();
+          }
+          return;
+        }
 
-  return (
-    <div role='group' {...composableProps(props)} onKeyDown={onKeyDown} ref={forwardedRef}>
-      {ends && (
-        <IconButton
-          icon='ph--arrow-line-up--regular'
+        navigation.step(delta);
+      },
+      [navigation],
+    );
+
+    return (
+      <div role='group' {...Util.composableProps(props)} onKeyDown={onKeyDown} ref={forwardedRef}>
+        {ends && (
+          <IconButton.Root
+            icon='ph--arrow-line-up--regular'
+            iconOnly
+            label='First message'
+            variant='ghost'
+            data-testid='feed.nav.top'
+            onClick={() => navigation.first()}
+          />
+        )}
+        <IconButton.Root
+          icon='ph--caret-up--regular'
           iconOnly
-          label='First message'
+          label='Previous message'
           variant='ghost'
-          data-testid='feed.nav.top'
-          onClick={() => navigation.first()}
+          data-testid='feed.nav.back'
+          onClick={() => navigation.step(-1)}
         />
-      )}
-      <IconButton
-        icon='ph--caret-up--regular'
-        iconOnly
-        label='Previous message'
-        variant='ghost'
-        data-testid='feed.nav.back'
-        onClick={() => navigation.step(-1)}
-      />
-      <IconButton
-        icon='ph--caret-down--regular'
-        iconOnly
-        label='Next message'
-        variant='ghost'
-        data-testid='feed.nav.forward'
-        onClick={() => navigation.step(1)}
-      />
-      {ends && (
-        <IconButton
-          icon='ph--arrow-line-down--regular'
+        <IconButton.Root
+          icon='ph--caret-down--regular'
           iconOnly
-          label='Last message'
+          label='Next message'
           variant='ghost'
-          data-testid='feed.nav.bottom'
-          onClick={() => navigation.last()}
+          data-testid='feed.nav.forward'
+          onClick={() => navigation.step(1)}
         />
-      )}
-    </div>
-  );
-});
+        {ends && (
+          <IconButton.Root
+            icon='ph--arrow-line-down--regular'
+            iconOnly
+            label='Last message'
+            variant='ghost'
+            data-testid='feed.nav.bottom'
+            onClick={() => navigation.last()}
+          />
+        )}
+      </div>
+    );
+  },
+);
 
 MessageListNav.displayName = MESSAGE_LIST_NAV_NAME;
 

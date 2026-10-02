@@ -2,15 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type KeyboardEvent, type SyntheticEvent, useCallback, useRef, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
+
+import type * as Util from '../../util/Util.ts';
 
 // TODO(burdon): Factor out.
 const cache = new Map<string, string>();
 
-export type ImageProps = ThemedClassName<
+type ImageProps = Util.ThemedClassName<
   {
     src: string;
     alt?: string;
@@ -27,7 +30,7 @@ export type ImageProps = ThemedClassName<
   } & ColorOptions
 >;
 
-export const Image = ({
+const Image = ({
   classNames,
   src,
   alt = '',
@@ -265,3 +268,6 @@ const isTransparent = (pixels: Uint8ClampedArray, sampleSize: number, threshold:
 
   return edgeTransparentPixels / edgePixels > threshold;
 };
+
+export { Image as Root };
+export type { ImageProps as RootProps };

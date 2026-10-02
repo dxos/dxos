@@ -13,7 +13,7 @@ import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import type * as ProjectCapabilities from '@dxos/plugin-projects/ProjectCapabilities';
 import { scaffoldProject } from '@dxos/plugin-projects/Templates';
-import { makeRoutine } from '@dxos/plugin-routine';
+import { makeRoutine } from '@dxos/plugin-routine/Wire';
 import { trim } from '@dxos/util';
 
 /** Skills for the project's chats: CRM tools plus the research/database/document utilities. */

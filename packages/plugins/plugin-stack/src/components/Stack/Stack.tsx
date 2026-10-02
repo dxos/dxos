@@ -17,10 +17,14 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AttentionSigilButton } from '@dxos/app-toolkit/AttentionSigil';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { Obj } from '@dxos/echo';
-import { Icon, Menu, ScrollArea, ScrollAreaRootProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -113,8 +117,8 @@ StackRoot.displayName = 'Stack.Root';
 // Content
 //
 
-type StackContentProps = ThemedClassName<
-  ComponentPropsWithoutRef<'div'> & Pick<ScrollAreaRootProps, 'centered' | 'thin' | 'padding'>
+type StackContentProps = Util.ThemedClassName<
+  ComponentPropsWithoutRef<'div'> & Pick<ScrollArea.RootProps, 'centered' | 'thin' | 'padding'>
 >;
 
 const StackContent = forwardRef<HTMLDivElement, StackContentProps>(({ children, ...props }, forwardedRef) => {
@@ -134,7 +138,7 @@ StackContent.displayName = 'Stack.Content';
 // Viewport
 //
 
-type StackViewportProps = ThemedClassName<PropsWithChildren>;
+type StackViewportProps = Util.ThemedClassName<PropsWithChildren>;
 
 const StackViewport = forwardRef<HTMLDivElement, StackViewportProps>(
   ({ classNames, children }, forwardedRef: ForwardedRef<HTMLDivElement>) => {
@@ -188,7 +192,7 @@ const DragHandleGlyph = () => (
 
 const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
   const { id, object } = data;
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { attendableId: parentAttendableId, collapsed, onAdd, onMoveUp, onMoveDown, onCollapse, onDelete } = useStack();
   const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
   const attendableId = GraphPath.getCollectionObjectPath(parentAttendableId, object.id);
@@ -204,7 +208,7 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
         <Menu.Root open={optionsMenuOpen} onOpenChange={setOptionsMenuOpen}>
           <Menu.Trigger asChild>
             <AttentionSigilButton size='md' attendableId={attendableId}>
-              <Icon icon={icon} classNames='transition-opacity' />
+              <Icon.Root icon={icon} classNames='transition-opacity' />
             </AttentionSigilButton>
           </Menu.Trigger>
           <Menu.Portal>
@@ -212,31 +216,31 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
               <Menu.Viewport>
                 {isCollapsed ? (
                   <Menu.Item onClick={() => onCollapse(id, false)} data-testid='section.expand'>
-                    <Icon icon='ph--arrows-out-line-vertical--regular' />
+                    <Icon.Root icon='ph--arrows-out-line-vertical--regular' />
                     <span className='ms-2 grow'>{t('expand.label')}</span>
                   </Menu.Item>
                 ) : (
                   <Menu.Item onClick={() => onCollapse(id, true)} data-testid='section.collapse'>
-                    <Icon icon='ph--arrows-in-line-vertical--regular' />
+                    <Icon.Root icon='ph--arrows-in-line-vertical--regular' />
                     <span className='ms-2 grow'>{t('collapse.label')}</span>
                   </Menu.Item>
                 )}
                 <Menu.Separator />
                 <Menu.Item onClick={() => onAdd(id)} data-testid='section.add'>
-                  <Icon icon='ph--plus--regular' />
+                  <Icon.Root icon='ph--plus--regular' />
                   <span className='ms-2 grow'>{t('add-section.label')}</span>
                 </Menu.Item>
                 <Menu.Item onClick={() => onMoveUp(id)} data-testid='section.move-up'>
-                  <Icon icon='ph--arrow-line-up--regular' />
+                  <Icon.Root icon='ph--arrow-line-up--regular' />
                   <span className='ms-2 grow'>{t('move-up.label')}</span>
                 </Menu.Item>
                 <Menu.Item onClick={() => onMoveDown(id)} data-testid='section.move-down'>
-                  <Icon icon='ph--arrow-line-down--regular' />
+                  <Icon.Root icon='ph--arrow-line-down--regular' />
                   <span className='ms-2 grow'>{t('move-down.label')}</span>
                 </Menu.Item>
                 <Menu.Separator />
                 <Menu.Item onClick={() => onDelete(id)} data-testid='section.remove'>
-                  <Icon icon='ph--trash--regular' />
+                  <Icon.Root icon='ph--trash--regular' />
                   <span className='ms-2 grow'>{t('remove-section.label')}</span>
                 </Menu.Item>
               </Menu.Viewport>

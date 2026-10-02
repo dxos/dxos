@@ -10,8 +10,9 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Banner, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Frame, MediaArtifact, type Storyboard } from '#types';
@@ -34,7 +35,7 @@ export type FrameCompanionProps = {
  * picked — so the companion follows the stack without either holding state of its own.
  */
 export const FrameCompanion = ({ companionTo: storyboard, attendableId }: FrameCompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const selectedId = useSelection(attendableId, 'single');
   const [refs] = useObject(storyboard, 'frames');

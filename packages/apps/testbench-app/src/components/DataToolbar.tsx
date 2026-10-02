@@ -4,7 +4,10 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { Field, Icon, Select, Toolbar } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { safeParseInt } from '@dxos/util';
 
 export type DataView = 'table' | 'list' | 'debug';
@@ -66,13 +69,13 @@ export const DataToolbar = ({ types, onAdd, onTypeChange, onFilterChange, onView
       {onViewChange && (
         <Toolbar.ToggleGroup type='single' value={view} onValueChange={(value) => setView(value as DataView)}>
           <Toolbar.ToggleGroupItem value='table'>
-            <Icon icon='ph--table--regular' />
+            <Icon.Root icon='ph--table--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='list'>
-            <Icon icon='ph--list--regular' />
+            <Icon.Root icon='ph--list--regular' />
           </Toolbar.ToggleGroupItem>
           <Toolbar.ToggleGroupItem value='debug'>
-            <Icon icon='ph--list-magnifying-glass--regular' />
+            <Icon.Root icon='ph--list-magnifying-glass--regular' />
           </Toolbar.ToggleGroupItem>
         </Toolbar.ToggleGroup>
       )}

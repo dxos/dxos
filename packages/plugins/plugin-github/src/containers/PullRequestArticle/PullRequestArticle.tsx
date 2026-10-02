@@ -12,12 +12,15 @@ import { useProgressMonitor } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
-import { Flex, Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Tabs from '@dxos/react-ui/Tabs';
 import { PullRequest } from '@dxos/types';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
@@ -72,7 +75,7 @@ export type PullRequestArticleProps = AppSurface.ObjectArticleProps<PullRequest.
  * pull request, not a different object to open.
  */
 export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }: PullRequestArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [subject] = useObject(pullRequest);
   const db = Obj.getDatabase(pullRequest);
@@ -506,7 +509,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
           <ActionToolbar {...menuActions} attendableId={attendableId} />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Flex column>
+          <Flex.Root column>
             <PullRequestStatus
               reference={reference}
               title={subject.title}
@@ -544,7 +547,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
                 onLineComment={diff.commit ? handleFilesLineComment : undefined}
               />
             )}
-          </Flex>
+          </Flex.Root>
         </Panel.Content>
         <Panel.Statusbar classNames='border-t border-subdued-separator' asChild>
           <ProgressMeter

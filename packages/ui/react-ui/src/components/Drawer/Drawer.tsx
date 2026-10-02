@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Drawer` — a panel that slides in from an edge of the viewport, built on Ark's drawer machine,
 // which owns the swipe gesture (drag to dismiss, snap points, velocity), dismissal and the dialog
 // ARIA. DXOS owns the layout parts — `Overlay` as the scrim the content nests in, the positioner
@@ -28,7 +30,7 @@ import React, {
 import { useControllableState } from '@dxos/react-hooks';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { ElevationProvider } from '../../providers/index.ts';
+import * as ElevationProvider from '../../providers/ElevationProvider/ElevationProvider.tsx';
 import { type ThemedClassName } from '../../util/index.ts';
 import { DrawerProvider, useDrawerContext } from './DrawerContext.ts';
 
@@ -140,14 +142,14 @@ const DrawerRoot = ({
   });
 
   return (
-    <ElevationProvider elevation='dialog'>
+    <ElevationProvider.Root elevation='dialog'>
       {/* Closed content is not in the DOM at all — except pushed, where the clip closes over it. */}
       <DrawerPrimitive.RootProvider value={drawer} lazyMount unmountOnExit={!push}>
         <DrawerProvider push={push} instant={instant.current} transition={transition}>
           {children}
         </DrawerProvider>
       </DrawerPrimitive.RootProvider>
-    </ElevationProvider>
+    </ElevationProvider.Root>
   );
 };
 
@@ -339,31 +341,31 @@ DrawerSwipeArea.displayName = 'Drawer.SwipeArea';
 //
 // Drawer
 //
-
-export const Drawer = {
-  Root: DrawerRoot,
-  Trigger: DrawerTrigger,
-  Portal: DrawerPortal,
-  Overlay: DrawerOverlay,
-  Content: DrawerContent,
-  Grabber: DrawerGrabber,
-  Title: DrawerTitle,
-  Description: DrawerDescription,
-  Close: DrawerClose,
-  SwipeArea: DrawerSwipeArea,
-};
-
 export type {
-  DrawerCloseProps,
-  DrawerContentProps,
-  DrawerDescriptionProps,
-  DrawerGrabberProps,
-  DrawerOverlayProps,
-  DrawerPortalProps,
-  DrawerRootProps,
-  DrawerSide,
-  DrawerSnapPoint,
-  DrawerSwipeAreaProps,
-  DrawerTitleProps,
-  DrawerTriggerProps,
+  DrawerCloseProps as CloseProps,
+  DrawerContentProps as ContentProps,
+  DrawerDescriptionProps as DescriptionProps,
+  DrawerGrabberProps as GrabberProps,
+  DrawerOverlayProps as OverlayProps,
+  DrawerPortalProps as PortalProps,
+  DrawerRootProps as RootProps,
+  DrawerSide as Side,
+  DrawerSnapPoint as SnapPoint,
+  DrawerSwipeAreaProps as SwipeAreaProps,
+  DrawerTitleProps as TitleProps,
+  DrawerTriggerProps as TriggerProps,
 };
+
+export {
+  DrawerClose as Close,
+  DrawerContent as Content,
+  DrawerDescription as Description,
+  DrawerGrabber as Grabber,
+  DrawerOverlay as Overlay,
+  DrawerPortal as Portal,
+  DrawerRoot as Root,
+  DrawerSwipeArea as SwipeArea,
+  DrawerTitle as Title,
+  DrawerTrigger as Trigger,
+};
+export * from './Drawer.theme.ts';

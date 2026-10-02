@@ -10,12 +10,20 @@ import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken, Connection } from '@dxos/link';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Card, Field, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -41,7 +49,7 @@ type RecordItem = { id: string; record: AtprotoRepo.RepoRecord };
  * for are marked; their records preview as ECHO objects (readonly card surface) and can be imported.
  */
 export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const readRepoLayer = useCapability(AtprotoCapabilities.ReadRepoLayer);
 
   const connections = useQuery(db, Filter.type(Connection.Connection));
@@ -198,15 +206,15 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
   const recordDetail = record ? (
     <ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
-        <Flex column gap='sm'>
+        <Flex.Root column gap='sm'>
           <span className='font-mono text-xs text-description truncate'>{record.uri}</span>
           {mappedForCollection ? (
-            <Flex column gap='sm'>
+            <Flex.Root column gap='sm'>
               {preview && previewIcon && (
                 <Card.Root>
                   <Card.Header>
                     <Card.Block>
-                      <Icon
+                      <Icon.Root
                         icon={previewIcon.icon}
                         classNames={previewIcon.hue ? getStyles(previewIcon.hue).text : undefined}
                       />
@@ -219,15 +227,15 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
               {alreadyImported ? (
                 <span className='text-sm text-success-text'>{t('imported.label')}</span>
               ) : (
-                <Button variant='primary' classNames='self-start' onClick={handleImport}>
+                <Button.Root variant='primary' classNames='self-start' onClick={handleImport}>
                   {t('import.label')}
-                </Button>
+                </Button.Root>
               )}
-            </Flex>
+            </Flex.Root>
           ) : (
             <JsonHighlighter data={record.value} />
           )}
-        </Flex>
+        </Flex.Root>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   ) : null;
@@ -236,7 +244,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root classNames='px-2'>
-          <Icon icon='ph--at--regular' size={4} classNames='text-description' />
+          <Icon.Root icon='ph--at--regular' size={4} classNames='text-description' />
           <Field.Root>
             <Field.Input
               classNames='grow'
@@ -250,7 +258,9 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
               }}
             />
           </Field.Root>
-          <Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>{t('browse.label')}</Button>
+          <Button.Root onClick={() => setActiveHandle(handleInput.trim() || undefined)}>
+            {t('browse.label')}
+          </Button.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='flex flex-col dx-grow py-2'>

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type CSSProperties } from 'react';
 
@@ -216,13 +218,16 @@ ColumnBlock.displayName = COLUMN_BLOCK_NAME;
 //
 // Column
 //
-
-export const Column = {
-  Root: ColumnRoot,
-  Row: ColumnRow,
-  Block: ColumnBlock,
-  Center: ColumnCenter,
-  Section: ColumnSection,
+export type {
+  ColumnBlockProps as BlockProps,
+  ColumnCenterProps as CenterProps,
+  ColumnRootProps as RootProps,
+  ColumnRowProps as RowProps,
+  ColumnSectionProps as SectionProps,
 };
 
-export type { ColumnBlockProps, ColumnCenterProps, ColumnRootProps, ColumnRowProps, ColumnSectionProps };
+export { ColumnBlock as Block, ColumnCenter as Center, ColumnRoot as Root, ColumnRow as Row, ColumnSection as Section };
+export * from './Column.theme.ts';
+export { useInColumn } from './ColumnContext.ts';
+export { ColumnContext } from './ColumnContext.ts';
+export * from './withColumn.ts';

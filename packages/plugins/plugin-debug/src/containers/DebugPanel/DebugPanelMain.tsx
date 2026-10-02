@@ -8,7 +8,8 @@ import { Surface } from '@dxos/app-framework/Surface';
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useNode } from '@dxos/plugin-graph/Hooks';
-import { Banner, useTranslation } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { DebugNodes, DebugSurface } from '#types';
@@ -23,7 +24,7 @@ const KEEP_MOUNTED: ReadonlySet<unknown> = new Set([DebugNodes.Console, DebugNod
  * their buffers while another tool is shown; every other page mounts only while selected.
  */
 export const DebugPanelMain = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { contextId, nodeId, select } = useDebugPanelContext();
   const { graph } = useAppGraph();
   const handleNavigate = useCallback(
@@ -89,7 +90,7 @@ type DebugPanelPageProps = {
 
 /** One tool's article surface; the `div` is its show/hide element, not layout. */
 const DebugPanelPage = ({ graph, contextId, nodeId, hidden, onNavigate }: DebugPanelPageProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const node = useNode(graph, nodeId);
   const data = useMemo<DebugSurface.PageData | undefined>(
     () =>

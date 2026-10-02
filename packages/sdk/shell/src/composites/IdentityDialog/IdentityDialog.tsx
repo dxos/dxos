@@ -4,17 +4,18 @@
 
 import React from 'react';
 
-import { Dialog, type DialogContentProps, useId } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { IdentityPanel, type IdentityPanelProps } from '../../panels/index.ts';
 
 export interface IdentityDialogProps
-  extends Omit<DialogContentProps, 'children'>, Omit<IdentityPanelProps, 'doneActionParent'> {
+  extends Omit<Dialog.ContentProps, 'children'>, Omit<IdentityPanelProps, 'doneActionParent'> {
   onDone: () => void;
 }
 
 export const IdentityDialog = (props: IdentityDialogProps) => {
-  const titleId = useId('identityDialog__title', props.title);
+  const titleId = Hooks.useId('identityDialog__title', props.title);
   return (
     <Dialog.Root defaultOpen onOpenChange={(open) => open || props.onDone?.()}>
       <Dialog.Portal>

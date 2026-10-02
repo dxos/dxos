@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Banner.tsx';
+export * as Banner from './Banner.tsx';

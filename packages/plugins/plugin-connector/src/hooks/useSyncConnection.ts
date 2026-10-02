@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 

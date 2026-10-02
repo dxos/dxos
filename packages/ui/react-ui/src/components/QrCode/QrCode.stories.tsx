@@ -7,11 +7,11 @@ import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../testing/index.ts';
-import { QrCode, type QrCodeProps } from './QrCode.tsx';
+import * as QrCode from './QrCode.tsx';
 
-const DefaultStory = (props: QrCodeProps) => (
+const DefaultStory = (props: QrCode.RootProps) => (
   <div className='w-64 text-description'>
-    <QrCode {...props} />
+    <QrCode.Root {...props} />
   </div>
 );
 

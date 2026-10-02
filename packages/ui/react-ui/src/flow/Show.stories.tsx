@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button } from '../components/Button/index.ts';
-import { Toolbar } from '../components/Toolbar/index.ts';
+import * as Button from '../components/Button/Button.tsx';
+import * as Toolbar from '../components/Toolbar/Toolbar.tsx';
 import { withLayout, withTheme } from '../testing/index.ts';
-import { Show } from './Show.tsx';
-import { Switch } from './Switch.tsx';
+import * as Show from './Show.tsx';
+import * as Switch from './Switch.tsx';
 
 type Task = { title: string };
 
@@ -19,11 +19,13 @@ const ShowStory = () => {
   return (
     <div className='p-4 flex flex-col gap-4'>
       <Toolbar.Root>
-        <Button onClick={() => setTask(task ? undefined : { title: 'Task 1' })}>{task ? 'Deselect' : 'Select'}</Button>
+        <Button.Root onClick={() => setTask(task ? undefined : { title: 'Task 1' })}>
+          {task ? 'Deselect' : 'Select'}
+        </Button.Root>
       </Toolbar.Root>
-      <Show when={task} fallback={<p className='text-subdued'>Nothing selected.</p>}>
+      <Show.Root when={task} fallback={<p className='text-subdued'>Nothing selected.</p>}>
         {(task) => <p>Selected: {task.title}</p>}
-      </Show>
+      </Show.Root>
     </div>
   );
 };
@@ -34,9 +36,9 @@ const SwitchStory = () => {
   return (
     <div className='p-4 flex flex-col gap-4'>
       <Toolbar.Root>
-        <Button onClick={() => setView('list')}>List</Button>
-        <Button onClick={() => setView('grid')}>Grid</Button>
-        <Button onClick={() => setView('other')}>Other</Button>
+        <Button.Root onClick={() => setView('list')}>List</Button.Root>
+        <Button.Root onClick={() => setView('grid')}>Grid</Button.Root>
+        <Button.Root onClick={() => setView('other')}>Other</Button.Root>
       </Toolbar.Root>
       <Switch.Root on={view} fallback={<p className='text-subdued'>No view.</p>}>
         <Switch.Match when='list'>

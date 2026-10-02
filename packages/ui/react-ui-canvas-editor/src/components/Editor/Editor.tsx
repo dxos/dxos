@@ -17,8 +17,8 @@ import React, {
 } from 'react';
 
 import { SelectionModel } from '@dxos/graph';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { testId } from '@dxos/react-ui-canvas';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type ActionHandler } from '../../actions/index.ts';
@@ -36,7 +36,7 @@ interface EditorController {
   update(): void;
 }
 
-type EditorRootProps<S extends CanvasBoard.Shape = CanvasBoard.Shape> = ThemedClassName<
+type EditorRootProps<S extends CanvasBoard.Shape = CanvasBoard.Shape> = Util.ThemedClassName<
   PropsWithChildren<
     Pick<EditorContextType<S>, 'id'> &
       Partial<

@@ -11,7 +11,7 @@ import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 
-import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
+import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute/Errors';
 import { log } from '@dxos/log';
 import { type EdgeFunctionEnv, ErrorCodec } from '@dxos/protocols';
 

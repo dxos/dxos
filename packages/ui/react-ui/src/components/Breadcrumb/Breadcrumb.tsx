@@ -2,14 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Link, type LinkProps } from '../Link/index.ts';
-
+import * as Icon from '../Icon/Icon.tsx';
+import * as Link from '../Link/Link.tsx';
 type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
   'aria-label': string;
   'asChild'?: boolean;
@@ -70,10 +71,10 @@ const BreadcrumbListItem = forwardRef<HTMLLIElement, BreadcrumbListItemProps>(
 
 BreadcrumbListItem.displayName = 'Breadcrumb.ListItem';
 
-type BreadcrumbLinkProps = LinkProps;
+type BreadcrumbLinkProps = Link.RootProps;
 
 const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>((props, forwardedRef) => {
-  return <Link {...props} ref={forwardedRef} />;
+  return <Link.Root {...props} ref={forwardedRef} />;
 });
 
 BreadcrumbLink.displayName = 'Breadcrumb.Link';
@@ -103,27 +104,27 @@ function BreadcrumbSeparator({ classNames, children, ...props }: BreadcrumbSepar
   const { tx } = useThemeContext();
   return (
     <ark.span role='separator' aria-hidden='true' {...props} className={tx('breadcrumb.separator', {}, classNames)}>
-      {children ?? <Icon icon='ph--caret-double-right--regular' />}
+      {children ?? <Icon.Root icon='ph--caret-double-right--regular' />}
     </ark.span>
   );
 }
 
 BreadcrumbSeparator.displayName = 'Breadcrumb.Separator';
-
-export const Breadcrumb = {
-  Root: BreadcrumbRoot,
-  List: BreadcrumbList,
-  ListItem: BreadcrumbListItem,
-  Link: BreadcrumbLink,
-  Current: BreadcrumbCurrent,
-  Separator: BreadcrumbSeparator,
-};
-
 export type {
-  BreadcrumbCurrentProps,
-  BreadcrumbLinkProps,
-  BreadcrumbListItemProps,
-  BreadcrumbListProps,
-  BreadcrumbRootProps,
-  BreadcrumbSeparatorProps,
+  BreadcrumbCurrentProps as CurrentProps,
+  BreadcrumbLinkProps as LinkProps,
+  BreadcrumbListItemProps as ListItemProps,
+  BreadcrumbListProps as ListProps,
+  BreadcrumbRootProps as RootProps,
+  BreadcrumbSeparatorProps as SeparatorProps,
 };
+
+export {
+  BreadcrumbCurrent as Current,
+  BreadcrumbLink as Link,
+  BreadcrumbList as List,
+  BreadcrumbListItem as ListItem,
+  BreadcrumbRoot as Root,
+  BreadcrumbSeparator as Separator,
+};
+export * from './Breadcrumb.theme.ts';

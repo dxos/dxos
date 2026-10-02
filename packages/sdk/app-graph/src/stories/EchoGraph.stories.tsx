@@ -18,7 +18,10 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Field, Icon, IconButton, Select } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Select from '@dxos/react-ui/Select';
 import { withTheme } from '@dxos/react-ui/testing';
 import { getSize, mx } from '@dxos/ui-theme';
 import { safeParseInt } from '@dxos/util';
@@ -207,7 +210,7 @@ const Controls = ({ children }: PropsWithChildren) => {
   return (
     <>
       <div className='flex shrink-0 p-2 space-x-2'>
-        <IconButton
+        <IconButton.Root
           icon={generating ? 'ph--pause--regular' : 'ph--play--regular'}
           label={generating ? 'Pause' : 'Play'}
           onClick={() => setGenerating((generating) => !generating)}
@@ -222,9 +225,9 @@ const Controls = ({ children }: PropsWithChildren) => {
               onChange={({ target: { value } }) => setActionInterval(value)}
             />
           </Field.Root>
-          <Icon icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
+          <Icon.Root icon='ph--timer--regular' classNames={mx('absolute right-1 top-1 mt-[6px]', getSize(3))} />
         </div>
-        <IconButton icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
+        <IconButton.Root icon='ph--plus--regular' label='Add' onClick={() => action && runAction(client, action)} />
         <Select.Root value={action?.toString()} onValueChange={(action) => setAction(action as unknown as Action)}>
           <Select.TriggerButton placeholder='Select value' />
           <Select.Portal>
@@ -319,7 +322,7 @@ const GraphTreeItem = ({
         onClick={() => onSelect(id)}
       >
         {expandable ? (
-          <IconButton
+          <IconButton.Root
             iconOnly
             variant='ghost'
             density='sm'
@@ -332,9 +335,9 @@ const GraphTreeItem = ({
             }}
           />
         ) : (
-          <Icon icon='ph--dot--regular' classNames={getSize(4)} />
+          <Icon.Root icon='ph--dot--regular' classNames={getSize(4)} />
         )}
-        <Icon icon={icon} classNames={getSize(4)} />
+        <Icon.Root icon={icon} classNames={getSize(4)} />
         <span className='truncate'>{node?.id ?? id}</span>
       </div>
       {expandable && open && (

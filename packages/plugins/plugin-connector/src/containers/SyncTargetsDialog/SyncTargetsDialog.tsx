@@ -9,11 +9,17 @@ import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Banner, Button, Dialog, Field, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -34,7 +40,7 @@ export type SyncTargetsDialogProps = {
  * the {@link ConnectorCoordination.ConnectorCoordinator}.
  */
 export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const manager = usePluginManager();
 
@@ -115,14 +121,14 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         <Dialog.Description>{t('sync-targets-dialog.description')}</Dialog.Description>
 
         {availableTargets.length > 0 && (
-          <Flex gap='sm' classNames='py-form-gap'>
-            <Button onClick={handleSelectAll} disabled={submitting}>
+          <Flex.Root gap='sm' classNames='py-form-gap'>
+            <Button.Root onClick={handleSelectAll} disabled={submitting}>
               {t('select-all.label')}
-            </Button>
-            <Button onClick={handleSelectNone} disabled={submitting}>
+            </Button.Root>
+            <Button.Root onClick={handleSelectNone} disabled={submitting}>
               {t('select-none.label')}
-            </Button>
-          </Flex>
+            </Button.Root>
+          </Flex.Root>
         )}
 
         {availableTargets.length === 0 ? (
@@ -169,11 +175,11 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>
-          <Button disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button>
+          <Button.Root disabled={submitting}>{t('cancel.label', { ns: osTranslations })}</Button.Root>
         </Dialog.Close>
-        <Button variant='primary' onClick={handleSubmit} disabled={submitting}>
+        <Button.Root variant='primary' onClick={handleSubmit} disabled={submitting}>
           {submitting ? t('saving.label', { ns: osTranslations }) : t('save.label', { ns: osTranslations })}
-        </Button>
+        </Button.Root>
       </Dialog.ActionBar>
     </Dialog.Content>
   );

@@ -38,8 +38,12 @@ import React, {
   useState,
 } from 'react';
 
-import { Icon, type Label, Tag, TextTooltip, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type WindowController, useListModel, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as TextTooltip from '@dxos/react-ui/TextTooltip';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   getStyles,
   hoverableControls,
@@ -978,8 +982,8 @@ const TreeWindow = ({
 };
 
 /** Renders a section-group label spanning the full tree row. Used when a node has `disposition === 'group'`. */
-const TreeSectionHeader = ({ label }: { label: Label }) => {
-  const { t } = useTranslation();
+const TreeSectionHeader = ({ label }: { label: ThemeProvider.Label }) => {
+  const { t } = Hooks.useTranslation();
   const { toggle } = useTreeRender();
   return (
     // `presentation`: a heading is not a permitted child of `role=tree`, and the label is
@@ -992,7 +996,7 @@ const TreeSectionHeader = ({ label }: { label: Label }) => {
         toggle && 'ps-(--dx-control)',
       )}
     >
-      {toLocalizedString(label, t)}
+      {ThemeProvider.toLocalizedString(label, t)}
     </div>
   );
 };
@@ -1490,12 +1494,12 @@ const TreeNodeHeading = <T extends { id: string }>({
   path: string[];
   props: TreeItemDataProps;
 }) => {
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   const { renderIcon: RenderIcon } = useTreeRender<T>();
   const styles = props.iconHue ? getStyles(props.iconHue) : undefined;
-  const text = toLocalizedString(props.label, t);
+  const text = ThemeProvider.toLocalizedString(props.label, t);
   return (
-    <TextTooltip text={text} side='bottom' truncateQuery='span[data-tooltip]' onlyWhenTruncating asChild>
+    <TextTooltip.Root text={text} side='bottom' truncateQuery='span[data-tooltip]' onlyWhenTruncating asChild>
       <div
         data-testid='treeItem.heading'
         className={mx('flex items-center min-w-0 gap-2 min-h-(--dx-control) select-none', props.headingClassName)}
@@ -1504,7 +1508,7 @@ const TreeNodeHeading = <T extends { id: string }>({
           <RenderIcon item={item} path={path} props={props} />
         ) : (
           props.icon && (
-            <Icon
+            <Icon.Root
               size={5}
               icon={props.icon}
               // Centred in a block, the column a child row's toggle sits in.
@@ -1517,7 +1521,7 @@ const TreeNodeHeading = <T extends { id: string }>({
         </span>
         <CountBadge count={props.count} modifiedCount={props.modifiedCount} />
       </div>
-    </TextTooltip>
+    </TextTooltip.Root>
   );
 };
 
@@ -1528,17 +1532,17 @@ const TreeNodeHeading = <T extends { id: string }>({
 const CountBadge = ({ count, modifiedCount }: Pick<TreeItemDataProps, 'count' | 'modifiedCount'>) => {
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Tag hue='rose' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag.Root hue='rose' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {modifiedCount}
-      </Tag>
+      </Tag.Root>
     );
   }
 
   if (typeof count === 'number') {
     return (
-      <Tag hue='neutral' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
+      <Tag.Root hue='neutral' classNames='shrink-0 justify-center [min-inline-size:1.5rem] tabular-nums'>
         {count}
-      </Tag>
+      </Tag.Root>
     );
   }
 

@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 

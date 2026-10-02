@@ -5,10 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Field, IconButton, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
-import { composable } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Field from '@dxos/react-ui/Field';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 
 import { PostContent } from '#components';
 import { translations } from '#translations';
@@ -102,7 +107,7 @@ const DefaultStory = () => {
             onClick={() => void handleFetch()}
             disabled={state.status === 'loading'}
           />
-          <IconButton
+          <IconButton.Root
             label={showMarkdown ? 'Show preview' : 'Show Markdown'}
             icon={showMarkdown ? 'ph--article--regular' : 'ph--code--regular'}
             iconOnly
@@ -136,7 +141,7 @@ type ResultViewProps = {
   showMarkdown: boolean;
 };
 
-const ResultView = composable<HTMLDivElement, ResultViewProps>(
+const ResultView = Util.composable<HTMLDivElement, ResultViewProps>(
   ({ article, sourceLength, showMarkdown, ...props }, forwardedRef) => {
     const post = useMemo(
       () =>

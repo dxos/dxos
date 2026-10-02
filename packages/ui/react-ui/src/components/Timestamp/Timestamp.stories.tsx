@@ -7,8 +7,8 @@ import React, { Fragment, useEffect, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Tooltip } from '../Tooltip/index.ts';
-import { Timestamp } from './Timestamp.tsx';
+import * as Tooltip from '../Tooltip/Tooltip.tsx';
+import * as Timestamp from './Timestamp.tsx';
 
 const minutesAgo = (minutes: number): Date => new Date(Date.now() - minutes * 60_000);
 
@@ -31,7 +31,7 @@ const DefaultStory = () => (
       <Fragment key={label}>
         <span className='text-right text-description tabular-nums'>{minutes.toLocaleString()}</span>
         <span className='text-description'>{label}</span>
-        <Timestamp date={minutesAgo(minutes)} classNames='text-right' />
+        <Timestamp.Root date={minutesAgo(minutes)} classNames='text-right' />
       </Fragment>
     ))}
   </div>
@@ -78,7 +78,7 @@ export const Default: Story = {
  * be a hover away rather than gone.
  */
 export const Tooltips: Story = {
-  render: () => <Timestamp date={minutesAgo(90)} />,
+  render: () => <Timestamp.Root date={minutesAgo(90)} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const time = await canvas.findByText('90m');
@@ -110,7 +110,7 @@ export const Live: Story = {
     }, []);
     return (
       <div className='flex flex-col items-center gap-2 text-sm'>
-        <Timestamp date={minutesAgo(minutes)} />
+        <Timestamp.Root date={minutesAgo(minutes)} />
         <span className='text-description'>a minute older every half second</span>
       </div>
     );
@@ -140,7 +140,7 @@ export const Ticks: Story = {
     // label would already read `1m` and the first assertion would fail for a reason that is not
     // the component's.
     const [date] = useState(() => new Date(Date.now() - 58_000));
-    return <Timestamp date={date} />;
+    return <Timestamp.Root date={date} />;
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -154,7 +154,7 @@ export const Ticks: Story = {
 export const Pinned: Story = {
   render: () => {
     const now = new Date('2026-09-24T12:00:00Z');
-    return <Timestamp date={new Date(now.getTime() - 90 * 60_000)} now={now} />;
+    return <Timestamp.Root date={new Date(now.getTime() - 90 * 60_000)} now={now} />;
   },
   play: async ({ canvasElement }) => {
     await expect(within(canvasElement).findByText('90m')).resolves.toBeTruthy();

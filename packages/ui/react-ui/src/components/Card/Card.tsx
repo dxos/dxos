@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import DOMPurify from 'dompurify';
 import React, {
@@ -22,20 +24,16 @@ import { type Density, type ElevationLevel, type SlottableProps } from '@dxos/ui
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { DensityProvider } from '../../providers/DensityProvider/index.ts';
+import * as DensityProvider from '../../providers/DensityProvider/DensityProvider.tsx';
 import { composable, composableProps, slottable } from '../../util/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { Button, IconButton } from '../Button/index.ts';
-import { Column, type ColumnRootProps } from '../Column/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Image, type ImageProps } from '../Image/index.ts';
-import { Menu } from '../Menu/index.ts';
-import {
-  type ToolbarActionIconButtonProps,
-  type ToolbarDragHandleProps,
-  type ToolbarMenuProps,
-} from '../Toolbar/index.ts';
-
+import * as Button from '../Button/Button.tsx';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as Column from '../Column/Column.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Image from '../Image/Image.tsx';
+import * as Menu from '../Menu/Menu.tsx';
+import type * as Toolbar from '../Toolbar/Toolbar.tsx';
 //
 // Root
 //
@@ -58,9 +56,9 @@ type CardRootProps = {
    * headers and rows); a card whose whole body is a form should use `sm` so the fields inset like
    * a standalone form rather than by the card's chrome.
    */
-  'gutter'?: ColumnRootProps['gutter'];
+  'gutter'?: Column.RootProps['gutter'];
   /** Vertical gap between the card's rows; defaults to `sm` (the card's standard `gap-1`). */
-  'gap'?: ColumnRootProps['gap'];
+  'gap'?: Column.RootProps['gap'];
   'density'?: Density;
   'style'?: CSSProperties;
   'tabIndex'?: number;
@@ -107,7 +105,7 @@ const CardRoot = composable<HTMLDivElement, CardRootProps>(
         >
           {/* As in Toolbar.Root: the attribute cascades `--dx-control`, but controls that stamp their
               own `data-density` from context would shadow it, so the context is provided too. */}
-          {density ? <DensityProvider density={density}>{children}</DensityProvider> : children}
+          {density ? <DensityProvider.Root density={density}>{children}</DensityProvider.Root> : children}
         </div>
       </Column.Root>
     );
@@ -158,14 +156,14 @@ CardHeader.displayName = CARD_HEADER_NAME;
 
 const CARD_DRAG_HANDLE_NAME = 'Card.DragHandle';
 
-type CardDragHandleProps = ToolbarDragHandleProps;
+type CardDragHandleProps = Toolbar.DragHandleProps;
 
 const CardDragHandle = forwardRef<HTMLButtonElement, CardDragHandleProps>(
   ({ testId = 'drag-handle', label }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     return (
       <CardBlock>
-        <IconButton
+        <IconButton.Root
           data-testid={testId}
           tabIndex={-1}
           noTooltip
@@ -190,7 +188,7 @@ CardDragHandle.displayName = CARD_DRAG_HANDLE_NAME;
 
 const CARD_ACTION_ICON_BUTTON_NAME = 'Card.ActionIconButton';
 
-type CardActionIconButtonProps = ToolbarActionIconButtonProps;
+type CardActionIconButtonProps = Toolbar.ActionIconButtonProps;
 
 const CARD_ACTION_ICONS = { close: 'ph--x--regular', delete: 'ph--trash--regular' } as const;
 
@@ -201,7 +199,7 @@ const CardActionIconButton = forwardRef<HTMLButtonElement, CardActionIconButtonP
     const { t } = useTranslation(translationKey);
     return (
       <CardBlock end>
-        <IconButton
+        <IconButton.Root
           iconOnly
           icon={CARD_ACTION_ICONS[action]}
           variant='ghost'
@@ -223,7 +221,7 @@ CardActionIconButton.displayName = CARD_ACTION_ICON_BUTTON_NAME;
 
 const CARD_MENU_NAME = 'Card.Menu';
 
-type CardMenuProps<T extends any | void = void> = ToolbarMenuProps<T>;
+type CardMenuProps<T extends any | void = void> = Toolbar.MenuProps<T>;
 
 function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps<T>) {
   const { t } = useTranslation(translationKey);
@@ -236,7 +234,7 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
     <CardBlock end>
       <Menu.Root>
         <Menu.Trigger disabled={!items?.length} asChild>
-          <IconButton
+          <IconButton.Root
             onClick={stopPropagation}
             iconOnly
             variant='ghost'
@@ -252,7 +250,7 @@ function CardMenu<T extends any | void = void>({ context, items }: CardMenuProps
                   // `context` is the generic payload threaded to each handler; the cast is the
                   // generic boundary (T may be `void`, so `context` is typed `T | undefined`).
                   <Menu.Item key={index} onSelect={() => onSelect(context as T)}>
-                    {icon && <Icon icon={icon} />}
+                    {icon && <Icon.Root icon={icon} />}
                     {label}
                   </Menu.Item>
                 ))}
@@ -515,7 +513,7 @@ type CardPosterProps = ThemedClassName<
   } & Partial<{ image: string; icon: string }> &
     // The image-rendering props (`fit`, `crossOrigin`, color-extraction options) are forwarded to
     // the underlying `Image`. `src`/`alt`/`classNames` are owned by the poster.
-    Omit<ImageProps, 'src' | 'alt' | 'classNames'>
+    Omit<Image.RootProps, 'src' | 'alt' | 'classNames'>
 >;
 
 function CardPoster({
@@ -532,14 +530,20 @@ function CardPoster({
 
   if (image) {
     return (
-      <Image classNames={[tx('card.poster', {}), aspect, classNames]} src={image} alt={alt} fit={fit} {...imageProps} />
+      <Image.Root
+        classNames={[tx('card.poster', {}), aspect, classNames]}
+        src={image}
+        alt={alt}
+        fit={fit}
+        {...imageProps}
+      />
     );
   }
 
   if (icon) {
     return (
       <div role='image' className={tx('card.poster-icon', {}, aspect, classNames)} aria-label={alt}>
-        <Icon icon={icon} size={10} />
+        <Icon.Root icon={icon} size={10} />
       </div>
     );
   }
@@ -580,9 +584,9 @@ function CardAction({
   // Resolved once so the guard and the content cannot disagree: the guard used `||` while the content
   // used `??`, so a falsy-but-valid `leading` (0, '', false) rendered nothing at all. Also drops a
   // non-null assertion on `icon`.
-  const gutter = leading ?? (icon ? <Icon icon={icon} size={4} /> : undefined);
+  const gutter = leading ?? (icon ? <Icon.Root icon={icon} size={4} /> : undefined);
   return (
-    <Button variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
+    <Button.Root variant='ghost' classNames={tx('card.action', {})} onClick={onClick}>
       {gutter !== undefined && <CardBlock>{gutter}</CardBlock>}
       <span className={tx('card.action-content', {})}>
         <span className={tx('card.action-label', {})}>{label}</span>
@@ -590,10 +594,10 @@ function CardAction({
       </span>
       {actionIcon && (
         <CardBlock end>
-          <Icon icon={actionIcon} size={4} />
+          <Icon.Root icon={actionIcon} size={4} />
         </CardBlock>
       )}
-    </Button>
+    </Button.Root>
   );
 }
 
@@ -612,11 +616,11 @@ function CardLink({ label, href }: CardLinkProps) {
   return (
     <a className={tx('card.link', {})} data-variant='ghost' href={href} target='_blank' rel='noreferrer'>
       <CardBlock>
-        <Icon icon='ph--link--regular' size={4} />
+        <Icon.Root icon='ph--link--regular' size={4} />
       </CardBlock>
       <span className={tx('card.link-label', {})}>{label}</span>
       <CardBlock end classNames='invisible group-hover:visible'>
-        <Icon icon='ph--arrow-square-out--regular' size={4} />
+        <Icon.Root icon='ph--arrow-square-out--regular' size={4} />
       </CardBlock>
     </a>
   );
@@ -627,39 +631,31 @@ CardLink.displayName = CARD_LINK_NAME;
 //
 // Card
 //
-
-export const Card = {
-  Root: CardRoot,
-
-  // Containers
-  Header: CardHeader,
-  Body: CardBody,
-
-  // Header components
-  Block: CardBlock,
-  DragHandle: CardDragHandle,
-  ActionIconButton: CardActionIconButton,
-  Menu: CardMenu,
-  Title: CardTitle,
-
-  // Body components
-  Section: CardSection,
-  Row: CardRow,
-
-  // Row components
-  Text: CardText,
-  Html: CardHtml,
-  Poster: CardPoster,
-  Action: CardAction,
-  Link: CardLink,
-};
-
 export type {
-  CardActionIconButtonProps,
-  CardBlockProps,
-  CardDragHandleProps,
-  CardHeaderProps,
-  CardMenuProps,
-  CardRootProps,
-  CardSectionProps,
+  CardActionIconButtonProps as ActionIconButtonProps,
+  CardBlockProps as BlockProps,
+  CardDragHandleProps as DragHandleProps,
+  CardHeaderProps as HeaderProps,
+  CardMenuProps as MenuProps,
+  CardRootProps as RootProps,
+  CardSectionProps as SectionProps,
 };
+
+export {
+  CardAction as Action,
+  CardActionIconButton as ActionIconButton,
+  CardBlock as Block,
+  CardBody as Body,
+  CardDragHandle as DragHandle,
+  CardHeader as Header,
+  CardHtml as Html,
+  CardLink as Link,
+  CardMenu as Menu,
+  CardPoster as Poster,
+  CardRoot as Root,
+  CardRow as Row,
+  CardSection as Section,
+  CardText as Text,
+  CardTitle as Title,
+};
+export * from './Card.theme.ts';

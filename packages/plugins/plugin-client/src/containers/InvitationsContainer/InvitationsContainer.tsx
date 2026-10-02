@@ -7,9 +7,13 @@ import React, { useCallback, useState } from 'react';
 
 import { useCapability } from '@dxos/app-framework/Hooks';
 import { Context } from '@dxos/context';
-import { Flex, Icon, IconButton, SystemIconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 
 import { meta } from '#meta';
 import { AccountCache, ClientCapabilities } from '#types';
@@ -17,7 +21,7 @@ import { AccountCache, ClientCapabilities } from '#types';
 import { useHubHttpClient } from '../../hooks/index.ts';
 
 export const InvitationsContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const accountCacheAtom = useCapability(ClientCapabilities.AccountCache);
   const [cache] = useAtom(accountCacheAtom);
   const setCache = useAtomSet(accountCacheAtom);
@@ -26,7 +30,7 @@ export const InvitationsContainer = () => {
   // Account/invitation routes live on hub-service, not the edge worker.
   const hubClient = useHubHttpClient();
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!hubClient) {
       return;
     }
@@ -75,7 +79,7 @@ export const InvitationsContainer = () => {
               label={t('generate-invitation.label')}
               description={t('generate-invitation.description', { count: remaining })}
             >
-              <IconButton
+              <IconButton.Root
                 icon='ph--plus--regular'
                 label={t('generate-invitation.label')}
                 variant='primary'
@@ -116,11 +120,11 @@ export const InvitationsContainer = () => {
 
 const AvailableInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitation }) => (
   <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-2'>
-    <Icon icon='ph--paper-plane-tilt--duotone' size={5} classNames='text-description' />
-    <Flex column classNames='min-w-0'>
+    <Icon.Root icon='ph--paper-plane-tilt--duotone' size={5} classNames='text-description' />
+    <Flex.Root column classNames='min-w-0'>
       <div className='font-mono truncate'>{row.code}</div>
       <p className='text-description text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
-    </Flex>
+    </Flex.Root>
     <SystemIconButton.Clipboard iconOnly value={row.code} />
   </Listbox.Item>
 );
@@ -129,11 +133,11 @@ const RedeemedInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitat
   const date = row.redeemedAt ?? row.createdAt;
   return (
     <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr] items-center gap-2'>
-      <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text' />
-      <Flex column classNames='min-w-0'>
+      <Icon.Root icon='ph--check-circle--duotone' size={5} classNames='text-success-text' />
+      <Flex.Root column classNames='min-w-0'>
         <div className='font-mono truncate'>{row.code}</div>
         <p className='text-description text-xs'>{new Date(date).toLocaleString()}</p>
-      </Flex>
+      </Flex.Root>
     </Listbox.Item>
   );
 };

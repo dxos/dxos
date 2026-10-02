@@ -4,8 +4,12 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { MediaPlayer, Panel, type ThemedClassName, Toolbar, composableProps, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as MediaPlayer from '@dxos/react-ui/MediaPlayer';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -19,7 +23,7 @@ export type StoryboardClip = {
 
 const DEFAULT_STILL_MS = 4_000;
 
-export type StoryboardPlayerProps = ThemedClassName<{
+export type StoryboardPlayerProps = Util.ThemedClassName<{
   clips: readonly StoryboardClip[];
   /** How long a still is shown before advancing. */
   stillMs?: number;
@@ -40,7 +44,7 @@ export const StoryboardPlayer = ({
   attendableId,
   onClose,
 }: StoryboardPlayerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const clip = clips[index];
@@ -74,7 +78,7 @@ export const StoryboardPlayer = ({
   }
 
   return (
-    <Panel.Root {...composableProps({ classNames }, attentionAttributes)}>
+    <Panel.Root {...Util.composableProps({ classNames }, attentionAttributes)}>
       <Panel.Toolbar asChild>
         <Toolbar.Root ref={toolbarRef} tabIndex={-1} classNames='outline-none'>
           {/* Laid out by hand — nav + position, the title centred, close — as one grid child rather
@@ -117,7 +121,7 @@ export const StoryboardPlayer = ({
       </Panel.Toolbar>
       <Panel.Content classNames='bg-scrim-surface'>
         {/* Keyed by clip so the element remounts and autoplays the next source. */}
-        <MediaPlayer
+        <MediaPlayer.Root
           key={clip.id}
           classNames='dx-expand bg-neutral-100 dark:bg-neutral-800'
           src={clip.src}

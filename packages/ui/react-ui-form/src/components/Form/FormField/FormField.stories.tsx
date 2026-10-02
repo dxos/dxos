@@ -8,7 +8,8 @@ import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Button, Field } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type FormPresentation } from '#types';
@@ -68,7 +69,7 @@ const DefaultStory = ({ variant, presentation, readonly }: StoryArgs) => {
               <Field.Switch checked={notifications} onCheckedChange={setNotifications} />
             </Form.Field>
             <Form.Field standalone label='Danger zone' description='There is no undo.'>
-              <Button>Delete everything</Button>
+              <Button.Root>Delete everything</Button.Root>
             </Form.Field>
           </Form.FieldSet>
         </Form.Content>

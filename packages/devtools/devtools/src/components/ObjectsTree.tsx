@@ -19,7 +19,6 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Icon, IconButton, Menu, ScrollArea } from '@dxos/react-ui';
 import {
   type ColumnRenderer,
   type IconRenderer,
@@ -28,6 +27,10 @@ import {
   type TreeItemDataProps,
   type TreeModel,
 } from '@dxos/react-ui-list';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 export interface ObjectsTreeProps {
@@ -103,12 +106,12 @@ const ObjectsTreeIcon: IconRenderer<ObjectsTreeItem> = ({ item, path }) => {
   return (
     <>
       {scoped.type === 'outgoing-relation' && (
-        <Icon icon='ph--arrow-right--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
+        <Icon.Root icon='ph--arrow-right--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
       )}
       {scoped.type === 'incoming-relation' && (
-        <Icon icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
+        <Icon.Root icon='ph--arrow-left--regular' classNames='shrink-0 w-4 h-4 opacity-70' />
       )}
-      <Icon icon={scoped.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
+      <Icon.Root icon={scoped.icon} classNames={['shrink-0 w-4 h-4', styles?.text]} />
     </>
   );
 };
@@ -154,7 +157,7 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
       {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
       <Menu.Root>
         <Menu.Trigger asChild>
-          <IconButton
+          <IconButton.Root
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon='ph--dots-three-vertical--regular'
@@ -166,34 +169,34 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
         <Menu.Content>
           {showOpen && (
             <Menu.Item onClick={handleOpen}>
-              <Icon icon='ph--arrow-square-out--regular' />
+              <Icon.Root icon='ph--arrow-square-out--regular' />
               Open
             </Menu.Item>
           )}
           {!node.deleted && (
             <Menu.Item onClick={handleDelete}>
-              <Icon icon='ph--trash--regular' />
+              <Icon.Root icon='ph--trash--regular' />
               Delete
             </Menu.Item>
           )}
           {node.deleted && (
             <Menu.Item onClick={handleRestore}>
-              <Icon icon='ph--arrow-counter-clockwise--regular' />
+              <Icon.Root icon='ph--arrow-counter-clockwise--regular' />
               Restore
             </Menu.Item>
           )}
 
           <Menu.Separator />
           <Menu.Item onClick={handleCopyDXN}>
-            <Icon icon='ph--copy--regular' />
+            <Icon.Root icon='ph--copy--regular' />
             Copy DXN
           </Menu.Item>
           <Menu.Item onClick={handleCopyJSON}>
-            <Icon icon='ph--brackets-curly--regular' />
+            <Icon.Root icon='ph--brackets-curly--regular' />
             Copy JSON
           </Menu.Item>
           <Menu.Item onClick={handlePrintToConsole}>
-            <Icon icon='ph--terminal-window--regular' />
+            <Icon.Root icon='ph--terminal-window--regular' />
             Print to console
           </Menu.Item>
         </Menu.Content>

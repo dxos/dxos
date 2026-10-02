@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type CSSProperties } from 'react';
 
@@ -147,12 +149,13 @@ PanelStatusbar.displayName = 'Panel.Statusbar';
 //
 // Panel
 //
-
-export const Panel = {
-  Root: PanelRoot,
-  Toolbar: PanelToolbar,
-  Content: PanelContent,
-  Statusbar: PanelStatusbar,
+export type {
+  PanelContentProps as ContentProps,
+  PanelElement as Element,
+  PanelRootProps as RootProps,
+  PanelStatusbarProps as StatusbarProps,
+  PanelToolbarProps as ToolbarProps,
 };
 
-export type { PanelContentProps, PanelElement, PanelRootProps, PanelStatusbarProps, PanelToolbarProps };
+export { PanelContent as Content, PanelRoot as Root, PanelStatusbar as Statusbar, PanelToolbar as Toolbar };
+export * from './Panel.theme.ts';

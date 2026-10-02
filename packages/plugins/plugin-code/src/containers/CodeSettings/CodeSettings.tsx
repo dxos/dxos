@@ -11,8 +11,9 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -26,7 +27,7 @@ export type CodeSettingsProps = AppSurface.SettingsData;
  * an ECHO `AccessToken`) and the schema-driven build-service `endpoint`.
  */
 export const CodeSettings = ({ subject }: CodeSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const spaces = useSpaces();
   const space = spaces[0];

@@ -9,8 +9,10 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
-import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Column from '@dxos/react-ui/Column';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { GitHubOperation } from '#types';
@@ -72,7 +74,7 @@ const importFailureKey = (error: unknown): string => {
  * user already is, and a picker would ask a question they have already answered.
  */
 export const ImportPullRequestDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const openObject = useOpenObject();
   const space = useActiveSpace();

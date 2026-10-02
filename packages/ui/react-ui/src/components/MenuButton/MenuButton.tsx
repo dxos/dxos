@@ -2,20 +2,21 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { Fragment, forwardRef } from 'react';
 
 import { type ThemedClassName } from '../../util/index.ts';
-import { IconButton, type IconButtonProps } from '../Button/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Menu } from '../Menu/index.ts';
-
+import * as IconButton from '../Button/IconButton.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Menu from '../Menu/Menu.tsx';
 /**
  * One entry in a {@link MenuButton}'s menu.
  *
  * A discriminated union rather than children, so a caller describes the menu it wants instead of
  * assembling five primitives in the right order — the shape every call site had duplicated.
  */
-export type MenuButtonItem =
+type MenuButtonItem =
   /** Heading over the entries that follow; not selectable. */
   | { type: 'group'; label: string }
   | { type: 'separator' }
@@ -26,8 +27,8 @@ export type MenuButtonItem =
   | { type: 'option'; label: string; selected: boolean; onSelect: () => void; testId?: string }
   | { type: 'checkbox'; label: string; checked: boolean; onCheckedChange: (checked: boolean) => void; testId?: string };
 
-export type MenuButtonProps = ThemedClassName<
-  Omit<IconButtonProps, 'children' | 'onSelect'> & {
+type MenuButtonProps = ThemedClassName<
+  Omit<IconButton.RootProps, 'children' | 'onSelect'> & {
     items: MenuButtonItem[];
   }
 >;
@@ -39,10 +40,10 @@ export type MenuButtonProps = ThemedClassName<
  * primary action beside its options pairs this with a button of its own (the split control the mic
  * and its settings make).
  */
-export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(({ items, ...props }, forwardedRef) => (
+const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(({ items, ...props }, forwardedRef) => (
   <Menu.Root>
     <Menu.Trigger asChild>
-      <IconButton {...props} ref={forwardedRef} />
+      <IconButton.Root {...props} ref={forwardedRef} />
     </Menu.Trigger>
     <Menu.Portal>
       <Menu.Content>
@@ -82,7 +83,7 @@ const MenuButtonEntry = ({ item }: { item: MenuButtonItem }) => {
           onSelect={item.onSelect}
         >
           <span className='grow truncate'>{item.label}</span>
-          {item.selected && <Icon icon='ph--check--regular' size={4} />}
+          {item.selected && <Icon.Root icon='ph--check--regular' size={4} />}
         </Menu.Item>
       );
 
@@ -96,9 +97,12 @@ const MenuButtonEntry = ({ item }: { item: MenuButtonItem }) => {
         >
           <span className='grow truncate'>{item.label}</span>
           <Menu.ItemIndicator asChild>
-            <Icon icon='ph--check--regular' size={4} />
+            <Icon.Root icon='ph--check--regular' size={4} />
           </Menu.ItemIndicator>
         </Menu.CheckboxItem>
       );
   }
 };
+
+export { MenuButton as Root };
+export type { MenuButtonItem as Item, MenuButtonProps as RootProps };

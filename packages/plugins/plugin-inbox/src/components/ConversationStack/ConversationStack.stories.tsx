@@ -9,9 +9,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Feed, Filter, Obj, Order, Query, Scope, Tag } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, DraftMessage, Message, Person } from '@dxos/types';
 

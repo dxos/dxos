@@ -5,7 +5,7 @@
 import { type Extension } from '@codemirror/state';
 import { useMemo } from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -44,7 +44,7 @@ export const useBasicMarkdownExtensions = ({
   readonly = false,
   extensions,
 }: UseBasicMarkdownExtensionsOptions = {}): Extension[] => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   return useMemo(
     () => [
       createBasicExtensions({ placeholder, readOnly: readonly }),

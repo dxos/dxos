@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Map from '@dxos/plugin-map/Map';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

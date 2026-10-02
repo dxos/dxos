@@ -10,7 +10,7 @@ import { type DependencyList, use, useCallback, useMemo } from 'react';
 import type { ServiceNotAvailableError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import type { SpaceId } from '@dxos/keys';
 
 import { Capabilities } from '../../common/index.ts';

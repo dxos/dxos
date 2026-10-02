@@ -6,7 +6,11 @@ import React, { useMemo, useState } from 'react';
 
 import { useClient } from '@dxos/react-client';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Field, Panel, SystemIconButton, Toolbar, useFileDownload } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { JsonView } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -39,7 +43,7 @@ export const DiagnosticsArticle = ({ role }: ArticleProps) => {
     await handleRefresh();
   };
 
-  const fileDownload = useFileDownload();
+  const fileDownload = Hooks.useFileDownload();
   const handleDownload = async () => {
     fileDownload(
       new Blob([JSON.stringify(data, undefined, 2)], { type: 'text/plain' }),

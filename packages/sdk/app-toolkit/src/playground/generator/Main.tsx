@@ -10,9 +10,9 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { Surface } from '@dxos/app-framework/Surface';
-import { EffectEx } from '@dxos/effect';
-import { IconButton } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Listbox } from '@dxos/react-ui-list';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { PlaygroundRoles } from '../roles.ts';
 
@@ -30,7 +30,7 @@ const Item = ({
   return (
     <Listbox.Item id={id}>
       <Listbox.ItemLabel>{id}</Listbox.ItemLabel>
-      <IconButton
+      <IconButton.Root
         iconOnly
         variant='ghost'
         icon='ph--x--regular'

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute/Errors';
 import * as Trace from '@dxos/compute/Trace';
 import { Obj, Ref } from '@dxos/echo';
 import { EID, type EntityId } from '@dxos/keys';

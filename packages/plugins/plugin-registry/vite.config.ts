@@ -14,6 +14,7 @@ export default defineConfig({
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',
     meta: 'src/meta.ts',
+    RegistryOperation: 'src/operations/definitions.ts',
     operations: 'src/operations/index.ts',
     skills: 'src/skills/index.ts',
     types: 'src/types.ts',

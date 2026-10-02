@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import type * as Schema from 'effect/Schema';
 
 import { Obj, Type } from '@dxos/echo';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import {
   type AtprotoPolicy,
   AtprotoPolicyAnnotation,

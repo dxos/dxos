@@ -5,8 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo, useState } from 'react';
 
-import { Field, Panel, Toolbar } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { useMapZoomHandler } from '../../hooks/index.ts';
 import { type GeoMarker } from '../../types.ts';

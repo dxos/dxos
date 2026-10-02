@@ -8,9 +8,14 @@ import React, { useCallback, useMemo } from 'react';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Cursor } from '@dxos/link';
-import { Banner, Button, Field, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { type TestConnectionStatus } from '#hooks';
 import { meta } from '#meta';
@@ -107,7 +112,7 @@ export const ConnectionView = ({
   onDelete,
   onRemoveBinding,
 }: ConnectionViewProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Panel.Root role={role}>
@@ -166,9 +171,9 @@ export const ConnectionView = ({
                     {/* Hide Sync now entirely when the connector has no `sync` op. */}
                     {canSync && (
                       <Form.Field standalone label={t('sync-now.label')} description={t('sync-now.description')}>
-                        <Button onClick={onSync} disabled={syncing || bindings.length === 0}>
+                        <Button.Root onClick={onSync} disabled={syncing || bindings.length === 0}>
                           {syncing ? t('syncing.label') : t('sync-now.label')}
-                        </Button>
+                        </Button.Root>
                       </Form.Field>
                     )}
 
@@ -186,9 +191,9 @@ export const ConnectionView = ({
                         }
                         error={testStatus === 'invalid' && testError ? testError : undefined}
                       >
-                        <Button onClick={onTestConnection} disabled={testing}>
+                        <Button.Root onClick={onTestConnection} disabled={testing}>
                           {testing ? t('testing-connection.label') : t('test-connection.label')}
-                        </Button>
+                        </Button.Root>
                       </Form.Field>
                     )}
 
@@ -199,9 +204,9 @@ export const ConnectionView = ({
                         label={t('reauthenticate.label')}
                         description={t('reauthenticate.description')}
                       >
-                        <Button onClick={onReauthenticate} disabled={reauthenticating}>
+                        <Button.Root onClick={onReauthenticate} disabled={reauthenticating}>
                           {reauthenticating ? t('reauthenticating.label') : t('reauthenticate.label')}
-                        </Button>
+                        </Button.Root>
                       </Form.Field>
                     )}
 
@@ -212,9 +217,9 @@ export const ConnectionView = ({
                         label={t('change-targets.label')}
                         description={t('change-targets.description')}
                       >
-                        <Button onClick={onChangeTargets} disabled={!syncTargetsAvailable || loadingTargets}>
+                        <Button.Root onClick={onChangeTargets} disabled={!syncTargetsAvailable || loadingTargets}>
                           {loadingTargets ? t('loading.label') : t('change-targets.label')}
-                        </Button>
+                        </Button.Root>
                       </Form.Field>
                     )}
 
@@ -223,9 +228,9 @@ export const ConnectionView = ({
                       label={t('delete-connection.label')}
                       description={t('delete-connection.description')}
                     >
-                      <Button variant='destructive' onClick={onDelete}>
+                      <Button.Root variant='destructive' onClick={onDelete}>
                         {t('delete-connection.label')}
-                      </Button>
+                      </Button.Root>
                     </Form.Field>
                   </Form.FieldSet>
 
@@ -278,7 +283,7 @@ const BindingRow = ({
   optionsSchema?: Schema.Codec<any, any>;
   onRemove: (binding: Cursor.ExternalCursor) => void;
 }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [resolvedTarget] = useObject(binding.spec.target);
   const missing = !resolvedTarget || Obj.isDeleted(resolvedTarget);
   // Label precedence: explicit binding label → remote id → the target's own label → its type's
@@ -320,7 +325,7 @@ const BindingRow = ({
       description={status}
       error={!missing && binding.lastError ? binding.lastError : undefined}
     >
-      {missing ? <Button onClick={() => onRemove(binding)}>{t('remove-binding.label')}</Button> : undefined}
+      {missing ? <Button.Root onClick={() => onRemove(binding)}>{t('remove-binding.label')}</Button.Root> : undefined}
 
       {/* Per-binding options: flat (default variant) so fields render inline rather than each in a border. */}
       {optionsSchema && !missing && (

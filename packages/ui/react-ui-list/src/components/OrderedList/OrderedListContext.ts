@@ -1,4 +1,4 @@
-import { createContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 //
 // Copyright 2026 DXOS.org
 //
@@ -33,4 +33,4 @@ export type OrderedListContextValue<T extends ListItemRecord> = {
 };
 
 export const [OrderedListProvider, useOrderedListContext] =
-  createContext<OrderedListContextValue<any>>(ORDERED_LIST_NAME);
+  Hooks.createContext<OrderedListContextValue<any>>(ORDERED_LIST_NAME);

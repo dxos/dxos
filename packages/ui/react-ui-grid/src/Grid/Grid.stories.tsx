@@ -8,10 +8,10 @@ import React, { type MouseEvent, type RefObject, useCallback, useRef, useState }
 import { defaultRowSize } from '@dxos/lit-grid';
 import { type DxGridPlaneCells } from '@dxos/lit-grid';
 import { random } from '@dxos/random';
-import { Menu } from '@dxos/react-ui';
 import { toPlaneCellIndex } from '@dxos/react-ui-grid';
 import { Combobox, type ComboboxRootProps } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
+import * as Menu from '@dxos/react-ui/Menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { Grid, type GridContentProps, type GridEditing, type GridRootProps } from './Grid.tsx';

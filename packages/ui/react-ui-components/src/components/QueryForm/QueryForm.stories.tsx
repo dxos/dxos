@@ -8,9 +8,9 @@ import React, { useState } from 'react';
 import { Filter, Query, Tag, Type } from '@dxos/echo';
 import { EntityId } from '@dxos/keys';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
 
 import { translations } from '#translations';

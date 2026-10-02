@@ -4,7 +4,7 @@
 
 import * as Project from '@dxos/compute/Project';
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
+import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { Repo } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -72,4 +72,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies ThemeProvider.Resource[];

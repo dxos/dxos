@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { PropsWithChildren, type ReactNode, useEffect, useRef, useState } from 'react';
 
 /**
@@ -14,7 +16,7 @@ const DEFAULT_DELAY = 500;
 /** A fallback worth showing at all is worth reading. */
 const DEFAULT_MIN_DURATION = 1_000;
 
-export type DeferredProps = PropsWithChildren<{
+type DeferredProps = PropsWithChildren<{
   /**
    * Whether the fallback is what should be shown — typically "the query has not produced content".
    *
@@ -63,7 +65,7 @@ export type DeferredProps = PropsWithChildren<{
  * </Deferred>
  * ```
  */
-export const Deferred = ({
+const Deferred = ({
   pending,
   delay = DEFAULT_DELAY,
   minDuration = DEFAULT_MIN_DURATION,
@@ -111,3 +113,6 @@ export const Deferred = ({
 };
 
 Deferred.displayName = 'Deferred';
+
+export { Deferred as Root };
+export type { DeferredProps as RootProps };

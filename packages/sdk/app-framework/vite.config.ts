@@ -33,6 +33,7 @@ export default defineConfig({
     'testing': 'src/testing/index.ts',
     'testing/react': 'src/testing/react.tsx',
     'core/capability-manager': 'src/core/capability-manager.ts',
+    'plugin-process-manager/ProcessManagerPlugin': 'src/plugin-process-manager/ProcessManagerPlugin.ts',
     'plugin-process-manager/history/history-tracker': 'src/plugin-process-manager/history/history-tracker.ts',
     'core/plugin-asset-cache': 'src/core/plugin-asset-cache.ts',
     'core/plugin-manifest': 'src/core/plugin-manifest.ts',

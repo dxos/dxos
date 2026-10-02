@@ -27,7 +27,7 @@ import { basename, dirname, resolve } from 'node:path';
 import { AiModelResolver, AiService } from '@dxos/ai';
 import { TypeSafeResolver } from '@dxos/ai/resolvers';
 import { Architecture, Diagnostics, Mermaid, MermaidEngine, type Scene, Score, View } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 const MODEL = 'ai.typesafe.model.jev.latest';
 

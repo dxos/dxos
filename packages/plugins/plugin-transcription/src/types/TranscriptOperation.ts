@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import { AiService } from '@dxos/ai';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref, Type } from '@dxos/echo';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 // Message and Person are used via Type.getSchema(Message.Message); they also appear in emitted .d.ts.
 // eslint-disable-next-line unused-imports/no-unused-imports
 import { Message, type Person, Transcript } from '@dxos/types';

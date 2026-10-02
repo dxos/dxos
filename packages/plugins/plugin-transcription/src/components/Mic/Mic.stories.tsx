@@ -5,9 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { type AudioInputDevice, MicSettings, type RecordMode } from '@dxos/react-ui-transcription';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 

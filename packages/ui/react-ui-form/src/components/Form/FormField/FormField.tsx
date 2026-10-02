@@ -8,8 +8,12 @@ import * as Str from 'effect/String';
 import React, { Component, type PropsWithChildren, type ReactNode, type Ref, useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { Field, Icon, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type FormFieldLabelPlacement, type FormFieldRendererProps, type FormPresentation } from '#types';
@@ -25,7 +29,7 @@ import { presentationFor } from './presentation.tsx';
 // FormFieldLabel
 //
 
-export type FormFieldLabelProps = ThemedClassName<
+export type FormFieldLabelProps = Util.ThemedClassName<
   {
     /** Render a plain `<span>` instead of an input-associated `Field.Label`, for labels used outside an `Field.Root` (e.g. section/group headers). */
     standalone?: boolean;
@@ -101,7 +105,7 @@ export const FormFieldLabel = ({
       {labelEnd}
       {error ? (
         <Tooltip.Trigger asChild content={error} side='bottom'>
-          <Icon icon='ph--warning--regular' size={4} classNames='text-error-text' />
+          <Icon.Root icon='ph--warning--regular' size={4} classNames='text-error-text' />
         </Tooltip.Trigger>
       ) : (
         <span />
@@ -152,7 +156,7 @@ export const FormStaticValue = ({ value, format }: { value: unknown; format?: Fo
   <p className='truncate min-w-0'>{formatStaticValue(value, format)}</p>
 );
 
-export type FormFieldProps<T = any> = ThemedClassName<
+export type FormFieldProps<T = any> = Util.ThemedClassName<
   PropsWithChildren<{
     /**
      * Binds the row to the form model at this path, dotted from the root: label, description,

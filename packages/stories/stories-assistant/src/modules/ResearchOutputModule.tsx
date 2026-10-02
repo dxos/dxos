@@ -9,7 +9,10 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { Filter, Query } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Card, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { ResearchInputQueue } from '../testing/schema.ts';
 

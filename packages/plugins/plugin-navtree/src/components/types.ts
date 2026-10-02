@@ -5,8 +5,8 @@
 import type { FC } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import type { Density } from '@dxos/react-ui';
 import type { TreeModel, TreeProps } from '@dxos/react-ui-list';
+import type { Density } from '@dxos/ui-types';
 
 import { NavTreeNode } from '#types';
 

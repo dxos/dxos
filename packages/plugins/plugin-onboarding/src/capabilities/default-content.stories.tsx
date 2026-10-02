@@ -25,7 +25,7 @@ import { translations as markdownTranslations } from '@dxos/plugin-markdown/tran
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
@@ -62,7 +62,7 @@ const DefaultStory = () => {
   const [doc] = useQuery(space?.db, Query.type(Markdown.Document));
   const id = doc && Obj.getURI(doc);
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (space) {
       await invokePromise(LayoutOperation.SwitchWorkspace, { subject: space.id });
     }

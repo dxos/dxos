@@ -8,15 +8,16 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import { EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space, useSpaceSyncState } from '@dxos/react-client/echo';
-import { Tooltip, useTranslation } from '@dxos/react-ui';
-import { AttentionGlyph } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import * as AttentionGlyph from '@dxos/react-ui/AttentionGlyph';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { useEdgeStatus } from '#hooks';
 import { meta } from '#meta';
 
 export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const qualifiedId = GraphPath.getSpacePath(space.id);
   const { hasAttention, isAncestor, isRelated } = useAttention(qualifiedId);
   const attended = hasAttention || isRelated;
@@ -29,7 +30,7 @@ export const InlineSyncStatus = ({ space, open }: { space: Space; open?: boolean
 
   return (
     <Tooltip.Trigger asChild content={t('syncing.label')} side='bottom'>
-      <AttentionGlyph
+      <AttentionGlyph.Root
         syncing={syncing}
         attended={attended}
         containsAttended={containsAttended}

@@ -6,20 +6,17 @@ import React, { type MouseEvent, useCallback, useMemo } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import {
-  Button,
-  type ChromaticPalette,
-  Field,
-  Icon,
-  IconButton,
-  Link,
-  type NeutralPalette,
-  Tag,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Link from '@dxos/react-ui/Link';
+import * as Tag from '@dxos/react-ui/Tag';
 import { mx } from '@dxos/ui-theme';
 import { getStyles } from '@dxos/ui-theme';
+import { type ChromaticPalette, type NeutralPalette } from '@dxos/ui-types';
 
 import { meta } from '#meta';
 import { type RegistryTagType } from '#types';
@@ -84,7 +81,7 @@ export const PluginItem = ({
   failure,
   readOnly,
 }: PluginItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { key: id, name, description, tags, icon: rawIcon } = plugin.meta.profile;
   const icon = rawIcon?.key ?? 'ph--circle--regular';
   const iconHue = rawIcon?.hue ?? 'neutral';
@@ -154,7 +151,7 @@ export const PluginItem = ({
     >
       <div className={mx(gridRows, 'rounded-l-md', styles.surface)}>
         <div className='flex justify-center row-start-2 cursor-pointer' onClick={handleClick}>
-          <Icon classNames={styles.fg} icon={icon} size={14} />
+          <Icon.Root classNames={styles.fg} icon={icon} size={14} />
         </div>
       </div>
 
@@ -163,7 +160,7 @@ export const PluginItem = ({
           <span className='text-lg truncate'>{name ?? id}</span>
           {failure && <PluginFailureBadge failure={failure} />}
           {deviceOnly && (
-            <Icon
+            <Icon.Root
               data-testid={`pluginList.${id}.deviceOnly`}
               icon='ph--monitor--regular'
               size={4}
@@ -178,14 +175,14 @@ export const PluginItem = ({
 
         <div className='flex gap-1 overflow-x-auto scrollbar-none'>
           {displayTags.map((tag: string) => (
-            <Tag key={tag} hue={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
+            <Tag.Root key={tag} hue={tagColors[tag as RegistryTagType]} classNames='text-xs uppercase'>
               {tag}
-            </Tag>
+            </Tag.Root>
           ))}
         </div>
 
         <div className='flex gap-2 items-center text-sm'>
-          <IconButton
+          <IconButton.Root
             aria-describedby={descriptionId}
             classNames='cursor-pointer'
             icon='ph--gear--regular'
@@ -196,22 +193,26 @@ export const PluginItem = ({
             disabled={!hasSettings}
           />
 
-          <Link aria-describedby={descriptionId} classNames='text-description cursor-pointer' onClick={handleClick}>
+          <Link.Root
+            aria-describedby={descriptionId}
+            classNames='text-description cursor-pointer'
+            onClick={handleClick}
+          >
             {t('details.label')}
-          </Link>
+          </Link.Root>
 
           <div className='grow' />
           <div className='pe-1'>
             {isUpdating ? (
-              <Button aria-describedby={descriptionId} density='md' variant='primary' disabled>
+              <Button.Root aria-describedby={descriptionId} density='md' variant='primary' disabled>
                 {t('updating.label')}
-              </Button>
+              </Button.Root>
             ) : showUpdateButton ? (
-              <Button aria-describedby={descriptionId} density='md' variant='primary' onClick={handleUpdate}>
+              <Button.Root aria-describedby={descriptionId} density='md' variant='primary' onClick={handleUpdate}>
                 {t('update.label')}
-              </Button>
+              </Button.Root>
             ) : showInstallButton ? (
-              <Button
+              <Button.Root
                 aria-describedby={descriptionId}
                 density='md'
                 variant='primary'
@@ -219,7 +220,7 @@ export const PluginItem = ({
                 onClick={handleInstall}
               >
                 {isInstalling ? t('installing.label') : t('install.label')}
-              </Button>
+              </Button.Root>
             ) : (
               <Field.Root id={inputId}>
                 <Field.Switch classNames='self-center' checked={isEnabled} disabled={readOnly} onClick={handleChange} />

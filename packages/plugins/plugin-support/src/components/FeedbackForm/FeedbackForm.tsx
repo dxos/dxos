@@ -6,8 +6,9 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';
-import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { type DiscordPresence } from '#hooks';
 import { meta } from '#meta';
@@ -122,7 +123,7 @@ export type FeedbackFormDownloadLogsProps = {
 };
 
 const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const handleClick = useCallback(async () => {
     try {
       await onDownloadLogs?.();
@@ -137,7 +138,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
   return (
     <div className='flex w-full pt-form-padding'>
-      <IconButton
+      <IconButton.Root
         classNames='w-full'
         type='button'
         icon='ph--download-simple--regular'
@@ -158,7 +159,7 @@ export type FeedbackFormSubmitProps = {
 };
 
 const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { pending } = useFeedbackFormContext(`${FEEDBACK_FORM}.Submit`);
 
   return (
@@ -185,7 +186,7 @@ export type FeedbackFormDiscordPresenceProps = {
 };
 
 const FeedbackFormDiscordPresence = ({ discordPresence }: FeedbackFormDiscordPresenceProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   if (!discordPresence) {
     return null;

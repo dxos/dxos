@@ -10,31 +10,31 @@ import { type Density } from '@dxos/ui-types';
 import { translations } from '#translations';
 
 import { withTheme } from '../../testing/index.ts';
-import { Tooltip } from '../Tooltip/index.ts';
-import { Button } from './Button.tsx';
-import { IconButton, type IconButtonProps } from './IconButton.tsx';
-import { SystemIconButton } from './SystemIconButton.tsx';
+import * as Tooltip from '../Tooltip/Tooltip.tsx';
+import * as Button from './Button.tsx';
+import * as IconButton from './IconButton.tsx';
+import * as SystemIconButton from './SystemIconButton.tsx';
 
-const DefaultStory = (props: IconButtonProps) => {
+const DefaultStory = (props: IconButton.RootProps) => {
   return (
     <Tooltip.Provider>
       <div className='flex gap-4'>
-        <IconButton {...props} />
-        <IconButton iconOnly {...props} />
-        <Button>{props.label}</Button>
+        <IconButton.Root {...props} />
+        <IconButton.Root iconOnly {...props} />
+        <Button.Root>{props.label}</Button.Root>
       </div>
     </Tooltip.Provider>
   );
 };
 
 const densities: Density[] = ['lg', 'md', 'sm'];
-const densityIconSize: Record<Density, IconButtonProps['size']> = {
+const densityIconSize: Record<Density, IconButton.RootProps['size']> = {
   lg: 5,
   md: 4,
   sm: 4,
 };
 
-const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
+const DensitiesStory = (props: Omit<IconButton.RootProps, 'density' | 'size'>) => {
   return (
     <Tooltip.Provider>
       <div className='grid grid-cols-[auto_1fr_1fr] gap-4 items-center'>
@@ -45,7 +45,7 @@ const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
         {densities.map((density) => (
           <Fragment key={density}>
             <div className='text-xs font-mono'>density={density}</div>
-            <IconButton
+            <IconButton.Root
               square
               classNames='w-fit'
               density={density}
@@ -53,8 +53,8 @@ const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
               iconOnly
               {...props}
             />
-            <IconButton classNames='w-fit' density={density} size={densityIconSize[density]} {...props} />
-            <Button density={density}>{props.label}</Button>
+            <IconButton.Root classNames='w-fit' density={density} size={densityIconSize[density]} {...props} />
+            <Button.Root density={density}>{props.label}</Button.Root>
           </Fragment>
         ))}
       </div>
@@ -62,7 +62,7 @@ const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
   );
 };
 
-type SystemPresetVariantProps = Partial<Pick<IconButtonProps, 'variant' | 'iconOnly'>>;
+type SystemPresetVariantProps = Partial<Pick<IconButton.RootProps, 'variant' | 'iconOnly'>>;
 
 const SystemPresetRow = ({
   name,
@@ -134,14 +134,14 @@ const SystemStory = () => {
 
 const meta = {
   title: 'ui/react-ui-core/components/IconButton',
-  component: IconButton,
+  component: IconButton.Root,
   render: DefaultStory as any,
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
     translations,
   },
-} satisfies Meta<typeof IconButton>;
+} satisfies Meta<typeof IconButton.Root>;
 
 export default meta;
 
@@ -177,9 +177,9 @@ const TagStory = () => (
   <Tooltip.Provider>
     <div className='flex flex-wrap gap-2 items-center'>
       {hues.map((hue) => (
-        <IconButton key={hue} variant='tag' hue={hue} density='sm' icon='ph--copy--regular' iconEnd label={hue} />
+        <IconButton.Root key={hue} variant='tag' hue={hue} density='sm' icon='ph--copy--regular' iconEnd label={hue} />
       ))}
-      <IconButton variant='tag' density='sm' iconOnly icon='ph--x--regular' label='Remove' />
+      <IconButton.Root variant='tag' density='sm' iconOnly icon='ph--x--regular' label='Remove' />
     </div>
   </Tooltip.Provider>
 );

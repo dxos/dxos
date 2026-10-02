@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -25,7 +25,7 @@ import { type UseTextEditorProps } from '../hooks/index.ts';
 type StoryArgs = { placeholder?: string; viewMode?: EditorViewMode } & UseTextEditorProps;
 
 const DefaultStory = ({ autoFocus, initialValue, placeholder, viewMode = 'source' }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
 
   const extensions = useMemo(
     () => [

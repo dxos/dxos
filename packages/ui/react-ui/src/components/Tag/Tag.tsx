@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
@@ -10,12 +12,12 @@ import { type ChromaticPalette, type MessageValence, type NeutralPalette } from 
 import { useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
 
-export type TagProps = ThemedClassName<ComponentPropsWithRef<typeof ark.span>> & {
+type TagProps = ThemedClassName<ComponentPropsWithRef<typeof ark.span>> & {
   asChild?: boolean;
   hue?: NeutralPalette | ChromaticPalette | MessageValence;
 };
 
-export const Tag = forwardRef<HTMLSpanElement, TagProps>(
+const Tag = forwardRef<HTMLSpanElement, TagProps>(
   ({ asChild, hue = 'neutral', classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
@@ -29,3 +31,7 @@ export const Tag = forwardRef<HTMLSpanElement, TagProps>(
     );
   },
 );
+
+export { Tag as Root };
+export type { TagProps as RootProps };
+export * from './Tag.theme.ts';

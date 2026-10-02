@@ -107,10 +107,10 @@ To use DXOS UI components, wrap your app with a `<ThemeProvider />` component:
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ThemeProvider } from '@dxos/react-ui';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 createRoot(document.getElementById('root')!).render(
-  <ThemeProvider>{/* your components using react-ui here */}</ThemeProvider>,
+  <ThemeProvider.Root>{/* your components using react-ui here */}</ThemeProvider.Root>,
 );
 ```
 

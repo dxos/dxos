@@ -12,8 +12,8 @@
 import * as Schema from 'effect/Schema';
 import React, { type ReactElement, type ReactNode, type RefAttributes } from 'react';
 
-import { SchemaAST } from '@dxos/effect';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -31,11 +31,13 @@ export type ObjectTreeProps<T> = {
  * `style` / `role`) onto its root `<div>` and forwards its ref, so it can
  * be slotted into themed parents like `Panel.Content`.
  */
-const ObjectTreeImpl = composable<HTMLDivElement, ObjectTreeProps<any>>(({ schema, value, ...props }, forwardedRef) => (
-  <div {...composableProps(props, { role: 'table', classNames: 'font-mono text-sm w-full' })} ref={forwardedRef}>
-    <Node ast={schema.ast} value={value} label={null} depth={0} />
-  </div>
-));
+const ObjectTreeImpl = Util.composable<HTMLDivElement, ObjectTreeProps<any>>(
+  ({ schema, value, ...props }, forwardedRef) => (
+    <div {...Util.composableProps(props, { role: 'table', classNames: 'font-mono text-sm w-full' })} ref={forwardedRef}>
+      <Node ast={schema.ast} value={value} label={null} depth={0} />
+    </div>
+  ),
+);
 
 ObjectTreeImpl.displayName = 'ObjectTree';
 

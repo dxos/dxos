@@ -4,8 +4,13 @@
 
 import React from 'react';
 
-import { Banner, Panel, ScrollArea, Tag, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 export type EchoObjectItem = {
   id: string;
@@ -14,7 +19,7 @@ export type EchoObjectItem = {
   label: string;
 };
 
-export type EchoObjectsListProps = ThemedClassName<{
+export type EchoObjectsListProps = Util.ThemedClassName<{
   objects: EchoObjectItem[];
 }>;
 
@@ -40,7 +45,7 @@ export const EchoObjectsList = ({ classNames, objects }: EchoObjectsListProps) =
                 {objects.map((object) => (
                   <Listbox.Item classNames='gap-2' key={object.id} id={object.id}>
                     <Listbox.ItemLabel>{object.label}</Listbox.ItemLabel>
-                    <Tag hue='neutral'>{object.typename}</Tag>
+                    <Tag.Root hue='neutral'>{object.typename}</Tag.Root>
                   </Listbox.Item>
                 ))}
               </Listbox.Content>

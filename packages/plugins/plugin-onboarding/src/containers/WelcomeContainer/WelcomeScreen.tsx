@@ -9,7 +9,7 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as Account from '@dxos/app-toolkit/Account';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { createDidFromIdentityKey } from '@dxos/credentials';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { ClientOperation } from '@dxos/plugin-client';
@@ -17,7 +17,7 @@ import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { useClient } from '@dxos/react-client';
 import { useIdentity } from '@dxos/react-client/halo';
-import { ThemeProvider, defaultTx } from '@dxos/react-ui';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { joinWaitlist, login } from '../../credentials/index.ts';
@@ -289,7 +289,7 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
   );
 
   return (
-    <ThemeProvider tx={defaultTx} themeMode='dark' resourceExtensions={translations}>
+    <ThemeProvider.Root tx={ThemeProvider.defaultTx} themeMode='dark' resourceExtensions={translations}>
       <Welcome
         state={state}
         error={error}
@@ -304,6 +304,6 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
         onCreateAccountWithOAuth={!identity && !passkeyOnly ? handleCreateAccountWithOAuth : undefined}
         onJoinWaitlist={!passkeyOnly ? handleJoinWaitlist : undefined}
       />
-    </ThemeProvider>
+    </ThemeProvider.Root>
   );
 };

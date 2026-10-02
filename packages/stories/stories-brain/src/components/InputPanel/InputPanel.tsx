@@ -5,18 +5,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import {
-  Banner,
-  Button,
-  Field,
-  Panel,
-  ScrollArea,
-  Select,
-  type ThemedClassName,
-  Toolbar,
-  useThemeContext,
-} from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -57,7 +55,7 @@ export type InputPayload =
       transcript: string;
     };
 
-export type InputPanelProps = ThemedClassName<{
+export type InputPanelProps = Util.ThemedClassName<{
   /** The active input tab (controlled, so the parent can keep it in sync with the selected pipeline). */
   mode: InputMode;
   /** Switch the active input tab. */
@@ -98,7 +96,7 @@ export const InputPanel = ({
   onLoadDataset,
   onInput,
 }: InputPanelProps) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const [text, setText] = useState(initialDocument);
   const [underline, setUnderline] = useState(false);
   const [datasetId, setDatasetId] = useState(datasets[0]?.id ?? '');
@@ -136,15 +134,15 @@ export const InputPanel = ({
     <Panel.Root classNames={classNames}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Button variant={mode === 'document' ? 'primary' : 'ghost'} onClick={() => onModeChange('document')}>
+          <Button.Root variant={mode === 'document' ? 'primary' : 'ghost'} onClick={() => onModeChange('document')}>
             Document
-          </Button>
-          <Button variant={mode === 'dataset' ? 'primary' : 'ghost'} onClick={() => onModeChange('dataset')}>
+          </Button.Root>
+          <Button.Root variant={mode === 'dataset' ? 'primary' : 'ghost'} onClick={() => onModeChange('dataset')}>
             Dataset
-          </Button>
-          <Button variant={mode === 'record' ? 'primary' : 'ghost'} onClick={() => onModeChange('record')}>
+          </Button.Root>
+          <Button.Root variant={mode === 'record' ? 'primary' : 'ghost'} onClick={() => onModeChange('record')}>
             Record
-          </Button>
+          </Button.Root>
           <div className='grow' />
           {mode === 'document' && parse && (
             <Field.Root>
@@ -193,9 +191,9 @@ export const InputPanel = ({
                         classNames='w-20'
                       />
                     </Field.Root>
-                    <Button disabled={busy} onClick={() => onLoadDataset(count)}>
+                    <Button.Root disabled={busy} onClick={() => onLoadDataset(count)}>
                       Load
-                    </Button>
+                    </Button.Root>
                   </>
                 )}
               </Toolbar.Root>

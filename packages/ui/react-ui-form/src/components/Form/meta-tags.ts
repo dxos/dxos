@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 
 import { Obj, Ref, Tag } from '@dxos/echo';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { EID } from '@dxos/keys';
 
 import { omitId } from '../../util/index.ts';

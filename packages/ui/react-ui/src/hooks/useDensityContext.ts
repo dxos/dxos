@@ -6,9 +6,9 @@ import { useContext } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
-import { DensityContext } from '../providers/index.ts';
+import * as DensityProvider from '../providers/DensityProvider/DensityProvider.tsx';
 
 export const useDensityContext = (densityProp?: Density): Density | undefined => {
-  const { density } = useContext(DensityContext);
+  const { density } = useContext(DensityProvider.DensityContext);
   return densityProp ?? density;
 };

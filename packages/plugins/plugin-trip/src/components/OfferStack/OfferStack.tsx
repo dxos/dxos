@@ -5,16 +5,12 @@
 import { format } from 'date-fns';
 import React, { forwardRef, useCallback, useMemo } from 'react';
 
-import {
-  Card,
-  Icon,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 import { BookingSearch } from '#types';
@@ -37,7 +33,7 @@ type OfferTileProps = Pick<MosaicTileProps<OfferTileData>, 'data' | 'location' |
 const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, current }, forwardedRef) => {
   const { offer, onSelect } = data;
   const { setCurrentId } = useMosaicContainer('OfferTile');
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(offer.id);
@@ -60,7 +56,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Header>
             <Card.Block>
-              <Icon icon='ph--airplane--regular' />
+              <Icon.Root icon='ph--airplane--regular' />
             </Card.Block>
             <div className='flex items-baseline justify-between gap-2 min-w-0'>
               <Card.Title classNames='truncate'>{offer.operator.name}</Card.Title>
@@ -80,7 +76,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
             {departAt && (
               <Card.Row>
                 <Card.Block>
-                  <Icon icon='ph--calendar--regular' />
+                  <Icon.Root icon='ph--calendar--regular' />
                 </Card.Block>
                 <Card.Text variant='description'>{format(new Date(departAt), 'PPp')}</Card.Text>
               </Card.Row>
@@ -94,7 +90,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
 
 OfferTile.displayName = 'OfferTile';
 
-export type OfferStackProps = ThemedClassName<{
+export type OfferStackProps = Util.ThemedClassName<{
   offers?: readonly BookingSearch.FlightOffer[];
   currentId?: string;
   onSelect?: OfferSelectHandler;
@@ -105,12 +101,12 @@ export type OfferStackProps = ThemedClassName<{
  * `Mosaic.Stack` list pattern (as `SegmentStack`) so offers render with the same
  * card / focus / scroll affordances. Tiles are not draggable.
  */
-export const OfferStack = composable<HTMLDivElement, OfferStackProps>(
+export const OfferStack = Util.composable<HTMLDivElement, OfferStackProps>(
   ({ offers = [], currentId, onSelect, ...props }, forwardedRef) => {
     const items = useMemo(() => offers.map((offer) => ({ offer, onSelect })), [offers, onSelect]);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId}>
           <ScrollArea.Root orientation='vertical' padding thin>
             <ScrollArea.Viewport>

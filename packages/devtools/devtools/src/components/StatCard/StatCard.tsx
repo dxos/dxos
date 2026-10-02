@@ -4,16 +4,12 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import {
-  Card,
-  type CardMenuProps,
-  type CardRootProps,
-  Flex,
-  Icon,
-  IconButton,
-  type ThemedClassName,
-  Tooltip,
-} from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 import { type Hue, getStyles, mx } from '@dxos/ui-theme';
 
 /** One hue per category of card, so a stack reads by colour before it reads by title. */
@@ -32,7 +28,7 @@ export const STAT_CARD_HUES = {
 // Root
 //
 
-type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string; density?: CardRootProps['density'] }>>;
+type StatCardRootProps = PropsWithChildren<Util.ThemedClassName<{ id?: string; density?: Card.RootProps['density'] }>>;
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
 const StatCardRoot = ({ id, density = 'sm', classNames, children }: StatCardRootProps) => (
@@ -56,18 +52,18 @@ type StatCardHeaderProps = {
   info?: ReactNode;
   /** One control in the trailing gutter; several go in `menu` instead. */
   action?: ReactNode;
-  menu?: CardMenuProps['items'];
+  menu?: Card.MenuProps['items'];
 };
 
 const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
   <Card.Header>
     <Card.Block>
-      <Icon icon={icon} classNames={hue && getStyles(hue).text} />
+      <Icon.Root icon={icon} classNames={hue && getStyles(hue).text} />
     </Card.Block>
-    <Flex align='center' gap='sm' classNames='min-w-0'>
+    <Flex.Root align='center' gap='sm' classNames='min-w-0'>
       <Card.Title>{title}</Card.Title>
       {info !== undefined && <span className='shrink-0 font-mono text-xs text-description'>{info}</span>}
-    </Flex>
+    </Flex.Root>
     {action && <Card.Block end>{action}</Card.Block>}
     {menu && <Card.Menu items={menu} />}
   </Card.Header>
@@ -80,7 +76,7 @@ StatCardHeader.displayName = 'StatCard.Header';
 //
 
 type StatCardRowProps = PropsWithChildren<
-  ThemedClassName<{
+  Util.ThemedClassName<{
     /** Leading gutter icon; the gutter is kept even when empty so labels align across rows. */
     icon?: string;
     iconClassNames?: string;
@@ -141,7 +137,7 @@ const StatCardRow = ({
       <Card.Block compact>
         {control ??
           (onToggle ? (
-            <IconButton
+            <IconButton.Root
               variant='ghost'
               icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
               iconOnly
@@ -150,10 +146,10 @@ const StatCardRow = ({
               onClick={() => onToggle(!open)}
             />
           ) : (
-            icon && <Icon icon={icon} classNames={iconClassNames} />
+            icon && <Icon.Root icon={icon} classNames={iconClassNames} />
           ))}
       </Card.Block>
-      <Flex
+      <Flex.Root
         align='center'
         justify='between'
         gap='sm'
@@ -173,7 +169,7 @@ const StatCardRow = ({
             )}
           </>
         )}
-      </Flex>
+      </Flex.Root>
       {trailing && (
         // A unit reads on from its value, so it sits at the gutter's start; a control stays centred.
         <Card.Block end compact classNames={!action && 'justify-items-start'}>
@@ -203,14 +199,14 @@ StatCardSection.displayName = 'StatCard.Section';
 // Content
 //
 
-type StatCardContentProps = PropsWithChildren<ThemedClassName>;
+type StatCardContentProps = PropsWithChildren<Util.ThemedClassName>;
 
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, children }: StatCardContentProps) => (
   <Card.Row>
-    <Flex column grow={false} classNames={['min-w-0 text-xs [grid-column-end:span_2]', classNames]}>
+    <Flex.Root column grow={false} classNames={['min-w-0 text-xs [grid-column-end:span_2]', classNames]}>
       {children}
-    </Flex>
+    </Flex.Root>
   </Card.Row>
 );
 

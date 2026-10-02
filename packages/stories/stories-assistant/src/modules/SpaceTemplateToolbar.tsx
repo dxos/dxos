@@ -16,7 +16,10 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Field, Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { isPersistent, setPersistent } from '../testing/persistence.ts';
 import { VOYAGE_SPACE_ID } from '../testing/voyage-space.ts';
@@ -135,7 +138,7 @@ const TemplateSelect = () => {
   // template rather than on any: each contributing module activates on its own, so the samples can
   // register a beat before the story's own, and a one-shot on the first arrival would open nothing.
   const [opened, setOpened] = useState(false);
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!opened && !busy.current && templates.some(({ id }) => id === templateId)) {
       setOpened(true);
       await handleSelect(templateId);

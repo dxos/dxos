@@ -5,8 +5,9 @@
 import React, { Fragment } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useComputeNodeState } from '../hooks/index.ts';
@@ -30,7 +31,7 @@ export const FeedComponent = ({ shape }: ShapeComponentProps<FeedShape>) => {
   );
 };
 
-export const FeedItem = ({ classNames, item }: ThemedClassName<{ item: any }>) => {
+export const FeedItem = ({ classNames, item }: Util.ThemedClassName<{ item: any }>) => {
   if (typeof item !== 'object') {
     return <div className={mx(classNames, 'whitespace-pre-wrap')}>{item}</div>;
   }

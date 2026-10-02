@@ -4,17 +4,13 @@
 
 import React, { Children, type PropsWithChildren, useId } from 'react';
 
-import {
-  Collapsible,
-  Field,
-  Fieldset,
-  Icon,
-  type ThemedClassName,
-  Tooltip,
-  composable,
-  composableProps,
-} from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import * as Collapsible from '@dxos/react-ui/Collapsible';
+import * as Field from '@dxos/react-ui/Field';
+import * as Fieldset from '@dxos/react-ui/Fieldset';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useFormContext } from '../../../hooks/index.ts';
@@ -24,7 +20,7 @@ import { FormFieldSetDepthContext, useFormFieldSetDepth } from './FormFieldSetCo
 
 const FORM_FIELDSET_NAME = 'Form.FieldSet';
 
-export type FormFieldSetProps = ThemedClassName<
+export type FormFieldSetProps = Util.ThemedClassName<
   PropsWithChildren<{
     label?: string;
     /** Markdown, rendered under the legend, or as a tooltip on the label. */
@@ -46,7 +42,7 @@ export type FormFieldSetProps = ThemedClassName<
  * schema-driven one a `Form.Fields`. Its chrome follows its depth: a top-level field set is a titled
  * section, a nested one an indented, bordered group, so the same element serves both.
  */
-export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
+export const FormFieldSet = Util.composable<HTMLFieldSetElement, FormFieldSetProps>(
   (
     {
       children,
@@ -83,7 +79,7 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
         aria-label={description}
         className='grid size-6 place-items-center rounded-xs text-description hover:bg-hover-surface'
       >
-        <Icon icon='ph--question--regular' size={4} />
+        <Icon.Root icon='ph--question--regular' size={4} />
       </Tooltip.Trigger>
     );
 
@@ -115,7 +111,7 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
                     aria-labelledby={labelId}
                     classNames='group grid size-6 place-items-center rounded-xs hover:bg-hover-surface'
                   >
-                    <Icon
+                    <Icon.Root
                       icon='ph--caret-right--regular'
                       size={3}
                       classNames='transition-transform group-data-[state=open]:rotate-90'
@@ -161,7 +157,7 @@ export const FormFieldSet = composable<HTMLFieldSetElement, FormFieldSetProps>(
 
     const fieldset = (
       <Fieldset.Root
-        {...composableProps(props, { classNames: styles.fieldSet() })}
+        {...Util.composableProps(props, { classNames: styles.fieldSet() })}
         aria-labelledby={showLabel ? labelId : undefined}
         ref={forwardedRef}
       >

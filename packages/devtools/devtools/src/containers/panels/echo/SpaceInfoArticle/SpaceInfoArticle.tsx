@@ -12,7 +12,9 @@ import { Space_PipelineStateSchema } from '@dxos/protocols/buf/dxos/client/servi
 import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 import { type Space } from '@dxos/react-client/echo';
 import { useMulticastObservable } from '@dxos/react-hooks';
-import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
 import { useDevtoolsState, useSpacesInfo } from '../../../../hooks/index.ts';

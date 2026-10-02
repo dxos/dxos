@@ -12,10 +12,10 @@ import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
-import { SchemaEx } from '@dxos/effect';
-import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form, FormFieldHeader, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
 import { arrayMove } from '@dxos/util';
@@ -32,7 +32,7 @@ export type PipelinePropertiesProps = AppSurface.ObjectPropertiesProps<Pipeline.
  * Supports editing the pipeline view.
  */
 export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(pipeline);
   const [expandedId, setExpandedId] = useState<string>();
   const [columns, updateColumns] = useObject(pipeline, 'columns');
@@ -49,7 +49,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
     },
   });
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!view?.query || !db) {
       return;
     }

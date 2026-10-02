@@ -10,13 +10,13 @@ import * as Layer from 'effect/Layer';
 import { afterAll, beforeAll, describe, test } from 'vitest';
 
 import { PROGRESS_STATUS_CANCELLED } from '@dxos/app-toolkit';
-import { RunAgainError } from '@dxos/compute';
 import * as Cancellation from '@dxos/compute/Cancellation';
+import { RunAgainError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Blob, Database, Feed, Filter, Obj, Order, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import { createSyncProgressKey } from '@dxos/plugin-inbox/MailSync';

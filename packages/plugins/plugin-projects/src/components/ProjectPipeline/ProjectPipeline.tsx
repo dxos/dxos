@@ -8,8 +8,9 @@ import type * as Chat from '@dxos/assistant/Chat';
 import type * as Project from '@dxos/compute/Project';
 import { useSessionTimeline } from '@dxos/plugin-assistant/Hooks';
 import { type Space } from '@dxos/react-client/echo';
-import { Banner, useTranslation } from '@dxos/react-ui';
 import { Gantt, type GanttAxis, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -45,7 +46,7 @@ export const ProjectPipeline = ({
   onSelectTask,
   onSelectChat,
 }: ProjectPipelineProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const chats = useProjectChats(space, project);
   const timeline = useSessionTimeline(space, { chats, tasks });
 

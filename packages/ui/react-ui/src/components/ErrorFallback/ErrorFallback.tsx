@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type PropsWithChildren } from 'react';
 import { type FallbackProps } from 'react-error-boundary';
 
@@ -9,16 +11,15 @@ import { safeStringify } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { useTranslation } from '../../providers/index.ts';
-import { SystemIconButton } from '../Button/index.ts';
-import { ErrorStack } from './ErrorStack.tsx';
-
-export type ErrorFallbackProps = PropsWithChildren<Pick<FallbackProps, 'error'> & { title?: string; data?: any }>;
+import { useTranslation } from '../../providers/ThemeProvider/TranslationsContext.ts';
+import * as SystemIconButton from '../Button/SystemIconButton.tsx';
+import * as ErrorStack from './ErrorStack.tsx';
+type ErrorFallbackProps = PropsWithChildren<Pick<FallbackProps, 'error'> & { title?: string; data?: any }>;
 
 /**
  * Themed fallback component for `ErrorBoundary`.
  */
-export const ErrorFallback = ({ children, error, title, data }: ErrorFallbackProps) => {
+const ErrorFallback = ({ children, error, title, data }: ErrorFallbackProps) => {
   const { t } = useTranslation(translationKey);
   const isDev = process.env.NODE_ENV === 'development';
   const message = error instanceof Error ? error.message : String(error);
@@ -30,7 +31,7 @@ export const ErrorFallback = ({ children, error, title, data }: ErrorFallbackPro
 
       {isDev && error instanceof Error && (
         <Section title='Stack' onCopy={() => (error instanceof Error ? (error.stack ?? error.message) : String(error))}>
-          <ErrorStack error={error} />
+          <ErrorStack.Root error={error} />
         </Section>
       )}
 
@@ -57,3 +58,8 @@ const Section = ({ children, title, onCopy }: PropsWithChildren<{ title?: string
     </div>
   );
 };
+
+export { ErrorFallback as Root };
+export type { ErrorFallbackProps as RootProps };
+export { ErrorBoundary, type ErrorBoundaryProps, type FallbackProps } from '@dxos/react-error-boundary';
+export { type ParsedStackFrame, parseCaptureOwnerStack } from './parse-stack.ts';

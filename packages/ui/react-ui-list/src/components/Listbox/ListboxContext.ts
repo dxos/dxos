@@ -2,7 +2,7 @@
 // Copyright 2022 DXOS.org
 //
 
-import { createContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { type UseListSelectionReturn } from '../../hooks/index.ts';
 
@@ -39,8 +39,9 @@ export type ListboxItemContextValue = {
   selected: boolean;
 };
 
-export const [ListboxProvider, useListboxContext] = createContext<ListboxContextValue>(LISTBOX_NAME);
-export const [ListboxItemProvider, useListboxItemContext] = createContext<ListboxItemContextValue>(LISTBOX_ITEM_NAME);
+export const [ListboxProvider, useListboxContext] = Hooks.createContext<ListboxContextValue>(LISTBOX_NAME);
+export const [ListboxItemProvider, useListboxItemContext] =
+  Hooks.createContext<ListboxItemContextValue>(LISTBOX_ITEM_NAME);
 
 /**
  * Read selection state for a single id from inside any descendant of `<Listbox.Root>`.

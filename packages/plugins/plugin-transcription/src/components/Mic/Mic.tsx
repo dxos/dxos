@@ -5,7 +5,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useAtomCapabilityState } from '@dxos/app-framework/Hooks';
-import { SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 import {
   type AudioInputDevice,
@@ -14,6 +13,8 @@ import {
   listAudioInputs,
   setPreferredAudioInput,
 } from '@dxos/react-ui-transcription';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 
 import { meta } from '#meta';
 import { Settings, TranscriptionCapabilities } from '#types';
@@ -30,7 +31,7 @@ export type MicProps = {
  * this same control that way, rather than a copy of it.
  */
 export const Mic = ({ docId }: MicProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [session, setSession] = useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings, setSettings] = useAtomCapabilityState(TranscriptionCapabilities.Settings);
 

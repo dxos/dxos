@@ -17,15 +17,12 @@ import React, {
 } from 'react';
 
 import { Obj, Ref } from '@dxos/echo';
-import {
-  Avatar,
-  IconButton,
-  type ThemedClassName,
-  useOnTransition,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Util from '@dxos/react-ui/Util';
 import { type ContentBlock, type Message as MessageType } from '@dxos/types';
 import { createBasicExtensions, createThemeExtensions, keymap, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -46,7 +43,7 @@ const buttonClassNames = 'p-1! transition-opacity';
 // Root
 //
 
-export type MessageRootProps = ThemedClassName<
+export type MessageRootProps = Util.ThemedClassName<
   ComponentPropsWithRef<'div'> & MessageMetadata & Partial<{ continues: boolean; controls: ReactNode }>
 >;
 
@@ -100,7 +97,7 @@ MessageRoot.displayName = 'Message.Root';
 // Heading
 //
 
-export type MessageHeadingProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
+export type MessageHeadingProps = Util.ThemedClassName<ComponentPropsWithoutRef<'div'>> &
   Pick<MessageMetadata, 'authorName' | 'timestamp'>;
 
 const MessageHeading = ({ children, classNames, timestamp, authorName, ...props }: MessageHeadingProps) => {
@@ -120,7 +117,7 @@ MessageHeading.displayName = 'Message.Heading';
 export type MessageAuthorNameProps = Pick<MessageMetadata, 'authorName'>;
 
 const MessageAuthorName = ({ authorName }: MessageAuthorNameProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
     <Avatar.Label classNames='block truncate min-w-0 shrink text-sm text-subdued'>
       {authorName ?? t('anonymous.label')}
@@ -133,7 +130,7 @@ MessageAuthorName.displayName = 'Message.AuthorName';
 export type MessageTimeProps = Pick<MessageMetadata, 'timestamp'>;
 
 const MessageTime = ({ timestamp }: MessageTimeProps) => {
-  const { dtLocale } = useTranslation(translationKey);
+  const { dtLocale } = Hooks.useTranslation(translationKey);
   const dt = timestamp ? new Date(timestamp) : undefined;
   return (
     <time className='shrink-0 text-subdued text-xs' dateTime={dt?.toISOString()}>
@@ -206,7 +203,7 @@ const TextBlock = ({
   editing?: boolean;
   onSave?: (text: string) => void;
 }) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const inMemoryContentRef = useRef(block.text);
 
   const handleDocumentChange = useCallback((next: string) => {
@@ -217,7 +214,7 @@ const TextBlock = ({
     onSave?.(inMemoryContentRef.current);
   }, [onSave]);
 
-  useOnTransition(editing, true, false, saveDocumentChange);
+  Hooks.useOnTransition(editing, true, false, saveDocumentChange);
 
   const { parentRef, focusAttributes, view } = useTextEditor(
     () => ({
@@ -361,7 +358,7 @@ export type MessageTileProps = {
  * the unit rendered by `Thread.Messages`.
  */
 const MessageTile = ({ message, classNames, continues = true }: MessageTileProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const {
     getMetadata,
     identityDid,
@@ -407,7 +404,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
     showEdit || showAccept || showAcceptChange || showRejectChange || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <IconButton
+          <IconButton.Root
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -418,7 +415,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAccept && (
-          <IconButton
+          <IconButton.Root
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -429,7 +426,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showAcceptChange && (
-          <IconButton
+          <IconButton.Root
             data-testid='thread.message.accept-change'
             variant='ghost'
             icon='ph--check--regular'
@@ -440,7 +437,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showRejectChange && (
-          <IconButton
+          <IconButton.Root
             data-testid='thread.message.reject-change'
             variant='ghost'
             icon='ph--x--regular'
@@ -451,7 +448,7 @@ const MessageTile = ({ message, classNames, continues = true }: MessageTileProps
           />
         )}
         {showDelete && (
-          <IconButton
+          <IconButton.Root
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'
@@ -510,7 +507,7 @@ export type MessageGroupProps = {
  * to a single message.
  */
 const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { getMetadata, identityDid, editable, onMessageDelete, onAcceptProposal } = useThreadContext('Message.Group');
   const [editing, setEditing] = useState(false);
 
@@ -541,7 +538,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
     showEdit || showAccept || showDelete ? (
       <div className={buttonGroupClassNames}>
         {showEdit && (
-          <IconButton
+          <IconButton.Root
             data-testid={editing ? 'thread.message.save' : 'thread.message.edit'}
             variant='ghost'
             icon={editing ? 'ph--check--regular' : 'ph--pencil-simple--regular'}
@@ -552,7 +549,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showAccept && (
-          <IconButton
+          <IconButton.Root
             data-testid='thread.message.accept'
             variant='ghost'
             icon='ph--check--regular'
@@ -563,7 +560,7 @@ const MessageGroup = ({ messages, continues = true, classNames }: MessageGroupPr
           />
         )}
         {showDelete && (
-          <IconButton
+          <IconButton.Root
             data-testid='thread.message.delete'
             variant='ghost'
             icon='ph--x--regular'

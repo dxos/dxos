@@ -9,13 +9,17 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
-import { Button, Dialog, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 import { SpaceOperation } from '#types';
 
 export const ImportSpaceDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   const [importing, setImporting] = useState<string>();
@@ -67,7 +71,7 @@ export const ImportSpaceDialog = () => {
       <Dialog.Body>
         <p className='my-4'>{t('import-space-dialog.description')}</p>
         {importing ? (
-          <Flex
+          <Flex.Root
             align='center'
             justify='center'
             gap='sm'
@@ -76,10 +80,10 @@ export const ImportSpaceDialog = () => {
             classNames='my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm'
           >
             <div>
-              <Icon icon='ph--spinner-gap--regular' size={8} classNames='animate-spin' />
+              <Icon.Root icon='ph--spinner-gap--regular' size={8} classNames='animate-spin' />
               <span>{t('import-space-dialog.importing.label', { filename: importing })}</span>
             </div>
-          </Flex>
+          </Flex.Root>
         ) : (
           <FileUploader
             types={['json', 'tar']}
@@ -89,14 +93,14 @@ export const ImportSpaceDialog = () => {
               void handleFile(file);
             }}
           >
-            <Icon icon='ph--file-plus--duotone' size={8} />
+            <Icon.Root icon='ph--file-plus--duotone' size={8} />
             <span>{t('import-space-dialog.upload.label')}</span>
           </FileUploader>
         )}
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>
-          <Button variant='primary'>{t('cancel.label')}</Button>
+          <Button.Root variant='primary'>{t('cancel.label')}</Button.Root>
         </Dialog.Close>
       </Dialog.ActionBar>
     </Dialog.Content>

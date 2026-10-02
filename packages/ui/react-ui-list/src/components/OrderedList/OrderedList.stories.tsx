@@ -5,7 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useState } from 'react';
 
-import { Field, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx, osTranslations } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
@@ -171,7 +172,7 @@ const CheckboxWithDeleteStory = () => {
 //
 
 const DraggableWithToggleStory = () => {
-  const { t } = useTranslation(osTranslations);
+  const { t } = Hooks.useTranslation(osTranslations);
   const [items, setItems] = useState<Item[]>(initialItems);
   const [expandedId, setExpandedId] = useState<string>();
 

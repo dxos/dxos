@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type AllowedAxis, type ComponentFunction, type Theme } from '@dxos/ui-types';
 
-import { withColumn } from '../Column/index.ts';
+import * as Column from '../Column/Column.tsx';
 
 export type ScrollAreaStyleProps = {
   orientation?: AllowedAxis;
@@ -60,7 +60,7 @@ const viewport: ComponentFunction<ScrollAreaStyleProps> = (
 
     // Reset --dx-col so nested components don't try to grid-position themselves.
     // ScrollArea has already consumed --gutter for padding.
-    withColumn.consumed(),
+    Column.withColumn.consumed(),
 
     orientation === 'vertical' && 'overflow-y-scroll',
     orientation === 'horizontal' && 'flex overflow-x-scroll overscroll-x-contain',

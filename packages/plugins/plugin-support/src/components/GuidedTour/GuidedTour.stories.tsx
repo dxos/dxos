@@ -10,8 +10,11 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import type * as Tour from '@dxos/app-toolkit/Tour';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
-import { Button, IconButton, Panel, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
@@ -45,16 +48,16 @@ const DefaultStory = () => {
     <Panel.Root classNames='dx-base-surface'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <IconButton icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
-          <IconButton icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
+          <IconButton.Root icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+          <IconButton.Root icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
           <Toolbar.Separator variant='gap' />
-          <IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
+          <IconButton.Root icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid place-items-center'>
-        <Button onClick={() => setRunning(true)} data-testid='story.start'>
+        <Button.Root onClick={() => setRunning(true)} data-testid='story.start'>
           Start tour
-        </Button>
+        </Button.Root>
       </Panel.Content>
       <GuidedTour steps={steps} running={running} onRunningChanged={setRunning} />
     </Panel.Root>
@@ -150,19 +153,19 @@ const LateStepsStory = () => {
     <Panel.Root classNames='dx-base-surface'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <IconButton icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
-          <IconButton icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
+          <IconButton.Root icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+          <IconButton.Root icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='story.search' />
           <Toolbar.Separator variant='gap' />
-          <IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
+          <IconButton.Root icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='story.menu' />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid place-items-center gap-2'>
-        <Button onClick={() => load(steps)} data-testid='story.startFirst'>
+        <Button.Root onClick={() => load(steps)} data-testid='story.startFirst'>
           Start first tour
-        </Button>
-        <Button onClick={() => load(laterSteps)} data-testid='story.startSecond'>
+        </Button.Root>
+        <Button.Root onClick={() => load(laterSteps)} data-testid='story.startSecond'>
           Start second tour
-        </Button>
+        </Button.Root>
       </Panel.Content>
       <GuidedTour steps={current} running={running && current.length > 0} onRunningChanged={setRunning} />
     </Panel.Root>
@@ -201,13 +204,13 @@ export const TestMissingTarget: Story = {
       <Panel.Root classNames='dx-base-surface'>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <IconButton icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
+            <IconButton.Root icon='ph--plus--regular' iconOnly label='Add' data-testid='story.add' />
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content classNames='grid place-items-center'>
-          <Button onClick={() => setRunning(true)} data-testid='story.start'>
+          <Button.Root onClick={() => setRunning(true)} data-testid='story.start'>
             Start tour
-          </Button>
+          </Button.Root>
         </Panel.Content>
         <GuidedTour steps={withMissing} running={running} onRunningChanged={setRunning} />
       </Panel.Root>

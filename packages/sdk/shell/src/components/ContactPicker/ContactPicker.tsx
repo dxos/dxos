@@ -5,8 +5,8 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Contact } from '@dxos/react-client/halo';
-import { useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { translationKey } from '../../translations.ts';
 import { contactDisplayName, contactKeyHex, filterContacts } from '../ContactList/index.ts';
@@ -22,7 +22,7 @@ export type ContactPickerProps = {
 };
 
 export const ContactPicker = ({ contacts, excludeKeys = [], value, onChange, disabled }: ContactPickerProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [query, setQuery] = useState('');
   const candidates = useMemo(
     () =>

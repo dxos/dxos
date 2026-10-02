@@ -13,8 +13,8 @@ import {
   RecoverIdentityRequest_ExternalSignatureSchema,
   RecoverIdentityRequestSchema,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { Button } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { useClient } from '../client/index.ts';
@@ -115,15 +115,15 @@ const Test = () => {
   return (
     <>
       <div className='mb-4 flex gap-2'>
-        <Button disabled={!!identity} onClick={handleCreateIdentity}>
+        <Button.Root disabled={!!identity} onClick={handleCreateIdentity}>
           Create Identity
-        </Button>
-        <Button disabled={!identity} onClick={handleCreatePassKey}>
+        </Button.Root>
+        <Button.Root disabled={!identity} onClick={handleCreatePassKey}>
           Create Passkey
-        </Button>
-        <Button disabled={!!identity} onClick={handleAuthenticate}>
+        </Button.Root>
+        <Button.Root disabled={!!identity} onClick={handleAuthenticate}>
           Authenticate with Passkey
-        </Button>
+        </Button.Root>
       </div>
       <div className='flex flex-col min-w-[28rem] divide-y divide-subdued-separator border border-separator rounded-sm'>
         <JsonHighlighter data={{ identity, credentials: credentials.length }} />

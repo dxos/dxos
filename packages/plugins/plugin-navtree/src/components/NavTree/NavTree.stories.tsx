@@ -20,9 +20,14 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { Field, Focus, IconButton, Main, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as Field from '@dxos/react-ui/Field';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Main from '@dxos/react-ui/Main';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
@@ -44,7 +49,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   return (
     <Panel.Toolbar classNames='border-b border-separator'>
-      <IconButton
+      <IconButton.Root
         density='lg'
         icon='ph--circle--regular'
         label='Test'

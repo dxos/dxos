@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type ReactNode } from 'react';
 
-export type ShowProps<T> = {
+type ShowProps<T> = {
   /** Children render while this is present — anything except `undefined`/`null`/`false` (ui-template's `present`). */
   when: T | undefined | null | false;
   /** Rendered while `when` is absent. */
@@ -24,7 +26,7 @@ export type ShowProps<T> = {
  * </Show>
  * ```
  */
-export const Show = <T,>({ when, fallback = null, children }: ShowProps<T>): ReactNode => {
+const Show = <T,>({ when, fallback = null, children }: ShowProps<T>): ReactNode => {
   if (when === undefined || when === null || when === false) {
     return <>{fallback}</>;
   }
@@ -33,3 +35,6 @@ export const Show = <T,>({ when, fallback = null, children }: ShowProps<T>): Rea
 };
 
 Show.displayName = 'Show';
+
+export { Show as Root };
+export type { ShowProps as RootProps };

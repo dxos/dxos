@@ -9,9 +9,13 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { ButtonGroup, Field, Flex, SystemIconButton, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -43,11 +47,11 @@ const usePendingGatedState = <T,>(value: T, pending: boolean): [T, Dispatch<SetS
   if (!pending) {
     lastRef.current = value;
   }
-  return useControlledState(lastRef.current);
+  return Hooks.useControlledState(lastRef.current);
 };
 
 export const ProfileContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const pendingRef = useRef(false);
@@ -169,9 +173,9 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field standalone label={label} description={t('hue.description')}>
-            <Flex classNames='justify-self-end'>
+            <Flex.Root classNames='justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
-            </Flex>
+            </Flex.Root>
           </Form.Field>
         );
       },
@@ -179,12 +183,12 @@ export const ProfileContainer = () => {
       did: ({ label, getValue }) => {
         return (
           <Form.Field label={label} description={t('did.description')}>
-            <ButtonGroup classNames='w-full'>
+            <Button.Group classNames='w-full'>
               {/* `flex-1 min-w-0` lets the field shrink below its content width so the copy button
                     stays inside the row at phone widths; a fixed `min-w-*` would push it past the panel edge. */}
               <Field.Input value={getValue()} disabled classNames='w-full min-w-0' />
               <SystemIconButton.Clipboard iconOnly value={getValue() ?? ''} />
-            </ButtonGroup>
+            </Button.Group>
           </Form.Field>
         );
       },

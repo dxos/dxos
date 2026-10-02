@@ -9,7 +9,7 @@ import React, { type FC, type ReactElement, type SVGProps, forwardRef } from 're
 import { getSize, iconSize, mx } from '@dxos/ui-theme';
 
 import { withTheme } from '../../testing/index.ts';
-import { Icon } from './Icon.tsx';
+import * as Icon from './Icon.tsx';
 
 /**
  * Create icon from serializable data.
@@ -51,12 +51,12 @@ const createIcon = ({
 
 const meta = {
   title: 'ui/react-ui-core/components/Icon',
-  component: Icon,
+  component: Icon.Root,
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
-} satisfies Meta<typeof Icon>;
+} satisfies Meta<typeof Icon.Root>;
 
 export default meta;
 
@@ -92,7 +92,7 @@ export const Brand: Story = {
   render: () => (
     <div className='flex gap-8'>
       {(['dxos', 'echo', 'halo', 'mesh', 'dxns', 'kube'] as const).map((name) => (
-        <Icon key={name} icon={`dx--${name}--regular`} classNames={getSize(12)} />
+        <Icon.Root key={name} icon={`dx--${name}--regular`} classNames={getSize(12)} />
       ))}
     </div>
   ),
@@ -109,10 +109,10 @@ export const Extended: Story = {
   },
   render: () => (
     <div className='flex items-end gap-8'>
-      <Icon icon='px--anthropic--regular' classNames={getSize(12)} />
-      <Icon icon='px--anthropic--regular' classNames={getSize(8)} />
-      <Icon icon='px--anthropic--regular' classNames={getSize(5)} />
-      <Icon icon='ph--circle--regular' classNames={getSize(5)} />
+      <Icon.Root icon='px--anthropic--regular' classNames={getSize(12)} />
+      <Icon.Root icon='px--anthropic--regular' classNames={getSize(8)} />
+      <Icon.Root icon='px--anthropic--regular' classNames={getSize(5)} />
+      <Icon.Root icon='ph--circle--regular' classNames={getSize(5)} />
     </div>
   ),
 };
@@ -124,11 +124,11 @@ export const Dynamic: Story = {
   render: (args) => {
     return (
       <div className='flex gap-4'>
-        <Icon {...args} />
+        <Icon.Root {...args} />
         <div className='flex gap-4' style={iconSize(8)}>
-          <Icon {...args} />
+          <Icon.Root {...args} />
           <div className='flex gap-4' style={iconSize(null)}>
-            <Icon {...args} />
+            <Icon.Root {...args} />
           </div>
         </div>
       </div>
@@ -141,7 +141,7 @@ export const Custom = {
     return (
       <div className='grid grid-cols-2 gap-8'>
         <CustomIcon weight={'regular'} className={mx(getSize(16))} />
-        <Icon icon='ph--github-logo--regular' classNames={mx(getSize(16))} />
+        <Icon.Root icon='ph--github-logo--regular' classNames={mx(getSize(16))} />
       </div>
     );
   },

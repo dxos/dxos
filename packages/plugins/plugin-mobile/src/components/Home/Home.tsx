@@ -10,10 +10,14 @@ import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections } from '@dxos/plugin-graph/Hooks';
-import { Avatar, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -26,14 +30,14 @@ export type HomeProps = {};
  * Home screen.
  */
 export const Home = (_: HomeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Profile and settings moved to the navbar's main menu; Home lists spaces only.
   const items = useItemsByDisposition('workspace');
   useExpandPath(GraphNode.RootId);
 
   const { results, handleSearch } = useSearchListResults({
     items,
-    extract: (node) => toLocalizedString(node.properties.label, t),
+    extract: (node) => ThemeProvider.toLocalizedString(node.properties.label, t),
   });
 
   return (
@@ -57,10 +61,10 @@ export const Home = (_: HomeProps) => {
 
 const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
-  const name = toLocalizedString(data.properties.label, t);
+  const name = ThemeProvider.toLocalizedString(data.properties.label, t);
   const pending = data.properties.pending === true;
   const isSelected = selectedValue === data.id;
   const cardRef = useRef<HTMLDivElement>(null);
@@ -119,7 +123,7 @@ const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
           <Avatar.Label asChild>
             <Card.Title classNames='cursor-pointer'>{name}</Card.Title>
           </Avatar.Label>
-          <Card.Block end>{!pending && <Icon icon='ph--caret-right--regular' />}</Card.Block>
+          <Card.Block end>{!pending && <Icon.Root icon='ph--caret-right--regular' />}</Card.Block>
         </Avatar.Root>
       </Card.Header>
     </Card.Root>

@@ -24,7 +24,7 @@ import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import type * as Skill from '@dxos/compute/Skill';
 import { type ConfigPresetOptions, configPreset } from '@dxos/config';
 import { Database, Feed, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService, TestHelpers } from '@dxos/effect/testing';
 import { DXN, type SpaceId } from '@dxos/keys';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';

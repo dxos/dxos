@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import ErrorStackParser from 'error-stack-parser';
 import React from 'react';
 
@@ -13,7 +15,7 @@ import { type ParsedStackFrame } from './parse-stack.ts';
 /** A stack frame resolved to a local (workspace) source location. */
 type LocalFrame = { href: string; fileName: string };
 
-export type ErrorStackProps = ThemedClassName<{
+type ErrorStackProps = ThemedClassName<{
   /** When set, these frames are shown instead of parsing `error`. */
   frames?: ParsedStackFrame[];
   /** Used when `frames` is omitted. */
@@ -23,7 +25,7 @@ export type ErrorStackProps = ThemedClassName<{
 /**
  * Renders a parsed error stack trace with tree connector symbols and clickable vscode:// links for local frames.
  */
-export const ErrorStack = ({ classNames, error, frames: framesProp }: ErrorStackProps) => {
+const ErrorStack = ({ classNames, error, frames: framesProp }: ErrorStackProps) => {
   const frames = framesProp ?? (error ? ErrorStackParser.parse(error) : []);
   if (frames.length === 0) {
     return null;
@@ -98,3 +100,6 @@ const parseLocalFrame = (fileUrl: string, line?: number, col?: number): LocalFra
     return undefined;
   }
 };
+
+export { ErrorStack as Root };
+export type { ErrorStackProps as RootProps };

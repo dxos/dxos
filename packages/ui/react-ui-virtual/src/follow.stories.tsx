@@ -5,8 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { IconButton, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { ScrollFollower } from './follow.ts';
@@ -117,14 +120,14 @@ const DefaultStory = ({
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <IconButton
+          <IconButton.Root
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
             iconOnly
             label={running ? 'Stop' : 'Start'}
             data-testid='follow.toggle'
             onClick={handleToggle}
           />
-          <IconButton
+          <IconButton.Root
             icon='ph--arrow-line-up--regular'
             iconOnly
             label='Top'

@@ -10,7 +10,7 @@ import { DXN, EID, Filter, JsonSchema, Obj, Query, type QueryAST, Scope, Tag, Ty
 import { useQuery } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type ProjectionModel, ViewModel, getTypeURIFromQuery } from '@dxos/schema';
 import { Employer, Organization, Person, Pipeline } from '@dxos/types';
@@ -44,7 +44,7 @@ const DefaultStory = (props: StoryArgs) => {
 
   const tags = useQuery(space?.db, Filter.type(Tag.Tag));
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (space) {
       const TestSchema = Schema.Struct({
         name: Schema.String,

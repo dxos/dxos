@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // Subpath, not the `date-fns` barrel: this component is boot-reachable via
 // `Input` -> `SegmentedInput` -> `DatePicker`, and the barrel drags the whole library with it.
 import { format as formatDate } from 'date-fns/format';
@@ -17,11 +19,11 @@ import React, {
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { useTranslation } from '../../providers/index.ts';
+import { useTranslation } from '../../providers/ThemeProvider/TranslationsContext.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { Calendar, type DateRange } from '../Calendar/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Popover } from '../Popover/index.ts';
+import * as Calendar from '../Calendar/Calendar.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Popover from '../Popover/Popover.tsx';
 import { DatePickerProvider, useDatePickerContext } from './DatePickerContext.ts';
 
 //
@@ -33,18 +35,18 @@ import { DatePickerProvider, useDatePickerContext } from './DatePickerContext.ts
 // in-repo consumers); use `<Calendar.Root>` directly with custom state if needed.
 //
 
-export type DatePickerMode = 'single' | 'range';
+type DatePickerMode = 'single' | 'range';
 
 type ValueByMode = {
   single: Date | undefined;
-  range: DateRange | undefined;
+  range: Calendar.DateRange | undefined;
 };
 
 //
 // Root.
 //
 
-export type DatePickerRootProps<M extends DatePickerMode = 'single'> = {
+type DatePickerRootProps<M extends DatePickerMode = 'single'> = {
   mode?: M;
   value?: ValueByMode[M];
   defaultValue?: ValueByMode[M];
@@ -123,7 +125,7 @@ const formatValue = (mode: DatePickerMode, value: unknown, fmt: string): string 
     case 'single':
       return formatDate(value as Date, fmt);
     case 'range': {
-      const r = value as DateRange;
+      const r = value as Calendar.DateRange;
       if (!r.from) {
         return undefined;
       }
@@ -132,7 +134,7 @@ const formatValue = (mode: DatePickerMode, value: unknown, fmt: string): string 
   }
 };
 
-export type DatePickerTriggerProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'button'>, 'children'>> &
+type DatePickerTriggerProps = ThemedClassName<Omit<ComponentPropsWithoutRef<'button'>, 'children'>> &
   PropsWithChildren<{
     format?: string;
     placeholder?: string;
@@ -160,7 +162,7 @@ const DatePickerTrigger = forwardRef<HTMLButtonElement, DatePickerTriggerProps>(
         >
           {children ?? (
             <>
-              {icon && <Icon size={4} icon='ph--calendar--regular' />}
+              {icon && <Icon.Root size={4} icon='ph--calendar--regular' />}
               {label}
             </>
           )}
@@ -176,7 +178,7 @@ DatePickerTrigger.displayName = 'DatePickerTrigger';
 // Content.
 //
 
-export type DatePickerContentProps = ThemedClassName<ComponentPropsWithoutRef<typeof Popover.Content>>;
+type DatePickerContentProps = ThemedClassName<ComponentPropsWithoutRef<typeof Popover.Content>>;
 
 const DatePickerContent = forwardRef<HTMLDivElement, DatePickerContentProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
@@ -230,7 +232,7 @@ const DatePickerCalendar = ({ classNames }: { classNames?: string } = {}) => {
     );
   }
 
-  const range = value as DateRange | undefined;
+  const range = value as Calendar.DateRange | undefined;
   return (
     <Calendar.Root
       mode='range'
@@ -241,7 +243,7 @@ const DatePickerCalendar = ({ classNames }: { classNames?: string } = {}) => {
           setValue(undefined);
           return;
         }
-        const merged: DateRange = withTime
+        const merged: Calendar.DateRange = withTime
           ? { from: carryTime(range?.from, next.from)!, to: carryTime(range?.to, next.to) }
           : next;
         setValue(merged);
@@ -258,12 +260,19 @@ DatePickerCalendar.displayName = 'DatePickerCalendar';
 //
 // Public namespace.
 //
-
-export const DatePicker = {
-  Root: DatePickerRoot,
-  Trigger: DatePickerTrigger,
-  Content: DatePickerContent,
-  Calendar: DatePickerCalendar,
-};
-
 export type { ValueByMode };
+
+export {
+  DatePickerCalendar as Calendar,
+  DatePickerContent as Content,
+  DatePickerRoot as Root,
+  DatePickerTrigger as Trigger,
+};
+export type {
+  DatePickerContentProps as ContentProps,
+  DatePickerMode as Mode,
+  DatePickerRootProps as RootProps,
+  DatePickerTriggerProps as TriggerProps,
+};
+export * from './DatePicker.theme.ts';
+export { useDatePickerContext } from './DatePickerContext.ts';

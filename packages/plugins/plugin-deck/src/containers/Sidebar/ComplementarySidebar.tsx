@@ -8,8 +8,14 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { IconButton, type Label, Main, Panel, Tabs, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Main from '@dxos/react-ui/Main';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { iconSize, mx } from '@dxos/ui-theme';
 
 import { PlankLoading } from '#components';
@@ -20,7 +26,7 @@ import { isDeckCompanionMounted, layoutAppliesTopbar } from '../../util/index.ts
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 import { ToggleComplementarySidebarButton } from './SidebarButton.tsx';
 
-const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies Label;
+const label = ['complementary-sidebar.title', { ns: meta.profile.key }] satisfies ThemeProvider.Label;
 
 export type ComplementarySidebarProps = {
   current?: string;
@@ -28,7 +34,7 @@ export type ComplementarySidebarProps = {
 
 export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { state, updateState } = useDeckState();
   const breakpoint = useBreakpoints();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
@@ -88,7 +94,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 key={Attention.getLinkedVariant(companion.id)}
                 value={Attention.getLinkedVariant(companion.id)}
                 classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-                label={toLocalizedString(companion.properties.label, t)}
+                label={ThemeProvider.toLocalizedString(companion.properties.label, t)}
                 icon={companion.properties.icon}
                 iconOnly
                 tooltipSide='left'
@@ -149,7 +155,7 @@ type ComplementarySidebarPanelProps = {
 };
 
 const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const data = useMemo(() => ({ id: companion.id, subject: companion.data }), [companion.id, companion.data]);
 
   if (!mounted) {
@@ -160,16 +166,16 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
     <Panel.Root>
       <Panel.Toolbar asChild size='lg'>
         <Toolbar.Root style={iconSize(5)} classNames='dx-header-surface'>
-          <IconButton
+          <IconButton.Root
             classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
-            label={toLocalizedString(companion.properties.label, t)}
+            label={ThemeProvider.toLocalizedString(companion.properties.label, t)}
             icon={companion.properties.icon}
             iconOnly
             tooltipSide='left'
             data-value={Attention.getLinkedVariant(companion.id)}
             variant='default'
           />
-          <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
+          <div className='px-1'>{ThemeProvider.toLocalizedString(companion.properties.label, t)}</div>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='dx-r1-surface'>

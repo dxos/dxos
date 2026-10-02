@@ -9,10 +9,12 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Annotation, DXN, Format, Type } from '@dxos/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Card, Tooltip, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Card from '@dxos/react-ui/Card';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
@@ -311,7 +313,7 @@ const PlaygroundStory = ({ card = false }: PlaygroundStoryArgs) => {
     setValues(next as Partial<FlightValues>);
   }, []);
 
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const extensions = useMemo(
     () => [
       xml(),

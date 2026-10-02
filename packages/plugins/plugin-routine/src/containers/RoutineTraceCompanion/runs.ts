@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute/Errors';
 import * as Trace from '@dxos/compute/Trace';
 import { type Obj, type Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';

@@ -10,7 +10,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { getEnvString } from '@dxos/config';
 import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
 import { useConfig } from '@dxos/react-client';
-import { Flex, Icon, IconButton, Menu, useTranslation } from '@dxos/react-ui';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Menu from '@dxos/react-ui/Menu';
 import { isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -27,7 +31,7 @@ const DISCORD_URL = 'https://dxos.org/discord';
 const GITHUB_URL = 'https://github.com/dxos/dxos';
 
 export const HelpMenu = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
@@ -52,7 +56,7 @@ export const HelpMenu = () => {
     <Menu.Root>
       <Menu.Trigger asChild>
         <StatusBar.Item>
-          <IconButton variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
+          <IconButton.Root variant='ghost' icon='ph--info--regular' iconOnly label={t('help-menu.label')} />
         </StatusBar.Item>
       </Menu.Trigger>
       <Menu.Portal>
@@ -60,42 +64,42 @@ export const HelpMenu = () => {
           <Menu.Viewport>
             <Menu.Item asChild>
               <a href={DOCS_URL} target='_blank' rel='noopener noreferrer'>
-                <Icon icon='ph--book-open--regular' size={4} />
+                <Icon.Root icon='ph--book-open--regular' size={4} />
                 <span>{t('docs.label')}</span>
               </a>
             </Menu.Item>
             <Menu.Item onClick={openDialog(SHORTCUTS_DIALOG)}>
-              <Icon icon='ph--keyboard--regular' size={4} />
+              <Icon.Root icon='ph--keyboard--regular' size={4} />
               <span>{t('shortcuts.label')}</span>
             </Menu.Item>
             <Menu.Separator />
             <Menu.Item asChild>
               <a href={DISCORD_URL} target='_blank' rel='noopener noreferrer'>
-                <Icon icon='ph--discord-logo--regular' size={4} />
+                <Icon.Root icon='ph--discord-logo--regular' size={4} />
                 <span>{t('discord.label')}</span>
               </a>
             </Menu.Item>
             <Menu.Item asChild>
               <a href={GITHUB_URL} target='_blank' rel='noopener noreferrer'>
-                <Icon icon='ph--github-logo--regular' size={4} />
+                <Icon.Root icon='ph--github-logo--regular' size={4} />
                 <span>{t('github.label')}</span>
               </a>
             </Menu.Item>
             {!isTauri() && (
               <Menu.Item asChild>
                 <a href={downloadHref} target='_blank' rel='noopener noreferrer'>
-                  <Icon icon='ph--download-simple--regular' size={4} />
+                  <Icon.Root icon='ph--download-simple--regular' size={4} />
                   <span>{t('download-apps.label')}</span>
                 </a>
               </Menu.Item>
             )}
             <Menu.Separator />
             <Menu.Item onClick={openDialog(ABOUT_DIALOG)}>
-              <Icon icon='ph--info--regular' size={4} />
+              <Icon.Root icon='ph--info--regular' size={4} />
               <span>{t('about.label')}</span>
             </Menu.Item>
             {version && (
-              <Flex column classNames='ps-8 pe-2 pb-2 text-xs text-description'>
+              <Flex.Root column classNames='ps-8 pe-2 pb-2 text-xs text-description'>
                 <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
                   {version}
                 </a>
@@ -106,7 +110,7 @@ export const HelpMenu = () => {
                     })}
                   </span>
                 )}
-              </Flex>
+              </Flex.Root>
             )}
           </Menu.Viewport>
           <Menu.Arrow />

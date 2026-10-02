@@ -19,8 +19,13 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import * as Carousel from '@dxos/react-ui/Carousel';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { useTours } from '#hooks';
 import { meta } from '#meta';
@@ -39,7 +44,7 @@ export type SupportCompanionProps = Pick<AppSurface.ArticleProps<'help', {}, Obj
  * plugin's `meta.profile.description` (Markdown) and `meta.profile.screenshots` (Carousel).
  */
 export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const { invokePromise } = useOperationInvoker();
   const schemasByModule = useAtomValue(manager.capabilities.atomByModule(AppCapabilities.Schema));
@@ -94,7 +99,7 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
             <Toolbar.IconButton
               key={tour.id}
               icon='ph--path--regular'
-              label={toLocalizedString(tour.label, t)}
+              label={ThemeProvider.toLocalizedString(tour.label, t)}
               onClick={() => invokePromise(HelpOperation.StartTour, { tourId: tour.id, subjectId: attendableId })}
               data-testid='supportPlugin.startCompanionTour'
             />

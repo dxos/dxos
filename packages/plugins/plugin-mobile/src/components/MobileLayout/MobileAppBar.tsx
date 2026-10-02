@@ -6,9 +6,13 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { Fragment } from 'react';
 
-import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
+import * as DensityProvider from '@dxos/react-ui/DensityProvider';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -42,9 +46,9 @@ export type MobileAppBarProps = {
 /**
  * AppBar component that renders a title, optional back button, and actions dropdown.
  */
-export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
+export const MobileAppBar = Util.composable<HTMLDivElement, MobileAppBarProps>(
   ({ classNames, title, actions, showBackButton, popoverAnchorId, onAction, onBack, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const menuActions = useMenuActions(actions);
     const actionsValue = useAtomValue(actions);
     const hasActions = actionsValue.nodes.length > 0;
@@ -57,9 +61,9 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
     const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
 
     return (
-      <DensityProvider density='md'>
+      <DensityProvider.Root density='md'>
         <Toolbar.Root
-          {...composableProps(props, {
+          {...Util.composableProps(props, {
             role: 'banner',
             // `min-h` rather than `h`: the Panel toolbar slot pins the row to `--dx-toolbar-size`,
             // and a min-height is the one way to grow past it without depending on class order.
@@ -70,7 +74,7 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
           ref={forwardedRef}
         >
           {keyboardOpen ? (
-            <IconButton
+            <IconButton.Root
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
@@ -78,7 +82,7 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
               classNames={TOUCH_TARGET}
             />
           ) : showBackButton ? (
-            <IconButton
+            <IconButton.Root
               variant='ghost'
               icon='ph--caret-left--regular'
               iconOnly
@@ -93,7 +97,7 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
           {hasActions ? (
             <AnchorRoot>
               <ActionMenu {...menuActions} caller={meta.profile.key} onAction={onAction}>
-                <IconButton
+                <IconButton.Root
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
                   iconOnly
@@ -106,7 +110,7 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
             <span />
           )}
         </Toolbar.Root>
-      </DensityProvider>
+      </DensityProvider.Root>
     );
   },
 );

@@ -14,8 +14,9 @@ import { type AnyProperties } from '@dxos/echo/internal';
 import { log } from '@dxos/log';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Toolbar, Tooltip } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { Text } from '@dxos/schema';
 import { hues } from '@dxos/ui-types';
 

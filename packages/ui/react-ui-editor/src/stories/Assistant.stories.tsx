@@ -11,8 +11,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
-import { useThemeContext } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   type AssistantOptions,
   assistant,
@@ -64,7 +64,7 @@ const useTestGenerate = () => {
 type StoryArgs = Pick<EditorViewProps, 'value'>;
 
 const DefaultStory = (props: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const generate = useTestGenerate();
   const extensions = useMemo(
     () =>

@@ -8,7 +8,7 @@ import { afterEach, describe, test, vi } from 'vitest';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Blob, Database } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';

@@ -12,10 +12,14 @@ import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
@@ -53,7 +57,7 @@ export type BaseRegistryArticleProps = {
   | 'onUpdate'
 >;
 
-export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticleProps>(
+export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryArticleProps>(
   (
     {
       id,
@@ -73,7 +77,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const manager = usePluginManager();
     const { invoke, invokePromise } = useOperationInvoker();
     const allSettings = useCapabilities(AppCapabilities.Settings);
@@ -138,7 +142,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     );
 
     return (
-      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+      <Panel.Root {...Util.composableProps(props)} ref={forwardedRef}>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Field.Root>

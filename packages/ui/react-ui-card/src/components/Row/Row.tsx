@@ -7,18 +7,15 @@ import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, use
 
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
-import {
-  Card,
-  DxAnchorActivate,
-  Icon,
-  IconButton,
-  type IconButtonProps,
-  SystemIconButton,
-  Tag,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import * as Tag from '@dxos/react-ui/Tag';
 import { type Actor, type Message } from '@dxos/types';
 import { mx, toHue } from '@dxos/ui-theme';
+import { DxAnchorActivate } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -151,7 +148,7 @@ const AnchorIconButton = ({
   }, [value, openCard, onClick]);
 
   return (
-    <IconButton
+    <IconButton.Root
       onPointerEnter={startHover}
       onPointerLeave={cancelHover}
       classNames={compact ? 'min-h-0' : 'aspect-square'}
@@ -189,7 +186,7 @@ const RowDate = ({ start, end }: RowDateProps) => {
   return (
     <Card.Row>
       <Card.Block>
-        <Icon icon='ph--calendar--regular' />
+        <Icon.Root icon='ph--calendar--regular' />
       </Card.Block>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
         <div className='truncate text-description'>{format(start, 'PPp')}</div>
@@ -307,7 +304,7 @@ export const ContactAvatar = ({
   onContactCreate,
   onClick,
 }: ContactAvatarProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   // Unconditional hook, but a `getContact` caller passes no `db`, so it runs no query.
   const resolved = useActorContact(getContact ? undefined : db, actor);
   const contactDXN = getContact ? getContact(actor) : resolved;
@@ -350,7 +347,7 @@ export const ContactAvatar = ({
         <Avatar actor={actor} size={size} onClick={onClick} />
       </div>
       {canCreate && (
-        <IconButton
+        <IconButton.Root
           variant='ghost'
           iconOnly
           icon='ph--user-circle-plus--regular'
@@ -378,7 +375,7 @@ const PersonContactRow = ({
   onRemove,
   onClick,
 }: RowPersonProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   return (
     <Card.Row>
@@ -396,7 +393,7 @@ const PersonContactRow = ({
       <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
       {onRemove && (
         <Card.Block end>
-          <IconButton
+          <IconButton.Root
             variant='ghost'
             iconOnly
             icon='ph--x--regular'
@@ -441,11 +438,11 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
   return (
     <Card.Row>
       <Card.Block>
-        <Icon icon='ph--tag--regular' />
+        <Icon.Root icon='ph--tag--regular' />
       </Card.Block>
       <div className='flex flex-wrap gap-1 py-1' data-testid='extracted-tags'>
         {tags.map((tag) => (
-          <Tag
+          <Tag.Root
             key={tag.id}
             hue={toHue(tag.hue)}
             data-testid={`message-tag-${tag.id}`}
@@ -459,7 +456,7 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
             }
           >
             {tag.label ?? tag.id}
-          </Tag>
+          </Tag.Root>
         ))}
       </div>
     </Card.Row>
@@ -483,7 +480,7 @@ type RowStarProps = {
  * the click from bubbling so starring doesn't also select/activate the surrounding tile or card.
  */
 const RowStar = ({ starred, onToggle }: RowStarProps) => {
-  const handleClick = useCallback<NonNullable<IconButtonProps['onClick']>>(
+  const handleClick = useCallback<NonNullable<IconButton.RootProps['onClick']>>(
     (event) => {
       event.stopPropagation();
       onToggle?.();
@@ -523,11 +520,11 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
   return (
     <Card.Row>
       <Card.Block>
-        <Icon icon='ph--paperclip--regular' />
+        <Icon.Root icon='ph--paperclip--regular' />
       </Card.Block>
       <div className='flex flex-wrap gap-1 py-1' data-testid='message-attachments'>
         {attachments.map((attachment, index) => (
-          <Tag
+          <Tag.Root
             key={attachment.ref.uri}
             hue='neutral'
             classNames={mx('inline-flex items-center gap-1', onAttachmentClick && 'cursor-pointer')}
@@ -551,9 +548,9 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
               },
             })}
           >
-            <Icon icon='ph--file--regular' size={3} />
+            <Icon.Root icon='ph--file--regular' size={3} />
             {attachment.name ?? attachment.ref.uri}
-          </Tag>
+          </Tag.Root>
         ))}
       </div>
     </Card.Row>

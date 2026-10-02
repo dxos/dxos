@@ -13,7 +13,6 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { EID } from '@dxos/keys';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board as BoardComponent,
@@ -24,6 +23,9 @@ import {
 } from '@dxos/react-ui-board';
 import { translationKey } from '@dxos/react-ui-board/translations';
 import { ObjectPicker, type ObjectPickerContentProps } from '@dxos/react-ui-form';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { isNonNullable } from '@dxos/util';
 
 import { Board } from '#types';
@@ -49,7 +51,7 @@ const normalizeCells = (cells: Board.Board['layout']['cells']): Layout['items'] 
 export type BoardArticleProps = AppSurface.ObjectArticleProps<Board.Board>;
 
 export const BoardArticle = ({ role, subject: board, attendableId }: BoardArticleProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { hasAttention } = useAttention(attendableId);
   const db = Obj.getDatabase(board);
   const [boardItems] = useObject(board, 'items');

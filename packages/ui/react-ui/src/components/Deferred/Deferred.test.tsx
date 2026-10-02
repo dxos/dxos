@@ -6,7 +6,7 @@ import { act, cleanup, render, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { Deferred } from './Deferred.tsx';
+import * as Deferred from './Deferred.tsx';
 
 describe('Deferred', () => {
   beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
@@ -17,9 +17,9 @@ describe('Deferred', () => {
 
   test('renders children when not pending', () => {
     render(
-      <Deferred pending={false} fallback={fallback}>
+      <Deferred.Root pending={false} fallback={fallback}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     expect(screen.queryByTestId(CONTENT)).not.toBeNull();
     expect(screen.queryByTestId(FALLBACK)).toBeNull();
@@ -29,17 +29,17 @@ describe('Deferred', () => {
   // results, and showing the fallback for those few frames reads as the real answer.
   test('a pending state shorter than `delay` never shows the fallback', async () => {
     const { rerender } = render(
-      <Deferred pending delay={1_000} fallback={fallback}>
+      <Deferred.Root pending delay={1_000} fallback={fallback}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     expect(screen.queryByTestId(FALLBACK)).toBeNull();
 
     await advance(200);
     rerender(
-      <Deferred pending={false} delay={1_000} fallback={fallback}>
+      <Deferred.Root pending={false} delay={1_000} fallback={fallback}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     await advance(2_000);
 
@@ -49,9 +49,9 @@ describe('Deferred', () => {
 
   test('a pending state longer than `delay` shows the fallback', async () => {
     render(
-      <Deferred pending delay={1_000} fallback={fallback}>
+      <Deferred.Root pending delay={1_000} fallback={fallback}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     await advance(1_100);
     expect(screen.queryByTestId(FALLBACK)).not.toBeNull();
@@ -59,9 +59,9 @@ describe('Deferred', () => {
 
   test('`delay` of 0 shows the fallback immediately', () => {
     render(
-      <Deferred pending delay={0} fallback={fallback}>
+      <Deferred.Root pending delay={0} fallback={fallback}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     expect(screen.queryByTestId(FALLBACK)).not.toBeNull();
   });
@@ -69,9 +69,9 @@ describe('Deferred', () => {
   // The defaults carry the policy, so a consumer opting into the guard passes neither bound.
   test('defers by default, with no bounds given', async () => {
     render(
-      <Deferred pending fallback={fallback}>
+      <Deferred.Root pending fallback={fallback}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     expect(screen.queryByTestId(FALLBACK)).toBeNull();
 
@@ -83,16 +83,16 @@ describe('Deferred', () => {
   // the same flash by the other route.
   test('`minDuration` holds a fallback that has already rendered', async () => {
     const { rerender } = render(
-      <Deferred pending delay={0} minDuration={1_000} fallback={fallback}>
+      <Deferred.Root pending delay={0} minDuration={1_000} fallback={fallback}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     expect(screen.queryByTestId(FALLBACK)).not.toBeNull();
 
     rerender(
-      <Deferred pending={false} delay={0} minDuration={1_000} fallback={fallback}>
+      <Deferred.Root pending={false} delay={0} minDuration={1_000} fallback={fallback}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     await advance(300);
     expect(screen.queryByTestId(FALLBACK)).not.toBeNull();
@@ -106,14 +106,14 @@ describe('Deferred', () => {
   // back by `delay` has not been on screen at all, so it owes no minimum.
   test('`minDuration` does not delay content when the fallback never showed', async () => {
     const { rerender } = render(
-      <Deferred pending delay={1_000} minDuration={5_000} fallback={fallback}>
+      <Deferred.Root pending delay={1_000} minDuration={5_000} fallback={fallback}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     rerender(
-      <Deferred pending={false} delay={1_000} minDuration={5_000} fallback={fallback}>
+      <Deferred.Root pending={false} delay={1_000} minDuration={5_000} fallback={fallback}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     await advance(50);
     expect(screen.queryByTestId(CONTENT)).not.toBeNull();
@@ -122,9 +122,9 @@ describe('Deferred', () => {
   test('the fallback thunk is not called while content is shown', () => {
     const spy = vi.fn(fallback);
     render(
-      <Deferred pending={false} fallback={spy}>
+      <Deferred.Root pending={false} fallback={spy}>
         {content}
-      </Deferred>,
+      </Deferred.Root>,
     );
     expect(spy).not.toHaveBeenCalled();
   });

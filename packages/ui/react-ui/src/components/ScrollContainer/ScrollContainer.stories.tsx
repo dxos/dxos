@@ -8,17 +8,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import { random } from '@dxos/random';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
-import { ScrollContainer, type ScrollContainerRootProps, type ScrollController } from './ScrollContainer.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Panel from '../Panel/Panel.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as ScrollContainer from './ScrollContainer.tsx';
 
-type StoryArgs = ScrollContainerRootProps & { running?: boolean; initialLines?: number };
+type StoryArgs = ScrollContainer.RootProps & { running?: boolean; initialLines?: number };
 
 const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: StoryArgs) => {
   const [lines, setLines] = useState<string[]>([]);
   const [running, setRunning] = useState(runningProp);
-  const scroller = useRef<ScrollController>(null);
+  const scroller = useRef<ScrollContainer.ScrollController>(null);
   useEffect(() => {
     setLines(Array.from({ length: initialLines }, () => random.lorem.paragraph()));
   }, [initialLines]);
@@ -38,8 +38,8 @@ const DefaultStory = ({ initialLines = 0, running: runningProp, ...props }: Stor
     <Panel.Root classNames='dx-document'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Button onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button>
-          <Button onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button>
+          <Button.Root onClick={() => setRunning((running) => !running)}>{running ? 'Stop' : 'Start'}</Button.Root>
+          <Button.Root onClick={() => scroller.current?.scrollToBottom()}>Scroll to bottom</Button.Root>
           <Toolbar.Separator />
           <div className='px-1'>{lines.length}</div>
         </Toolbar.Root>

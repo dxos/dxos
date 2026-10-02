@@ -8,10 +8,13 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { Entity, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { useType as defaultUseType, useQuery } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
-import { Button, Field, Icon, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import { ParentLabelAnnotationId } from '@dxos/schema';
 
 import { translationKey } from '#translations';
@@ -86,7 +89,7 @@ export const RefField = (props: RefFieldProps) => {
     resolveCreateEntry,
     onValueChange,
   } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const resolved = presentationFor(presentation);
 
   const typename = useMemo(
@@ -191,12 +194,12 @@ export const RefField = (props: RefFieldProps) => {
             </Field.Root>
           </div>
         ) : (
-          <Button classNames='w-full text-start gap-form-gap'>
+          <Button.Root classNames='w-full text-start gap-form-gap'>
             <div className='grow overflow-hidden'>
               <span className='truncate text-description'>{placeholder || label || t('ref-field.placeholder')}</span>
             </div>
-            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
-          </Button>
+            <Icon.Root icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
+          </Button.Root>
         )}
       </ObjectPicker.Trigger>
       <ObjectPicker.Portal>

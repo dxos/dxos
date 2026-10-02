@@ -9,6 +9,7 @@ export default defineConfig({
     Chat: 'src/components/Chat/index.ts',
     TracePanel: 'src/containers/TracePanel/TracePanel.tsx',
     AssistantSkill: 'src/skills/assistant/AssistantSkill.ts',
+    PluginManagerSkill: 'src/skills/plugin-manager/PluginManagerSkill.ts',
     index: 'src/index.ts',
     AssistantPlugin: 'src/AssistantPlugin.ts',
     skills: 'src/skills/index.ts',

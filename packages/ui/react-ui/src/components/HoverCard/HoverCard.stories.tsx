@@ -7,10 +7,10 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { HoverCard, type HoverCardRootProps } from './HoverCard.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as HoverCard from './HoverCard.tsx';
 
-type StoryProps = Pick<HoverCardRootProps, 'openDelay' | 'closeDelay'> & { side?: 'top' | 'bottom' };
+type StoryProps = Pick<HoverCard.RootProps, 'openDelay' | 'closeDelay'> & { side?: 'top' | 'bottom' };
 
 const DefaultStory = ({ openDelay, closeDelay, side = 'top' }: StoryProps) => (
   // A tall scroller under the trigger, so the card can be seen tracking its trigger as the page moves.
@@ -19,7 +19,7 @@ const DefaultStory = ({ openDelay, closeDelay, side = 'top' }: StoryProps) => (
     <div className='flex justify-center'>
       <HoverCard.Root openDelay={openDelay} closeDelay={closeDelay}>
         <HoverCard.Trigger asChild>
-          <Button data-testid='hover-card.trigger'>Hover me</Button>
+          <Button.Root data-testid='hover-card.trigger'>Hover me</Button.Root>
         </HoverCard.Trigger>
         <HoverCard.Portal>
           <HoverCard.Content side={side} classNames='p-3 max-w-64' data-testid='hover-card.content'>

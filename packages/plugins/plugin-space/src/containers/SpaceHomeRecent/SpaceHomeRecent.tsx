@@ -13,8 +13,11 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Collection, Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Card, Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -34,7 +37,7 @@ type SpaceScopedProps = {
  * contributor (plugin-assistant) fills the empty state instead.
  */
 export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const schemas = useCapabilities(AppCapabilities.Schema);
   const filter = useMemo(() => {
@@ -74,9 +77,9 @@ export const SpaceHomeRecent = ({ space, onClose }: SpaceScopedProps) => {
 
 const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const typename = Obj.getTypename(data);
-  const label = toLocalizedString(
+  const label = ThemeProvider.toLocalizedString(
     Obj.getLabel(data) ?? (typename ? ['object-name.placeholder', { ns: typename, defaultValue: 'New item' }] : ''),
     t,
   );
@@ -92,7 +95,7 @@ const RecentObjectTile = ({ data }: { data: Obj.Unknown; index: number }) => {
     <Card.Root role='button' fullWidth classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
         <Card.Block>
-          <Icon icon={icon} classNames={iconStyles?.text} />
+          <Icon.Root icon={icon} classNames={iconStyles?.text} />
         </Card.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>

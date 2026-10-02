@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Toast` on Ark's toast machine, which is a store plus a `Toaster` host rather than a tree of
 // roots. The declarative API is kept: `Toast.Provider` owns the store, `Toast.Root` registers its
 // content and mirrors its `open` state into the store, and `Toast.Viewport` is the host, rendering
@@ -32,12 +34,13 @@ import { useControllableState } from '@dxos/react-hooks';
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { DensityProvider, ElevationProvider } from '../../providers/index.ts';
+import * as DensityProvider from '../../providers/DensityProvider/DensityProvider.tsx';
+import * as ElevationProvider from '../../providers/ElevationProvider/ElevationProvider.tsx';
 import { type ThemedClassName } from '../../util/index.ts';
-import { IconButton } from '../Button/index.ts';
-import { Column } from '../Column/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Progress } from '../Progress/index.ts';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as Column from '../Column/Column.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Progress from '../Progress/Progress.tsx';
 import {
   TOAST_NAME,
   ToastProvider as ToastContextProvider,
@@ -98,10 +101,12 @@ const ToastHost = ({ entry }: { entry: ToastEntry }) => {
   const timed = Number.isFinite(entry.countdown) && entry.countdown > 0;
   return (
     <ToastPrimitive.Root {...entry.props} className={tx('toast.root', {}, entry.classNames)} ref={entry.ref}>
-      <ElevationProvider elevation='toast'>
+      <ElevationProvider.Root elevation='toast'>
         <Column.Root classNames={tx('toast.grid', {})}>{entry.children}</Column.Root>
-        {timed && <Progress countdown={entry.countdown} paused={toast.paused} classNames={tx('toast.countdown', {})} />}
-      </ElevationProvider>
+        {timed && (
+          <Progress.Root countdown={entry.countdown} paused={toast.paused} classNames={tx('toast.countdown', {})} />
+        )}
+      </ElevationProvider.Root>
     </ToastPrimitive.Root>
   );
 };
@@ -259,7 +264,7 @@ const ToastTitle = forwardRef<HTMLDivElement, ToastTitleProps>(
       <Column.Row classNames={tx('toast.header', {})}>
         {icon && (
           <Column.Block>
-            <Icon icon={icon} size={5} />
+            <Icon.Root icon={icon} size={5} />
           </Column.Block>
         )}
         <ToastPrimitive.Title {...props} className={tx('toast.title', {}, classNames)} ref={forwardedRef}>
@@ -267,7 +272,7 @@ const ToastTitle = forwardRef<HTMLDivElement, ToastTitleProps>(
         </ToastPrimitive.Title>
         {onClose && (
           <Column.Block end>
-            <IconButton
+            <IconButton.Root
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
@@ -313,7 +318,7 @@ const ToastActions = forwardRef<HTMLDivElement, ToastActionsProps>(
     const { tx } = useThemeContext();
     return (
       <Column.Center classNames={tx('toast.actions', {}, classNames)} ref={forwardedRef} {...props}>
-        <DensityProvider density='sm'>{children}</DensityProvider>
+        <DensityProvider.Root density='sm'>{children}</DensityProvider.Root>
       </Column.Center>
     );
   },
@@ -343,27 +348,27 @@ const ToastClose = ToastPrimitive.CloseTrigger;
 //
 // Toast
 //
-
-export const Toast = {
-  Provider: ToastProvider,
-  Viewport: ToastViewport,
-  Root: ToastRoot,
-  Title: ToastTitle,
-  Description: ToastDescription,
-  Actions: ToastActions,
-  Action: ToastAction,
-  Close: ToastClose,
-};
-
 export { TOAST_NAME };
 
 export type {
-  ToastActionProps,
-  ToastActionsProps,
-  ToastCloseProps,
-  ToastDescriptionProps,
-  ToastProviderProps,
-  ToastRootProps,
-  ToastTitleProps,
-  ToastViewportProps,
+  ToastActionProps as ActionProps,
+  ToastActionsProps as ActionsProps,
+  ToastCloseProps as CloseProps,
+  ToastDescriptionProps as DescriptionProps,
+  ToastProviderProps as ProviderProps,
+  ToastRootProps as RootProps,
+  ToastTitleProps as TitleProps,
+  ToastViewportProps as ViewportProps,
 };
+
+export {
+  ToastAction as Action,
+  ToastActions as Actions,
+  ToastClose as Close,
+  ToastDescription as Description,
+  ToastProvider as Provider,
+  ToastRoot as Root,
+  ToastTitle as Title,
+  ToastViewport as Viewport,
+};
+export * from './Toast.theme.ts';

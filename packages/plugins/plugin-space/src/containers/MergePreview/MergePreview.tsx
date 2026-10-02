@@ -5,8 +5,10 @@
 import React, { forwardRef } from 'react';
 
 import { type Type } from '@dxos/echo';
-import { Card, Panel, ScrollArea } from '@dxos/react-ui';
 import { ObjectForm } from '@dxos/react-ui-form';
+import * as Card from '@dxos/react-ui/Card';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { SpaceCapabilities } from '#types';
 

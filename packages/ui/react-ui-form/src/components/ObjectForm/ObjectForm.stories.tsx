@@ -10,8 +10,8 @@ import { Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Person } from '@dxos/types';
 
 import { translations } from '#translations';

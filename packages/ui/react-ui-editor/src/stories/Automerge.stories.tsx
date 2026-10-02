@@ -16,8 +16,9 @@ import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { useSpace } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
 import { useClientStory, withMultiClientProvider } from '@dxos/react-client/testing';
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Util from '@dxos/react-ui/Util';
 import { Text } from '@dxos/schema';
 import {
   type DataExtensionsIdentity,
@@ -33,7 +34,7 @@ import { useTextEditor } from '../hooks/index.ts';
 
 const initialContent = ['# Hello world!', 'Hello Automerge', ''].join('\n\n');
 
-type EditorProps = ThemedClassName<{
+type EditorProps = Util.ThemedClassName<{
   source: Doc.Accessor;
   messenger?: Messenger;
   identity?: DataExtensionsIdentity;
@@ -41,7 +42,7 @@ type EditorProps = ThemedClassName<{
 }>;
 
 const Editor = ({ classNames, source, messenger, identity, autoFocus }: EditorProps) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const { parentRef } = useTextEditor(
     () => ({
       autoFocus,

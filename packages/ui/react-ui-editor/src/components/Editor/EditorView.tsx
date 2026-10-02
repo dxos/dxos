@@ -6,14 +6,14 @@ import { Transaction } from '@codemirror/state';
 import { EditorView as NaturalEditorView } from '@codemirror/view';
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { computeDocChanges, initialSync } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
 import { type UseTextEditorProps, useTextEditor } from '../../hooks/index.ts';
 import { type EditorController, createEditorController } from './controller.ts';
 
-export type EditorViewProps = ThemedClassName<
+export type EditorViewProps = Util.ThemedClassName<
   {
     focusable?: boolean;
     value?: string;

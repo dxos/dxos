@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
 import type * as Plugin from '@dxos/app-framework/Plugin';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { type TestAppOptions, type TestHarness, createTestApp } from '@dxos/app-framework/testing';
 import { AttentionPlugin } from '@dxos/plugin-attention/testing';
 import { GraphPlugin } from '@dxos/plugin-graph/testing';
@@ -27,7 +27,7 @@ export type ComposerTestAppOptions = Omit<TestAppOptions, 'plugins'> & {
 const headlessCorePlugins = (): Plugin.Plugin[] => [
   AttentionPlugin.make(),
   GraphPlugin.make(),
-  ProcessManagerPlugin(),
+  ProcessManagerPlugin.make(),
   SettingsPlugin.make(),
 ];
 
@@ -48,7 +48,7 @@ export const createComposerTestApp = async (opts: ComposerTestAppOptions = {}): 
   const core = headlessCorePlugins();
   if (theme) {
     const { ThemePlugin } = await import('@dxos/plugin-theme/testing');
-    const { defaultTx } = await import('@dxos/react-ui');
+    const { defaultTx } = await import('@dxos/react-ui/ThemeProvider');
     core.push(ThemePlugin.make({ tx: defaultTx }));
   }
   return createTestApp({

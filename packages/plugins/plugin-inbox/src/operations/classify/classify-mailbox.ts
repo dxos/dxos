@@ -27,7 +27,7 @@ import { trim } from '@dxos/util';
 import { InboxOperation } from '#types';
 
 import { type SystemTagId, findOrCreateSystemTag } from '../../types/SystemTags.ts';
-import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../FeedCursor.ts';
+import * as FeedCursor from '../FeedCursor.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -184,7 +184,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
       const feed = yield* Database.load(mailbox.feed);
       const tagIndex = yield* Database.load(mailbox.tags);
       const { db } = yield* Database.Service;
-      const cursor = yield* findOrCreateFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID);
+      const cursor = yield* FeedCursor.findOrCreateFeedCursor(mailbox, FeedCursor.CLASSIFY_CURSOR_KEY_ID);
 
       const signal = yield* Cancellation.signal;
       const traceWriter = yield* Trace.TraceService;

@@ -7,8 +7,10 @@ import React, { type ReactNode, useMemo } from 'react';
 import { Surface } from '@dxos/app-framework/Surface';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { type ThemedClassName, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -24,7 +26,7 @@ import { Pane, type PaneTab } from '../Pane/index.ts';
 // primary plank via `attendableId`. Controls (e.g. close) are supplied by the container.
 //
 
-export type CompanionProps = ThemedClassName<{
+export type CompanionProps = Util.ThemedClassName<{
   /** The plank's companions, or undefined until they have been read — an empty array is a plank with none. */
   companions?: AppGraphNode.Node[];
   /** Selected companion id. */
@@ -50,7 +52,7 @@ export const Companion = ({
   controls,
   headless,
 }: CompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const companions = companionsProp ?? [];
 
   // Fall back to the first companion when uncontrolled so a panel is always visible.
@@ -60,7 +62,7 @@ export const Companion = ({
       companions.map((node) => ({
         id: node.id,
         icon: node.properties?.icon ?? 'ph--circle-dashed--regular',
-        label: toLocalizedString(node.properties?.label ?? '', t),
+        label: ThemeProvider.toLocalizedString(node.properties?.label ?? '', t),
         testId: `deck.companion.tab.${Attention.getLinkedVariant(node.id)}`,
       })),
     [companions, t],

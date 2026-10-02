@@ -22,22 +22,13 @@ import React, {
   useCallback,
 } from 'react';
 
-import {
-  Button,
-  type ButtonProps,
-  Icon,
-  type IconProps,
-  Popover,
-  type PopoverContentProps,
-  type PopoverVirtualTriggerProps,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  createContext,
-  useControllableState,
-  useThemeContext,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { listTheme } from '../List.theme.ts';
@@ -65,7 +56,7 @@ type ComboboxContextValue = {
   onValueChange: (nextValue: string) => void;
 };
 
-const [ComboboxProvider, useComboboxContext] = createContext<Partial<ComboboxContextValue>>(COMBOBOX_NAME, {});
+const [ComboboxProvider, useComboboxContext] = Hooks.createContext<Partial<ComboboxContextValue>>(COMBOBOX_NAME, {});
 
 //
 // Root
@@ -94,12 +85,12 @@ const ComboboxRoot = ({
   onValueChange: propsOnValueChange,
   placeholder,
 }: ComboboxRootProps) => {
-  const [open = false, onOpenChange] = useControllableState({
+  const [open = false, onOpenChange] = Hooks.useControllableState({
     prop: openProp,
     defaultProp: defaultOpen,
     onChange: propsOnOpenChange,
   });
-  const [value = '', onValueChange] = useControllableState({
+  const [value = '', onValueChange] = Hooks.useControllableState({
     prop: valueProp,
     defaultProp: defaultValue,
     onChange: propsOnValueChange,
@@ -128,12 +119,12 @@ const ComboboxRoot = ({
 // Filtering is caller-driven: pass already-matching <Combobox.Item> children.
 //
 
-type ComboboxContentProps = PopoverContentProps & {
+type ComboboxContentProps = Popover.ContentProps & {
   /** Snap the highlight to the first item whenever the list changes (type-to-filter lists). */
   resetSelectionOnChange?: boolean;
 };
 
-const ComboboxContent = composable<HTMLDivElement, ComboboxContentProps>(
+const ComboboxContent = Util.composable<HTMLDivElement, ComboboxContentProps>(
   ({ children, classNames, resetSelectionOnChange, collisionPadding = 0, ...props }, forwardedRef) => {
     return (
       <Popover.Content
@@ -173,11 +164,11 @@ ComboboxContent.displayName = COMBOBOX_CONTENT_NAME;
 // Trigger — the button that opens the popover.
 //
 
-type ComboboxTriggerProps = ButtonProps;
+type ComboboxTriggerProps = Button.RootProps;
 
-const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
+const ComboboxTrigger = Util.composable<HTMLButtonElement, ComboboxTriggerProps>(
   ({ children, classNames, onClick, ...props }, forwardedRef) => {
-    const { tx } = useThemeContext();
+    const { tx } = ThemeProvider.useThemeContext();
     const { open, placeholder, value, displayValue } = useComboboxContext(COMBOBOX_TRIGGER_NAME);
     // Nullish, matching the `??` that picks the children below: `false`/`0`/`''` suppress the
     // fallback caret without being a caret of their own, so the column has to collapse for them too.
@@ -185,7 +176,7 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
 
     return (
       <Popover.Trigger asChild>
-        <Button
+        <Button.Root
           {...props}
           // The `Select` trigger slot, so the two controls are indistinguishable in a form
           // (input surface, 1fr/auto grid, control sizing). That second column belongs to the caret
@@ -206,10 +197,10 @@ const ComboboxTrigger = composable<HTMLButtonElement, ComboboxTriggerProps>(
               <span className={styles.comboboxTriggerText({ class: !value && 'text-placeholder' })}>
                 {displayValue || value || placeholder}
               </span>
-              <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
+              <Icon.Root icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
             </>
           )}
-        </Button>
+        </Button.Root>
       </Popover.Trigger>
     );
   },
@@ -221,7 +212,7 @@ ComboboxTrigger.displayName = COMBOBOX_TRIGGER_NAME;
 // VirtualTrigger
 //
 
-type ComboboxVirtualTriggerProps = PopoverVirtualTriggerProps;
+type ComboboxVirtualTriggerProps = Popover.VirtualTriggerProps;
 
 const ComboboxVirtualTrigger = Popover.VirtualTrigger;
 
@@ -229,13 +220,15 @@ const ComboboxVirtualTrigger = Popover.VirtualTrigger;
 // Input — text input wired to Picker.Input. Caller controls value.
 //
 
-type ComboboxInputProps = ThemedClassName<
+type ComboboxInputProps = Util.ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'value'> & Pick<PickerInputProps, 'value' | 'onValueChange'>
 >;
 
-const ComboboxInput = composable<HTMLInputElement, ComboboxInputProps>(({ classNames, ...props }, forwardedRef) => {
-  return <Picker.Input {...props} classNames={styles.comboboxInput({ class: classNames })} ref={forwardedRef} />;
-});
+const ComboboxInput = Util.composable<HTMLInputElement, ComboboxInputProps>(
+  ({ classNames, ...props }, forwardedRef) => {
+    return <Picker.Input {...props} classNames={styles.comboboxInput({ class: classNames })} ref={forwardedRef} />;
+  },
+);
 
 ComboboxInput.displayName = 'Combobox.Input';
 
@@ -249,7 +242,7 @@ const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     return (
       <ScrollArea.Root
-        {...composableProps(props, { classNames: styles.comboboxList({ class: classNames }) })}
+        {...Util.composableProps(props, { classNames: styles.comboboxList({ class: classNames }) })}
         role='listbox'
         thin
         ref={forwardedRef}
@@ -266,7 +259,7 @@ ComboboxList.displayName = 'Combobox.List';
 // Item — wraps Picker.Item; commits value + closes popover on select.
 //
 
-type ComboboxItemProps = ThemedClassName<
+type ComboboxItemProps = Util.ThemedClassName<
   PropsWithChildren<{
     /** Unique identifier. */
     value: string;
@@ -277,7 +270,7 @@ type ComboboxItemProps = ThemedClassName<
     /** Optional icon id (Phosphor) shown before the label. */
     icon?: string;
     /** Additional class names for the icon. */
-    iconClassNames?: IconProps['classNames'];
+    iconClassNames?: Icon.RootProps['classNames'];
     /** Show a check icon on the right (commonly used for confirming the picked item). */
     checked?: boolean;
     /** Suffix text after the label. */
@@ -337,7 +330,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
       >
         {children ?? (
           <>
-            {icon && <Icon icon={icon} classNames={iconClassNames} />}
+            {icon && <Icon.Root icon={icon} classNames={iconClassNames} />}
             {description ? (
               <span className='w-0 grow flex flex-col'>
                 <span className='truncate'>{label}</span>
@@ -347,7 +340,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
               <span className='w-0 grow truncate'>{label}</span>
             )}
             {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
-            {checked && <Icon icon='ph--check--regular' />}
+            {checked && <Icon.Root icon='ph--check--regular' />}
           </>
         )}
       </Picker.Item>
@@ -361,7 +354,7 @@ ComboboxItem.displayName = COMBOBOX_ITEM_NAME;
 // Empty — passthrough placeholder. No translation; caller supplies copy.
 //
 
-type ComboboxEmptyProps = ThemedClassName<PropsWithChildren>;
+type ComboboxEmptyProps = Util.ThemedClassName<PropsWithChildren>;
 
 const ComboboxEmpty = forwardRef<HTMLDivElement, ComboboxEmptyProps>(({ classNames, children }, forwardedRef) => {
   return (

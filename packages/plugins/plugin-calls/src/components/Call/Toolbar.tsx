@@ -11,22 +11,19 @@ import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useActions, useNode } from '@dxos/plugin-graph/Hooks';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';
-import {
-  Icon,
-  IconButton,
-  type IconButtonProps,
-  Toolbar as NaturalToolbar,
-  type ThemedClassName,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as ToolbarModule from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import { type Channel } from '@dxos/types';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
 
-export type ToolbarProps = ThemedClassName<{
+export type ToolbarProps = Util.ThemedClassName<{
   channel?: Channel.Channel;
   participants?: number;
   autoHideControls?: boolean;
@@ -48,7 +45,7 @@ export const Toolbar = ({
   joinDisabled,
   onLeave,
 }: ToolbarProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { graph } = useAppGraph();
   const runAction = useActionRunner();
   const call = useCapability(CallsCapabilities.Manager);
@@ -72,7 +69,7 @@ export const Toolbar = ({
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
-      <NaturalToolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
+      <ToolbarModule.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={audioEnabled}
           state={{
@@ -107,10 +104,10 @@ export const Toolbar = ({
 
         {(participants !== undefined && (
           <div className='flex justify-center items-center gap-2 w-[5rem] text-xs text-subdued'>
-            <Icon icon='ph--users--regular' />
+            <Icon.Root icon='ph--users--regular' />
             <div>{participants}</div>
           </div>
-        )) || <NaturalToolbar.Separator variant='gap' />}
+        )) || <ToolbarModule.Separator variant='gap' />}
 
         {inRoom && (
           <>
@@ -135,11 +132,11 @@ export const Toolbar = ({
             {actions
               .filter((action): action is AppGraphNode.Action => AppGraphNode.isAction(action))
               .map((action) => (
-                <IconButton
+                <IconButton.Root
                   key={action.id}
                   {...defaultButtonProps}
                   icon={action.properties.icon}
-                  label={toLocalizedString(action.properties.label, t)}
+                  label={ThemeProvider.toLocalizedString(action.properties.label, t)}
                   classNames={action.properties.classNames}
                   onClick={() => node && void runAction(action, { parent: node })}
                 />
@@ -163,14 +160,14 @@ export const Toolbar = ({
           </>
         )}
         {inRoom ? (
-          <IconButton
+          <IconButton.Root
             variant='destructive'
             icon='ph--phone-x--regular'
             label={t('leave-call.button')}
             onClick={onLeave}
           />
         ) : (
-          <IconButton
+          <IconButton.Root
             variant='primary'
             icon='ph--phone-incoming--regular'
             label={t('join-call.button')}
@@ -178,28 +175,28 @@ export const Toolbar = ({
             onClick={onJoin}
           />
         )}
-      </NaturalToolbar.Root>
+      </ToolbarModule.Root>
     </div>
   );
 };
 
 Toolbar.displayName = 'MeetingToolbar';
 
-type ToolbarButtonProps = Pick<IconButtonProps, 'disabled'> & {
+type ToolbarButtonProps = Pick<IconButton.RootProps, 'disabled'> & {
   active?: boolean;
   state: {
-    on: Pick<IconButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
-    off: Pick<IconButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
+    on: Pick<IconButton.RootProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
+    off: Pick<IconButton.RootProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
   };
 };
 
-const defaultButtonProps: Partial<IconButtonProps> = {
+const defaultButtonProps: Partial<IconButton.RootProps> = {
   size: 5,
   iconOnly: true,
 };
 
 const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
-  <IconButton
+  <IconButton.Root
     {...defaultButtonProps}
     classNames={[active ? (state.on.classNames ?? 'bg-accent-bg') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}

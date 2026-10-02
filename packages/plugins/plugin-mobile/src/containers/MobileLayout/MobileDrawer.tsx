@@ -9,8 +9,11 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useCompanions, useDeckState, useSelectedCompanion } from '@dxos/plugin-deck/Hooks';
 import { useNode } from '@dxos/plugin-graph/Hooks';
-import { Banner, ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { Loading } from '#components';
 import { useMobileDrawerActions, useMobileStack } from '#hooks';
@@ -22,7 +25,7 @@ const DRAWER_NAME = 'MobileDeckLayout.Drawer';
  * Companion drawer for the visible panel of the mobile stack.
  */
 export const MobileDrawer = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { graph } = useAppGraph();
   const { state } = useDeckState();
   const { topId } = useMobileStack();
@@ -65,7 +68,7 @@ export const MobileDrawer = () => {
             type={AppSurface.Article}
             data={data}
             limit={1}
-            fallback={ErrorFallback}
+            fallback={ErrorFallback.Root}
             placeholder={placeholder}
           />
         ) : (

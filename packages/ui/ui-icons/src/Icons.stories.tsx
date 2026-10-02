@@ -10,7 +10,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Icon } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getSize } from '@dxos/ui-theme';
 
@@ -41,7 +41,7 @@ const Row = ({ symbol }: { symbol: string }) => (
       // The slot keeps columns aligned across rows; the inner box takes its size from the icon.
       <div key={size} className='grid w-20 place-items-center'>
         <div className='inline-flex border border-dashed border-separator'>
-          <Icon icon={symbol} classNames={getSize(size)} />
+          <Icon.Root icon={symbol} classNames={getSize(size)} />
         </div>
       </div>
     ))}
@@ -85,7 +85,7 @@ export const Inline: Story = {
     <div className='flex flex-col gap-4 text-base'>
       {Object.values(PxIcons).map((symbol) => (
         <p key={symbol} className='flex items-center gap-2'>
-          <Icon icon={symbol} />
+          <Icon.Root icon={symbol} />
           <span>The quick brown fox — {symbol}</span>
         </p>
       ))}

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { Obj } from '@dxos/echo';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 
 import { Chessboard } from '#components';
 import { Chess } from '#types';

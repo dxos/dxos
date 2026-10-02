@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Menu, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
 
 import { meta } from '#meta';
 import { Notebook } from '#types';
@@ -17,7 +18,7 @@ export type NotebookMenuProps = {
 
 // TODO(burdon): Better way to organize menu?
 export const NotebookMenu = ({ cell, onCellInsert, onCellDelete }: NotebookMenuProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Menu.Portal>
       <Menu.Content>

@@ -68,6 +68,11 @@
       "types": "./dist/types/src/core/plugin-manifest.d.ts",
       "import": "./dist/lib/core/plugin-manifest.mjs"
     },
+    "./ProcessManagerPlugin": {
+      "source": "./src/plugin-process-manager/ProcessManagerPlugin.ts",
+      "types": "./dist/types/src/plugin-process-manager/ProcessManagerPlugin.d.ts",
+      "import": "./dist/lib/plugin-process-manager/ProcessManagerPlugin.mjs"
+    },
     "./Registry": {
       "source": "./src/core/registry.ts",
       "types": "./dist/types/src/core/registry.d.ts",

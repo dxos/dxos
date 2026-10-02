@@ -10,12 +10,12 @@ import { useActivationSignal, useCapabilities, useOperationInvoker } from '@dxos
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Routine from '@dxos/compute/Routine';
 import { Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { RoutineCapabilities, RoutineEvents } from '#types';
@@ -55,7 +55,7 @@ export const CreateRoutinePanel = ({
   onCancel,
   templates: templatesProp,
 }: CreateRoutinePanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   useActivationSignal(RoutineEvents.Start);
   const capabilityTemplates = useCapabilities(RoutineCapabilities.Template);
   const { invokePromise } = useOperationInvoker();

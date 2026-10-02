@@ -4,9 +4,9 @@
 
 import React, { type ChangeEventHandler, type ReactNode } from 'react';
 
-import { Field as NaturalField, type InputProps as NaturalInputProps } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
 
-export type InputProps = NaturalInputProps & {
+export type InputProps = Field.InputProps & {
   validationMessage?: string;
   label?: ReactNode;
   disabled?: boolean;
@@ -19,10 +19,10 @@ export type InputProps = NaturalInputProps & {
  */
 export const TextInput = ({ validationMessage, label, ...props }: InputProps) => {
   return (
-    <NaturalField.Root>
-      <NaturalField.Label>{label}</NaturalField.Label>
-      <NaturalField.Input {...props} classNames='py-2 mt-2 text-center' />
-      {validationMessage && <NaturalField.ErrorText>{validationMessage}</NaturalField.ErrorText>}
-    </NaturalField.Root>
+    <Field.Root>
+      <Field.Label>{label}</Field.Label>
+      <Field.Input {...props} classNames='py-2 mt-2 text-center' />
+      {validationMessage && <Field.ErrorText>{validationMessage}</Field.ErrorText>}
+    </Field.Root>
   );
 };

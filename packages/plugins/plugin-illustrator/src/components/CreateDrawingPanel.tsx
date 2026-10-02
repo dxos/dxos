@@ -7,9 +7,10 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/Hooks';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Column, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Column from '@dxos/react-ui/Column';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { IllustratorCapabilities } from '#types';
@@ -30,7 +31,7 @@ type VariantSelection = Schema.Schema.Type<typeof VariantSelection>;
  * variant.createCanvas, then wraps it in a Drawing.
  */
 export const CreateDrawingPanel = ({ onCreateObject, onCancel, variants: variantsProp }: CreateDrawingPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const capabilityVariants = useCapabilities(IllustratorCapabilities.VariantProvider);
   const variants = variantsProp ?? capabilityVariants;
   const sorted = useMemo(() => [...variants].sort((a, b) => a.label.localeCompare(b.label)), [variants]);

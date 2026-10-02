@@ -8,10 +8,12 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, type Key, type Obj, type Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { Column, Dialog, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Column from '@dxos/react-ui/Column';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
@@ -43,7 +45,7 @@ export const CustomTokenDialog = ({
   connectorLabel,
   existingTarget,
 }: CustomTokenDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invoke } = useOperationInvoker();
   const coordinator = useCapability(ConnectorCoordination.ConnectorCoordinator);
   const connectors = useCapabilities(ConnectorSpec.Connector).flat();

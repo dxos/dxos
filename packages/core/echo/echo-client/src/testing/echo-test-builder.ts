@@ -18,7 +18,7 @@ import { type Entity, Filter, Obj, Query, type Type } from '@dxos/echo';
 import { EchoHost, type QueryDebounceOptions, type QueryExecutorMode } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';

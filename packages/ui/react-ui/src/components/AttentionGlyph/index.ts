@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './AttentionGlyph.tsx';
+export * as AttentionGlyph from './AttentionGlyph.tsx';

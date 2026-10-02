@@ -5,8 +5,13 @@
 import React, { useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import { Field, IconButton, Panel, type ThemedClassName, Toolbar, useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as Field from '@dxos/react-ui/Field';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -15,7 +20,7 @@ import {
   pos,
 } from '@dxos/ui-editor';
 
-export type DocumentEditorProps = ThemedClassName<{
+export type DocumentEditorProps = Util.ThemedClassName<{
   /** Initial markdown content; the component owns subsequent edits. */
   initialValue?: string;
   /** POS tagger wired into the `pos` decoration extension; omit to disable decorations. */
@@ -32,7 +37,7 @@ export type DocumentEditorProps = ThemedClassName<{
  * always receive the latest edits; variants select the pipeline via the parent's `onRun`.
  */
 export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onRun }: DocumentEditorProps) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const [text, setText] = useState(initialValue);
   const [underline, setUnderline] = useState(false);
   const extensions = useMemo(
@@ -60,7 +65,7 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
             </Field.Root>
           )}
           <div className='grow' />
-          <IconButton
+          <IconButton.Root
             icon={busy ? 'ph--spinner-gap--regular' : 'ph--play--regular'}
             iconOnly
             label='Run pipeline'

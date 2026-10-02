@@ -96,6 +96,11 @@
       "source": "./src/operations/index.ts",
       "types": "./dist/types/src/operations/index.d.ts",
       "import": "./dist/lib/operations.mjs"
+    },
+    "./RegistryOperation": {
+      "source": "./src/operations/definitions.ts",
+      "types": "./dist/types/src/operations/definitions.d.ts",
+      "import": "./dist/lib/RegistryOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -137,6 +142,7 @@
     "@dxos/random": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",

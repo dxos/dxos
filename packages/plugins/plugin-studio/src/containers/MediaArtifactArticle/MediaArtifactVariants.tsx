@@ -8,8 +8,14 @@ import { Surface } from '@dxos/app-framework/Surface';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Button, Field, Flex, Icon, Panel, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { VariantGallery } from '#components';
 import { meta } from '#meta';
@@ -19,7 +25,7 @@ import { type MediaArtifact } from '#types';
 /** `'all'` gallery, or the index of a produced (frozen) variant. */
 type Selected = 'all' | number;
 
-export type MediaArtifactVariantsProps = ThemedClassName<{
+export type MediaArtifactVariantsProps = Util.ThemedClassName<{
   artifact: MediaArtifact.MediaArtifact;
   attendableId?: string;
   /**
@@ -42,7 +48,7 @@ export const MediaArtifactVariants = ({
   attendableId,
   actionsNodeId,
 }: MediaArtifactVariantsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { graph } = useAppGraph();
   const db = Obj.getDatabase(artifact);
   const [artifactSnapshot] = useObject(artifact);
@@ -127,21 +133,21 @@ export const MediaArtifactVariants = ({
           label: ['all.tab.label', { ns: meta.profile.key }],
           render: () => (
             <>
-              <Button variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
+              <Button.Root variant={selected === 'all' ? 'primary' : 'ghost'} onClick={() => setSelected('all')}>
                 {t('all.tab.label')}
-              </Button>
+              </Button.Root>
               {variants.map((variant, index) => (
-                <Button
+                <Button.Root
                   key={variant.id}
                   variant={selected === index ? 'primary' : 'ghost'}
                   onClick={() => setSelected(index)}
                 >
                   {variant.jobId ? (
-                    <Icon icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' />
+                    <Icon.Root icon='ph--spinner-gap--regular' size={4} classNames='animate-spin' />
                   ) : (
                     index + 1
                   )}
-                </Button>
+                </Button.Root>
               ))}
             </>
           ),
@@ -192,9 +198,9 @@ export const MediaArtifactVariants = ({
         ) : (
           selectedVariant &&
           (selectedVariant.jobId ? (
-            <Flex role='status' center classNames='h-full text-subdued'>
+            <Flex.Root role='status' center classNames='h-full text-subdued'>
               {t('generating.label')}
-            </Flex>
+            </Flex.Root>
           ) : (
             <Surface.Surface
               type={VariantRenderer}

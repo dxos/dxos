@@ -10,7 +10,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { Annotation, DXN, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { FactoryAnnotation, type FactoryFn } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';

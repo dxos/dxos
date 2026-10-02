@@ -9,20 +9,21 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Button, IconButton } from '../Button/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
-import { DRAWER_MAX_HEIGHT, Main, type MainRootProps } from './Main.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Main from './Main.tsx';
 import { useMainContext, useSidebars } from './MainContext.ts';
 
 type StoryMainArgs = Pick<
-  MainRootProps,
+  Main.RootProps,
   'defaultNavigationSidebarState' | 'defaultComplementarySidebarState' | 'defaultDrawerState'
 >;
 
 const NavigationSidebarToggle = ({ close }: { close?: boolean }) => {
   const { toggleNavigationSidebar } = useSidebars('StoryMain__SidebarToggle');
   return (
-    <IconButton
+    <IconButton.Root
       icon={close ? 'ph--caret-left--regular' : 'ph--caret-right--regular'}
       iconOnly
       label='Toggle navigation sidebar'
@@ -34,7 +35,7 @@ const NavigationSidebarToggle = ({ close }: { close?: boolean }) => {
 const ComplementarySidebarToggle = ({ close }: { close?: boolean }) => {
   const { toggleComplementarySidebar } = useSidebars('StoryMain__SidebarToggle');
   return (
-    <IconButton
+    <IconButton.Root
       icon={close ? 'ph--caret-right--regular' : 'ph--caret-left--regular'}
       iconOnly
       label='Toggle complementary sidebar'
@@ -45,7 +46,7 @@ const ComplementarySidebarToggle = ({ close }: { close?: boolean }) => {
 
 const DrawerClose = () => {
   const { setDrawerState } = useMainContext('StoryMain__DrawerClose');
-  return <Button onClick={() => setDrawerState('closed')}>Close</Button>;
+  return <Button.Root onClick={() => setDrawerState('closed')}>Close</Button.Root>;
 };
 
 const DefaultStory = ({
@@ -182,8 +183,8 @@ export const DrawerResizeKeyboard: Story = {
     await userEvent.keyboard('{ArrowDown}{ArrowDown}');
     await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', '23'));
     // Past the bound the value pins.
-    await userEvent.keyboard(`{ArrowUp>${DRAWER_MAX_HEIGHT}/}`);
-    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', String(DRAWER_MAX_HEIGHT)));
+    await userEvent.keyboard(`{ArrowUp>${Main.DRAWER_MAX_HEIGHT}/}`);
+    await waitFor(() => expect(handle).toHaveAttribute('aria-valuenow', String(Main.DRAWER_MAX_HEIGHT)));
   },
 };
 

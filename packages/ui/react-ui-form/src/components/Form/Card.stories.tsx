@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Schema from 'effect/Schema';
 import React from 'react';
 
-import { Card, Icon } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -37,7 +38,7 @@ const ReferenceCard = () => (
   <Card.Root fullWidth>
     <Card.Header>
       <Card.Block>
-        <Icon icon='ph--user--regular' />
+        <Icon.Root icon='ph--user--regular' />
       </Card.Block>
       <Card.Title>Reference card</Card.Title>
     </Card.Header>
@@ -56,7 +57,7 @@ const FormCard = () => (
   <Card.Root fullWidth>
     <Card.Header>
       <Card.Block>
-        <Icon icon='ph--pencil--regular' />
+        <Icon.Root icon='ph--pencil--regular' />
       </Card.Block>
       <Card.Title>Form card</Card.Title>
     </Card.Header>

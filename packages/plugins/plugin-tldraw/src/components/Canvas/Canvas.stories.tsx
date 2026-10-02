@@ -7,8 +7,10 @@ import React, { useState } from 'react';
 
 import { createObject } from '@dxos/echo-client';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { RecordBuilder } from '#model';
 import { data } from '#testing';
@@ -41,15 +43,15 @@ const DefaultStory = () => {
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Button variant='primary' onClick={handleClear}>
+          <Button.Root variant='primary' onClick={handleClear}>
             Clear
-          </Button>
-          <Button variant='ghost' onClick={handleCreate}>
+          </Button.Root>
+          <Button.Root variant='ghost' onClick={handleCreate}>
             Create
-          </Button>
-          <Button variant='ghost' onClick={handleMigrate}>
+          </Button.Root>
+          <Button.Root variant='ghost' onClick={handleMigrate}>
             Load V1 Sample
-          </Button>
+          </Button.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>

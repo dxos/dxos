@@ -6,7 +6,7 @@ import { format as formatDate } from 'date-fns';
 import React, { useCallback } from 'react';
 
 import { Format } from '@dxos/echo';
-import { Field } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
 
 import { type FormFieldRendererProps } from '#types';
 

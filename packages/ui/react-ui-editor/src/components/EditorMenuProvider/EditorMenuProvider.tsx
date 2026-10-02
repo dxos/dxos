@@ -16,18 +16,13 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useControllableState } from '@dxos/react-hooks';
-import {
-  DX_ANCHOR_ACTIVATE,
-  type DxAnchorActivate,
-  Field,
-  Icon,
-  Popover,
-  ScrollArea,
-  toLocalizedString,
-  useDynamicRef,
-  useThemeContext,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -77,11 +72,11 @@ export const EditorMenuProvider = ({
   onQueryChange,
   onNavigate,
 }: EditorMenuProviderProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Hold the latest `getView` so callbacks/effects always read the current view without re-subscribing.
-  const getViewRef = useDynamicRef(getView);
+  const getViewRef = Hooks.useDynamicRef(getView);
   const [open, setOpen] = useControllableState({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -249,7 +244,7 @@ type MenuProps = {
 } & Pick<MenuGroupProps, 'currentItem' | 'onSelect'>;
 
 const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
-  const { tx } = useThemeContext();
+  const { tx } = ThemeProvider.useThemeContext();
   return (
     <ul>
       {groups.map((group, index) => (
@@ -272,14 +267,14 @@ type MenuGroupProps = {
 } & Pick<MenuItemProps, 'onSelect'>;
 
 const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
-  const { tx } = useThemeContext();
-  const { t } = useTranslation();
+  const { tx } = ThemeProvider.useThemeContext();
+  const { t } = Hooks.useTranslation();
 
   return (
     <>
       {group.label && (
         <div className={tx('menu.groupLabel', {})}>
-          <span>{toLocalizedString(group.label, t)}</span>
+          <span>{ThemeProvider.toLocalizedString(group.label, t)}</span>
         </div>
       )}
 
@@ -301,8 +296,8 @@ type MenuItemProps = {
 };
 
 const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
-  const { tx } = useThemeContext();
-  const { t } = useTranslation();
+  const { tx } = ThemeProvider.useThemeContext();
+  const { t } = Hooks.useTranslation();
 
   const listRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
@@ -317,8 +312,8 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
 
   return (
     <li ref={listRef} className={tx('menu.item', {}, [current && 'bg-hover-surface'])} onClick={handleSelect}>
-      {item.icon && <Icon icon={item.icon} />}
-      <span className='grow truncate'>{toLocalizedString(item.label, t)}</span>
+      {item.icon && <Icon.Root icon={item.icon} />}
+      <span className='grow truncate'>{ThemeProvider.toLocalizedString(item.label, t)}</span>
     </li>
   );
 };

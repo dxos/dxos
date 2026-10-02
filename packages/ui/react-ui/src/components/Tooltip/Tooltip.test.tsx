@@ -6,10 +6,10 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import React, { type PropsWithChildren, forwardRef } from 'react';
 import { afterEach, describe, test } from 'vitest';
 
-import { ThemeProvider } from '../../providers/index.ts';
+import * as ThemeProvider from '../../providers/ThemeProvider/ThemeProvider.tsx';
 import { defaultTx } from '../../theme/index.ts';
-import { TextTooltip } from './TextTooltip.tsx';
-import { Tooltip, type TooltipSide } from './Tooltip.tsx';
+import * as TextTooltip from './TextTooltip.tsx';
+import * as Tooltip from './Tooltip.tsx';
 
 /**
  * A single provider serves every trigger in the app, so these pin the two consequences of that: the
@@ -73,9 +73,9 @@ describe('Tooltip', () => {
   test('a text tooltip that fits stays closed without cancelling the pointer event', async ({ expect }) => {
     render(
       <Tooltip.Provider delayDuration={0} disableHoverableContent>
-        <TextTooltip text='label' onlyWhenTruncating>
+        <TextTooltip.Root text='label' onlyWhenTruncating>
           <button>label</button>
-        </TextTooltip>
+        </TextTooltip.Root>
       </Tooltip.Provider>,
       { wrapper: Wrapper },
     );
@@ -163,7 +163,7 @@ describe('Tooltip', () => {
 type HarnessProps = { onRender?: (label: string) => void; describedBy?: string };
 
 // `delayDuration={0}` opens on pointer-move without waiting, so no timer control is needed.
-const Harness = ({ onRender, describedBy, sides = [] }: HarnessProps & { sides?: TooltipSide[] }) => (
+const Harness = ({ onRender, describedBy, sides = [] }: HarnessProps & { sides?: Tooltip.Side[] }) => (
   <Tooltip.Provider delayDuration={0} disableHoverableContent>
     <CountingTrigger label='first' onRender={onRender} describedBy={describedBy} side={sides[0]} />
     <CountingTrigger label='second' onRender={onRender} side={sides[1]} />
@@ -177,7 +177,7 @@ const CountingTrigger = ({
   onRender,
   describedBy,
   side,
-}: { label: string; side?: TooltipSide } & HarnessProps) => (
+}: { label: string; side?: Tooltip.Side } & HarnessProps) => (
   <Tooltip.Trigger asChild content={`${label} tip`} side={side}>
     <CountingButton label={label} onRender={onRender} describedBy={describedBy} />
   </Tooltip.Trigger>
@@ -194,4 +194,4 @@ const CountingButton = forwardRef<HTMLButtonElement, { label: string } & Harness
   },
 );
 
-const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider tx={defaultTx}>{children}</ThemeProvider>;
+const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider.Root tx={defaultTx}>{children}</ThemeProvider.Root>;

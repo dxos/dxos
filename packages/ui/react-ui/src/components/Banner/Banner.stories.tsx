@@ -9,8 +9,8 @@ import { random } from '@dxos/random';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Banner } from './Banner.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Banner from './Banner.tsx';
 
 random.seed(123);
 
@@ -31,7 +31,7 @@ const DefaultStory = ({ valence, title, body, button }: StoryArgs) => {
             <Banner.Body asChild classNames='gap-2'>
               <div>
                 <p>{body}</p>
-                {button && <Button>Test</Button>}
+                {button && <Button.Root>Test</Button.Root>}
               </div>
             </Banner.Body>
           )}

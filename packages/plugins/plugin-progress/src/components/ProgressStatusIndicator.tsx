@@ -8,8 +8,10 @@ import { useCapability } from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useProgressMonitors } from '@dxos/app-toolkit/Hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
-import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Popover from '@dxos/react-ui/Popover';
 
 import { meta } from '#meta';
 
@@ -19,7 +21,7 @@ import { meta } from '#meta';
  * provider is active, so the rail stays clean when idle.
  */
 export const ProgressStatusIndicator = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const registry = useCapability(AppCapabilities.ProgressRegistry);
   const monitors = useProgressMonitors();
   const active = monitors.filter((monitor) => monitor.status === 'running' || monitor.status === 'pending');
@@ -28,7 +30,7 @@ export const ProgressStatusIndicator = () => {
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton
+          <IconButton.Root
             variant='ghost'
             icon='ph--circle-notch--regular'
             iconOnly

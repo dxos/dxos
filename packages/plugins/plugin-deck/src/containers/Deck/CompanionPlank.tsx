@@ -8,15 +8,15 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useNode } from '@dxos/plugin-graph/Hooks';
-import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { Companion } from '#components';
 import { useCompanions } from '#hooks';
 
 import { PlankCompanionControls } from './PlankControls.tsx';
 
-export type CompanionPlankProps = ThemedClassName<{
+export type CompanionPlankProps = Util.ThemedClassName<{
   /**
    * The companion to show (`<plank>/~<variant>`), or the plank itself when it has no companions — the
    * pane belongs to the plank either way, and a linked segment names its plank as its parent.

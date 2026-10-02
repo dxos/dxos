@@ -8,3 +8,4 @@ export * from './errors.ts';
 export * from '#meta';
 export * from '#skills';
 export * from '#types';
+export * from './components/FeedbackForm/index.ts';

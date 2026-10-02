@@ -4,10 +4,10 @@
 
 import React, { type HTMLAttributes, useState } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export const Tree = ({ classNames, data }: ThemedClassName<{ data?: object }>) => {
+export const Tree = ({ classNames, data }: Util.ThemedClassName<{ data?: object }>) => {
   return (
     <div className={mx('flex w-full py-2 overflow-auto', classNames)}>
       <Node data={data} root />
@@ -15,7 +15,7 @@ export const Tree = ({ classNames, data }: ThemedClassName<{ data?: object }>) =
   );
 };
 
-export const Node = ({ data }: ThemedClassName<{ data?: any; root?: boolean }>) => {
+export const Node = ({ data }: Util.ThemedClassName<{ data?: any; root?: boolean }>) => {
   if (typeof data !== 'object' || data === undefined || data === null) {
     return <Scalar value={data} />;
   }
@@ -39,7 +39,7 @@ export const Node = ({ data }: ThemedClassName<{ data?: any; root?: boolean }>) 
   );
 };
 
-export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: string; data?: any }>) => {
+export const KeyValue = ({ classNames, label, data }: Util.ThemedClassName<{ label: string; data?: any }>) => {
   const [open, setOpen] = useState(true);
   if (data === undefined) {
     return null;
@@ -67,7 +67,7 @@ export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: s
   );
 };
 
-const Scalar = ({ classNames, value }: ThemedClassName<{ value: any }>) => {
+const Scalar = ({ classNames, value }: Util.ThemedClassName<{ value: any }>) => {
   return (
     <Box className={mx('dx-tag dx-tag--green text-xs items-center', classNames)}>
       {(value === undefined && 'undefined') ||

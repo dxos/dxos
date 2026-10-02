@@ -4,7 +4,13 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { AlertDialog, Button, Field, Flex, Grid, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 
 import { meta } from '#meta';
 
@@ -14,7 +20,7 @@ export type RecoveryCodeDialogProps = {
 
 // TODO(burdon): Should have cancel button.
 export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [confirmation, setConfirmation] = useState(false);
 
   const handleConfirmation = useCallback((checked: boolean) => setConfirmation(checked), []);
@@ -25,11 +31,11 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
         <AlertDialog.Title>{t('recovery-code-dialog.title')}</AlertDialog.Title>
         <AlertDialog.Description classNames='py-4'>{t('recovery-code-dialog.description')}</AlertDialog.Description>
         <Code code={code} />
-        <Flex column gap='sm' classNames='py-4'>
+        <Flex.Root column gap='sm' classNames='py-4'>
           <p>{t('recovery-code-dialog-warning-1.message')}</p>
           <p>{t('recovery-code-dialog-warning-2.message')}</p>
-        </Flex>
-        <Flex gap='sm' align='center' classNames='pb-4'>
+        </Flex.Root>
+        <Flex.Root gap='sm' align='center' classNames='pb-4'>
           <Field.Checkbox
             data-testid='recoveryCode.confirm'
             checked={confirmation}
@@ -37,13 +43,13 @@ export const RecoveryCodeDialog = ({ code }: RecoveryCodeDialogProps) => {
           >
             {t('recovery-code-confirmation.label')}
           </Field.Checkbox>
-        </Flex>
+        </Flex.Root>
       </AlertDialog.Body>
       <AlertDialog.ActionBar>
         <AlertDialog.Action asChild>
-          <Button data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
+          <Button.Root data-testid='recoveryCode.continue' variant='primary' disabled={!confirmation}>
             {t('continue.label')}
-          </Button>
+          </Button.Root>
         </AlertDialog.Action>
       </AlertDialog.ActionBar>
     </AlertDialog.Content>
@@ -59,14 +65,14 @@ const Code = ({ code }: { code: string }) => {
         value={code}
         classNames='absolute top-2 right-2 invisible group-hover:visible'
       />
-      <Grid cols={4} grow={false} data-testid='recoveryCode.code' data-code={code}>
+      <Grid.Root cols={4} grow={false} data-testid='recoveryCode.code' data-code={code}>
         {words.map((word, i) => (
-          <Flex key={i} gap='sm' align='center' classNames='p-2'>
+          <Flex.Root key={i} gap='sm' align='center' classNames='p-2'>
             <div className='w-4 text-xs text-center text-subdued'>{i + 1}</div>
             <div className='text-sm'>{word}</div>
-          </Flex>
+          </Flex.Root>
         ))}
-      </Grid>
+      </Grid.Root>
     </div>
   );
 };

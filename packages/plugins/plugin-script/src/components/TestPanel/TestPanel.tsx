@@ -5,9 +5,15 @@
 import React, { forwardRef, useRef, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Avatar, Field, Grid, Icon, ScrollArea, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Field from '@dxos/react-ui/Field';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -24,14 +30,14 @@ type Message = {
   error?: Error;
 };
 
-export type TestPanelProps = ThemedClassName<{
+export type TestPanelProps = Util.ThemedClassName<{
   onInvoke?: (input: unknown) => Promise<unknown>;
 }>;
 
 // TODO(burdon): Need persistent history (currently lost when switching tabs).
-export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
+export const TestPanel = Util.composable<HTMLDivElement, TestPanelProps>(
   ({ classNames, onInvoke, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const [input, setInput] = useState('');
@@ -108,7 +114,7 @@ export const TestPanel = composable<HTMLDivElement, TestPanelProps>(
 
     return (
       <div
-        {...composableProps(props, { classNames: ['flex flex-col h-full overflow-hidden', classNames] })}
+        {...Util.composableProps(props, { classNames: ['flex flex-col h-full overflow-hidden', classNames] })}
         ref={forwardedRef}
       >
         {/* TODO(burdon): Replace with Thread. */}
@@ -148,20 +154,20 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
       <ScrollArea.Root orientation='vertical' classNames='h-full' ref={forwardedRef}>
         <ScrollArea.Viewport classNames='gap-6 p-2'>
           {history.map((message, i) => (
-            <Grid key={i} cols={MESSAGE_COLS} grow={false}>
+            <Grid.Root key={i} cols={MESSAGE_COLS} grow={false}>
               <div className='p-1'>{message.type === 'response' && <RobotAvatar />}</div>
               <div className='overflow-auto'>
                 <MessageItem message={message} />
               </div>
-            </Grid>
+            </Grid.Root>
           ))}
 
           {state === 'pending' && (
-            <Grid cols={MESSAGE_COLS} grow={false}>
+            <Grid.Root cols={MESSAGE_COLS} grow={false}>
               <div className='p-1'>
-                <Icon icon='ph--spinner--regular' size={6} classNames='animate-spin' />
+                <Icon.Root icon='ph--spinner--regular' size={6} classNames='animate-spin' />
               </div>
-            </Grid>
+            </Grid.Root>
           )}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
@@ -169,7 +175,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   },
 );
 
-const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
+const MessageItem = ({ classNames, message }: Util.ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
   const wrapper = 'p-1 px-2 rounded-md bg-hover-surface';
   return (

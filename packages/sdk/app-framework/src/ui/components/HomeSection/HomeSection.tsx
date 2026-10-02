@@ -4,14 +4,16 @@
 
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import { Field, SystemIconButton, type ThemedClassName } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 //
 // Root
 //
 
-type HomeSectionRootProps = ThemedClassName<PropsWithChildren>;
+type HomeSectionRootProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
  * Shared container for a Home content section: a centered, max-width column. Home surface
@@ -30,7 +32,7 @@ HomeSectionRoot.displayName = 'HomeSection.Root';
 // Header
 //
 
-type HomeSectionHeaderProps = ThemedClassName<
+type HomeSectionHeaderProps = Util.ThemedClassName<
   PropsWithChildren<{
     /** Section heading. */
     title?: string;

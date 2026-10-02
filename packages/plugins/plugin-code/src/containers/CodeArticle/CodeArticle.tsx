@@ -14,8 +14,11 @@ import { useObject } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { getSpace } from '@dxos/react-client/echo';
-import { Grid, Panel, useThemeContext, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -66,7 +69,7 @@ const languageForPath = (path: string) => {
 // introspect explorer so the visual rhythm matches across panels.
 export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
   ({ role, subject: project, attendableId }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const invoker = useOperationInvoker();
     const [buildRunState, updateBuildRun] = useAtomCapabilityState(CodeCapabilities.BuildRun);
     const projectId = project.id;
@@ -225,8 +228,8 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
           />
         </Panel.Toolbar>
         <Panel.Content asChild>
-          <Grid cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
-            <Grid rows={[1, 2]} classNames='divide-y divide-subdued-separator'>
+          <Grid.Root cols={['30rem', '1fr']} classNames='divide-x divide-separator'>
+            <Grid.Root rows={[1, 2]} classNames='divide-y divide-subdued-separator'>
               <div role='region' aria-label={t('browse-pane.label')} className='dx-expand grid overflow-auto'>
                 <FileTree
                   files={fileEntries}
@@ -238,11 +241,11 @@ export const CodeArticle = forwardRef<HTMLDivElement, CodeArticleProps>(
               <div role='region' aria-label={t('inspect-pane.label')} className='dx-expand grid'>
                 <BuildOutput state={projectState} />
               </div>
-            </Grid>
+            </Grid.Root>
             <div role='region' aria-label={t('output-pane.label')} className='dx-expand grid'>
               {selected ? <FileEditor file={selected} role={role} /> : null}
             </div>
-          </Grid>
+          </Grid.Root>
         </Panel.Content>
       </Panel.Root>
     );
@@ -255,7 +258,7 @@ type FileEditorProps = {
 };
 
 const FileEditor = ({ file, role }: FileEditorProps) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const identity = useIdentity();
   const space = getSpace(file);
 

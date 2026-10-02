@@ -12,12 +12,12 @@ import * as Option from 'effect/Option';
 import type * as RpcClient from 'effect/rpc/RpcClient';
 import type * as Scope from 'effect/Scope';
 
-import { ServiceNotAvailableError } from '@dxos/compute';
 import { ProcessManager } from '@dxos/compute-runtime';
+import { ServiceNotAvailableError } from '@dxos/compute/Errors';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
 import { Annotation, Database, EID, Feed, Filter, Obj, type URI } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 import { type ContentBlock, Message } from '@dxos/types';
 

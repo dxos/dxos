@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, {
   type ComponentPropsWithRef,
@@ -19,10 +21,9 @@ import { translationKey } from '#translations';
 
 import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
-import { IconButton } from '../Button/index.ts';
-import { Column } from '../Column/index.ts';
-import { Icon } from '../Icon/index.ts';
-
+import * as IconButton from '../Button/IconButton.tsx';
+import * as Column from '../Column/Column.tsx';
+import * as Icon from '../Icon/Icon.tsx';
 const bannerIcons: Record<MessageValence, string> = {
   success: 'ph--check-circle--duotone',
   info: 'ph--info--duotone',
@@ -167,7 +168,7 @@ const BannerTitle = forwardRef<HTMLDivElement, BannerTitleProps>(
       <Column.Row classNames={tx('banner.header', {}, classNames)} ref={forwardedRef}>
         {icon && (
           <Column.Block>
-            <Icon icon={icon} />
+            <Icon.Root icon={icon} />
           </Column.Block>
         )}
         <h2 className={tx('banner.title', {}, classNames)} id={titleId}>
@@ -175,7 +176,7 @@ const BannerTitle = forwardRef<HTMLDivElement, BannerTitleProps>(
         </h2>
         {onClose && (
           <Column.Block end>
-            <IconButton
+            <IconButton.Root
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
@@ -257,7 +258,7 @@ const BannerEmpty = composable<HTMLDivElement, BannerEmptyProps>(({ label, icon,
       ref={forwardedRef}
     >
       {/* Decorative: the message carries the whole statement, so the glyph is not announced beside it. */}
-      {icon && <Icon icon={icon} size={6} classNames='text-subdued' aria-hidden='true' />}
+      {icon && <Icon.Root icon={icon} size={6} classNames='text-subdued' aria-hidden='true' />}
       <span>{message}</span>
     </div>
   );
@@ -268,13 +269,13 @@ BannerEmpty.displayName = BANNER_EMPTY_NAME;
 //
 // Banner
 //
-
-export const Banner = {
-  Root: BannerRoot,
-  Content: BannerContent,
-  Title: BannerTitle,
-  Body: BannerBody,
-  Empty: BannerEmpty,
+export type {
+  BannerBodyProps as BodyProps,
+  BannerContentProps as ContentProps,
+  BannerEmptyProps as EmptyProps,
+  BannerRootProps as RootProps,
+  BannerTitleProps as TitleProps,
 };
 
-export type { BannerBodyProps, BannerContentProps, BannerEmptyProps, BannerRootProps, BannerTitleProps };
+export { BannerBody as Body, BannerContent as Content, BannerEmpty as Empty, BannerRoot as Root, BannerTitle as Title };
+export * from './Banner.theme.ts';

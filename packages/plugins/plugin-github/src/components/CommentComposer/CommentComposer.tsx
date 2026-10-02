@@ -4,7 +4,11 @@
 
 import React, { type KeyboardEvent, type RefObject, useCallback } from 'react';
 
-import { Button, Field, Flex, Popover, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -25,7 +29,7 @@ export type CommentComposerProps = {
  * about one line of a diff.
  */
 export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, onCancel }: CommentComposerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   // Cmd/Ctrl+Enter submits, matching GitHub's own comment form.
   const handleKeyDown = useCallback(
@@ -57,21 +61,21 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
           onKeyDown={handleKeyDown}
         />
       </Field.Root>
-      <Flex justify='end' gap='sm'>
-        <Button onClick={onCancel}>{t('comment-cancel.label')}</Button>
-        <Button variant='primary' disabled={busy || !value.trim()} onClick={onSubmit}>
+      <Flex.Root justify='end' gap='sm'>
+        <Button.Root onClick={onCancel}>{t('comment-cancel.label')}</Button.Root>
+        <Button.Root variant='primary' disabled={busy || !value.trim()} onClick={onSubmit}>
           {t('comment-submit.label')}
-        </Button>
-      </Flex>
+        </Button.Root>
+      </Flex.Root>
     </>
   );
 };
 
 /** The composer as a band under the toolbar, for a comment on the pull request as a whole. */
 export const CommentBand = (props: CommentComposerProps) => (
-  <Flex column gap='sm' classNames='p-3 border-b border-separator'>
+  <Flex.Root column gap='sm' classNames='p-3 border-b border-separator'>
     <CommentComposer {...props} />
-  </Flex>
+  </Flex.Root>
 );
 
 export type LineCommentPopoverProps = CommentComposerProps & {

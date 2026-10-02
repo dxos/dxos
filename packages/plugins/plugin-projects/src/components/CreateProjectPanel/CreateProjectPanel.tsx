@@ -7,9 +7,10 @@ import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState }
 
 import { useCapabilities } from '@dxos/app-framework/Hooks';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Field, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { ProjectCapabilities } from '#types';
@@ -32,7 +33,7 @@ type CreateProjectValues = Schema.Schema.Type<typeof CreateProjectValues>;
  * which plugin-projects' CreateObjectEntry `createObject` resolves to run the template's `scaffold`.
  */
 export const CreateProjectPanel = ({ onCreateObject, onCancel, templates: templatesProp }: CreateProjectPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const capabilityTemplates = useCapabilities(ProjectCapabilities.Template);
 

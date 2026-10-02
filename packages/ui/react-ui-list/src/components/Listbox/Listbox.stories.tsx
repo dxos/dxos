@@ -6,8 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Field, Icon, Panel, Toolbar } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { useListDisclosure } from '../../hooks/index.ts';
@@ -217,9 +220,9 @@ const DisclosureStory = () => {
                   type='button'
                   className='flex items-center gap-2 px-3 py-2 text-start dx-hover dx-focus-ring-inset'
                 >
-                  <Icon icon='ph--package--regular' size={5} classNames='shrink-0' />
+                  <Icon.Root icon='ph--package--regular' size={5} classNames='shrink-0' />
                   <span className='flex-1 min-w-0 truncate'>{item.name}</span>
-                  <Icon
+                  <Icon.Root
                     icon='ph--caret-right--regular'
                     size={4}
                     classNames={mx('shrink-0 transition-transform', expanded && 'rotate-90')}

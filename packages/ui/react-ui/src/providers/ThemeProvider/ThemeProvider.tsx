@@ -2,18 +2,19 @@
 // Copyright 2022 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type PropsWithChildren, createContext, useEffect, useMemo } from 'react';
 
 import { trackKeyboardModality } from '@dxos/react-focus';
 import { type Density, type Elevation, type ThemeFunction, type ThemeMode } from '@dxos/ui-types';
 
 import { type SafeAreaPadding, useSafeArea } from '../../hooks/index.ts';
-import { hasIosKeyboard } from '../../util/index.ts';
-import { DensityProvider } from '../DensityProvider/index.ts';
-import { ElevationProvider } from '../ElevationProvider/index.ts';
+import { hasIosKeyboard } from '../../util/mobile.ts';
+import * as DensityProvider from '../DensityProvider/DensityProvider.tsx';
+import * as ElevationProvider from '../ElevationProvider/ElevationProvider.tsx';
 import { IconRegistryProvider } from './IconRegistry.tsx';
-import { TranslationsProvider, type TranslationsProviderProps } from './TranslationsProvider.tsx';
-
+import * as TranslationsProvider from './TranslationsProvider.tsx';
 export type ThemeContextValue<P extends Record<string, any> = Record<string, any>> = {
   tx: ThemeFunction<P>;
   themeMode: ThemeMode;
@@ -27,8 +28,8 @@ export type ThemeContextValue<P extends Record<string, any> = Record<string, any
  */
 export const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
-export type ThemeProviderProps<P extends Record<string, any> = Record<string, any>> = Omit<
-  TranslationsProviderProps,
+type ThemeProviderProps<P extends Record<string, any> = Record<string, any>> = Omit<
+  TranslationsProvider.RootProps,
   'children'
 > &
   Partial<Omit<ThemeContextValue<P>, 'safeAreaPadding'>> &
@@ -37,7 +38,7 @@ export type ThemeProviderProps<P extends Record<string, any> = Record<string, an
     rootElevation?: Elevation;
   }>;
 
-export const ThemeProvider = ({
+const ThemeProvider = ({
   children,
   fallback = null,
   resourceExtensions,
@@ -61,18 +62,39 @@ export const ThemeProvider = ({
   return (
     <ThemeContext.Provider value={contextValue}>
       <IconRegistryProvider>
-        <TranslationsProvider
+        <TranslationsProvider.Root
           {...{
             fallback,
             resourceExtensions,
             appNs,
           }}
         >
-          <ElevationProvider elevation='base'>
-            <DensityProvider density={rootDensity}>{children}</DensityProvider>
-          </ElevationProvider>
-        </TranslationsProvider>
+          <ElevationProvider.Root elevation='base'>
+            <DensityProvider.Root density={rootDensity}>{children}</DensityProvider.Root>
+          </ElevationProvider.Root>
+        </TranslationsProvider.Root>
       </IconRegistryProvider>
     </ThemeContext.Provider>
   );
 };
+
+export { ThemeProvider as Root };
+export type { ThemeProviderProps as RootProps };
+export { type Label, isLabel, toLocalizedString } from '@dxos/ui-types/translations';
+export {
+  type IconRegistry,
+  type IconSource,
+  extendedIconSource,
+  getIconRegistry,
+  phosphorIconSource,
+  useIconRegistry,
+} from './icon-registry.ts';
+export * from './IconRegistry.tsx';
+export { TranslationsContext } from './TranslationsContext.ts';
+export * from '../../hooks/useThemeContext.ts';
+export * from '../../hooks/useTranslationsContext.ts';
+export * from '../../theme/bindTheme.ts';
+export * from '../../theme/defaultTheme.ts';
+export * from '../../util/mobile.ts';
+export { type Resource, type TFunction } from '@dxos/i18n';
+export { Trans } from 'react-i18next';

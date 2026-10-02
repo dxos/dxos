@@ -12,7 +12,7 @@ import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import { useSettingsScope } from '@dxos/app-toolkit/Hooks';
 import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { RegistrySettings } from '#components';
 import { type RegistrySettings as RegistrySettingsType } from '#types';

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type FocusEvent, type KeyboardEvent, type MouseEvent, useCallback, useRef, useState } from 'react';
 
@@ -184,10 +186,8 @@ const Item = slottable<HTMLDivElement, ItemProps>(
 //
 // Focus
 //
+export type { GroupProps, ItemProps };
 
-export const Focus = {
-  Group,
-  Item,
-};
-
-export type { GroupProps as FocusGroupProps, ItemProps as FocusItemProps };
+export { Group, Item };
+export * from './Focus.theme.ts';
+export { useFocus } from './FocusContext.ts';

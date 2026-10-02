@@ -7,8 +7,11 @@ import React, { useCallback } from 'react';
 
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
-import { Banner, Field, Flex, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Sheet, SheetUtil } from '#types';
@@ -18,7 +21,7 @@ export type RangeListProps = {
 };
 
 export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [sheet, updateSheet] = useObject(sheetProp);
   // TODO(thure): Implement similar to comments, #8121
   const handleSelectRange = (range: Sheet.Range) => {};
@@ -62,13 +65,13 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
                     classNames='flex items-center cursor-pointer'
                     onClick={() => handleSelectRange(range)}
                   >
-                    <Flex align='center' classNames='grow truncate px-2'>
+                    <Flex.Root align='center' classNames='grow truncate px-2'>
                       {t('range.title', {
                         position: rangeToA1Notation(SheetUtil.rangeFromIndex(sheetProp, range.range)),
                         key: t(`range-key.${range.key}.label`),
                         value: t(`range-value.${range.value}.label`),
                       })}
-                    </Flex>
+                    </Flex.Root>
                     <OrderedList.DeleteButton onClick={() => handleDeleteRange(range)} />
                   </OrderedList.Item>
                 );

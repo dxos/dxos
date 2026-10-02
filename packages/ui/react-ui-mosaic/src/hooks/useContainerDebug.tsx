@@ -5,13 +5,13 @@
 import React, { type FC, type ReactNode, forwardRef, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useMosaicContainer } from '../components/index.ts';
 
-export type UseContainerDebug = [FC<ThemedClassName>, (() => ReactNode) | undefined];
+export type UseContainerDebug = [FC<Util.ThemedClassName>, (() => ReactNode) | undefined];
 
 /**
  * Hook that returns a component to be rendered in the container's viewport (within the context),
@@ -33,7 +33,7 @@ export const useContainerDebug = (debug?: boolean): UseContainerDebug => {
 
 const CONTAINER_INFO_NAME = 'ContainerInfo';
 
-const ContainerInfo = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
+const ContainerInfo = forwardRef<HTMLDivElement, Util.ThemedClassName>(({ classNames }, forwardedRef) => {
   const { id, state, activeLocation, scrolling } = useMosaicContainer(CONTAINER_INFO_NAME);
   const counter = useRef(0);
   return (

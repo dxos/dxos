@@ -9,9 +9,10 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
-import { useMergeRefs, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   type DebugNode,
   type ThemeExtensionsOptions,
@@ -48,7 +49,7 @@ export type EditorStoryArgs = Pick<UseTextEditorProps, 'id' | 'scrollTo' | 'sele
 export const EditorStory = forwardRef<EditorController, EditorStoryArgs>(
   ({ debug, debugCustom, text, extensions: extensionsProp, ...props }, forwardedRef) => {
     const controllerRef = useRef<EditorController>(null);
-    const mergedRef = useMergeRefs([controllerRef, forwardedRef]);
+    const mergedRef = Hooks.useMergeRefs([controllerRef, forwardedRef]);
     const view = controllerRef.current?.view;
 
     const attentionAttrs = useAttentionAttributes('test-panel');
@@ -114,7 +115,7 @@ const EditorComponent = forwardRef<EditorController, EditorStoryArgs>(
     forwardedRef,
   ) => {
     invariant(object);
-    const { themeMode } = useThemeContext();
+    const { themeMode } = ThemeProvider.useThemeContext();
     const attentionAttrs = useAttentionAttributes(id);
     const { parentRef, focusAttributes, view } = useTextEditor(
       () => ({

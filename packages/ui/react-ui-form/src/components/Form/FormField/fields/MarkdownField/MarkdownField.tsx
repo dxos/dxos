@@ -7,8 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 
 import { type Database, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { IconButton, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
 
@@ -138,7 +139,7 @@ type CreateTextButtonProps = {
 };
 
 const CreateTextButton = ({ db, disabled, onCreate }: CreateTextButtonProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const handleClick = useCallback(() => {
     if (!db) {
@@ -149,6 +150,11 @@ const CreateTextButton = ({ db, disabled, onCreate }: CreateTextButtonProps) => 
   }, [db, onCreate]);
 
   return (
-    <IconButton icon='ph--plus--regular' label={t('create-text.label')} onClick={handleClick} disabled={disabled} />
+    <IconButton.Root
+      icon='ph--plus--regular'
+      label={t('create-text.label')}
+      onClick={handleClick}
+      disabled={disabled}
+    />
   );
 };

@@ -5,8 +5,9 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Card, Flex } from '@dxos/react-ui';
 import { Avatar, Row } from '@dxos/react-ui-card';
+import * as Card from '@dxos/react-ui/Card';
+import * as Flex from '@dxos/react-ui/Flex';
 import { type Message } from '@dxos/types';
 
 import { getMessageProps } from '../../util/index.ts';
@@ -19,10 +20,10 @@ export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Mes
         <Card.Block>
           <Avatar actor={message.sender} name={from} variant='square' size={7} />
         </Card.Block>
-        <Flex gap='md' align='center' justify='between' classNames='col-span-2'>
+        <Flex.Root gap='md' align='center' justify='between' classNames='col-span-2'>
           <span className='grow truncate'>{from}</span>
           <span className='text-xs text-description text-right whitespace-nowrap pe-2'>{date}</span>
-        </Flex>
+        </Flex.Root>
       </Card.Header>
       <Card.Row>
         <p className='text-xs text-description text-info-text'>{email}</p>

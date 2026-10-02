@@ -12,8 +12,8 @@ import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks'
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { Surface } from '@dxos/app-framework/Surface';
-import { EffectEx } from '@dxos/effect';
-import { Button } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Button from '@dxos/react-ui/Button';
 
 import { PlaygroundRoles } from '../roles.ts';
 import { Number, createAlertOperation, createPluginId } from './generator.ts';
@@ -39,15 +39,15 @@ export const Toolbar = () => {
 
   return (
     <>
-      <Button onClick={handleAdd}>Add</Button>
+      <Button.Root onClick={handleAdd}>Add</Button.Root>
       <div className='flex items-center'>Count: {count}</div>
       {generatorPlugins.map((plugin) => (
-        <Button
+        <Button.Root
           key={plugin.meta.profile.key}
           onClick={() => invokePromise(createAlertOperation(Plugin.getURI(plugin.meta)))}
         >
           {plugin.meta.profile.key.replace('org.dxos.test.generator.', '')}
-        </Button>
+        </Button.Root>
       ))}
     </>
   );

@@ -2,11 +2,9 @@
 // Copyright 2022 DXOS.org
 //
 
-export { BUTTON_GROUP_NAME, useButtonGroupContext } from './ButtonGroupContext.ts';
-
-export * from './Button.tsx';
-export * from './IconButton.tsx';
-export * from './SystemIconButton.tsx';
-export * from './Toggle.tsx';
-export * from './ToggleGroup.tsx';
-export * from './ToggleIconButton.tsx';
+export * as Button from './Button.tsx';
+export * as IconButton from './IconButton.tsx';
+export * as SystemIconButton from './SystemIconButton.tsx';
+export * as Toggle from './Toggle.tsx';
+export * as ToggleGroup from './ToggleGroup.tsx';
+export * as ToggleIconButton from './ToggleIconButton.tsx';

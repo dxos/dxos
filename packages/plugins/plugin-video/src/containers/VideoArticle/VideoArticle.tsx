@@ -9,9 +9,11 @@ import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel, Tabs, useTranslation } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Tabs from '@dxos/react-ui/Tabs';
 import { Video } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -155,7 +157,7 @@ const TranscriptTabs = ({
   onTabChange,
   onRegenerate,
 }: TranscriptTabsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // The selected tab reads as primary while this article has attention.
   const { hasAttention } = useAttention(attendableId);
 

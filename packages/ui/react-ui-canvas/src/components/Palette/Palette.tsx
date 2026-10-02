@@ -5,7 +5,7 @@
 import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import React, { useEffect, useRef } from 'react';
 
-import { IconButton } from '@dxos/react-ui';
+import * as IconButton from '@dxos/react-ui/IconButton';
 import { mx } from '@dxos/ui-theme';
 
 import { type LinkRegistry, type NodeRegistry } from '../../model/registry.ts';
@@ -113,7 +113,7 @@ const PaletteButton = ({
     return draggable({ element: ref.current, getInitialData: () => nodeDragData(nodeType) });
   }, [nodeType]);
   return (
-    <IconButton
+    <IconButton.Root
       ref={ref}
       variant='ghost'
       iconOnly

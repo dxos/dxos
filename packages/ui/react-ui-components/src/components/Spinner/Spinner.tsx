@@ -5,8 +5,9 @@
 import { AnimatePresence, motion } from 'motion/react';
 import React, { forwardRef } from 'react';
 
-import { type Size, type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { getSize, mx } from '@dxos/ui-theme';
+import { type Size } from '@dxos/ui-types';
 
 export type SpinnerState = 'pulse' | 'spin' | 'flash' | 'error';
 
@@ -17,7 +18,7 @@ const stateClassNames: Record<SpinnerState, string> = {
   error: 'bg-rose-700 border-2 border-rose-bg',
 };
 
-export type SpinnerProps = ThemedClassName<{
+export type SpinnerProps = Util.ThemedClassName<{
   state?: SpinnerState;
   duration?: number;
   size?: Size;

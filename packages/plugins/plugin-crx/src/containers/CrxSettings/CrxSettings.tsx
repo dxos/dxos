@@ -7,8 +7,10 @@ import React, { useCallback, useState } from 'react';
 import { useSettingsState } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
-import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -28,7 +30,7 @@ export type CrxSettingsProps = AppSurface.SettingsData<{ readonly?: boolean }>;
  * round-trip connection test against the extension's content relay.
  */
 export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
   const [test, setTest] = useState<TestState>({ kind: 'idle' });
 
@@ -65,8 +67,8 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
           </Form.FieldSet>
 
           <Form.FieldSet label={t('test.title')}>
-            <Flex gap='sm'>
-              <IconButton
+            <Flex.Root gap='sm'>
+              <IconButton.Root
                 disabled={test.kind === 'pending'}
                 icon='ph--plug--regular'
                 label={t('test.button.label')}
@@ -74,7 +76,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
               />
 
               {/* role=status + aria-live so screen readers announce the async outcome. */}
-              <Flex align='center'>
+              <Flex.Root align='center'>
                 <span
                   role='status'
                   aria-live='polite'
@@ -89,8 +91,8 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
                   {test.kind === 'ok' || test.kind === 'error' ? test.message : ''}
                   {test.kind === 'pending' ? t('test.pending.message') : ''}
                 </span>
-              </Flex>
-            </Flex>
+              </Flex.Root>
+            </Flex.Root>
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>

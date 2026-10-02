@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, {
   type Ref,
   forwardRef,
@@ -16,7 +18,7 @@ import React, {
 import { mx } from '@dxos/ui-theme';
 import { type ClassNameValue, type ThemedClassName } from '@dxos/ui-types';
 
-import { useReducedMotion } from '../../util/index.ts';
+import { useReducedMotion } from '../../util/animation.ts';
 import { type TextCrawlSize } from './sizes.ts';
 
 const emptyLines: string[] = [];
@@ -25,7 +27,7 @@ const emptyLines: string[] = [];
 // the active line is fully bright by the time the ribbon settles in place.
 const LINE_FADE_RATIO = 1 / 3;
 
-export type TextCrawlProps = {
+type TextCrawlProps = {
   /** Auto-advance after `minDuration`. */
   autoAdvance?: boolean;
   /** Start at the last line. */
@@ -37,7 +39,7 @@ export type TextCrawlProps = {
 /**
  * Scrolling text lines.
  */
-export const TextCrawl = ({
+const TextCrawl = ({
   autoAdvance = false,
   greedy = false,
   minDuration = 1_000,
@@ -275,3 +277,7 @@ const Line = ({
     </div>
   );
 };
+
+export { TextCrawl as Root };
+export type { TextCrawlProps as RootProps };
+export * from './sizes.ts';

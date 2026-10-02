@@ -6,10 +6,11 @@ import React, { useCallback, useState } from 'react';
 
 import { Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { IconButton, ThemedClassName } from '@dxos/react-ui';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
-export type SchemaTableProps = ThemedClassName<{
+export type SchemaTableProps = Util.ThemedClassName<{
   types: any[];
   objects?: Record<string, number | undefined>;
   label: string;
@@ -59,7 +60,7 @@ export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }:
             <div className='px-2 text-right font-mono'>
               {typeof type.presetLabel === 'string' ? '—' : typename ? (objects[typename] ?? 0) : 0}
             </div>
-            <IconButton
+            <IconButton.Root
               variant='ghost'
               icon={pending === typename ? 'ph--spinner--regular' : 'ph--plus--regular'}
               iconOnly

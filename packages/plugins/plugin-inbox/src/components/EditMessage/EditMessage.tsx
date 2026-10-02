@@ -6,19 +6,16 @@ import { Prec } from '@codemirror/state';
 import React, { type Ref, useCallback, useMemo, useRef, useState } from 'react';
 
 import { type Database, Obj } from '@dxos/echo';
-import {
-  Button,
-  Column,
-  Field,
-  Icon,
-  IconButton,
-  ScrollArea,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, RefEditor } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Column from '@dxos/react-ui/Column';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type Message as MessageType, Person } from '@dxos/types';
 import { type Extension, keymap } from '@dxos/ui-editor';
 
@@ -111,9 +108,9 @@ export type EditMessageProps = {
   onDelete?: () => void;
 };
 
-export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
+export const EditMessage = Util.composable<HTMLDivElement, EditMessageProps>(
   ({ message, extensions, onSend, title, onDelete, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const db = Obj.getDatabase(message);
     const [showCc, setShowCc] = useState(!!message.properties?.cc);
     const [showBcc, setShowBcc] = useState(!!message.properties?.bcc);
@@ -212,7 +209,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
       <ScrollArea.Root>
         <ScrollArea.Viewport>
           <Column.Root
-            {...composableProps(props, {
+            {...Util.composableProps(props, {
               // The editor row uses `minmax(8lh,1fr)` (not `1fr`) so its minimum height participates in
               // layout: when the surface is short the whole form scrolls (outer ScrollArea) instead of
               // the editor overflowing its cell and overlapping the Send button.
@@ -227,7 +224,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               <Column.Center classNames='flex items-center justify-between pt-form-gap'>
                 <h2 className='text-lg'>{title}</h2>
                 {onDelete && (
-                  <IconButton
+                  <IconButton.Root
                     iconOnly
                     variant='ghost'
                     icon='ph--trash--regular'
@@ -328,10 +325,10 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
             </Column.Center>
 
             <Column.Center classNames='pb-form-padding'>
-              <Button variant='primary' onClick={handleSend} data-testid='send-email-button'>
-                <Icon icon='ph--paper-plane-right--regular' size={5} />
+              <Button.Root variant='primary' onClick={handleSend} data-testid='send-email-button'>
+                <Icon.Root icon='ph--paper-plane-right--regular' size={5} />
                 <span className='ms-2'>{t('send-email-button.label')}</span>
-              </Button>
+              </Button.Root>
             </Column.Center>
           </Column.Root>
         </ScrollArea.Viewport>

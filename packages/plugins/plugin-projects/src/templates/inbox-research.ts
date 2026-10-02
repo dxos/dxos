@@ -11,7 +11,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Ref } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
-import { makeRoutine } from '@dxos/plugin-routine';
+import { makeRoutine } from '@dxos/plugin-routine/Wire';
 import { trim } from '@dxos/util';
 
 import { ProjectCapabilities } from '#types';

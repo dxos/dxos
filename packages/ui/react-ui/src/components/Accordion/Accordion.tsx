@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Accordion as AccordionPrimitive, useAccordionItemContext } from '@ark-ui/react/accordion';
 import React, {
   type ComponentPropsWithoutRef,
@@ -14,7 +16,7 @@ import React, {
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 import {
   ACCORDION_ITEM_NAME,
   AccordionItemProvider,
@@ -26,18 +28,18 @@ import {
 // Built on `@ark-ui/react`'s Accordion (zag state machine), which carries the APG keymap for key
 // navigation.
 
-export type { AccordionItemRecord };
+export type { AccordionItemRecord as ItemRecord };
 
 //
 // Root
 //
 
-export type AccordionRendererProps<T extends AccordionItemRecord> = {
+type AccordionRendererProps<T extends AccordionItemRecord> = {
   items: T[];
 };
 
 /** Kept as `(value: string[]) => void` rather than Ark's details object, so callers are unaffected. */
-export type AccordionValueProps = {
+type AccordionValueProps = {
   value?: string[];
   defaultValue?: string[];
   onValueChange?: (value: string[]) => void;
@@ -45,7 +47,7 @@ export type AccordionValueProps = {
 
 const defaultGetId = <T extends AccordionItemRecord>(item: T) => item.id ?? '';
 
-export type AccordionRootProps<T extends AccordionItemRecord> = ThemedClassName<
+type AccordionRootProps<T extends AccordionItemRecord> = ThemedClassName<
   {
     children?: (props: AccordionRendererProps<T>) => ReactNode;
     /** Whether to show a border around the item. */
@@ -90,7 +92,7 @@ AccordionRoot.displayName = 'Accordion.Root';
 // Item
 //
 
-export type AccordionItemProps<T extends AccordionItemRecord> = ThemedClassName<
+type AccordionItemProps<T extends AccordionItemRecord> = ThemedClassName<
   PropsWithChildren<{
     item: T;
     /** The item's element — a reorder aspect binds its drop target here. */
@@ -126,7 +128,7 @@ const AccordionItem = <T extends AccordionItemRecord>({
 
 AccordionItem.displayName = 'Accordion.Item';
 
-export type AccordionItemHeaderProps = ThemedClassName<
+type AccordionItemHeaderProps = ThemedClassName<
   ComponentPropsWithoutRef<'div'> & {
     icon?: string;
     /** Apply `dx-hover` row styling on the trigger (off by default; mirrors `Listbox.Item`). */
@@ -169,13 +171,13 @@ const AccordionItemHeader = ({
             centerline as the first line of the content, which may span multiple lines. */}
         {icon && (
           <span className={tx('accordion.triggerIcon', {})}>
-            <Icon icon={icon} size={4} />
+            <Icon.Root icon={icon} size={4} />
           </span>
         )}
         <div className={tx('accordion.triggerContent', {})}>{children}</div>
         {!disabled && (
           <span className={tx('accordion.triggerIcon', {})}>
-            <Icon
+            <Icon.Root
               icon='ph--caret-right--regular'
               size={4}
               classNames='transition-transform duration-200 group-data-[state=open]:rotate-90'
@@ -190,7 +192,7 @@ const AccordionItemHeader = ({
 
 AccordionItemHeader.displayName = 'Accordion.ItemHeader';
 
-export type AccordionItemBodyProps = ThemedClassName<PropsWithChildren<{ style?: CSSProperties }>>;
+type AccordionItemBodyProps = ThemedClassName<PropsWithChildren<{ style?: CSSProperties }>>;
 
 const AccordionItemBody = ({ children, classNames, style }: AccordionItemBodyProps) => {
   const { tx } = useThemeContext();
@@ -205,9 +207,19 @@ const AccordionItemBody = ({ children, classNames, style }: AccordionItemBodyPro
 
 AccordionItemBody.displayName = 'Accordion.ItemBody';
 
-export const Accordion = {
-  Root: AccordionRoot,
-  Item: AccordionItem,
-  ItemHeader: AccordionItemHeader,
-  ItemBody: AccordionItemBody,
+export {
+  AccordionItem as Item,
+  AccordionItemBody as ItemBody,
+  AccordionItemHeader as ItemHeader,
+  AccordionRoot as Root,
 };
+export type {
+  AccordionItemBodyProps as ItemBodyProps,
+  AccordionItemHeaderProps as ItemHeaderProps,
+  AccordionItemProps as ItemProps,
+  AccordionRendererProps as RendererProps,
+  AccordionRootProps as RootProps,
+  AccordionValueProps as ValueProps,
+};
+export * from './Accordion.theme.ts';
+export { useAccordionItemContext } from './AccordionContext.ts';

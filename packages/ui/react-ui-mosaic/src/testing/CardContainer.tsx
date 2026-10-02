@@ -5,8 +5,10 @@
 import React, { type PropsWithChildren } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { Card, Icon, Popover } from '@dxos/react-ui';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 
 const DEFAULT_BLOCK_SIZE = 22;
 const MIN_BLOCK_SIZE = 8;
@@ -50,7 +52,7 @@ export const PopoverCardContainer = ({
   return (
     <Popover.Root open>
       <Popover.Trigger asChild>
-        <Icon icon={icon} />
+        <Icon.Root icon={icon} />
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content onOpenAutoFocus={(event: Event) => event.preventDefault()}>
@@ -60,7 +62,7 @@ export const PopoverCardContainer = ({
             <Card.Root border={false} classNames='dx-card-popover'>
               <Card.Header>
                 <Card.Block>
-                  <Icon icon={icon} />
+                  <Icon.Root icon={icon} />
                 </Card.Block>
                 <Card.Title>Popover</Card.Title>
               </Card.Header>

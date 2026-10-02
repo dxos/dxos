@@ -6,8 +6,13 @@ import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } 
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Icon, Panel, Splitter, type ThemedClassName, Toolbar, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { useCountdown } from '#hooks';
 import { meta } from '#meta';
@@ -20,7 +25,7 @@ import { Sound } from '../Sound/index.ts';
 // Mixer
 //
 
-export type MixerProps = ThemedClassName<{
+export type MixerProps = Util.ThemedClassName<{
   dream: Dream.Dream;
   engine: MixerEngine;
 }>;
@@ -213,7 +218,7 @@ type LayerListItemProps = {
 
 /** Single layer row in the mixer list. */
 const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDelete }: LayerListItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <OrderedList.Item
       id={item.id}
@@ -224,7 +229,7 @@ const LayerListItem = ({ item, selected, onLayerSelect, onLayerUpdate, onLayerDe
       onClick={() => onLayerSelect(item.id)}
     >
       <OrderedList.DragHandle />
-      <Icon icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
+      <Icon.Root icon={sourceIcon[item.source.type] ?? 'ph--question--regular'} />
       {/* Plain title row — there's no disclosure panel here, so we don't want
           `OrderedList.Title`'s aria-expanded / trigger semantics. */}
       <div className='flex grow items-center truncate'>{item.name ?? Sequence.getSourceLabel(item.source)}</div>

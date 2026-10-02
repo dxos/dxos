@@ -4,13 +4,8 @@
 
 import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
-import {
-  ScrollArea,
-  type ScrollAreaRootProps,
-  type ThemedClassName,
-  composable,
-  composableProps,
-} from '@dxos/react-ui';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useListDisclosure, useListNavigation, useReorderAutoScroll, useReorderList } from '../../hooks/index.ts';
@@ -21,7 +16,7 @@ const styles = listTheme.styles();
 
 export type { ListItemRecord };
 
-export type OrderedListRootProps<T extends ListItemRecord> = ThemedClassName<{
+export type OrderedListRootProps<T extends ListItemRecord> = Util.ThemedClassName<{
   items: readonly T[];
   /**
    * Type guard reserved for backwards compatibility with the deprecated `List` API. The
@@ -121,7 +116,7 @@ export const OrderedListRoot = <T extends ListItemRecord>({
  * Container for the list. Applies the navigation aspect's `containerProps` so role,
  * aria-orientation, focus-group attributes, and focus-on-entry are wired in one place.
  */
-export const OrderedListContent = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => {
+export const OrderedListContent = ({ classNames, children }: Util.ThemedClassName<PropsWithChildren>) => {
   const { navigation } = useOrderedListContext('OrderedList.Content');
   return (
     <div {...navigation.containerProps} className={styles.orderedListContent({ class: mx(classNames) })}>
@@ -139,9 +134,9 @@ export const OrderedListContent = ({ classNames, children }: ThemedClassName<Pro
  * container when a drag hovers near its edges — long lists can be reordered without
  * scrolling manually first.
  */
-type OrderedListViewportProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+type OrderedListViewportProps = Pick<ScrollArea.RootProps, 'thin' | 'padding' | 'centered'>;
 
-export const OrderedListViewport = composable<HTMLDivElement, OrderedListViewportProps>((props, forwardedRef) => {
+export const OrderedListViewport = Util.composable<HTMLDivElement, OrderedListViewportProps>((props, forwardedRef) => {
   const { thin, padding, centered, children, ...rest } = props as PropsWithChildren<
     OrderedListViewportProps & Record<string, unknown>
   >;
@@ -150,7 +145,7 @@ export const OrderedListViewport = composable<HTMLDivElement, OrderedListViewpor
   const autoScrollRef = useReorderAutoScroll();
   return (
     <ScrollArea.Root
-      {...composableProps<HTMLDivElement>(rest, { classNames: styles.orderedListViewport() })}
+      {...Util.composableProps<HTMLDivElement>(rest, { classNames: styles.orderedListViewport() })}
       {...{ thin, padding, centered }}
       orientation='vertical'
       ref={forwardedRef}

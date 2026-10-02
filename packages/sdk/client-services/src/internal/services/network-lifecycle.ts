@@ -17,7 +17,8 @@ import {
   createChainEdgeIdentity,
   createEphemeralEdgeIdentity,
 } from '@dxos/edge-client';
-import { EffectEx, Hook } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { SignalManagerService } from '@dxos/messaging';

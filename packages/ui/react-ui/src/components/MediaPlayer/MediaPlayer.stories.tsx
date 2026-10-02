@@ -6,14 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { MediaPlayer } from './MediaPlayer.tsx';
+import * as MediaPlayer from './MediaPlayer.tsx';
 
 const meta = {
   title: 'ui/react-ui-core/components/MediaPlayer',
-  component: MediaPlayer,
+  component: MediaPlayer.Root,
   decorators: [withTheme()],
   parameters: { layout: 'centered' },
-} satisfies Meta<typeof MediaPlayer>;
+} satisfies Meta<typeof MediaPlayer.Root>;
 
 export default meta;
 

@@ -4,8 +4,9 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { Icon, useTranslation } from '@dxos/react-ui';
 import { type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 
@@ -59,7 +60,7 @@ export const RepositoryFileTree = ({
   onExpandedChange,
   onSelect,
 }: RepositoryFileTreeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const root = useMemo(() => buildNode({ path: '', name: '', type: 'root' }, directories), [directories]);
 
   const model = useMemo(
@@ -98,7 +99,7 @@ export const RepositoryFileTree = ({
   const renderIcon = useMemo<IconRenderer<FileNode>>(
     () =>
       ({ item }) => (
-        <Icon
+        <Icon.Root
           icon={
             item.type === 'directory'
               ? expanded.has(item.path)

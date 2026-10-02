@@ -38,7 +38,7 @@ import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { Filter, Query } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { DXN } from '@dxos/keys';

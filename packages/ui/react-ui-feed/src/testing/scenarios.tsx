@@ -5,7 +5,8 @@
 import React, { type ComponentType } from 'react';
 
 import { random } from '@dxos/random';
-import { IconButton, SystemIconButton } from '@dxos/react-ui';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 import { type ContentBlock, Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -480,14 +481,14 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
                 bubble's edge — right-aligned, like the words it belongs to. */}
             <div className='flex items-center justify-end gap-1 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
               <CopyButton message={message} />
-              <IconButton
+              <IconButton.Root
                 icon='ph--arrow-counter-clockwise--regular'
                 iconOnly
                 label='Rewind'
                 variant='ghost'
                 density='sm'
               />
-              <IconButton icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' density='sm' />
+              <IconButton.Root icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' density='sm' />
               <span className='text-subdued'>#{index}</span>
               <span>{timeOf(message)}</span>
             </div>
@@ -498,7 +499,13 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
           {children}
           <div className='flex items-center gap-1 pt-1 text-xs text-description opacity-0 transition-opacity group-hover:opacity-100'>
             <CopyButton message={message} />
-            <IconButton icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' density='sm' />
+            <IconButton.Root
+              icon='ph--arrow-bend-up-left--regular'
+              iconOnly
+              label='Reply'
+              variant='ghost'
+              density='sm'
+            />
             <span className='text-subdued'>#{index}</span>
             <span>{timeOf(message)}</span>
           </div>
@@ -548,7 +555,7 @@ const CommentChrome = ({ message, children }: MessageChromeProps) => (
       <span className='font-medium'>{message.sender.name}</span>
       <span>{timeOf(message)}</span>
       <span className='grow' />
-      <IconButton
+      <IconButton.Root
         icon={message.properties?.resolved ? 'ph--check-circle--regular' : 'ph--circle--regular'}
         iconOnly
         label='Resolve'

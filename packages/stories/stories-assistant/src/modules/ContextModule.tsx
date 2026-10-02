@@ -12,9 +12,11 @@ import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, type Ref } from '@dxos/echo';
 import { useContextBinder } from '@dxos/plugin-assistant/Hooks';
 import { type Space, useObject, useQuery } from '@dxos/react-client/echo';
-import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Card from '@dxos/react-ui/Card';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 export const ContextModule = () => {
   const space = useActiveSpace();

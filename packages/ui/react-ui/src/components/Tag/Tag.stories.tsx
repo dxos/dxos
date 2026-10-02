@@ -9,24 +9,24 @@ import { hues } from '@dxos/ui-types';
 import { type ChromaticPalette, type MessageValence } from '@dxos/ui-types';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Tag } from './Tag.tsx';
+import * as Tag from './Tag.tsx';
 
 const palettes = ['neutral', 'success', 'info', 'warning', 'error', ...hues] as (ChromaticPalette | MessageValence)[];
 
 const meta = {
   title: 'ui/react-ui-core/components/Tag',
-  component: Tag,
+  component: Tag.Root,
   render: () => (
     <div>
       {palettes.map((palette) => (
-        <Tag key={palette} hue={palette}>
+        <Tag.Root key={palette} hue={palette}>
           {palette}
-        </Tag>
+        </Tag.Root>
       ))}
     </div>
   ),
   decorators: [withTheme(), withLayout({ layout: 'default' })],
-} satisfies Meta<typeof Tag>;
+} satisfies Meta<typeof Tag.Root>;
 
 export default meta;
 

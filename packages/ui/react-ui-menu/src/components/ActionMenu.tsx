@@ -13,7 +13,8 @@ import React, {
   useState,
 } from 'react';
 
-import { Icon, Menu, type MenuRootProps } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
 import { mx } from '@dxos/ui-theme';
 import { type MenuItemChrome } from '@dxos/ui-types';
 
@@ -83,7 +84,7 @@ const ActionMenuItem = ({
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
     >
       {action.properties?.icon && (
-        <Icon
+        <Icon.Root
           icon={action.properties.icon}
           size={iconSize}
           classNames={mx(action.properties.spin && 'animate-spin', action.properties.iconClassNames)}
@@ -91,7 +92,7 @@ const ActionMenuItem = ({
       )}
       <ActionLabel action={action} />
       {/* Trailing check marks the current value of a single-select group (`checked`). */}
-      {action.properties?.checked && <Icon icon='ph--check--regular' size={iconSize} classNames='ms-auto' />}
+      {action.properties?.checked && <Icon.Root icon='ph--check--regular' size={iconSize} classNames='ms-auto' />}
     </Menu.Item>
   );
 };
@@ -103,9 +104,9 @@ const ActionSubMenu = ({ menu, group }: { menu: MenuActions; group: MenuItemGrou
   return (
     <Menu.Sub>
       <Menu.SubTrigger classNames='gap-2' {...(testId && { 'data-testid': testId })}>
-        {icon && <Icon icon={icon} size={iconSize} />}
+        {icon && <Icon.Root icon={icon} size={iconSize} />}
         <ActionLabel action={group} />
-        <Icon icon='ph--caret-right--regular' size={iconSize} classNames='ms-auto' />
+        <Icon.Root icon='ph--caret-right--regular' size={iconSize} classNames='ms-auto' />
       </Menu.SubTrigger>
       <Menu.Portal>
         <Menu.SubContent>
@@ -149,7 +150,7 @@ const ActionMenuItems = ({
 //
 
 export type ActionMenuProps = Partial<MenuActions> &
-  Pick<MenuRootProps, 'open' | 'defaultOpen' | 'onOpenChange'> & {
+  Pick<Menu.RootProps, 'open' | 'defaultOpen' | 'onOpenChange'> & {
     /** The group whose items the menu shows; the root's when omitted. */
     group?: MenuGroupContext;
     /** Explicit items in place of the group's own; contributions still apply. A thunk is called

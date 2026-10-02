@@ -6,7 +6,11 @@ import { formatDistance } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Button, Dialog, Link, Trans, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Link from '@dxos/react-ui/Link';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '../../meta.ts';
 
@@ -39,7 +43,7 @@ const parseUrl = (url: string): URL | undefined => {
 };
 
 export const AboutDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
 
@@ -74,21 +78,21 @@ export const AboutDialog = () => {
         <div className='flex flex-col gap-3'>
           {timestamp && (
             <div className='flex items-center gap-1'>
-              <Link href={releaseUrl} variant='neutral'>
+              <Link.Root href={releaseUrl} variant='neutral'>
                 {t('published.label', {
                   timestamp: formatDistance(new Date(timestamp), new Date(), { addSuffix: true }),
                 })}
-              </Link>
+              </Link.Root>
             </div>
           )}
           {showEnv && <div className='flex items-center'>{t('environment.label', { environment: edgeEnv })}</div>}
           <p>
-            <Trans
+            <ThemeProvider.Trans
               {...{
                 t,
                 i18nKey: 'powered-by-dxos.message',
                 components: {
-                  dxos: <Link href='https://dxos.org' variant='neutral' />,
+                  dxos: <Link.Root href='https://dxos.org' variant='neutral' />,
                 },
               }}
             />
@@ -97,7 +101,7 @@ export const AboutDialog = () => {
       </Dialog.Body>
       <Dialog.ActionBar>
         <Dialog.Close asChild>
-          <Button variant='primary'>{t('close.label')}</Button>
+          <Button.Root variant='primary'>{t('close.label')}</Button.Root>
         </Dialog.Close>
       </Dialog.ActionBar>
     </Dialog.Content>

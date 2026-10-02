@@ -4,15 +4,15 @@
 
 import { createContext } from '@dxos/react-hooks';
 
-import { type DatePickerMode, type ValueByMode } from './DatePicker.tsx';
+import type * as DatePicker from './DatePicker.tsx';
 
 // Kept out of `DatePicker.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.
 
 export type DatePickerContextValue = {
-  mode: DatePickerMode;
-  value: ValueByMode[DatePickerMode];
-  setValue: (next: ValueByMode[DatePickerMode]) => void;
+  mode: DatePicker.Mode;
+  value: DatePicker.ValueByMode[DatePicker.Mode];
+  setValue: (next: DatePicker.ValueByMode[DatePicker.Mode]) => void;
   withTime: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;

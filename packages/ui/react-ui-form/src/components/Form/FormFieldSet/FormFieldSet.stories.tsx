@@ -8,7 +8,8 @@ import * as Struct from 'effect/Struct';
 import React, { useState } from 'react';
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test';
 
-import { Button, Field } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -53,7 +54,7 @@ const DefaultStory = ({ variant }: StoryArgs) => {
               <Field.Switch checked={wireframe} onCheckedChange={setWireframe} />
             </Form.Field>
             <Form.Field standalone label='Reset' description='Forget the layout.'>
-              <Button>Reset</Button>
+              <Button.Root>Reset</Button.Root>
             </Form.Field>
           </Form.FieldSet>
         </Form.Content>
@@ -164,7 +165,7 @@ export const Sections: Story = {
               <p>Alice, Bob</p>
             </Form.FieldSet>
             <Form.FieldSet appearance='section' label='Invitations' description='Manage invitations.'>
-              <Button>Invite</Button>
+              <Button.Root>Invite</Button.Root>
             </Form.FieldSet>
           </Form.FieldSet>
         </Form.Content>

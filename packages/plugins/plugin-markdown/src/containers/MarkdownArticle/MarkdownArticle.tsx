@@ -15,11 +15,10 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';
-import { Panel } from '@dxos/react-ui';
 import { ViewState } from '@dxos/react-ui-attention';
 import {
   Editor,
@@ -29,6 +28,7 @@ import {
   useEditorContext,
 } from '@dxos/react-ui-editor';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Text } from '@dxos/schema';
 import { Merge } from '@dxos/util';
 

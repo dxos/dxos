@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withTheme } from '../../testing/index.ts';
-import { IconButton } from '../Button/index.ts';
-import { MenuButton, type MenuButtonItem } from './MenuButton.tsx';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as MenuButton from './MenuButton.tsx';
 
 const DEVICES = ['Built-in Microphone', 'AirPods Pro', 'USB Audio'];
 
@@ -17,14 +17,14 @@ const DefaultStory = () => {
   const [device, setDevice] = useState('');
   const [extraction, setExtraction] = useState(true);
 
-  const items: MenuButtonItem[] = [
+  const items: MenuButton.Item[] = [
     { type: 'group', label: 'Record mode' },
     { type: 'option', label: 'Toggle', selected: mode === 'toggle', onSelect: () => setMode('toggle') },
     { type: 'option', label: 'Hold to record', selected: mode === 'hold', onSelect: () => setMode('hold') },
     { type: 'separator' },
     { type: 'group', label: 'Input device' },
     { type: 'option', label: 'System default', selected: device === '', onSelect: () => setDevice('') },
-    ...DEVICES.map((name): MenuButtonItem => ({
+    ...DEVICES.map((name): MenuButton.Item => ({
       type: 'option',
       label: name,
       selected: device === name,
@@ -43,8 +43,8 @@ const DefaultStory = () => {
   return (
     // The split control the pattern exists for: a primary action, and its options beside it.
     <div className='flex items-center'>
-      <IconButton icon='ph--microphone--regular' iconOnly variant='ghost' label='Record' />
-      <MenuButton
+      <IconButton.Root icon='ph--microphone--regular' iconOnly variant='ghost' label='Record' />
+      <MenuButton.Root
         icon='ph--caret-down--regular'
         iconOnly
         variant='ghost'

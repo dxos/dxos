@@ -8,8 +8,11 @@ import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } f
 import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Format } from '@dxos/echo';
-import { Column, Dialog, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext } from '@dxos/react-ui-form';
+import * as Column from '@dxos/react-ui/Column';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 import { OutlineOperation } from '#types';
@@ -35,7 +38,7 @@ type QuickEntryActionsProps = {
  * Custom form actions with Cancel, Save & Add Another, and Save buttons.
  */
 const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const {
     form: { canSave, onSave, onCancel },
   } = useFormContext(QUICK_ENTRY_ACTIONS_NAME);
@@ -53,7 +56,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
   return (
     <div className='grid grid-flow-col gap-form-gap auto-cols-fr py-form-padding'>
       {onCancel && (
-        <IconButton
+        <IconButton.Root
           icon='ph--x--regular'
           iconEnd
           label={t('quick-entry-cancel.label')}
@@ -61,7 +64,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
           data-testid='cancel-button'
         />
       )}
-      <IconButton
+      <IconButton.Root
         disabled={!canSave}
         icon='ph--plus--regular'
         iconEnd
@@ -69,7 +72,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
         onClick={handleSaveAndContinue}
         data-testid='save-and-continue-button'
       />
-      <IconButton
+      <IconButton.Root
         type='submit'
         variant='primary'
         disabled={!canSave}
@@ -84,7 +87,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
 };
 
 export const QuickEntryDialog = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [formKey, setFormKey] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);

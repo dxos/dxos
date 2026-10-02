@@ -10,13 +10,15 @@ import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHan
 
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { INITIAL_FOCUS_ATTRIBUTE } from '@dxos/react-focus';
-import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   type EditorMenuGroup,
   type EditorToolbarState,
   type UseTextEditorProps,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   type EditorSelectionState,
   type EditorStateStore,
@@ -40,7 +42,7 @@ import { meta } from '#meta';
 
 import { type MarkdownEditorToolbarProps } from './MarkdownEditorToolbar.tsx';
 
-export type MarkdownEditorContentProps = ThemedClassName<{
+export type MarkdownEditorContentProps = Util.ThemedClassName<{
   id: string;
   attendableId?: string;
   role?: string;
@@ -77,8 +79,8 @@ export const MarkdownEditorContent = forwardRef<EditorView | null, MarkdownEdito
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.profile.key);
-    const { themeMode } = useThemeContext();
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { themeMode } = ThemeProvider.useThemeContext();
     const registry = useContext(RegistryContext);
 
     // Callback to update toolbar state atom.

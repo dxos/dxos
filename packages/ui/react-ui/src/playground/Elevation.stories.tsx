@@ -7,7 +7,8 @@ import React from 'react';
 
 import { translations } from '#translations';
 
-import { Field, Fieldset } from '../components/index.ts';
+import * as Field from '../components/Field/Field.tsx';
+import * as Fieldset from '../components/Fieldset/Fieldset.tsx';
 import { withLayoutVariants, withTheme } from '../testing/index.ts';
 
 type StoryArgs = {

@@ -8,9 +8,12 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { Banner, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 import { ClientOperation } from '#operations';
@@ -28,7 +31,7 @@ const KIND_ICONS: Record<Identity.RecoveryKind, string> = {
 };
 
 export const RecoveryCredentialsContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const credentials = useCredentials();
   const recoveryCredentials = credentials.filter(
@@ -64,7 +67,7 @@ export const RecoveryCredentialsContainer = () => {
         <Form.Content>
           <Form.FieldSet label={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
             <Form.Field standalone label={t('create-passkey.label')} description={t('create-passkey.description')}>
-              <IconButton
+              <IconButton.Root
                 label={t('create-passkey.label')}
                 icon='ph--key--duotone'
                 variant='primary'
@@ -76,7 +79,7 @@ export const RecoveryCredentialsContainer = () => {
               label={t('create-recovery-code.label')}
               description={t('create-recovery-code.description')}
             >
-              <IconButton
+              <IconButton.Root
                 label={t('create-recovery-code.label')}
                 icon='ph--receipt--duotone'
                 variant='default'
@@ -100,7 +103,7 @@ export const RecoveryCredentialsContainer = () => {
                     const { lookupKey, label, kind = 'unknown', revoked } = credential.recovery ?? { revoked: false };
                     return (
                       <Listbox.Item key={credential.id ?? index} id={credential.id ?? `${index}`} classNames='gap-2'>
-                        <Icon icon={KIND_ICONS[kind]} />
+                        <Icon.Root icon={KIND_ICONS[kind]} />
                         <Listbox.ItemLabel classNames={revoked ? 'text-subdued line-through' : undefined}>
                           {label ?? t(`recovery-kind-${kind}.label`)}
                         </Listbox.ItemLabel>
@@ -112,7 +115,7 @@ export const RecoveryCredentialsContainer = () => {
                           // identity, and there is no self-service way back.
                           lookupKey &&
                           activeCount > 1 && (
-                            <IconButton
+                            <IconButton.Root
                               iconOnly
                               label={t('revoke-credential.label')}
                               icon='ph--trash--regular'
@@ -143,7 +146,7 @@ export const RecoveryCredentialsContainer = () => {
             )}
             {recoveryCredentials.length > 0 && (
               <Form.Field standalone label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>
-                <IconButton
+                <IconButton.Root
                   label={t('manage-passkeys.label')}
                   icon='ph--arrow-square-out--regular'
                   variant='default'

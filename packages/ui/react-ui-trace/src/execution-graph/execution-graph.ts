@@ -9,7 +9,7 @@ import * as Pipeable from 'effect/Pipeable';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute';
+import { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE } from '@dxos/compute/Errors';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Annotation } from '@dxos/echo';

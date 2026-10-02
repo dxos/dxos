@@ -35,7 +35,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { useCapability } from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { stubParse } from '@dxos/nlp/testing';
 import { Pipeline } from '@dxos/pipeline';
 import { EmailPipeline, type FactIndexer, Thread } from '@dxos/pipeline-email';

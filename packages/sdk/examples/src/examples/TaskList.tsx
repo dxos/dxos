@@ -7,7 +7,8 @@ import React, { type ChangeEventHandler, type KeyboardEventHandler, useState } f
 import { Filter, Obj } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { useQuery, useSpace } from '@dxos/react-client/echo';
-import { Field, IconButton } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { TaskType } from '../types.ts';
 
@@ -56,7 +57,7 @@ const TaskList = ({ id, spaceId }: { id: number; spaceId?: SpaceId }) => {
               />
             </Field.Root>
             <div className='grow'>{task.title}</div>
-            <IconButton
+            <IconButton.Root
               icon='ph--x--regular'
               size={4}
               label={`Delete ${task.title}`}

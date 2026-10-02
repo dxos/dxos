@@ -10,7 +10,7 @@ import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Rpc from './internal/rpc.ts';
 import * as RpcTiming from './RpcTiming.ts';

@@ -15,7 +15,6 @@ import { AiService, OpaqueToolkit, Provider } from '@dxos/ai';
 import { type AiServicePreset, TestAiService } from '@dxos/ai/testing';
 import { Alarm, Harness } from '@dxos/assistant';
 import * as Chat from '@dxos/assistant/Chat';
-import { ServiceNotAvailableError } from '@dxos/compute';
 import {
   FeedTraceSink,
   ProcessManager,
@@ -29,6 +28,7 @@ import {
 import { TestDatabaseLayer } from '@dxos/compute-runtime/testing';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Credential from '@dxos/compute/Credential';
+import { ServiceNotAvailableError } from '@dxos/compute/Errors';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';

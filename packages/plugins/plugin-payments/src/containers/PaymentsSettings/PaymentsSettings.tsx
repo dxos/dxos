@@ -11,8 +11,11 @@ import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { Banner, Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { buyPremium, createStripeCheckout } from '#services';
@@ -26,7 +29,7 @@ type Status = {
 export type PaymentsSettingsProps = AppSurface.SettingsData;
 
 export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
@@ -101,13 +104,13 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
             actions={<SettingsScope prefix={meta.profile.key} />}
           >
             <Form.Fields />
-            <Flex column gap='sm' classNames='my-2'>
-              <Button disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
+            <Flex.Root column gap='sm' classNames='my-2'>
+              <Button.Root disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
                 {pending ? t('pending.label') : t('buy-premium.label')}
-              </Button>
-              <Button disabled={pending || !paymentsUrl} onClick={handleBuyCredits}>
+              </Button.Root>
+              <Button.Root disabled={pending || !paymentsUrl} onClick={handleBuyCredits}>
                 {pending ? t('pending.label') : t('buy-credits.label')}
-              </Button>
+              </Button.Root>
               {status.kind === 'result' && (
                 <pre className='text-xs whitespace-pre-wrap overflow-auto'>{status.text}</pre>
               )}
@@ -119,7 +122,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
                   </Banner.Content>
                 </Banner.Root>
               )}
-            </Flex>
+            </Flex.Root>
           </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>

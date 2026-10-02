@@ -2,14 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
 import { type ThemedClassName } from '../../util/index.ts';
-import { Icon } from '../Icon/index.ts';
-
+import * as Icon from '../Icon/Icon.tsx';
 const attentionGlyphStyles = mx(
   'inline-block rounded-xs size-3 bg-transparent text-accent-text transition-colors',
   '[[data-contains-attended=true]_&]:bg-attention-contains',
@@ -68,7 +69,7 @@ export const Syncing = () => {
 
   return (
     <div role='status' className='flex items-center'>
-      <Icon
+      <Icon.Root
         icon='ph--circle-notch--bold'
         size={3}
         style={animationProps}
@@ -78,14 +79,14 @@ export const Syncing = () => {
   );
 };
 
-export type AttentionGlyphProps = {
+type AttentionGlyphProps = {
   attended?: boolean;
   containsAttended?: boolean;
   syncing?: boolean;
   presence?: 'none' | 'one' | 'many';
 } & ThemedClassName<Omit<ComponentPropsWithRef<typeof ark.span>, 'children'>>;
 
-export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
+const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
   ({ presence, attended, syncing, containsAttended, classNames, ...props }, forwardedRef) => {
     const icon = syncing ? (
       <Syncing />
@@ -104,3 +105,6 @@ export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
     );
   },
 );
+
+export { AttentionGlyph as Root };
+export type { AttentionGlyphProps as RootProps };

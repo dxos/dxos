@@ -5,9 +5,13 @@
 import React, { type ReactNode } from 'react';
 
 import { type Space } from '@dxos/react-client/echo';
-import { Field, IconButton, Select, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Select from '@dxos/react-ui/Select';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -38,7 +42,7 @@ export const SpaceSettings = ({
   eligibleDefaultSpaces = spaces,
   onDefaultSpaceChange,
 }: SpaceSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Form.Root variant='settings'>
@@ -66,7 +70,7 @@ export const SpaceSettings = ({
                     <Select.Viewport>
                       {eligibleDefaultSpaces?.map((space) => (
                         <Select.Option key={space.id} value={space.id}>
-                          {toLocalizedString(getSpaceDisplayName(space), t)}
+                          {ThemeProvider.toLocalizedString(getSpaceDisplayName(space), t)}
                         </Select.Option>
                       ))}
                     </Select.Viewport>
@@ -85,9 +89,9 @@ export const SpaceSettings = ({
                     <Listbox.Item key={space.id} id={space.id} classNames='w-full gap-2 items-center'>
                       {/* TODO(burdon): Should auto center and truncate; NOTE truncate doesn't work with flex grow. */}
                       <Listbox.ItemLabel classNames='min-h-0!'>
-                        {toLocalizedString(getSpaceDisplayName(space), t)}
+                        {ThemeProvider.toLocalizedString(getSpaceDisplayName(space), t)}
                       </Listbox.ItemLabel>
-                      <IconButton
+                      <IconButton.Root
                         icon='ph--faders--regular'
                         iconOnly
                         label={t('settings.open-settings.label')}

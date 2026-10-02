@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import { Annotation, Database, DXN, Feed, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type EntityId } from '@dxos/keys';
 import { FactoryAnnotation, type FactoryFn, FeedAnnotation, StateMap, TagIndex } from '@dxos/schema';
 

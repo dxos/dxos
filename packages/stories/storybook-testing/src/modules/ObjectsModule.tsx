@@ -7,8 +7,11 @@ import React, { useMemo, useState } from 'react';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Field, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Field from '@dxos/react-ui/Field';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /** `Select` values must be non-empty strings, so "no type filter" needs a sentinel. */
 const ALL_TYPES = '__all__';

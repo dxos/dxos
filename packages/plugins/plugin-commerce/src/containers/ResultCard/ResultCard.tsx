@@ -5,7 +5,11 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Card, Flex, SystemIconButton, composable, useTranslation } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -28,9 +32,9 @@ export type ResultCardProps = {
  * `Card.Header` is a 3-slot subgrid (icon · content · action); the star toggle occupies the
  * leading icon slot and title + price occupy the centre `1fr` content slot.
  */
-export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
+export const ResultCard = Util.composable<HTMLDivElement, ResultCardProps>(
   ({ subject, current, starred = false, onToggleStar, classNames, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     // Subscribe so the card re-renders when the result (or its image) loads.
     const [result] = useObject(subject);
     const imageUrl = result.images?.[0];
@@ -65,10 +69,10 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
           <Card.Block>
             <SystemIconButton.Star variant='ghost' iconOnly square active={starred} onClick={handleToggleStar} />
           </Card.Block>
-          <Flex column gap='xs' classNames='min-w-0 py-2'>
+          <Flex.Root column gap='xs' classNames='min-w-0 py-2'>
             <Card.Title classNames='line-clamp-2'>{result.title}</Card.Title>
             {price && <span className='text-sm text-description'>{price}</span>}
-          </Flex>
+          </Flex.Root>
           <Card.Block end />
         </Card.Header>
       </Card.Root>

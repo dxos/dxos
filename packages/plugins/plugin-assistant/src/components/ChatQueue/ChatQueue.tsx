@@ -4,13 +4,15 @@
 
 import React, { useCallback } from 'react';
 
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import type * as Util from '@dxos/react-ui/Util';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
 
-export type ChatQueueProps = ThemedClassName<{
+export type ChatQueueProps = Util.ThemedClassName<{
   /** Queued input awaiting processing, in append order. */
   messages: readonly Message.Message[];
   onCancel?: (message: Message.Message) => void;
@@ -44,7 +46,7 @@ type QueuedItemProps = {
 };
 
 const QueuedItem = ({ message, onCancel }: QueuedItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const handleCancel = useCallback(() => {
     onCancel?.(message);
@@ -60,7 +62,7 @@ const QueuedItem = ({ message, onCancel }: QueuedItemProps) => {
           overflows its max-width and the start of the prompt is what gets cut. */}
       <span className='min-w-0 truncate'>{Message.extractText(message)}</span>
       {onCancel && (
-        <IconButton
+        <IconButton.Root
           iconOnly
           icon='ph--x--regular'
           variant='ghost'

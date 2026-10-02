@@ -12,10 +12,10 @@ import React, {
   useState,
 } from 'react';
 
-import { ScrollArea, type ThemedClassName } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { type DndContainerHandler, useDndRootContext } from '@dxos/react-ui-dnd';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useContainerDebug } from '../../hooks/index.ts';
@@ -47,13 +47,13 @@ const BoardRoot = BoardRootInner as <TColumn = any, TItem = any>(props: BoardRoo
 
 const BOARD_CONTENT_NAME = 'Board.Content';
 
-type BoardContentProps<TColumn = any> = ThemedClassName<{
+type BoardContentProps<TColumn = any> = Util.ThemedClassName<{
   debug?: boolean;
   eventHandler?: DndContainerHandler<TColumn>;
   Tile?: MosaicStackProps<TColumn>['Tile'];
 }>;
 
-const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
+const BoardContentInner = Util.composable<HTMLDivElement, BoardContentProps>(
   ({ debug, eventHandler, Tile = DefaultBoardColumn, ...props }, forwardedRef) => {
     const { model } = useBoardContext(BOARD_CONTENT_NAME);
     const [DebugInfo, debugHandler] = useContainerDebug(debug);
@@ -62,7 +62,7 @@ const BoardContentInner = composable<HTMLDivElement, BoardContentProps>(
     const items = useAtomValue(model.columns);
 
     return (
-      <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
+      <div {...Util.composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
         <Focus.Group asChild orientation='horizontal'>
           <Mosaic.Container
             asChild
@@ -116,7 +116,7 @@ BoardPlaceholder.displayName = BOARD_PLACEHOLDER_NAME;
 
 const BOARD_DEBUG_NAME = 'Board.Debug';
 
-export const BoardDebug = forwardRef<HTMLDivElement, ThemedClassName>(({ classNames }, forwardedRef) => {
+export const BoardDebug = forwardRef<HTMLDivElement, Util.ThemedClassName>(({ classNames }, forwardedRef) => {
   const { containers, dragging } = useDndRootContext(BOARD_DEBUG_NAME);
   const counter = useRef(0);
   return (

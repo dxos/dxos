@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Timestamp.tsx';
+export * as Timestamp from './Timestamp.tsx';

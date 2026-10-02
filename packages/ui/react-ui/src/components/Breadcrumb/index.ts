@@ -2,4 +2,4 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './Breadcrumb.tsx';
+export * as Breadcrumb from './Breadcrumb.tsx';

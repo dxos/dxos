@@ -8,9 +8,9 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/Hooks';
-import { Tabs } from '@dxos/react-ui';
 import { type MenuItem } from '@dxos/react-ui-menu';
-import { Position } from '@dxos/util';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Position from '@dxos/util/Position';
 
 import { useLoadDescendents } from '#hooks';
 

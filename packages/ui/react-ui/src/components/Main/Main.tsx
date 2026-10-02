@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Drawer as DrawerPrimitive, useDrawer } from '@ark-ui/react/drawer';
 import { ark } from '@ark-ui/react/factory';
 import React, {
@@ -25,7 +27,8 @@ import { osTranslations } from '@dxos/ui-theme';
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { type Label, toLocalizedString, useTranslation } from '../../providers/index.ts';
+import * as ThemeProvider from '../../providers/ThemeProvider/ThemeProvider.tsx';
+import { useTranslation } from '../../providers/ThemeProvider/TranslationsContext.ts';
 import { type MainStyleProps } from '../../theme/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
 import {
@@ -220,7 +223,7 @@ type MainSidebarProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> &
   /** Vetoes the focus the sidebar takes on opening; by default it takes focus only from the keyboard. */
   onOpenAutoFocus?: (event: Event) => void;
   side: 'w-start' | 'w-end';
-  label: Label;
+  label: ThemeProvider.Label;
 };
 
 /**
@@ -297,7 +300,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
     const sidebarProps = {
       ...(state === 'closed' && { inert: true }),
       ...props,
-      'aria-label': toLocalizedString(label, t),
+      'aria-label': ThemeProvider.toLocalizedString(label, t),
       'data-side': side === 'w-end' ? 'ie' : 'is',
       'data-state': state,
       'data-resizing': resizing ? 'true' : 'false',
@@ -427,7 +430,7 @@ MainContent.displayName = MAIN_CONTENT_NAME;
 //
 
 type MainDrawerProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {
-  label: Label;
+  label: ThemeProvider.Label;
   /** Height in rem. */
   minHeight?: number;
   /** Height in rem. */
@@ -540,7 +543,7 @@ const MainDrawer = forwardRef<HTMLDivElement, MainDrawerProps>(
         {...mover}
         {...props}
         role='region'
-        aria-label={toLocalizedString(label, t)}
+        aria-label={ThemeProvider.toLocalizedString(label, t)}
         data-sidebar-left-state={navigationSidebarState}
         data-sidebar-right-state={complementarySidebarState}
         className={tx('main.drawer', {}, classNames)}
@@ -574,24 +577,26 @@ MainDrawer.displayName = MAIN_DRAWER_NAME;
 //
 // Main
 //
-
-export const Main = {
-  Root: MainRoot,
-  Overlay: MainOverlay,
-  Content: MainContent,
-  NavigationSidebar: MainNavigationSidebar,
-  ComplementarySidebar: MainComplementarySidebar,
-  Drawer: MainDrawer,
-};
-
 export { DRAWER_DEFAULT_HEIGHT, DRAWER_MAX_HEIGHT, DRAWER_MIN_HEIGHT };
 
 export type {
+  MainContentProps as ContentProps,
+  MainDrawerProps as DrawerProps,
   DrawerState,
-  MainContentProps,
-  MainDrawerProps,
-  MainNavigationSidebarProps,
-  MainOverlayProps,
-  MainRootProps,
+  MainNavigationSidebarProps as NavigationSidebarProps,
+  MainOverlayProps as OverlayProps,
+  MainRootProps as RootProps,
   SidebarState,
 };
+
+export {
+  MainComplementarySidebar as ComplementarySidebar,
+  MainContent as Content,
+  MainDrawer as Drawer,
+  MainNavigationSidebar as NavigationSidebar,
+  MainOverlay as Overlay,
+  MainRoot as Root,
+};
+export * from './Main.theme.ts';
+export { useLandmarkMover, useMainContext, useSidebars } from './MainContext.ts';
+export * from './constants.ts';

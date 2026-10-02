@@ -13,9 +13,12 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
 import { ResizeHandle, type Size, resizeAttributes, sizeStyle } from '@dxos/react-ui-dnd';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
 import { type LinkWidgetState, type WidgetProps, releaseBlockHeight, setLinkWidgetState } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { isTruthy } from '@dxos/util';
@@ -91,7 +94,7 @@ export const PreviewComponent = ({
   onOpen,
   isSurfaceAvailable: isSurfaceAvailableProp,
 }: PreviewComponentProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Optional, not `useOperationInvoker`: that hook SUSPENDS until the capability exists, and a
   // suspending portal holds the whole editor tree un-committed — embeds never appeared on the
   // first document render. The invoker is only the open-click fallback; absence is tolerable.
@@ -321,7 +324,7 @@ export const PreviewComponent = ({
   if (unresolved) {
     return (
       <span className='dx-tag dx-tag--red inline-flex items-center gap-1 align-baseline'>
-        <Icon icon='ph--warning--regular' size={4} />
+        <Icon.Root icon='ph--warning--regular' size={4} />
         {t('object-not-found.label')}
       </span>
     );
@@ -359,13 +362,13 @@ export const PreviewComponent = ({
 
           <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
             <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
-              {objectIcon && <Icon icon={objectIcon.icon} size={4} />}
+              {objectIcon && <Icon.Root icon={objectIcon.icon} size={4} />}
               {objectLabel}
             </span>
           </div>
 
           <div className='absolute top-1 right-1 flex items-center justify-end gap-1'>
-            <IconButton
+            <IconButton.Root
               density='sm'
               icon='ph--arrow-square-out--regular'
               iconOnly

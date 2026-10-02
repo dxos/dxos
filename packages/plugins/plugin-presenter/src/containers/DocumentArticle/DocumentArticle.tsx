@@ -8,7 +8,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useLayout } from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { PresentationShell, RevealPlayer } from '#components';
 

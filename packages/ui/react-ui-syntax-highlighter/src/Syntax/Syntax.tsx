@@ -5,8 +5,9 @@
 import { JSONPath } from 'jsonpath-plus';
 import React, { type PropsWithChildren, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Field, ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { JsonHighlighter, type JsonReplacer } from '../JsonHighlighter/index.ts';
@@ -131,9 +132,12 @@ const SYNTAX_CONTENT_NAME = 'Syntax.Content';
 type SyntaxContentProps = ComposableProps;
 
 /** Flex-column layout container for composite parts. */
-const SyntaxContent = composable<HTMLDivElement, SyntaxContentProps>(({ children, ...props }, forwardedRef) => {
+const SyntaxContent = Util.composable<HTMLDivElement, SyntaxContentProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { classNames: 'flex flex-col p-1 dx-expand overflow-hidden' })} ref={forwardedRef}>
+    <div
+      {...Util.composableProps(props, { classNames: 'flex flex-col p-1 dx-expand overflow-hidden' })}
+      ref={forwardedRef}
+    >
       {children}
     </div>
   );
@@ -218,9 +222,9 @@ const SYNTAX_VIEWPORT_NAME = 'Syntax.Viewport';
 type SyntaxViewportProps = ComposableProps;
 
 /** Optional scroll wrapper. Compose around `Syntax.Code` to make it scrollable. */
-const SyntaxViewport = composable<HTMLDivElement, SyntaxViewportProps>(({ children, ...props }, forwardedRef) => {
+const SyntaxViewport = Util.composable<HTMLDivElement, SyntaxViewportProps>(({ children, ...props }, forwardedRef) => {
   return (
-    <ScrollArea.Root {...composableProps(props)} orientation='all' thin ref={forwardedRef}>
+    <ScrollArea.Root {...Util.composableProps(props)} orientation='all' thin ref={forwardedRef}>
       <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -239,8 +243,8 @@ type SyntaxCodeProps = ComposableProps<{
 }>;
 
 /** Highlighted code leaf, unscrolled: `Syntax.Viewport` owns the scrolling. Reads source/data from `Syntax.Root`. */
-const SyntaxCode = composable<HTMLDivElement, SyntaxCodeProps>(({ testId, ...props }, forwardedRef) => {
-  const merged = composableProps(props, { classNames: 'text-sm' });
+const SyntaxCode = Util.composable<HTMLDivElement, SyntaxCodeProps>(({ testId, ...props }, forwardedRef) => {
+  const merged = Util.composableProps(props, { classNames: 'text-sm' });
 
   const context = useSyntaxContext(SYNTAX_CODE_NAME);
   if (context.mode === 'json') {

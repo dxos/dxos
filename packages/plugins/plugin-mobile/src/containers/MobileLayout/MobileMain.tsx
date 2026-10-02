@@ -11,8 +11,9 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useDeckState } from '@dxos/plugin-deck/Hooks';
 import { useNode } from '@dxos/plugin-graph/Hooks';
-import { ErrorFallback, Panel } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { Loading, MobileAppBar, MobileNavBar, NavigationStack, useExpandPath, useMobileLayout } from '#components';
 import { useMobileAppBar, useMobileNavbarActions, useMobileStack } from '#hooks';
@@ -50,7 +51,7 @@ const MainPanel = ({ id, popoverAnchorId }: MainPanelProps) => {
       type={AppSurface.Article}
       data={data}
       limit={1}
-      fallback={ErrorFallback}
+      fallback={ErrorFallback.Root}
       placeholder={placeholder}
     />
   );

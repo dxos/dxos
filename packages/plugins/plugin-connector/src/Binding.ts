@@ -12,7 +12,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { RunAgainError } from '@dxos/compute';
+import { RunAgainError } from '@dxos/compute/Errors';
 import { ServiceNotAvailableError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as Routine from '@dxos/compute/Routine';
@@ -23,7 +23,7 @@ import { Database, EID, Filter, type Key, Obj, Query, Ref, Type } from '@dxos/ec
 import { invariant } from '@dxos/invariant';
 import { type AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { makeRoutine } from '@dxos/plugin-routine';
+import { makeRoutine } from '@dxos/plugin-routine/Wire';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 import { meta } from '#meta';

@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import * as SchemaIssue from 'effect/SchemaIssue';
 
 import * as Operation from '@dxos/compute/Operation';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { DXN } from '@dxos/keys';
 
 import * as Capabilities from './common/capabilities.ts';

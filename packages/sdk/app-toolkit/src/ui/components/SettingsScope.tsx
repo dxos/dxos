@@ -4,7 +4,10 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { AlertDialog, Button, ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { useSettingsScope } from '../hooks/index.ts';
@@ -16,7 +19,7 @@ export type SettingsScopeProps = {
 
 /** Whether a settings panel follows the account or stays on this device. */
 export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
-  const { t } = useTranslation(osTranslations);
+  const { t } = Hooks.useTranslation(osTranslations);
   const { available, synced, takeLocal, rejoinAccount, getConflicts } = useSettingsScope(prefix);
   const [conflicts, setConflicts] = useState<readonly string[]>([]);
 
@@ -50,22 +53,22 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
 
   return (
     <>
-      <ToggleGroup type='single' value={synced ? 'synced' : 'local'} onValueChange={handleValueChange}>
-        <ToggleGroupIconItem
+      <ToggleGroup.Root type='single' value={synced ? 'synced' : 'local'} onValueChange={handleValueChange}>
+        <ToggleGroup.IconItem
           value='synced'
           data-testid='settingsScope.synced'
           icon='ph--cloud-check--regular'
           label={t('settings-scope.synced.label')}
           iconOnly
         />
-        <ToggleGroupIconItem
+        <ToggleGroup.IconItem
           value='local'
           data-testid='settingsScope.local'
           icon='ph--monitor--regular'
           label={t('settings-scope.local.label')}
           iconOnly
         />
-      </ToggleGroup>
+      </ToggleGroup.Root>
       <AlertDialog.Root open={conflicts.length > 0} onOpenChange={(open) => !open && setConflicts([])}>
         <AlertDialog.Overlay>
           <AlertDialog.Content>
@@ -78,21 +81,21 @@ export const SettingsScope = ({ prefix }: SettingsScopeProps) => {
             <AlertDialog.ActionBar>
               <div className='grow' />
               <AlertDialog.Cancel asChild>
-                <Button>{t('settings-scope.conflict-dialog.cancel.label')}</Button>
+                <Button.Root>{t('settings-scope.conflict-dialog.cancel.label')}</Button.Root>
               </AlertDialog.Cancel>
               <AlertDialog.Action asChild>
-                <Button data-testid='settingsScope.keepLocal' onClick={() => handleResolve('local')}>
+                <Button.Root data-testid='settingsScope.keepLocal' onClick={() => handleResolve('local')}>
                   {t('settings-scope.conflict-dialog.keep-local.label')}
-                </Button>
+                </Button.Root>
               </AlertDialog.Action>
               <AlertDialog.Action asChild>
-                <Button
+                <Button.Root
                   data-testid='settingsScope.keepShared'
                   variant='primary'
                   onClick={() => handleResolve('shared')}
                 >
                   {t('settings-scope.conflict-dialog.keep-shared.label')}
-                </Button>
+                </Button.Root>
               </AlertDialog.Action>
             </AlertDialog.ActionBar>
           </AlertDialog.Content>

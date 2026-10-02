@@ -4,7 +4,8 @@
 
 import React, { type ReactElement, type ReactNode } from 'react';
 
-import { Icon, composable, composableProps } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Util from '@dxos/react-ui/Util';
 import { type ComposableProps } from '@dxos/ui-types';
 
 import { listTheme } from '../List.theme.ts';
@@ -31,16 +32,19 @@ export type ListItemContentProps = ComposableProps<{
   description?: ReactNode;
 }>;
 
-export const ListItemContent = composable<HTMLDivElement, ListItemContentProps>(
+export const ListItemContent = Util.composable<HTMLDivElement, ListItemContentProps>(
   ({ icon, title, description, ...props }, forwardedRef) => {
     // Drop the leading icon track when no icon is set, so the content isn't indented past empty space.
     const hasIcon = icon != null;
     const styles = listTheme.styles({ hasIcon });
     return (
-      <div {...composableProps<HTMLDivElement>(props, { classNames: styles.itemContentRoot() })} ref={forwardedRef}>
+      <div
+        {...Util.composableProps<HTMLDivElement>(props, { classNames: styles.itemContentRoot() })}
+        ref={forwardedRef}
+      >
         {hasIcon && (
           <div className={styles.itemContentIcon()}>
-            {typeof icon === 'string' ? <Icon icon={icon} size={5} /> : icon}
+            {typeof icon === 'string' ? <Icon.Root icon={icon} size={5} /> : icon}
           </div>
         )}
         <span className={styles.itemContentTitle()}>{title}</span>

@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { AlertDialog, Button, useTranslation } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -36,7 +38,7 @@ export const DisableDependentsAlert = ({
   onResolvePluginName,
   onConfirm,
 }: DisableDependentsAlertProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const resolveName = onResolvePluginName ?? ((id: string) => id);
   return (
     <AlertDialog.Content>
@@ -56,12 +58,12 @@ export const DisableDependentsAlert = ({
       <AlertDialog.ActionBar>
         <div className='grow' />
         <AlertDialog.Cancel asChild>
-          <Button>{t('cancel.label')}</Button>
+          <Button.Root>{t('cancel.label')}</Button.Root>
         </AlertDialog.Cancel>
         <AlertDialog.Action asChild>
-          <Button variant='primary' onClick={onConfirm}>
+          <Button.Root variant='primary' onClick={onConfirm}>
             {t('disable-dependents-dialog.confirm.label')}
-          </Button>
+          </Button.Root>
         </AlertDialog.Action>
       </AlertDialog.ActionBar>
     </AlertDialog.Content>

@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import browser from 'webextension-polyfill';
 
 import { log } from '@dxos/log';
-import { IconButton } from '@dxos/react-ui';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import {
   PAGE_ACTION_PREDICATE_MESSAGE_TYPE,
@@ -123,7 +123,7 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
   return (
     <>
       {actions.map((action) => (
-        <IconButton
+        <IconButton.Root
           key={action.id}
           variant='ghost'
           iconOnly

@@ -4,9 +4,10 @@
 
 import React, { memo } from 'react';
 
-import { IconButton, type IconButtonProps, composable } from '@dxos/react-ui';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Util from '@dxos/react-ui/Util';
 
-export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label'> & {
+export type TreeItemToggleProps = Omit<IconButton.RootProps, 'icon' | 'size' | 'label'> & {
   open?: boolean;
   isBranch?: boolean;
   hidden?: boolean;
@@ -19,10 +20,10 @@ export type TreeItemToggleProps = Omit<IconButtonProps, 'icon' | 'size' | 'label
  * focusable, and the machine toggles the branch from its keymap.
  */
 export const TreeItemToggle = memo(
-  composable<HTMLButtonElement, TreeItemToggleProps>(
+  Util.composable<HTMLButtonElement, TreeItemToggleProps>(
     ({ classNames, open, isBranch, hidden, density = 'md', ...props }, forwardedRef) => {
       return (
-        <IconButton
+        <IconButton.Root
           ref={forwardedRef}
           data-testid='treeItem.toggle'
           aria-expanded={open}

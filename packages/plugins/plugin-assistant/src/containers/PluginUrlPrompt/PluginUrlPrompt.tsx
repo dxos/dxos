@@ -8,8 +8,12 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
-import { RegistryOperation, describeLoadError } from '@dxos/plugin-registry/Operations';
-import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import { describeLoadError } from '@dxos/plugin-registry/Operations';
+import * as RegistryOperation from '@dxos/plugin-registry/RegistryOperation';
+import * as Button from '@dxos/react-ui/Button';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 
@@ -30,7 +34,7 @@ export type PluginUrlPromptProps = {
  * button here is the only path that loads it.
  */
 export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_URL_PROMPT_NAME);
   const { invokePromise } = useOperationInvoker();
@@ -68,7 +72,7 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
   const label = name ?? t('plugin-url-prompt.default.name');
 
   return (
-    <Flex
+    <Flex.Root
       role='group'
       column
       gap='sm'
@@ -77,32 +81,32 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
       classNames='my-2 p-3 border border-subdued-separator rounded-sm [contain:inline-size]'
       data-testid='assistant.pluginUrlPrompt'
     >
-      <Flex gap='sm' align='center'>
-        <Icon icon='ph--cloud-arrow-down--regular' size={5} classNames='shrink-0 text-subdued' />
-        <Flex column classNames='min-w-0'>
+      <Flex.Root gap='sm' align='center'>
+        <Icon.Root icon='ph--cloud-arrow-down--regular' size={5} classNames='shrink-0 text-subdued' />
+        <Flex.Root column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-url-prompt.title', { plugin: label })}</p>
           <p className='text-sm text-subdued'>
             {isLoaded
               ? t('plugin-url-prompt.loaded', { plugin: label })
               : t('plugin-url-prompt.description', { plugin: label })}
           </p>
-        </Flex>
-      </Flex>
+        </Flex.Root>
+      </Flex.Root>
       <code className='text-xs text-subdued break-all'>{url}</code>
       {error && <p className='text-sm text-error-text'>{t('plugin-url-prompt.failed', { error })}</p>}
       {!isLoaded && (
-        <Flex justify='end'>
-          <Button
+        <Flex.Root justify='end'>
+          <Button.Root
             variant='primary'
             disabled={pending}
             onClick={() => void handleLoad()}
             data-testid='assistant.pluginUrlPrompt.load'
           >
             {t('plugin-url-prompt.button')}
-          </Button>
-        </Flex>
+          </Button.Root>
+        </Flex.Root>
       )}
-    </Flex>
+    </Flex.Root>
   );
 };
 

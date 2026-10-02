@@ -2,5 +2,5 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Icon.tsx';
-export * from './IconBlock.tsx';
+export * as Icon from './Icon.tsx';
+export * as IconBlock from './IconBlock.tsx';

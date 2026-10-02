@@ -35,9 +35,16 @@ const isConventional = (key, packageName) =>
  * Entry points that predate this rule and are each a migration of their own.
  *
  * TODO(wittjosiah): Whittle this down to nothing. `echo/internal` should become actually internal;
- *  `app-framework/config` only re-exports `Config2` from `@dxos/protocols`.
+ *  `app-framework/config` only re-exports `Config2` from `@dxos/protocols`; `react-ui/next` is the
+ *  next-generation component set, which gets subpaths when it replaces the current one.
  */
-const PENDING_ENTRYPOINTS = new Set(['@dxos/app-framework/config', '@dxos/echo/internal']);
+const PENDING_ENTRYPOINTS = new Set([
+  '@dxos/app-framework/config',
+  '@dxos/echo/internal',
+  '@dxos/react-ui/next',
+  '@dxos/react-ui/next/testing',
+  '@dxos/react-ui/next/theme.css',
+]);
 
 /**
  * ESLint rule rejecting entry points that are not namespaces in a package that has migrated to

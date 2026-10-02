@@ -4,12 +4,16 @@
 
 import React, { useRef } from 'react';
 
-import { Banner, IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { type PredicateItem } from '../types.ts';
 
-export type PredicateListProps = ThemedClassName<{
+export type PredicateListProps = Util.ThemedClassName<{
   predicates: PredicateItem[];
   /** Selected predicate (the filter); `undefined` means no filter (show all). */
   selected?: string;
@@ -33,7 +37,7 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
           <Toolbar.Text classNames='grow'>
             Predicates{predicates.length > 0 ? ` (${predicates.length})` : ''}
           </Toolbar.Text>
-          <IconButton
+          <IconButton.Root
             icon='ph--x--regular'
             iconOnly
             label='Clear'

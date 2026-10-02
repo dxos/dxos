@@ -9,9 +9,9 @@ import React, { useState } from 'react';
 import { translations } from '#translations';
 
 import { withTheme } from '../../testing/index.ts';
-import { type DateRange } from '../Calendar/index.ts';
-import { Field } from '../Field/index.ts';
-import { DatePicker } from './DatePicker.tsx';
+import type * as Calendar from '../Calendar/Calendar.tsx';
+import * as Field from '../Field/Field.tsx';
+import * as DatePicker from './DatePicker.tsx';
 
 const toTime = (date: Date | undefined) => (date ? format(date, 'HH:mm') : '');
 const applyTime = (date: Date | undefined, time: string): Date => {
@@ -47,7 +47,7 @@ export const Single: Story = {
 
 export const Range: Story = {
   render: () => {
-    const [value, setValue] = useState<DateRange | undefined>();
+    const [value, setValue] = useState<Calendar.DateRange | undefined>();
     return (
       <DatePicker.Root mode='range' value={value} onValueChange={setValue}>
         <DatePicker.Trigger />
@@ -78,7 +78,7 @@ export const SingleWithTime: Story = {
 
 export const RangeWithTime: Story = {
   render: () => {
-    const [value, setValue] = useState<DateRange | undefined>();
+    const [value, setValue] = useState<Calendar.DateRange | undefined>();
     return (
       <DatePicker.Root mode='range' withTime value={value} onValueChange={setValue}>
         <DatePicker.Trigger format='PPP p' />

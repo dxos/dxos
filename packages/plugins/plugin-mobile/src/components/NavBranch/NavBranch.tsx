@@ -12,10 +12,15 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useConnections } from '@dxos/plugin-graph/Hooks';
-import { Avatar, Banner, Icon, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -90,7 +95,7 @@ const useEmptyGroupIds = (graph: AppGraph.ExpandableGraph, nodes: AppGraphNode.N
  * spaces, collection sections, type sections, and schema nodes.
  */
 export const NavBranch = ({ id }: NavBranchProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { graph } = useAppGraph();
 
   useExpandPath(id);
@@ -105,7 +110,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items: visibleChildren,
-    extract: (child) => toLocalizedString(child.properties.label, t),
+    extract: (child) => ThemeProvider.toLocalizedString(child.properties.label, t),
   });
 
   return (
@@ -135,13 +140,13 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
 const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const ref = useRef<HTMLDivElement>(null);
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const isSelected = selectedValue === data.id;
 
-  const name = toLocalizedString(data.properties.label, t);
+  const name = ThemeProvider.toLocalizedString(data.properties.label, t);
 
   const handleSelect = useCallback(
     () => void invokePromise(LayoutOperation.Open, { subject: [data.id] }),
@@ -194,7 +199,7 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
             <Card.Title>{name}</Card.Title>
           </Avatar.Label>
           <Card.Block end>
-            <Icon icon='ph--caret-right--regular' />
+            <Icon.Root icon='ph--caret-right--regular' />
           </Card.Block>
         </Avatar.Root>
       </Card.Header>

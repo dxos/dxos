@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Slider as SliderPrimitive } from '@ark-ui/react/slider';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
@@ -112,6 +114,8 @@ const Slider = forwardRef<HTMLDivElement, SliderProps>(
 
 Slider.displayName = 'Slider';
 
-export { Slider };
+export { Slider as Root };
 
-export type { SliderProps };
+export type { SliderProps as RootProps };
+
+export * from './Slider.theme.ts';

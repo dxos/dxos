@@ -11,8 +11,11 @@ import { CardMenuSlot } from '@dxos/app-toolkit/CardMenuSlot';
 import { useCardPivot, useObjectMenuItems, useObjectNavigate } from '@dxos/app-toolkit/Hooks';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 
@@ -35,7 +38,7 @@ export type ObjectCardProps = {
  * renders a related object, a record's reference or a tile in a `CardMasonry`.
  */
 export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: ObjectCardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   useObject(Obj.isObject(subject) ? subject : undefined);
   const icon = Entity.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular';
@@ -70,7 +73,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
       <Card.Header>
         <Card.Block>
           <CardIconSlot subject={subject}>
-            <Icon icon={icon} />
+            <Icon.Root icon={icon} />
           </CardIconSlot>
         </Card.Block>
         <Card.Title>{Entity.getLabel(subject, { fallback: 'typename' })}</Card.Title>
@@ -80,7 +83,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
             <CardMenuSlot subject={subject} menu={menu} />
             {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
             <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-              <IconButton
+              <IconButton.Root
                 iconOnly
                 variant='ghost'
                 icon='ph--dots-three-vertical--regular'

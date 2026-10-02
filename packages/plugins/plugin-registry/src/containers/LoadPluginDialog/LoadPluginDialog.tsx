@@ -5,14 +5,18 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { Button, Dialog, Field, Flex, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { RegistryOperation, describeLoadError } from '#operations';
 
 export const LoadPluginDialog = () => {
   const { invokePromise } = useOperationInvoker();
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +50,7 @@ export const LoadPluginDialog = () => {
       </Dialog.Header>
       <Dialog.Body>
         {/* TODO(burdon): Form section. */}
-        <Flex column gap='lg'>
+        <Flex.Root column gap='lg'>
           <Field.Root validationValence={error ? 'error' : undefined}>
             <Field.Label>{t('plugin-url.label')}</Field.Label>
             <Field.Input
@@ -66,12 +70,12 @@ export const LoadPluginDialog = () => {
             />
             {error && <Field.HelperText>{error}</Field.HelperText>}
           </Field.Root>
-          <Flex justify='end'>
-            <Button variant='primary' disabled={!url.trim() || loading} onClick={() => void handleLoad()}>
+          <Flex.Root justify='end'>
+            <Button.Root variant='primary' disabled={!url.trim() || loading} onClick={() => void handleLoad()}>
               {loading ? t('loading.label') : t('load-plugin.label')}
-            </Button>
-          </Flex>
-        </Flex>
+            </Button.Root>
+          </Flex.Root>
+        </Flex.Root>
       </Dialog.Body>
     </Dialog.Content>
   );

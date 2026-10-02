@@ -4,9 +4,9 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
-import { Card } from '@dxos/react-ui';
 import { Avatar } from '@dxos/react-ui-card';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Person } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -17,7 +17,7 @@ export type RelatedContactsProps = {
 };
 
 export const RelatedContacts = ({ contacts, onContactClick }: RelatedContactsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (!contacts.length) {
     return null;
   }

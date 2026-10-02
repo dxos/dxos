@@ -4,12 +4,13 @@
 
 import React from 'react';
 
-import { Icon, type ThemedClassName } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { Word } from '#types';
 
-export type WordListProps = ThemedClassName<{
+export type WordListProps = Util.ThemedClassName<{
   words: Word.Word[];
   /** Highlighted row (e.g. the card currently being drilled). */
   selected?: string;
@@ -75,7 +76,7 @@ const ProgressPips = ({ word }: { word: Word.Word }) => {
   return (
     <span className='flex items-center gap-1' title={`${box}/${Word.BOX_COUNT}`}>
       {Array.from({ length: Word.BOX_COUNT }, (_, index) => (
-        <Icon
+        <Icon.Root
           key={index}
           icon={index < box ? 'ph--circle--fill' : 'ph--circle--regular'}
           size={2}

@@ -13,9 +13,15 @@ import { random } from '@dxos/random';
 import { type Client, useClient } from '@dxos/react-client';
 import { useSpaces } from '@dxos/react-client/echo';
 import { persistentClientServices, withClientProvider } from '@dxos/react-client/testing';
-import { Button, Card, Field, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Field from '@dxos/react-ui/Field';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Focus } from '../Focus/index.ts';
 import { Mosaic } from './Mosaic.ts';
@@ -301,12 +307,12 @@ const FeedPaginationStory = () => {
                 />
               </Field.Root>
             </div>
-            <Button onClick={handleAdd} classNames='shrink-0'>
+            <Button.Root onClick={handleAdd} classNames='shrink-0'>
               Add
-            </Button>
-            <Button onClick={handleReset} classNames='shrink-0'>
+            </Button.Root>
+            <Button.Root onClick={handleReset} classNames='shrink-0'>
               Reset
-            </Button>
+            </Button.Root>
             <Select.Root
               value={sortField}
               onValueChange={(value) => setSortField(value === 'number' || value === 'word' ? value : 'natural')}

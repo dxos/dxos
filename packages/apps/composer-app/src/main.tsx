@@ -15,7 +15,6 @@ import React, { StrictMode, Suspense, lazy, useCallback, useEffect, useState } f
 import { createRoot } from 'react-dom/client';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 
-import { EdgeRegistryPluginProvider } from '@dxos/app-framework';
 import { bootLoader } from '@dxos/app-framework/App';
 import {
   FIRST_INTERACTIVE_EVENT,
@@ -25,11 +24,12 @@ import {
 } from '@dxos/app-framework/Hooks';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
+import * as Registry from '@dxos/app-framework/Registry';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
 // boot path uses.
 import { EdgeHttpClient } from '@dxos/edge-client/http';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';
@@ -38,8 +38,8 @@ import { translations as observabilityTranslations } from '@dxos/plugin-observab
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
-import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
@@ -642,7 +642,7 @@ const main = async () => {
   const defaults = getDefaults(conf);
 
   const edgeUrl = config.values.runtime?.services?.edge?.url;
-  const pluginRegistryProvider = edgeUrl ? new EdgeRegistryPluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
+  const pluginRegistryProvider = edgeUrl ? new Registry.EdgePluginProvider(new EdgeHttpClient(edgeUrl)) : undefined;
 
   startupMark('plugins:end');
   startupMeasure('plugins-init', 'plugins:start', 'plugins:end');
@@ -693,8 +693,8 @@ const main = async () => {
             (`react-ui-card`, `-form`, …) which a plugin re-exports — so without this the primitives'
             keys (`system-button.*`, `toolbar-*`) render raw as the accessible name of every
             icon-only button. */}
-        <ThemeProvider
-          tx={defaultTx}
+        <ThemeProvider.Root
+          tx={ThemeProvider.defaultTx}
           resourceExtensions={[...reactUiTranslations, ...translations, ...observabilityTranslations]}
         >
           <Tooltip.Provider>
@@ -711,7 +711,7 @@ const main = async () => {
               />
             </Suspense>
           </Tooltip.Provider>
-        </ThemeProvider>
+        </ThemeProvider.Root>
       </ErrorBoundary>
     );
   };

@@ -5,8 +5,9 @@
 import React, { type MouseEvent, type ReactNode, useMemo } from 'react';
 
 import { type Obj, type Ref } from '@dxos/echo';
-import { Icon, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 
@@ -49,7 +50,9 @@ const Tile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
   return (
     <div className='relative'>
       <GalleryImage src={src} contentType={data.variant.contentType} alt={data.variant.label} />
-      {selected && <Icon icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />}
+      {selected && (
+        <Icon.Root icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />
+      )}
     </div>
   );
 };
@@ -60,7 +63,7 @@ const Tile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
  * container (see `useListSelection`).
  */
 export const VariantGallery = ({ variants, emptyMessage, selectedIds, onSelect }: VariantGalleryProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const items = useMemo(() => variants.map((variant, index) => ({ variant, index })), [variants]);
 
   if (items.length === 0) {

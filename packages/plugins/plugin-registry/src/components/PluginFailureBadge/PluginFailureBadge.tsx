@@ -5,7 +5,9 @@
 import React from 'react';
 
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Popover from '@dxos/react-ui/Popover';
 
 import { meta } from '#meta';
 
@@ -27,12 +29,12 @@ export type PluginFailureBadgeProps = {
  * from "the plugin crashed".
  */
 export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <IconButton
+        <IconButton.Root
           variant='destructive'
           icon='ph--warning--bold'
           iconOnly

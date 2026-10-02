@@ -9,13 +9,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { random } from '@dxos/random';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
-import { Toc, type TocItemData, type TocRootProps } from './Toc.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Toc from './Toc.tsx';
 
 random.seed(1234567890);
 
 /** A heading with the text its link shows; the machine needs only `value` and `depth`. */
-type Heading = TocItemData & { label: string; paragraphs: string[] };
+type Heading = Toc.ItemData & { label: string; paragraphs: string[] };
 
 const SECTIONS = 8;
 
@@ -62,7 +62,7 @@ const Document = () => (
   </Toc.Content>
 );
 
-type StoryArgs = Pick<TocRootProps, 'rootMargin' | 'autoScroll' | 'scrollBehavior'>;
+type StoryArgs = Pick<Toc.RootProps, 'rootMargin' | 'autoScroll' | 'scrollBehavior'>;
 
 /** The document scrolls in its own viewport (`scrollEl`), the nav in another beside it. */
 const DefaultStory = ({ rootMargin, autoScroll, scrollBehavior }: StoryArgs) => {

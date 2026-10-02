@@ -4,8 +4,10 @@
 
 import React, { useMemo } from 'react';
 
-import { Banner, Icon, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
@@ -49,7 +51,7 @@ export type CheckRunListProps = {
 
 /** Every check on the head commit: its outcome, how long it took, and its logs a click away. */
 export const CheckRunList = ({ runs }: CheckRunListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const sorted = useMemo(() => (runs ? sortCheckRuns(runs) : undefined), [runs]);
   const summary = useCheckSummary(runs);
 
@@ -82,7 +84,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
               onClick={url ? () => window.open(url, '_blank', 'noopener,noreferrer') : undefined}
             >
               <Listbox.ItemContent
-                icon={<Icon icon={icon} size={5} classNames={classNames} />}
+                icon={<Icon.Root icon={icon} size={5} classNames={classNames} />}
                 title={run.name}
                 description={[detail, outcome].filter(Boolean).join(' · ')}
               />
@@ -96,7 +98,7 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
 
 /** The label the checks section carries: the counts once there are runs to count. */
 export const useCheckSummary = (runs?: readonly GitHubOperation.CheckRun[]): string => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return useMemo(() => {
     if (!runs || runs.length === 0) {
       return t('checks.label');

@@ -10,8 +10,8 @@ import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { AlertDialog } from './AlertDialog.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as AlertDialog from './AlertDialog.tsx';
 
 type StoryArgs = Partial<{
   title: string;
@@ -25,7 +25,7 @@ const DefaultStory = ({ title, description, openTrigger, cancelTrigger, actionTr
   return (
     <AlertDialog.Root defaultOpen>
       <AlertDialog.Trigger asChild>
-        <Button>{openTrigger}</Button>
+        <Button.Root>{openTrigger}</Button.Root>
       </AlertDialog.Trigger>
       <AlertDialog.Overlay>
         <AlertDialog.Content>
@@ -36,10 +36,10 @@ const DefaultStory = ({ title, description, openTrigger, cancelTrigger, actionTr
           <AlertDialog.ActionBar>
             <div className='grow' />
             <AlertDialog.Cancel asChild>
-              <Button>{cancelTrigger}</Button>
+              <Button.Root>{cancelTrigger}</Button.Root>
             </AlertDialog.Cancel>
             <AlertDialog.Action asChild>
-              <Button variant='primary'>{actionTrigger}</Button>
+              <Button.Root variant='primary'>{actionTrigger}</Button.Root>
             </AlertDialog.Action>
           </AlertDialog.ActionBar>
         </AlertDialog.Content>
@@ -81,10 +81,10 @@ export const TestOutsideClick: StoryObj = {
           </AlertDialog.Body>
           <AlertDialog.ActionBar>
             <AlertDialog.Cancel asChild>
-              <Button>Cancel</Button>
+              <Button.Root>Cancel</Button.Root>
             </AlertDialog.Cancel>
             <AlertDialog.Action asChild>
-              <Button variant='primary'>Discard</Button>
+              <Button.Root variant='primary'>Discard</Button.Root>
             </AlertDialog.Action>
           </AlertDialog.ActionBar>
         </AlertDialog.Content>

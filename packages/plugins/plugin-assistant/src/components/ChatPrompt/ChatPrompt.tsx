@@ -13,7 +13,6 @@ import { type Event } from '@dxos/async';
 import * as Project from '@dxos/compute/Project';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { type ThemedClassName, useDynamicRef, useTranslation } from '@dxos/react-ui';
 import {
   ChatEditor,
   type ChatEditorController,
@@ -22,6 +21,8 @@ import {
   commands,
 } from '@dxos/react-ui-chat';
 import { type ActionGraphProps } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
@@ -40,7 +41,7 @@ import { ChatReferences } from './ChatReferences.tsx';
 import { useChatVoiceInput } from './useChatVoiceInput.ts';
 
 export type ChatPromptProps = Merge<
-  ThemedClassName<{
+  Util.ThemedClassName<{
     outline?: boolean;
     settings?: boolean;
     expandable?: boolean;
@@ -88,7 +89,7 @@ export const ChatPrompt = ({
   preset,
   companionTo,
 }: ChatPromptProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const processorState = getProcessorState(processor);
   const error = useAtomValue(processorState.error).pipe(Option.getOrUndefined);
   const streaming = useAtomValue(processorState.streaming);
@@ -117,7 +118,7 @@ export const ChatPrompt = ({
   // are the deterministic operation shortcuts (see assistant-toolkit `SlashCommands`).
   const [companion] = useObject(companionTo);
   const [instructions] = useObject(Obj.instanceOf(Project.Project, companion) ? companion.instructions : undefined);
-  const commandsRef = useDynamicRef(instructions?.commands ?? []);
+  const commandsRef = Hooks.useDynamicRef(instructions?.commands ?? []);
   const commandsExtension = useMemo(
     () =>
       commands({

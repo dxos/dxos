@@ -4,9 +4,11 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, Icon, ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
 import { Subscription } from '#types';
 
@@ -28,7 +30,7 @@ export type SubscriptionStackProps = {
   onAction?: SubscriptionStackActionHandler;
 };
 
-export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackProps>(
+export const SubscriptionStack = Util.composable<HTMLDivElement, SubscriptionStackProps>(
   ({ feeds = [], currentId, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
@@ -52,7 +54,7 @@ export const SubscriptionStack = composable<HTMLDivElement, SubscriptionStackPro
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container
           asChild
           withFocus
@@ -131,7 +133,7 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
           <Card.Root ref={forwardedRef}>
             <Card.Header>
               <Card.Block>
-                <Icon icon={icon} classNames={iconClassName} />
+                <Icon.Root icon={icon} classNames={iconClassName} />
               </Card.Block>
               <Card.Title>{feed.name ?? 'Untitled feed'}</Card.Title>
               <Card.Menu items={menuItems} />

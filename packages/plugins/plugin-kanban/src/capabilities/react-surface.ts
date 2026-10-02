@@ -8,8 +8,8 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { SchemaEx } from '@dxos/effect';
-import { Position } from '@dxos/util';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import * as Position from '@dxos/util/Position';
 
 import { KanbanArticle, KanbanProperties } from '#containers';
 import { Kanban } from '#types';

@@ -13,8 +13,11 @@ import React, { Fragment, type PropsWithChildren, useEffect, useMemo, useRef, us
 import { createPortal } from 'react-dom';
 
 import { random } from '@dxos/random';
-import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   type ObjectLinkProps,
   type ObjectLinksOptions,
@@ -88,7 +91,7 @@ const PreviewCard = () => {
           <Card.Root border={false} classNames='dx-card-popover'>
             <Card.Header>
               <Card.Block>
-                <Icon icon='ph--file-text--regular' />
+                <Icon.Root icon='ph--file-text--regular' />
               </Card.Block>
               <Card.Title>{target.label}</Card.Title>
               <Popover.Close asChild>
@@ -130,7 +133,7 @@ const PreviewBlockCard = ({ eid, label }: ObjectLinkProps) => {
     <Card.Root>
       <Card.Header>
         <Card.Block>
-          <Icon icon='ph--arrow-square-up--regular' />
+          <Icon.Root icon='ph--arrow-square-up--regular' />
         </Card.Block>
         <Card.Title>{label}</Card.Title>
       </Card.Header>
@@ -249,7 +252,7 @@ type StoryArgs = Pick<ObjectLinksOptions, 'trigger'> & {
 };
 
 const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigger, preview }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const [widgets, setWidgets] = useState<WidgetState[]>([]);
   const extensions = useMemo(
     () => [

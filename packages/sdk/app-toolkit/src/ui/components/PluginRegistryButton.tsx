@@ -5,13 +5,16 @@
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/Hooks';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { SettingsOperation } from '../../operations/index.ts';
 import { usePluginRegistryAvailable } from '../hooks/index.ts';
 
-export type PluginRegistryButtonProps = Partial<Omit<ComponentPropsWithoutRef<typeof IconButton>, 'icon' | 'label'>>;
+export type PluginRegistryButtonProps = Partial<
+  Omit<ComponentPropsWithoutRef<typeof IconButton.Root>, 'icon' | 'label'>
+>;
 
 /**
  * Icon button that opens the plugin registry via {@link SettingsOperation.OpenPluginRegistry}.
@@ -22,7 +25,7 @@ export type PluginRegistryButtonProps = Partial<Omit<ComponentPropsWithoutRef<ty
  */
 export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistryButtonProps>(
   ({ onClick, ...props }, forwardedRef) => {
-    const { t } = useTranslation(osTranslations);
+    const { t } = Hooks.useTranslation(osTranslations);
     const { invokePromise } = useOperationInvoker();
     const available = usePluginRegistryAvailable();
     if (!available) {
@@ -30,7 +33,7 @@ export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistry
     }
 
     return (
-      <IconButton
+      <IconButton.Root
         {...props}
         ref={forwardedRef}
         icon='ph--squares-four--regular'

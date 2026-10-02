@@ -9,8 +9,8 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
-import { Position } from '@dxos/util';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import * as Position from '@dxos/util/Position';
 
 import { MapSurface, MapViewEditor, WorldMapSurface } from '#containers';
 import { Map } from '#types';

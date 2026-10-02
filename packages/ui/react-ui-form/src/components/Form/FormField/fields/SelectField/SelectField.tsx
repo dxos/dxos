@@ -4,7 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Icon, Select, type SelectRootProps } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Select from '@dxos/react-ui/Select';
 import { getStyles } from '@dxos/ui-theme';
 
 import { type FormFieldRendererProps } from '#types';
@@ -26,7 +27,7 @@ export const SelectField = ({
   onBlur,
 }: SelectFieldOptions) => {
   // A choice is a commit: the select never blurs, so it commits itself.
-  const handleValueChange = useCallback<NonNullable<SelectRootProps['onValueChange']>>(
+  const handleValueChange = useCallback<NonNullable<Select.RootProps['onValueChange']>>(
     (value) => {
       onValueChange(type, value);
       onBlur();
@@ -54,7 +55,7 @@ export const SelectField = ({
                 // NOTE: Numeric values are converted to and from strings.
                 <Select.Option key={String(value)} value={String(value)}>
                   <span className='flex items-center flex-row gap-2'>
-                    {icon && <Icon icon={icon} classNames={getIconHueStyles(iconHue)} />}
+                    {icon && <Icon.Root icon={icon} classNames={getIconHueStyles(iconHue)} />}
                     {label ?? String(value)}
                     {secondaryLabel && <span className='text-subdued text-xs'>{secondaryLabel}</span>}
                   </span>

@@ -7,7 +7,8 @@ import React, { captureOwnerStack, useEffect, useState } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { safeStringify } from '@dxos/util';
 
-import { ErrorStack, parseCaptureOwnerStack } from '../components/index.ts';
+import * as ErrorFallback from '../components/ErrorFallback/ErrorFallback.tsx';
+import * as ErrorStack from '../components/ErrorFallback/ErrorStack.tsx';
 
 export type LoadingProps = { data?: any };
 
@@ -16,7 +17,7 @@ export type LoadingProps = { data?: any };
  */
 export const Loading = ({ data }: LoadingProps) => {
   const [visible, setVisible] = useState(false);
-  const ownerFrames = parseCaptureOwnerStack(captureOwnerStack());
+  const ownerFrames = ErrorFallback.parseCaptureOwnerStack(captureOwnerStack());
 
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 1000);
@@ -38,7 +39,7 @@ export const Loading = ({ data }: LoadingProps) => {
 
         <h3 className='uppercase capitalize text-xs mt-2'>Owner stack</h3>
         {ownerFrames && ownerFrames.length > 0 ? (
-          <ErrorStack frames={ownerFrames} />
+          <ErrorStack.Root frames={ownerFrames} />
         ) : (
           <p className='text-xs text-subdued'>No owner stack (production build or unsupported context).</p>
         )}

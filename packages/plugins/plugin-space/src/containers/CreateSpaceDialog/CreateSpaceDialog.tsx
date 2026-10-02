@@ -13,11 +13,13 @@ import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
-import { Dialog, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { useInputSurfaceLookup } from '#hooks';
 import { meta } from '#meta';
@@ -32,7 +34,7 @@ const initialValues: FormValues = { private: false, edgeReplication: true };
 
 export const CreateSpaceDialog = () => {
   const closeRef = useRef<HTMLButtonElement | null>(null);
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invoke } = useOperationInvoker();
 
   const inputSurfaceLookup = useInputSurfaceLookup();

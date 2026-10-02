@@ -10,12 +10,12 @@ import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Field } from '../Field/index.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogContentProps } from './Dialog.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Field from '../Field/Field.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Dialog from './Dialog.tsx';
 
-type StoryArgs = Pick<DialogContentProps, 'size' | 'elevation'> &
+type StoryArgs = Pick<Dialog.ContentProps, 'size' | 'elevation'> &
   Partial<{
     title: string;
     description: string;
@@ -32,7 +32,7 @@ const DefaultStory = ({ size, elevation, title, description, openTrigger, closeT
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
-        <Button>{openTrigger}</Button>
+        <Button.Root>{openTrigger}</Button.Root>
       </Dialog.Trigger>
       <Dialog.Overlay blockAlign={blockAlign}>
         <Dialog.Content size={size} elevation={elevation}>
@@ -52,7 +52,7 @@ const DefaultStory = ({ size, elevation, title, description, openTrigger, closeT
           </Dialog.Body>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
-              <Button variant='primary'>{closeTrigger}</Button>
+              <Button.Root variant='primary'>{closeTrigger}</Button.Root>
             </Dialog.Close>
           </Dialog.ActionBar>
         </Dialog.Content>
@@ -70,7 +70,7 @@ const ScrollingStory = ({ size, elevation, title, description, openTrigger, clos
   return (
     <Dialog.Root defaultOpen modal>
       <Dialog.Trigger asChild>
-        <Button>{openTrigger}</Button>
+        <Button.Root>{openTrigger}</Button.Root>
       </Dialog.Trigger>
       <Dialog.Overlay blockAlign={blockAlign}>
         <Dialog.Content size={size} elevation={elevation}>
@@ -91,7 +91,7 @@ const ScrollingStory = ({ size, elevation, title, description, openTrigger, clos
           </Dialog.Body>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
-              <Button variant='primary'>{closeTrigger}</Button>
+              <Button.Root variant='primary'>{closeTrigger}</Button.Root>
             </Dialog.Close>
           </Dialog.ActionBar>
         </Dialog.Content>
@@ -187,7 +187,7 @@ export const TestOpenClose: StoryObj = {
   render: () => (
     <Dialog.Root>
       <Dialog.Trigger asChild>
-        <Button>Open dialog</Button>
+        <Button.Root>Open dialog</Button.Root>
       </Dialog.Trigger>
       <Dialog.Overlay>
         <Dialog.Content>
@@ -289,8 +289,8 @@ export const TestActionBarFocus: StoryObj = {
             </Field.Root>
           </Dialog.Body>
           <Dialog.ActionBar>
-            <Button>Cancel</Button>
-            <Button variant='primary'>Commit</Button>
+            <Button.Root>Cancel</Button.Root>
+            <Button.Root variant='primary'>Commit</Button.Root>
           </Dialog.ActionBar>
         </Dialog.Content>
       </Dialog.Overlay>
@@ -316,11 +316,11 @@ export const TestNoDescriptionAutoFocus: StoryObj = {
           </Dialog.Header>
           <Dialog.ActionBar>
             <Dialog.Close asChild>
-              <Button>Cancel</Button>
+              <Button.Root>Cancel</Button.Root>
             </Dialog.Close>
-            <Button variant='primary' {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}>
+            <Button.Root variant='primary' {...{ [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}>
               Commit
-            </Button>
+            </Button.Root>
           </Dialog.ActionBar>
         </Dialog.Content>
       </Dialog.Overlay>

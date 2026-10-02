@@ -6,9 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { proxyFetchLegacy } from '@dxos/edge-client';
-import { Button, Field } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type GenerationOption } from './heygen-provider-types.ts';
@@ -148,15 +149,15 @@ const ProviderHarness = () => {
         />
       </Field.Root>
       <div className='flex gap-2'>
-        <Button disabled={!apiKey.trim() || busy != null} onClick={() => run('avatars')}>
+        <Button.Root disabled={!apiKey.trim() || busy != null} onClick={() => run('avatars')}>
           {busy === 'avatars' ? 'Loading avatars…' : 'List avatars'}
-        </Button>
-        <Button disabled={!apiKey.trim() || busy != null} onClick={() => run('voices')}>
+        </Button.Root>
+        <Button.Root disabled={!apiKey.trim() || busy != null} onClick={() => run('voices')}>
           {busy === 'voices' ? 'Loading voices…' : 'List voices'}
-        </Button>
-        <Button disabled={!apiKey.trim()} onClick={() => void inspect()}>
+        </Button.Root>
+        <Button.Root disabled={!apiKey.trim()} onClick={() => void inspect()}>
           Inspect raw fields
-        </Button>
+        </Button.Root>
       </div>
 
       <div className='dx-expand flex flex-col gap-2 overflow-y-auto'>

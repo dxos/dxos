@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Next } from '@dxos/react-ui/next';
 
 import { type ReorderListController, type UseListDisclosureReturn } from '../../hooks/index.ts';
@@ -17,7 +17,7 @@ export type OrderedListContextValue = {
   move: (id: string, direction: Next.DragMoveDirection) => void;
 };
 
-export const [OrderedListProvider, useOrderedListContext] = createContext<OrderedListContextValue>('OrderedList');
+export const [OrderedListProvider, useOrderedListContext] = Hooks.createContext<OrderedListContextValue>('OrderedList');
 
 export type OrderedListItemContextValue = {
   id: string;
@@ -26,4 +26,4 @@ export type OrderedListItemContextValue = {
 };
 
 export const [OrderedListItemProvider, useOrderedListItemContext] =
-  createContext<OrderedListItemContextValue>('OrderedList.Item');
+  Hooks.createContext<OrderedListItemContextValue>('OrderedList.Item');

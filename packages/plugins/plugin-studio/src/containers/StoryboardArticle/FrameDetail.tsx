@@ -5,7 +5,9 @@
 import React from 'react';
 
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { Banner, IconButton, useTranslation } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 import { type Frame } from '#types';
@@ -27,7 +29,7 @@ export type FrameDetailProps = {
  * companion's.
  */
 export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // The snapshot re-renders this on frame changes; the ref is read live so the resolved artifact is
   // the live object — the surface filter checks the subject's type, which a snapshot fails.
   const [snapshot] = useObject(frame);
@@ -40,7 +42,7 @@ export const FrameDetail = ({ frame, attendableId, onAddArtifact }: FrameDetailP
           <span className='flex flex-col items-center gap-2'>
             {t('frame-empty.message')}
             {onAddArtifact && (
-              <IconButton
+              <IconButton.Root
                 icon='ph--plus--regular'
                 label={t('add-frame-artifact.label')}
                 onClick={() => onAddArtifact(frame)}

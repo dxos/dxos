@@ -14,16 +14,11 @@ import React, {
 } from 'react';
 
 import { useFocusGroup } from '@dxos/react-focus';
-import {
-  IconBlock,
-  IconButton,
-  type IconButtonProps,
-  type ThemedClassName,
-  ToggleIconButton,
-  createContext,
-  useMergeRefs,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconBlock from '@dxos/react-ui/IconBlock';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ToggleIconButton from '@dxos/react-ui/ToggleIconButton';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx, osTranslations } from '@dxos/ui-theme';
 
 import { useListGrid, useReorderItem } from '../../hooks/index.ts';
@@ -47,9 +42,9 @@ type OrderedListItemContextValue = {
 };
 
 const [OrderedListItemProvider, useOrderedListItemContext] =
-  createContext<OrderedListItemContextValue>(ORDERED_LIST_ITEM_NAME);
+  Hooks.createContext<OrderedListItemContextValue>(ORDERED_LIST_ITEM_NAME);
 
-export type OrderedListItemProps<T extends ListItemRecord> = ThemedClassName<
+export type OrderedListItemProps<T extends ListItemRecord> = Util.ThemedClassName<
   PropsWithChildren<{
     id: string;
     /** The record handed to the underlying reorder hook (kept for back-compat with callers). */
@@ -103,7 +98,7 @@ export const OrderedListItem = <T extends ListItemRecord>({
     ...groupProps
   } = useFocusGroup({ tabBehavior: 'limited' });
   const { rowRef, handleRef, closestEdge, state } = useReorderItem(reorder, id);
-  const itemRef = useMergeRefs<HTMLDivElement>([
+  const itemRef = Hooks.useMergeRefs<HTMLDivElement>([
     rowRef as RefCallback<HTMLDivElement>,
     navigationMode === 'listbox' ? focusGroupRef : undefined,
   ]);
@@ -177,7 +172,7 @@ export type OrderedListDragHandleProps = PropsWithChildren<{
 export const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHandleProps) => {
   const { readonly } = useOrderedListContext('OrderedListDragHandle');
   const { canDrag, handleRef } = useOrderedListItemContext('OrderedListDragHandle');
-  const { t } = useTranslation(osTranslations);
+  const { t } = Hooks.useTranslation(osTranslations);
   const disabled = readonly || !canDrag;
   if (asChild) {
     return (
@@ -187,7 +182,7 @@ export const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHand
     );
   }
   return (
-    <IconButton
+    <IconButton.Root
       variant='ghost'
       disabled={disabled}
       noTooltip
@@ -208,7 +203,7 @@ export const OrderedListTitle = ({
   children,
   onClick,
   ...props
-}: ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => {
+}: Util.ThemedClassName<PropsWithChildren<ComponentProps<'div'>>>) => {
   const { triggerProps } = useOrderedListItemContext('OrderedListTitle');
   const handleClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
@@ -243,16 +238,16 @@ export const OrderedListIconButton = ({
   disabled,
   classNames,
   ...props
-}: IconButtonProps & { autoHide?: boolean }) => (
-  <IconBlock>
-    <IconButton
+}: IconButton.RootProps & { autoHide?: boolean }) => (
+  <IconBlock.Root>
+    <IconButton.Root
       {...props}
       variant='ghost'
       iconOnly
       disabled={disabled}
       classNames={[classNames, autoHide && disabled && 'hidden']}
     />
-  </IconBlock>
+  </IconBlock.Root>
 );
 
 /**
@@ -267,9 +262,9 @@ export const OrderedListDeleteButton = ({
   disabled,
   classNames,
   ...props
-}: Partial<Pick<IconButtonProps, 'icon'>> &
-  Omit<IconButtonProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => {
-  const { t } = useTranslation(osTranslations);
+}: Partial<Pick<IconButton.RootProps, 'icon'>> &
+  Omit<IconButton.RootProps, 'icon' | 'label'> & { autoHide?: boolean; label?: string }) => {
+  const { t } = Hooks.useTranslation(osTranslations);
   return (
     <OrderedListIconButton
       {...props}
@@ -286,8 +281,8 @@ export const OrderedListDeleteButton = ({
  * Expand/collapse caret; reflects and toggles the item's expanded state via the disclosure
  * trigger's `aria-expanded` + `aria-controls`.
  */
-export const OrderedListExpandCaret = ({ onClick, ...props }: Partial<IconButtonProps>) => {
-  const { t } = useTranslation(osTranslations);
+export const OrderedListExpandCaret = ({ onClick, ...props }: Partial<IconButton.RootProps>) => {
+  const { t } = Hooks.useTranslation(osTranslations);
   const { expanded, toggle, triggerProps } = useOrderedListItemContext('OrderedListExpandCaret');
   const handleClick = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
@@ -297,7 +292,7 @@ export const OrderedListExpandCaret = ({ onClick, ...props }: Partial<IconButton
     [toggle, onClick],
   );
   return (
-    <ToggleIconButton
+    <ToggleIconButton.Root
       iconOnly
       variant='ghost'
       active={expanded}
@@ -313,7 +308,7 @@ export const OrderedListExpandCaret = ({ onClick, ...props }: Partial<IconButton
   );
 };
 
-export type OrderedListDetailItemProps<T extends ListItemRecord> = ThemedClassName<
+export type OrderedListDetailItemProps<T extends ListItemRecord> = Util.ThemedClassName<
   PropsWithChildren<{
     id: string;
     /** The record handed to the underlying reorder hook (kept for back-compat with callers). */
@@ -322,7 +317,7 @@ export type OrderedListDetailItemProps<T extends ListItemRecord> = ThemedClassNa
     canDrag?: boolean;
     /** Title content shown in the clickable name row (clicking toggles expansion). */
     title: ReactNode;
-    titleClassNames?: ThemedClassName<any>['classNames'];
+    titleClassNames?: Util.ThemedClassName<any>['classNames'];
     /** Inline actions placed in the name row before the expand caret (e.g. a visibility toggle). */
     actions?: ReactNode;
     /** Action(s) placed outside the bordered column, flanking it (e.g. a delete button). */

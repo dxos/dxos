@@ -11,9 +11,15 @@ import { useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
-import { Card, Flex, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionMenu } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 import { ChessComAccount, ChessComOperation } from '#types';
@@ -21,7 +27,7 @@ import { ChessComAccount, ChessComOperation } from '#types';
 export type ChessGameArticleProps = AppSurface.ObjectArticleProps<ChessComAccount.Account>;
 
 export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [account] = useObject(subject);
   const [gamesFeed] = useObject(account?.games);
@@ -72,9 +78,9 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
       </Panel.Toolbar>
       <Panel.Content>
         {empty ? (
-          <Flex center classNames='h-full text-subdued text-sm'>
+          <Flex.Root center classNames='h-full text-subdued text-sm'>
             {t('empty-games.message')}
-          </Flex>
+          </Flex.Root>
         ) : (
           // TODO(burdon): This seems wrong?
           <Masonry.Root Tile={GameTile} minColumnWidth={18} maxColumnWidth={24}>
@@ -89,7 +95,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
 };
 
 const GameTile = ({ data: game }: { data: Game.Game }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
   const [cardRef, pivotId] = useCardPivot();
   const objectMenuItems = useObjectMenuItems(game, pivotId);
@@ -99,12 +105,12 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
     <Card.Root ref={cardRef} fullWidth>
       <Card.Header>
         <Card.Block>
-          <Icon icon={icon} />
+          <Icon.Root icon={icon} />
         </Card.Block>
         <Card.Title>{Obj.getLabel(game, { fallback: 'typename' })}</Card.Title>
         <Card.Block end>
           <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
-            <IconButton
+            <IconButton.Root
               iconOnly
               variant='ghost'
               icon='ph--dots-three-vertical--regular'

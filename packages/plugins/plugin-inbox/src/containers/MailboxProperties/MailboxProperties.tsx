@@ -11,8 +11,11 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
-import { Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { useSyncTrigger } from '#hooks';
 import { meta } from '#meta';
@@ -21,7 +24,7 @@ import { Mailbox } from '#types';
 export type MailboxPropertiesProps = AppSurface.ObjectPropertiesProps<Mailbox.Mailbox>;
 
 export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const connectors = useCapabilities(ConnectorSpec.Connector);
@@ -43,7 +46,7 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
     <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('mailbox-sync.label')}</Field.Label>
-        <Flex align='center'>
+        <Flex.Root align='center'>
           {/* TODO(burdon): Pad Switch like button/icon (square with padding). */}
           <Field.Switch
             checked={syncEnabled ?? false}
@@ -53,9 +56,14 @@ export const MailboxProperties = ({ subject }: MailboxPropertiesProps) => {
             }}
           />
           {syncTrigger && (
-            <IconButton iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
+            <IconButton.Root
+              iconOnly
+              icon='ph--gear--regular'
+              label={t('view-trigger.label')}
+              onClick={handleViewTrigger}
+            />
           )}
-        </Flex>
+        </Flex.Root>
       </Field.Root>
     </Form.FieldSet>
   );

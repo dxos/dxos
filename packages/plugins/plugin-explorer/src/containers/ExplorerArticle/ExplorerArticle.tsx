@@ -7,9 +7,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Filter, Obj, type View } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { type TreeNode } from '@dxos/react-ui-graph';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import { DxAnchorActivate } from '@dxos/ui-types';
 import '@dxos/react-ui-graph/styles/graph.css';
 
 import { type ExplorerArticleVariant, VARIANTS, Visualization, isVariant } from '#components';
@@ -93,7 +96,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
             <Toolbar.ToggleGroup type='single' value={selected} onValueChange={handleVariantChange}>
               {VARIANTS.map(({ value, icon, label }) => (
                 <Toolbar.ToggleGroupItem key={value} value={value} aria-label={label} title={label}>
-                  <Icon icon={icon} size={4} />
+                  <Icon.Root icon={icon} size={4} />
                 </Toolbar.ToggleGroupItem>
               ))}
             </Toolbar.ToggleGroup>

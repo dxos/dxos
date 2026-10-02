@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Calendar, type DateRange } from './Calendar.tsx';
+import * as Calendar from './Calendar.tsx';
 
 const meta: Meta<typeof Calendar.Root> = {
   title: 'ui/react-ui-core/components/Calendar',
@@ -30,7 +30,7 @@ export const Single: Story = {
 
 export const Range: Story = {
   render: () => {
-    const [range, setRange] = useState<DateRange | undefined>();
+    const [range, setRange] = useState<Calendar.DateRange | undefined>();
     return <Calendar.Root mode='range' selected={range} onSelect={setRange} />;
   },
 };

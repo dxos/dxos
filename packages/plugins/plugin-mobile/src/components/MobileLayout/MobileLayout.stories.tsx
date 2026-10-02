@@ -5,8 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Column, Field, Flex, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
+import * as Column from '@dxos/react-ui/Column';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Splitter from '@dxos/react-ui/Splitter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { WithKeyboard } from '../../testing/index.ts';
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout.tsx';
@@ -24,11 +29,11 @@ const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) =
       <Panel.Content asChild>
         <Column.Root gutter='sm' classNames='py-form-chrome'>
           <Column.Center>
-            <Flex column>
+            <Flex.Root column>
               <Field.Root>
                 <Field.Input placeholder={label} />
               </Field.Root>
-            </Flex>
+            </Flex.Root>
           </Column.Center>
         </Column.Root>
       </Panel.Content>
@@ -37,7 +42,7 @@ const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) =
 };
 
 const DefaultStory = () => {
-  const [splitterMode, setSplitterMode] = useState<SplitterMode>('start');
+  const [splitterMode, setSplitterMode] = useState<Splitter.Mode>('start');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {

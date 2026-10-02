@@ -10,9 +10,9 @@ import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import type * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, AssistantPreset, Ollama } from '#types';
@@ -36,7 +36,7 @@ export type UsePresets = {
  * has not selected one shows the configured per-provider model.
  */
 export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UsePresets => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Subscribed rather than read: the picker has to follow a selection made on another mount of the
   // same chat, and the stamp the processor writes before the first request.
   const [session] = useObject(chat, 'session');

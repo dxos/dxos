@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// @import-as-namespace
+
 // One provider serves every trigger in the app: a single content node, positioned at whichever
 // trigger is active, on Ark's tooltip machine — which supports many triggers on one machine
 // (`triggerValue`, per-value trigger ids). The triggers are our own elements rather than Ark's
@@ -324,10 +326,13 @@ TooltipTrigger.displayName = TRIGGER_NAME;
 //
 // Tooltip
 //
-
-export const Tooltip = {
-  Provider: TooltipProvider,
-  Trigger: TooltipTrigger,
+export type {
+  TooltipProviderProps as ProviderProps,
+  TooltipSide as Side,
+  TooltipTriggerElement as TriggerElement,
+  TooltipTriggerProps as TriggerProps,
 };
 
-export type { TooltipProviderProps, TooltipSide, TooltipTriggerElement, TooltipTriggerProps };
+export { TooltipProvider as Provider, TooltipTrigger as Trigger };
+export * from './Tooltip.theme.ts';
+export { useTooltipContext } from './TooltipContext.ts';

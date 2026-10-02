@@ -10,7 +10,6 @@ import React, { type MouseEvent, type WheelEvent, useCallback, useContext, useEf
 
 import { type Type } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { composable, composableProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridAxisMeta,
@@ -24,6 +23,7 @@ import {
   gridSeparatorInlineEnd,
 } from '@dxos/react-ui-grid';
 import { DxEditRequest } from '@dxos/react-ui-grid';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type InsertRowResult, ModalController, type TableModel, type TablePresentation } from '../../model/index.ts';
@@ -59,7 +59,7 @@ export type TableContentProps = {
   testId?: string;
 };
 
-export const TableContent = composable<HTMLDivElement, TableContentProps>(
+export const TableContent = Util.composable<HTMLDivElement, TableContentProps>(
   (
     { schema, model, presentation, ignoreAttention, attendableId, onCreate, onRowClick, testId, ...props },
     forwardedRef,
@@ -391,7 +391,7 @@ export const TableContent = composable<HTMLDivElement, TableContentProps>(
     }
 
     return (
-      <div {...composableProps(props, { classNames: 'dx-expand relative' })} ref={forwardedRef}>
+      <div {...Util.composableProps(props, { classNames: 'dx-expand relative' })} ref={forwardedRef}>
         <Grid.Root id={model.id ?? 'table-grid'}>
           <TableValueEditor
             model={model}

@@ -22,7 +22,7 @@ import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
 
-import { NoHandlerError, RunAgainError } from '@dxos/compute';
+import { NoHandlerError, RunAgainError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -39,7 +39,8 @@ import {
   QueryResult,
   Ref,
 } from '@dxos/echo';
-import { EffectEx, SpanAttributes } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';

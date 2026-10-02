@@ -7,9 +7,9 @@ import React, { useRef, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Menu } from './Menu.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Menu from './Menu.tsx';
 
 /** Every part: plain, disabled and shortcut items, a submenu, checkbox items and a radio group. */
 const MenuParts = () => {
@@ -34,7 +34,7 @@ const MenuParts = () => {
         <Menu.Sub>
           <Menu.SubTrigger>
             <span className='grow'>More Tools</span>
-            <Icon icon='ph--caret-right--regular' size={4} />
+            <Icon.Root icon='ph--caret-right--regular' size={4} />
           </Menu.SubTrigger>
           <Menu.Portal>
             <Menu.SubContent>
@@ -57,14 +57,14 @@ const MenuParts = () => {
         {/* A toggle keeps the menu open, so several can be set in one visit. */}
         <Menu.CheckboxItem checked={bookmarks} onCheckedChange={setBookmarks} closeOnSelect={false}>
           <Menu.ItemIndicator>
-            <Icon icon='ph--check--regular' size={4} />
+            <Icon.Root icon='ph--check--regular' size={4} />
           </Menu.ItemIndicator>
           <span className='grow'>Show Bookmarks</span>
           <span className='opacity-50'>⌘+B</span>
         </Menu.CheckboxItem>
         <Menu.CheckboxItem checked={urls} onCheckedChange={setUrls} closeOnSelect={false}>
           <Menu.ItemIndicator>
-            <Icon icon='ph--check--regular' size={4} />
+            <Icon.Root icon='ph--check--regular' size={4} />
           </Menu.ItemIndicator>
           Show Full URLs
         </Menu.CheckboxItem>
@@ -75,13 +75,13 @@ const MenuParts = () => {
         <Menu.RadioGroup value={person} onValueChange={setPerson}>
           <Menu.RadioItem value='pedro' closeOnSelect={false}>
             <Menu.ItemIndicator>
-              <Icon icon='ph--dot--bold' size={4} />
+              <Icon.Root icon='ph--dot--bold' size={4} />
             </Menu.ItemIndicator>
             Pedro Duarte
           </Menu.RadioItem>
           <Menu.RadioItem value='colm' closeOnSelect={false}>
             <Menu.ItemIndicator>
-              <Icon icon='ph--dot--bold' size={4} />
+              <Icon.Root icon='ph--dot--bold' size={4} />
             </Menu.ItemIndicator>
             Colm Tuite
           </Menu.RadioItem>
@@ -97,7 +97,7 @@ const DefaultStory = () => {
   return (
     <Menu.Root defaultOpen>
       <Menu.Trigger asChild>
-        <Button>Customise options</Button>
+        <Button.Root>Customise options</Button.Root>
       </Menu.Trigger>
       <Menu.Content sideOffset={4} collisionPadding={8}>
         <MenuParts />
@@ -170,9 +170,9 @@ export const VirtualTrigger = {
     const buttonRef = useRef<HTMLButtonElement | null>(null);
     return (
       <>
-        <Button onClick={() => setMenuOpen(true)} ref={buttonRef}>
+        <Button.Root onClick={() => setMenuOpen(true)} ref={buttonRef}>
           Customise options
-        </Button>
+        </Button.Root>
         <Menu.Root open={menuOpen} onOpenChange={setMenuOpen}>
           <Menu.VirtualTrigger virtualRef={buttonRef} />
           <Menu.Content sideOffset={4} collisionPadding={8}>
@@ -214,7 +214,7 @@ export const TestSelect: StoryObj = {
       <div className='flex flex-col gap-2'>
         <Menu.Root>
           <Menu.Trigger asChild>
-            <Button>Open menu</Button>
+            <Button.Root>Open menu</Button.Root>
           </Menu.Trigger>
           <Menu.Portal>
             <Menu.Content>

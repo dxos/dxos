@@ -8,9 +8,9 @@ Brand marks (DXOS, ECHO, HALO, …) do not belong here — those are the `dx` se
 ## Usage
 
 ```tsx
-import { Icon } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
 
-<Icon icon='px--anthropic--regular' />;
+<Icon.Root icon='px--anthropic--regular' />;
 ```
 
 `@dxos/ui-icons` is private, so consumers of published packages reference the symbol name as a

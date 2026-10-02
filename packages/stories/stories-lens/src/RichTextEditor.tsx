@@ -12,7 +12,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import { Lens } from '@dxos/echo-panproto';
 import { useLens } from '@dxos/echo-panproto/react';
 import { useObject } from '@dxos/echo-react';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { Text } from '@dxos/schema';
 
 import { type Block, type Inline, type Mark, RICH_TEXT_LENS_ID, RichTextLens, blockText } from './rich-text.ts';

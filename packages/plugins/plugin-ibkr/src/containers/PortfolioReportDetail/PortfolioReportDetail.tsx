@@ -8,7 +8,11 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { IconButton, Panel, SystemIconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { ReportSections } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
@@ -28,7 +32,7 @@ export type PortfolioReportDetailProps = Pick<
  * copies the raw XML and can sync lots from this report into the owning portfolio.
  */
 export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioReportDetailProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const positions = useMemo(() => parsePositions(subject.xml), [subject.xml]);
@@ -62,7 +66,7 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
       <Panel.Toolbar asChild>
         <Toolbar.Root classNames='justify-end'>
           {companionTo && (
-            <IconButton
+            <IconButton.Root
               disabled={syncingLots}
               variant='primary'
               iconClassNames={syncingLots ? 'animate-spin' : undefined}

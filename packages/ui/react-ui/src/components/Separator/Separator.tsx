@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
@@ -35,6 +37,8 @@ const Separator = forwardRef<HTMLDivElement, SeparatorProps>(
 
 Separator.displayName = 'Separator';
 
-export type { SeparatorProps };
+export type { SeparatorProps as RootProps };
 
-export { Separator };
+export { Separator as Root };
+
+export * from './Separator.theme.ts';

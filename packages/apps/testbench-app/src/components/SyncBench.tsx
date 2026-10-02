@@ -19,8 +19,8 @@ import { log } from '@dxos/log';
 import { useClient, useConfig } from '@dxos/react-client';
 import { type SpaceSyncState } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, ButtonGroup } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
 import { Expando } from '@dxos/schema';
 
 const runtime = Atom.runtime(BrowserKeyValueStore.layerLocalStorage);
@@ -133,18 +133,20 @@ export const SyncBench = () => {
   return (
     <div className='grid grid-rows-[auto_1fr] gap-2 '>
       <div className='flex flex-col gap-2'>
-        <ButtonGroup>
-          <Button onClick={createSpace}>Create space</Button>
-          <Button onClick={() => setShowConfig(!showConfig)}>Show config ({showConfig ? 'on' : 'off'})</Button>
-          <Button onClick={refreshSyncState}>Refresh sync state</Button>
-          <Button onClick={handleInvite}>Invite</Button>
-          <Button onClick={handleLoadAll}>Load all objects</Button>
-        </ButtonGroup>
-        <ButtonGroup>
-          <Button onClick={() => createObjects(10)}>Create 10</Button>
-          <Button onClick={() => createObjects(100)}>Create 100</Button>
-          <Button onClick={() => createObjects(1000)}>Create 1000</Button>
-        </ButtonGroup>
+        <Button.Group>
+          <Button.Root onClick={createSpace}>Create space</Button.Root>
+          <Button.Root onClick={() => setShowConfig(!showConfig)}>
+            Show config ({showConfig ? 'on' : 'off'})
+          </Button.Root>
+          <Button.Root onClick={refreshSyncState}>Refresh sync state</Button.Root>
+          <Button.Root onClick={handleInvite}>Invite</Button.Root>
+          <Button.Root onClick={handleLoadAll}>Load all objects</Button.Root>
+        </Button.Group>
+        <Button.Group>
+          <Button.Root onClick={() => createObjects(10)}>Create 10</Button.Root>
+          <Button.Root onClick={() => createObjects(100)}>Create 100</Button.Root>
+          <Button.Root onClick={() => createObjects(1000)}>Create 1000</Button.Root>
+        </Button.Group>
       </div>
       <JsonHighlighter
         data={{

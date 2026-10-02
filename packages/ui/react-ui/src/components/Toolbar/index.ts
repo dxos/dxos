@@ -2,4 +2,4 @@
 // Copyright 2022 DXOS.org
 //
 
-export * from './Toolbar.tsx';
+export * as Toolbar from './Toolbar.tsx';

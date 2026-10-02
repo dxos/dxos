@@ -8,7 +8,10 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type InvocationsState } from '@dxos/compute-runtime';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/Hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
-import { Flex, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Popover from '@dxos/react-ui/Popover';
 
 import { meta } from '#meta';
 
@@ -41,7 +44,7 @@ const getIconClassNames = (state: TriggerStatusState): string | undefined => {
 export type SpaceStatusProps = AppSurface.SpaceArticleProps;
 
 export const SpaceStatus = ({ space }: SpaceStatusProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { state } = useTriggerRuntimeControls(space.db);
   // The dispatcher is stopped for the space when `triggersDisabled` is set, so `enabled` already
   // reflects the space-wide kill-switch; per-trigger edge routing does not affect this indicator.
@@ -72,7 +75,7 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton
+          <IconButton.Root
             variant='ghost'
             icon={getIcon(triggerState)}
             iconOnly
@@ -108,17 +111,17 @@ const TriggerStatusPopover = ({
   currentFunctionName,
   lastInvocation, // TODO(burdon): Show.
 }: TriggerStatusPopoverProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
-    <Flex column gap='sm' classNames='p-2 w-[240px]'>
-      <Flex column gap='xs'>
+    <Flex.Root column gap='sm' classNames='p-2 w-[240px]'>
+      <Flex.Root column gap='xs'>
         <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (
           <div className='text-xs text-description'>{currentFunctionName}</div>
         )}
-      </Flex>
-    </Flex>
+      </Flex.Root>
+    </Flex.Root>
   );
 };
 

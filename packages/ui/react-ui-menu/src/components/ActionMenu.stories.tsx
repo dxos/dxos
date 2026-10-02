@@ -7,7 +7,8 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
-import { Button, IconButton } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as IconButton from '@dxos/react-ui/IconButton';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -78,7 +79,7 @@ export const StaticItems: Story = {
       <>
         <Contributor menu={menu} id='static-items' items={staticItems} />
         <ActionMenu {...menu}>
-          <IconButton icon='ph--list-checks--regular' label='Options' />
+          <IconButton.Root icon='ph--list-checks--regular' label='Options' />
         </ActionMenu>
       </>
     );
@@ -113,12 +114,12 @@ export const ReactiveItems: Story = {
         <Contributor menu={menu} id='reactive-items' priority={50} items={reactiveItems} />
         <div>
           <ActionMenu {...menu}>
-            <IconButton icon='ph--list-checks--regular' label='Options' />
+            <IconButton.Root icon='ph--list-checks--regular' label='Options' />
           </ActionMenu>
         </div>
-        <Button data-testid='update-button' onClick={() => setCount((prev) => prev + 1)}>
+        <Button.Root data-testid='update-button' onClick={() => setCount((prev) => prev + 1)}>
           Update Reactive Item ({count})
-        </Button>
+        </Button.Root>
       </div>
     );
   },
@@ -152,7 +153,7 @@ export const ReplacementMode: Story = {
       <>
         <Contributor menu={menu} id='replacement-items' mode='replacement' items={replacementItems} />
         <ActionMenu {...menu}>
-          <IconButton icon='ph--list-checks--regular' label='Options (replaced)' />
+          <IconButton.Root icon='ph--list-checks--regular' label='Options (replaced)' />
         </ActionMenu>
       </>
     );
@@ -183,7 +184,7 @@ export const PriorityOrdering: Story = {
         <Contributor menu={menu} id='low-priority-items' priority={150} items={lowPriorityItems} />
         <Contributor menu={menu} id='high-priority-items' priority={50} items={highPriorityItems} />
         <ActionMenu {...menu}>
-          <IconButton icon='ph--list-checks--regular' label='Options (priority ordered)' />
+          <IconButton.Root icon='ph--list-checks--regular' label='Options (priority ordered)' />
         </ActionMenu>
       </>
     );

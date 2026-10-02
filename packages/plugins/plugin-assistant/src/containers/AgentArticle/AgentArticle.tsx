@@ -11,7 +11,9 @@ import * as Agent from '@dxos/assistant/Agent';
 import { Database, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { InstructionsEditor } from '@dxos/plugin-routine/InstructionsEditor';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -23,7 +25,7 @@ export type AgentArticleProps = AppSurface.ObjectArticleProps<Agent.Agent>;
  * Project; automation (subscriptions/schedule) is edited in the properties panel.
  */
 export const AgentArticle = ({ role, subject: agent }: AgentArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(agent);
   // Resolve reactively: a sync `.target` read never resolves on a cold/deep-link load.
   const [instructionsSnapshot] = useObject(agent.instructions);

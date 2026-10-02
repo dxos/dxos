@@ -60,16 +60,10 @@ import React, {
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { List, ListItem } from '@dxos/react-list';
-import {
-  Icon,
-  type IconProps,
-  ScrollArea,
-  type ScrollAreaRootProps,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useMergeRefs,
-} from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type SelectionItemBinding, useListNavigation, useListSelection } from '../../hooks/index.ts';
@@ -170,15 +164,15 @@ Root.displayName = LISTBOX_ROOT_NAME;
 // Optional — popover/dialog consumers can skip it and provide their own scroll container.
 //
 
-type ViewportProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+type ViewportProps = Pick<ScrollArea.RootProps, 'thin' | 'padding' | 'centered'>;
 
-const Viewport = composable<HTMLDivElement, ViewportProps>((props, forwardedRef) => {
+const Viewport = Util.composable<HTMLDivElement, ViewportProps>((props, forwardedRef) => {
   const { thin, padding, centered, children, ...rest } = props as PropsWithChildren<
     ViewportProps & Record<string, unknown>
   >;
   return (
     <ScrollArea.Root
-      {...composableProps<HTMLDivElement>(rest, { classNames: styles.listboxViewport() })}
+      {...Util.composableProps<HTMLDivElement>(rest, { classNames: styles.listboxViewport() })}
       {...{ thin, padding, centered }}
       orientation='vertical'
       ref={forwardedRef}
@@ -202,7 +196,7 @@ type ContentProps = {
   'aria-label'?: string;
 };
 
-const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef) => {
+const Content = Util.composable<HTMLUListElement, ContentProps>((props, forwardedRef) => {
   const { selectable, multiselectable } = useListboxContext(LISTBOX_CONTENT_NAME);
 
   // `useListNavigation` bundles role + aria-orientation + arrow-key navigation. In `listbox` mode
@@ -217,7 +211,7 @@ const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef)
   // context check. The container's role/aria/navigation wiring comes from the navigation
   // aspect rather than the primitive's `selectable` plumbing — that keeps the ARIA grammar
   // (`aria-selected`) owned by `Item` below.
-  const composed = composableProps<HTMLUListElement>(rest, { classNames: styles.listboxContent() });
+  const composed = Util.composableProps<HTMLUListElement>(rest, { classNames: styles.listboxContent() });
   const multiselectableProps = multiselectable ? { 'aria-multiselectable': true } : null;
   return (
     <List
@@ -225,7 +219,9 @@ const Content = composable<HTMLUListElement, ContentProps>((props, forwardedRef)
       {...composed}
       {...multiselectableProps}
       {...navigation.containerProps}
-      ref={useMergeRefs([forwardedRef, navigation.containerProps.ref]) as unknown as ForwardedRef<HTMLOListElement>}
+      ref={
+        Hooks.useMergeRefs([forwardedRef, navigation.containerProps.ref]) as unknown as ForwardedRef<HTMLOListElement>
+      }
     >
       {children}
     </List>
@@ -262,7 +258,7 @@ type ItemProps = PropsWithChildren<{
   onKeyDown?: (event: KeyboardEvent<HTMLLIElement>) => void;
 }>;
 
-const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
+const Item = Util.composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
   const {
     id,
     disabled,
@@ -349,9 +345,9 @@ const Item = composable<HTMLLIElement, ItemProps>((props, forwardedRef) => {
     [onKeyDown, onFocusGroupKeyDown, interactive, disabled, selectable, selection],
   );
 
-  const itemRef = useMergeRefs<HTMLLIElement>([forwardedRef, focusGroupRef]);
+  const itemRef = Hooks.useMergeRefs<HTMLLIElement>([forwardedRef, focusGroupRef]);
 
-  const composed = composableProps<HTMLLIElement>(rest, {
+  const composed = Util.composableProps<HTMLLIElement>(rest, {
     classNames: styles.listboxItem({
       class: [!interactive && 'cursor-default', disabled && 'opacity-50 cursor-not-allowed'],
     }),
@@ -400,10 +396,10 @@ const ListItemProviderHost = ({ id, selected, children }: PropsWithChildren<List
 // ItemLabel — text content for the item; grows and truncates.
 //
 
-type ItemLabelProps = ThemedClassName<ComponentPropsWithRef<'span'>>;
+type ItemLabelProps = Util.ThemedClassName<ComponentPropsWithRef<'span'>>;
 
-const ItemLabel = composable<HTMLSpanElement, ItemLabelProps>(({ children, ...rest }, forwardedRef) => (
-  <span {...composableProps<HTMLSpanElement>(rest, { classNames: styles.listboxItemLabel() })} ref={forwardedRef}>
+const ItemLabel = Util.composable<HTMLSpanElement, ItemLabelProps>(({ children, ...rest }, forwardedRef) => (
+  <span {...Util.composableProps<HTMLSpanElement>(rest, { classNames: styles.listboxItemLabel() })} ref={forwardedRef}>
     {children}
   </span>
 ));
@@ -414,12 +410,12 @@ ItemLabel.displayName = LISTBOX_ITEM_LABEL_NAME;
 // Indicator — checkmark icon for the selected item.
 //
 
-type IndicatorProps = Omit<IconProps, 'icon'> & Partial<Pick<IconProps, 'icon'>>;
+type IndicatorProps = Omit<Icon.RootProps, 'icon'> & Partial<Pick<Icon.RootProps, 'icon'>>;
 
 const Indicator = forwardRef<SVGSVGElement, IndicatorProps>(({ classNames, ...rootProps }, forwardedRef) => {
   const { selected } = useListboxItemContext(LISTBOX_INDICATOR_NAME);
   return (
-    <Icon
+    <Icon.Root
       icon='ph--check--regular'
       {...rootProps}
       classNames={mx(!selected && 'invisible', classNames)}

@@ -5,7 +5,13 @@
 import React, { Fragment } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Banner, Carousel, Flex, Grid, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Carousel from '@dxos/react-ui/Carousel';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 
 import { meta } from '#meta';
 import { Result } from '#types';
@@ -20,7 +26,7 @@ export type ResultDetailProps = {
 
 /** Detail pane for the selected search result. */
 export const ResultDetail = ({ result: subject, starred = false, onToggleStar, onClose }: ResultDetailProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Subscribe so the pane re-renders when the result loads.
   const [result] = useObject(subject);
   if (!result) {
@@ -30,14 +36,14 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
   const properties = Object.entries(result.properties ?? {});
 
   return (
-    <Flex column gap='md' classNames='p-3 overflow-y-auto'>
-      <Grid cols={['minmax(0, 1fr)', 'min-content', 'min-content']} grow={false} gap='sm' align='start'>
+    <Flex.Root column gap='md' classNames='p-3 overflow-y-auto'>
+      <Grid.Root cols={['minmax(0, 1fr)', 'min-content', 'min-content']} grow={false} gap='sm' align='start'>
         <h2 className='text-lg font-medium'>{result.title}</h2>
         <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={onToggleStar} />
         {onClose && (
-          <IconButton iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
+          <IconButton.Root iconOnly variant='ghost' icon='ph--x--regular' label={t('close.label')} onClick={onClose} />
         )}
-      </Grid>
+      </Grid.Root>
 
       {result.price != null && (
         // Match ResultCard: currency-first, locale-grouped.
@@ -77,7 +83,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
           ))}
         </dl>
       )}
-    </Flex>
+    </Flex.Root>
   );
 };
 

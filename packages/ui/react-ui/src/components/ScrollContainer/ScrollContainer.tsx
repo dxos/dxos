@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, {
   type PropsWithChildren,
   type RefObject,
@@ -22,8 +24,8 @@ import { type SlottableProps } from '@dxos/ui-types';
 
 import { composable, composableProps, slottable } from '../../util/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { IconButton } from '../Button/index.ts';
-import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import { ScrollContainerProvider, useScrollContainerContext } from './ScrollContainerContext.ts';
 
 // Within a pixel: at fractional zoom the three measures are rounded differently, and exact equality
@@ -132,7 +134,7 @@ ScrollContainerRoot.displayName = 'ScrollContainer.Root';
 // Content
 //
 
-type ScrollContainerContentProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+type ScrollContainerContentProps = Pick<ScrollArea.RootProps, 'thin' | 'padding' | 'centered'>;
 
 /**
  * Composable wrapper around ScrollArea.Root.
@@ -299,7 +301,7 @@ function ScrollContainerScrollDownButton({ classNames }: ScrollContainerScrollDo
         classNames,
       )}
     >
-      <IconButton
+      <IconButton.Root
         variant='primary'
         icon='ph--arrow-down--regular'
         iconOnly
@@ -316,19 +318,19 @@ ScrollContainerScrollDownButton.displayName = SCROLL_DOWN_BUTTON_NAME;
 //
 // ScrollContainer
 //
-
-export const ScrollContainer = {
-  Root: ScrollContainerRoot,
-  Content: ScrollContainerContent,
-  Viewport: ScrollContainerViewport,
-  Fade: ScrollContainerFade,
-  ScrollDownButton: ScrollContainerScrollDownButton,
-};
-
 export type {
-  ScrollContainerContentProps,
-  ScrollContainerFadeProps,
-  ScrollContainerRootProps,
-  ScrollContainerScrollDownButtonProps,
-  ScrollContainerViewportProps,
+  ScrollContainerContentProps as ContentProps,
+  ScrollContainerFadeProps as FadeProps,
+  ScrollContainerRootProps as RootProps,
+  ScrollContainerScrollDownButtonProps as ScrollDownButtonProps,
+  ScrollContainerViewportProps as ViewportProps,
 };
+
+export {
+  ScrollContainerContent as Content,
+  ScrollContainerFade as Fade,
+  ScrollContainerRoot as Root,
+  ScrollContainerScrollDownButton as ScrollDownButton,
+  ScrollContainerViewport as Viewport,
+};
+export { useScrollContainerContext } from './ScrollContainerContext.ts';

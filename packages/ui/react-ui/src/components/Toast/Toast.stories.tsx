@@ -7,8 +7,8 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Toast } from './Toast.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Toast from './Toast.tsx';
 
 type StoryArgs = {
   icon?: string;
@@ -23,7 +23,7 @@ const DefaultStory = ({ icon, title, description, duration, action }: StoryArgs)
   const [open, setOpen] = useState(true);
   return (
     <Toast.Provider>
-      <Button onClick={() => setOpen(true)}>Open toast</Button>
+      <Button.Root onClick={() => setOpen(true)}>Open toast</Button.Root>
       <Toast.Viewport />
       <Toast.Root open={open} onOpenChange={setOpen} duration={duration}>
         <Toast.Title icon={icon} onClose={() => setOpen(false)}>
@@ -33,7 +33,7 @@ const DefaultStory = ({ icon, title, description, duration, action }: StoryArgs)
         {action && (
           <Toast.Actions>
             <Toast.Action asChild>
-              <Button variant='primary'>{action}</Button>
+              <Button.Root variant='primary'>{action}</Button.Root>
             </Toast.Action>
           </Toast.Actions>
         )}
@@ -74,7 +74,7 @@ const StackedStory = ({ overlap = true }: { overlap?: boolean }) => {
   const remove = (id: number) => setToasts((current) => current.filter((toast) => toast !== id));
   return (
     <Toast.Provider overlap={overlap}>
-      <Button onClick={add}>Add toast</Button>
+      <Button.Root onClick={add}>Add toast</Button.Root>
       <Toast.Viewport />
       {toasts.map((id) => (
         <Toast.Root key={id} duration={Infinity} onOpenChange={(open) => !open && remove(id)}>
@@ -125,7 +125,7 @@ export const TestLifecycle: StoryObj = {
     };
     return (
       <Toast.Provider>
-        <Button onClick={() => handleOpenChange(true)}>Show toast</Button>
+        <Button.Root onClick={() => handleOpenChange(true)}>Show toast</Button.Root>
         <span data-testid='log'>{log.join(',')}</span>
         <Toast.Viewport />
         <Toast.Root open={open} onOpenChange={handleOpenChange} duration={Infinity}>
@@ -135,7 +135,7 @@ export const TestLifecycle: StoryObj = {
           <Toast.Description>Stays until closed.</Toast.Description>
           <Toast.Actions>
             <Toast.Action asChild>
-              <Button variant='primary'>OK</Button>
+              <Button.Root variant='primary'>OK</Button.Root>
             </Toast.Action>
           </Toast.Actions>
         </Toast.Root>

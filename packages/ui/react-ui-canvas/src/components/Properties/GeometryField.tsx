@@ -12,8 +12,8 @@
 
 import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, useState } from 'react';
 
-import { Field } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
 
 import { DEFAULT_GRID, MAJOR_GRID_RATIO } from '../../model/types.ts';
 

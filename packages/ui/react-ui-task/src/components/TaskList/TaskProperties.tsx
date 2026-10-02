@@ -6,8 +6,13 @@ import React, { type ReactNode } from 'react';
 
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Button, Column, Icon, type ThemedClassName, Timestamp, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuAction, createMenuAction } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as Column from '@dxos/react-ui/Column';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Timestamp from '@dxos/react-ui/Timestamp';
+import type * as Util from '@dxos/react-ui/Util';
 import { Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -31,7 +36,7 @@ const ESTIMATE_ICON = 'ph--ruler--regular';
 /** A member of the task's space, offered as an assignee by identity. */
 export type TaskMember = { did: string; name?: string };
 
-export type TaskPropertiesProps = ThemedClassName<{
+export type TaskPropertiesProps = Util.ThemedClassName<{
   task: Task.Task;
   /**
    * The space's members, the owner among them. Passed in rather than read here: membership lives in
@@ -52,7 +57,7 @@ export type TaskPropertiesProps = ThemedClassName<{
  * ("Set estimate") instead of showing a dot that reads as a value of its own.
  */
 export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }: TaskPropertiesProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const status = task.status ?? 'todo';
   const priority = task.priority ?? undefined;
   const estimate = task.estimate ?? undefined;
@@ -76,7 +81,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
       {createdAt !== undefined && (
         <TaskProperty
           icon='ph--calendar-plus--regular'
-          label={<Timestamp date={createdAt} />}
+          label={<Timestamp.Root date={createdAt} />}
           unset
           testId='taskList.property.created'
         />
@@ -218,7 +223,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
           greys, and with the same asterisk on both rows the mismatch read as a meaning the rows do
           not carry. A value keeps the hue its option table gives it. */}
       <div className={TASK_GRID_ICON}>
-        <Icon icon={icon} classNames={mx('shrink-0', unset ? 'text-description' : iconClassNames)} />
+        <Icon.Root icon={icon} classNames={mx('shrink-0', unset ? 'text-description' : iconClassNames)} />
       </div>
       <span className={mx('min-w-0 pe-1.5 text-sm truncate', unset && 'text-description')}>{label}</span>
     </>
@@ -241,7 +246,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
           grid would size the glyph column to the glyph instead of to the shared 24px. `w-fit`, since
           a property is as wide as its value and a full-width button would paint a bar across the
           pane on hover. */}
-      <Button
+      <Button.Root
         variant='ghost'
         density='sm'
         // `items-center`, overriding the shared grid's `items-start`: a property is one line, and the
@@ -252,7 +257,7 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
         data-testid={testId}
       >
         {content}
-      </Button>
+      </Button.Root>
     </ActionMenu>
   );
 };

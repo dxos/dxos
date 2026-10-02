@@ -4,7 +4,14 @@
 
 import React from 'react';
 
-import { Avatar, Button, Icon, IconButton, Link, Tooltip, Trans, useTranslation } from '@dxos/react-ui';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Link from '@dxos/react-ui/Link';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { getSize, mx, textValence } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -18,7 +25,7 @@ export const AgentConfig = ({
   onAgentCreate,
   onAgentRefresh,
 }: Omit<AgentFormProps, 'agentHostingEnabled'>) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
     <div className='p-1'>
       <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent.heading')}</h2>
@@ -58,7 +65,7 @@ export const AgentConfig = ({
             </Avatar.Root>
             {agentStatus === 'created' && (
               <Tooltip.Trigger asChild content={t('destroy-agent.label')} side='bottom'>
-                <IconButton
+                <IconButton.Root
                   variant='ghost'
                   classNames='px-0 w-(--dx-rail-action) h-(--dx-rail-action)'
                   data-testid='agent.destroy'
@@ -78,7 +85,7 @@ export const AgentConfig = ({
         </>
       ) : (
         <>
-          <Button
+          <Button.Root
             variant='ghost'
             classNames='my-2 w-full justify-start gap-2 ps-0 pe-3'
             data-testid={agentStatus === 'creatable' ? 'devices-panel.create-agent' : 'devices-panel.agent-error'}
@@ -87,24 +94,24 @@ export const AgentConfig = ({
           >
             <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-input-surface grid place-items-center')}>
               {agentStatus === 'creatable' ? (
-                <Icon icon='ph--plus--light' size={6} />
+                <Icon.Root icon='ph--plus--light' size={6} />
               ) : (
-                <Icon icon='ph--arrows-clockwise--light' size={6} />
+                <Icon.Root icon='ph--arrows-clockwise--light' size={6} />
               )}
             </div>
             <span className='grow font-medium text-start'>
               {t(agentStatus === 'creatable' ? 'create-agent.label' : '')}
             </span>
-          </Button>
+          </Button.Root>
           {agentStatus === 'creatable' && (
             <div className='space-y-2' id='devices-panel.create-agent.description'>
               <p className='text-description'>
-                <Trans
+                <ThemeProvider.Trans
                   {...{
                     t,
                     i18nKey: 'create-agent-clickwrap',
                     components: {
-                      tosLink: <Link />,
+                      tosLink: <Link.Root />,
                     },
                   }}
                 />

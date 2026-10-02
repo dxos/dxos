@@ -27,7 +27,7 @@ import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
-import type { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as AppUpdate$ from '../app/AppUpdate.ts';

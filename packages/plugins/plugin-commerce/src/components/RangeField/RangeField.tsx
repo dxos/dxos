@@ -4,7 +4,7 @@
 
 import React, { type ChangeEvent } from 'react';
 
-import { Field } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
 
 export type RangeValue = { min?: number; max?: number };
 

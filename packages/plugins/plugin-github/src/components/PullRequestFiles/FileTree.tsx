@@ -4,8 +4,10 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Field, Icon, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 
@@ -27,7 +29,7 @@ export type FileTreeProps = {
  * trailing edge, and the file on screen as the current row.
  */
 export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange }: FileTreeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // The model is rebuilt whenever the selection moves, so the reader's collapses live outside it.
   const [closed, setClosed] = useState<ReadonlySet<string>>(() => new Set());
 
@@ -80,7 +82,7 @@ export const FileTree = ({ root, selected, reviewed, onSelect, onReviewedChange 
             data-testid='pull-request.files.reviewed'
           />
         ) : (
-          <Icon icon='ph--folder--regular' size={4} />
+          <Icon.Root icon='ph--folder--regular' size={4} />
         ),
     [reviewed, onReviewedChange, t],
   );

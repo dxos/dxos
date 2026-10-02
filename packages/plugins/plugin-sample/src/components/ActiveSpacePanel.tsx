@@ -7,7 +7,7 @@
 
 import React from 'react';
 
-import { Tag } from '@dxos/react-ui';
+import * as Tag from '@dxos/react-ui/Tag';
 
 export type ActiveSpacePanelProps = {
   spaceName?: string;
@@ -23,7 +23,7 @@ export const ActiveSpacePanel = ({ spaceName }: ActiveSpacePanelProps) => {
       {spaceName && (
         <div className='flex items-center gap-2 text-sm'>
           <span className='text-description'>Active space:</span>
-          <Tag hue='neutral'>{spaceName}</Tag>
+          <Tag.Root hue='neutral'>{spaceName}</Tag.Root>
         </div>
       )}
     </div>

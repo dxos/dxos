@@ -7,11 +7,13 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/Hooks';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { List, ListItem } from '@dxos/react-list';
-import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Combobox } from '@dxos/react-ui-list';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 import { AssistantCapabilities, Ollama } from '#types';
@@ -37,7 +39,7 @@ export const OllamaModels = () => {
 };
 
 export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Explicit subscription: the list and badges must re-render as pulls/installs/loads land.
   const state = useAtomValue(manager.state);
   const [query, setQuery] = useState('');
@@ -118,9 +120,9 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   key={model.name}
                   className='flex flex-col gap-trim-xs rounded-sm dx-input-surface px-trim-sm py-trim-xs w-full'
                 >
-                  <Flex gap='sm' align='center'>
+                  <Flex.Root gap='sm' align='center'>
                     <span className='grow truncate font-medium'>{model.name}</span>
-                    <IconButton
+                    <IconButton.Root
                       icon={running ? 'ph--eject--regular' : 'ph--play--regular'}
                       iconOnly
                       label={running ? t('settings.ollama.unload.label') : t('settings.ollama.load.label')}
@@ -131,7 +133,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                         )()
                       }
                     />
-                    <IconButton
+                    <IconButton.Root
                       icon='ph--trash--regular'
                       iconOnly
                       label={t('settings.ollama.remove.label')}
@@ -140,13 +142,13 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                         void withPending(model.name, () => EffectEx.runPromise(manager.remove(model.name)))()
                       }
                     />
-                  </Flex>
+                  </Flex.Root>
                   {(size || loadedLabel || error) && (
-                    <Flex gap='sm' align='center' classNames='text-sm'>
+                    <Flex.Root gap='sm' align='center' classNames='text-sm'>
                       {size && <span className='text-description'>{size}</span>}
                       {loadedLabel && <span className='text-success-text'>{loadedLabel}</span>}
                       {error && <span className='truncate text-error-text'>{shortError(error)}</span>}
-                    </Flex>
+                    </Flex.Root>
                   )}
                 </ListItem>
               );
@@ -161,15 +163,15 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   key={name}
                   className='flex flex-col gap-trim-xs rounded-sm dx-input-surface px-trim-sm py-trim-xs w-full'
                 >
-                  <Flex gap='sm' align='center'>
+                  <Flex.Root gap='sm' align='center'>
                     <span className='grow truncate font-medium text-description'>{name}</span>
-                    <IconButton
+                    <IconButton.Root
                       icon='ph--x--regular'
                       iconOnly
                       label={t('settings.ollama.cancel.label')}
                       onClick={() => void EffectEx.runPromise(manager.cancel(name))}
                     />
-                  </Flex>
+                  </Flex.Root>
                   <span className='text-sm text-description'>{status}</span>
                 </ListItem>
               );

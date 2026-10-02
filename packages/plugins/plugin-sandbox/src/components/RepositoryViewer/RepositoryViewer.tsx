@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { Grid, Panel, useTranslation } from '@dxos/react-ui';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 
@@ -62,7 +64,7 @@ export const RepositoryViewer = ({
   onSelectCommit,
   onLoadMoreCommits,
 }: RepositoryViewerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const empty = !loading && !error && branches.length === 0;
   const isCommit = currentRef !== undefined && !branches.some((branch) => branch.name === currentRef);
 
@@ -92,7 +94,7 @@ export const RepositoryViewer = ({
             onLoadMore={onLoadMoreCommits}
           />
         ) : (
-          <Grid cols={['18rem', '1fr']} classNames='divide-x divide-separator'>
+          <Grid.Root cols={['18rem', '1fr']} classNames='divide-x divide-separator'>
             <div
               role='region'
               aria-label={t('files-pane.label')}
@@ -116,7 +118,7 @@ export const RepositoryViewer = ({
               </div>
               {file ? <RepositoryFileView file={file} /> : <div />}
             </div>
-          </Grid>
+          </Grid.Root>
         )}
       </Panel.Content>
     </Panel.Root>

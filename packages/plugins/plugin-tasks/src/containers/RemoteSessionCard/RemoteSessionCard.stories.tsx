@@ -6,7 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Icon } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { RemoteSession } from '@dxos/types';
 
@@ -62,7 +63,7 @@ const DefaultStory = ({ kind }: StoryArgs) => {
     <Card.Root classNames='dx-card-popover'>
       <Card.Header>
         <Card.Block>
-          <Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--robot--regular'} />
+          <Icon.Root icon={Obj.getIcon(subject)?.icon ?? 'ph--robot--regular'} />
         </Card.Block>
         <Card.Title>{RemoteSession.harnessName(subject) ?? 'Session'}</Card.Title>
       </Card.Header>

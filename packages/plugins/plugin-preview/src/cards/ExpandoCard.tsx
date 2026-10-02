@@ -7,9 +7,9 @@ import React, { useCallback, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
-import { Card } from '@dxos/react-ui';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form } from '@dxos/react-ui-form';
+import * as Card from '@dxos/react-ui/Card';
 
 const schemaForValue = (value: unknown): Schema.Codec<any, any> | undefined => {
   switch (typeof value) {

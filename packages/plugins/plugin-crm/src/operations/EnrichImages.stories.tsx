@@ -14,8 +14,11 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { corePlugins } from '@dxos/plugin-testing';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Card, Icon, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Organization, Person } from '@dxos/types';
 
 import { CrmPlugin } from '#plugin';
@@ -59,9 +62,9 @@ const DefaultStory = () => {
   return (
     <div className='flex flex-col gap-2 p-2'>
       <Toolbar.Root>
-        <Button onClick={handleEnrich} data-testid='crm.story.enrich'>
+        <Button.Root onClick={handleEnrich} data-testid='crm.story.enrich'>
           Enrich images
-        </Button>
+        </Button.Root>
         <span className='text-sm text-description' data-testid='crm.story.status'>
           {status}
         </span>
@@ -71,7 +74,9 @@ const DefaultStory = () => {
         <Card.Root key={subject.id} fullWidth>
           <Card.Header>
             <Card.Block>
-              <Icon icon={Obj.instanceOf(Person.Person, subject) ? 'ph--user--regular' : 'ph--buildings--regular'} />
+              <Icon.Root
+                icon={Obj.instanceOf(Person.Person, subject) ? 'ph--user--regular' : 'ph--buildings--regular'}
+              />
             </Card.Block>
             <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
           </Card.Header>

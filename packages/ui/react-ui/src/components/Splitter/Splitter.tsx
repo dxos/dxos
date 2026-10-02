@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Splitter` — two panes and the seam between them, built on `@ark-ui/react`'s Splitter (zag state
 // machine). The machine owns the drag (pointer capture, the global resize cursor), the keyboard
 // resize, the `separator` role and its `aria-value*`, the lower bound on both panes, and keeping the
@@ -323,13 +325,13 @@ SplitterHandle.displayName = HANDLE_NAME;
 //
 // Splitter
 //
-
-const Splitter = {
-  Root: SplitterRoot,
-  Panel: SplitterPanel,
-  Handle: SplitterHandle,
+export type {
+  SplitterHandleProps as HandleProps,
+  SplitterMode as Mode,
+  SplitterOrientation as Orientation,
+  SplitterPanelProps as PanelProps,
+  SplitterRootProps as RootProps,
 };
 
-export { Splitter };
-
-export type { SplitterHandleProps, SplitterMode, SplitterOrientation, SplitterPanelProps, SplitterRootProps };
+export { SplitterHandle as Handle, SplitterPanel as Panel, SplitterRoot as Root };
+export * from './Splitter.theme.ts';

@@ -4,7 +4,8 @@
 
 import React, { type ReactNode } from 'react';
 
-import { IconButton, Popover } from '@dxos/react-ui';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Popover from '@dxos/react-ui/Popover';
 
 import { type ArtifactKind, type ArtifactLink } from '../../pull-request-body.ts';
 
@@ -61,7 +62,7 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <IconButton
+        <IconButton.Root
           variant='tag'
           density='sm'
           classNames='bg-input-surface text-base-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border align-baseline'

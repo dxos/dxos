@@ -5,7 +5,7 @@
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/keys';
-import { RegistryOperation } from '@dxos/plugin-registry/Operations';
+import * as RegistryOperation from '@dxos/plugin-registry/RegistryOperation';
 import { trim } from '@dxos/util';
 
 export const key = 'org.dxos.skill.pluginManager';

@@ -9,7 +9,7 @@ import React from 'react';
 import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { STAT_CARD_HUES, StatCard } from '@dxos/devtools';
-import { Flex } from '@dxos/react-ui';
+import * as Flex from '@dxos/react-ui/Flex';
 
 // Fallback so the atom hook is called unconditionally when no store is contributed (host plugin not
 // loaded); the panel then renders its empty state.
@@ -60,7 +60,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
   }
 
   return (
-    <Flex column gap='sm'>
+    <Flex.Root column gap='sm'>
       {compartments.map(([pluginKey, value]) => (
         <StatCard.Root key={pluginKey}>
           <StatCard.Header icon='ph--chart-bar--regular' hue={STAT_CARD_HUES.system} title={pluginKey} />
@@ -69,7 +69,7 @@ export const StatsPanel = ({ showEmpty = true }: StatsPanelProps) => {
           ))}
         </StatCard.Root>
       ))}
-    </Flex>
+    </Flex.Root>
   );
 };
 

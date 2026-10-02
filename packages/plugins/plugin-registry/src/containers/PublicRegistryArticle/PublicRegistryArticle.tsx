@@ -12,11 +12,11 @@ import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import { useSettingsDivergedKeys } from '@dxos/app-toolkit/Hooks';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { useTranslation } from '@dxos/react-ui';
-import { composable } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -55,9 +55,9 @@ export type PublicRegistryArticleProps = {
   id: string;
 };
 
-export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryArticleProps>(
+export const PublicRegistryArticle = Util.composable<HTMLDivElement, PublicRegistryArticleProps>(
   ({ id, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const manager = usePluginManager();
     const { invoke } = useOperationInvoker();
     const { entries, loading, error } = useRegistryPlugins();

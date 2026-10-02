@@ -9,7 +9,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { Home, NavBranch } from '#components';
 

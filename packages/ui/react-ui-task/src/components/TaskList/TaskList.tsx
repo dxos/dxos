@@ -6,19 +6,16 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 
 import { Tag as EchoTag, Filter, Obj, type Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import {
-  Icon,
-  IconBlock,
-  IconButton,
-  Tag,
-  Tooltip,
-  composable,
-  composableProps,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Listbox, TREE_BLOCK, useListDisclosure } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuAction, type MenuItem, executeMenuAction, fallbackIcon } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconBlock from '@dxos/react-ui/IconBlock';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Util from '@dxos/react-ui/Util';
 import { type Actor, PullRequest, Task } from '@dxos/types';
 import { hoverableControlItem, mx, toHue } from '@dxos/ui-theme';
 import { type ComposableProps, type ThemedClassName } from '@dxos/ui-types';
@@ -310,9 +307,9 @@ type TaskListViewportProps = ComposableProps<{
   rows?: number;
 }>;
 
-const TaskListViewport = composable<HTMLDivElement, TaskListViewportProps>(
+const TaskListViewport = Util.composable<HTMLDivElement, TaskListViewportProps>(
   ({ children, rows: rowsProp, ...props }, forwardedRef) => {
-    const { className, style, ...rest } = composableProps(props);
+    const { className, style, ...rest } = Util.composableProps(props);
     // Whole rows only: a fractional count would cut through the next row.
     const rows = rowsProp === undefined ? undefined : Math.max(Math.floor(rowsProp), 0);
     return (
@@ -497,8 +494,8 @@ TaskListContent.displayName = 'TaskList.Content';
 
 type TaskListGroupLabelProps = ComposableProps;
 
-const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props);
+const TaskListGroupLabel = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+  const { className, ...rest } = Util.composableProps(props);
   return (
     <div
       {...rest}
@@ -514,7 +511,7 @@ TaskListGroupLabel.displayName = 'TaskList.GroupLabel';
 
 /** Trailing cells of a tree row — the same content the flat row puts after its title. */
 const TaskTreeTrailing = ({ item }: { item: TaskNode }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { showEstimates } = useTaskListContext('TaskList.TreeTrailing');
   const task = item.task;
   // Subscribed for the same reason as the heading: priority, estimate and assignee are property
@@ -563,7 +560,7 @@ const isMenuAction = (item: MenuItem): item is MenuAction => 'data' in item && t
  * to discover nothing — and several collapse into the overflow menu, matching the nav tree's rows.
  */
 const TaskListItemActions = ({ task }: { task: Task.Task }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { getTaskActions } = useTaskListContext('TaskList.ItemActions');
   const actions = useMemo(() => getTaskActions?.(task) ?? [], [getTaskActions, task]);
 
@@ -574,12 +571,12 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
   const [only] = actions;
   if (actions.length === 1 && isMenuAction(only)) {
     return (
-      <IconBlock>
-        <IconButton
+      <IconBlock.Root>
+        <IconButton.Root
           variant='ghost'
           iconOnly
           icon={only.properties?.icon ?? fallbackIcon}
-          label={toLocalizedString(only.properties?.label, t)}
+          label={ThemeProvider.toLocalizedString(only.properties?.label, t)}
           data-testid={only.properties?.testId}
           classNames={ROW_ACTION_CLASSNAMES}
           onClick={(event) => {
@@ -588,17 +585,17 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
             void executeMenuAction(only);
           }}
         />
-      </IconBlock>
+      </IconBlock.Root>
     );
   }
 
   return (
-    <IconBlock>
+    <IconBlock.Root>
       {/* The button is the trigger, not the block: the button stops the click so the row is not selected
           too, and a trigger above it would never receive it. The block still gives every control in
           the row one rail-item square. */}
       <ActionMenu deferUntilOpen actions={actions}>
-        <IconButton
+        <IconButton.Root
           variant='ghost'
           iconOnly
           icon='ph--dots-three-vertical--regular'
@@ -608,7 +605,7 @@ const TaskListItemActions = ({ task }: { task: Task.Task }) => {
           onClick={(event) => event.stopPropagation()}
         />
       </ActionMenu>
-    </IconBlock>
+    </IconBlock.Root>
   );
 };
 
@@ -683,9 +680,9 @@ const TaskListItemTags = ({ task, tags }: { task: Task.Task; tags: readonly Ref.
   return (
     <>
       {labelled.map((tag) => (
-        <Tag key={tag.id} hue={toHue(tag.hue)} data-testid='taskList.item.tag'>
+        <Tag.Root key={tag.id} hue={toHue(tag.hue)} data-testid='taskList.item.tag'>
           {tag.label}
-        </Tag>
+        </Tag.Root>
       ))}
     </>
   );
@@ -707,7 +704,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
 
   if (PullRequest.instanceOf(artifact)) {
     return (
-      <IconButton
+      <IconButton.Root
         {...anchor}
         variant='tag'
         density='sm'
@@ -723,9 +720,9 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
   }
 
   return (
-    <Tag {...anchor} hue='amber' classNames='cursor-pointer'>
+    <Tag.Root {...anchor} hue='amber' classNames='cursor-pointer'>
       {label}
-    </Tag>
+    </Tag.Root>
   );
 };
 
@@ -750,43 +747,45 @@ type TaskListAssigneeProps = {
   iconOnly?: boolean;
 };
 
-const TaskListAssignee = composable<HTMLSpanElement, TaskListAssigneeProps>(({ assignee, iconOnly }, _forwardedRef) => {
-  const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
-  const [session] = useObject(assignee.subject);
-  const anchor = usePreviewAnchor({
-    eid: session && Obj.getURI(session).toString(),
-    label: label ?? '',
-    // Without this the card falls back to the type's placeholder ("New item"), since a session's
-    // label prop is its title and the harness reports none.
-    title: harness?.title ?? label,
-  });
+const TaskListAssignee = Util.composable<HTMLSpanElement, TaskListAssigneeProps>(
+  ({ assignee, iconOnly }, _forwardedRef) => {
+    const { label, icon, agent, session: harness } = useAssigneeDisplay(assignee);
+    const [session] = useObject(assignee.subject);
+    const anchor = usePreviewAnchor({
+      eid: session && Obj.getURI(session).toString(),
+      label: label ?? '',
+      // Without this the card falls back to the type's placeholder ("New item"), since a session's
+      // label prop is its title and the harness reports none.
+      title: harness?.title ?? label,
+    });
 
-  if (!label && !agent) {
-    return null;
-  }
+    if (!label && !agent) {
+      return null;
+    }
 
-  const tag = (
-    <Tag
-      hue={agent ? 'purple' : 'indigo'}
-      data-testid='taskList.item.assignee'
-      // A button when there is a session to open, so the keyboard reaches it as the pointer does.
-      {...(session && { ...anchor, role: 'button', tabIndex: 0 })}
-      classNames={session && 'cursor-pointer'}
-    >
-      {(agent || iconOnly) && <Icon icon={icon} size={3} classNames={mx('inline-block', !iconOnly && 'me-1')} />}
-      {iconOnly ? <span className='sr-only'>{label}</span> : label}
-    </Tag>
-  );
+    const tag = (
+      <Tag.Root
+        hue={agent ? 'purple' : 'indigo'}
+        data-testid='taskList.item.assignee'
+        // A button when there is a session to open, so the keyboard reaches it as the pointer does.
+        {...(session && { ...anchor, role: 'button', tabIndex: 0 })}
+        classNames={session && 'cursor-pointer'}
+      >
+        {(agent || iconOnly) && <Icon.Root icon={icon} size={3} classNames={mx('inline-block', !iconOnly && 'me-1')} />}
+        {iconOnly ? <span className='sr-only'>{label}</span> : label}
+      </Tag.Root>
+    );
 
-  // A session shows its card on hover, which already names the run; a tooltip would stack on it.
-  return iconOnly && !session && label ? (
-    <Tooltip.Trigger asChild content={label}>
-      {tag}
-    </Tooltip.Trigger>
-  ) : (
-    tag
-  );
-});
+    // A session shows its card on hover, which already names the run; a tooltip would stack on it.
+    return iconOnly && !session && label ? (
+      <Tooltip.Trigger asChild content={label}>
+        {tag}
+      </Tooltip.Trigger>
+    ) : (
+      tag
+    );
+  },
+);
 
 TaskListAssignee.displayName = 'TaskList.Assignee';
 

@@ -5,7 +5,12 @@
 import React, { useState } from 'react';
 
 import { NamePopover } from '@dxos/app-framework/NamePopover';
-import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as TextTooltip from '@dxos/react-ui/TextTooltip';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -83,18 +88,18 @@ export const VersionBanner = ({
   onViewChange,
   onClose,
 }: VersionBannerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [namingBranch, setNamingBranch] = useState(false);
 
   return (
     <Toolbar.Root data-testid={`version-banner-${mode}`} aria-live='polite'>
       <div className='flex items-center gap-1 px-2 truncate'>
-        <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
-        <Tag hue={hue}>{name}</Tag>
+        <Icon.Root icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
+        <Tag.Root hue={hue}>{name}</Tag.Root>
         {timestamp && (
-          <TextTooltip text={new Date(timestamp).toLocaleString()} side='bottom'>
-            <Tag hue='sky'>{relativeTime(timestamp)}</Tag>
-          </TextTooltip>
+          <TextTooltip.Root text={new Date(timestamp).toLocaleString()} side='bottom'>
+            <Tag.Root hue='sky'>{relativeTime(timestamp)}</Tag.Root>
+          </TextTooltip.Root>
         )}
       </div>
       <Toolbar.Separator />
@@ -133,7 +138,7 @@ export const VersionBanner = ({
           ))}
         </Toolbar.ToggleGroup>
       )}
-      <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
+      <IconButton.Root variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
     </Toolbar.Root>
   );
 };

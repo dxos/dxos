@@ -11,7 +11,8 @@ import { Trigger } from '@dxos/async';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { type InvitationResult } from '@dxos/react-client/invitations';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { JoinPanel, type JoinPanelProps } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -26,7 +27,7 @@ export type JoinDialogProps = JoinPanelProps & {
 export const JoinDialog = ({ navigableCollections, onDone, ...props }: JoinDialogProps) => {
   const { invokePromise } = useOperationInvoker();
   const client = useClient();
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const handleDone = useCallback(
     async (result: InvitationResult | null) => {

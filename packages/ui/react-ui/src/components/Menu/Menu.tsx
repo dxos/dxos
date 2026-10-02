@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// @import-as-namespace
+
 // One menu machine serves dropdown, context and sub menus (`Menu.Trigger` for a dropdown,
 // `Menu.ContextTrigger` for a context menu, a nested `Menu.Root` for a submenu).
 
@@ -29,7 +31,7 @@ import { composeEventHandlers, useComposedRefs, useControllableState } from '@dx
 import { type Positioning, useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
 import { ColumnContext } from '../Column/ColumnContext.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import {
   MENU_NAME,
   type MenuAlign,
@@ -583,52 +585,55 @@ MenuSubTrigger.displayName = 'Menu.SubTrigger';
 //
 // Namespaces
 //
-
-/**
- * The menu's parts, inert in the sense Ark's are: the caller renders every item and sets every
- * property. `Root` serves dropdown and context menus alike — a `ContextTrigger` inside it opens on
- * right-click at the pointer and shifts the default placement to the side.
- */
-export const Menu = {
-  Root: MenuRoot,
-  Trigger: MenuTrigger,
-  ContextTrigger: MenuContextTrigger,
-  VirtualTrigger: MenuVirtualTrigger,
-  Portal: MenuPortal,
-  Content: MenuContent,
-  Viewport: MenuViewport,
-  Group: MenuGroup,
-  GroupLabel: MenuGroupLabel,
-  Label: MenuGroupLabel,
-  Item: MenuItem,
-  CheckboxItem: MenuCheckboxItem,
-  RadioGroup: MenuRadioGroup,
-  RadioItem: MenuRadioItem,
-  ItemIndicator: MenuItemIndicator,
-  Separator: MenuSeparator,
-  Arrow: MenuArrow,
-  Sub: MenuSub,
-  SubTrigger: MenuSubTrigger,
-  SubContent: MenuContent,
-};
-
 export type {
-  MenuArrowProps,
-  MenuCheckboxItemProps,
-  MenuContentProps,
-  MenuContextTriggerProps,
-  MenuGroupLabelProps,
-  MenuGroupProps,
-  MenuItemIndicatorProps,
-  MenuItemProps,
-  MenuPortalProps,
-  MenuRadioGroupProps,
-  MenuRadioItemProps,
-  MenuRootProps,
-  MenuSeparatorProps,
-  MenuSubProps,
-  MenuSubTriggerProps,
-  MenuTriggerProps,
-  MenuViewportProps,
-  MenuVirtualTriggerProps,
+  MenuArrowProps as ArrowProps,
+  MenuCheckboxItemProps as CheckboxItemProps,
+  MenuContentProps as ContentProps,
+  MenuContextTriggerProps as ContextTriggerProps,
+  MenuGroupLabelProps as GroupLabelProps,
+  MenuGroupProps as GroupProps,
+  MenuItemIndicatorProps as ItemIndicatorProps,
+  MenuItemProps as ItemProps,
+  MenuPortalProps as PortalProps,
+  MenuRadioGroupProps as RadioGroupProps,
+  MenuRadioItemProps as RadioItemProps,
+  MenuRootProps as RootProps,
+  MenuSeparatorProps as SeparatorProps,
+  MenuSubProps as SubProps,
+  MenuSubTriggerProps as SubTriggerProps,
+  MenuTriggerProps as TriggerProps,
+  MenuViewportProps as ViewportProps,
+  MenuVirtualTriggerProps as VirtualTriggerProps,
 };
+
+export {
+  MenuArrow as Arrow,
+  MenuCheckboxItem as CheckboxItem,
+  MenuContent as Content,
+  MenuContextTrigger as ContextTrigger,
+  MenuGroup as Group,
+  MenuGroupLabel as GroupLabel,
+  MenuItem as Item,
+  MenuItemIndicator as ItemIndicator,
+  MenuGroupLabel as Label,
+  MenuPortal as Portal,
+  MenuRadioGroup as RadioGroup,
+  MenuRadioItem as RadioItem,
+  MenuRoot as Root,
+  MenuSeparator as Separator,
+  MenuSub as Sub,
+  MenuContent as SubContent,
+  MenuSubTrigger as SubTrigger,
+  MenuTrigger as Trigger,
+  MenuViewport as Viewport,
+  MenuVirtualTrigger as VirtualTrigger,
+};
+export * from './Menu.theme.ts';
+export {
+  type MenuAlign,
+  type MenuContentHandlers,
+  type MenuPlacementOptions,
+  type MenuSelectHandler,
+  type MenuSide,
+  useMenuContext,
+} from './MenuContext.ts';

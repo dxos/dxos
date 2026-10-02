@@ -21,7 +21,7 @@ import * as SqlError from 'effect/sql/SqlError';
 import * as Statement from 'effect/sql/Statement';
 import * as Stream from 'effect/Stream';
 
-import { GlobalValue } from '@dxos/effect';
+import * as GlobalValue from '@dxos/effect/GlobalValue';
 import { log } from '@dxos/log';
 // @ts-ignore - wa-sqlite example VFS without typed exports.
 import { AccessHandlePoolVFS } from '@dxos/wa-sqlite/src/examples/AccessHandlePoolVFS.js';

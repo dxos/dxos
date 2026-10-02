@@ -12,26 +12,22 @@ import { useProgressMonitor } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import {
-  Field,
-  Flex,
-  IconButton,
-  Panel,
-  ScrollArea,
-  ThemedClassName,
-  useAsyncEffect,
-  useTranslation,
-} from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { sortKeys } from '@dxos/util';
@@ -50,11 +46,11 @@ export type SpaceGeneratorProps = {
   onCreateObjects?: (objects: Obj.Unknown[]) => void;
 };
 
-export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
+export const SpaceGenerator = Util.composable<HTMLDivElement, SpaceGeneratorProps>(
   ({ children, space, onCreateObjects, ...props }, forwardedRef) => {
     const invoker = useOperationInvoker();
     const { invokePromise } = invoker;
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     const client = useClient();
     const [count, setCount] = useState(1);
     const [info, setInfo] = useState<any>({});
@@ -67,7 +63,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     }, [manager]);
 
     // Register types.
-    useAsyncEffect(async () => {
+    Hooks.useAsyncEffect(async () => {
       await client.addTypes([...staticTypes, ...recordTypes, ...presets.schemas]);
     }, [client, presets]);
 
@@ -118,7 +114,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       });
     }, [space]);
 
-    useAsyncEffect(updateInfo, [updateInfo]);
+    Hooks.useAsyncEffect(updateInfo, [updateInfo]);
 
     // TODO(wittjosiah): Custom toast required — `notify` labels are fixed at invocation, so a
     //  result-dependent count cannot be reported through it. Drop these once operation notify
@@ -184,7 +180,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       // `alwaysActive`: the toolbar gates itself on the menu scope's attention, and this debug panel
       // is not an attendable surface, so without it every action renders disabled.
 
-      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+      <Panel.Root {...Util.composableProps(props)} ref={forwardedRef}>
         <Panel.Toolbar>
           <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
             <Field.Root>
@@ -286,7 +282,7 @@ const useSpaceGeneratorMenu = ({
 // Stable key for the test progress monitor within the shared registry.
 const TEST_PROGRESS_NAME = `${meta.profile.key}.test-progress`;
 
-type ProgressGeneratorProps = ThemedClassName;
+type ProgressGeneratorProps = Util.ThemedClassName;
 
 // Drives a synthetic progress monitor (10s over 10 steps) so the R0 rail meter can be exercised —
 // and renders the meter here too, since the rail's only lives inside a popover the user must open,
@@ -344,18 +340,23 @@ const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
 
   return (
     <div className={mx('flex flex-col gap-1 py-1', classNames)}>
-      <Flex gap='sm' align='center'>
+      <Flex.Root gap='sm' align='center'>
         <span className='grow'>Progress Monitor</span>
         {running ? (
-          <IconButton
+          <IconButton.Root
             icon='ph--x--regular'
             label='Cancel test progress'
             onClick={() => registry?.cancel(TEST_PROGRESS_NAME)}
           />
         ) : (
-          <IconButton icon='ph--play--regular' label='Start test progress' disabled={!registry} onClick={handleStart} />
+          <IconButton.Root
+            icon='ph--play--regular'
+            label='Start test progress'
+            disabled={!registry}
+            onClick={handleStart}
+          />
         )}
-      </Flex>
+      </Flex.Root>
       {monitor && (monitor.status === 'running' || monitor.status === 'error') && (
         <ProgressMeter state={monitor} onCancel={() => registry?.cancel(TEST_PROGRESS_NAME)} />
       )}

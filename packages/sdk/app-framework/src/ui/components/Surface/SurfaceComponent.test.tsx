@@ -8,7 +8,7 @@ import React, { Profiler, useState } from 'react';
 import { describe, test, vi } from 'vitest';
 
 import { DXN } from '@dxos/keys';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { ActivationEvents, Capabilities } from '../../../common/index.ts';
 import * as Role from '../../../common/Role.ts';

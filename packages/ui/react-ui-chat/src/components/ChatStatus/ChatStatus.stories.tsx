@@ -5,9 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef } from 'react';
 
-import { Button, Toolbar } from '@dxos/react-ui';
 import { Matrix } from '@dxos/react-ui-components';
+import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { ChatStatus, type ChatStatusController } from './ChatStatus.tsx';
 import { useChatStatusContext } from './ChatStatusContext.ts';
@@ -116,8 +117,8 @@ export const Controller: Story = {
     return (
       <div className='flex flex-col gap-4'>
         <Toolbar.Root>
-          <Button onClick={() => ref.current?.start()}>Start</Button>
-          <Button onClick={() => ref.current?.stop()}>Stop</Button>
+          <Button.Root onClick={() => ref.current?.start()}>Start</Button.Root>
+          <Button.Root onClick={() => ref.current?.stop()}>Stop</Button.Root>
         </Toolbar.Root>
         <ChatStatus.Root ref={ref}>
           <ChatStatus.Icon>

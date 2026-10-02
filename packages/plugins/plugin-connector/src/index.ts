@@ -11,3 +11,4 @@ export * as SyncTemplate from './SyncTemplate.ts';
 export * from './errors.ts';
 export * from '#meta';
 export * from '#types';
+export * from '#skills';

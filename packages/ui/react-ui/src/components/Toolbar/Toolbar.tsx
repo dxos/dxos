@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, {
   type ComponentPropsWithoutRef,
@@ -21,29 +23,17 @@ import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { DensityProvider } from '../../providers/DensityProvider/index.ts';
+import * as DensityProvider from '../../providers/DensityProvider/DensityProvider.tsx';
 import { type ToolbarStyleProps } from '../../theme/index.ts';
 import { composable, composableProps, slottable } from '../../util/index.ts';
-import {
-  Button,
-  type ButtonGroupProps,
-  type ButtonProps,
-  IconButton,
-  type IconButtonProps,
-  Toggle,
-  ToggleGroup,
-  ToggleGroupIconItem,
-  type ToggleGroupIconItemProps,
-  ToggleGroupItem,
-  type ToggleGroupItemProps,
-  type ToggleGroupProps,
-  type ToggleProps,
-} from '../Button/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Link, type LinkProps } from '../Link/index.ts';
-import { Menu } from '../Menu/index.ts';
-import { Separator, type SeparatorProps } from '../Separator/index.ts';
-
+import * as Button from '../Button/Button.tsx';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as Toggle from '../Button/Toggle.tsx';
+import * as ToggleGroup from '../Button/ToggleGroup.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Link from '../Link/Link.tsx';
+import * as Menu from '../Menu/Menu.tsx';
+import * as Separator from '../Separator/Separator.tsx';
 //
 // Root
 //
@@ -127,7 +117,7 @@ const ToolbarRoot = composable<HTMLDivElement, ToolbarRootProps>(
             otherwise — and that stamp sits ON the control, so it shadows the `--dx-control` the bar's
             class set around it. The context is what those controls read, so the bar provides both:
             the class for descendants that only read the variable, the context for those that stamp. */}
-        {density ? <DensityProvider density={density}>{children}</DensityProvider> : children}
+        {density ? <DensityProvider.Root density={density}>{children}</DensityProvider.Root> : children}
       </ark.div>
     );
   },
@@ -157,10 +147,10 @@ ToolbarText.displayName = 'Toolbar.Text';
 // Button
 //
 
-type ToolbarButtonProps = ButtonProps;
+type ToolbarButtonProps = Button.RootProps;
 
 const ToolbarButton = forwardRef<HTMLButtonElement, ToolbarButtonProps>((props, forwardedRef) => {
-  return <Button {...props} ref={forwardedRef} />;
+  return <Button.Root {...props} ref={forwardedRef} />;
 });
 
 ToolbarButton.displayName = 'Toolbar.Button';
@@ -169,18 +159,18 @@ ToolbarButton.displayName = 'Toolbar.Button';
 // IconButton
 //
 
-type ToolbarIconButtonProps = IconButtonProps;
+type ToolbarIconButtonProps = IconButton.RootProps;
 
 const ToolbarIconButton = forwardRef<HTMLButtonElement, ToolbarIconButtonProps>((props, forwardedRef) => {
-  return <IconButton {...props} ref={forwardedRef} />;
+  return <IconButton.Root {...props} ref={forwardedRef} />;
 });
 
 ToolbarIconButton.displayName = 'Toolbar.IconButton';
 
-type ToolbarToggleProps = ToggleProps;
+type ToolbarToggleProps = Toggle.RootProps;
 
 const ToolbarToggle = forwardRef<HTMLButtonElement, ToolbarToggleProps>((props, forwardedRef) => {
-  return <Toggle {...props} ref={forwardedRef} />;
+  return <Toggle.Root {...props} ref={forwardedRef} />;
 });
 
 ToolbarToggle.displayName = 'Toolbar.Toggle';
@@ -189,15 +179,15 @@ ToolbarToggle.displayName = 'Toolbar.Toggle';
 // Link
 //
 
-type ToolbarLinkProps = LinkProps;
+type ToolbarLinkProps = Link.RootProps;
 
 const ToolbarLink = forwardRef<HTMLAnchorElement, ToolbarLinkProps>((props, forwardedRef) => {
-  return <Link {...props} ref={forwardedRef} />;
+  return <Link.Root {...props} ref={forwardedRef} />;
 });
 
 ToolbarLink.displayName = 'Toolbar.Link';
 
-type ToolbarToggleGroupProps = ToggleGroupProps & ButtonGroupProps;
+type ToolbarToggleGroupProps = ToggleGroup.RootProps & Button.GroupProps;
 
 //
 // ToggleGroup
@@ -205,24 +195,24 @@ type ToolbarToggleGroupProps = ToggleGroupProps & ButtonGroupProps;
 
 /** A toggle group inside the bar leaves arrow navigation to the bar. */
 const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((props, forwardedRef) => {
-  return <ToggleGroup {...props} rovingFocus={false} ref={forwardedRef} />;
+  return <ToggleGroup.Root {...props} rovingFocus={false} ref={forwardedRef} />;
 });
 
 ToolbarToggleGroup.displayName = 'Toolbar.ToggleGroup';
 
-type ToolbarToggleGroupItemProps = ToggleGroupItemProps;
+type ToolbarToggleGroupItemProps = ToggleGroup.ItemProps;
 
 const ToolbarToggleGroupItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupItemProps>((props, forwardedRef) => {
-  return <ToggleGroupItem {...props} ref={forwardedRef} />;
+  return <ToggleGroup.Item {...props} ref={forwardedRef} />;
 });
 
 ToolbarToggleGroupItem.displayName = 'Toolbar.ToggleGroupItem';
 
-type ToolbarToggleGroupIconItemProps = ToggleGroupIconItemProps;
+type ToolbarToggleGroupIconItemProps = ToggleGroup.IconItemProps;
 
 const ToolbarToggleGroupIconItem = forwardRef<HTMLButtonElement, ToolbarToggleGroupIconItemProps>(
   (props, forwardedRef) => {
-    return <ToggleGroupIconItem {...props} ref={forwardedRef} />;
+    return <ToggleGroup.IconItem {...props} ref={forwardedRef} />;
   },
 );
 
@@ -232,12 +222,12 @@ ToolbarToggleGroupIconItem.displayName = 'Toolbar.ToggleGroupIconItem';
 // Separator
 //
 
-type ToolbarSeparatorProps = SeparatorProps & { variant?: 'gap' | 'line' };
+type ToolbarSeparatorProps = Separator.RootProps & { variant?: 'gap' | 'line' };
 
 const ToolbarSeparator = forwardRef<HTMLDivElement, ToolbarSeparatorProps>(
   ({ variant = 'gap', ...props }, forwardedRef) => {
     return variant === 'line' ? (
-      <Separator orientation='vertical' {...props} ref={forwardedRef} />
+      <Separator.Root orientation='vertical' {...props} ref={forwardedRef} />
     ) : (
       <div role='separator' aria-orientation='vertical' className='grow' ref={forwardedRef} />
     );
@@ -358,7 +348,7 @@ function ToolbarMenu<T extends any | void = void>({ context, items }: ToolbarMen
             <Menu.Viewport>
               {items?.map(({ label, icon, onClick: onSelect }, index) => (
                 <Menu.Item key={index} onSelect={() => onSelect(context as T)}>
-                  {icon && <Icon icon={icon} />}
+                  {icon && <Icon.Root icon={icon} />}
                   {label}
                 </Menu.Item>
               ))}
@@ -376,37 +366,37 @@ ToolbarMenu.displayName = 'Toolbar.Menu';
 //
 // Toolbar
 //
-
-export const Toolbar = {
-  Root: ToolbarRoot,
-  Text: ToolbarText,
-  Button: ToolbarButton,
-  IconButton: ToolbarIconButton,
-  Link: ToolbarLink,
-  Toggle: ToolbarToggle,
-  ToggleGroup: ToolbarToggleGroup,
-  ToggleGroupItem: ToolbarToggleGroupItem,
-  ToggleGroupIconItem: ToolbarToggleGroupIconItem,
-  Separator: ToolbarSeparator,
-  DragHandle: ToolbarDragHandle,
-  ActionIconButton: ToolbarActionIconButton,
-  Menu: ToolbarMenu,
-};
-
 export type {
-  ToolbarActionIconButtonAction,
-  ToolbarActionIconButtonProps,
-  ToolbarButtonProps,
-  ToolbarDragHandleProps,
-  ToolbarIconButtonProps,
-  ToolbarLinkProps,
-  ToolbarMenuItem,
-  ToolbarMenuProps,
-  ToolbarRootProps,
-  ToolbarSeparatorProps,
-  ToolbarTextProps,
-  ToolbarToggleGroupIconItemProps,
-  ToolbarToggleGroupItemProps,
-  ToolbarToggleGroupProps,
-  ToolbarToggleProps,
+  ToolbarActionIconButtonAction as ActionIconButtonAction,
+  ToolbarActionIconButtonProps as ActionIconButtonProps,
+  ToolbarButtonProps as ButtonProps,
+  ToolbarDragHandleProps as DragHandleProps,
+  ToolbarIconButtonProps as IconButtonProps,
+  ToolbarLinkProps as LinkProps,
+  ToolbarMenuItem as MenuItem,
+  ToolbarMenuProps as MenuProps,
+  ToolbarRootProps as RootProps,
+  ToolbarSeparatorProps as SeparatorProps,
+  ToolbarTextProps as TextProps,
+  ToolbarToggleGroupIconItemProps as ToggleGroupIconItemProps,
+  ToolbarToggleGroupItemProps as ToggleGroupItemProps,
+  ToolbarToggleGroupProps as ToggleGroupProps,
+  ToolbarToggleProps as ToggleProps,
 };
+
+export {
+  ToolbarActionIconButton as ActionIconButton,
+  ToolbarButton as Button,
+  ToolbarDragHandle as DragHandle,
+  ToolbarIconButton as IconButton,
+  ToolbarLink as Link,
+  ToolbarMenu as Menu,
+  ToolbarRoot as Root,
+  ToolbarSeparator as Separator,
+  ToolbarText as Text,
+  ToolbarToggle as Toggle,
+  ToolbarToggleGroup as ToggleGroup,
+  ToolbarToggleGroupIconItem as ToggleGroupIconItem,
+  ToolbarToggleGroupItem as ToggleGroupItem,
+};
+export * from './Toolbar.theme.ts';

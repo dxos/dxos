@@ -7,8 +7,8 @@ import React, { useMemo } from 'react';
 import { Format } from '@dxos/echo/Format';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { Device_PresenceState, DeviceKind, DeviceType, useDevices } from '@dxos/react-client/halo';
-import { Panel } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { MasterDetailTable } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';

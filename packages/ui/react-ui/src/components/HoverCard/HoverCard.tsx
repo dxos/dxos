@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // A card that opens on hover or focus of its trigger, for previewing what a small element stands
 // for without a click. The Ark machine owns the open/close delays, hover intent, positioning and
 // presence; this file is anatomy plus the DXOS placement vocabulary the popover speaks, and the
@@ -27,15 +29,14 @@ import { type ElevationLevel } from '@dxos/ui-types';
 
 import { useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { ColumnContext } from '../Column/index.ts';
-import { type PopoverPlacementOptions } from '../Popover/index.ts';
-
+import * as Column from '../Column/Column.tsx';
+import type * as Popover from '../Popover/Popover.tsx';
 const HOVER_CARD_NAME = 'HoverCard';
 
 type HoverCardContextValue = {
   open: boolean;
   triggerRef: React.RefObject<HTMLElement | null>;
-  setPlacement: (options: PopoverPlacementOptions) => void;
+  setPlacement: (options: Popover.PopoverPlacementOptions) => void;
 };
 
 const [HoverCardProvider, useHoverCardContext] = createContext<HoverCardContextValue>(HOVER_CARD_NAME);
@@ -69,7 +70,7 @@ const HoverCardRoot: FC<HoverCardRootProps> = ({
     onChange: onOpenChange,
   });
   const triggerRef = useRef<HTMLElement | null>(null);
-  const [placementOptions, setPlacement] = useState<PopoverPlacementOptions>({});
+  const [placementOptions, setPlacement] = useState<Popover.PopoverPlacementOptions>({});
   const { positioning } = usePositioning({ open, triggerRef, placement: placementOptions, defaultSide: 'top' });
 
   const hoverCard = useHoverCard({
@@ -143,7 +144,7 @@ const HoverCardPortal = ({ children, container }: HoverCardPortalProps) => {
     <Portal container={containerRef}>
       {/* The portal leaves the declaring tree's DOM but not its React context, so content declared
           inside a Column would otherwise lay out for a gutter no ancestor provides. */}
-      <ColumnContext.Provider value={false}>{children}</ColumnContext.Provider>
+      <Column.ColumnContext.Provider value={false}>{children}</Column.ColumnContext.Provider>
     </Portal>
   );
 };
@@ -157,7 +158,7 @@ HoverCardPortal.displayName = PORTAL_NAME;
 const CONTENT_NAME = 'HoverCard.Content';
 
 type HoverCardContentProps = ThemedClassName<ComponentPropsWithRef<typeof HoverCardPrimitive.Content>> &
-  PopoverPlacementOptions & {
+  Popover.PopoverPlacementOptions & {
     /** Material-style elevation, 0–5, onto the surface ladder; a card is `popup` (5) by default. */
     elevation?: ElevationLevel;
   };
@@ -243,19 +244,19 @@ const HoverCardArrow = forwardRef<HTMLDivElement, HoverCardArrowProps>(({ classN
 });
 
 HoverCardArrow.displayName = ARROW_NAME;
-
-export const HoverCard = {
-  Root: HoverCardRoot,
-  Trigger: HoverCardTrigger,
-  Portal: HoverCardPortal,
-  Content: HoverCardContent,
-  Arrow: HoverCardArrow,
-};
-
 export type {
-  HoverCardArrowProps,
-  HoverCardContentProps,
-  HoverCardPortalProps,
-  HoverCardRootProps,
-  HoverCardTriggerProps,
+  HoverCardArrowProps as ArrowProps,
+  HoverCardContentProps as ContentProps,
+  HoverCardPortalProps as PortalProps,
+  HoverCardRootProps as RootProps,
+  HoverCardTriggerProps as TriggerProps,
 };
+
+export {
+  HoverCardArrow as Arrow,
+  HoverCardContent as Content,
+  HoverCardPortal as Portal,
+  HoverCardRoot as Root,
+  HoverCardTrigger as Trigger,
+};
+export * from './HoverCard.theme.ts';

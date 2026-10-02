@@ -16,10 +16,10 @@ import { useObject, useObjects } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as MapCapabilities from '@dxos/plugin-map/MapCapabilities';
 import * as MapRole from '@dxos/plugin-map/MapRole';
-import { Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 import { mx } from '@dxos/ui-theme';
 
 import { type SegmentCardAction, SegmentStack } from '#components';

@@ -17,8 +17,8 @@ import { type Message as SignalMessage, type SwarmEvent } from '@dxos/protocols/
 import { PublicKey, useClient } from '@dxos/react-client';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Toolbar } from '@dxos/react-ui';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { MasterDetailTable, Searchbar, Select } from '../../../../components/index.ts';
 

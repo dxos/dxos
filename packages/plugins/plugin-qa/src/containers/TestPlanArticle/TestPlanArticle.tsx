@@ -10,7 +10,9 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { Field, Icon, Panel } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { RunRow } from '#components';
 import { QaOperation, type TestCase, TestPlan, TestRun } from '#types';
@@ -86,10 +88,10 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Content classNames='flex flex-col gap-4 p-4' data-testid='qa.plan'>
         <header className='flex items-center gap-2'>
-          <Icon icon='ph--check-square-offset--regular' size={5} />
+          <Icon.Root icon='ph--check-square-offset--regular' size={5} />
           <h1 className='grow text-lg'>{plan.name}</h1>
           <button className='dx-button' disabled={starting} onClick={handleStartRun} data-testid='qa.plan.start-run'>
-            <Icon icon='ph--play--regular' size={4} />
+            <Icon.Root icon='ph--play--regular' size={4} />
             <span>Run</span>
           </button>
         </header>
@@ -123,7 +125,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
               onClick={handleAddCase}
               data-testid='qa.plan.add-case'
             >
-              <Icon icon='ph--plus--regular' size={4} />
+              <Icon.Root icon='ph--plus--regular' size={4} />
               <span>Add case</span>
             </button>
           </div>

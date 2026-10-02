@@ -4,7 +4,11 @@
 
 import React, { useState } from 'react';
 
-import { Field, IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 export type QuestionRow = {
   readonly id: string;
@@ -13,7 +17,7 @@ export type QuestionRow = {
   readonly answer?: string;
 };
 
-export type QuestionsPanelProps = ThemedClassName<{
+export type QuestionsPanelProps = Util.ThemedClassName<{
   questions: readonly QuestionRow[];
   disabled?: boolean;
   onAdd: (text: string) => void;
@@ -47,7 +51,7 @@ export const QuestionsPanel = ({ classNames, questions, disabled, onAdd }: Quest
               onKeyDown={(event) => event.key === 'Enter' && handleAdd()}
             />
           </Field.Root>
-          <IconButton
+          <IconButton.Root
             icon='ph--plus--regular'
             iconOnly
             label='Add question'

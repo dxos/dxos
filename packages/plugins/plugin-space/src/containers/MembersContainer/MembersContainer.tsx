@@ -23,8 +23,12 @@ import {
   Invitation_Type,
   InvitationEncoder,
 } from '@dxos/react-client/invitations';
-import { Button, Icon, QrCode, SystemIconButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as QrCode from '@dxos/react-ui/QrCode';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 import {
   type ActionMenuItem,
   AuthCode,
@@ -59,7 +63,7 @@ export type MembersContainerProps = AppSurface.SpaceArticleProps<{
 }>;
 
 export const MembersContainer = ({ space, createInvitationUrl }: MembersContainerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const config = useConfig();
   const { invokePromise } = useOperationInvoker();
   const invitations = useSpaceInvitations(space.key);
@@ -258,15 +262,15 @@ const InvitationSection = ({
 };
 
 const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel?: () => void }) => {
-  const { t } = useTranslation(shellTranslationKey);
-  const qrLabel = useId('members-container__qr-code');
+  const { t } = Hooks.useTranslation(shellTranslationKey);
+  const qrLabel = Hooks.useId('members-container__qr-code');
   const emoji = hexToEmoji(id);
   return (
     <>
       <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
         <div className='w-full aspect-square relative text-description'>
-          <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
+          <QrCode.Root aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
           <Centered>
             <Emoji text={emoji} />
           </Centered>
@@ -276,15 +280,15 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
         </span>
         <SystemIconButton.Clipboard value={url ?? 'never'} />
       </div>
-      <Button variant='ghost' onClick={onCancel}>
+      <Button.Root variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button>
+      </Button.Root>
     </>
   );
 };
 
 const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; onCancel?: () => void }) => {
-  const { t } = useTranslation(shellTranslationKey);
+  const { t } = Hooks.useTranslation(shellTranslationKey);
   const emoji = hexToEmoji(id);
 
   return (
@@ -293,18 +297,18 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
       <p className='text-description'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
-      <Button variant='ghost' onClick={onCancel}>
+      <Button.Root variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button>
+      </Button.Root>
     </>
   );
 };
 
 const InvitationComplete = ({ statusValue }: { statusValue: number }) => {
   return statusValue > 0 ? (
-    <Icon icon='ph--check--regular' size={6} classNames='m-trim-xs' />
+    <Icon.Root icon='ph--check--regular' size={6} classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size={6} classNames='m-trim-xs' />
+    <Icon.Root icon='ph--x--regular' size={6} classNames='m-trim-xs' />
   );
 };
 

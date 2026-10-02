@@ -38,8 +38,10 @@ import React, {
 } from 'react';
 
 import { raise } from '@dxos/debug';
-import { composable, composableProps, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Next, type Size } from '@dxos/react-ui/next';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Util from '@dxos/react-ui/Util';
 
 import { type TreeData, isTreeDataFor } from '../../components/Tree/tree-data.ts';
 import { type TreeModel } from '../../components/Tree/TreeContext.ts';
@@ -244,8 +246,8 @@ const NOMINAL_BLOCK = 32;
  * Ark's `tree` element carrying Container attributes, so the ScrollArea viewport slot merges onto it and the tree
  * element itself scrolls (part-naming rules 1 and 2).
  */
-const TreeContentElement = composable<HTMLDivElement, {}>(({ children, ...props }, forwardedRef) => {
-  const { className, ...rest } = composableProps(props, { classNames: 'nx-grid nx-tree-content' });
+const TreeContentElement = Util.composable<HTMLDivElement, {}>(({ children, ...props }, forwardedRef) => {
+  const { className, ...rest } = Util.composableProps(props, { classNames: 'nx-grid nx-tree-content' });
   return (
     <TreeView.Tree
       {...rest}
@@ -386,7 +388,7 @@ type DragState = { instruction: Instruction | null; kind: DropKind; dragging: bo
 const TreeItem = ({ node, children }: TreeItemProps) => {
   const { treeId, virtualize, draggable, indentGuides, canDrop, getDropKind, onOpenChange } =
     useTreeContext('Tree.Item');
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<DragState>({ instruction: null, kind: 'move', dragging: false });
   const { id, path, item, depth, branch, open, props } = node;
@@ -471,7 +473,7 @@ const TreeItem = ({ node, children }: TreeItemProps) => {
     'className': 'nx-grid nx-tree-item',
   };
 
-  const label = toLocalizedString(props.label, t);
+  const label = ThemeProvider.toLocalizedString(props.label, t);
   const content = (
     <>
       <Next.Block>

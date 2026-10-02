@@ -2,9 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { useEffect, useState } from 'react';
 
-export type ThrowErrorProps = {
+type ThrowErrorProps = {
   error?: () => Error;
   delay?: number;
 };
@@ -12,7 +14,7 @@ export type ThrowErrorProps = {
 /**
  * Use this to debug the error boundary.
  */
-export const ThrowError = ({ delay = 1_000, ...props }: ThrowErrorProps) => {
+const ThrowError = ({ delay = 1_000, ...props }: ThrowErrorProps) => {
   const [error, setError] = useState<Error>();
   useEffect(() => {
     if (delay < 0) {
@@ -35,3 +37,6 @@ export const ThrowError = ({ delay = 1_000, ...props }: ThrowErrorProps) => {
 const generator = ({ error, delay }: ThrowErrorProps) => {
   return error?.() ?? new Error(`Error generated after ${delay}ms`);
 };
+
+export { ThrowError as Root };
+export type { ThrowErrorProps as RootProps };

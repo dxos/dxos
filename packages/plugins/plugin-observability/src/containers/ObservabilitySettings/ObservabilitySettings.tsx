@@ -7,8 +7,9 @@ import React from 'react';
 import { useOperationInvoker, useSettingsState } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { SettingsScope } from '@dxos/app-toolkit/SettingsScope';
-import { Banner, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { ObservabilityOperation, Settings } from '#types';
@@ -20,7 +21,7 @@ export type ObservabilitySettingsProps = AppSurface.SettingsData;
  * directly, so enabling/disabling observability takes effect on the running services.
  */
 export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { settings } = useSettingsState<Settings.Settings>(subject.atom);
   const { invokePromise } = useOperationInvoker();
 

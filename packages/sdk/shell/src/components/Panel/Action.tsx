@@ -11,14 +11,19 @@ import React, {
 } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { Button, type ButtonProps, Icon, IconButton, Menu, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Menu from '@dxos/react-ui/Menu';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
 
 // TODO(burdon): Move to react-ui.
 
-export type LargeButtonProps = ButtonProps & {
+export type LargeButtonProps = Button.RootProps & {
   isFull?: boolean;
 };
 
@@ -27,7 +32,7 @@ export type ActionMenuItem = {
   description: string;
   icon: string;
   testId?: string;
-} & Pick<ButtonProps, 'onClick'>;
+} & Pick<Button.RootProps, 'onClick'>;
 
 const defaultActions = {
   noopAction: {
@@ -73,11 +78,11 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 
   const activeAction = actions[activeActionKey as string] ?? {};
 
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   return (
     <div className={mx('mt-2 flex gap-px items-center', isFull && 'w-full')}>
-      <Button
+      <Button.Root
         {...rest}
         classNames={['h-11 flex-1 min-w-0 flex gap-2 rounded-ie-none', classNames]}
         ref={forwardedRef}
@@ -85,12 +90,12 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
         data-testid={testId}
         onClick={activeAction.onClick}
       >
-        {activeAction.icon && <Icon icon={activeAction.icon} />}
+        {activeAction.icon && <Icon.Root icon={activeAction.icon} />}
         <span>{activeAction.label}</span>
-      </Button>
+      </Button.Root>
       <Menu.Root>
         <Menu.Trigger asChild>
-          <IconButton
+          <IconButton.Root
             size={4}
             label={t('invite-options.label')}
             icon='ph--caret-down--regular'
@@ -115,7 +120,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                     classNames='gap-2'
                     data-testid={action.testId}
                   >
-                    {action.icon && <Icon icon={action.icon} />}
+                    {action.icon && <Icon.Root icon={action.icon} />}
                     <div className='flex-1 min-w-0 space-b-1'>
                       <p id={`${id}__label`}>{action.label}</p>
                       {action.description && (
@@ -125,7 +130,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                       )}
                     </div>
                     <Menu.ItemIndicator asChild>
-                      <Icon icon='ph--check--regular' size={4} />
+                      <Icon.Root icon='ph--check--regular' size={4} />
                     </Menu.ItemIndicator>
                   </Menu.CheckboxItem>
                 );
@@ -149,9 +154,9 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
 export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, forwardedRef) => {
   const { children, classNames, variant, isFull = true, ...rest } = props;
   return (
-    <Button {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
+    <Button.Root {...rest} classNames={[isFull && 'w-full', classNames]} variant={variant} ref={forwardedRef}>
       {children}
-    </Button>
+    </Button.Root>
   );
 });
 
@@ -159,7 +164,7 @@ export const Action = forwardRef<HTMLButtonElement, LargeButtonProps>((props, fo
 // Actions
 //
 
-type ActionBarProps = Omit<ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'children'> & {
+type ActionBarProps = Omit<Util.ThemedClassName<ComponentPropsWithoutRef<'div'>>, 'children'> & {
   children: ReactNode | ReactNode[];
 };
 

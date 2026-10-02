@@ -9,14 +9,15 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
-import { Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { ContactList, type ContactSpace } from '@dxos/shell/react';
 
 import { meta } from '#meta';
 
 export const ContactsContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const contacts = useContacts();
   const spaces = useSpaces();

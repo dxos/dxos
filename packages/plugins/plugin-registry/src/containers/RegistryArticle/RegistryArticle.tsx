@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
-import { composable } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 
 import { BaseRegistryArticle } from '../BaseRegistryArticle/index.ts';
 
@@ -24,7 +24,7 @@ export type RegistryArticleProps = {
   extraTagsById?: Record<string, readonly string[]>;
 };
 
-export const RegistryArticle = composable<HTMLDivElement, RegistryArticleProps>(
+export const RegistryArticle = Util.composable<HTMLDivElement, RegistryArticleProps>(
   ({ id, plugins: pluginsProp, extraTagsById, ...props }, forwardedRef) => {
     const manager = usePluginManager();
     const failed = useAtomValue(manager.failed);

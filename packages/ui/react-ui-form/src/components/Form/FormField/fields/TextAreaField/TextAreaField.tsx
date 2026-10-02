@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Field, type TextareaProps } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -21,7 +21,7 @@ export const TextAreaField = ({
   onValueChange,
   onBlur,
 }: FormFieldRendererProps<string>) => {
-  const handleChange = useCallback<NonNullable<TextareaProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<Field.TextareaProps['onChange']>>(
     (event) => onValueChange(type, event.target.value),
     [type, onValueChange],
   );

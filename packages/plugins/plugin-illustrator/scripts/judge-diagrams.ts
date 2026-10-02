@@ -34,7 +34,7 @@ import {
   Score,
   View,
 } from '@dxos/diagram';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 const MODEL = 'ai.typesafe.model.jev.latest';
 

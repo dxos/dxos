@@ -8,20 +8,20 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { withTheme } from '@dxos/react-ui/testing';
 import { range } from '@dxos/util';
 
-import { Button } from '../Button/index.ts';
-import { AttentionGlyph, type AttentionGlyphProps } from './AttentionGlyph.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as AttentionGlyph from './AttentionGlyph.tsx';
 
-const DefaultStory = (props: AttentionGlyphProps) => {
+const DefaultStory = (props: AttentionGlyph.RootProps) => {
   return (
     <ul className='flex gap-2 mb-2'>
       <li>
-        <AttentionGlyph presence='none' {...props} />
+        <AttentionGlyph.Root presence='none' {...props} />
       </li>
       <li>
-        <AttentionGlyph presence='one' {...props} />
+        <AttentionGlyph.Root presence='one' {...props} />
       </li>
       <li>
-        <AttentionGlyph presence='many' {...props} />
+        <AttentionGlyph.Root presence='many' {...props} />
       </li>
     </ul>
   );
@@ -29,7 +29,7 @@ const DefaultStory = (props: AttentionGlyphProps) => {
 
 const meta = {
   title: 'ui/react-ui-attention/AttentionGlyph',
-  component: AttentionGlyph as any,
+  component: AttentionGlyph.Root as any,
   render: DefaultStory,
   decorators: [withTheme()],
 } satisfies Meta<typeof DefaultStory>;
@@ -77,11 +77,11 @@ export const Syncing: Story = {
 
     return (
       <div className='flex flex-col p-2 w-[200px]'>
-        <Button onClick={handleChangeAttended}>Change attended</Button>
+        <Button.Root onClick={handleChangeAttended}>Change attended</Button.Root>
         {Array.from(spaces.entries()).map(([space, sync]) => (
           <div key={space} className='flex items-center'>
             <div className='grow'>{space}</div>
-            {sync && <AttentionGlyph syncing attended={attended === 1} containsAttended={attended === 2} />}
+            {sync && <AttentionGlyph.Root syncing attended={attended === 1} containsAttended={attended === 2} />}
           </div>
         ))}
       </div>

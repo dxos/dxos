@@ -12,8 +12,9 @@ import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /** Cap on retained events so a long-running story does not grow the list unbounded. */
 const MAX_EVENTS = 200;

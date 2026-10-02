@@ -5,9 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Panel, Toolbar, composable, composableProps, useComposedRefs, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { EditorView, createBasicExtensions, createMermaidExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { CLASS_DIAGRAM, FLOWCHART, NESTED_FLOWCHART, projectMermaid } from '../../testing/index.ts';
@@ -19,9 +23,9 @@ import { Diagram, type DiagramBackgroundProps } from './Diagram.tsx';
  * beside it is a projection that re-derives on every keystroke. Composable so it is a valid
  * `Panel.Content asChild` target — the editor's own ref is composed with the slot's.
  */
-const SourceEditor = composable<HTMLDivElement, { value: string; onChange: (value: string) => void }>(
+const SourceEditor = Util.composable<HTMLDivElement, { value: string; onChange: (value: string) => void }>(
   ({ value, onChange, ...props }, forwardedRef) => {
-    const { themeMode } = useThemeContext();
+    const { themeMode } = ThemeProvider.useThemeContext();
     const extensions = useMemo(
       () => [
         createBasicExtensions({ lineNumbers: true, lineWrapping: false }),
@@ -39,9 +43,9 @@ const SourceEditor = composable<HTMLDivElement, { value: string; onChange: (valu
     );
 
     const { parentRef } = useTextEditor({ initialValue: value, extensions }, [extensions]);
-    const ref = useComposedRefs(forwardedRef, parentRef);
+    const ref = Hooks.useComposedRefs(forwardedRef, parentRef);
 
-    return <div {...composableProps(props, { classNames: 'overflow-auto' })} ref={ref} />;
+    return <div {...Util.composableProps(props, { classNames: 'overflow-auto' })} ref={ref} />;
   },
 );
 

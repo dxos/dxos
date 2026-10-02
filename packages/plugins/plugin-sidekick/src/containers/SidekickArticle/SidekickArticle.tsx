@@ -5,7 +5,7 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Column } from '@dxos/react-ui';
+import * as Column from '@dxos/react-ui/Column';
 
 import { ActionItems, DayAhead, Permissions, ProfileGrid, ProfileSummary } from '#components';
 import { Sidekick } from '#types';

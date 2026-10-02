@@ -8,9 +8,10 @@ import React, { useCallback, useMemo } from 'react';
 import { type Database, Obj, Ref, Type } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN, URI } from '@dxos/keys';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { translationKey } from '#translations';
 
@@ -31,7 +32,7 @@ import { type RefFieldProps } from './RefField.tsx';
  */
 export const InlineRefField = (props: RefFieldProps) => {
   const { type, readonly, label, db, getValue, onValueChange, onCreate, useType = defaultUseType } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const reference = getValue() as Ref.Ref<any> | undefined;
   const typename = useMemo(
@@ -62,7 +63,7 @@ export const InlineRefField = (props: RefFieldProps) => {
       ) : (
         !readonly &&
         onCreate && (
-          <IconButton
+          <IconButton.Root
             classNames='w-full gap-form-gap'
             disabled={!createType || !db}
             icon='ph--plus--regular'

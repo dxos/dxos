@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef, memo, useMemo } from 'react';
 
@@ -10,7 +12,7 @@ import { type Size } from '@dxos/ui-types';
 import { useIconHref, useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
 
-export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof ark.svg>> & {
+type IconProps = ThemedClassName<ComponentPropsWithRef<typeof ark.svg>> & {
   icon: string;
   size?: Size;
   synchronized?: boolean;
@@ -19,7 +21,7 @@ export type IconProps = ThemedClassName<ComponentPropsWithRef<typeof ark.svg>> &
 /**
  * The Icon's size can be set directly or inherited from the `--dx-icon-size` CSS variable.
  */
-export const Icon = memo(
+const Icon = memo(
   forwardRef<SVGSVGElement, IconProps>(({ classNames, icon, size, synchronized, style, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const spinDelay = useMemo(() => (synchronized ? `${-(Date.now() % 1_000)}ms` : undefined), [synchronized]);
@@ -37,3 +39,8 @@ export const Icon = memo(
     );
   }),
 );
+
+export { Icon as Root };
+export type { IconProps as RootProps };
+export * from './Icon.theme.ts';
+export * from '../../hooks/useIconHref.ts';

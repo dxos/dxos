@@ -9,10 +9,12 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Banner, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 import { Result, Search } from '#types';
@@ -28,7 +30,7 @@ export type SearchArticleProps = AppSurface.ObjectArticleProps<Search.Search>;
  * companion (see {@link SearchProperties}).
  */
 export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   // Use the live `subject` for reads/writes (the tag helpers mutate it); subscribe via useObject so
   // the view re-renders when results/tags change.

@@ -10,7 +10,8 @@ import * as EffectStream from 'effect/Stream';
 
 import { Event, MulticastObservable } from '@dxos/async';
 import { type Config, ConfigService } from '@dxos/config';
-import { EffectEx, Hook } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
 import { BaseError } from '@dxos/errors';
 import { log } from '@dxos/log';
 import { SwarmNetworkManagerService } from '@dxos/network-manager';

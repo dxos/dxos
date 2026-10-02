@@ -13,9 +13,12 @@ import { Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { meta } from '#meta';
 
@@ -29,7 +32,7 @@ const ACTIONS_VALUES = {};
 export type ConnectionSettingsArticleProps = Record<string, never>;
 
 export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const space = useActiveSpace();
   const { invokePromise } = useOperationInvoker();
   const connections = useQuery(
@@ -77,7 +80,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
                       label={t('add-connection.label')}
                       description={t('connect-service.description')}
                     >
-                      <Button onClick={handleAdd}>{t('connect.label')}</Button>
+                      <Button.Root onClick={handleAdd}>{t('connect.label')}</Button.Root>
                     </Form.Field>
                   </Form.FieldSet>
 

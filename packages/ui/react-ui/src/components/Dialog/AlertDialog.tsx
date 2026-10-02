@@ -2,33 +2,20 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Dialog as DialogPrimitive } from '@ark-ui/react/dialog';
 import React, { type ComponentPropsWithRef, type FC } from 'react';
 
-import {
-  Dialog,
-  type DialogActionBarProps,
-  type DialogActionIconButtonProps,
-  type DialogBodyProps,
-  type DialogContentProps,
-  type DialogDescriptionProps,
-  type DialogHeaderProps,
-  type DialogOverlayProps,
-  type DialogPortalProps,
-  DialogRootImpl,
-  type DialogRootProps,
-  type DialogTitleProps,
-  type DialogTriggerProps,
-} from './Dialog.tsx';
-
+import * as Dialog from './Dialog.tsx';
 //
 // Root
 //
 
-type AlertDialogRootProps = DialogRootProps;
+type AlertDialogRootProps = Dialog.RootProps;
 
 /** A dialog the machine gives `role="alertdialog"` and does not dismiss on a click outside. */
-const AlertDialogRoot: FC<AlertDialogRootProps> = (props) => <DialogRootImpl {...props} role='alertdialog' />;
+const AlertDialogRoot: FC<AlertDialogRootProps> = (props) => <Dialog.RootImpl {...props} role='alertdialog' />;
 
 AlertDialogRoot.displayName = 'AlertDialog.Root';
 
@@ -47,36 +34,44 @@ const AlertDialogAction = DialogPrimitive.CloseTrigger;
 //
 // AlertDialog
 //
-
-export const AlertDialog = {
-  Root: AlertDialogRoot,
-  Trigger: Dialog.Trigger,
-  Portal: Dialog.Portal,
-  Overlay: Dialog.Overlay,
-  Content: Dialog.Content,
-  Header: Dialog.Header,
-  Body: Dialog.Body,
-  Title: Dialog.Title,
-  Description: Dialog.Description,
-  ActionBar: Dialog.ActionBar,
-  ActionIconButton: Dialog.ActionIconButton,
-  // AlertDialog-specific dismissal.
-  Cancel: AlertDialogCancel,
-  Action: AlertDialogAction,
-};
-
+const AlertDialogTrigger = Dialog.Trigger;
+const AlertDialogPortal = Dialog.Portal;
+const AlertDialogOverlay = Dialog.Overlay;
+const AlertDialogContent = Dialog.Content;
+const AlertDialogHeader = Dialog.Header;
+const AlertDialogBody = Dialog.Body;
+const AlertDialogTitle = Dialog.Title;
+const AlertDialogDescription = Dialog.Description;
+const AlertDialogActionBar = Dialog.ActionBar;
+const AlertDialogActionIconButton = Dialog.ActionIconButton;
 export type {
-  DialogActionBarProps as AlertDialogActionBarProps,
-  DialogActionIconButtonProps as AlertDialogActionIconButtonProps,
-  AlertDialogActionProps,
-  DialogBodyProps as AlertDialogBodyProps,
-  AlertDialogCancelProps,
-  DialogContentProps as AlertDialogContentProps,
-  DialogDescriptionProps as AlertDialogDescriptionProps,
-  DialogHeaderProps as AlertDialogHeaderProps,
-  DialogOverlayProps as AlertDialogOverlayProps,
-  DialogPortalProps as AlertDialogPortalProps,
-  AlertDialogRootProps,
-  DialogTitleProps as AlertDialogTitleProps,
-  DialogTriggerProps as AlertDialogTriggerProps,
+  AlertDialogActionProps as ActionProps,
+  AlertDialogCancelProps as CancelProps,
+  AlertDialogRootProps as RootProps,
 };
+
+export {
+  AlertDialogAction as Action,
+  AlertDialogActionBar as ActionBar,
+  AlertDialogActionIconButton as ActionIconButton,
+  AlertDialogBody as Body,
+  AlertDialogCancel as Cancel,
+  AlertDialogContent as Content,
+  AlertDialogDescription as Description,
+  AlertDialogHeader as Header,
+  AlertDialogOverlay as Overlay,
+  AlertDialogPortal as Portal,
+  AlertDialogRoot as Root,
+  AlertDialogTitle as Title,
+  AlertDialogTrigger as Trigger,
+};
+export type ActionBarProps = Dialog.ActionBarProps;
+export type ActionIconButtonProps = Dialog.ActionIconButtonProps;
+export type BodyProps = Dialog.BodyProps;
+export type ContentProps = Dialog.ContentProps;
+export type DescriptionProps = Dialog.DescriptionProps;
+export type HeaderProps = Dialog.HeaderProps;
+export type OverlayProps = Dialog.OverlayProps;
+export type PortalProps = Dialog.PortalProps;
+export type TitleProps = Dialog.TitleProps;
+export type TriggerProps = Dialog.TriggerProps;

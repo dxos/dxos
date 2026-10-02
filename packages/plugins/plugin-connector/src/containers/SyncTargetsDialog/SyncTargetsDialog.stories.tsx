@@ -9,7 +9,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Dialog } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

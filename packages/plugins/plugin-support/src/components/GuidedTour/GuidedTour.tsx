@@ -9,15 +9,11 @@ import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
 import { useLayout } from '@dxos/app-toolkit/Hooks';
 import type * as Tour from '@dxos/app-toolkit/Tour';
 import { log } from '@dxos/log';
-import {
-  Button,
-  Icon,
-  IconButton,
-  Tour as TourComponent,
-  type TourStepDetails,
-  useTour,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as TourModule from '@dxos/react-ui/Tour';
 
 import { meta } from '#meta';
 
@@ -30,7 +26,7 @@ const toStep = (
   step: Tour.Step,
   index: number,
   capabilities: CapabilityManager.CapabilityManager,
-): TourStepDetails => ({
+): TourModule.StepDetails => ({
   id: step.id ?? String(index + 1),
   type: 'tooltip',
   target: resolveTarget(step.target),
@@ -55,7 +51,7 @@ export type GuidedTourProps = {
 };
 
 export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: GuidedTourProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const layout = useLayout();
   const paused = layout.dialogOpen;
@@ -80,7 +76,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
   const resumeAt = useRef<string | undefined>(undefined);
   const pausing = useRef(false);
   const lastStepId = useRef<string | undefined>(undefined);
-  const tour = useTour({
+  const tour = TourModule.useTour({
     steps: tourSteps,
     closeOnInteractOutside: false,
     onStepChange: ({ stepId }) => {
@@ -145,22 +141,19 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
         stop: () => setRunning(false),
       }}
     >
-      <TourComponent.Root tour={tour}>
-        <TourComponent.Portal>
-          <TourComponent.Spotlight />
-          <TourComponent.Positioner>
-            <TourComponent.Content
+      <TourModule.Root tour={tour}>
+        <TourModule.Portal>
+          <TourModule.Spotlight />
+          <TourModule.Positioner>
+            <TourModule.Content
               classNames='w-60 min-h-40 gap-0 p-2 border-accent-bg bg-accent-bg text-accent-fg'
               data-testid='helpPlugin.tooltip'
             >
-              <TourComponent.Arrow classNames='[--arrow-background:var(--color-accent-bg)] [&>[data-part=arrow-tip]]:border-accent-bg' />
+              <TourModule.Arrow classNames='[--arrow-background:var(--color-accent-bg)] [&>[data-part=arrow-tip]]:border-accent-bg' />
               <div className='flex items-start'>
-                <TourComponent.Title
-                  classNames='grow px-2 py-1 text-accent-fg'
-                  data-testid='helpPlugin.tooltip.title'
-                />
-                <TourComponent.Close asChild ref={closeRef}>
-                  <IconButton
+                <TourModule.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
+                <TourModule.Close asChild ref={closeRef}>
+                  <IconButton.Root
                     density='md'
                     icon='ph--x--bold'
                     iconOnly
@@ -169,11 +162,11 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                     variant='primary'
                     data-testid='helpPlugin.tooltip.close'
                   />
-                </TourComponent.Close>
+                </TourModule.Close>
               </div>
-              <TourComponent.Description classNames='grow px-4 my-2 text-accent-fg' />
-              <TourComponent.Control>
-                <IconButton
+              <TourModule.Description classNames='grow px-4 my-2 text-accent-fg' />
+              <TourModule.Control>
+                <IconButton.Root
                   classNames={[!tour.hasPrevStep && 'invisible']}
                   icon='ph--caret-left--regular'
                   iconOnly
@@ -184,7 +177,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                 />
                 <div className='flex grow justify-center'>
                   {Array.from({ length: tour.totalSteps }).map((_, index) => (
-                    <Icon
+                    <Icon.Root
                       key={index}
                       icon={stepIndex === index ? 'ph--circle--fill' : 'ph--circle--regular'}
                       size={2}
@@ -193,13 +186,13 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                   ))}
                 </div>
                 {last ? (
-                  <TourComponent.Close asChild>
-                    <Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
+                  <TourModule.Close asChild>
+                    <Button.Root variant='primary' data-testid='helpPlugin.tooltip.finish'>
                       {t('tour-done.label')}
-                    </Button>
-                  </TourComponent.Close>
+                    </Button.Root>
+                  </TourModule.Close>
                 ) : (
-                  <IconButton
+                  <IconButton.Root
                     icon='ph--caret-right--regular'
                     iconOnly
                     label={t('tour-next.label')}
@@ -209,11 +202,11 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
                     data-testid='helpPlugin.tooltip.next'
                   />
                 )}
-              </TourComponent.Control>
-            </TourComponent.Content>
-          </TourComponent.Positioner>
-        </TourComponent.Portal>
-      </TourComponent.Root>
+              </TourModule.Control>
+            </TourModule.Content>
+          </TourModule.Positioner>
+        </TourModule.Portal>
+      </TourModule.Root>
     </TourContext.Provider>
   );
 };

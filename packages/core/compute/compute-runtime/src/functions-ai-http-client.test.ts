@@ -9,8 +9,8 @@ import * as HttpClient from 'effect/http/HttpClient';
 import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import { describe, test } from 'vitest';
 
-import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
-import { EffectEx } from '@dxos/effect';
+import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute/Errors';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client.ts';

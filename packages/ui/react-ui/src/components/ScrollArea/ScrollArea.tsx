@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { CSSProperties, useMemo, useState } from 'react';
 
@@ -10,7 +12,7 @@ import { type AllowedAxis, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks/index.ts';
 import { composable, composableProps, slottable } from '../../util/index.ts';
-import { ScrollAreaThumbs } from './ScrollAreaThumbs.tsx';
+import * as ScrollAreaThumbs from './ScrollAreaThumbs.tsx';
 import { type ScrollbarDensity, scrollbar } from './scrollbar.ts';
 
 //
@@ -88,7 +90,12 @@ const ScrollAreaRoot = composable<HTMLDivElement, ScrollAreaRootProps>(
         <div {...rest} className={tx('scrollArea.root', options, className)} ref={forwardedRef}>
           {children}
           {!native && scrollbars && viewport && (
-            <ScrollAreaThumbs viewport={viewport} orientation={orientation} density={density} autoHide={autoHide} />
+            <ScrollAreaThumbs.Root
+              viewport={viewport}
+              orientation={orientation}
+              density={density}
+              autoHide={autoHide}
+            />
           )}
         </div>
       </ScrollAreaProvider>
@@ -145,10 +152,8 @@ ScrollAreaViewport.displayName = SCROLLAREA_VIEWPORT_NAME;
 //
 // ScrollArea
 //
+export type { ScrollAreaRootProps as RootProps, ScrollAreaViewportProps as ViewportProps };
 
-export const ScrollArea = {
-  Root: ScrollAreaRoot,
-  Viewport: ScrollAreaViewport,
-};
-
-export type { ScrollAreaRootProps, ScrollAreaViewportProps };
+export { ScrollAreaRoot as Root, ScrollAreaViewport as Viewport };
+export * from './ScrollArea.theme.ts';
+export * from './scrollbar.ts';

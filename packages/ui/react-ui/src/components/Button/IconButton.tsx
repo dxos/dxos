@@ -2,16 +2,17 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { Icon, type IconProps } from '../Icon/index.ts';
-import { Tooltip, type TooltipSide } from '../Tooltip/index.ts';
-import { Button, type ButtonProps } from './Button.tsx';
-
-type IconButtonProps = Omit<ButtonProps, 'children'> &
-  Partial<Pick<IconProps, 'icon' | 'size'>> & {
+import * as Icon from '../Icon/Icon.tsx';
+import * as Tooltip from '../Tooltip/Tooltip.tsx';
+import * as Button from './Button.tsx';
+type IconButtonProps = Omit<Button.RootProps, 'children'> &
+  Partial<Pick<Icon.RootProps, 'icon' | 'size'>> & {
     label: string;
     noTooltip?: boolean;
     iconOnly?: boolean;
@@ -21,7 +22,7 @@ type IconButtonProps = Omit<ButtonProps, 'children'> &
     square?: boolean;
     /** Removes inline padding while keeping the control's height. */
     compact?: boolean;
-    tooltipSide?: TooltipSide;
+    tooltipSide?: Tooltip.Side;
   };
 
 const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>((props, forwardedRef) =>
@@ -54,19 +55,21 @@ const LabelledIconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     const { tx } = useThemeContext();
     return (
       // `caretDown` stays in `props` so `Button` still renders the caret; the theme only reads it.
-      <Button
+      <Button.Root
         {...props}
         classNames={tx('iconButton.root', { iconOnly, square, compact, caretDown: props.caretDown }, classNames)}
         ref={forwardedRef}
       >
-        {icon && !iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}
+        {icon && !iconEnd && <Icon.Root icon={icon} size={size} classNames={iconClassNames} />}
         <span className={iconOnly ? 'sr-only' : undefined}>{label}</span>
-        {icon && iconEnd && <Icon icon={icon} size={size} classNames={iconClassNames} />}
-      </Button>
+        {icon && iconEnd && <Icon.Root icon={icon} size={size} classNames={iconClassNames} />}
+      </Button.Root>
     );
   },
 );
 
-export { IconButton };
+export { IconButton as Root };
 
-export type { IconButtonProps };
+export type { IconButtonProps as RootProps };
+
+export * from './IconButton.theme.ts';

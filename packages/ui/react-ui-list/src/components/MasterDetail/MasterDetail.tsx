@@ -6,18 +6,16 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type ReactNode, useMemo } from 'react';
 
-import {
-  Banner,
-  Column,
-  Icon,
-  IconBlock,
-  IconButton,
-  Panel,
-  ScrollArea,
-  type ThemedClassName,
-  Tooltip,
-} from '@dxos/react-ui';
 import { type ActionGraphProps, ActionMenu, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Column from '@dxos/react-ui/Column';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconBlock from '@dxos/react-ui/IconBlock';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { OrderedList } from '../OrderedList/index.ts';
@@ -36,7 +34,7 @@ export type MasterDetailIcon = { icon: string; hue?: string };
 /** A row's trailing adornment: a status icon with a tooltip label (e.g. a 'mapped' or warning badge). */
 export type MasterDetailAdornment = { icon: string; label: string };
 
-export type MasterDetailProps<T extends MasterDetailRecord> = ThemedClassName<{
+export type MasterDetailProps<T extends MasterDetailRecord> = Util.ThemedClassName<{
   items: readonly T[];
   /** Currently highlighted row; `undefined` clears the selection. */
   selectedId?: string;
@@ -176,21 +174,21 @@ const MasterDetailRow = <T extends MasterDetailRecord>({
       onClick={() => onSelect?.(selected ? undefined : item.id)}
     >
       {icon && (
-        <IconBlock>
-          <Icon icon={icon.icon} classNames={icon.hue ? getStyles(icon.hue).text : undefined} />
-        </IconBlock>
+        <IconBlock.Root>
+          <Icon.Root icon={icon.icon} classNames={icon.hue ? getStyles(icon.hue).text : undefined} />
+        </IconBlock.Root>
       )}
       <span className='grow truncate'>{label}</span>
       {adornment && (
         <Tooltip.Provider>
           <Tooltip.Trigger asChild side='bottom' content={adornment.label}>
-            <Icon icon={adornment.icon} />
+            <Icon.Root icon={adornment.icon} />
           </Tooltip.Trigger>
         </Tooltip.Provider>
       )}
       {getMenu && (
         <ActionMenu {...menu}>
-          <IconButton
+          <IconButton.Root
             iconOnly
             variant='ghost'
             density='sm'

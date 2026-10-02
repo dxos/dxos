@@ -3,9 +3,9 @@
 //
 
 import { type Client } from '@dxos/client';
-import { FunctionError } from '@dxos/compute';
 import { FUNCTIONS_META_KEY } from '@dxos/compute-runtime';
 import { FunctionServiceError } from '@dxos/compute-runtime';
+import { FunctionError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import { type Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';

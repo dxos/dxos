@@ -8,10 +8,10 @@ import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { useQuery, useType } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
-import { composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';
+import * as Util from '@dxos/react-ui/Util';
 import { FactoryAnnotation } from '@dxos/schema';
 
 import { translationKey } from '#translations';
@@ -24,7 +24,7 @@ export type ObjectPropertiesProps = PropsWithChildren<
 >;
 
 // TODO(wittjosiah): Reconcile w/ ObjectForm.
-export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps>(
+export const ObjectProperties = Util.composable<HTMLDivElement, ObjectPropertiesProps>(
   ({ children, object, getCreateDefaults, resolveCreateEntry, ...props }, forwardedRef) => {
     const db = Obj.getDatabase(object);
     const meta = Obj.getMeta(object);
@@ -139,7 +139,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         getCreateDefaults={getCreateDefaults}
         resolveCreateEntry={resolveCreateEntry}
       >
-        <Form.Viewport {...composableProps(props)} scroll ref={forwardedRef}>
+        <Form.Viewport {...Util.composableProps(props)} scroll ref={forwardedRef}>
           <Form.Content>
             <Form.Fields />
             <Form.FieldSet>{children}</Form.FieldSet>

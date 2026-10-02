@@ -28,19 +28,13 @@ import React, {
   useRef,
 } from 'react';
 
-import {
-  type Density,
-  type Elevation,
-  Icon,
-  ScrollArea,
-  type ScrollAreaRootProps,
-  type ThemedClassName,
-  useControllableState,
-  useTranslation,
-} from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { type EscapeBehavior, Picker, usePickerInputContext, usePickerItemContext } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
+import { type Density, type Elevation } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -71,7 +65,7 @@ const SearchListRoot = ({
   onSearch,
   resetSelectionOnChange,
 }: SearchListRootProps) => {
-  const [query = '', setQuery] = useControllableState({
+  const [query = '', setQuery] = Hooks.useControllableState({
     prop: valueProp,
     defaultProp: defaultValue,
     onChange: undefined,
@@ -160,9 +154,9 @@ type SearchListContentProps = {};
  * When hosting `SearchList` inside a `Column.Root` (e.g. `Dialog.Body`), the parent propagator
  * handles column placement for SearchList's children automatically.
  */
-const SearchListContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+const SearchListContent = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   return (
-    <div {...composableProps(props, { role: 'none', classNames: 'dx-expand' })} ref={forwardedRef}>
+    <div {...Util.composableProps(props, { role: 'none', classNames: 'dx-expand' })} ref={forwardedRef}>
       {children}
     </div>
   );
@@ -177,7 +171,7 @@ SearchListContent.displayName = 'SearchList.Content';
 
 type InputVariant = 'default' | 'subdued';
 
-type SearchListInputProps = ThemedClassName<
+type SearchListInputProps = Util.ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'value'> & {
     density?: Density;
     elevation?: Elevation;
@@ -189,7 +183,7 @@ type SearchListInputProps = ThemedClassName<
 
 const SearchListInput = forwardRef<HTMLInputElement, SearchListInputProps>(
   ({ density, elevation, variant = 'subdued', placeholder, onChange, escapeBehavior, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const { query, onQueryChange } = useSearchListInputContext('SearchList.Input');
     const defaultPlaceholder = t('search.placeholder');
 
@@ -229,9 +223,9 @@ SearchListInput.displayName = 'SearchList.Input';
 // popover edge does not want: `padding={false}` makes the rows flush, matching `Listbox`.
 //
 
-type SearchListViewportProps = Pick<ScrollAreaRootProps, 'thin' | 'padding' | 'centered'>;
+type SearchListViewportProps = Pick<ScrollArea.RootProps, 'thin' | 'padding' | 'centered'>;
 
-const SearchListViewport = composable<HTMLDivElement, SearchListViewportProps>((props, forwardedRef) => {
+const SearchListViewport = Util.composable<HTMLDivElement, SearchListViewportProps>((props, forwardedRef) => {
   const {
     thin = true,
     padding = true,
@@ -241,7 +235,7 @@ const SearchListViewport = composable<HTMLDivElement, SearchListViewportProps>((
   } = props as PropsWithChildren<SearchListViewportProps & Record<string, unknown>>;
   return (
     <ScrollArea.Root
-      {...composableProps<HTMLDivElement>(rest)}
+      {...Util.composableProps<HTMLDivElement>(rest)}
       {...{ thin, padding, centered }}
       role='listbox'
       ref={forwardedRef}
@@ -257,7 +251,7 @@ SearchListViewport.displayName = 'SearchList.Viewport';
 // Item — search-themed convenience wrapper around `Picker.Item`.
 //
 
-type SearchListItemProps = ThemedClassName<{
+type SearchListItemProps = Util.ThemedClassName<{
   /** Unique identifier. */
   value: string;
   /** Display label. */
@@ -286,10 +280,10 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
         classNames={mx('flex gap-2 items-center px-2 rounded-xs', classNames)}
         ref={forwardedRef}
       >
-        {icon && <Icon icon={icon} classNames={iconClassNames} />}
+        {icon && <Icon.Root icon={icon} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>
         {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
-        {checked && <Icon icon='ph--check--regular' />}
+        {checked && <Icon.Root icon='ph--check--regular' />}
       </Picker.Item>
     );
   },
@@ -301,10 +295,10 @@ SearchListItem.displayName = 'SearchList.Item';
 // Empty
 //
 
-type SearchListEmptyProps = ThemedClassName;
+type SearchListEmptyProps = Util.ThemedClassName;
 
 const SearchListEmpty = ({ classNames }: SearchListEmptyProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
     <div role='status' className={mx(classNames)}>
       {t('empty-results.message')}
@@ -318,7 +312,7 @@ SearchListEmpty.displayName = 'SearchList.Empty';
 // Group
 //
 
-type SearchListGroupProps = ThemedClassName<
+type SearchListGroupProps = Util.ThemedClassName<
   PropsWithChildren<{
     /** Heading for the group. */
     heading?: ReactNode;

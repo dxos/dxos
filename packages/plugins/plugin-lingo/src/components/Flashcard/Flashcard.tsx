@@ -4,13 +4,16 @@
 
 import React from 'react';
 
-import { Button, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { type Word } from '#types';
 
-export type FlashcardProps = ThemedClassName<{
+export type FlashcardProps = Util.ThemedClassName<{
   word: Word.Word;
   /** The answer side is showing. */
   revealed: boolean;
@@ -23,7 +26,7 @@ export type FlashcardProps = ThemedClassName<{
  * Self-grading rather than typed input — recall, not spelling, is what the schedule measures.
  */
 export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: FlashcardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <div className={mx('flex flex-col items-center justify-center gap-6 p-8', classNames)}>
@@ -39,22 +42,22 @@ export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: Fl
           {word.examples?.[0] && <span className='text-sm text-description italic'>{word.examples[0]}</span>}
         </div>
       ) : (
-        <Button onClick={onReveal} data-testid='lingo.flashcard.reveal'>
-          <Icon icon='ph--eye--regular' size={4} />
+        <Button.Root onClick={onReveal} data-testid='lingo.flashcard.reveal'>
+          <Icon.Root icon='ph--eye--regular' size={4} />
           <span className='pl-2'>{t('reveal.button')}</span>
-        </Button>
+        </Button.Root>
       )}
 
       {revealed && (
         <div className='flex gap-2'>
-          <Button onClick={() => onAnswer(false)} data-testid='lingo.flashcard.incorrect'>
-            <Icon icon='ph--x--regular' size={4} />
+          <Button.Root onClick={() => onAnswer(false)} data-testid='lingo.flashcard.incorrect'>
+            <Icon.Root icon='ph--x--regular' size={4} />
             <span className='pl-2'>{t('incorrect.button')}</span>
-          </Button>
-          <Button variant='primary' onClick={() => onAnswer(true)} data-testid='lingo.flashcard.correct'>
-            <Icon icon='ph--check--regular' size={4} />
+          </Button.Root>
+          <Button.Root variant='primary' onClick={() => onAnswer(true)} data-testid='lingo.flashcard.correct'>
+            <Icon.Root icon='ph--check--regular' size={4} />
             <span className='pl-2'>{t('correct.button')}</span>
-          </Button>
+          </Button.Root>
         </div>
       )}
     </div>

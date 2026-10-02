@@ -7,8 +7,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { type Progress } from '@dxos/progress';
 import { random } from '@dxos/random';
-import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
@@ -129,9 +131,9 @@ const DefaultStory = ({ stages = 0, indeterminate, ...args }: StoryArgs) => {
     <Panel.Root>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <IconButton icon='ph--play--regular' label='Start' onClick={handleStart} />
-          <IconButton icon='ph--warning--regular' label='Fail' onClick={handleFail} />
-          <IconButton icon='ph--x--regular' label='Reset' onClick={handleCancel} />
+          <IconButton.Root icon='ph--play--regular' label='Start' onClick={handleStart} />
+          <IconButton.Root icon='ph--warning--regular' label='Fail' onClick={handleFail} />
+          <IconButton.Root icon='ph--x--regular' label='Reset' onClick={handleCancel} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content />

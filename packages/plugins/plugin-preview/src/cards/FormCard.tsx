@@ -9,9 +9,10 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
-import { Card, useTranslation } from '@dxos/react-ui';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Form, type FormPresentation, type FormUpdateMeta, getFormProperties, omitId } from '@dxos/react-ui-form';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type ProjectionModel } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -29,7 +30,7 @@ export type FormCardProps = AppSurface.ObjectCardProps & {
  * schema looked up via `useType`.
  */
 export const FormCard = ({ subject, projection, readonly = true, layout }: FormCardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Readonly cards default to the `static` presentation — plain DOM, undefined values
   // omitted — which reads as a preview rather than a form. Editable cards keep the
   // `compact` form layout. Callers can override either via the explicit `layout` prop.

@@ -15,7 +15,7 @@ import type * as Scope from 'effect/Scope';
 import * as Stream from 'effect/Stream';
 
 import { Stream as PbStream } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { makeInProcessClient, normalizeHandlers, runServiceCall, toServiceError } from '@dxos/protocols';

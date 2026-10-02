@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { Toolbar, type ToolbarRootProps } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { type Hue } from '@dxos/ui-theme';
 
 import { type ToolMode } from '../VoxelEditor/index.ts';
 
-export type VoxelToolbarProps = ToolbarRootProps & {
+export type VoxelToolbarProps = Toolbar.RootProps & {
   /** Currently selected tool mode. */
   toolMode: ToolMode;
   /** Currently selected hue. */
@@ -43,7 +43,7 @@ const TOOL_OPTIONS: { value: ToolMode; icon: string; label: string }[] = [
 ];
 
 /** Toolbar for the voxel editor with tool mode, hue picker, and actions. */
-export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
+export const VoxelToolbar = Util.composable<HTMLDivElement, VoxelToolbarProps>(
   (
     {
       toolMode,
@@ -63,7 +63,7 @@ export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
     forwardedRef,
   ) => {
     return (
-      <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+      <Toolbar.Root {...Util.composableProps(props)} ref={forwardedRef}>
         <Toolbar.ToggleGroup
           type='single'
           value={toolMode}

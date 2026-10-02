@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Avatar, type AvatarStatus, type Size } from '@dxos/react-ui';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import { type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
 import { L0ItemActiveTabIndicator } from '../Sidebar/index.ts';
@@ -14,7 +15,7 @@ export type UserAccountAvatarProps = {
   userId?: string;
   hue?: string;
   emoji?: string;
-  status?: AvatarStatus;
+  status?: Avatar.Status;
   /** Shows a dot on the avatar, e.g. while invitations are pending. */
   badge?: boolean;
 };

@@ -4,9 +4,10 @@
 
 import React from 'react';
 
-import { Banner, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -25,7 +26,7 @@ export type SearchResultListProps = {
  * plain (non-selectable) mode — rows are `role=listitem`, not `role=option`.
  */
 export const SearchResultList = ({ results, query, onSelect }: SearchResultListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Listbox.Root>
       <Listbox.Viewport>

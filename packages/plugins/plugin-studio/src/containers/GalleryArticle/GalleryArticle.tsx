@@ -10,9 +10,14 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Flex, Icon, IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { GalleryImage } from '#components';
 import { meta } from '#meta';
@@ -35,7 +40,9 @@ const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean 
   return (
     <div className='relative'>
       <GalleryImage src={src} contentType={contentType} alt={data.artifact.name} />
-      {selected && <Icon icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />}
+      {selected && (
+        <Icon.Root icon='ph--check-circle--fill' size={6} classNames='absolute top-1 right-1 text-primary-500' />
+      )}
     </div>
   );
 };
@@ -49,7 +56,7 @@ export type GalleryArticleProps = AppSurface.ObjectArticleProps<Collection.Colle
  * renders the outline and emits tile clicks.
  */
 export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(collection);
 
@@ -110,13 +117,13 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <IconButton
+          <IconButton.Root
             icon='ph--plus--regular'
             label={t('create.label')}
             disabled={!db}
             onClick={() => void handleCreate()}
           />
-          <IconButton
+          <IconButton.Root
             icon='ph--trash--regular'
             label={t('delete.label')}
             disabled={selectedIds.size === 0}
@@ -126,9 +133,9 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
       </Panel.Toolbar>
       <Panel.Content>
         {items.length === 0 ? (
-          <Flex role='status' center classNames='h-full text-subdued'>
+          <Flex.Root role='status' center classNames='h-full text-subdued'>
             {t('empty.message')}
-          </Flex>
+          </Flex.Root>
         ) : (
           <Masonry.Root Tile={ArtifactTile}>
             <Masonry.Content centered>

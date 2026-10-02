@@ -11,9 +11,10 @@ import { useLayout } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Entity, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, useTranslation } from '@dxos/react-ui';
 import { SearchList } from '@dxos/react-ui-search';
 import { type SearchResult } from '@dxos/react-ui-search';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { buildSearchQuery, toSearchResults, useGlobalSearch, useSearchableTypeUris } from '#hooks';
 import { meta } from '#meta';
@@ -23,7 +24,7 @@ export type SearchDialogProps = AppSurface.SpaceArticleProps<{
 }>;
 
 export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const { setMatch } = useGlobalSearch();
   const layout = useLayout();
@@ -76,7 +77,7 @@ export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps)
             autoFocus
             escapeBehavior='dismiss'
             placeholder={t('search.placeholder')}
-            {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+            {...{ [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
           />
           <SearchList.Viewport classNames='max-h-[24rem]'>
             {query && allResults.length === 0 && <SearchList.Empty />}

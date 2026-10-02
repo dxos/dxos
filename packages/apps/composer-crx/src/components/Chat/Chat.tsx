@@ -9,9 +9,11 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { ChatEditor, type ChatEditorController, type ChatEditorProps, ChatStatusIndicator } from '@dxos/react-ui-chat';
 import { MarkdownStream, type MarkdownStreamController, type MarkdownStreamProps } from '@dxos/react-ui-markdown';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import type * as Util from '@dxos/react-ui/Util';
 import { compactSlots } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -50,7 +52,7 @@ const isHiddenContext = (message: UIMessage<Metadata>): boolean =>
 /** Network status of the agent socket: probed on mount, updated live as the socket opens/closes. */
 export type ConnectionStatus = 'checking' | 'online' | 'offline';
 
-export type ChatProps = ThemedClassName<{
+export type ChatProps = Util.ThemedClassName<{
   /** Chat-agent host (ws/wss); the agent connection is derived from it. */
   host?: string;
   /** URL of the page the panel is attached to; injected as chat context. */
@@ -63,7 +65,7 @@ export type ChatProps = ThemedClassName<{
  * Simplified chat: a streaming markdown thread over an editor input, backed by the chat agent.
  */
 export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const editorRef = useRef<ChatEditorController>(null);
   const spaceIdRef = useRef<SpaceId | null>(null);
   const [status, setStatus] = useState<ConnectionStatus>('checking');
@@ -220,7 +222,7 @@ export const Chat = ({ classNames, host, url, onError }: ChatProps) => {
         />
         {/* TODO(burdon): Create new session; move to menu. */}
         {filteredMessages.length > 0 && (
-          <IconButton
+          <IconButton.Root
             variant='ghost'
             icon='ph--x--regular'
             iconOnly

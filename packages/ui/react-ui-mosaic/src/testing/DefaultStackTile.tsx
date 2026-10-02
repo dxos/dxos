@@ -5,9 +5,10 @@
 import React, { useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, IconButton } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Card from '@dxos/react-ui/Card';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { Focus, Mosaic, type MosaicStackTileComponent } from '../components/index.ts';
 
@@ -40,7 +41,7 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
               <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
               <Card.Block end>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
+                  <IconButton.Root iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
                 </ActionMenu>
               </Card.Block>
             </Card.Header>

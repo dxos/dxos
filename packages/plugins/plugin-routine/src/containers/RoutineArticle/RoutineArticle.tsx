@@ -11,8 +11,8 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Routine from '@dxos/compute/Routine';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { RoutineForm } from '#components';
 import { meta } from '#meta';

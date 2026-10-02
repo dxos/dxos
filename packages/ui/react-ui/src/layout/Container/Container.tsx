@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React from 'react';
 
@@ -9,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { composableProps, slottable } from '../../util/index.ts';
 
-export const Container = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
+const Container = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps<HTMLDivElement>(props);
   return (
     <ark.div asChild={asChild} {...rest} className={mx('dx-expand', className)} ref={forwardedRef}>
@@ -17,3 +19,5 @@ export const Container = slottable<HTMLDivElement>(({ children, asChild, ...prop
     </ark.div>
   );
 });
+
+export { Container as Root };

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Tour` — a guided walkthrough on Ark's tour machine, which owns the steps, waits for each step's
 // target to appear, scrolls it into view, positions the card beside it (or centres it, for a
 // `dialog` step), cuts the target out of the backdrop, and traps focus between card and target.
@@ -226,44 +228,44 @@ TourControl.displayName = 'Tour.Control';
 //
 // Tour
 //
-
-export const Tour = {
-  Root: TourRoot,
-  Portal: TourPortal,
-  Backdrop: TourBackdrop,
-  Spotlight: TourSpotlight,
-  Positioner: TourPositioner,
-  Content: TourContent,
-  Arrow: TourArrow,
-  Title: TourTitle,
-  Description: TourDescription,
-  ProgressText: TourProgressText,
-  Close: TourClose,
-  Actions: TourActions,
-  ActionTrigger: TourActionTrigger,
-  Control: TourControl,
-};
-
 export { useTour, useTourContext };
 
 export type {
-  TourActionsProps,
-  TourActionTriggerProps,
-  TourArrowProps,
-  TourBackdropProps,
-  TourCloseProps,
-  TourContentProps,
-  TourControlProps,
-  TourDescriptionProps,
-  TourPortalProps,
-  TourPositionerProps,
-  TourProgressTextProps,
-  TourRootProps,
-  TourSpotlightProps,
-  TourStepAction,
-  TourStepDetails,
-  TourStepPlacement,
-  TourTitleProps,
+  TourActionsProps as ActionsProps,
+  TourActionTriggerProps as ActionTriggerProps,
+  TourArrowProps as ArrowProps,
+  TourBackdropProps as BackdropProps,
+  TourCloseProps as CloseProps,
+  TourContentProps as ContentProps,
+  TourControlProps as ControlProps,
+  TourDescriptionProps as DescriptionProps,
+  TourPortalProps as PortalProps,
+  TourPositionerProps as PositionerProps,
+  TourProgressTextProps as ProgressTextProps,
+  TourRootProps as RootProps,
+  TourSpotlightProps as SpotlightProps,
+  TourStepAction as StepAction,
+  TourStepDetails as StepDetails,
+  TourStepPlacement as StepPlacement,
+  TourTitleProps as TitleProps,
   UseTourProps,
   UseTourReturn,
 };
+
+export {
+  TourActions as Actions,
+  TourActionTrigger as ActionTrigger,
+  TourArrow as Arrow,
+  TourBackdrop as Backdrop,
+  TourClose as Close,
+  TourContent as Content,
+  TourControl as Control,
+  TourDescription as Description,
+  TourPortal as Portal,
+  TourPositioner as Positioner,
+  TourProgressText as ProgressText,
+  TourRoot as Root,
+  TourSpotlight as Spotlight,
+  TourTitle as Title,
+};
+export * from './Tour.theme.ts';

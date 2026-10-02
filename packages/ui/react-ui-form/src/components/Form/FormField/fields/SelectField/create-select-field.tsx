@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { Select } from '@dxos/react-ui';
+import * as Select from '@dxos/react-ui/Select';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 

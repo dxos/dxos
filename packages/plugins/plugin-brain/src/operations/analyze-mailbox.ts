@@ -9,7 +9,7 @@ import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EMAIL_EXTRACT_OPTIONS, type FactExtractor, messageToDocument, runFactPipeline } from '@dxos/pipeline-email';
 import { type RDF, extractDocFacts } from '@dxos/pipeline-rdf';
 import * as FeedCursor from '@dxos/plugin-inbox/FeedCursor';

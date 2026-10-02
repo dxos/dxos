@@ -8,7 +8,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { EdgeServiceName } from '@dxos/config';
 import { Database, Feed, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useEdgeServiceEndpoint } from '@dxos/react-client';

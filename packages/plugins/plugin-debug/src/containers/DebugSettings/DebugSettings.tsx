@@ -11,8 +11,12 @@ import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
-import { Field, IconButton, Select, Toast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toast from '@dxos/react-ui/Toast';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { gzip, setDeep } from '@dxos/util';
 
@@ -21,7 +25,7 @@ import { Settings } from '#types';
 
 import { DebugPortSettings } from '../DebugPortSettings/index.ts';
 
-type Toast = {
+type ToastMessage = {
   title: string;
   description?: string;
 };
@@ -40,9 +44,9 @@ export type DebugSettingsProps = AppSurface.SettingsProps<
 >;
 
 export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onUpload }: DebugSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  const [toast, setToast] = useState<Toast>();
-  const download = useFileDownload();
+  const { t } = Hooks.useTranslation(meta.profile.key);
+  const [toast, setToast] = useState<ToastMessage>();
+  const download = Hooks.useFileDownload();
   const [storageConfig, setStorageConfig] = useState<ConfigInit>({});
   const client = useClient();
 
@@ -51,7 +55,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
   }, []);
 
   const handleToast = useCallback(
-    (toast: Toast) => {
+    (toast: ToastMessage) => {
       setToast(toast);
       const timer = setTimeout(() => setToast(undefined), 5_000);
       return () => clearTimeout(timer);
@@ -173,7 +177,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.tracing-panel.label')}
               description={t('settings.tracing-panel.description')}
             >
-              <IconButton
+              <IconButton.Root
                 icon='ph--arrow-square-out--regular'
                 iconOnly
                 label={t('settings.tracing-panel.label')}
@@ -185,7 +189,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-diagnostics.label')}
               description={t('settings.download-diagnostics.description')}
             >
-              <IconButton
+              <IconButton.Root
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-diagnostics.label')}
@@ -197,7 +201,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-logs.label')}
               description={t('settings.download-logs.description')}
             >
-              <IconButton
+              <IconButton.Root
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-logs.label')}
@@ -205,7 +209,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               />
             </Form.Field>
             <Form.Field standalone label={t('settings.repair.label')} description={t('settings.repair.description')}>
-              <IconButton
+              <IconButton.Root
                 icon='ph--first-aid-kit--regular'
                 iconOnly
                 label={t('settings.repair.label')}

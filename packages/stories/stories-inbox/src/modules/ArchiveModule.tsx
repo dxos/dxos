@@ -15,9 +15,12 @@ import { log } from '@dxos/log';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { IconButton, Panel, SystemIconButton, Toolbar } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 import { downloadBlob } from '@dxos/util';
@@ -207,7 +210,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             disabled={!feed || busy || starredIds.length === 0}
             onDownload={handleDownload}
           />
-          <IconButton
+          <IconButton.Root
             iconOnly
             icon='ph--tray-arrow-down--regular'
             label={`Download all (${messages.length})`}
@@ -216,7 +219,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
           />
           {/* Not `SystemIconButton.Download`: it fixes its own glyph, which would make this visually
               identical to the feed export beside it. */}
-          <IconButton
+          <IconButton.Root
             iconOnly
             icon='ph--envelope-simple--regular'
             label={selected ? `Save message (${selectedHtml ? 'html' : 'json'})` : 'Save message — select one first'}
@@ -224,7 +227,7 @@ const ArchiveModuleContainer = ({ space }: { space: Space }) => {
             onClick={handleDownloadMessage}
           />
           <Toolbar.Separator />
-          <IconButton
+          <IconButton.Root
             iconOnly
             icon='ph--trash--regular'
             label='Reset'

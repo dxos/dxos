@@ -6,12 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing/index.ts';
-import { Toggle } from '../Button/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Select } from '../Select/index.ts';
-import { Toolbar, type ToolbarRootProps } from './Toolbar.tsx';
+import * as Toggle from '../Button/Toggle.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Select from '../Select/Select.tsx';
+import * as Toolbar from './Toolbar.tsx';
 
-type StorybookToolbarProps = Pick<ToolbarRootProps, 'elevation'>;
+type StorybookToolbarProps = Pick<Toolbar.RootProps, 'elevation'>;
 
 const DefaultStory = ({ elevation }: StorybookToolbarProps) => {
   return (
@@ -36,28 +36,28 @@ const DefaultStory = ({ elevation }: StorybookToolbarProps) => {
       {/* TODO(burdon): Icon sizes should adapt to density. */}
       <Toolbar.ToggleGroup type='multiple'>
         <Toolbar.ToggleGroupItem value='a'>
-          <Icon icon='ph--text-b--regular' />
+          <Icon.Root icon='ph--text-b--regular' />
         </Toolbar.ToggleGroupItem>
         <Toolbar.ToggleGroupItem value='b'>
-          <Icon icon='ph--text-italic--regular' />
+          <Icon.Root icon='ph--text-italic--regular' />
         </Toolbar.ToggleGroupItem>
         <Toolbar.ToggleGroupItem value='c'>
-          <Icon icon='ph--text-underline--regular' />
+          <Icon.Root icon='ph--text-underline--regular' />
         </Toolbar.ToggleGroupItem>
       </Toolbar.ToggleGroup>
       {/* TODO(burdon): Highlight isn't shown. */}
       <Toolbar.ToggleGroup type='single' defaultValue='a'>
         <Toolbar.ToggleGroupItem value='a'>
-          <Icon icon='ph--file-ts--regular' />
+          <Icon.Root icon='ph--file-ts--regular' />
         </Toolbar.ToggleGroupItem>
         <Toolbar.ToggleGroupItem value='b'>
-          <Icon icon='ph--file-js--regular' />
+          <Icon.Root icon='ph--file-js--regular' />
         </Toolbar.ToggleGroupItem>
       </Toolbar.ToggleGroup>
       <Toolbar.Button asChild>
-        <Toggle>
-          <Icon icon='ph--bug--regular' />
-        </Toggle>
+        <Toggle.Root>
+          <Icon.Root icon='ph--bug--regular' />
+        </Toggle.Root>
       </Toolbar.Button>
       <Toolbar.Separator />
       <Toolbar.Button>Test</Toolbar.Button>

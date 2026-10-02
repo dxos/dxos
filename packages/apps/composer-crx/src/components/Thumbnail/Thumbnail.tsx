@@ -6,11 +6,13 @@ import '@dxos-theme';
 
 import React from 'react';
 
-import { Field, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Generalize to card.
-export const Thumbnail = ({ url, classNames }: ThemedClassName<{ url: string }>) => {
+export const Thumbnail = ({ url, classNames }: Util.ThemedClassName<{ url: string }>) => {
   return (
     <div className={mx('flex flex-col w-full', classNames)}>
       <Toolbar.Root>

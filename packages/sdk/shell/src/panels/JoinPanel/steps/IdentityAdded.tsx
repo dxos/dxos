@@ -7,7 +7,8 @@ import React, { cloneElement } from 'react';
 import { generateName } from '@dxos/display-name';
 import { toPublicKey } from '@dxos/protocols/buf';
 import type { Identity } from '@dxos/react-client/halo';
-import { Avatar, useId, useTranslation } from '@dxos/react-ui';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 import { hexToFallback } from '@dxos/util';
 
@@ -24,11 +25,11 @@ export interface IdentityAddedProps extends JoinStepProps {
 export const IdentityAdded = (props: IdentityAddedProps) => {
   const { mode, addedIdentity, active, send, onDone, doneActionParent } = props;
   const disabled = !active;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const addedIdentityHex = toPublicKey(addedIdentity?.identityKey)?.toHex() ?? '0';
   const fallbackValue = hexToFallback(addedIdentityHex);
-  const labelId = useId('identityListItem__label');
+  const labelId = Hooks.useId('identityListItem__label');
   const displayName = addedIdentity?.profile?.displayName ?? (addedIdentity && generateName(addedIdentityHex));
 
   const doneAction = (

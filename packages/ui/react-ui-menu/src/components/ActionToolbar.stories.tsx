@@ -8,8 +8,10 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useContext, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Field, IconButton, Toolbar } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as IconButton from '@dxos/react-ui/IconButton';
 import { withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { translations } from '#translations';
 
@@ -48,7 +50,7 @@ export const DropdownMenu: Story = {
 
     return (
       <ActionMenu {...menu}>
-        <IconButton icon='ph--list-checks--regular' label='Options' />
+        <IconButton.Root icon='ph--list-checks--regular' label='Options' />
       </ActionMenu>
     );
   },

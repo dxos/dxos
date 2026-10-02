@@ -21,9 +21,12 @@ import React, {
 import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
-import { EffectEx } from '@dxos/effect';
-import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
+import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   type AutoScrollProps,
   PROMPT_ELEMENT,
@@ -87,7 +90,7 @@ export type MarkdownStreamEvent = {
   value: string | null;
 };
 
-export type MarkdownStreamProps = ThemedClassName<
+export type MarkdownStreamProps = Util.ThemedClassName<
   {
     debug?: boolean;
 
@@ -173,7 +176,7 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
     }, [view, footerVisible]);
 
     // Streaming text queue.
-    const [queue, setQueue, queueRef] = useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
+    const [queue, setQueue, queueRef] = Hooks.useStateWithRef(Effect.runSync(Queue.unbounded<string>()));
 
     // Reset document.
     const onReset = useCallback(
@@ -252,12 +255,12 @@ export const MarkdownStream = forwardRef<MarkdownStreamController | null, Markdo
         <div className={mx('dx-expand', classNames)} ref={parentRef} />
 
         {/* React widgets are rendered in portals outside of the editor. */}
-        <ErrorBoundary name='markdown-stream'>
+        <ErrorFallback.ErrorBoundary name='markdown-stream'>
           {widgets.map(({ Component, root, id, props }) => (
             <div key={id}>{createPortal(<Component view={view} {...props} />, root)}</div>
           ))}
           {footerRoot && footerVisible && createPortal(footer, footerRoot)}
-        </ErrorBoundary>
+        </ErrorFallback.ErrorBoundary>
       </>
     );
   },
@@ -290,7 +293,7 @@ const useMarkdownStreamTextEditor = (
     setFooterRoot,
   }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
 
   // Active widgets.
   const [widgets, setWidgets] = useState<WidgetState[]>([]);
@@ -350,7 +353,7 @@ const useMarkdownStreamTextEditor = (
     extensionsProp,
   ]);
 
-  const viewRef = useDynamicRef(view);
+  const viewRef = Hooks.useDynamicRef(view);
   return { view, viewRef, parentRef, widgets };
 };
 

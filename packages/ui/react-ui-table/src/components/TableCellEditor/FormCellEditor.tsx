@@ -6,11 +6,12 @@ import type * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Entity, Ref, Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
-import { type Label, Popover } from '@dxos/react-ui';
 import { Form, type FormRootProps, type RefFieldProps } from '@dxos/react-ui-form';
 import { parseCellIndex, useGridContext } from '@dxos/react-ui-grid';
+import * as Popover from '@dxos/react-ui/Popover';
+import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { type FieldProjection } from '@dxos/schema';
 import { getDeep, isTruthy, setDeep } from '@dxos/util';
 
@@ -19,7 +20,7 @@ import { translationKey } from '#translations';
 import { type ModalController, type TableModel, type TableRow } from '../../model/index.ts';
 import { narrowSchema } from '../../util/index.ts';
 
-const createOptionLabel: Label = ['create-new-object.label', { ns: translationKey }];
+const createOptionLabel: ThemeProvider.Label = ['create-new-object.label', { ns: translationKey }];
 
 export type OnCreateHandler = (schema: Type.AnyEntity, values: any) => Parameters<typeof Ref.make>[0];
 

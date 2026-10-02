@@ -5,7 +5,9 @@
 import React, { type MouseEvent, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Focus, SystemIconButton } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 import { mx } from '@dxos/ui-theme';
 
 import { useMagazinePostData } from '#atoms';

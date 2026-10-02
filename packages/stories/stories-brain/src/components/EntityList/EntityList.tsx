@@ -4,12 +4,16 @@
 
 import React, { useRef } from 'react';
 
-import { Banner, IconButton, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { type EntityItem } from '../types.ts';
 
-export type EntityListProps = ThemedClassName<{
+export type EntityListProps = Util.ThemedClassName<{
   entities: EntityItem[];
   /** Selected entity id (the context); `undefined` means no context (show all). */
   selected?: string;
@@ -35,7 +39,7 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Text classNames='grow'>Entities{entities.length > 0 ? ` (${entities.length})` : ''}</Toolbar.Text>
-          <IconButton
+          <IconButton.Root
             icon='ph--x--regular'
             iconOnly
             label='Clear'

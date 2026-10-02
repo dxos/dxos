@@ -18,8 +18,9 @@ import { useResizeDetector } from 'react-resize-detector';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { createContext } from '@dxos/react-hooks';
-import { ScrollArea, ScrollAreaRootProps, ThemedClassName, usePx } from '@dxos/react-ui';
-import { composable, composableProps, useMergeRefs } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { cardMaxInlineSize, cardMinInlineSize } from '@dxos/ui-theme';
 
 import { prefersReducedMotion, useFlip } from './useFlip.ts';
@@ -108,11 +109,11 @@ MasonryRoot.displayName = 'Masonry.Root';
 // density is configured here.
 //
 
-type MasonryContentProps = ThemedClassName<
-  PropsWithChildren<Pick<ScrollAreaRootProps, 'scrollbars' | 'centered' | 'thin' | 'padding'>>
+type MasonryContentProps = Util.ThemedClassName<
+  PropsWithChildren<Pick<ScrollArea.RootProps, 'scrollbars' | 'centered' | 'thin' | 'padding'>>
 >;
 
-const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
+const MasonryContentInner = Util.composable<HTMLDivElement, MasonryContentProps>(
   ({ children, scrollbars, centered = true, thin = true, padding = true, ...props }, forwardedRef) => {
     const { gap } = useMasonryContext('Masonry.Content');
     return (
@@ -122,7 +123,7 @@ const MasonryContentInner = composable<HTMLDivElement, MasonryContentProps>(
         // pl = gap and pr = gap - scrollbar, keeping both sides symmetric with the
         // scrollbar accounted for at any density. Cast: CSSProperties has no index
         // signature for CSS custom properties, so `--gutter` cannot be typed directly.
-        {...composableProps(props, { style: { '--gutter': `${gap}rem` } as CSSProperties })}
+        {...Util.composableProps(props, { style: { '--gutter': `${gap}rem` } as CSSProperties })}
         scrollbars={scrollbars}
         centered={centered}
         thin={thin}
@@ -152,7 +153,7 @@ const MasonryContent = MasonryContentInner as (
 // this layer separately from Content to control the tile grid.
 //
 
-type MasonryViewportProps<Item> = ThemedClassName<{
+type MasonryViewportProps<Item> = Util.ThemedClassName<{
   /** Items to render in the masonry grid. */
   items: readonly Item[];
   /** Extract a stable key from an item, aligned with react-ui-mosaic's getId. */
@@ -183,11 +184,11 @@ type MasonryViewportProps<Item> = ThemedClassName<{
   scroll?: boolean;
 }>;
 
-const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any>>(
+const MasonryViewportInner = Util.composable<HTMLDivElement, MasonryViewportProps<any>>(
   ({ items, getId, cacheKey, selectedIds, onSelect, scroll = true, ...props }, forwardedRef) => {
     const { Tile, columns, maxColumns, minColumnWidth, maxColumnWidth, gap, animate, centered } =
       useMasonryContext('Masonry.Viewport');
-    const remInPx = usePx(1);
+    const remInPx = Hooks.usePx(1);
     // Measure the viewport's own content box (net of padding and scrollbar) rather
     // than deriving it from the root width, so the grid tracks the actual available
     // width for any ScrollArea density (thin/scrollbars/padding) without duplicating
@@ -261,7 +262,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       tabbable: true,
       cyclic: true,
     });
-    const gridRef = useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef]);
+    const gridRef = Hooks.useMergeRefs<HTMLDivElement>([forwardedRef, focusGroupRef]);
 
     // The viewport is the full-width scroll container; its centered+padded theme
     // (with `--gutter` set to the gap) balances the scrollbar into symmetric inline
@@ -272,7 +273,7 @@ const MasonryViewportInner = composable<HTMLDivElement, MasonryViewportProps<any
       <>
         {contentWidth > 0 && (
           <div
-            {...composableProps(props, {
+            {...Util.composableProps(props, {
               classNames: 'relative',
               style: {
                 width: `${contentWidth}px`,
@@ -364,7 +365,7 @@ const useColumnCount = (
   maxColumnWidth: number,
   gap: number,
 ) => {
-  const remInPx = usePx(1);
+  const remInPx = Hooks.usePx(1);
   return useMemo(() => {
     if (columns != null) {
       return columns;

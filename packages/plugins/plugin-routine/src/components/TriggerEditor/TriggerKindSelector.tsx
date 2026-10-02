@@ -4,8 +4,9 @@
 
 import React, { useCallback } from 'react';
 
-import { Icon, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 
@@ -32,7 +33,7 @@ export type TriggerKindSelectorProps = {
  * selecting a row emits its kind. Selection is transient — the parent swaps in the variant editor on change.
  */
 export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const handleValueChange = useCallback(
     (id: string) => {
       const option = OPTIONS.find((option) => option.kind === id);
@@ -49,7 +50,7 @@ export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
         {OPTIONS.map(({ kind, icon, disabled }) => (
           <Listbox.Item key={kind} id={kind} disabled={disabled} classNames='dx-input-surface rounded-sm'>
             <Listbox.ItemContent
-              icon={<Icon icon={icon} size={5} classNames='text-description' />}
+              icon={<Icon.Root icon={icon} size={5} classNames='text-description' />}
               title={<span className='font-medium'>{t(`trigger-kind.${kind}.label`)}</span>}
               description={t(`trigger-kind.${kind}.description`)}
             />

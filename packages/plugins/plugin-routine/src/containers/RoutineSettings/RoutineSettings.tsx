@@ -6,8 +6,9 @@ import React from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
-import { Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -19,7 +20,7 @@ import { meta } from '#meta';
  * The page is reached from space settings, so the space comes from context rather than surface data.
  */
 export const RoutineSettings = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const space = useActiveSpace();
   const [properties, changeProperties] = useObject(space?.properties);
   const enabled = !(properties?.triggersDisabled ?? false);

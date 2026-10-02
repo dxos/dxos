@@ -17,7 +17,7 @@ import { describe, test } from 'vitest';
 
 import { StateStore } from '@dxos/crawler';
 import { deterministicAiService } from '@dxos/crawler/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Pipeline } from '@dxos/pipeline';
 import {
   ExtractedQuestionStore,

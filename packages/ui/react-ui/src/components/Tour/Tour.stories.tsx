@@ -7,14 +7,15 @@ import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Button, IconButton } from '../Button/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
-import { Tour, type TourStepDetails, useTour } from './Tour.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as Panel from '../Panel/Panel.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Tour from './Tour.tsx';
 
 const target = (selector: string) => () => document.querySelector<HTMLElement>(selector);
 
-const steps: TourStepDetails[] = [
+const steps: Tour.StepDetails[] = [
   {
     id: 'welcome',
     type: 'dialog',
@@ -71,21 +72,21 @@ const steps: TourStepDetails[] = [
 
 /** A toolbar with three targets and a button that starts the tour. */
 const DefaultStory = () => {
-  const tour = useTour({ steps: useMemo(() => steps, []) });
+  const tour = Tour.useTour({ steps: useMemo(() => steps, []) });
   return (
     <Panel.Root classNames='dx-base-surface'>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <IconButton icon='ph--plus--regular' iconOnly label='Add' data-testid='tour.add' />
-          <IconButton icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='tour.search' />
+          <IconButton.Root icon='ph--plus--regular' iconOnly label='Add' data-testid='tour.add' />
+          <IconButton.Root icon='ph--magnifying-glass--regular' iconOnly label='Search' data-testid='tour.search' />
           <Toolbar.Separator variant='gap' />
-          <IconButton icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='tour.menu' />
+          <IconButton.Root icon='ph--dots-three-vertical--regular' iconOnly label='Menu' data-testid='tour.menu' />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid place-items-center'>
-        <Button onClick={() => tour.start()} data-testid='tour.start'>
+        <Button.Root onClick={() => tour.start()} data-testid='tour.start'>
           Start tour
-        </Button>
+        </Button.Root>
       </Panel.Content>
 
       <Tour.Root tour={tour}>
@@ -104,7 +105,9 @@ const DefaultStory = () => {
                     {(actions) =>
                       actions.map((action) => (
                         <Tour.ActionTrigger key={action.label} action={action} asChild>
-                          <Button variant={action.action === 'next' ? 'primary' : 'ghost'}>{action.label}</Button>
+                          <Button.Root variant={action.action === 'next' ? 'primary' : 'ghost'}>
+                            {action.label}
+                          </Button.Root>
                         </Tour.ActionTrigger>
                       ))
                     }

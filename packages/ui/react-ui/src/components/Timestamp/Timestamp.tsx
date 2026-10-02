@@ -2,15 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { useEffect, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { type DateLike, compactInterval, formatCompact, toDate } from '../../util/format-time.ts';
-import { TextTooltip } from '../Tooltip/index.ts';
-
-export type TimestampProps = ThemedClassName<{
+import * as TextTooltip from '../Tooltip/TextTooltip.tsx';
+type TimestampProps = ThemedClassName<{
   /** The instant shown, as an ISO string, a Unix timestamp in milliseconds, or a Date. */
   date: DateLike;
   /**
@@ -32,7 +33,7 @@ export type TimestampProps = ThemedClassName<{
  * Everything shown is lossy, which is why the tooltip carries the timestamp in full: the compact
  * form answers "recently?" and the tooltip answers "when exactly?".
  */
-export const Timestamp = ({ classNames, date, now }: TimestampProps) => {
+const Timestamp = ({ classNames, date, now }: TimestampProps) => {
   // The tick's only job is to re-render; the value is derived, so nothing can drift out of step
   // with what is displayed.
   const [, setTick] = useState(0);
@@ -75,7 +76,7 @@ export const Timestamp = ({ classNames, date, now }: TimestampProps) => {
   const full = parsed.toLocaleString(undefined, { dateStyle: 'full', timeStyle: 'medium' });
 
   return (
-    <TextTooltip text={full}>
+    <TextTooltip.Root text={full}>
       {/* `time`, so the machine-readable instant travels with the text a reader sees. Tabular
           numerals, since a column of counters that reflows as digits change reads as movement. */}
       <time
@@ -85,8 +86,12 @@ export const Timestamp = ({ classNames, date, now }: TimestampProps) => {
       >
         {compact}
       </time>
-    </TextTooltip>
+    </TextTooltip.Root>
   );
 };
 
 Timestamp.displayName = 'Timestamp';
+
+export { Timestamp as Root };
+export type { TimestampProps as RootProps };
+export * from '../../util/format-time.ts';

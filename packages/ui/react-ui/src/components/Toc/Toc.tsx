@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Toc` — a table of contents on Ark's toc machine, which watches the headings of a rendered
 // document (by `id`, through an `IntersectionObserver`) and marks the links to the ones in view.
 // Items are `{ value, depth }`: the heading's id and its level; the link's text is the consumer's.
@@ -133,26 +135,26 @@ TocLink.displayName = 'Toc.Link';
 //
 // Toc
 //
-
-export const Toc = {
-  Root: TocRoot,
-  Content: TocContent,
-  Nav: TocNav,
-  Title: TocTitle,
-  List: TocList,
-  Indicator: TocIndicator,
-  Item: TocItem,
-  Link: TocLink,
-};
-
 export type {
-  TocContentProps,
-  TocIndicatorProps,
-  TocItemData,
-  TocItemProps,
-  TocLinkProps,
-  TocListProps,
-  TocNavProps,
-  TocRootProps,
-  TocTitleProps,
+  TocContentProps as ContentProps,
+  TocIndicatorProps as IndicatorProps,
+  TocItemData as ItemData,
+  TocItemProps as ItemProps,
+  TocLinkProps as LinkProps,
+  TocListProps as ListProps,
+  TocNavProps as NavProps,
+  TocRootProps as RootProps,
+  TocTitleProps as TitleProps,
 };
+
+export {
+  TocContent as Content,
+  TocIndicator as Indicator,
+  TocItem as Item,
+  TocLink as Link,
+  TocList as List,
+  TocNav as Nav,
+  TocRoot as Root,
+  TocTitle as Title,
+};
+export * from './Toc.theme.ts';

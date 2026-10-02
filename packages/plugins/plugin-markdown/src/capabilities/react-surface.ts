@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { Text } from '@dxos/schema';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { EditableMarkdownCard, MarkdownCard, MarkdownSettings } from '#containers';
 import { meta } from '#meta';

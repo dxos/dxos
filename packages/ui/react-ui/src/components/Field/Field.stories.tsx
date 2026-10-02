@@ -11,28 +11,18 @@ import { mx } from '@dxos/ui-theme';
 import { type MessageValence } from '@dxos/ui-types';
 
 import { withLayout, withLayoutVariants, withTheme } from '../../testing/index.ts';
-import { Icon } from '../Icon/index.ts';
-import {
-  type CheckboxProps,
-  type DateInputProps,
-  type DateTimeInputProps,
-  Field,
-  type InputProps,
-  type PinInputProps,
-  type SwitchProps,
-  type TextareaProps,
-  type TimeProps,
-} from './Field.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Field from './Field.tsx';
 
 type VariantMap = {
-  text: InputProps;
-  pin: PinInputProps;
-  textarea: TextareaProps;
-  time: TimeProps;
-  date: DateInputProps;
-  datetime: DateTimeInputProps;
-  checkbox: CheckboxProps;
-  switch: SwitchProps;
+  text: Field.InputProps;
+  pin: Field.PinInputProps;
+  textarea: Field.TextareaProps;
+  time: Field.TimeProps;
+  date: Field.DateInputProps;
+  datetime: Field.DateTimeInputProps;
+  checkbox: Field.CheckboxProps;
+  switch: Field.SwitchProps;
 };
 
 type Variant = { [K in keyof VariantMap]: { type: K } & VariantMap[K] }[keyof VariantMap];
@@ -266,7 +256,7 @@ export const InputAdornments: Story = {
     <div className='flex flex-col'>
       <Field.Root>
         <Field.Label>Start icon</Field.Label>
-        <Field.Input start={<Icon icon='ph--magnifying-glass--regular' size={4} />} placeholder='Search…' />
+        <Field.Input start={<Icon.Root icon='ph--magnifying-glass--regular' size={4} />} placeholder='Search…' />
       </Field.Root>
       <Field.Root>
         <Field.Label>End text</Field.Label>
@@ -276,7 +266,7 @@ export const InputAdornments: Story = {
         <Field.Label>Both</Field.Label>
         <Field.Input
           start={<span className='text-sm'>$</span>}
-          end={<Icon icon='ph--currency-circle-dollar--regular' size={4} />}
+          end={<Icon.Root icon='ph--currency-circle-dollar--regular' size={4} />}
           placeholder='0.00'
         />
       </Field.Root>

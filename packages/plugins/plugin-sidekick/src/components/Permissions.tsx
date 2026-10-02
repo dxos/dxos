@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Field, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -24,7 +25,7 @@ export type PermissionsProps = {
 };
 
 export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   if (entries.length === 0) {
     return null;

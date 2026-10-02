@@ -5,7 +5,7 @@
 import { describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
-import { ServiceNotAvailableError } from '@dxos/compute';
+import { ServiceNotAvailableError } from '@dxos/compute/Errors';
 
 import { isAiServiceUnavailable } from './ai-gate.ts';
 

@@ -25,16 +25,11 @@ import React, {
   useState,
 } from 'react';
 
-import {
-  type Density,
-  type Elevation,
-  Field,
-  type ThemedClassName,
-  composableProps,
-  slottable,
-  useThemeContext,
-} from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
+import { type Density, type Elevation } from '@dxos/ui-types';
 
 import { listTheme } from '../List.theme.ts';
 import {
@@ -181,7 +176,7 @@ type InputVariant = 'default' | 'subdued';
  */
 type EscapeBehavior = 'clear' | 'dismiss';
 
-type PickerInputProps = ThemedClassName<
+type PickerInputProps = Util.ThemedClassName<
   Omit<ComponentPropsWithRef<'input'>, 'value'> & {
     /** Controlled input value. Caller owns this — e.g. binds to query state. */
     value?: string;
@@ -197,7 +192,7 @@ type PickerInputProps = ThemedClassName<
 
 const PickerInput = forwardRef<HTMLInputElement, PickerInputProps>(
   ({ value, onValueChange, onChange, onKeyDown, autoFocus, escapeBehavior = 'clear', ...props }, forwardedRef) => {
-    const { hasIosKeyboard } = useThemeContext();
+    const { hasIosKeyboard } = ThemeProvider.useThemeContext();
     const { selectedValue, onSelectedValueChange, getItemValues, triggerSelect } =
       usePickerInputContext('Picker.Input');
     const inputRef = useRef<HTMLInputElement>(null);
@@ -346,7 +341,7 @@ PickerInput.displayName = 'Picker.Input';
 // Item
 //
 
-type PickerItemProps = ThemedClassName<{
+type PickerItemProps = Util.ThemedClassName<{
   /** Unique identifier; used by the registry and DOM-order traversal. */
   value: string;
   /** Callback when the item is committed (click, or Enter while highlighted). */
@@ -357,7 +352,7 @@ type PickerItemProps = ThemedClassName<{
   children?: ReactNode;
 }>;
 
-const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
+const PickerItem = Util.slottable<HTMLDivElement, PickerItemProps>(
   ({ value, onSelect, disabled, asChild, children, ...props }, forwardedRef) => {
     const { selectedValue, onSelectedValueChange, registerItem, unregisterItem } = usePickerItemContext('Picker.Item');
     const internalRef = useRef<HTMLDivElement>(null);
@@ -395,7 +390,7 @@ const PickerItem = slottable<HTMLDivElement, PickerItemProps>(
     return (
       <ark.div
         asChild={asChild}
-        {...composableProps<HTMLDivElement>(props, {
+        {...Util.composableProps<HTMLDivElement>(props, {
           classNames: styles.pickerItem({ class: mx(disabled && 'opacity-50 cursor-not-allowed') }),
           role: 'option',
         })}

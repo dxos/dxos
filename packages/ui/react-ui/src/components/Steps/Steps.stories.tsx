@@ -9,9 +9,9 @@ import { expect, waitFor, within } from 'storybook/test';
 import { random } from '@dxos/random';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
-import { Steps, type StepsProps } from './Steps.tsx';
+import * as Panel from '../Panel/Panel.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Steps from './Steps.tsx';
 
 const TICK_MS = 200;
 /** Items in a counted stage; the line leaving it fills as they are worked through. */
@@ -22,7 +22,7 @@ const ITEMS = 10;
  */
 const step = () => random.number.int({ min: 1, max: 3 });
 
-type StoryArgs = Partial<StepsProps> & {
+type StoryArgs = Partial<Steps.RootProps> & {
   /** How many stages the plan starts with. */
   stages?: number;
 };
@@ -124,7 +124,7 @@ const DefaultStory = ({ stages: initial = 5, indeterminate, ...props }: StoryArg
       </Panel.Toolbar>
       <Panel.Content classNames='h-6' />
       <Panel.Statusbar>
-        <Steps
+        <Steps.Root
           steps={stages}
           active={active}
           fraction={fraction}
@@ -206,7 +206,7 @@ const HandoverStory = ({ stages = 3 }: StoryArgs) => {
           Reset
         </Toolbar.Button>
       </Toolbar.Root>
-      <Steps steps={stages} active={active} fraction={fraction} />
+      <Steps.Root steps={stages} active={active} fraction={fraction} />
     </div>
   );
 };
@@ -271,7 +271,7 @@ const FailureStory = ({ stages = 4 }: StoryArgs) => {
           Fail
         </Toolbar.Button>
       </Toolbar.Root>
-      <Steps steps={stages} active={2} fraction={0.5} error={failed} />
+      <Steps.Root steps={stages} active={2} fraction={0.5} error={failed} />
     </div>
   );
 };

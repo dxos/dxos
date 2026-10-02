@@ -6,14 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useRef } from 'react';
 
 import { random } from '@dxos/random';
-import { Icon, IconButton } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Card, type CardRootProps } from './Card.tsx';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Card from './Card.tsx';
 
 random.seed(0);
 
-type StoryArgs = Pick<CardRootProps, 'elevation'> & {
+type StoryArgs = Pick<Card.RootProps, 'elevation'> & {
   title: string;
   description?: string;
   image?: string;
@@ -34,13 +35,13 @@ const DefaultStory = ({ title, description, image, fullWidth, elevation }: Story
         <Card.Poster alt='Card.Poster' image={image} />
         <Card.Row>
           <Card.Block>
-            <Icon icon='ph--dot-outline--regular' />
+            <Icon.Root icon='ph--dot-outline--regular' />
           </Card.Block>
           <Card.Text>Card.Text (default)</Card.Text>
         </Card.Row>
         <Card.Row>
           <Card.Block>
-            <Icon icon='ph--dot-outline--regular' />
+            <Icon.Root icon='ph--dot-outline--regular' />
           </Card.Block>
           <Card.Text variant='description'>
             Card.Text (description)
@@ -178,25 +179,25 @@ export const Slots: Story = {
           {/* Leading passive icon. */}
           <Card.Row>
             <Card.Block>
-              <Icon icon='ph--user--regular' />
+              <Icon.Root icon='ph--user--regular' />
             </Card.Block>
             <Card.Text>Start slot — passive Icon</Card.Text>
           </Card.Row>
           {/* Passive icon + trailing IconButton: the two gutters align to the pixel. */}
           <Card.Row>
             <Card.Block>
-              <Icon icon='ph--at--regular' />
+              <Icon.Root icon='ph--at--regular' />
             </Card.Block>
             <Card.Text>Start Icon + end IconButton (aligned)</Card.Text>
             <Card.Block end>
-              <IconButton iconOnly variant='ghost' icon='ph--x--regular' label='Remove' onClick={() => {}} />
+              <IconButton.Root iconOnly variant='ghost' icon='ph--x--regular' label='Remove' onClick={() => {}} />
             </Card.Block>
           </Card.Row>
           {/* Conditional leading slot: when falsy, content stays in the center track. */}
           <Card.Row>
             {showLeading && (
               <Card.Block>
-                <Icon icon='ph--calendar--regular' />
+                <Icon.Root icon='ph--calendar--regular' />
               </Card.Block>
             )}
             <Card.Text>Conditional start slot</Card.Text>
@@ -206,7 +207,7 @@ export const Slots: Story = {
             <Card.Text>Trailing link via asChild</Card.Text>
             <Card.Block end asChild>
               <a href='https://dxos.org' target='_blank' rel='noreferrer'>
-                <Icon icon='ph--arrow-square-out--regular' />
+                <Icon.Root icon='ph--arrow-square-out--regular' />
               </a>
             </Card.Block>
           </Card.Row>

@@ -12,3 +12,4 @@ export * from './core.ts';
 export * from './corpus/index.ts';
 export * from '#meta';
 export * from '#types';
+export * from './harness.ts';

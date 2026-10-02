@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -59,13 +61,7 @@ type ScrollAreaThumbsProps = {
  * (its own scrollbars are hidden via CSS), so scroll chaining and nesting behave as the browser
  * intends. Must be rendered as a sibling of the viewport inside a positioned root.
  */
-export const ScrollAreaThumbs = ({
-  viewport,
-  orientation,
-  density,
-  autoHide,
-  onOverflowChange,
-}: ScrollAreaThumbsProps) => {
+const ScrollAreaThumbs = ({ viewport, orientation, density, autoHide, onOverflowChange }: ScrollAreaThumbsProps) => {
   const [vertical, setVertical] = useState<ThumbGeometry>(HIDDEN);
   const [horizontal, setHorizontal] = useState<ThumbGeometry>(HIDDEN);
   const [dragging, setDragging] = useState<AllowedAxis | undefined>();
@@ -228,3 +224,5 @@ export const ScrollAreaThumbs = ({
     </>
   );
 };
+
+export { ScrollAreaThumbs as Root };

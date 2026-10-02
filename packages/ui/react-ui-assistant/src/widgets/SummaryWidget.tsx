@@ -4,14 +4,14 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type WidgetProps, getXmlTextChild } from '@dxos/ui-editor';
 
 import { translationKey } from '../translations.ts';
 
 export const SummaryWidget = ({ children }: WidgetProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   return (
     <TogglePanel.Root>

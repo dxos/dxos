@@ -5,7 +5,9 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { Menu, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { translationKey } from '#translations';
 
@@ -14,7 +16,7 @@ import { type ModalController, type TableModel } from '../../model/index.ts';
 type RowActionsMenuProps = { model: TableModel; modals: ModalController };
 
 export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const hasSelection = model.selection.hasSelection;
   const state = useAtomValue(modals.state);
   if (state?.type !== 'row') {
@@ -38,7 +40,7 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
                       model.handleRowAction(action.id, state.rowIndex);
                     }}
                   >
-                    {toLocalizedString(action.label, t)}
+                    {ThemeProvider.toLocalizedString(action.label, t)}
                   </Menu.Item>
                 ))}
               </Menu.Group>

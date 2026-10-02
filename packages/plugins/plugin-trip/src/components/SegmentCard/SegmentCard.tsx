@@ -6,9 +6,11 @@ import { format } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import { getStyles } from '@dxos/ui-theme';
 import { trim } from '@dxos/util';
 
@@ -60,7 +62,7 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
 export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data, location, current }, forwardedRef) => {
   const { segment, onAction } = data;
   const { setCurrentId, setSelected } = useMosaicContainer('SegmentTile');
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const handleCurrentChange = useCallback(() => {
     setCurrentId(segment.id);
@@ -98,7 +100,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
         <Card.Root fullWidth border={false} ref={forwardedRef}>
           <Card.Header>
             <Card.Block>
-              <Icon icon={icon} classNames={iconStyles?.text} />
+              <Icon.Root icon={icon} classNames={iconStyles?.text} />
             </Card.Block>
             <Card.Title>{title}</Card.Title>
             <Card.ActionIconButton action='delete' onClick={handleDelete} label={t('segment.delete.label')} />
@@ -124,7 +126,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
                 {date && (
                   <Card.Row>
                     <Card.Block>
-                      <Icon icon='ph--calendar--regular' />
+                      <Icon.Root icon='ph--calendar--regular' />
                     </Card.Block>
                     <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
                   </Card.Row>

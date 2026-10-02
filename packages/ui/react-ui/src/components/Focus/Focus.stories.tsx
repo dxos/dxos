@@ -9,7 +9,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { Focus } from './Focus.tsx';
+import * as Focus from './Focus.tsx';
 
 type Item = { id: string; label: string };
 

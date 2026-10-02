@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Fieldset` — a group of fields on Ark's fieldset: a `<fieldset>` whose `disabled` reaches every
 // field inside it (the field machine reads the fieldset's), named by its legend and described by
 // its helper and error text through `aria-labelledby`/`aria-describedby`, which the machine wires by
@@ -91,12 +93,17 @@ FieldsetErrorText.displayName = 'Fieldset.ErrorText';
 //
 // Fieldset
 //
-
-export const Fieldset = {
-  Root: FieldsetRoot,
-  Legend: FieldsetLegend,
-  HelperText: FieldsetHelperText,
-  ErrorText: FieldsetErrorText,
+export type {
+  FieldsetErrorTextProps as ErrorTextProps,
+  FieldsetHelperTextProps as HelperTextProps,
+  FieldsetLegendProps as LegendProps,
+  FieldsetRootProps as RootProps,
 };
 
-export type { FieldsetErrorTextProps, FieldsetHelperTextProps, FieldsetLegendProps, FieldsetRootProps };
+export {
+  FieldsetErrorText as ErrorText,
+  FieldsetHelperText as HelperText,
+  FieldsetLegend as Legend,
+  FieldsetRoot as Root,
+};
+export * from './Fieldset.theme.ts';

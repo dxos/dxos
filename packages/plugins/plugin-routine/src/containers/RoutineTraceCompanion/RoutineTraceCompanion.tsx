@@ -6,9 +6,16 @@ import React from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Accordion, Banner, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Accordion from '@dxos/react-ui/Accordion';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -36,7 +43,7 @@ export type RoutineTraceCompanionProps = {
 
 /** Companion panel showing the execution trace (runs) of a Routine. */
 export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(subject);
   const runs = useRoutineRuns(db, subject);
 
@@ -53,13 +60,17 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
             ) : (
               <Accordion.Root<RoutineRun> items={runs} getId={getRunId}>
                 {({ items }) => (
-                  <Flex column>
+                  <Flex.Root column>
                     {items.map((run) => (
                       <Accordion.Item key={run.pid} item={run}>
                         <Accordion.ItemHeader hover>
                           <Listbox.ItemContent
                             icon={
-                              <Icon icon={STATUS_ICONS[run.status]} size={5} classNames={STATUS_CLASSES[run.status]} />
+                              <Icon.Root
+                                icon={STATUS_ICONS[run.status]}
+                                size={5}
+                                classNames={STATUS_CLASSES[run.status]}
+                              />
                             }
                             title={<span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>}
                             description={`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}
@@ -74,7 +85,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
                         </Accordion.ItemBody>
                       </Accordion.Item>
                     ))}
-                  </Flex>
+                  </Flex.Root>
                 )}
               </Accordion.Root>
             )}

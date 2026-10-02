@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Carousel` — slides shown one at a time, built on `@ark-ui/react`'s Carousel (zag state machine).
 // The machine owns the scroll-snap track and which page it is on, the wrap-around, the auto-advance
 // and its stopping the moment the reader takes over, the arrow keys, and the `region` / `slide`
@@ -16,22 +18,16 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useTranslation } from '../../providers/index.ts';
-import {
-  type ThemedClassName,
-  animationsDisabled,
-  composable,
-  composableProps,
-  useReducedMotion,
-} from '../../util/index.ts';
-import { IconButton } from '../Button/index.ts';
-import { type MediaKind, MediaPlayer } from '../MediaPlayer/index.ts';
-
+import { useTranslation } from '../../providers/ThemeProvider/TranslationsContext.ts';
+import { animationsDisabled, useReducedMotion } from '../../util/animation.ts';
+import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as MediaPlayer from '../MediaPlayer/MediaPlayer.tsx';
 //
 // Root
 //
 
-export type CarouselRootProps = PropsWithChildren<{
+type CarouselRootProps = PropsWithChildren<{
   /** Total number of slides; drives auto-advance and indicator counts. */
   count: number;
   /**
@@ -93,7 +89,7 @@ CarouselRoot.displayName = 'Carousel.Root';
 // Content
 //
 
-export type CarouselContentProps = ThemedClassName<PropsWithChildren<{}>>;
+type CarouselContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 const CarouselContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => (
   // Rows are `[1fr, auto]`: row 1 (Previous|Viewport|Next) stretches when the parent
@@ -118,7 +114,7 @@ CarouselContent.displayName = 'Carousel.Content';
 // Viewport
 //
 
-export type CarouselViewportProps = ThemedClassName<PropsWithChildren<{}>>;
+type CarouselViewportProps = ThemedClassName<PropsWithChildren<{}>>;
 
 /** The scroll-snap track. The machine parks the tab stop here and answers the arrow keys on it. */
 const CarouselViewport = ({ children, classNames }: CarouselViewportProps) => {
@@ -145,12 +141,12 @@ CarouselViewport.displayName = 'Carousel.Viewport';
 // Slide
 //
 
-export type CarouselSlideProps = ThemedClassName<{
+type CarouselSlideProps = ThemedClassName<{
   index: number;
-  /** Media source URL — rendered via the embedded {@link MediaPlayer}. */
+  /** Media source URL — rendered via the embedded {@link MediaPlayer.Root}. */
   src: string;
   /** Override media auto-detection (`'video' | 'audio'`). */
-  kind?: MediaKind;
+  kind?: MediaPlayer.MediaKind;
   /** Accessible label / `<img alt>` fallback. */
   alt?: string;
   controls?: boolean;
@@ -176,7 +172,7 @@ const CarouselSlide = ({
 
   return (
     <CarouselPrimitive.Item index={index} className={mx('relative h-full dx-base-surface', classNames)}>
-      <MediaPlayer
+      <MediaPlayer.Root
         classNames='dx-fill'
         src={src}
         kind={kind}
@@ -199,7 +195,7 @@ CarouselSlide.displayName = 'Carousel.Slide';
 // Previous / Next
 //
 
-export type CarouselButtonProps = ThemedClassName<{}>;
+type CarouselButtonProps = ThemedClassName<{}>;
 
 const CarouselPrevious = ({ classNames }: CarouselButtonProps) => {
   const { t } = useTranslation(translationKey);
@@ -210,7 +206,7 @@ const CarouselPrevious = ({ classNames }: CarouselButtonProps) => {
 
   return (
     <CarouselPrimitive.PrevTrigger asChild>
-      <IconButton
+      <IconButton.Root
         classNames={mx('self-center', classNames)}
         square
         variant='ghost'
@@ -233,7 +229,7 @@ const CarouselNext = ({ classNames }: CarouselButtonProps) => {
 
   return (
     <CarouselPrimitive.NextTrigger asChild>
-      <IconButton
+      <IconButton.Root
         classNames={mx('self-center', classNames)}
         square
         variant='ghost'
@@ -251,7 +247,7 @@ CarouselNext.displayName = 'Carousel.Next';
 // Indicators
 //
 
-export type CarouselIndicatorsProps = ThemedClassName<{}>;
+type CarouselIndicatorsProps = ThemedClassName<{}>;
 
 /**
  * Tab-strip of slide indicators. Sits in the centre column so it matches the viewport's width.
@@ -279,7 +275,7 @@ const CarouselIndicators = ({ classNames }: CarouselIndicatorsProps) => {
       >
         {pageSnapPoints.map((_, index) => (
           <CarouselPrimitive.Indicator key={index} index={index} asChild>
-            <IconButton
+            <IconButton.Root
               role='tab'
               aria-selected={index === page}
               // `dx-focus-ring-none`: focusing a dot selects its slide (`onFocus` below), so the fill
@@ -307,7 +303,7 @@ CarouselIndicators.displayName = 'Carousel.Indicators';
 // Caption
 //
 
-export type CarouselCaptionProps = ThemedClassName<{
+type CarouselCaptionProps = ThemedClassName<{
   /** Render prop receiving the active slide index. */
   children: (index: number) => ReactNode;
 }>;
@@ -334,13 +330,22 @@ CarouselCaption.displayName = 'Carousel.Caption';
 // Carousel
 //
 
-export const Carousel = {
-  Root: CarouselRoot,
-  Content: CarouselContent,
-  Viewport: CarouselViewport,
-  Slide: CarouselSlide,
-  Previous: CarouselPrevious,
-  Next: CarouselNext,
-  Indicators: CarouselIndicators,
-  Caption: CarouselCaption,
+export {
+  CarouselCaption as Caption,
+  CarouselContent as Content,
+  CarouselIndicators as Indicators,
+  CarouselNext as Next,
+  CarouselPrevious as Previous,
+  CarouselRoot as Root,
+  CarouselSlide as Slide,
+  CarouselViewport as Viewport,
+};
+export type {
+  CarouselButtonProps as ButtonProps,
+  CarouselCaptionProps as CaptionProps,
+  CarouselContentProps as ContentProps,
+  CarouselIndicatorsProps as IndicatorsProps,
+  CarouselRootProps as RootProps,
+  CarouselSlideProps as SlideProps,
+  CarouselViewportProps as ViewportProps,
 };

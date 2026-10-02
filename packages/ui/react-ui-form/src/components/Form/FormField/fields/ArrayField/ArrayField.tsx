@@ -7,11 +7,12 @@ import React, { type ReactNode, useCallback, useRef } from 'react';
 
 import { Annotation, Ref } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -55,7 +56,7 @@ export const ArrayField = ({
   fieldProps: inputProps,
   ...props
 }: ArrayFieldProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const elementType = SchemaEx.getArrayElementType(type);
   const { onValueChange } = inputProps;
   const values = useFormValues(ArrayField.displayName, path, () => []);

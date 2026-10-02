@@ -6,8 +6,8 @@
 // components, so a context exported beside one forces a full reload on every edit — and the edit
 // pane, which lives in its own file, needs the same context the list provides.
 
-import { createContext } from '@dxos/react-ui';
 import { type MenuItem } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Task } from '@dxos/types';
 
 import { type TaskPlacement } from './hierarchy.ts';
@@ -65,4 +65,4 @@ export type TaskListContextValue = {
   onTaskMove?: (task: Task.Task, placement: TaskPlacement) => void;
 };
 
-export const [TaskListProvider, useTaskListContext] = createContext<TaskListContextValue>(TASK_LIST_NAME);
+export const [TaskListProvider, useTaskListContext] = Hooks.createContext<TaskListContextValue>(TASK_LIST_NAME);

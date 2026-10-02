@@ -14,10 +14,12 @@ import { Connection } from '@dxos/link';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import { useAtomState } from '@dxos/react-hooks';
-import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { Ibkr, IbkrOperation } from '#types';
 
@@ -36,7 +38,7 @@ export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio
  * Clicking a report opens it in the complementary plank via the app-graph-builder companion node.
  */
 export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const showItem = useShowItem();
 
   // `useObject` re-renders when the Portfolio's feed ref resolves, so the query below picks up the feed.

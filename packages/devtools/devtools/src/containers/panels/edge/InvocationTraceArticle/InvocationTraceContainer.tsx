@@ -15,10 +15,12 @@ import { EncodedReference } from '@dxos/echo-protocol';
 import { Format } from '@dxos/echo/Format';
 import { type URI } from '@dxos/keys';
 import { type SerializedError } from '@dxos/protocols';
-import { Panel, Tabs, Toolbar } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { DynamicTable, type TableFeatures, type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
@@ -40,7 +42,7 @@ export type InvocationTraceContainerProps = {
   invocationSpans?: InvocationSpan[];
 };
 
-export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTraceContainerProps>(
+export const InvocationTraceContainer = Util.composable<HTMLDivElement, InvocationTraceContainerProps>(
   (
     {
       role,
@@ -171,7 +173,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
     );
 
     return (
-      <div {...composableProps(props, { classNames: ['h-full'] })} ref={forwardedRef}>
+      <div {...Util.composableProps(props, { classNames: ['h-full'] })} ref={forwardedRef}>
         <Panel.Root role={role}>
           {showSpaceSelector && (
             <Panel.Toolbar asChild>

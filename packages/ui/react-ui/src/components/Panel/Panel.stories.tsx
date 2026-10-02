@@ -6,12 +6,15 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, within } from 'storybook/test';
 
-import { Card, Field, ScrollArea, ScrollAreaRootProps, Toolbar } from '../../components/index.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
 import { composable, composableProps } from '../../util/index.ts';
-import { Panel, type PanelRootProps } from './Panel.tsx';
+import * as Card from '../Card/Card.tsx';
+import * as Field from '../Field/Field.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Panel from './Panel.tsx';
 
-const List = composable<HTMLDivElement, ScrollAreaRootProps>((props, forwardedRef) => {
+const List = composable<HTMLDivElement, ScrollArea.RootProps>((props, forwardedRef) => {
   return (
     <ScrollArea.Root centered {...composableProps(props, { role: 'list' })} ref={forwardedRef}>
       <ScrollArea.Viewport>
@@ -38,9 +41,9 @@ const List = composable<HTMLDivElement, ScrollAreaRootProps>((props, forwardedRe
  *   uses: {@link Panel.Root}, {@link Panel.Toolbar}, {@link Panel.Content}, {@link Panel.Statusbar}
  *   related: org.dxos.react-ui-menu.toolbarMenu
  */
-type StoryArgs = Pick<PanelRootProps, 'as' | 'elevation'> & {
+type StoryArgs = Pick<Panel.RootProps, 'as' | 'elevation'> & {
   /** The toolbar's and status bar's own level, over the panel's. */
-  barElevation?: PanelRootProps['elevation'];
+  barElevation?: Panel.RootProps['elevation'];
 };
 
 const DefaultStory = ({ as, elevation, barElevation }: StoryArgs) => {

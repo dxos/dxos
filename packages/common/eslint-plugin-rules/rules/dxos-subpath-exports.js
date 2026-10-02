@@ -5,6 +5,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { isSubpathPackage } from './dxos-subpath-imports.js';
+
 const MODULE_EXTENSIONS = ['.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs'];
 
 // A module declares itself a namespace with the same directive `import-as-namespace` enforces. It
@@ -189,7 +191,8 @@ const analyzeBarrel = (entryFile, readFile, pkg) => {
     return result;
   };
 
-  return { namespaces: namespacesOf(entryFile, null), ambiguous, externalStars, pluginStars };
+  const namespaces = namespacesOf(entryFile, null);
+  return { namespaces, ambiguous, externalStars, pluginStars, reached: visited };
 };
 
 /** Reads the package.json governing a file, with its directory. */
@@ -263,6 +266,8 @@ export default {
     fixable: 'code',
     schema: [],
     messages: {
+      missingSubpathExport:
+        'Subpath "{{key}}" is declared in the exports map but this barrel does not re-export it. Add `export * from \'{{specifier}}\';` so the package root keeps its whole API.',
       missingNamespaceExport:
         'Subpath "{{key}}" is declared in the exports map but no namespace "{{name}}" is exported from this barrel. Add: export * as {{name}} from \'{{specifier}}\';',
       namespaceTargetMismatch:
@@ -327,7 +332,7 @@ export default {
           return;
         }
 
-        const { namespaces, ambiguous, externalStars, pluginStars } = analyzeBarrel(
+        const { namespaces, ambiguous, externalStars, pluginStars, reached } = analyzeBarrel(
           path.resolve(filename),
           readFile,
           pkg,
@@ -387,9 +392,25 @@ export default {
             if (ambiguous.has(name)) {
               continue; // Reported below with the paths that collide.
             }
-            // Only a namespace module owes the barrel a re-export; a subpath onto an ordinary
-            // module is a standalone entrypoint, and hoisting it would enlarge the barrel.
-            if (!target || !isNamespaceModule(target, directiveCache)) {
+            if (!target) {
+              continue;
+            }
+            // A package whose imports `dxos-subpath-imports` rewrites keeps its root the complete API,
+            // so any other subpath module must be reachable through the barrel's `export *` chain.
+            if (!isNamespaceModule(target, directiveCache)) {
+              if (isSubpathPackage(pkg.json.name) && !reached.has(target)) {
+                const specifier =
+                  './' + path.relative(path.dirname(path.resolve(filename)), target).replace(/\\/g, '/');
+                context.report({
+                  node,
+                  messageId: 'missingSubpathExport',
+                  data: { key, specifier },
+                  fix: (fixer) => {
+                    const last = node.body.at(-1);
+                    return last ? fixer.insertTextAfter(last, `\nexport * from '${specifier}';`) : null;
+                  },
+                });
+              }
               continue;
             }
             context.report({

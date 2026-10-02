@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type PropsWithChildren } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
 import { DensityContext } from './DensityContext.ts';
 
-export type DensityProviderProps = PropsWithChildren<{
+type DensityProviderProps = PropsWithChildren<{
   density?: Density;
 }>;
 
@@ -22,6 +24,11 @@ export type DensityProviderProps = PropsWithChildren<{
  * subtree-wide density applies the class itself, where its scope is visible at the call site
  * (see `Toolbar.Root`).
  */
-export const DensityProvider = ({ density, children }: DensityProviderProps) => (
+const DensityProvider = ({ density, children }: DensityProviderProps) => (
   <DensityContext.Provider value={{ density }}>{children}</DensityContext.Provider>
 );
+
+export { DensityProvider as Root };
+export type { DensityProviderProps as RootProps };
+export * from './DensityContext.ts';
+export * from '../../hooks/useDensityContext.ts';

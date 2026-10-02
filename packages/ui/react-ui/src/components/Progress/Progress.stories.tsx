@@ -8,9 +8,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { random } from '@dxos/random';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
-import { Progress, type ProgressProps } from './Progress.tsx';
+import * as Panel from '../Panel/Panel.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Progress from './Progress.tsx';
 
 const TICK_MS = 100;
 /**
@@ -20,7 +20,7 @@ const TICK_MS = 100;
  */
 const step = () => random.number.int({ min: 1, max: 6 }) / 100;
 
-type StoryArgs = Partial<ProgressProps>;
+type StoryArgs = Partial<Progress.RootProps>;
 
 /**
  * Runs the bar from empty to full so the width transition is watched rather than sampled: a static
@@ -93,7 +93,7 @@ const DefaultStory = ({ indeterminate, error, ...props }: StoryArgs) => {
       <Panel.Statusbar>
         {/* The sweep is what `running` looks like when nothing counts; stopping it has to leave
             something behind, so the bar falls back to the fraction the run did reach. */}
-        <Progress
+        <Progress.Root
           {...props}
           progress={progress}
           // A stopped run is no longer uncounted, it is simply idle — so the sweep gives way to an
@@ -121,7 +121,7 @@ const CountdownStory = ({ countdown, ...props }: StoryArgs) => {
       <Panel.Content classNames='h-6' />
       <Panel.Statusbar>
         {/* Remounting is what restarts a CSS animation, so the run counter is the key. */}
-        <Progress key={run} {...props} countdown={countdown} paused={paused} />
+        <Progress.Root key={run} {...props} countdown={countdown} paused={paused} />
       </Panel.Statusbar>
     </Panel.Root>
   );
@@ -129,13 +129,13 @@ const CountdownStory = ({ countdown, ...props }: StoryArgs) => {
 
 const meta = {
   title: 'ui/react-ui-core/components/Progress',
-  component: Progress,
+  component: Progress.Root,
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'centered', classNames: 'w-[30rem]' })],
   parameters: {
     layout: 'centered',
   },
-} satisfies Meta<typeof Progress>;
+} satisfies Meta<typeof Progress.Root>;
 
 export default meta;
 

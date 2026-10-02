@@ -9,7 +9,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Entity, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Space, isSpace } from '@dxos/react-client/echo';
-import { Field, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -47,7 +48,7 @@ export type RenamePopoverProps = { subject: RenameSubject };
  * Inline rename popover anchored to a navtree row. Commits on Enter or when dismissed; Escape cancels.
  */
 export const RenamePopover = ({ subject }: RenamePopoverProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const space = !isRenameCallback(subject) && isSpace(subject);
   const { invokePromise } = useOperationInvoker();
   const [name, setNameState] = useState(() => getName(subject));

@@ -13,8 +13,11 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
-import { Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
@@ -22,7 +25,7 @@ import { FeedOperation, Subscription } from '#types';
 export type FeedPropertiesProps = AppSurface.ObjectPropertiesProps<Subscription.Subscription>;
 
 export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const [pending, setPending] = useState(false);
@@ -80,7 +83,7 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
     <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('feed-sync.label')}</Field.Label>
-        <Flex align='center'>
+        <Flex.Root align='center'>
           <Field.Switch
             checked={syncEnabled ?? false}
             disabled={pending}
@@ -89,9 +92,14 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
             }}
           />
           {syncTrigger && (
-            <IconButton iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
+            <IconButton.Root
+              iconOnly
+              icon='ph--gear--regular'
+              label={t('view-trigger.label')}
+              onClick={handleViewTrigger}
+            />
           )}
-        </Flex>
+        </Flex.Root>
       </Field.Root>
     </Form.FieldSet>
   );

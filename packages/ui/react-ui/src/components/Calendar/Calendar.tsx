@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { CalendarDate } from '@internationalized/date';
 import React, { type ComponentPropsWithoutRef, type ReactNode, forwardRef } from 'react';
 import {
@@ -22,8 +24,7 @@ import {
 import { type ClassNameValue } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { Icon } from '../Icon/index.ts';
-
+import * as Icon from '../Icon/Icon.tsx';
 //
 // Date <-> CalendarDate conversion.
 // External API stays `Date` (and `{from,to}`-style range objects) so existing call sites keep working.
@@ -70,7 +71,7 @@ type RangeProps = BaseCalendarProps & {
   onSelect?: (range: DateRange | undefined) => void;
 };
 
-export type CalendarRootProps = SingleProps | RangeProps;
+type CalendarRootProps = SingleProps | RangeProps;
 
 const CalendarShell = ({
   classNames,
@@ -100,11 +101,11 @@ const CalendarChrome = () => {
   return (
     <header className={tx('calendar.nav', {}) ?? undefined}>
       <RACButton slot='previous' className={tx('calendar.button_previous', {}) ?? undefined}>
-        <Icon size={4} icon='ph--caret-left--regular' />
+        <Icon.Root size={4} icon='ph--caret-left--regular' />
       </RACButton>
       <RACHeading className={tx('calendar.caption_label', {}) ?? undefined} />
       <RACButton slot='next' className={tx('calendar.button_next', {}) ?? undefined}>
-        <Icon size={4} icon='ph--caret-right--regular' />
+        <Icon.Root size={4} icon='ph--caret-right--regular' />
       </RACButton>
     </header>
   );
@@ -183,9 +184,9 @@ const CalendarRoot = forwardRef<HTMLDivElement, CalendarRootProps>((props, forwa
 });
 
 CalendarRoot.displayName = 'Calendar.Root';
-
-export const Calendar = {
-  Root: CalendarRoot,
-};
-
 export type { ComponentPropsWithoutRef };
+
+export { CalendarRoot as Root };
+export type { CalendarRootProps as RootProps };
+export * from './Calendar.theme.ts';
+export { parseCalendarDate } from './parse-calendar-date.ts';

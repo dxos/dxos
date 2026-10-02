@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Editable, type EditableActivation, type EditableBlurBehavior } from './Editable.tsx';
+import * as Editable from './Editable.tsx';
 import { useEditable } from './useEditable.ts';
 
 type StoryArgs = {
@@ -18,8 +18,8 @@ type StoryArgs = {
   previewLabel?: string;
   initialValue?: string;
   placeholder?: string;
-  activation?: EditableActivation;
-  blurBehavior?: EditableBlurBehavior;
+  activation?: Editable.EditableActivation;
+  blurBehavior?: Editable.EditableBlurBehavior;
   disabled?: boolean;
 };
 

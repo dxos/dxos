@@ -16,7 +16,8 @@ import React, { useMemo, useState } from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { random } from '@dxos/random';
-import { Column, ScrollArea } from '@dxos/react-ui';
+import * as Column from '@dxos/react-ui/Column';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { type EscapeBehavior, Picker } from './Picker.tsx';

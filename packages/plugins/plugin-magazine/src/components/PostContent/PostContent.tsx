@@ -4,9 +4,9 @@
 
 import React, { useMemo } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
-import { composable } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
 import { usePostContentAtom } from '#atoms';
 import { Subscription } from '#types';
@@ -27,7 +27,7 @@ export type PostContentProps = {
  * entry for this Post id, falling back to `post.description`) → meta line
  * (author · …extra · published).
  */
-export const PostContent = composable<HTMLDivElement, PostContentProps>(
+export const PostContent = Util.composable<HTMLDivElement, PostContentProps>(
   ({ post, metadata = [], ...props }, forwardedRef) => {
     const meta = [post.author, ...metadata, formatDate(post.published)].filter(Boolean).join(' · ');
     const title = post.title;

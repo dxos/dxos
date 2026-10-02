@@ -1,4 +1,4 @@
-import { createContext } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 //
 // Copyright 2025 DXOS.org
 //
@@ -17,4 +17,4 @@ export type ChatStatusContextValue = {
   running: boolean;
 };
 
-export const [ChatStatusProvider, useChatStatusContext] = createContext<ChatStatusContextValue>('ChatStatus');
+export const [ChatStatusProvider, useChatStatusContext] = Hooks.createContext<ChatStatusContextValue>('ChatStatus');

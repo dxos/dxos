@@ -4,8 +4,9 @@
 
 import React, { useState } from 'react';
 
-import { Card, ToggleIconButton } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Card from '@dxos/react-ui/Card';
+import * as ToggleIconButton from '@dxos/react-ui/ToggleIconButton';
 
 export const JsonCard = ({ data }: { data: unknown }) => {
   const [open, setOpen] = useState(false);
@@ -17,7 +18,7 @@ export const JsonCard = ({ data }: { data: unknown }) => {
   return (
     <Card.Row>
       <Card.Block classNames='self-start'>
-        <ToggleIconButton
+        <ToggleIconButton.Root
           variant='ghost'
           density='sm'
           icon='ph--caret-right--regular'

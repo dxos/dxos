@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import { Tabs as TabsPrimitive } from '@ark-ui/react/tabs';
 import React, { type ComponentPropsWithoutRef, type MouseEvent, useCallback, useLayoutEffect } from 'react';
@@ -12,8 +14,8 @@ import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
 
 import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
-import { Button, type ButtonProps, IconButton, type IconButtonProps } from '../Button/index.ts';
-
+import * as Button from '../Button/Button.tsx';
+import * as IconButton from '../Button/IconButton.tsx';
 type TabsActivePart = 'list' | 'panel';
 
 type TabsOrientation = 'horizontal' | 'vertical';
@@ -28,7 +30,7 @@ type TabsContextValue = {
   activePart: TabsActivePart;
   setActivePart: (nextActivePart: TabsActivePart) => void;
   /** The button variant of the selected tab in a horizontal tablist; `default` unless the host says otherwise. */
-  selectedVariant?: ButtonProps['variant'];
+  selectedVariant?: Button.RootProps['variant'];
 } & {
   orientation?: TabsOrientation;
   value?: string;
@@ -220,7 +222,7 @@ TabsTablist.displayName = 'Tabs.Tablist';
 // BackButton
 //
 
-const TabsBackButton = ({ classNames, onClick, ...props }: ButtonProps) => {
+const TabsBackButton = ({ classNames, onClick, ...props }: Button.RootProps) => {
   const { setActivePart } = useTabsContext('TabsBackButton');
   const handleClick = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
@@ -230,7 +232,7 @@ const TabsBackButton = ({ classNames, onClick, ...props }: ButtonProps) => {
     [setActivePart, onClick],
   );
 
-  return <Button {...props} classNames={['@md:hidden text-start', classNames]} onClick={handleClick} />;
+  return <Button.Root {...props} classNames={['@md:hidden text-start', classNames]} onClick={handleClick} />;
 };
 
 TabsBackButton.displayName = 'Tabs.BackButton';
@@ -253,7 +255,7 @@ TabsTabGroupHeading.displayName = 'Tabs.TabGroupHeading';
 // Tab
 //
 
-type TabsButtonProps = ButtonProps & { value: string };
+type TabsButtonProps = Button.RootProps & { value: string };
 
 const TabsButton = ({ value, classNames, children, onClick, variant, ...props }: TabsButtonProps) => {
   const { setActivePart, orientation, value: contextValue, selectedVariant } = useTabsContext('TabsButton');
@@ -269,7 +271,7 @@ const TabsButton = ({ value, classNames, children, onClick, variant, ...props }:
 
   return (
     <TabsPrimitive.Trigger value={value} asChild>
-      <Button
+      <Button.Root
         {...props}
         variant={
           variant ?? (orientation === 'horizontal' && contextValue === value ? (selectedVariant ?? 'default') : 'ghost')
@@ -282,7 +284,7 @@ const TabsButton = ({ value, classNames, children, onClick, variant, ...props }:
         onClick={handleClick}
       >
         {children}
-      </Button>
+      </Button.Root>
     </TabsPrimitive.Trigger>
   );
 };
@@ -293,7 +295,7 @@ TabsButton.displayName = 'Tabs.Button';
 // IconButton
 //
 
-type TabsIconButtonProps = IconButtonProps & { value: string };
+type TabsIconButtonProps = IconButton.RootProps & { value: string };
 
 const TabsIconButton = ({ value, classNames, onClick, variant, iconOnly, ...props }: TabsIconButtonProps) => {
   const { setActivePart, orientation, value: contextValue, selectedVariant } = useTabsContext('TabsIconButton');
@@ -309,7 +311,7 @@ const TabsIconButton = ({ value, classNames, onClick, variant, iconOnly, ...prop
 
   return (
     <TabsPrimitive.Trigger value={value} asChild>
-      <IconButton
+      <IconButton.Root
         {...props}
         iconOnly={iconOnly}
         variant={
@@ -348,27 +350,27 @@ type TabsTabPrimitiveProps = ComponentPropsWithoutRef<typeof TabsPrimitive.Trigg
 //
 // Tabs
 //
-
-export const Tabs = {
-  Root: TabsRoot,
-  Tablist: TabsTablist,
-  Button: TabsButton,
-  IconButton: TabsIconButton,
-  TabPrimitive: TabsPrimitive.Trigger,
-  TabGroupHeading: TabsTabGroupHeading,
-  Viewport: TabsViewport,
-  Panel: TabsPanel,
-  BackButton: TabsBackButton,
+const TabsTabPrimitive = TabsPrimitive.Trigger;
+export type {
+  TabsActivePart as ActivePart,
+  TabsButtonProps as ButtonProps,
+  TabsIconButtonProps as IconButtonProps,
+  TabsPanelProps as PanelProps,
+  TabsRootProps as RootProps,
+  TabsTabGroupHeadingProps as TabGroupHeadingProps,
+  TabsTablistProps as TablistProps,
+  TabsTabPrimitiveProps as TabPrimitiveProps,
+  TabsViewportProps as ViewportProps,
 };
 
-export type {
-  TabsActivePart,
-  TabsButtonProps,
-  TabsIconButtonProps,
-  TabsPanelProps,
-  TabsRootProps,
-  TabsTabGroupHeadingProps,
-  TabsTablistProps,
-  TabsTabPrimitiveProps,
-  TabsViewportProps,
+export {
+  TabsBackButton as BackButton,
+  TabsButton as Button,
+  TabsIconButton as IconButton,
+  TabsPanel as Panel,
+  TabsRoot as Root,
+  TabsTabGroupHeading as TabGroupHeading,
+  TabsTablist as Tablist,
+  TabsTabPrimitive as TabPrimitive,
+  TabsViewport as Viewport,
 };

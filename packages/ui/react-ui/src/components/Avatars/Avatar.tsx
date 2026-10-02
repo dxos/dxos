@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentProps, type ComponentPropsWithRef, type PropsWithChildren, forwardRef } from 'react';
 
@@ -20,7 +22,7 @@ import { useIconHref, useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
 import { type AvatarContextValue, AvatarProvider, useAvatarContext } from './AvatarContext.ts';
 
-export type AvatarRootProps = PropsWithChildren<Partial<AvatarContextValue>>;
+type AvatarRootProps = PropsWithChildren<Partial<AvatarContextValue>>;
 
 const AvatarRoot = ({ children, labelId: propsLabelId, descriptionId: propsDescriptionId }: AvatarRootProps) => {
   const labelId = useId('avatar__label', propsLabelId);
@@ -88,20 +90,17 @@ const AvatarDescription = forwardRef<HTMLSpanElement, AvatarDescriptionProps>(
     );
   },
 );
-
-export const Avatar = {
-  Root: AvatarRoot,
-  Content: AvatarContent,
-  Label: AvatarLabel,
-  Description: AvatarDescription,
-};
-
 export type {
-  AvatarAnimation,
-  AvatarContentProps,
-  AvatarDescriptionProps,
-  AvatarLabelProps,
-  AvatarStatus,
-  AvatarVariant,
+  AvatarAnimation as Animation,
+  AvatarContentProps as ContentProps,
+  AvatarDescriptionProps as DescriptionProps,
   NaturalDxAvatar as DxAvatar,
+  AvatarLabelProps as LabelProps,
+  AvatarStatus as Status,
+  AvatarVariant as Variant,
 };
+
+export { AvatarContent as Content, AvatarDescription as Description, AvatarLabel as Label, AvatarRoot as Root };
+export type { AvatarRootProps as RootProps };
+export * from './Avatar.theme.ts';
+export { useAvatarContext } from './AvatarContext.ts';

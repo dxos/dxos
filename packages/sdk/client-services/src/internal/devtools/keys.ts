@@ -7,7 +7,7 @@ import * as EffectStream from 'effect/Stream';
 
 import { scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type KeyringApi } from '@dxos/keyring';
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 

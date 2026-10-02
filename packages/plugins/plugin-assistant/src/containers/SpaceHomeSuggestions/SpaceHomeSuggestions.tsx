@@ -8,7 +8,10 @@ import { HomeSection } from '@dxos/app-framework/HomeSection';
 import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
-import { Card, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { useHomeSuggestions } from '#hooks';
 import { meta } from '#meta';
@@ -24,7 +27,7 @@ type SpaceScopedProps = {
  * quick entry points regardless of whether recent objects exist.
  */
 export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const suggestions = useHomeSuggestions(space);
 
@@ -45,7 +48,7 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
   return (
     <HomeSection.Root>
       <HomeSection.Header title={t('space-home.suggestions.heading')} onClose={onClose} />
-      <Flex column gap='md'>
+      <Flex.Root column gap='md'>
         {suggestions.map((prompt, index) => (
           // A real button, not a `role='button'` div: WKWebView only reliably synthesizes a tap into
           // a click for natively interactive elements, and the iOS walkthrough could not launch a
@@ -60,14 +63,14 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
             <Card.Root fullWidth>
               <Card.Header>
                 <Card.Block>
-                  <Icon icon='ph--sparkle--regular' />
+                  <Icon.Root icon='ph--sparkle--regular' />
                 </Card.Block>
                 <Card.Title>{prompt}</Card.Title>
               </Card.Header>
             </Card.Root>
           </button>
         ))}
-      </Flex>
+      </Flex.Root>
     </HomeSection.Root>
   );
 };

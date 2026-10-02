@@ -17,7 +17,13 @@
       "source": "./src/index.ts",
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
-    }
+    },
+    "./Position": {
+      "source": "./src/Position.ts",
+      "types": "./dist/types/src/Position.d.ts",
+      "import": "./dist/lib/Position.mjs"
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

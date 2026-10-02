@@ -48,8 +48,9 @@ checked and passed:
   `./vite-plugin`, `./testing` and `./testing/*`, `./assets/*`, and a Storybook addon's `./manager`
   and `./preview`. A `./hooks` becomes `./Hooks`, a `./components` one subpath per component set.
   The few entry points still pending a migration of their own are listed in the rule.
-- **`dxos-subpath-imports` applies to a fixed list**, currently `@dxos/app-framework`,
-  `@dxos/app-graph`, `@dxos/app-toolkit`, `@dxos/assistant-toolkit`, `@dxos/compute`. Adding a
+- **`dxos-subpath-imports` applies to a fixed list** (`DXOS_SUBPATH_PACKAGES`) plus every
+  `@dxos/plugin-*` package; `dxos-subpath-exports` requires those packages' roots to re-export
+  every subpath. Adding a
   package to that list requires the package to export `./package.json`, or the rule silently finds
   nothing.
 - **`dxos-package-imports` steps aside for conditional aliases.** Where an alias resolves per
@@ -59,12 +60,13 @@ checked and passed:
 
 ### `dxos-subpath-exports` findings
 
-Eight checks, of which only `missingNamespaceExport` autofixes — the rest describe a decision the
+Nine checks, of which only `missingNamespaceExport` and `missingSubpathExport` autofix — the rest describe a decision the
 rule cannot make for you:
 
 | Message | Meaning |
 | --- | --- |
 | `missingNamespaceExport` | A declared subpath has no matching namespace on the barrel. Inserted among its sorted siblings. |
+| `missingSubpathExport` | A package on the `dxos-subpath-imports` list does not re-export a subpath's module from its root. Appends `export * from` that module. |
 | `namespaceTargetMismatch` | Barrel and subpath resolve to different modules, so a consumer rewritten to the subpath gets another module. |
 | `typeOnlyNamespaceExport` | Re-exported as a type where the subpath declares a value entrypoint. |
 | `undeclaredNamespace` | On the barrel but with no subpath, so importing it costs the whole package. |

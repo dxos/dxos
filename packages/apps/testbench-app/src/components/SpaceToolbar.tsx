@@ -6,7 +6,8 @@ import React from 'react';
 
 import { PublicKey } from '@dxos/client';
 import { type Space } from '@dxos/react-client/echo';
-import { Select, Toolbar } from '@dxos/react-ui';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 export type SpaceToolbarProps = {
   spaces?: Space[];

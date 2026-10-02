@@ -27,19 +27,16 @@ import React, {
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';
-import {
-  Icon,
-  IconButton,
-  ScrollArea,
-  Tabs,
-  type ThemedClassName,
-  Tooltip,
-  toLocalizedString,
-  useMediaQuery,
-  useTranslation,
-} from '@dxos/react-ui';
 import { DropIndicator } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -87,7 +84,7 @@ type L0ItemProps = L0ItemRootProps & {
 const useL0ItemClick = ({ item, parent, path }: L0ItemProps, type: string) => {
   const { onSelect, onTabChange } = useNavTreeContext();
   const { getItem } = useNavTreeState();
-  const [isLg] = useMediaQuery('lg');
+  const [isLg] = Hooks.useMediaQuery('lg');
   const runAction = useActionRunner();
 
   return useCallback(
@@ -121,11 +118,11 @@ const l0Breakpoints: Record<string, string> = {
 const L0ItemRoot = memo(
   forwardRef<HTMLButtonElement, PropsWithChildren<L0ItemRootProps>>(
     ({ item, parent, path, onMouseEnter, children }, forwardedRef) => {
-      const { t } = useTranslation(meta.profile.key);
+      const { t } = Hooks.useTranslation(meta.profile.key);
       const { model } = useNavTreeContext();
       const itemPath = useMemo(() => [...path, item.id], [item.id, path]);
       const { id, testId } = useAtomValue(model.itemProps(itemPath));
-      const localizedString = toLocalizedString(item.properties.label, t);
+      const localizedString = ThemeProvider.toLocalizedString(item.properties.label, t);
 
       const type = l0ItemType(item);
       const handleClick = useL0ItemClick({ item, parent, path: itemPath }, type);
@@ -156,7 +153,7 @@ const L0ItemRoot = memo(
   ),
 );
 
-export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) => (
+export const L0ItemActiveTabIndicator = ({ classNames }: Util.ThemedClassName<{}>) => (
   <div
     className={mx(
       'hidden group-aria-selected/l0item:block absolute start-0 h-6 w-1.5 bg-accent-bg rounded-sm',
@@ -167,10 +164,10 @@ export const L0ItemActiveTabIndicator = ({ classNames }: ThemedClassName<{}>) =>
 
 // TODO(burdon): Factor out pinned (non-draggable) items.
 const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L0ItemProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const itemElement = useRef<HTMLButtonElement | null>(null);
   const [closestEdge, setEdge] = useState<Edge | null>(null);
-  const localizedString = toLocalizedString(item.properties.label, t);
+  const localizedString = ThemeProvider.toLocalizedString(item.properties.label, t);
   const hue = item.properties.hue ?? null;
   const pending = item.properties.pending === true;
 
@@ -256,7 +253,7 @@ const L0Item = memo(({ item, parent, path, pinned, onRearrange, onItemHover }: L
 });
 
 const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   if (item.properties.pending === true) {
     return <L0PendingAvatar />;
@@ -266,13 +263,13 @@ const ItemAvatar = ({ item }: Pick<L0ItemProps, 'item'>) => {
   if (item.properties.icon) {
     const hue = item.properties.hue ?? null;
     const hueFgStyle = hue && { style: { color: `var(--color-${hue}-fg)` } };
-    return <Icon icon={item.properties.icon} size={6} {...hueFgStyle} />;
+    return <Icon.Root icon={item.properties.icon} size={6} {...hueFgStyle} />;
   }
 
   const type = l0ItemType(item);
   if (type === 'tab' && item.properties.disposition !== 'pin-end') {
     const hue = item.properties.hue ?? null;
-    const localizedString = toLocalizedString(item.properties.label, t);
+    const localizedString = ThemeProvider.toLocalizedString(item.properties.label, t);
     return <DxAvatar hue={hue} hueVariant='surface' variant='square' size={12} fallback={localizedString} />;
   }
 
@@ -302,7 +299,7 @@ export const L0Menu = ({
   path,
   onItemHover,
 }: L0MenuProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const runAction = useActionRunner();
   const handleAction = useCallback(
     (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps) => {
@@ -349,7 +346,7 @@ export const L0Menu = ({
       <ActionMenu onAction={handleAction} group={parent} actions={menuActions}>
         {/* The trigger clones this child, so the testid belongs here rather than on `ActionMenu`. */}
         <div className='grid place-items-center' data-testid='spacePlugin.addSpace'>
-          <IconButton
+          <IconButton.Root
             density='lg'
             variant='ghost'
             size={5}

@@ -10,18 +10,16 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/Hooks';
-import {
-  Banner,
-  DensityProvider,
-  Icon,
-  IconButton,
-  ScrollArea,
-  Tabs,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Tree, TREE_BLOCK } from '@dxos/react-ui-list';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as DensityProvider from '@dxos/react-ui/DensityProvider';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tabs from '@dxos/react-ui/Tabs';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
@@ -60,9 +58,9 @@ export type L1PanelProps = {
  * unavailable-workspace message, so the sidebar is never blank.
  */
 const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: L1PanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const pending = item?.properties.pending === true;
-  const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
+  const title = item ? ThemeProvider.toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
 
@@ -98,7 +96,7 @@ const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: 
             className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
             style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
           >
-            <Icon icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
+            <Icon.Root icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
           </div>
         ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
@@ -146,7 +144,7 @@ const L1PanelContent = ({
   const navTreeContext = useNavTreeContext();
 
   return (
-    <DensityProvider density='md'>
+    <DensityProvider.Root density='md'>
       <L1PanelHeader path={path} item={item} onBack={onBack} />
       <ScrollArea.Root centered padding thin orientation='vertical'>
         <ScrollArea.Viewport>
@@ -169,7 +167,7 @@ const L1PanelContent = ({
           />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </DensityProvider>
+    </DensityProvider.Root>
   );
 };
 
@@ -177,9 +175,9 @@ const L1PanelContent = ({
  * Header row.
  */
 const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBack'> & { item: AppGraphNode.Node }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
-  const title = toLocalizedString(item.properties.label, t);
+  const title = ThemeProvider.toLocalizedString(item.properties.label, t);
   const backCapableWorkspace = AppNode.isPinnedWorkspace(item);
 
   const { menuActions, onAction } = useL1MenuActions({ item, path });
@@ -193,7 +191,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
       style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
     >
       {backCapableWorkspace ? (
-        <IconButton
+        <IconButton.Root
           classNames={[hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon='ph--caret-left--regular'
@@ -234,7 +232,7 @@ const MenuActions = ({
 }: {
   item: AppGraphNode.Node;
 } & Pick<L1MenuActions, 'menuActions' | 'onAction'>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   if (menuActions.length === 0) {
     return null;
@@ -242,13 +240,13 @@ const MenuActions = ({
 
   if (menuActions.length === 1) {
     return (
-      <IconButton
+      <IconButton.Root
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon={menuActions[0].properties?.icon ?? 'ph--circle-dashed--regular'}
         iconOnly
         size={4}
-        label={toLocalizedString(menuActions[0].properties?.label, t)}
+        label={ThemeProvider.toLocalizedString(menuActions[0].properties?.label, t)}
         data-testid={menuActions[0].properties?.testId}
         onClick={() => onAction(menuActions[0] as AppGraphNode.Action)}
       />
@@ -257,7 +255,7 @@ const MenuActions = ({
 
   return (
     <ActionMenu caller={NAV_TREE_ITEM} onAction={onAction} group={item} actions={menuActions as MenuItem[]}>
-      <IconButton
+      <IconButton.Root
         classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
         variant='ghost'
         icon='ph--dots-three-vertical--regular'

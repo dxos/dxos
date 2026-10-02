@@ -2,6 +2,8 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks/index.ts';
@@ -21,6 +23,8 @@ const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
   },
 );
 
-export { Skeleton };
+export { Skeleton as Root };
 
-export type { SkeletonProps };
+export type { SkeletonProps as RootProps };
+
+export * from './Skeleton.theme.ts';

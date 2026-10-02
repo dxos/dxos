@@ -7,7 +7,7 @@ import * as Migrator from 'effect/sql/Migrator';
 import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { layerMemory } from '@dxos/sql-sqlite/Platform';
 import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 

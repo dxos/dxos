@@ -5,7 +5,8 @@
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { GeoLocation, type GeoPoint } from '@dxos/echo/Format';
-import { Field, useTranslation } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { safeParseFloat } from '@dxos/util';
 
 import { translationKey } from '#translations';
@@ -21,7 +22,7 @@ export const GeoPointField = ({
   onValueChange,
   onBlur,
 }: FormFieldRendererProps<GeoPoint>) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const geoPoint = useMemo<GeoPoint>(() => getValue() ?? [0, 0], [getValue]);
   const value = useMemo(() => GeoLocation.fromGeoPoint(geoPoint), [geoPoint]);
 

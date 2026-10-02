@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { expect } from 'storybook/test';
 
-import { IconButton, Toolbar } from '@dxos/react-ui';
+import * as IconButton from '@dxos/react-ui/IconButton';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { ListModel } from './list-model.ts';
@@ -144,14 +145,14 @@ const DefaultStory = ({
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
-        <IconButton
+        <IconButton.Root
           icon='ph--caret-up--regular'
           iconOnly
           label='Previous'
           data-testid='window.prev'
           onClick={() => step(-1)}
         />
-        <IconButton
+        <IconButton.Root
           icon='ph--caret-down--regular'
           iconOnly
           label='Next'
@@ -159,14 +160,14 @@ const DefaultStory = ({
           onClick={() => step(1)}
         />
         <Toolbar.Separator />
-        <IconButton
+        <IconButton.Root
           icon='ph--arrow-line-up--regular'
           iconOnly
           label='Top'
           data-testid='window.top'
           onClick={() => controller.current?.scrollToIndex(0)}
         />
-        <IconButton
+        <IconButton.Root
           icon='ph--arrow-line-down--regular'
           iconOnly
           label='Bottom'
@@ -175,7 +176,7 @@ const DefaultStory = ({
         />
         {(append || prepend || grow) && <Toolbar.Separator />}
         {prepend && (
-          <IconButton
+          <IconButton.Root
             icon='ph--arrow-u-left-up--regular'
             iconOnly
             label='Prepend'
@@ -191,7 +192,7 @@ const DefaultStory = ({
           />
         )}
         {append && (
-          <IconButton
+          <IconButton.Root
             icon='ph--arrow-u-right-down--regular'
             iconOnly
             label='Append'
@@ -207,7 +208,7 @@ const DefaultStory = ({
           />
         )}
         {grow && (
-          <IconButton
+          <IconButton.Root
             icon='ph--arrows-out-line-vertical--regular'
             iconOnly
             label='Grow'

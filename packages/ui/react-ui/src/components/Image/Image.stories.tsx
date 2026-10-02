@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { random } from '@dxos/random';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Image } from './Image.tsx';
+import * as Image from './Image.tsx';
 
 const seed = Math.random();
 
@@ -16,17 +16,17 @@ random.seed(seed);
 
 const meta = {
   title: 'ui/react-ui-core/components/Image',
-  component: Image,
+  component: Image.Root,
   render: (args) => (
     <div className='dx-fullscreen flex justify-center items-center'>
-      <Image {...args} />
+      <Image.Root {...args} />
     </div>
   ),
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
-} satisfies Meta<typeof Image>;
+} satisfies Meta<typeof Image.Root>;
 
 export default meta;
 
@@ -78,7 +78,7 @@ export const Many: Story = {
     return (
       <div className='w-[60rem] grid grid-cols-3 grid-rows-3 gap-8'>
         {images.map((src, i) => (
-          <Image key={i} src={src} classNames={classNames} />
+          <Image.Root key={i} src={src} classNames={classNames} />
         ))}
       </div>
     );

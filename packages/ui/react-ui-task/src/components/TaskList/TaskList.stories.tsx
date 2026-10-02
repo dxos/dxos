@@ -8,10 +8,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { File, PullRequest, Task, TaskSet } from '@dxos/types';
+import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
@@ -464,7 +467,7 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
               <Card.Root border={false} data-testid='artifact-preview'>
                 <Card.Header>
                   <Card.Block>
-                    <Icon icon={iconFor(artifact)} />
+                    <Icon.Root icon={iconFor(artifact)} />
                   </Card.Block>
                   <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
                 </Card.Header>

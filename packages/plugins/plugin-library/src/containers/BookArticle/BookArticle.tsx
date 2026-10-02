@@ -5,7 +5,9 @@
 import React, { useRef, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 import { Book } from '#types';
@@ -23,7 +25,7 @@ type ViewMode = 'info' | 'read';
  * (Info) and the inline content reader (Read). Private notes live in a separate markdown companion.
  */
 export const BookArticle = ({ subject, role }: BookArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [viewMode, setViewMode] = useState<ViewMode>('info');
   const readerRef = useRef<EpubReaderHandle>(null);
 

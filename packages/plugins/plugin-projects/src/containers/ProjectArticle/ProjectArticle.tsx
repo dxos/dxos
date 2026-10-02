@@ -20,17 +20,23 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import { InstructionsEditor } from '@dxos/plugin-routine/InstructionsEditor';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useSpace } from '@dxos/react-client/echo';
-import { Banner, Flex, Icon, Panel, Splitter, Tabs, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions, useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Form } from '@dxos/react-ui-form';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { buildTaskForest, flattenVisibleTasks } from '@dxos/react-ui-task';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import * as Tabs from '@dxos/react-ui/Tabs';
 import { type Milestone, Task, type TaskSet } from '@dxos/types';
 
 import { ObjectCard, ProjectPipeline } from '#components';
@@ -62,7 +68,7 @@ export type ProjectArticleProps = AppSurface.ObjectArticleProps<Project.Project>
  * owns the scroll and gutter so fields stay inset from the panel edges.
  */
 export const ProjectArticle = ({ role, subject, attendableId }: ProjectArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // The selected tab and the chart toggle are view state under the project's id, so they outlive
   // the plank and the reload.
   const { tab, pipeline: showPipeline, axis = 'time' } = useViewState(ProjectView.aspect, subject.id);
@@ -354,11 +360,11 @@ ProjectArticle.displayName = 'ProjectArticle';
 
 /** Read-only: milestones are authored through the agent/MCP verbs, and store no status to render. */
 const MilestoneList = ({ refs }: { refs: ReadonlyArray<Ref.Ref<Milestone.Milestone>> }) => (
-  <Flex role='list' column gap='xs'>
+  <Flex.Root role='list' column gap='xs'>
     {refs.map((milestoneRef) => (
       <MilestoneRow key={milestoneRef.uri.toString()} milestoneRef={milestoneRef} />
     ))}
-  </Flex>
+  </Flex.Root>
 );
 
 /** One row, holding its own subscription so a rename re-renders just that row. */
@@ -369,11 +375,11 @@ const MilestoneRow = ({ milestoneRef }: { milestoneRef: Ref.Ref<Milestone.Milest
   }
 
   return (
-    <Flex role='listitem' gap='sm' align='center' classNames='min-w-0'>
-      <Icon icon='ph--flag--regular' classNames='text-info-text' />
+    <Flex.Root role='listitem' gap='sm' align='center' classNames='min-w-0'>
+      <Icon.Root icon='ph--flag--regular' classNames='text-info-text' />
       <span className='truncate'>{milestone.name}</span>
       {milestone.targetDate && <span className='text-subdued shrink-0'>{milestone.targetDate}</span>}
-    </Flex>
+    </Flex.Root>
   );
 };
 

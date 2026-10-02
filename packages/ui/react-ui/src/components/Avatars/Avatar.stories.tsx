@@ -9,7 +9,7 @@ import { type ChromaticPalette, type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
 import { withTheme } from '../../testing/index.ts';
-import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar.tsx';
+import * as Avatar from './Avatar.tsx';
 
 type StoryArgs = PropsWithChildren<{
   id?: string;
@@ -17,9 +17,9 @@ type StoryArgs = PropsWithChildren<{
   fallbackText?: string;
   label?: string;
   description?: string;
-  status?: AvatarStatus;
-  variant?: AvatarVariant;
-  animation?: AvatarAnimation;
+  status?: Avatar.Status;
+  variant?: Avatar.Variant;
+  animation?: Avatar.Animation;
   size?: Size;
   hue?: ChromaticPalette;
 }>;

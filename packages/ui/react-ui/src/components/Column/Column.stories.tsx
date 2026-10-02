@@ -5,9 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { Field, Icon, ScrollArea } from '../../components/index.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Column } from './Column.tsx';
+import * as Field from '../Field/Field.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Column from './Column.tsx';
 
 const List = () => {
   return (
@@ -185,7 +187,7 @@ export const Sections: Story = {
         {['Charge 198°C', 'Turnaround 1:35', 'Development 2:10'].map((text) => (
           <Column.Row key={text}>
             <Column.Block>
-              <Icon icon='ph--circle--regular' size={4} />
+              <Icon.Root icon='ph--circle--regular' size={4} />
             </Column.Block>
             <span>{text}</span>
           </Column.Row>

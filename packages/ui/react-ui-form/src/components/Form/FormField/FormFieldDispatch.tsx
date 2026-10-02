@@ -9,8 +9,11 @@ import * as String from 'effect/String';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
-import { Field, IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { translationKey } from '#translations';
 import { type FieldContext, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
@@ -217,7 +220,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     resolveCreateEntry,
     refInline,
   } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
   const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);
@@ -424,10 +427,10 @@ const renderSelectStatic =
 
 // An end-of-row button sits in a control cell, so it centres on the same line as a control's own
 // trailing icon (a select's caret, a date field's calendar) and its hover fill never touches the row's edges.
-export const CompactIconButton = (props: IconButtonProps) => {
+export const CompactIconButton = (props: IconButton.RootProps) => {
   return (
     <Field.Block>
-      <IconButton variant='ghost' iconOnly density='sm' size={3} {...props} />
+      <IconButton.Root variant='ghost' iconOnly density='sm' size={3} {...props} />
     </Field.Block>
   );
 };

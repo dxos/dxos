@@ -4,7 +4,8 @@
 
 import React, { useEffect } from 'react';
 
-import { IconButton, useControlledState } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 export type PagerProps = {
   index?: number;
@@ -15,7 +16,7 @@ export type PagerProps = {
 };
 
 export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit }: PagerProps) => {
-  const [index, setIndex] = useControlledState(indexProp);
+  const [index, setIndex] = Hooks.useControlledState(indexProp);
   useEffect(() => {
     onChange?.(index);
   }, [index]);
@@ -76,7 +77,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
 
   return (
     <div className='flex items-center text-neutral-500'>
-      <IconButton
+      <IconButton.Root
         icon='ph--caret-double-left--regular'
         size={6}
         label='Jump to first'
@@ -86,7 +87,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
         classNames='p-0'
         onClick={() => onChange?.(0)}
       />
-      <IconButton
+      <IconButton.Root
         icon='ph--caret-left--regular'
         size={6}
         label='Previous'
@@ -96,7 +97,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
         classNames='p-0'
         onClick={() => handleChangeIndex(-1)}
       />
-      <IconButton
+      <IconButton.Root
         icon='ph--caret-right--regular'
         size={6}
         label='Next'
@@ -106,7 +107,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
         classNames='p-0'
         onClick={() => handleChangeIndex(1)}
       />
-      <IconButton
+      <IconButton.Root
         icon='ph--caret-double-right--regular'
         size={6}
         label='Jump to last'
@@ -141,7 +142,7 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
 
 export const StartButton = ({ running, onClick }: { running?: boolean; onClick?: (start: boolean) => void }) => {
   return (
-    <IconButton
+    <IconButton.Root
       icon={running ? 'ph--x--regular' : 'ph--play--regular'}
       size={6}
       label={running ? 'Stop' : 'Play'}

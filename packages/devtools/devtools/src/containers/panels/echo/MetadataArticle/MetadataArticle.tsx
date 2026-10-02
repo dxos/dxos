@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { JsonView } from '../../../../components/index.ts';
 import { useMetadata } from '../../../../hooks/index.ts';

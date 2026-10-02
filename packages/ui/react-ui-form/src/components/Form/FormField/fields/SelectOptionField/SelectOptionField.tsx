@@ -6,10 +6,15 @@ import React, { type ChangeEvent, type KeyboardEvent, useCallback, useEffect, us
 
 import { type SelectOption } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
-import { type ChromaticPalette, Field, IconButton, Tag, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { HuePicker } from '@dxos/react-ui-pickers';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as ToggleIconButton from '@dxos/react-ui/ToggleIconButton';
 import { osTranslations } from '@dxos/ui-theme';
+import { type ChromaticPalette } from '@dxos/ui-types';
 import { hues } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
@@ -21,7 +26,7 @@ export const SelectOptionField = ({
   getValue,
   onValueChange,
 }: FormFieldRendererProps<SelectOption[] | undefined>) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [selected, setSelectedId] = useState<string | null>(null);
   const [isNewOption, setIsNewOption] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -138,9 +143,9 @@ export const SelectOptionField = ({
                     <OrderedList.DragHandle />
                     {/* TODO(ZaymonFC): Move spacer into Tag component. */}
                     <div className='flex grow items-center truncate px-2' onClick={() => handleClick(item.id)}>
-                      <Tag hue={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag>
+                      <Tag.Root hue={item.color as ChromaticPalette}>{item.title || '\u200b'}</Tag.Root>
                     </div>
-                    <ToggleIconButton
+                    <ToggleIconButton.Root
                       iconOnly
                       variant='ghost'
                       active={selected === item.id}
@@ -163,7 +168,7 @@ export const SelectOptionField = ({
                           classNames='flex-1'
                         />
                         <HuePicker disabled={!!readonly} value={item.color} onChange={handleColorChange(item.id)} />
-                        <IconButton
+                        <IconButton.Root
                           disabled={!!readonly}
                           icon='ph--trash--fill'
                           iconOnly
@@ -175,7 +180,7 @@ export const SelectOptionField = ({
                   )}
                 </OrderedList.Item>
               ))}
-              <IconButton
+              <IconButton.Root
                 classNames='w-full'
                 variant='ghost'
                 icon='ph--plus--regular'

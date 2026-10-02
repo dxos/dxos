@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Field } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
 import { mx } from '@dxos/ui-theme';
 import { safeParseFloat } from '@dxos/util';
 

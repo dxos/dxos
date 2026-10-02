@@ -5,13 +5,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
-import { Field } from '@dxos/react-ui';
 import {
   type ShapeComponentProps,
   TextBox,
   type TextBoxControl,
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
+import * as Field from '@dxos/react-ui/Field';
 import { safeParseJson } from '@dxos/util';
 
 import { useComputeNodeState } from '../hooks/index.ts';

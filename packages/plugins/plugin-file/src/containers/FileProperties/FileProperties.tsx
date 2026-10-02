@@ -8,9 +8,12 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Blob, Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
-import { Field, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 import { File } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -27,7 +30,7 @@ export type FilePropertiesProps = AppSurface.ObjectPropertiesProps<File.File>;
  * the regenerate control rather than a value presented as permanent.
  */
 export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [reference, setReference] = useState<string | undefined>(undefined);
   const [url, setUrl] = useState<string | undefined>(undefined);
   const [pending, setPending] = useState(false);
@@ -85,7 +88,7 @@ export const FileProperties = ({ subject: file }: FilePropertiesProps) => {
           <div className='flex w-full gap-1'>
             <Field.Input readOnly value={url} classNames='grow' />
             <SystemIconButton.Clipboard iconOnly value={url} label={t('properties.url.copy.label')} />
-            <IconButton
+            <IconButton.Root
               iconOnly
               icon='ph--arrows-clockwise--regular'
               label={t('properties.url.regenerate.label')}

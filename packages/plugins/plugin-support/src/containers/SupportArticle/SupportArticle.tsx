@@ -7,7 +7,14 @@ import React, { useCallback } from 'react';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Button, Column, Field, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Column from '@dxos/react-ui/Column';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 import { Support } from '#types';
@@ -15,7 +22,7 @@ import { Support } from '#types';
 export type SupportArticleProps = AppSurface.ObjectArticleProps<Support.Ticket>;
 
 export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [ticket] = useObject(subject);
 
   const handleSetTitle = useCallback(
@@ -91,23 +98,23 @@ export const SupportArticle = ({ role, subject }: SupportArticleProps) => {
                 </Field.Root>
               )}
 
-              <Flex gap='sm' align='center'>
+              <Flex.Root gap='sm' align='center'>
                 {status === 'open' && (
-                  <Button variant='outline' onClick={() => handleStatus('in_progress')}>
+                  <Button.Root variant='outline' onClick={() => handleStatus('in_progress')}>
                     {t('mark-in-progress.button')}
-                  </Button>
+                  </Button.Root>
                 )}
                 {status !== 'resolved' && (
-                  <Button variant='primary' onClick={() => handleStatus('resolved')}>
+                  <Button.Root variant='primary' onClick={() => handleStatus('resolved')}>
                     {t('resolve.button')}
-                  </Button>
+                  </Button.Root>
                 )}
                 {status === 'resolved' && (
-                  <Button variant='outline' onClick={() => handleStatus('open')}>
+                  <Button.Root variant='outline' onClick={() => handleStatus('open')}>
                     {t('reopen.button')}
-                  </Button>
+                  </Button.Root>
                 )}
-              </Flex>
+              </Flex.Root>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Column.Root>

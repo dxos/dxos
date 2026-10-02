@@ -11,8 +11,8 @@ import { DeferredTask, scheduleMicroTask, scheduleTask, synchronized } from '@dx
 import { Context, Resource } from '@dxos/context';
 import { raise } from '@dxos/debug';
 import { QueryAST } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
-import { type RuntimeProvider } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import type * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { type IndexEngine } from '@dxos/index-core';
 import { log } from '@dxos/log';
 import { QueryService } from '@dxos/protocols/rpc';

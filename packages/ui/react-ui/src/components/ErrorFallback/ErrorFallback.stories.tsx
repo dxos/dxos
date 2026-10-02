@@ -8,20 +8,20 @@ import React from 'react';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { ErrorFallback } from './ErrorFallback.tsx';
-import { ThrowError } from './ThrowError.tsx';
+import * as ErrorFallback from './ErrorFallback.tsx';
+import * as ThrowError from './ThrowError.tsx';
 
 const DefaultStory = () => {
   return (
-    <ErrorBoundary name='story' FallbackComponent={ErrorFallback}>
-      <ThrowError />
+    <ErrorBoundary name='story' FallbackComponent={ErrorFallback.Root}>
+      <ThrowError.Root />
     </ErrorBoundary>
   );
 };
 
 const meta: Meta = {
   title: 'ui/react-ui-core/components/ErrorFallback',
-  component: ErrorFallback,
+  component: ErrorFallback.Root,
   decorators: [withTheme(), withLayout({ layout: 'column' })],
   parameters: {
     layout: 'fullscreen',
@@ -41,5 +41,5 @@ export const Default: Story = {
 };
 
 export const StringError: Story = {
-  render: () => <ErrorFallback error='This is a string error message' data={{ context: 'story' }} />,
+  render: () => <ErrorFallback.Root error='This is a string error message' data={{ context: 'story' }} />,
 };

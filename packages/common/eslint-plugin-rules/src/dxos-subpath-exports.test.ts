@@ -189,4 +189,19 @@ describe('dxos-subpath-exports', () => {
       ],
     });
   });
+
+  it('requires a listed package to re-export every subpath', () => {
+    const listed = fixture('subpath-reexport');
+    ruleTester.run('dxos-subpath-exports', rule, {
+      valid: [{ filename: listed, code: "export * as Alpha from './Alpha.ts';\nexport * from './hooks/index.ts';" }],
+      invalid: [
+        {
+          code: "export * as Alpha from './Alpha.ts';",
+          filename: listed,
+          output: "export * as Alpha from './Alpha.ts';\nexport * from './hooks/index.ts';",
+          errors: [{ messageId: 'missingSubpathExport' }],
+        },
+      ],
+    });
+  });
 });

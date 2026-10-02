@@ -7,10 +7,10 @@ import React, { type ComponentPropsWithoutRef, forwardRef, useState } from 'reac
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
-import { Splitter, type SplitterMode, type SplitterRootProps } from './Splitter.tsx';
+import * as Panel from '../Panel/Panel.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Splitter from './Splitter.tsx';
 
 const PanelContent = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> & { label: string }>(
   ({ label, ...props }, forwardedRef) => (
@@ -46,7 +46,7 @@ const Panes = () => (
 );
 
 // Renders the splitter with no surrounding chrome (Panel.Root keeps the height chain without a toolbar).
-const BasicStory = (args: SplitterRootProps) => (
+const BasicStory = (args: Splitter.RootProps) => (
   <Panel.Root>
     <Panel.Content asChild>
       <Splitter.Root {...args}>
@@ -57,8 +57,8 @@ const BasicStory = (args: SplitterRootProps) => (
 );
 
 // Toolbar drives the animated collapse via `mode`.
-const ToolbarStory = (args: SplitterRootProps) => {
-  const [mode, setMode] = useState<SplitterMode>(args.mode ?? 'split');
+const ToolbarStory = (args: Splitter.RootProps) => {
+  const [mode, setMode] = useState<Splitter.Mode>(args.mode ?? 'split');
   return (
     <Panel.Root>
       <Panel.Toolbar asChild>
@@ -81,7 +81,7 @@ const ToolbarStory = (args: SplitterRootProps) => {
  * Drives a controlled splitter, as the deck does: the size is the app's state and the seam only
  * reports where it was dragged to. The readout is in rem, which is what the app stores.
  */
-const ControlledStory = (args: SplitterRootProps) => {
+const ControlledStory = (args: Splitter.RootProps) => {
   const [size, setSize] = useState(args.defaultSize ?? 20);
   return (
     <Panel.Root>
@@ -97,7 +97,7 @@ const ControlledStory = (args: SplitterRootProps) => {
   );
 };
 
-const meta: Meta<SplitterRootProps> = {
+const meta: Meta<Splitter.RootProps> = {
   title: 'ui/react-ui-core/components/Splitter',
   component: Splitter.Root,
   render: BasicStory,
@@ -109,7 +109,7 @@ const meta: Meta<SplitterRootProps> = {
 
 export default meta;
 
-type Story = StoryObj<SplitterRootProps>;
+type Story = StoryObj<Splitter.RootProps>;
 
 export const VerticalStart: Story = {
   args: {

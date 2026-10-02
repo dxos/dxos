@@ -5,7 +5,12 @@
 import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type RDF } from '@dxos/pipeline-rdf';
-import { Banner, Button, Panel, ScrollArea, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { type EchoObjectItem, EchoObjectsList } from '../EchoObjectsList/index.ts';
 import { FactPanel } from '../FactPanel/index.ts';
@@ -16,7 +21,7 @@ export type StatItem = { label: string; value: string | number };
 /** A pipeline-specific output view (e.g. email messages, threads, transcript) shown as its own tab. */
 export type OutputDetail = { id: string; label: string; content: ReactNode };
 
-export type OutputPanelProps = ThemedClassName<{
+export type OutputPanelProps = Util.ThemedClassName<{
   facts: RDF.Fact[];
   objects: EchoObjectItem[];
   /** Common per-pipeline metrics (Stats tab). */
@@ -40,23 +45,23 @@ export const OutputPanel = ({ classNames, facts, objects, stats = [], details = 
     <Panel.Root classNames={classNames}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
-          <Button variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
+          <Button.Root variant={active === 'facts' ? 'primary' : 'ghost'} onClick={() => setTab('facts')}>
             Facts
-          </Button>
-          <Button variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
+          </Button.Root>
+          <Button.Root variant={active === 'objects' ? 'primary' : 'ghost'} onClick={() => setTab('objects')}>
             Objects
-          </Button>
-          <Button variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
+          </Button.Root>
+          <Button.Root variant={active === 'stats' ? 'primary' : 'ghost'} onClick={() => setTab('stats')}>
             Stats
-          </Button>
+          </Button.Root>
           {details.map((detail) => (
-            <Button
+            <Button.Root
               key={detail.id}
               variant={active === detail.id ? 'primary' : 'ghost'}
               onClick={() => setTab(detail.id)}
             >
               {detail.label}
-            </Button>
+            </Button.Root>
           ))}
         </Toolbar.Root>
       </Panel.Toolbar>

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Editable` — text that becomes an input in place ("inline edit" / "click-to-edit"), built on
 // `@ark-ui/react`'s Editable (zag state machine).
 //
@@ -26,7 +28,7 @@ import { createContext } from '@dxos/react-hooks';
 
 import { useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 import { type EditableActivationBinding, type UseEditableOptions, useEditable } from './useEditable.ts';
 
 const EDITABLE_NAME = 'Editable.Root';
@@ -88,7 +90,7 @@ const EditablePreview = forwardRef<HTMLSpanElement, EditablePreviewProps>(({ cla
       {/* Pushed to the trailing edge: the affordance belongs to the row, not to the text, so it
             does not move as the title's length changes. */}
       <span className='grow' />
-      <Icon icon='ph--pencil-simple--regular' size={4} classNames={tx('editable.previewIcon', {})} />
+      <Icon.Root icon='ph--pencil-simple--regular' size={4} classNames={tx('editable.previewIcon', {})} />
     </EditablePrimitive.Preview>
   );
 });
@@ -144,14 +146,10 @@ const EditableInput = forwardRef<HTMLInputElement, EditableInputProps>(({ classN
 });
 
 EditableInput.displayName = EDITABLE_INPUT_NAME;
-
-export const Editable = {
-  Root: EditableRoot,
-  Preview: EditablePreview,
-  Input: EditableInput,
-};
-
 export { useEditableContext };
 export * from './useEditable.ts';
 
-export type { EditableInputProps, EditablePreviewProps, EditableRootProps };
+export type { EditableInputProps as InputProps, EditablePreviewProps as PreviewProps, EditableRootProps as RootProps };
+
+export { EditableInput as Input, EditablePreview as Preview, EditableRoot as Root };
+export * from './Editable.theme.ts';

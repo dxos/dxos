@@ -5,8 +5,9 @@
 import React from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
-import { Banner, Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Panel from '@dxos/react-ui/Panel';
 
 export type EmptyPanelProps = {
   label: string;

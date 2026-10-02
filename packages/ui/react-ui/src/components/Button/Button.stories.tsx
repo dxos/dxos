@@ -7,25 +7,25 @@ import React from 'react';
 
 import { withTheme } from '../../testing/index.ts';
 import { withLayoutVariants } from '../../testing/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Button, ButtonGroup, type ButtonProps } from './Button.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Button from './Button.tsx';
 
-const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
+const DefaultStory = ({ children, ...args }: Omit<Button.RootProps, 'ref'>) => {
   return (
     <div className='flex items-center gap-2'>
-      <Button {...args}>{children}</Button>
-      <Button {...args} disabled>
+      <Button.Root {...args}>{children}</Button.Root>
+      <Button.Root {...args} disabled>
         {children}
-      </Button>
+      </Button.Root>
       {(args.variant === 'default' || args.variant === 'primary') && (
-        <ButtonGroup>
-          <Button {...args}>
-            <Icon icon='ph--caret-left--regular' />
-          </Button>
-          <Button {...args}>
-            <Icon icon='ph--caret-right--regular' />
-          </Button>
-        </ButtonGroup>
+        <Button.Group>
+          <Button.Root {...args}>
+            <Icon.Root icon='ph--caret-left--regular' />
+          </Button.Root>
+          <Button.Root {...args}>
+            <Icon.Root icon='ph--caret-right--regular' />
+          </Button.Root>
+        </Button.Group>
       )}
     </div>
   );
@@ -33,10 +33,10 @@ const DefaultStory = ({ children, ...args }: Omit<ButtonProps, 'ref'>) => {
 
 const meta = {
   title: 'ui/react-ui-core/components/Button',
-  component: Button,
+  component: Button.Root,
   render: DefaultStory,
   decorators: [withTheme(), withLayoutVariants()],
-} satisfies Meta<typeof Button>;
+} satisfies Meta<typeof Button.Root>;
 
 export default meta;
 

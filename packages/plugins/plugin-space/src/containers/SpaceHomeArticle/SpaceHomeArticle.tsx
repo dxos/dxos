@@ -8,7 +8,6 @@ import { Surface } from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useAppGraph, useLayout } from '@dxos/app-toolkit/Hooks';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';
-import { Column, Flex, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -18,6 +17,10 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Column from '@dxos/react-ui/Column';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { meta } from '#meta';
 import { SpaceSurface } from '#types';
@@ -50,9 +53,9 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
         <Column.Root gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
           <ScrollArea.Root orientation='vertical' centered padding>
             <ScrollArea.Viewport>
-              <Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
+              <Flex.Root column gap='lg' classNames='dx-document pb-trim-2xl'>
                 <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
-              </Flex>
+              </Flex.Root>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <Column.Center classNames='dx-document pb-4'>

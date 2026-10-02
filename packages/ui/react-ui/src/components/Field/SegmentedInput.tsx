@@ -26,9 +26,9 @@ import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { DatePicker } from '../DatePicker/index.ts';
-import { Popover } from '../Popover/index.ts';
-import { type FieldSharedProps } from './Field.tsx';
+import * as DatePicker from '../DatePicker/DatePicker.tsx';
+import * as Popover from '../Popover/Popover.tsx';
+import type * as Field from './Field.tsx';
 import { FIELD_NAME, useFieldValence } from './FieldContext.ts';
 import { useFieldTrigger } from './FieldTriggerContext.ts';
 
@@ -127,7 +127,7 @@ const renderSegment = (segment: DateSegmentData, classNames = segmentClassNames)
 // Shared props.
 //
 
-type SegmentedInputBaseProps = FieldSharedProps &
+type SegmentedInputBaseProps = Field.SharedProps &
   ThemedClassName<{
     'id'?: string;
     'value'?: string;
@@ -151,8 +151,8 @@ const useFieldChrome = ({
   density: densityProp,
   elevation: elevationProp,
 }: {
-  density: FieldSharedProps['density'];
-  elevation: FieldSharedProps['elevation'];
+  density: Field.SharedProps['density'];
+  elevation: Field.SharedProps['elevation'];
 }) => {
   const { tx } = useThemeContext();
   const density = useDensityContext(densityProp);

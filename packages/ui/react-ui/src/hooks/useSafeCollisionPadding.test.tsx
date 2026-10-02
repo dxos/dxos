@@ -6,17 +6,17 @@ import { renderHook } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
-import { ThemeContext, type ThemeContextValue } from '../providers/index.ts';
+import * as ThemeProvider from '../providers/ThemeProvider/ThemeProvider.tsx';
 import { defaultTx } from '../theme/index.ts';
 import { initialSafeArea } from './useSafeArea.ts';
 import { useSafeCollisionPadding } from './useSafeCollisionPadding.ts';
 
-const wrap = (value: ThemeContextValue | undefined) =>
+const wrap = (value: ThemeProvider.ThemeContextValue | undefined) =>
   function Wrapper({ children }: PropsWithChildren) {
-    return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+    return <ThemeProvider.ThemeContext.Provider value={value}>{children}</ThemeProvider.ThemeContext.Provider>;
   };
 
-const base: ThemeContextValue = { tx: defaultTx, themeMode: 'dark', hasIosKeyboard: false };
+const base: ThemeProvider.ThemeContextValue = { tx: defaultTx, themeMode: 'dark', hasIosKeyboard: false };
 
 describe('useSafeCollisionPadding', () => {
   // A portalled surface under the dev server's dual-module split resolves the fallback context, which

@@ -2,6 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { useScrollContainerContext } from './ScrollContainerContext.ts';
-
-export * from './ScrollContainer.tsx';
+export * as ScrollContainer from './ScrollContainer.tsx';

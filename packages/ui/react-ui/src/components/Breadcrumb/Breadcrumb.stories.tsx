@@ -6,19 +6,19 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Breadcrumb, type BreadcrumbRootProps } from './Breadcrumb.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Breadcrumb from './Breadcrumb.tsx';
 
-const DefaultStory = (props: BreadcrumbRootProps) => {
+const DefaultStory = (props: Breadcrumb.RootProps) => {
   return (
     <div>
       <Breadcrumb.Root {...props}>
         <Breadcrumb.List>
           <Breadcrumb.ListItem>
             <Breadcrumb.Link>
-              <Button variant='ghost' classNames='px-0 text-base-fg font-normal'>
+              <Button.Root variant='ghost' classNames='px-0 text-base-fg font-normal'>
                 Home
-              </Button>
+              </Button.Root>
             </Breadcrumb.Link>
             <Breadcrumb.Separator />
           </Breadcrumb.ListItem>

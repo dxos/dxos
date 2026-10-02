@@ -4,9 +4,10 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
+import * as Card from '@dxos/react-ui/Card';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '../../index.ts';
 
@@ -31,7 +32,7 @@ export type SearchStackProps = {
 /**
  * Card-based search result stack component using mosaic layout.
  */
-export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
+export const SearchStack = Util.composable<HTMLDivElement, SearchStackProps>(
   ({ results = [], currentId, onAction, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(() => results.map((result) => ({ result, onAction })), [results, onAction]);
@@ -53,7 +54,7 @@ export const SearchStack = composable<HTMLDivElement, SearchStackProps>(
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild withFocus currentId={currentId} onCurrentChange={handleCurrentChange}>
           <ScrollArea.Root orientation='vertical' padding centered thin>
             <ScrollArea.Viewport ref={setViewport}>

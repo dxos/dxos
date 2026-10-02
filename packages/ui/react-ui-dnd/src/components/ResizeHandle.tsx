@@ -9,7 +9,8 @@ import { type DragLocationHistory } from '@atlaskit/pragmatic-drag-and-drop/type
 import React, { useLayoutEffect, useRef } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
-import { type ThemedClassName, useElevationContext } from '@dxos/react-ui';
+import * as ElevationProvider from '@dxos/react-ui/ElevationProvider';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx, surfaceZIndex } from '@dxos/ui-theme';
 
 import { type Side, type Size } from '../types.ts';
@@ -55,7 +56,7 @@ const getNextSize = (
 
 const RESIZE_SUBJECT_DRAGGING = 'data-dx-resizing';
 
-export type ResizeHandleProps = ThemedClassName<{
+export type ResizeHandleProps = Util.ThemedClassName<{
   side: Side;
   iconPosition?: 'start' | 'center' | 'end';
   defaultSize?: Size;
@@ -85,7 +86,7 @@ export const ResizeHandle = ({
     onChange: onSizeChange,
   });
   const dragStartSize = useRef<Size>(size);
-  const elevation = useElevationContext();
+  const elevation = ElevationProvider.useElevationContext();
 
   const orientation = side.startsWith('inline') ? 'horizontal' : 'vertical';
   const client = orientation === 'horizontal' ? 'clientX' : 'clientY';

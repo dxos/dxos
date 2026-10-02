@@ -5,14 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -44,7 +44,7 @@ const SHEET_NAME = 'Test Sheet';
 
 const DefaultStory = ({ text }: EditorProps) => {
   const id = useMemo(() => PublicKey.random(), []);
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const [space] = useSpaces();
   const computeGraph = useComputeGraph(space);
   const { parentRef, focusAttributes } = useTextEditor(
@@ -115,7 +115,7 @@ const meta = {
       createSpace: true,
     }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [ProcessManagerPlugin()] }),
+    withPluginManager({ plugins: [ProcessManagerPlugin.make()] }),
     withComputeGraphDecorator(),
   ],
   parameters: {

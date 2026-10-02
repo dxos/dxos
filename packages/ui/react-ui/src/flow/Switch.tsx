@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { Children, type ReactNode, isValidElement } from 'react';
 
 type RootProps<T> = {
@@ -54,10 +56,6 @@ const SwitchRoot = <T,>({ on, fallback = null, children }: RootProps<T>): ReactN
 };
 
 SwitchRoot.displayName = 'Switch.Root';
+export type { MatchProps, RootProps };
 
-export const Switch = {
-  Root: SwitchRoot,
-  Match: SwitchMatch,
-};
-
-export type { MatchProps as SwitchMatchProps, RootProps as SwitchRootProps };
+export { SwitchMatch as Match, SwitchRoot as Root };

@@ -7,8 +7,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
-import { RegistryOperation } from '@dxos/plugin-registry/Operations';
-import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
+import * as RegistryOperation from '@dxos/plugin-registry/RegistryOperation';
+import * as Button from '@dxos/react-ui/Button';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 
@@ -27,7 +30,7 @@ export type PluginPromptProps = {
  * the button here is the only path that turns the plugin on.
  */
 export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_PROMPT_NAME);
   const { invokePromise } = useOperationInvoker();
@@ -72,10 +75,10 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
   const isEnabled = enabled.includes(pluginId);
 
   return (
-    <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>
-      <Flex gap='sm' align='center'>
-        <Icon icon='ph--plugs--regular' size={5} classNames='shrink-0 text-subdued' />
-        <Flex column classNames='min-w-0'>
+    <Flex.Root role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>
+      <Flex.Root gap='sm' align='center'>
+        <Icon.Root icon='ph--plugs--regular' size={5} classNames='shrink-0 text-subdued' />
+        <Flex.Root column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-prompt.title', { plugin: label })}</p>
           {/* A plugin's own description runs to paragraphs and would dwarf the chat. */}
           <p className='text-sm text-subdued'>
@@ -85,17 +88,17 @@ export const PluginPrompt = ({ plugin: pluginId }: PluginPromptProps) => {
                 ? t('plugin-prompt.enabled', { plugin: label })
                 : t('plugin-prompt.description', { plugin: label })}
           </p>
-        </Flex>
-      </Flex>
+        </Flex.Root>
+      </Flex.Root>
       {failed && <p className='text-sm text-error-text'>{t('plugin-prompt.failed', { plugin: label })}</p>}
       {plugin && !isEnabled && (
-        <Flex justify='end'>
-          <Button variant='primary' disabled={pending} onClick={handleEnable}>
+        <Flex.Root justify='end'>
+          <Button.Root variant='primary' disabled={pending} onClick={handleEnable}>
             {t('plugin-prompt.button')}
-          </Button>
-        </Flex>
+          </Button.Root>
+        </Flex.Root>
       )}
-    </Flex>
+    </Flex.Root>
   );
 };
 

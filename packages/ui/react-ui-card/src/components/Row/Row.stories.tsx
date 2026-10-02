@@ -16,9 +16,12 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Actor, Person } from '@dxos/types';
+import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
@@ -81,7 +84,7 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
               <Card.Root border={false} data-testid='contact-preview'>
                 <Card.Header>
                   <Card.Block>
-                    <Icon icon='ph--user--regular' />
+                    <Icon.Root icon='ph--user--regular' />
                   </Card.Block>
                   <Card.Title>{link.title ?? link.label}</Card.Title>
                 </Card.Header>

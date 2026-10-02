@@ -22,8 +22,10 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import { CardMasonry } from '@dxos/plugin-space/CardMasonry';
-import { Column, Icon, useTranslation } from '@dxos/react-ui';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
+import * as Column from '@dxos/react-ui/Column';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -239,7 +241,7 @@ export type TaskAttachmentsProps = {
  * and nothing could be.
  */
 export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: TaskAttachmentsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [refs] = useObject(task, 'attachments');
   const dragging = useContext(FileDragContext);
 
@@ -296,7 +298,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
           </RemoveAttachmentContext.Provider>
         ) : (
           <>
-            <Icon icon='ph--paperclip--regular' />
+            <Icon.Root icon='ph--paperclip--regular' />
             {t('task-attachments.drop-area.label')}
           </>
         )}
@@ -310,7 +312,7 @@ const RemoveAttachmentContext = createContext<((object: Obj.Unknown) => void) | 
 
 /** Adds "Remove attachment" to each attachment card's menu, beside the file's own actions. */
 const AttachmentCardMenu = ({ subject, menu }: AppSurface.CardMenuData<Obj.Unknown>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const onRemove = useContext(RemoveAttachmentContext);
   const items = useMemo(
     () =>

@@ -7,12 +7,15 @@ import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Show from '@dxos/react-ui/Show';
+import * as Util from '@dxos/react-ui/Util';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
@@ -40,7 +43,7 @@ export const OutlineArticle = ({
   taskSet,
   toolbar = true,
 }: OutlineArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(outline);
 
   // Link the user navigated into; the back button clears it to return to the outline.
@@ -148,7 +151,7 @@ export const OutlineArticle = ({
   }
 
   return (
-    <Show when={text}>
+    <Show.Root when={text}>
       {(text) => (
         <Outline.Root
           ref={outlineRef}
@@ -161,24 +164,24 @@ export const OutlineArticle = ({
           extensions={extensions}
         >
           <Panel.Root role={role}>
-            <Show when={toolbar}>
+            <Show.Root when={toolbar}>
               <Panel.Toolbar asChild>
                 <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
               </Panel.Toolbar>
-            </Show>
+            </Show.Root>
             <Panel.Content asChild>
               <Outline.Content classNames='dx-document' />
             </Panel.Content>
           </Panel.Root>
         </Outline.Root>
       )}
-    </Show>
+    </Show.Root>
   );
 };
 
 OutlineArticle.displayName = 'OutlineArticle';
 
-const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) => {
+const TaskForm = ({ classNames, task }: Util.ThemedClassName<{ task: Task.Task }>) => {
   const schema = useMemo(() => omitId(Type.getSchema(Task.Task)), []);
 
   const handleSave = useCallback(

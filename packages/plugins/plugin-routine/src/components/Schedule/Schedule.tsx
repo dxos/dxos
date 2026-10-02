@@ -5,15 +5,10 @@
 import React, { type PropsWithChildren, createContext, forwardRef, useCallback, useContext, useState } from 'react';
 
 import { invariant } from '@dxos/invariant';
-import {
-  Field,
-  ThemedClassName,
-  ToggleGroup,
-  ToggleGroupItem,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -153,7 +148,7 @@ const useScheduleContext = (consumer: string): ScheduleContextValue => {
 // Root
 //
 
-export type ScheduleRootProps = ThemedClassName<
+export type ScheduleRootProps = Util.ThemedClassName<
   PropsWithChildren<{
     value?: ScheduleValue;
     /** Timezone abbreviation shown in the summary, e.g. `EDT`. */
@@ -175,7 +170,7 @@ export type ScheduleRootProps = ThemedClassName<
  * and the schedule state context. Controllable via `value`/`onValueChange`, or self-managing via
  * `defaultValue`. Compose with `Schedule.Header`, `Schedule.Kind`, `Schedule.Body`, `Schedule.Description`.
  */
-const ScheduleRoot = composable<HTMLDivElement, ScheduleRootProps>(
+const ScheduleRoot = Util.composable<HTMLDivElement, ScheduleRootProps>(
   (
     {
       children,
@@ -218,7 +213,7 @@ const ScheduleRoot = composable<HTMLDivElement, ScheduleRootProps>(
           timezone,
         }}
       >
-        <div {...composableProps(props, { classNames: 'flex flex-col gap-y-3' })} ref={forwardedRef}>
+        <div {...Util.composableProps(props, { classNames: 'flex flex-col gap-y-3' })} ref={forwardedRef}>
           {children}
         </div>
       </ScheduleContext.Provider>
@@ -240,7 +235,7 @@ export type ScheduleHeaderProps = { classNames?: string };
  * (column 3).
  */
 const ScheduleHeader = forwardRef<HTMLDivElement, ScheduleHeaderProps>(({ classNames }, forwardedRef) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { value, timezone } = useScheduleContext('Schedule.Header');
   return <p className={mx('grow truncate text-description', classNames)}>{describeSchedule(value, timezone)}</p>;
 });
@@ -251,11 +246,11 @@ ScheduleHeader.displayName = 'Schedule.Header';
 // Kind
 //
 
-export type ScheduleKindProps = ThemedClassName;
+export type ScheduleKindProps = Util.ThemedClassName;
 
 /** Segmented frequency tabs (Once / Hourly / Daily / Weekly / Custom). */
 const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNames }, forwardedRef) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { value, onValueChange, kinds } = useScheduleContext('Schedule.Kind');
   const handleKindChange = useCallback(
     (kind: string) => {
@@ -267,18 +262,18 @@ const ScheduleKindRow = forwardRef<HTMLDivElement, ScheduleKindProps>(({ classNa
   );
 
   return (
-    <ToggleGroup
+    <ToggleGroup.Root
       classNames='overflow-x-auto scrollbar-none'
       type='single'
       value={value.kind}
       onValueChange={handleKindChange}
     >
       {kinds.map((kind) => (
-        <ToggleGroupItem key={kind} value={kind}>
+        <ToggleGroup.Item key={kind} value={kind}>
           {t(KIND_LABEL_KEYS[kind])}
-        </ToggleGroupItem>
+        </ToggleGroup.Item>
       ))}
-    </ToggleGroup>
+    </ToggleGroup.Root>
   );
 });
 
@@ -288,7 +283,7 @@ ScheduleKindRow.displayName = 'Schedule.Kind';
 // Body
 //
 
-export type ScheduleBodyProps = ThemedClassName;
+export type ScheduleBodyProps = Util.ThemedClassName;
 
 /** Per-kind editor for the active frequency. Rendered as a 3-column row so editors can use the gutters. */
 const ScheduleBody = forwardRef<HTMLDivElement, ScheduleBodyProps>(({ classNames }, forwardedRef) => {
@@ -313,7 +308,7 @@ export const Schedule = {
 // Per-kind editors.
 //
 
-const LabelledRow = ({ label, children, classNames }: ThemedClassName<PropsWithChildren<{ label: string }>>) => (
+const LabelledRow = ({ label, children, classNames }: Util.ThemedClassName<PropsWithChildren<{ label: string }>>) => (
   <label className={mx('flex items-center gap-2 shrink-0', classNames)}>
     <span className='text-sm'>{label}</span>
     {children}
@@ -321,7 +316,7 @@ const LabelledRow = ({ label, children, classNames }: ThemedClassName<PropsWithC
 );
 
 const ScheduleEditor = ({ value, onChange }: { value: ScheduleValue; onChange: (value: ScheduleValue) => void }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   switch (value.kind) {
     // case 'once':
     // `Field.Root` renders no DOM, so the trigger (column 1) and the field (center) become direct children

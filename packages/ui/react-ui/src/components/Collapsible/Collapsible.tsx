@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Collapsible` — a section that folds under its own heading, built on `@ark-ui/react`'s Collapsible
 // (zag state machine). The machine owns the open state, pairs the trigger to the section it controls
 // (`aria-controls`/`aria-expanded`), measures the section so its height can be animated, and mounts
@@ -126,13 +128,11 @@ CollapsibleContent.displayName = CONTENT_NAME;
 //
 // Collapsible
 //
-
-const Collapsible = {
-  Root: CollapsibleRoot,
-  Trigger: CollapsibleTrigger,
-  Content: CollapsibleContent,
+export type {
+  CollapsibleContentProps as ContentProps,
+  CollapsibleRootProps as RootProps,
+  CollapsibleTriggerProps as TriggerProps,
 };
 
-export { Collapsible };
-
-export type { CollapsibleContentProps, CollapsibleRootProps, CollapsibleTriggerProps };
+export { CollapsibleContent as Content, CollapsibleRoot as Root, CollapsibleTrigger as Trigger };
+export * from './Collapsible.theme.ts';

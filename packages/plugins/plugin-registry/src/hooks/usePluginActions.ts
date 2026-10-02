@@ -11,7 +11,7 @@ import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useNode } from '@dxos/plugin-graph/Hooks';
 
 import { getPluginPath, getPluginSpecPath } from '../paths.ts';

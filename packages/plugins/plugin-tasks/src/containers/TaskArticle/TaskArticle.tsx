@@ -9,9 +9,14 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { Column, IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
+import * as Column from '@dxos/react-ui/Column';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -39,7 +44,7 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * a plugin that can store files is present.
  */
 export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attendableId }: TaskArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
@@ -152,7 +157,7 @@ TaskArticle.displayName = 'TaskArticle';
  * row's trailing gutter, where the pane's whole subject is the task and they are its actions.
  */
 const TaskActions = ({ task }: { task: Task.Task }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const contributed = useTaskActions();
   const actions = useMemo(() => contributed(task), [contributed, task]);
 
@@ -162,7 +167,7 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
 
   return (
     <ActionMenu deferUntilOpen actions={actions}>
-      <IconButton
+      <IconButton.Root
         variant='ghost'
         iconOnly
         icon='ph--dots-three-vertical--regular'

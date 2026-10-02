@@ -8,7 +8,8 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { Ibkr, IbkrOperation } from '#types';
 
@@ -27,7 +28,7 @@ export type PortfolioImportActionProps = {
  * {@link IconButton}.
  */
 export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -59,7 +60,7 @@ export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) =
 
   return (
     <>
-      <IconButton
+      <IconButton.Root
         disabled={importing}
         variant='ghost'
         iconClassNames={importing ? 'animate-spin' : undefined}

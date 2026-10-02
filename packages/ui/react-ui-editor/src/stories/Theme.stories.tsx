@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { useThemeContext } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { createBasicExtensions, createThemeExtensions } from '@dxos/ui-editor';
 
 import { Editor } from '../components/index.ts';
@@ -15,7 +15,7 @@ const createText = (monospace?: boolean) =>
   [`${monospace ? 'monospace' : 'body'}`, 'Hello world', '0123456789'].join('\n');
 
 const DefaultStory = () => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const [ext1, ext2] = useMemo(
     () => [
       //

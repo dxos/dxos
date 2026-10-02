@@ -11,9 +11,9 @@ import { random } from '@dxos/random';
 import { translations } from '#translations';
 
 import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
-import { FloatingPanel, type FloatingPanelPoint, type FloatingPanelSize } from './FloatingPanel.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as FloatingPanel from './FloatingPanel.tsx';
 
 const paragraphs = Array.from({ length: 4 }, () => random.lorem.paragraph(3));
 
@@ -28,8 +28,8 @@ type StoryArgs = {
  * title bar or fills the viewport, and closes; where it was left is reported so a host can keep it.
  */
 const DefaultStory = ({ draggable = true, resizable = true, persistRect = true }: StoryArgs) => {
-  const [position, setPosition] = useState<FloatingPanelPoint>();
-  const [size, setSize] = useState<FloatingPanelSize>();
+  const [position, setPosition] = useState<FloatingPanel.Point>();
+  const [size, setSize] = useState<FloatingPanel.Size>();
 
   return (
     <div className='flex flex-col gap-2 items-start'>
@@ -43,7 +43,7 @@ const DefaultStory = ({ draggable = true, resizable = true, persistRect = true }
         onSizeChangeEnd={setSize}
       >
         <FloatingPanel.Trigger asChild>
-          <Button>Open panel</Button>
+          <Button.Root>Open panel</Button.Root>
         </FloatingPanel.Trigger>
         <FloatingPanel.Portal>
           <FloatingPanel.Content>

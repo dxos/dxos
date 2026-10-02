@@ -4,17 +4,13 @@
 
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import {
-  Field,
-  Toolbar,
-  type ToolbarRootProps,
-  Tooltip,
-  composable,
-  composableProps,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { type DropdownMenuItemGroupProperties, type ToggleGroupMenuItemGroupProperties } from '@dxos/ui-types';
 
@@ -42,7 +38,7 @@ type ItemProps<T> = { menu: MenuActions } & T;
 
 const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) => {
   const { onAction, caller, iconSize = 5 } = menu;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [pending, setPending] = useState(false);
   const pendingRef = useRef(false);
 
@@ -97,9 +93,9 @@ const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
 
 const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) => {
   const { onAction, caller } = menu;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { label, iconOnly, disabled, testId, hidden, checked } = action.properties;
-  const labelStr = toLocalizedString(label, t);
+  const labelStr = ThemeProvider.toLocalizedString(label, t);
 
   const handleCheckedChange = useCallback(() => {
     if (onAction) {
@@ -138,7 +134,7 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
 };
 
 const DropdownToolbarItem = ({ menu, group }: ItemProps<{ group: MenuItemGroup<DropdownMenuItemGroupProperties> }>) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { iconSize = 5 } = menu;
   const items = useMenuItems(menu, group);
   const {
@@ -200,7 +196,7 @@ const ToggleGroupItem = ({
   action,
 }: ItemProps<{ group: MenuItemGroup<ToggleGroupMenuItemGroupProperties>; action: MenuAction }>) => {
   const { onAction, caller, iconSize = 5 } = menu;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames, iconClassNames, spin } = action.properties;
 
   const handleClick = useCallback(() => {
@@ -301,7 +297,7 @@ const ActionToolbarItems = ({ menu }: { menu: MenuActions }) => {
 //
 
 export type ActionToolbarProps = Partial<MenuActions> &
-  ToolbarRootProps & {
+  Toolbar.RootProps & {
     /** The toolbar is enabled only while this attendable has attention, unless `alwaysActive`. */
     attendableId?: string;
     alwaysActive?: boolean;
@@ -313,7 +309,7 @@ export type ActionToolbarProps = Partial<MenuActions> &
  * `ActionMenu` into a plain `Toolbar.Root`. Without a `MenuActions` it is an empty toolbar until one
  * arrives (a tile whose menu is built asynchronously).
  */
-export const ActionToolbar = composable<HTMLDivElement, ActionToolbarProps>(
+export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>(
   (
     { items, contributions, onAction, caller, iconSize, attendableId, alwaysActive, children, ...props },
     forwardedRef,
@@ -334,7 +330,7 @@ export const ActionToolbar = composable<HTMLDivElement, ActionToolbarProps>(
 
     return (
       <Toolbar.Root
-        {...composableProps(props, { classNames: attendableId })}
+        {...Util.composableProps(props, { classNames: attendableId })}
         disabled={!alwaysActive && !hasAttention}
         ref={forwardedRef}
       >

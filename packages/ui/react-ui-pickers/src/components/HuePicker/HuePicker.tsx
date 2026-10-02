@@ -4,7 +4,10 @@
 
 import React from 'react';
 
-import { type ButtonProps, type IconProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import type * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Icon from '@dxos/react-ui/Icon';
+import type * as Util from '@dxos/react-ui/Util';
 import { getSize, osTranslations } from '@dxos/ui-theme';
 import { hues } from '@dxos/ui-types';
 
@@ -17,11 +20,11 @@ export type HuePickerProps = {
   defaultValue?: string;
   value?: string;
   onChange?: (nextHue: string) => void;
-  onReset?: ButtonProps['onClick'];
+  onReset?: Button.RootProps['onClick'];
 } & Pick<PickerButtonProps, 'disabled' | 'defaultValue' | 'value' | 'onChange' | 'onReset' | 'rootVariant'>;
 
-export const HuePicker = ({ label, ...props }: ThemedClassName<HuePickerProps>) => {
-  const { t } = useTranslation(osTranslations);
+export const HuePicker = ({ label, ...props }: Util.ThemedClassName<HuePickerProps>) => {
+  const { t } = Hooks.useTranslation(osTranslations);
 
   return (
     <PickerButton
@@ -34,7 +37,7 @@ export const HuePicker = ({ label, ...props }: ThemedClassName<HuePickerProps>) 
   );
 };
 
-const HuePreview = ({ value, size = 5 }: { value: string; size?: IconProps['size'] }) => {
+const HuePreview = ({ value, size = 5 }: { value: string; size?: Icon.RootProps['size'] }) => {
   return (
     <div className='flex justify-center items-center'>
       <svg viewBox={`0 0 ${size} ${size}`} className={getSize(size)}>

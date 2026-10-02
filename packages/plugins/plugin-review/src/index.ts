@@ -8,3 +8,5 @@ export * as ReviewPlugin from './ReviewPlugin.ts';
 export * from '#meta';
 export * from '#types';
 export { CommentsArticle } from '#containers';
+export * from '#operations';
+export * from '#skills';

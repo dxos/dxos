@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 
 import * as Annotation from '@dxos/echo/Annotation';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { type Merge } from '@dxos/util';
 
 import { type FieldContext } from '#types';

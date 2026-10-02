@@ -10,7 +10,7 @@ import { useCallback, useContext, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { Obj, Ref, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 

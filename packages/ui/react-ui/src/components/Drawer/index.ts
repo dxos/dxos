@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Drawer.tsx';
+export * as Drawer from './Drawer.tsx';

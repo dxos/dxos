@@ -25,11 +25,15 @@ import {
   View,
 } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
-import { Banner, Field, type ThemedClassName, ToggleIconButton, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ToggleIconButton from '@dxos/react-ui/ToggleIconButton';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   ParentLabelAnnotation,
   ProjectionModel,
@@ -45,7 +49,7 @@ import { type FormFieldMap, type FormFieldRenderer, type FormFieldRendererProps 
 import { FieldEditor } from '../FieldEditor/index.ts';
 import { CompactIconButton, Form, FormFieldHeader, FormFieldLabel, type FormRootProps } from '../Form/index.ts';
 
-export type ViewEditorProps = ThemedClassName<
+export type ViewEditorProps = Util.ThemedClassName<
   {
     type?: Type.AnyEntity;
     view: View.View;
@@ -81,7 +85,7 @@ export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
   ) => {
     const atomRegistry = useContext(RegistryContext);
     const schemaReadonly = type == null || Type.getDatabase(type) == null;
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
 
     const projectionModel = useMemo(() => {
       if (!type) {
@@ -268,7 +272,7 @@ type FieldListProps = {
 const FieldList = ({ type, view, registry, readonly, showHeading = false, onDelete }: FieldListProps) => {
   const atomRegistry = useContext(RegistryContext);
   const schemaReadonly = Type.getDatabase(type) == null;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   // Subscribe to view changes for reactivity.
   const [viewSnapshot] = useObject(view);
@@ -379,7 +383,7 @@ const FieldList = ({ type, view, registry, readonly, showHeading = false, onDele
                   title={field.path}
                   titleClassNames={hidden ? 'text-subdued' : undefined}
                   actions={
-                    <ToggleIconButton
+                    <ToggleIconButton.Root
                       iconOnly
                       variant='ghost'
                       active={hidden}

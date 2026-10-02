@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 
 import {
   type BundleEdge,
@@ -17,7 +17,7 @@ import { type TreeNode } from './types.ts';
 
 export type LayoutVariant = 'tidy' | 'radial' | 'edge';
 
-export type TreeComponentProps = ThemedClassName<{
+export type TreeComponentProps = Util.ThemedClassName<{
   data: TreeNode;
   /** Optional edges for the `edge` variant (hierarchical edge bundling). */
   edges?: BundleEdge[];

@@ -18,7 +18,6 @@ import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { Panel, Switch, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
@@ -37,6 +36,10 @@ import {
   type TaskPlacement,
   type TaskSelectModifiers,
 } from '@dxos/react-ui-task';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Switch from '@dxos/react-ui/Switch';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Task, TaskSet } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -66,7 +69,7 @@ export const TaskSetArticle = ({
   subject: taskSet,
   showDescription = true,
 }: TaskSetArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { hasAttention } = useAttention(attendableId);
   const filterEditorRef = useRef<EditorController>(null);
   const spaceId = Obj.getDatabase(taskSet)?.spaceId;

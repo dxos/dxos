@@ -6,9 +6,12 @@ import React, { useCallback } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';
-import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
+import * as DensityProvider from '@dxos/react-ui/DensityProvider';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Util from '@dxos/react-ui/Util';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -34,10 +37,10 @@ export type NavTreeItemActionMenuProps = NavTreeNode.ActionProperties & {
   menuActions?: AppGraphNode.Action[];
 };
 
-export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTreeItemActionMenuProps>(
+export const NavTreeItemActionDropdownMenu = Util.composable<HTMLButtonElement, NavTreeItemActionMenuProps>(
   ({ parent, path, label, icon, testId, menuActions, caller, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
-    const density = useDensityContext();
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const density = DensityProvider.useDensityContext();
     const runAction = useActionRunner();
     const handleAction = useCallback(
       (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps = {}) => runAction(action, { ...params, path }),
@@ -46,14 +49,14 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
 
     return (
       <ActionMenu caller={caller} onAction={handleAction} group={parent} actions={menuActions as MenuItem[]}>
-        <IconButton
+        <IconButton.Root
           {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
-          {...composableProps(props)}
+          {...Util.composableProps(props)}
           classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
           variant='ghost'
           icon={icon ?? fallbackIcon}
           iconOnly
-          label={toLocalizedString(label, t)}
+          label={ThemeProvider.toLocalizedString(label, t)}
           data-testid={testId}
           // The tree selects a row on any click inside it, and selecting navigates away from the
           // menu just opened. The trigger has handled the click by the time this runs.
@@ -81,10 +84,10 @@ export const NavTreeItemMonolithicAction = (
     properties: { disabled, caller, testId, icon, variant = 'ghost', iconOnly = true } = { label: 'never' },
     baseLabel,
   } = props;
-  const density = useDensityContext();
+  const density = DensityProvider.useDensityContext();
   const runAction = useActionRunner();
   return (
-    <IconButton
+    <IconButton.Root
       {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
       variant={variant}
       classNames={[
@@ -118,10 +121,13 @@ export const NavTreeItemAction = ({
   path,
   ...props
 }: NavTreeItemActionMenuProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const monolithicAction = menuActions?.length === 1 && menuActions[0];
-  const baseLabel = toLocalizedString(monolithicAction ? monolithicAction.properties!.label : props.label, t);
+  const baseLabel = ThemeProvider.toLocalizedString(
+    monolithicAction ? monolithicAction.properties!.label : props.label,
+    t,
+  );
   return monolithic && menuActions?.length === 1 ? (
     <NavTreeItemMonolithicAction baseLabel={baseLabel} parent={parent} path={path} {...menuActions[0]} />
   ) : (

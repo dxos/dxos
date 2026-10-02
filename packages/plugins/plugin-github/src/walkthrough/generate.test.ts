@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 import { PROGRESS_STATUS_COMPLETE } from '@dxos/app-toolkit';
 import { Database, Filter, Ref } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PullRequest } from '@dxos/types';
 
 import { Walkthrough } from '#types';

@@ -4,7 +4,9 @@
 
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { Button, Field, Popover } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Popover from '@dxos/react-ui/Popover';
 
 export type NamePopoverProps = PropsWithChildren<{
   open: boolean;
@@ -56,9 +58,9 @@ export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit
                 }}
               />
             </Field.Root>
-            <Button variant='primary' onClick={submit}>
+            <Button.Root variant='primary' onClick={submit}>
               {submitLabel}
-            </Button>
+            </Button.Root>
           </div>
           <Popover.Arrow />
         </Popover.Content>

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, {
   InputHTMLAttributes,
   type KeyboardEvent,
@@ -20,14 +22,13 @@ import { downloadBlob } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { IconButton, type IconButtonProps } from './IconButton.tsx';
-import { ToggleIconButton, type ToggleIconButtonProps } from './ToggleIconButton.tsx';
-
+import * as IconButton from './IconButton.tsx';
+import * as ToggleIconButton from './ToggleIconButton.tsx';
 // Static presets fix the icon and default the label; callers can still override `label`.
-type StaticPresetProps = Omit<IconButtonProps, 'icon' | 'label'> & { label?: string };
+type StaticPresetProps = Omit<IconButton.RootProps, 'icon' | 'label'> & { label?: string };
 
 // Stateful presets fix both icons so a call site cannot supply a conflicting glyph.
-type TogglePresetProps = Omit<ToggleIconButtonProps, 'icon' | 'activeIcon' | 'label'> & { label?: string };
+type TogglePresetProps = Omit<ToggleIconButton.RootProps, 'icon' | 'activeIcon' | 'label'> & { label?: string };
 
 //
 // Star
@@ -36,7 +37,7 @@ type TogglePresetProps = Omit<ToggleIconButtonProps, 'icon' | 'activeIcon' | 'la
 const StarIconButton = forwardRef<HTMLButtonElement, TogglePresetProps>(({ label, active, ...props }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   return (
-    <ToggleIconButton
+    <ToggleIconButton.Root
       {...props}
       active={active}
       icon='ph--star--regular'
@@ -58,7 +59,7 @@ const BookmarkIconButton = forwardRef<HTMLButtonElement, TogglePresetProps>(
   ({ label, active, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     return (
-      <ToggleIconButton
+      <ToggleIconButton.Root
         {...props}
         active={active}
         icon='ph--bookmark-simple--regular'
@@ -85,7 +86,7 @@ const DisclosureIconButton = forwardRef<HTMLButtonElement, TogglePresetProps>(
   ({ label, active, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
     return (
-      <ToggleIconButton
+      <ToggleIconButton.Root
         {...props}
         active={active}
         aria-expanded={active ?? false}
@@ -106,7 +107,12 @@ DisclosureIconButton.displayName = 'SystemIconButton.Disclosure';
 const AddIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ label, ...props }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   return (
-    <IconButton {...props} icon='ph--plus--regular' label={label ?? t('system-button.add.label')} ref={forwardedRef} />
+    <IconButton.Root
+      {...props}
+      icon='ph--plus--regular'
+      label={label ?? t('system-button.add.label')}
+      ref={forwardedRef}
+    />
   );
 });
 
@@ -120,7 +126,7 @@ AddIconButton.displayName = 'SystemIconButton.Add';
 const AiIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ label, ...props }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   return (
-    <IconButton {...props} icon={AI_ACTION_ICON} label={label ?? t('system-button.ai.label')} ref={forwardedRef} />
+    <IconButton.Root {...props} icon={AI_ACTION_ICON} label={label ?? t('system-button.ai.label')} ref={forwardedRef} />
   );
 });
 
@@ -133,7 +139,7 @@ AiIconButton.displayName = 'SystemIconButton.Ai';
 const DeleteIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ label, ...props }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   return (
-    <IconButton
+    <IconButton.Root
       {...props}
       icon='ph--trash--regular'
       label={label ?? t('system-button.delete.label')}
@@ -151,7 +157,12 @@ DeleteIconButton.displayName = 'SystemIconButton.Delete';
 const EditIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ label, ...props }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   return (
-    <IconButton {...props} icon='ph--pen--regular' label={label ?? t('system-button.edit.label')} ref={forwardedRef} />
+    <IconButton.Root
+      {...props}
+      icon='ph--pen--regular'
+      label={label ?? t('system-button.edit.label')}
+      ref={forwardedRef}
+    />
   );
 });
 
@@ -164,7 +175,12 @@ EditIconButton.displayName = 'SystemIconButton.Edit';
 const CloseIconButton = forwardRef<HTMLButtonElement, StaticPresetProps>(({ label, ...props }, forwardedRef) => {
   const { t } = useTranslation(translationKey);
   return (
-    <IconButton {...props} icon='ph--x--regular' label={label ?? t('system-button.close.label')} ref={forwardedRef} />
+    <IconButton.Root
+      {...props}
+      icon='ph--x--regular'
+      label={label ?? t('system-button.close.label')}
+      ref={forwardedRef}
+    />
   );
 });
 
@@ -209,7 +225,7 @@ const ClipboardIconButton = forwardRef<HTMLButtonElement, ClipboardIconButtonPro
     useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
     return (
-      <IconButton
+      <IconButton.Root
         {...props}
         classNames={classNames}
         hue={hue}
@@ -245,7 +261,7 @@ const UploadIconButton = forwardRef<HTMLButtonElement, UploadIconButtonProps>(
     return (
       <>
         <input className='sr-only' type='file' accept={accept} onChange={onFileChange} ref={fileInputRef} />
-        <IconButton
+        <IconButton.Root
           icon='ph--upload-simple--regular'
           label={label ?? t('system-button.upload.label')}
           {...props}
@@ -286,7 +302,7 @@ const DownloadIconButton = forwardRef<HTMLButtonElement, DownloadIconButtonProps
       }
     }, [onDownload, filename]);
     return (
-      <IconButton
+      <IconButton.Root
         icon='ph--download-simple--regular'
         label={label ?? t('system-button.download.label')}
         {...props}
@@ -305,7 +321,7 @@ DownloadIconButton.displayName = 'SystemIconButton.Download';
 
 type MicButtonMode = 'toggle' | 'hold';
 
-type MicIconButtonProps = Omit<IconButtonProps, 'icon' | 'onClick'> & {
+type MicIconButtonProps = Omit<IconButton.RootProps, 'icon' | 'onClick'> & {
   /** `toggle`: click flips recording. `hold`: records only while held (push-to-talk). */
   mode?: MicButtonMode;
   /** Whether recording is active; drives the active (recording) styling. */
@@ -393,7 +409,7 @@ const MicIconButton = forwardRef<HTMLButtonElement, MicIconButtonProps>(
           };
 
     return (
-      <IconButton
+      <IconButton.Root
         {...props}
         {...holdHandlers}
         classNames={[recordingClassNames, classNames]}
@@ -409,22 +425,6 @@ MicIconButton.displayName = 'SystemIconButton.Mic';
 //
 // Namespace
 //
-
-export const SystemIconButton = {
-  Add: AddIconButton,
-  Ai: AiIconButton,
-  Bookmark: BookmarkIconButton,
-  Clipboard: ClipboardIconButton,
-  Close: CloseIconButton,
-  Delete: DeleteIconButton,
-  Disclosure: DisclosureIconButton,
-  Download: DownloadIconButton,
-  Edit: EditIconButton,
-  Mic: MicIconButton,
-  Star: StarIconButton,
-  Upload: UploadIconButton,
-};
-
 export type {
   ClipboardIconButtonProps,
   DownloadIconButtonProps,
@@ -433,4 +433,19 @@ export type {
   StaticPresetProps,
   TogglePresetProps,
   UploadIconButtonProps,
+};
+
+export {
+  AddIconButton as Add,
+  AiIconButton as Ai,
+  BookmarkIconButton as Bookmark,
+  ClipboardIconButton as Clipboard,
+  CloseIconButton as Close,
+  DeleteIconButton as Delete,
+  DisclosureIconButton as Disclosure,
+  DownloadIconButton as Download,
+  EditIconButton as Edit,
+  MicIconButton as Mic,
+  StarIconButton as Star,
+  UploadIconButton as Upload,
 };

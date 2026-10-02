@@ -10,9 +10,12 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Field, Icon, Panel, Toolbar } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { TogglePanel, type TogglePanelRootProps } from './TogglePanel.tsx';
 
@@ -88,7 +91,7 @@ const DefaultStory = (props: TogglePanelRootProps) => {
             <TogglePanel.Header
               icon={
                 running ? (
-                  <Icon icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
+                  <Icon.Root icon={'ph--circle-notch--regular'} classNames='text-subdued animate-spin' size={4} />
                 ) : undefined
               }
             >

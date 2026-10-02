@@ -9,7 +9,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useLayout } from '@dxos/app-toolkit/Hooks';
 import { type Collection, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { PageNumber, Pager, PresentationShell, PresenterContext, Layout as PresenterLayout } from '#components';
 

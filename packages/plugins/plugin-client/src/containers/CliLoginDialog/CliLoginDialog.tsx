@@ -6,11 +6,13 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Invitation } from '@dxos/halo';
 import { useIdentity, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { AlertDialog, Button, useTranslation } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { ClientCapabilities, CliLogin } from '#types';
@@ -32,7 +34,7 @@ type Status = 'confirm' | 'sending' | 'waiting' | 'success' | 'error';
  * why it is only created on an explicit click and only sent to a loopback callback.
  */
 export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const identity = useIdentity();
   const [identityService] = useCapabilities(ClientCapabilities.IdentityService);
@@ -129,25 +131,29 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
         {status === 'confirm' || status === 'sending' ? (
           <>
             <AlertDialog.Cancel asChild>
-              <Button data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
+              <Button.Root data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
                 {t('cli-login-deny.label')}
-              </Button>
+              </Button.Root>
             </AlertDialog.Cancel>
-            <Button
+            <Button.Root
               data-testid='cliLogin.authorize'
               variant='primary'
               disabled={!identity || status === 'sending'}
               onClick={handleAuthorize}
             >
               {t('cli-login-authorize.label')}
-            </Button>
+            </Button.Root>
           </>
         ) : (
           <AlertDialog.Action asChild>
             {/* While the CLI is joining, closing cancels the invitation, so the action says so. */}
-            <Button data-testid='cliLogin.done' variant={status === 'success' ? 'primary' : 'default'} onClick={close}>
+            <Button.Root
+              data-testid='cliLogin.done'
+              variant={status === 'success' ? 'primary' : 'default'}
+              onClick={close}
+            >
               {t(status === 'waiting' ? 'cli-login-cancel.label' : 'cli-login-done.label')}
-            </Button>
+            </Button.Root>
           </AlertDialog.Action>
         )}
       </AlertDialog.ActionBar>

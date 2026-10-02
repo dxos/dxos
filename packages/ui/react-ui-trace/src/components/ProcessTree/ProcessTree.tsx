@@ -8,8 +8,12 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import * as Process from '@dxos/compute/Process';
-import { Icon, IconButton, ScrollArea, Tooltip, composable, composableProps } from '@dxos/react-ui';
 import { type ColumnRenderer, type IconRenderer, Tree, createStaticTreeModel } from '@dxos/react-ui-list';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { Unit } from '@dxos/util';
 
@@ -63,7 +67,7 @@ const NO_SELECTION: readonly string[] = [];
  * model and is re-seeded — a collapse must survive the next tick. Renders through `Tree`.
  */
 export const ProcessTree = React.memo(
-  composable<HTMLDivElement, ProcessTreeProps>(
+  Util.composable<HTMLDivElement, ProcessTreeProps>(
     (
       {
         processes,
@@ -125,7 +129,7 @@ export const ProcessTree = React.memo(
       const renderColumns = useMemo(() => makeColumnRenderer(onProcessTerminate), [onProcessTerminate]);
 
       return (
-        <ScrollArea.Root {...composableProps(props)} thin ref={forwardedRef}>
+        <ScrollArea.Root {...Util.composableProps(props)} thin ref={forwardedRef}>
           <ScrollArea.Viewport>
             <Tree<ProcessNode>
               id={ROOT_ID}
@@ -153,7 +157,7 @@ const makeIconRenderer =
   ({ item: { process } }) =>
     process === undefined ? null : (
       <Tooltip.Trigger content={process.state.toString()}>
-        <Icon
+        <Icon.Root
           size={4}
           synchronized
           classNames={mx(
@@ -189,7 +193,7 @@ const makeColumnRenderer =
         </div>
         <div className='flex items-center mx-1'>
           {onProcessTerminate && process.state !== Process.State.TERMINATED && (
-            <IconButton
+            <IconButton.Root
               classNames='min-h-0 p-1'
               icon='ph--x--regular'
               iconOnly

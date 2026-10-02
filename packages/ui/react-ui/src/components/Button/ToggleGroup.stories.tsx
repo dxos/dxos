@@ -6,29 +6,29 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { withTheme } from '../../testing/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { ToggleGroup, ToggleGroupItem, type ToggleGroupProps } from './ToggleGroup.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as ToggleGroup from './ToggleGroup.tsx';
 
 // TODO(burdon): Create composite Root, Item, etc?
-const DefaultStory = (props: ToggleGroupProps) => {
+const DefaultStory = (props: ToggleGroup.RootProps) => {
   return (
-    <ToggleGroup {...props}>
-      <ToggleGroupItem value='textb'>
-        <Icon icon='ph--text-b--regular' />
-      </ToggleGroupItem>
-      <ToggleGroupItem value='texti'>
-        <Icon icon='ph--text-italic--regular' />
-      </ToggleGroupItem>
-    </ToggleGroup>
+    <ToggleGroup.Root {...props}>
+      <ToggleGroup.Item value='textb'>
+        <Icon.Root icon='ph--text-b--regular' />
+      </ToggleGroup.Item>
+      <ToggleGroup.Item value='texti'>
+        <Icon.Root icon='ph--text-italic--regular' />
+      </ToggleGroup.Item>
+    </ToggleGroup.Root>
   );
 };
 
 const meta = {
   title: 'ui/react-ui-core/components/ToggleGroup',
-  component: ToggleGroup,
+  component: ToggleGroup.Root,
   render: DefaultStory,
   decorators: [withTheme()],
-} satisfies Meta<typeof ToggleGroup>;
+} satisfies Meta<typeof ToggleGroup.Root>;
 
 export default meta;
 

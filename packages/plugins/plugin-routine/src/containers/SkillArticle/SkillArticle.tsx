@@ -6,8 +6,9 @@ import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Skill from '@dxos/compute/Skill';
-import { Panel, Toolbar } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { TemplateEditor } from '#components';
 

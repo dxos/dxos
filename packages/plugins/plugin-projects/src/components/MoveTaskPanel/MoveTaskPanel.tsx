@@ -6,8 +6,8 @@ import React, { useMemo } from 'react';
 
 import type * as Project from '@dxos/compute/Project';
 import { Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -19,7 +19,7 @@ export type MoveTaskPanelProps = {
 
 /** A searchable list of destination projects for a task's "Move to…" action. */
 export const MoveTaskPanel = ({ projects, onSelect }: MoveTaskPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const sorted = useMemo(
     () => [...projects].sort((left, right) => label(left).localeCompare(label(right))),
     [projects],

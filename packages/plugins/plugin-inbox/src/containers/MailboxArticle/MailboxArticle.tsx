@@ -26,7 +26,6 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { Deferred, ElevationProvider, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -38,6 +37,9 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Deferred from '@dxos/react-ui/Deferred';
+import * as ElevationProvider from '@dxos/react-ui/ElevationProvider';
+import * as Panel from '@dxos/react-ui/Panel';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 
@@ -434,13 +436,13 @@ export const MailboxArticle = ({
 
   return (
     <Panel.Root data-testid='inbox.mailbox'>
-      <ElevationProvider elevation='positioned'>
+      <ElevationProvider.Root elevation='positioned'>
         <Panel.Toolbar asChild>
           <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
         </Panel.Toolbar>
-      </ElevationProvider>
+      </ElevationProvider.Root>
       <Panel.Content>
-        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
+        <Deferred.Root pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -456,7 +458,7 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        </Deferred>
+        </Deferred.Root>
       </Panel.Content>
       <Panel.Statusbar asChild>
         <ProgressMeter

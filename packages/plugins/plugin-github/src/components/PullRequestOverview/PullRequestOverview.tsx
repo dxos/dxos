@@ -7,9 +7,11 @@ import React, { useMemo } from 'react';
 import { useCapabilities } from '@dxos/app-framework/Hooks';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { Banner, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { MarkdownLink, MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
@@ -33,7 +35,7 @@ export type PullRequestOverviewProps = {
  * beyond the diff, and every check on its head commit.
  */
 export const PullRequestOverview = ({ body, details, runs }: PullRequestOverviewProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const parsed = useMemo(() => parsePullRequestBody(body), [body]);
   const components = useBodyComponents();
   const related = useRelatedItems(parsed);
@@ -92,7 +94,11 @@ const useBodyComponents = (): MarkdownViewProps['components'] => {
         return (
           <DxAnchor eid={href} className='dx-tag--anchor'>
             {icon && (
-              <Icon icon={icon.icon} size={4} classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
+              <Icon.Root
+                icon={icon.icon}
+                size={4}
+                classNames={['inline-block align-[-0.125em] me-1', icon.classNames]}
+              />
             )}
             {children === href ? (PreviewCapabilities.linkLabel(all, href) ?? children) : children}
           </DxAnchor>

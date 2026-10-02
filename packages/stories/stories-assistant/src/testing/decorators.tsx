@@ -45,7 +45,7 @@ import { ExampleHandlers } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';
@@ -64,8 +64,8 @@ import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
-import { useAsyncEffect } from '@dxos/react-ui';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { type StoryDecoratorsProps, createStoryDecorators } from '@dxos/storybook-testing';
 import { Outline, Task, TaskSet } from '@dxos/types';
@@ -157,7 +157,7 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
   // would never re-run, leaving the chat without its story-declared skills.
   const chats = useQuery(space?.db, Filter.type(Chat.Chat));
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!space) {
       return;
     }

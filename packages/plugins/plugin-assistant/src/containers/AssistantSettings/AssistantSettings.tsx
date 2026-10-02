@@ -9,8 +9,8 @@ import { Provider } from '@dxos/ai';
 import { useOptionalCapability } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type DXN } from '@dxos/keys';
-import { useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Assistant, AssistantCapabilities, Ollama } from '#types';
@@ -28,7 +28,7 @@ const presetOptions = (provider: DXN.DXN, installed?: ReadonlySet<string>) =>
     .map((preset) => ({ value: preset.model, label: preset.label }));
 
 export const AssistantSettings = ({ settings, onSettingsChange, scope }: AssistantSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   // The Ollama manager is the bundled sidecar (desktop only). Its presence selects the local
   // provider: the managed `built-in` vs. an external `ollama` server.

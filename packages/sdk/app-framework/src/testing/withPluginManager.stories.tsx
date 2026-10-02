@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { ThrowError } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as ThrowError from '@dxos/react-ui/ThrowError';
 
 import { Capabilities } from '../common/index.ts';
 import * as Role from '../common/Role.ts';
@@ -59,7 +59,7 @@ export const Default: Story = {};
  * the usual "Copy" action.
  */
 export const Crashes: Story = {
-  render: () => <ThrowError delay={0} />,
+  render: () => <ThrowError.Root delay={0} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() => expect(canvas.getByRole('button', { name: 'Download logs' })).toBeInTheDocument());

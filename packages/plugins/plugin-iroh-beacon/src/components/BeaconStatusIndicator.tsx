@@ -6,7 +6,10 @@ import React from 'react';
 
 import { useOptionalAtomCapability } from '@dxos/app-framework/Hooks';
 import { StatusBar } from '@dxos/plugin-status-bar/StatusBar';
-import { Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Popover from '@dxos/react-ui/Popover';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -19,7 +22,7 @@ export const BeaconStatusIndicator = () => {
   // The status bar paints with the shell, but the beacon service activates on `SpacesAvailable` — which
   // the forked client initialization can land long after — so absence is a normal early state here.
   const state = useOptionalAtomCapability(BeaconCapabilities.State);
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 
   const iconClass = onlineCount > 0 ? 'text-green-500' : state?.status === 'connecting' ? 'animate-pulse' : undefined;
@@ -28,7 +31,7 @@ export const BeaconStatusIndicator = () => {
     <Popover.Root>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton
+          <IconButton.Root
             variant='ghost'
             icon='ph--broadcast--regular'
             iconOnly
@@ -49,7 +52,7 @@ export const BeaconStatusIndicator = () => {
 
 const BeaconPopover = () => {
   const state = useOptionalAtomCapability(BeaconCapabilities.State);
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 
   if (!state) {
@@ -60,7 +63,10 @@ const BeaconPopover = () => {
     <div className='flex flex-col gap-2 w-[280px] p-2'>
       {/* Header. */}
       <div className='flex items-center gap-2 mb-1'>
-        <Icon icon='ph--broadcast--regular' classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-description')} />
+        <Icon.Root
+          icon='ph--broadcast--regular'
+          classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-description')}
+        />
         <span className='font-medium text-sm'>{t('beacon-title.label')}</span>
       </div>
 
@@ -99,7 +105,7 @@ const BeaconPopover = () => {
 const PeerRow = ({ peer }: { peer: BeaconPeer }) => {
   return (
     <div className='flex items-center gap-2 text-sm'>
-      <Icon
+      <Icon.Root
         icon={peer.online ? 'ph--circle-bg' : 'ph--circle--regular'}
         classNames={mx('shrink-0', peer.online ? 'text-green-500' : 'text-description')}
         size={3}

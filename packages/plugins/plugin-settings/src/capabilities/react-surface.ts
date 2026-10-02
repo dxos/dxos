@@ -8,7 +8,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { DefaultSettings } from '#containers';
 

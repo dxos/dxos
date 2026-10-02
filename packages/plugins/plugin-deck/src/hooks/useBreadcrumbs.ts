@@ -7,7 +7,8 @@ import * as Option from 'effect/Option';
 import { useContext, useEffect, useState } from 'react';
 
 import { useAppGraph } from '@dxos/app-toolkit/Hooks';
-import { toLocalizedString, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '#meta';
 
@@ -21,7 +22,7 @@ export type Breadcrumb = { id: string; label: string };
 export const useBreadcrumbs = (ids: string[]): Breadcrumb[] => {
   const { graph } = useAppGraph();
   const registry = useContext(RegistryContext);
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [crumbs, setCrumbs] = useState<Breadcrumb[]>([]);
   // A stable dependency for the id list; NUL cannot appear in a node id.
   const key = ids.join('\0');
@@ -38,7 +39,7 @@ export const useBreadcrumbs = (ids: string[]): Breadcrumb[] => {
       setCrumbs(
         idList.map((id, index) => {
           const node = Option.getOrUndefined(registry.get(atoms[index]));
-          const label = toLocalizedString(node?.properties?.label ?? '', t) || id;
+          const label = ThemeProvider.toLocalizedString(node?.properties?.label ?? '', t) || id;
           return { id, label };
         }),
       );

@@ -9,8 +9,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Popover, type PopoverContentProps } from './Popover.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Popover from './Popover.tsx';
 
 random.seed(1234);
 
@@ -18,7 +18,7 @@ const DefaultStory = ({
   openTrigger,
   elevation,
   children,
-}: PropsWithChildren<{ openTrigger: ReactNode } & Pick<PopoverContentProps, 'elevation'>>) => {
+}: PropsWithChildren<{ openTrigger: ReactNode } & Pick<Popover.ContentProps, 'elevation'>>) => {
   return (
     <Popover.Root defaultOpen>
       <Popover.Trigger asChild>{openTrigger}</Popover.Trigger>
@@ -48,7 +48,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    openTrigger: <Button>Open popover</Button>,
+    openTrigger: <Button.Root>Open popover</Button.Root>,
     children: random.lorem.paragraphs(3),
   },
 };
@@ -59,9 +59,9 @@ export const VirtualTrigger = {
     const buttonRef = useRef<HTMLButtonElement | null>(null);
     return (
       <>
-        <Button onClick={() => setOpen(true)} ref={buttonRef}>
+        <Button.Root onClick={() => setOpen(true)} ref={buttonRef}>
           Open popover
-        </Button>
+        </Button.Root>
         <Popover.Root open={open} onOpenChange={setOpen}>
           <Popover.VirtualTrigger virtualRef={buttonRef} />
           <Popover.Content>
@@ -84,7 +84,7 @@ export const TestOpenClose: StoryObj = {
   render: () => (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <Button>Open popover</Button>
+        <Button.Root>Open popover</Button.Root>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content>
@@ -124,7 +124,7 @@ export const TestVirtualAnchor: StoryObj = {
     const buttonRef = useRef<HTMLButtonElement | null>(null);
     return (
       <div className='flex flex-col gap-32'>
-        <Button ref={buttonRef}>Anchor</Button>
+        <Button.Root ref={buttonRef}>Anchor</Button.Root>
         <Popover.Root defaultOpen>
           <Popover.VirtualTrigger virtualRef={buttonRef} />
           <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
@@ -156,7 +156,7 @@ export const TestVirtualAnchorFollowsScroll: StoryObj = {
     return (
       <div data-testid='scroller' className='h-48 w-80 overflow-y-auto border border-separator'>
         <div className='h-24' />
-        <Button ref={anchorRef}>Anchor</Button>
+        <Button.Root ref={anchorRef}>Anchor</Button.Root>
         <div className='h-96' />
         <Popover.Root defaultOpen>
           <Popover.VirtualTrigger virtualRef={anchorRef} />

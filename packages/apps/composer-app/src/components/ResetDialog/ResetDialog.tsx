@@ -8,19 +8,14 @@ import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import { FeedbackForm } from '@dxos/plugin-support/FeedbackForm';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
-import {
-  AlertDialog,
-  type AlertDialogRootProps,
-  Banner,
-  IconButton,
-  Menu,
-  Popover,
-  SystemIconButton,
-  useFileDownload,
-  useMediaQuery,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 
 import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util/index.ts';
 
@@ -46,7 +41,7 @@ const parseError = (t: (name: string, context?: object) => string, error: Error)
   return { title, message, stack, context };
 };
 
-export type ResetDialogProps = Pick<AlertDialogRootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
+export type ResetDialogProps = Pick<AlertDialog.RootProps, 'defaultOpen' | 'open' | 'onOpenChange'> & {
   error?: Error;
   logStore: IdbLogStore;
   /** Files the report. Absent when nothing can file one, which hides the feedback affordance. */
@@ -67,13 +62,13 @@ export const ResetDialog = ({
   onRefresh,
   onReset,
 }: ResetDialogProps) => {
-  const { t } = useTranslation('composer');
-  const [isNotMobile] = useMediaQuery('md');
+  const { t } = Hooks.useTranslation('composer');
+  const [isNotMobile] = Hooks.useMediaQuery('md');
   const error = errorProp && parseError(t, errorProp);
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const download = useFileDownload();
+  const download = Hooks.useFileDownload();
 
   useEffect(() => {
     if (!feedbackSent) {
@@ -154,7 +149,7 @@ export const ResetDialog = ({
               <>
                 <div>
                   <div className='flex items-center justify-between py-3'>
-                    <IconButton
+                    <IconButton.Root
                       icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                       variant='ghost'
                       classNames='flex items-center'
@@ -164,7 +159,7 @@ export const ResetDialog = ({
                     />
                     <div className='flex items-center gap-1'>
                       <SystemIconButton.Clipboard iconOnly label={t('copy-error.label')} onCopy={handleCopyError} />
-                      <IconButton
+                      <IconButton.Root
                         icon='ph--download-simple--regular'
                         iconOnly
                         label={t('download-logs.label')}
@@ -189,14 +184,14 @@ export const ResetDialog = ({
           </AlertDialog.Body>
 
           <AlertDialog.ActionBar>
-            <IconButton
+            <IconButton.Root
               variant='primary'
               icon='ph--barricade--regular'
               iconOnly={!isNotMobile}
               label={t('safe-mode.label')}
               onClick={handleSafeMode}
             />
-            <IconButton
+            <IconButton.Root
               icon='ph--stethoscope--regular'
               iconOnly={!isNotMobile}
               label={t('recovery.label')}
@@ -206,7 +201,7 @@ export const ResetDialog = ({
             {onReset && (
               <Menu.Root>
                 <Menu.Trigger asChild>
-                  <IconButton
+                  <IconButton.Root
                     icon='ph--trash--regular'
                     iconOnly
                     label={t('reset-app.label')}
@@ -231,11 +226,11 @@ export const ResetDialog = ({
             {onSubmitReport &&
               isNotMobile &&
               (feedbackSent ? (
-                <IconButton icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
+                <IconButton.Root icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
               ) : (
                 <Popover.Root open={feedbackOpen} onOpenChange={setFeedbackOpen}>
                   <Popover.Trigger asChild>
-                    <IconButton icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
+                    <IconButton.Root icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
                   </Popover.Trigger>
                   <Popover.Portal>
                     <Popover.Content>
@@ -254,7 +249,7 @@ export const ResetDialog = ({
                   </Popover.Portal>
                 </Popover.Root>
               ))}
-            <IconButton
+            <IconButton.Root
               icon='ph--arrow-clockwise--regular'
               iconOnly={!!isNotMobile}
               label={t(needRefresh ? 'update-and-reload-page.label' : 'reload-page.label')}

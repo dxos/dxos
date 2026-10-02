@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Hints, Keyshortcuts } from '@dxos/plugin-deck/DeckRole';
 import * as SpaceSchema from '@dxos/plugin-space/SpaceSchema';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import {
   DiscordPanel,

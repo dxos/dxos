@@ -4,14 +4,15 @@
 
 import React from 'react';
 
-import { AlertDialog, useId, useTranslation } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { StatusPanel } from '../../panels/index.ts';
 import { translationKey } from '../../translations.ts';
 
 export const StatusDialog = () => {
-  const { t } = useTranslation(translationKey);
-  const titleId = useId('statusDialog__title');
+  const { t } = Hooks.useTranslation(translationKey);
+  const titleId = Hooks.useId('statusDialog__title');
   return (
     <AlertDialog.Root open>
       <AlertDialog.Portal>

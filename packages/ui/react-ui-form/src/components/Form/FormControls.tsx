@@ -5,22 +5,13 @@
 import React, { type PropsWithChildren, useRef } from 'react';
 
 import { type AnyProperties } from '@dxos/echo/internal';
-import {
-  Column,
-  type ColumnRootProps,
-  DIALOG_AUTOFOCUS_ATTRIBUTE,
-  Field,
-  IconButton,
-  type IconButtonProps,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useInColumn,
-  useMergeRefs,
-  useTranslation,
-  withColumn,
-} from '@dxos/react-ui';
+import * as Column from '@dxos/react-ui/Column';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { type MakeOptional, type Merge } from '@dxos/util';
 
@@ -87,16 +78,16 @@ const FORM_VIEWPORT_NAME = 'Form.Viewport';
 
 export type FormViewportProps = {
   scroll?: boolean;
-  gutter?: ColumnRootProps['gutter'];
+  gutter?: Column.RootProps['gutter'];
 };
 
 // The viewing window: owns the gutter Column (chrome/side-padding).
 // Content-height by default; `scroll` makes it fill its parent and scroll (the gutter then hosts the scrollbar).
-export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
+export const FormViewport = Util.composable<HTMLDivElement, FormViewportProps>(
   ({ children, scroll, gutter = 'sm', ...props }, forwardedRef) => {
     const { variant = 'default' } = useFormContext(FORM_VIEWPORT_NAME);
     const styles = formTheme.styles({ variant });
-    const inColumn = useInColumn();
+    const inColumn = Column.useInColumn();
     // Span the full width when nested inside another Column grid (e.g. Card.Root)
     // instead of landing in a single narrow track.
     const span = '[.dx-column-root_&]:col-span-full';
@@ -108,7 +99,7 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
     if (inColumn && !scroll) {
       return (
         <Column.Center
-          {...composableProps(props, { classNames: ['w-full min-w-0', styles.viewport()] })}
+          {...Util.composableProps(props, { classNames: ['w-full min-w-0', styles.viewport()] })}
           ref={forwardedRef}
         >
           {children}
@@ -124,7 +115,7 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
     if (scroll) {
       return (
         <Column.Root
-          {...composableProps(props, { classNames: ['dx-expand', span, styles.viewport()] })}
+          {...Util.composableProps(props, { classNames: ['dx-expand', span, styles.viewport()] })}
           gutter={gutter}
           ref={forwardedRef}
         >
@@ -137,7 +128,7 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
 
     return (
       <Column.Root
-        {...composableProps(props, { classNames: ['w-full min-w-0', span, styles.viewport()] })}
+        {...Util.composableProps(props, { classNames: ['w-full min-w-0', span, styles.viewport()] })}
         gutter={gutter}
         ref={forwardedRef}
       >
@@ -155,21 +146,21 @@ FormViewport.displayName = FORM_VIEWPORT_NAME;
 
 const FORM_CONTENT_NAME = 'Form.Content';
 
-export type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
+export type FormContentProps = Util.ThemedClassName<PropsWithChildren<{}>>;
 
 // The viewed body: centered in the viewport's gutter. Pure body — the gutter Column is owned by `Form.Viewport`.
-export const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ...props }, forwardedRef) => {
+export const FormContent = Util.composable<HTMLDivElement, FormContentProps>(({ children, ...props }, forwardedRef) => {
   const { form, testId, variant = 'default' } = useFormContext(FORM_CONTENT_NAME);
   const styles = formTheme.styles({ variant });
   const localRef = useRef<HTMLDivElement>(null);
-  const mergedRef = useMergeRefs([forwardedRef, localRef]);
+  const mergedRef = Hooks.useMergeRefs([forwardedRef, localRef]);
   useKeyHandler(localRef, form);
 
   return (
     <div
-      {...composableProps(props, {
+      {...Util.composableProps(props, {
         role: 'form',
-        classNames: mx(withColumn.center(), 'flex flex-col w-full dx-document', styles.content()),
+        classNames: mx(Column.withColumn.center(), 'flex flex-col w-full dx-document', styles.content()),
       })}
       data-testid={testId}
       ref={mergedRef}
@@ -209,7 +200,7 @@ FormLayoutController.displayName = FORM_LAYOUT_NAME;
 
 const FORM_ACTIONS_NAME = 'Form.Actions';
 
-export type FormActionsProps = ThemedClassName<{
+export type FormActionsProps = Util.ThemedClassName<{
   submitLabel?: string;
   submitIcon?: string;
   /** Disables submit on top of the form's own `canSave`, for work the form did not start itself. */
@@ -217,7 +208,7 @@ export type FormActionsProps = ThemedClassName<{
 }>;
 
 export const FormActions = ({ classNames, submitLabel, submitIcon, submitDisabled }: FormActionsProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const {
     form: { canSave, onSave, onCancel },
     readonly,
@@ -232,9 +223,9 @@ export const FormActions = ({ classNames, submitLabel, submitIcon, submitDisable
   //   Deprecate FormSubmit ans use FormActions without Cancel button if no callback is supplied.
 
   return (
-    <div className={mx(withColumn.center(), formTheme.styles().actions(), classNames)}>
+    <div className={mx(Column.withColumn.center(), formTheme.styles().actions(), classNames)}>
       {onCancel && (
-        <IconButton
+        <IconButton.Root
           icon='ph--x--regular'
           iconEnd
           label={t('cancel-button.label')}
@@ -242,11 +233,11 @@ export const FormActions = ({ classNames, submitLabel, submitIcon, submitDisable
           data-testid='cancel-button'
           // Inside a dialog this claims the initial focus, so a reflexive Enter dismisses rather than
           // commits; the attribute is inert anywhere else.
-          {...{ [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
+          {...{ [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' }}
         />
       )}
       {onSave && (
-        <IconButton
+        <IconButton.Root
           type='submit'
           variant='primary'
           disabled={!canSave || submitDisabled}
@@ -269,10 +260,10 @@ FormActions.displayName = FORM_ACTIONS_NAME;
 
 const FORM_SUBMIT_NAME = 'Form.Submit';
 
-export type FormSubmitProps = ThemedClassName<Partial<Pick<IconButtonProps, 'icon' | 'label' | 'disabled'>>>;
+export type FormSubmitProps = Util.ThemedClassName<Partial<Pick<IconButton.RootProps, 'icon' | 'label' | 'disabled'>>>;
 
 export const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const {
     form: { canSave, onSave },
     readonly,
@@ -285,7 +276,7 @@ export const FormSubmit = ({ classNames, label, icon, disabled }: FormSubmitProp
 
   return (
     <div className={mx(formTheme.styles().submit(), classNames)}>
-      <IconButton
+      <IconButton.Root
         classNames='w-full'
         type='submit'
         variant='primary'
@@ -307,7 +298,7 @@ FormSubmit.displayName = FORM_SUBMIT_NAME;
 
 const FORM_ERROR_TEXT_NAME = 'Form.ErrorText';
 
-export type FormErrorTextProps = ThemedClassName<PropsWithChildren>;
+export type FormErrorTextProps = Util.ThemedClassName<PropsWithChildren>;
 
 /** Form-level error/validation message (e.g. a failed submit), styled via the error valence. */
 export const FormErrorText = ({ children, classNames }: FormErrorTextProps) => {

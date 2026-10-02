@@ -4,12 +4,12 @@
 
 import React, { type ReactNode, useCallback } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import type * as Util from '@dxos/react-ui/Util';
 
 export type FrameStackItem = { id: string };
 
-export type FrameStackProps<T extends FrameStackItem> = ThemedClassName<{
+export type FrameStackProps<T extends FrameStackItem> = Util.ThemedClassName<{
   items: readonly T[];
   selectedId?: string;
   onSelect?: (id: string) => void;

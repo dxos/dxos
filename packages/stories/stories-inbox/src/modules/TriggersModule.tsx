@@ -13,8 +13,11 @@ import { Filter, Obj, Query } from '@dxos/echo';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { useTriggerRuntimeControls } from '@dxos/plugin-routine/Hooks';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Button, Field, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 /**
  * Lists active triggers in the space and exposes manual cron invocation via {@link TriggerDispatcher}.
@@ -118,12 +121,12 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
                     </div>
                   )}
                   {Trigger.isManuallyInvokable(trigger.spec) && (
-                    <Button
+                    <Button.Root
                       onClick={() => handleInvoke(trigger)}
                       disabled={!state?.enabled || invokingId === trigger.id}
                     >
                       {invokingId === trigger.id ? 'Invoking…' : 'Invoke now'}
-                    </Button>
+                    </Button.Root>
                   )}
                 </li>
               );

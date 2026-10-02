@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { Field, type SwitchProps } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -21,7 +21,7 @@ export const BooleanField = ({
   onBlur,
 }: FormFieldRendererProps<boolean>) => {
   // A toggle is a commit: the switch never blurs, so it commits itself.
-  const handleChange = useCallback<NonNullable<SwitchProps['onCheckedChange']>>(
+  const handleChange = useCallback<NonNullable<Field.SwitchProps['onCheckedChange']>>(
     (value) => {
       onValueChange(type, value);
       onBlur();

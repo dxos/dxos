@@ -12,8 +12,11 @@ import { createPortal } from 'react-dom';
 
 import { type Type } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
-import { Card, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type DndTileData, useDndRootContext } from '@dxos/react-ui-dnd';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -26,7 +29,7 @@ type DragState = 'idle' | 'dragging';
 
 const BOARD_CELL_NAME = 'Board.Cell';
 
-export type BoardCellProps<T extends Type.AnyObj = any> = ThemedClassName<
+export type BoardCellProps<T extends Type.AnyObj = any> = Util.ThemedClassName<
   PropsWithChildren<{
     item: T;
     /** This item's current position/size in grid cells (its entry in the board layout). */
@@ -54,7 +57,7 @@ export const BoardCell = ({
   draggable: isDraggable,
   constraints,
 }: BoardCellProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const {
     cellSize,
     gap,
@@ -279,7 +282,7 @@ export const BoardCell = ({
           {title}
           {onDelete && (
             <Card.Block end>
-              <IconButton
+              <IconButton.Root
                 variant='ghost'
                 icon='ph--x--regular'
                 iconOnly

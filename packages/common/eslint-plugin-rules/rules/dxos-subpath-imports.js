@@ -17,9 +17,13 @@ const DXOS_SUBPATH_PACKAGES = new Set([
   '@dxos/app-graph',
   '@dxos/app-toolkit',
   '@dxos/assistant-toolkit',
+  '@dxos/async',
   '@dxos/compute',
+  '@dxos/effect',
   '@dxos/graph',
   '@dxos/observability',
+  '@dxos/react-ui',
+  '@dxos/util',
 ]);
 
 /**
@@ -29,7 +33,7 @@ const DXOS_SUBPATH_PACKAGES = new Set([
  * is a no-op. NOTE: the package must export `./package.json`, or the exports map is unreadable
  * under Node exports encapsulation and the rule silently skips it.
  */
-const isSubpathPackage = (packageName) =>
+export const isSubpathPackage = (packageName) =>
   DXOS_SUBPATH_PACKAGES.has(packageName) || packageName.startsWith('@dxos/plugin-');
 
 /**

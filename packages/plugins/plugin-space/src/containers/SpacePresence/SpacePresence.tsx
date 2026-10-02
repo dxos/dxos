@@ -11,20 +11,15 @@ import { type Space } from '@dxos/halo';
 import { useIdentity, useMembers } from '@dxos/halo-react';
 import { PublicKey } from '@dxos/keys';
 import { useSpace } from '@dxos/react-client/echo';
-import {
-  Avatar,
-  type AvatarContentProps,
-  type DxAvatar,
-  Popover,
-  type Size,
-  type ThemedClassName,
-  Tooltip,
-  useDefaultValue,
-  useTranslation,
-} from '@dxos/react-ui';
-import { AttentionGlyph, type AttentionGlyphProps } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
+import * as AttentionGlyph from '@dxos/react-ui/AttentionGlyph';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
+import { type Size } from '@dxos/ui-types';
 import { ComplexMap, hexToFallback } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -104,7 +99,7 @@ export type Member = Space.Member & {
   currentlyAttended: boolean;
 };
 
-export type MemberPresenceProps = ThemedClassName<{
+export type MemberPresenceProps = Util.ThemedClassName<{
   size?: Size;
   members?: Member[];
   showCount?: boolean;
@@ -113,7 +108,7 @@ export type MemberPresenceProps = ThemedClassName<{
 
 export const FullPresence = (props: MemberPresenceProps) => {
   const { size = 9, onMemberClick } = props;
-  const members = useDefaultValue(props.members, () => []);
+  const members = Hooks.useDefaultValue(props.members, () => []);
 
   if (members.length === 0) {
     return null;
@@ -180,7 +175,7 @@ export const FullPresence = (props: MemberPresenceProps) => {
   );
 };
 
-type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
+type PresenceAvatarProps = Pick<Avatar.ContentProps, 'size'> & {
   member: Space.Member;
   showName?: boolean;
   match?: boolean;
@@ -188,7 +183,7 @@ type PresenceAvatarProps = Pick<AvatarContentProps, 'size'> & {
   onClick?: () => void;
 };
 
-const PresenceAvatar = forwardRef<DxAvatar, PresenceAvatarProps>(
+const PresenceAvatar = forwardRef<Avatar.DxAvatar, PresenceAvatarProps>(
   ({ member, showName, match, index, onClick, size }, forwardedRef) => {
     const status = match ? 'current' : 'active';
     const fallbackValue = hexToFallback(member.identityKey ?? '0');
@@ -247,14 +242,14 @@ export const SmallPresenceLive = ({ id, open, viewers }: SmallPresenceLiveProps)
 
 export type SmallPresenceProps = {
   count?: number;
-} & Pick<AttentionGlyphProps, 'attended' | 'containsAttended'>;
+} & Pick<AttentionGlyph.RootProps, 'attended' | 'containsAttended'>;
 
 export const SmallPresence = ({ count = 0, attended, containsAttended }: SmallPresenceProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Tooltip.Trigger asChild content={t('presence.label', { count })} side='bottom'>
-      <AttentionGlyph
+      <AttentionGlyph.Root
         attended={attended}
         containsAttended={containsAttended}
         presence={count > 1 ? 'many' : count === 1 ? 'one' : 'none'}

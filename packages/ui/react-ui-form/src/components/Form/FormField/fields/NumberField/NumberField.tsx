@@ -4,7 +4,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 
-import { Field, type InputProps } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
 import { safeParseFloat } from '@dxos/util';
 
 import { type FormFieldRendererProps } from '#types';
@@ -58,7 +58,7 @@ export const NumberField = ({
     }
   }, [externalValue]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleChange = useCallback<NonNullable<InputProps['onChange']>>(
+  const handleChange = useCallback<NonNullable<Field.InputProps['onChange']>>(
     (event) => {
       const value = event.target.value;
       setRaw(value);

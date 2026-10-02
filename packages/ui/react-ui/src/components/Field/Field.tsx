@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Field` — a labelled control on Ark's field: the field owns the ids and the wiring between a
 // label, its control, the helper text and the error text (`htmlFor`, `aria-describedby`,
 // `aria-errormessage`, `aria-invalid`, the required/disabled/read-only state on every part). DXOS
@@ -31,11 +33,11 @@ import { translationKey } from '#translations';
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { IconButton, IconButtonProps } from '../Button/index.ts';
-import { Icon } from '../Icon/index.ts';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as Icon from '../Icon/Icon.tsx';
 import { FIELD_NAME, type FieldValence, FieldValenceProvider, useFieldValence } from './FieldContext.ts';
 import { type FieldTriggerHandler, FieldTriggerProvider, useFieldTriggerContext } from './FieldTriggerContext.ts';
-import { PinInput as PinInputPrimitive, type PinInputProps as PinInputPrimitiveProps } from './PinInput.tsx';
+import * as PinInputModule from './PinInput.tsx';
 import {
   SegmentedDate,
   type SegmentedDateProps,
@@ -125,7 +127,7 @@ Root.displayName = 'Field.Root';
 
 // `label` and `icon` have defaults below, so both are optional for callers (e.g. `<Field.TriggerIcon />`).
 // `onClick` is reserved — the trigger always opens the registered picker.
-type TriggerIconProps = Omit<IconButtonProps, 'label' | 'onClick'> & { label?: string };
+type TriggerIconProps = Omit<IconButton.RootProps, 'label' | 'onClick'> & { label?: string };
 
 const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
   ({ classNames, icon = 'ph--calendar--regular', 'aria-label': ariaLabel, label, ...props }, forwardedRef) => {
@@ -136,7 +138,7 @@ const TriggerIcon = forwardRef<HTMLButtonElement, TriggerIconProps>(
     }
 
     return (
-      <IconButton
+      <IconButton.Root
         ref={forwardedRef}
         variant='ghost'
         icon={icon}
@@ -223,7 +225,9 @@ ErrorText.displayName = 'Field.ErrorText';
 // PinInput
 //
 
-type PinInputProps = ThemedClassName<FieldSharedProps & Omit<PinInputPrimitiveProps, 'className' | 'segmentClassName'>>;
+type PinInputProps = ThemedClassName<
+  FieldSharedProps & Omit<PinInputModule.RootProps, 'className' | 'segmentClassName'>
+>;
 
 const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   ({ classNames, density: propsDensity, elevation: propsElevation, ...props }, forwardedRef) => {
@@ -233,7 +237,7 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
     const elevation = useElevationContext(propsElevation);
 
     return (
-      <PinInputPrimitive
+      <PinInputModule.Root
         {...{
           ...props,
           ...(props.autoFocus && !hasIosKeyboard && { autoFocus: true }),
@@ -467,10 +471,10 @@ const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
           className={tx('field.checkbox', { size }, 'shrink-0', classNames)}
         >
           <CheckboxPrimitive.Indicator asChild>
-            <Icon icon='ph--check--regular' classNames={tx('field.checkboxIndicator', { size })} />
+            <Icon.Root icon='ph--check--regular' classNames={tx('field.checkboxIndicator', { size })} />
           </CheckboxPrimitive.Indicator>
           <CheckboxPrimitive.Indicator indeterminate asChild>
-            <Icon icon='ph--minus--regular' classNames={tx('field.checkboxIndicator', { size })} />
+            <Icon.Root icon='ph--minus--regular' classNames={tx('field.checkboxIndicator', { size })} />
           </CheckboxPrimitive.Indicator>
         </CheckboxPrimitive.Control>
         {children && (
@@ -594,39 +598,42 @@ type DateTimeInputProps = SegmentedDateTimeProps;
 //
 // Input
 //
-
-export const Field = {
-  Root,
-  TriggerIcon,
-  PinInput,
-  Input,
-  Textarea,
-  Time,
-  Date,
-  DateTime,
-  Checkbox,
-  Switch,
-  Block,
-  Label,
-  HelperText,
-  ErrorText,
-};
-
 export type {
   CheckboxProps,
   CheckedState,
   DateInputProps,
   DateTimeInputProps,
   ErrorTextProps,
-  FieldRootProps,
-  FieldSharedProps,
-  FieldValence,
   HelperTextProps,
   InputProps,
   InputVariant,
   LabelProps,
   PinInputProps,
+  FieldRootProps as RootProps,
+  FieldSharedProps as SharedProps,
   SwitchProps,
   TextareaProps,
   TimeProps,
+  FieldValence as Valence,
 };
+
+export {
+  Block,
+  Checkbox,
+  Date,
+  DateTime,
+  ErrorText,
+  HelperText,
+  Input,
+  Label,
+  PinInput,
+  Root,
+  Switch,
+  Textarea,
+  Time,
+  TriggerIcon,
+};
+export * from './Field.theme.ts';
+export { type FieldValence, useFieldValence } from './FieldContext.ts';
+export { useFieldTrigger } from './FieldTriggerContext.ts';
+export * from './SegmentedInput.tsx';

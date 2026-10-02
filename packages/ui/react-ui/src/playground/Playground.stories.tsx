@@ -13,45 +13,40 @@ import { type Density, type MessageValence } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import {
-  AlertDialog,
-  Avatar,
-  Banner,
-  Breadcrumb,
-  Button,
-  type ButtonProps,
-  Card,
-  Carousel,
-  Collapsible,
-  DatePicker,
-  Dialog,
-  Editable,
-  Field,
-  Icon,
-  IconButton,
-  type InputVariant,
-  Link,
-  Menu,
-  Popover,
-  Progress,
-  QrCode,
-  ScrollArea,
-  Select,
-  Separator,
-  Skeleton,
-  Slider,
-  Splitter,
-  Steps,
-  Tabs,
-  Tag,
-  Toast,
-  Toggle,
-  ToggleGroup,
-  ToggleGroupItem,
-  Toolbar,
-  Tooltip,
-} from '../components/index.ts';
-import { DensityProvider } from '../providers/index.ts';
+import * as Avatar from '../components/Avatars/Avatar.tsx';
+import * as Banner from '../components/Banner/Banner.tsx';
+import * as Breadcrumb from '../components/Breadcrumb/Breadcrumb.tsx';
+import * as Button from '../components/Button/Button.tsx';
+import * as IconButton from '../components/Button/IconButton.tsx';
+import * as Toggle from '../components/Button/Toggle.tsx';
+import * as ToggleGroup from '../components/Button/ToggleGroup.tsx';
+import * as Card from '../components/Card/Card.tsx';
+import * as Carousel from '../components/Carousel/Carousel.tsx';
+import * as Collapsible from '../components/Collapsible/Collapsible.tsx';
+import * as DatePicker from '../components/DatePicker/DatePicker.tsx';
+import * as AlertDialog from '../components/Dialog/AlertDialog.tsx';
+import * as Dialog from '../components/Dialog/Dialog.tsx';
+import * as Editable from '../components/Editable/Editable.tsx';
+import * as Field from '../components/Field/Field.tsx';
+import * as Icon from '../components/Icon/Icon.tsx';
+import * as Link from '../components/Link/Link.tsx';
+import * as Menu from '../components/Menu/Menu.tsx';
+import * as Popover from '../components/Popover/Popover.tsx';
+import * as Progress from '../components/Progress/Progress.tsx';
+import * as QrCode from '../components/QrCode/QrCode.tsx';
+import * as ScrollArea from '../components/ScrollArea/ScrollArea.tsx';
+import * as Select from '../components/Select/Select.tsx';
+import * as Separator from '../components/Separator/Separator.tsx';
+import * as Skeleton from '../components/Skeleton/Skeleton.tsx';
+import * as Slider from '../components/Slider/Slider.tsx';
+import * as Splitter from '../components/Splitter/Splitter.tsx';
+import * as Steps from '../components/Steps/Steps.tsx';
+import * as Tabs from '../components/Tabs/Tabs.tsx';
+import * as Tag from '../components/Tag/Tag.tsx';
+import * as Toast from '../components/Toast/Toast.tsx';
+import * as Toolbar from '../components/Toolbar/Toolbar.tsx';
+import * as Tooltip from '../components/Tooltip/Tooltip.tsx';
+import * as DensityProvider from '../providers/DensityProvider/DensityProvider.tsx';
 import { withTheme } from '../testing/index.ts';
 
 //
@@ -108,9 +103,9 @@ const Frame = ({ children }: PropsWithChildren) => {
               ))}
             </Toolbar.ToggleGroup>
           </Toolbar.Root>
-          <DensityProvider density={density}>
+          <DensityProvider.Root density={density}>
             <div className='flex flex-col gap-8 p-4'>{children}</div>
-          </DensityProvider>
+          </DensityProvider.Root>
         </div>
         <Toast.Viewport />
       </Toast.Provider>
@@ -137,7 +132,7 @@ const Row = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
 // Sections
 //
 
-const BUTTON_VARIANTS: NonNullable<ButtonProps['variant']>[] = [
+const BUTTON_VARIANTS: NonNullable<Button.RootProps['variant']>[] = [
   'default',
   'primary',
   'outline',
@@ -149,41 +144,41 @@ const ButtonsSection = () => (
   <Section title='Button'>
     {BUTTON_VARIANTS.map((variant) => (
       <Row key={variant} label={variant}>
-        <Button variant={variant}>Button</Button>
-        <Button variant={variant}>
-          <Icon icon='ph--paper-plane-tilt--regular' />
+        <Button.Root variant={variant}>Button</Button.Root>
+        <Button.Root variant={variant}>
+          <Icon.Root icon='ph--paper-plane-tilt--regular' />
           With icon
-        </Button>
-        <Button variant={variant} disabled>
+        </Button.Root>
+        <Button.Root variant={variant} disabled>
           Disabled
-        </Button>
-        <IconButton variant={variant} icon='ph--gear--regular' iconOnly label='Settings' />
-        <IconButton variant={variant} icon='ph--plus--regular' label='Add' />
+        </Button.Root>
+        <IconButton.Root variant={variant} icon='ph--gear--regular' iconOnly label='Settings' />
+        <IconButton.Root variant={variant} icon='ph--plus--regular' label='Add' />
       </Row>
     ))}
     <Row label='toggle'>
-      <Toggle>
-        <Icon icon='ph--text-b--regular' />
-      </Toggle>
-      <Toggle defaultPressed>
-        <Icon icon='ph--text-italic--regular' />
-      </Toggle>
-      <ToggleGroup type='multiple' defaultValue={['a']}>
-        <ToggleGroupItem value='a'>
-          <Icon icon='ph--text-align-left--regular' />
-        </ToggleGroupItem>
-        <ToggleGroupItem value='b'>
-          <Icon icon='ph--text-align-center--regular' />
-        </ToggleGroupItem>
-        <ToggleGroupItem value='c'>
-          <Icon icon='ph--text-align-right--regular' />
-        </ToggleGroupItem>
-      </ToggleGroup>
+      <Toggle.Root>
+        <Icon.Root icon='ph--text-b--regular' />
+      </Toggle.Root>
+      <Toggle.Root defaultPressed>
+        <Icon.Root icon='ph--text-italic--regular' />
+      </Toggle.Root>
+      <ToggleGroup.Root type='multiple' defaultValue={['a']}>
+        <ToggleGroup.Item value='a'>
+          <Icon.Root icon='ph--text-align-left--regular' />
+        </ToggleGroup.Item>
+        <ToggleGroup.Item value='b'>
+          <Icon.Root icon='ph--text-align-center--regular' />
+        </ToggleGroup.Item>
+        <ToggleGroup.Item value='c'>
+          <Icon.Root icon='ph--text-align-right--regular' />
+        </ToggleGroup.Item>
+      </ToggleGroup.Root>
     </Row>
   </Section>
 );
 
-const VARIANTS: InputVariant[] = ['default', 'subdued'];
+const VARIANTS: Field.InputVariant[] = ['default', 'subdued'];
 
 const TextFieldsSection = () => {
   const [value, setValue] = useState('');
@@ -195,7 +190,7 @@ const TextFieldsSection = () => {
         </Field.Root>
       ))}
       <Field.Root>
-        <Field.Input placeholder='Search' start={<Icon icon='ph--magnifying-glass--regular' />} />
+        <Field.Input placeholder='Search' start={<Icon.Root icon='ph--magnifying-glass--regular' />} />
       </Field.Root>
       <Field.Root>
         <Field.Input
@@ -204,7 +199,13 @@ const TextFieldsSection = () => {
           onChange={(event) => setValue(event.target.value)}
           end={
             value ? (
-              <IconButton variant='ghost' icon='ph--x--regular' iconOnly label='Clear' onClick={() => setValue('')} />
+              <IconButton.Root
+                variant='ghost'
+                icon='ph--x--regular'
+                iconOnly
+                label='Clear'
+                onClick={() => setValue('')}
+              />
             ) : undefined
           }
         />
@@ -212,7 +213,7 @@ const TextFieldsSection = () => {
       <Field.Root>
         <Field.Input
           placeholder='Command'
-          start={<Icon icon='ph--terminal--regular' />}
+          start={<Icon.Root icon='ph--terminal--regular' />}
           end={<kbd className='text-xs text-description'>⌘K</kbd>}
         />
       </Field.Root>
@@ -220,9 +221,9 @@ const TextFieldsSection = () => {
         <Field.Input
           placeholder='With action'
           end={
-            <Button density='sm' variant='primary'>
+            <Button.Root density='sm' variant='primary'>
               Go
-            </Button>
+            </Button.Root>
           }
         />
       </Field.Root>
@@ -301,13 +302,13 @@ const SliderSection = () => {
   return (
     <Section title='Slider'>
       <div className='w-64'>
-        <Slider value={value} onValueChange={setValue} max={100} step={1} aria-label='Value' />
+        <Slider.Root value={value} onValueChange={setValue} max={100} step={1} aria-label='Value' />
       </div>
       <div className='w-64'>
-        <Slider defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum', 'Maximum']} />
+        <Slider.Root defaultValue={[25, 75]} max={100} step={1} thumbLabels={['Minimum', 'Maximum']} />
       </div>
       <div className='w-64'>
-        <Slider defaultValue={[50]} max={100} step={1} disabled aria-label='Disabled' />
+        <Slider.Root defaultValue={[50]} max={100} step={1} disabled aria-label='Disabled' />
       </div>
     </Section>
   );
@@ -316,13 +317,13 @@ const SliderSection = () => {
 const ProgressSection = () => (
   <Section title='Progress'>
     <div className='w-64'>
-      <Progress progress={0.35} />
+      <Progress.Root progress={0.35} />
     </div>
     <div className='w-64'>
-      <Progress indeterminate />
+      <Progress.Root indeterminate />
     </div>
     <div className='w-64'>
-      <Steps
+      <Steps.Root
         steps={['Plan', 'Build', 'Verify', 'Ship'].map((label) => ({ id: label.toLowerCase(), label }))}
         active={1}
         fraction={0.5}
@@ -355,9 +356,9 @@ const HUES = [
 const TagsSection = () => (
   <Section title='Tag'>
     {HUES.map((hue) => (
-      <Tag key={hue} hue={hue}>
+      <Tag.Root key={hue} hue={hue}>
         {hue}
-      </Tag>
+      </Tag.Root>
     ))}
   </Section>
 );
@@ -386,10 +387,10 @@ const AvatarSection = () => (
 const SkeletonSection = () => (
   <Section title='Skeleton'>
     <div className='flex items-center gap-3 w-64'>
-      <Skeleton variant='circle' classNames='size-10 shrink-0 rounded-full' />
+      <Skeleton.Root variant='circle' classNames='size-10 shrink-0 rounded-full' />
       <div className='flex flex-col gap-2 grow'>
-        <Skeleton classNames='h-3 w-full' />
-        <Skeleton classNames='h-3 w-4/6' />
+        <Skeleton.Root classNames='h-3 w-full' />
+        <Skeleton.Root classNames='h-3 w-4/6' />
       </div>
     </div>
   </Section>
@@ -412,11 +413,11 @@ const NavigationSection = () => (
         </Breadcrumb.ListItem>
       </Breadcrumb.List>
     </Breadcrumb.Root>
-    <Separator orientation='vertical' classNames='h-6' />
-    <Link href='#'>A link</Link>
-    <Separator orientation='vertical' classNames='h-6' />
+    <Separator.Root orientation='vertical' classNames='h-6' />
+    <Link.Root href='#'>A link</Link.Root>
+    <Separator.Root orientation='vertical' classNames='h-6' />
     <div className='w-40'>
-      <Separator />
+      <Separator.Root />
     </div>
   </Section>
 );
@@ -454,13 +455,13 @@ const CardSection = () => (
       <Card.Body>
         <Card.Row>
           <Card.Block>
-            <Icon icon='ph--dot-outline--regular' />
+            <Icon.Root icon='ph--dot-outline--regular' />
           </Card.Block>
           <Card.Text>Card text</Card.Text>
         </Card.Row>
         <Card.Row>
           <Card.Block>
-            <Icon icon='ph--dot-outline--regular' />
+            <Icon.Root icon='ph--dot-outline--regular' />
           </Card.Block>
           <Card.Text variant='description'>A description line.</Card.Text>
         </Card.Row>
@@ -490,11 +491,11 @@ const BannerSection = () => (
 const OverlaysSection = () => (
   <Section title='Tooltip, popover, menus'>
     <Tooltip.Trigger asChild content='A tooltip'>
-      <Button>Hover me</Button>
+      <Button.Root>Hover me</Button.Root>
     </Tooltip.Trigger>
     <Popover.Root>
       <Popover.Trigger asChild>
-        <Button>Popover</Button>
+        <Button.Root>Popover</Button.Root>
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Content>
@@ -507,7 +508,7 @@ const OverlaysSection = () => (
     </Popover.Root>
     <Menu.Root>
       <Menu.Trigger asChild>
-        <Button>Menu</Button>
+        <Button.Root>Menu</Button.Root>
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Content>
@@ -547,7 +548,7 @@ const DialogsSection = () => {
     <Section title='Dialog, alert dialog, toast'>
       <Dialog.Root>
         <Dialog.Trigger asChild>
-          <Button>Dialog</Button>
+          <Button.Root>Dialog</Button.Root>
         </Dialog.Trigger>
         <Dialog.Overlay>
           <Dialog.Content>
@@ -562,10 +563,10 @@ const DialogsSection = () => {
             </Dialog.Body>
             <Dialog.ActionBar>
               <Dialog.Close asChild>
-                <Button>Cancel</Button>
+                <Button.Root>Cancel</Button.Root>
               </Dialog.Close>
               <Dialog.Close asChild>
-                <Button variant='primary'>Save</Button>
+                <Button.Root variant='primary'>Save</Button.Root>
               </Dialog.Close>
             </Dialog.ActionBar>
           </Dialog.Content>
@@ -573,7 +574,7 @@ const DialogsSection = () => {
       </Dialog.Root>
       <AlertDialog.Root>
         <AlertDialog.Trigger asChild>
-          <Button variant='destructive'>Delete</Button>
+          <Button.Root variant='destructive'>Delete</Button.Root>
         </AlertDialog.Trigger>
         <AlertDialog.Overlay>
           <AlertDialog.Content>
@@ -583,16 +584,16 @@ const DialogsSection = () => {
             </AlertDialog.Body>
             <AlertDialog.ActionBar>
               <AlertDialog.Cancel asChild>
-                <Button>Cancel</Button>
+                <Button.Root>Cancel</Button.Root>
               </AlertDialog.Cancel>
               <AlertDialog.Action asChild>
-                <Button variant='destructive'>Delete</Button>
+                <Button.Root variant='destructive'>Delete</Button.Root>
               </AlertDialog.Action>
             </AlertDialog.ActionBar>
           </AlertDialog.Content>
         </AlertDialog.Overlay>
       </AlertDialog.Root>
-      <Button onClick={addToast}>Toast</Button>
+      <Button.Root onClick={addToast}>Toast</Button.Root>
       {/* One root per toast: each click adds one; open ones pile up and expand under the pointer. */}
       {toasts.map((id) => (
         <Toast.Root key={id} duration={6_000} onOpenChange={(open) => !open && removeToast(id)}>
@@ -602,7 +603,7 @@ const DialogsSection = () => {
           <Toast.Description>The bar below counts down to when this closes.</Toast.Description>
           <Toast.Actions>
             <Toast.Action asChild>
-              <Button variant='primary'>Undo</Button>
+              <Button.Root variant='primary'>Undo</Button.Root>
             </Toast.Action>
           </Toast.Actions>
         </Toast.Root>
@@ -701,10 +702,10 @@ const SplitterSection = () => (
 const QrCodeSection = () => (
   <Section title='QR code'>
     <div className='w-32'>
-      <QrCode value='https://dxos.org' />
+      <QrCode.Root value='https://dxos.org' />
     </div>
     <div className='w-32'>
-      <QrCode value='https://composer.space' errorCorrection='H' />
+      <QrCode.Root value='https://composer.space' errorCorrection='H' />
     </div>
   </Section>
 );

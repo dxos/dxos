@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as KeyValueStore from 'effect/persistence/KeyValueStore';
 import * as Schema from 'effect/Schema';
 
-import { TriggerStateNotFoundError } from '@dxos/compute';
+import { TriggerStateNotFoundError } from '@dxos/compute/Errors';
 import { EntityId } from '@dxos/keys';
 
 export const TriggerState = Schema.Struct({

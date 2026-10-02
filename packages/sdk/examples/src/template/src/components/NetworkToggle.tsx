@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Client } from '@dxos/react-client';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { Field } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
 
 export const NetworkToggle = ({ clients }: { clients: Client[] }) => {
   const toggleNetwork = async (checked: boolean) => {

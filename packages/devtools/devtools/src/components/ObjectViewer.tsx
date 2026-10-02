@@ -5,8 +5,9 @@
 import React, { type ComponentType, type JSX, useCallback } from 'react';
 
 import { URI } from '@dxos/keys';
-import { Field, SystemIconButton } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
+import * as Field from '@dxos/react-ui/Field';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 
 export type ObjectViewerProps = {
   object: any;

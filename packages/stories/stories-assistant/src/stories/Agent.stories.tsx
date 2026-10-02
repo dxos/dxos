@@ -10,7 +10,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { Client } from '@dxos/agent-claude/client';
 import * as ChatSchema from '@dxos/assistant/Chat';
 import { Database, Feed, Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Space } from '@dxos/react-client/echo';
 import { ContentBlock, Message } from '@dxos/types';
 import { concat } from '@dxos/util';

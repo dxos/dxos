@@ -4,8 +4,8 @@
 
 import React, { useEffect, useState } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { useComputeNodeState } from '../hooks/index.ts';
 import { FunctionBody } from './common/index.ts';

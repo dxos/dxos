@@ -4,7 +4,10 @@
 
 import React, { type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-import { type ButtonProps, useElevationContext, useId, useThemeContext } from '@dxos/react-ui';
+import type * as Button from '@dxos/react-ui/Button';
+import * as ElevationProvider from '@dxos/react-ui/ElevationProvider';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { mx } from '@dxos/ui-theme';
 
 // TODO(burdon): Convert to radix primitive and move to react-ui.
@@ -16,7 +19,7 @@ export interface CompoundButtonSlots {
   description: ComponentPropsWithoutRef<'p'>;
 }
 
-export interface CompoundButtonProps extends ButtonProps {
+export interface CompoundButtonProps extends Button.RootProps {
   children?: ReactNode;
   description?: ReactNode;
   before?: ReactNode;
@@ -34,10 +37,10 @@ export const CompoundButton = ({
   slots = {},
   ...buttonProps
 }: Omit<CompoundButtonProps, 'density'>) => {
-  const labelId = useId('compoundButton-label');
-  const descriptionId = useId('compoundButton-description');
-  const { tx } = useThemeContext();
-  const elevation = useElevationContext(propsElevation);
+  const labelId = Hooks.useId('compoundButton-label');
+  const descriptionId = Hooks.useId('compoundButton-description');
+  const { tx } = ThemeProvider.useThemeContext();
+  const elevation = ElevationProvider.useElevationContext(propsElevation);
   const styleProps = { ...buttonProps, variant, elevation, textWrap: true };
   const buttonClassName = tx('button.root', styleProps, 'flex items-center gap-4 py-2.5', slots.root?.className);
 

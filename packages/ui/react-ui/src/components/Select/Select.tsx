@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Select` on Ark's select machine, keeping the children-driven API: Ark takes the options as a
 // `collection`, so each `Option` registers itself with the root, which builds the collection from
 // what is rendered. Moving consumers to a `collection` prop is a later phase (MIGRATION.md).
@@ -30,9 +32,9 @@ import { useComposedRefs } from '@dxos/react-hooks';
 
 import { toOverflowPadding, useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { Button, type ButtonProps } from '../Button/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import { SELECT_NAME, type SelectOptionEntry, SelectProvider, useSelectContext } from './SelectContext.ts';
 
 /** Document order, which is the order keyboard navigation and typeahead follow. */
@@ -200,19 +202,19 @@ SelectPortal.displayName = 'Select.Portal';
 // TriggerButton
 //
 
-type SelectTriggerButtonProps = Omit<ButtonProps, 'children'> & Pick<SelectValueProps, 'placeholder' | 'children'>;
+type SelectTriggerButtonProps = Omit<Button.RootProps, 'children'> & Pick<SelectValueProps, 'placeholder' | 'children'>;
 
 const SelectTriggerButton = forwardRef<HTMLButtonElement, SelectTriggerButtonProps>(
   ({ children, placeholder, classNames, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     return (
       <SelectPrimitive.Trigger asChild ref={forwardedRef}>
-        <Button {...props} classNames={tx('select.triggerButton', {}, classNames)}>
+        <Button.Root {...props} classNames={tx('select.triggerButton', {}, classNames)}>
           <SelectValue placeholder={placeholder}>{children}</SelectValue>
           <SelectPrimitive.Indicator asChild>
-            <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
+            <Icon.Root icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
           </SelectPrimitive.Indicator>
-        </Button>
+        </Button.Root>
       </SelectPrimitive.Trigger>
     );
   },
@@ -375,7 +377,7 @@ const SelectOption = forwardRef<HTMLDivElement, SelectOptionProps>(({ children, 
     <SelectItemImpl {...props} node={children} ref={forwardedRef}>
       <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
       <span className='grow' />
-      <Icon size={3} icon='ph--check--regular' />
+      <Icon.Root size={3} icon='ph--check--regular' />
     </SelectItemImpl>
   );
 });
@@ -414,41 +416,41 @@ SelectSeparator.displayName = 'Select.Separator';
 //
 // Select
 //
-
-export const Select = {
-  Root: SelectRoot,
-  Trigger: SelectTrigger,
-  TriggerButton: SelectTriggerButton,
-  Value: SelectValue,
-  Icon: SelectIcon,
-  Portal: SelectPortal,
-  Content: SelectContent,
-  Viewport: SelectViewport,
-  Item: SelectItem,
-  ItemText: SelectItemText,
-  ItemIndicator: SelectItemIndicator,
-  Option: SelectOption,
-  Group: SelectGroup,
-  Label: SelectLabel,
-  Separator: SelectSeparator,
-};
-
 export { SELECT_NAME };
 
 export type {
-  SelectContentProps,
-  SelectGroupProps,
-  SelectIconProps,
-  SelectItemIndicatorProps,
-  SelectItemProps,
-  SelectItemTextProps,
-  SelectLabelProps,
-  SelectOptionProps,
-  SelectPortalProps,
-  SelectRootProps,
-  SelectSeparatorProps,
-  SelectTriggerButtonProps,
-  SelectTriggerProps,
-  SelectValueProps,
-  SelectViewportProps,
+  SelectContentProps as ContentProps,
+  SelectGroupProps as GroupProps,
+  SelectIconProps as IconProps,
+  SelectItemIndicatorProps as ItemIndicatorProps,
+  SelectItemProps as ItemProps,
+  SelectItemTextProps as ItemTextProps,
+  SelectLabelProps as LabelProps,
+  SelectOptionProps as OptionProps,
+  SelectPortalProps as PortalProps,
+  SelectRootProps as RootProps,
+  SelectSeparatorProps as SeparatorProps,
+  SelectTriggerButtonProps as TriggerButtonProps,
+  SelectTriggerProps as TriggerProps,
+  SelectValueProps as ValueProps,
+  SelectViewportProps as ViewportProps,
 };
+
+export {
+  SelectContent as Content,
+  SelectGroup as Group,
+  SelectIcon as Icon,
+  SelectItem as Item,
+  SelectItemIndicator as ItemIndicator,
+  SelectItemText as ItemText,
+  SelectLabel as Label,
+  SelectOption as Option,
+  SelectPortal as Portal,
+  SelectRoot as Root,
+  SelectSeparator as Separator,
+  SelectTrigger as Trigger,
+  SelectTriggerButton as TriggerButton,
+  SelectValue as Value,
+  SelectViewport as Viewport,
+};
+export * from './Select.theme.ts';

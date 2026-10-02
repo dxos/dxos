@@ -2,23 +2,24 @@
 // Copyright 2024 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useCallback, useRef } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
 
-import { Tooltip, type TooltipTriggerProps } from './Tooltip.tsx';
-
-export type TextTooltipProps = PropsWithChildren<
+import * as Tooltip from './Tooltip.tsx';
+type TextTooltipProps = PropsWithChildren<
   {
     text: string;
     asChild?: boolean;
     onlyWhenTruncating?: boolean;
     truncateQuery?: string;
-  } & Pick<TooltipTriggerProps, 'side'> &
+  } & Pick<Tooltip.TriggerProps, 'side'> &
     ComponentPropsWithoutRef<'button'>
 >;
 
-export const TextTooltip = forwardRef<HTMLButtonElement, TextTooltipProps>(
+const TextTooltip = forwardRef<HTMLButtonElement, TextTooltipProps>(
   ({ text, children, onlyWhenTruncating, asChild = true, side, truncateQuery, ...props }, forwardedRef) => {
     const content = useRef<HTMLButtonElement | null>(null);
     const ref = useComposedRefs(content, forwardedRef);
@@ -40,3 +41,6 @@ export const TextTooltip = forwardRef<HTMLButtonElement, TextTooltipProps>(
     );
   },
 );
+
+export { TextTooltip as Root };
+export type { TextTooltipProps as RootProps };

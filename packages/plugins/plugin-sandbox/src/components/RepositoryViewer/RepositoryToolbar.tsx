@@ -4,7 +4,9 @@
 
 import React from 'react';
 
-import { Select, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -30,7 +32,7 @@ export const RepositoryToolbar = ({
   onViewChange,
   onRefresh,
 }: RepositoryToolbarProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const isCommit = currentRef !== undefined && !branches.some((branch) => branch.name === currentRef);
   return (
     <Toolbar.Root classNames='gap-1'>

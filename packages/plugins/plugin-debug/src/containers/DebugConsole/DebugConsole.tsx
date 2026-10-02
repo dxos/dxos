@@ -5,8 +5,12 @@
 import React, { useCallback, useMemo, useRef } from 'react';
 
 import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
-import { IconButton, Panel, SystemIconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Terminal, type TerminalApi } from '@dxos/react-ui-terminal';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -33,7 +37,7 @@ export type DebugConsoleProps = {
  * snapshot, plugin management, eval), as an interactive Effect-CLI terminal.
  */
 export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const manager = usePluginManager();
   const apiRef = useRef<TerminalApi | null>(null);
   const lastResultRef = useRef('');
@@ -66,7 +70,7 @@ export const DebugConsole = ({ onClose, fit }: DebugConsoleProps) => {
       </Panel.Content>
       <Panel.Statusbar asChild>
         <Toolbar.Root classNames='bg-transparent'>
-          <IconButton
+          <IconButton.Root
             variant='ghost'
             iconOnly
             icon='ph--eraser--regular'

@@ -8,8 +8,10 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useObject } from '@dxos/echo-react';
-import { Icon, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type ColumnRenderer, type HeadingRenderer, Tree, isTreeDataFor } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -107,7 +109,7 @@ export const TaskTreeNode = ({
   onTaskUpdate,
   onTaskMove,
 }: TaskTreeNodeProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const registry = useContext(RegistryContext);
 
   // Read at construction only. Keeping `collapsed` out of the memo's dependencies is what makes the
@@ -381,7 +383,7 @@ const TaskRowHeading = ({
   onTaskCheck,
   onTaskUpdate,
 }: TaskTreeHeadingProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const task = node.task;
   // Subscribed per row: the model is rebuilt from the task array, whose identity a property edit
   // does not change, so a rename made anywhere else would leave the row showing its old title.
@@ -456,7 +458,7 @@ const TaskGroupHeading = ({
   showGutter: boolean;
   translationKey: string;
 }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
     <div
       className={mx(
@@ -465,8 +467,8 @@ const TaskGroupHeading = ({
       )}
       data-testid='taskList.group.header'
     >
-      {group.icon && <Icon icon={group.icon} size={4} classNames={group.iconClassNames} />}
-      <span className='truncate font-medium'>{toLocalizedString(group.label, t)}</span>
+      {group.icon && <Icon.Root icon={group.icon} size={4} classNames={group.iconClassNames} />}
+      <span className='truncate font-medium'>{ThemeProvider.toLocalizedString(group.label, t)}</span>
       <span className='text-sm text-description' data-testid='taskList.group.count'>
         {group.count}
       </span>

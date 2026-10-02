@@ -5,7 +5,8 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { Menu, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
 
 import { translationKey } from '#translations';
 
@@ -17,7 +18,7 @@ export type ColumnActionsMenuProps = {
 };
 
 export const ColumnActionsMenu = ({ model, modals }: ColumnActionsMenuProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const state = useAtomValue(modals.state);
   if (state?.type !== 'column') {
     return null;

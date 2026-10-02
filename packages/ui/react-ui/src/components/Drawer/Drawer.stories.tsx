@@ -7,14 +7,14 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Panel } from '../Panel/index.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
-import { Splitter } from '../Splitter/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
-import { Drawer, type DrawerRootProps } from './Drawer.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Panel from '../Panel/Panel.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Splitter from '../Splitter/Splitter.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Drawer from './Drawer.tsx';
 
-type StoryArgs = Pick<DrawerRootProps, 'side' | 'modal' | 'snapPoints'> & {
+type StoryArgs = Pick<Drawer.RootProps, 'side' | 'modal' | 'snapPoints'> & {
   title?: string;
   description?: string;
   /** Render the handle a sheet is dragged by. */
@@ -45,7 +45,7 @@ const Body = ({ title, description, grabber, filler = 0 }: StoryArgs) => (
     {description && <Drawer.Description>{description}</Drawer.Description>}
     <div className='flex flex-col gap-2 p-2'>
       <Drawer.Close asChild>
-        <Button variant='primary'>Close</Button>
+        <Button.Root variant='primary'>Close</Button.Root>
       </Drawer.Close>
     </div>
     {filler > 0 && <Filler lines={filler} />}
@@ -59,7 +59,7 @@ const DefaultStory = ({ side, modal, snapPoints, ...props }: StoryArgs) => (
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Drawer.Trigger asChild>
-            <Button>Open</Button>
+            <Button.Root>Open</Button.Root>
           </Drawer.Trigger>
         </Toolbar.Root>
       </Panel.Toolbar>

@@ -21,7 +21,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import jsonStableStringify from 'json-stable-stringify';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestContextService } from '@dxos/effect/testing';
 import { log } from '@dxos/log';
 import { deepMapValues } from '@dxos/util';

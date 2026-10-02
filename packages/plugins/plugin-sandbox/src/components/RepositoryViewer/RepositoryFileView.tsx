@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -18,7 +18,7 @@ export type RepositoryFileViewProps = {
 
 /** One file at a commit: highlighted text, an image, or a note that the file is binary. */
 export const RepositoryFileView = ({ file }: RepositoryFileViewProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (file.encoding === 'utf-8') {
     return (
       <SyntaxHighlighter

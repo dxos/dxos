@@ -4,8 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { Select, type SelectRootProps } from '@dxos/react-ui';
 import { Form, type FormFieldRendererProps } from '@dxos/react-ui-form';
+import * as Select from '@dxos/react-ui/Select';
 
 import type { FeedbackPluginOption } from './types.ts';
 
@@ -41,7 +41,7 @@ export const AreaSelectField = ({
   const { status, error } = getStatus();
   const value = getValue();
 
-  const handleValueChange = useCallback<NonNullable<SelectRootProps['onValueChange']>>(
+  const handleValueChange = useCallback<NonNullable<Select.RootProps['onValueChange']>>(
     (next) => onValueChange(type, next === CLEAR_VALUE ? undefined : next),
     [type, onValueChange],
   );

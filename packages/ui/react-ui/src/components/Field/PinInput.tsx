@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import { useFieldContext } from '@ark-ui/react/field';
 import React, {
   type ChangeEvent,
@@ -208,6 +210,6 @@ const PinInput = forwardRef<HTMLInputElement, PinInputProps>(
   },
 );
 
-export { PinInput };
+export { PinInput as Root };
 
-export type { PinInputProps };
+export type { PinInputProps as RootProps };

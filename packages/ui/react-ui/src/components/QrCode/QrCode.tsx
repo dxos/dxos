@@ -2,13 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { QrCode as QrCodePrimitive } from '@ark-ui/react/qr-code';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { Icon } from '../Icon/index.ts';
-
+import * as Icon from '../Icon/Icon.tsx';
 type QrCodeErrorCorrection = 'L' | 'M' | 'Q' | 'H';
 
 type QrCodeProps = ThemedClassName<Omit<ComponentPropsWithRef<typeof QrCodePrimitive.Root>, 'value' | 'encoding'>> & {
@@ -40,7 +41,7 @@ const QrCode = forwardRef<HTMLDivElement, QrCodeProps>(
         </QrCodePrimitive.Frame>
         {icon && (
           <QrCodePrimitive.Overlay>
-            <Icon icon={icon} size={10} classNames='bg-black' />
+            <Icon.Root icon={icon} size={10} classNames='bg-black' />
           </QrCodePrimitive.Overlay>
         )}
       </QrCodePrimitive.Root>
@@ -50,6 +51,8 @@ const QrCode = forwardRef<HTMLDivElement, QrCodeProps>(
 
 QrCode.displayName = 'QrCode';
 
-export { QrCode };
+export { QrCode as Root };
 
-export type { QrCodeErrorCorrection, QrCodeProps };
+export type { QrCodeErrorCorrection as ErrorCorrection, QrCodeProps as RootProps };
+
+export * from './QrCode.theme.ts';

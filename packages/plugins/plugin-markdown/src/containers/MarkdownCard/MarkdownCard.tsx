@@ -6,8 +6,9 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { Card, useTranslation } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Text } from '@dxos/schema';
 import { compactSlots } from '@dxos/ui-editor';
 
@@ -25,7 +26,7 @@ const SNIPPET_MAX_HEIGHT = '100cqi';
 export type MarkdownCardProps = { subject: Markdown.Document | Text.Text };
 
 export const MarkdownCard = ({ subject }: MarkdownCardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Subscribe to the live content so the snippet + word count track edits (e.g. an agent updating
   // the document); reading `subject.content.target.content` alone is not reactive to the string.
   const [docContent] = useObject(Obj.instanceOf(Markdown.Document, subject) ? subject.content : undefined, 'content');

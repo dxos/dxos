@@ -8,8 +8,8 @@ import React, { useCallback, useState } from 'react';
 import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing/index.ts';
-import { Button } from '../Button/index.ts';
-import { Collapsible } from './Collapsible.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Collapsible from './Collapsible.tsx';
 
 type Section = {
   id: string;
@@ -53,8 +53,8 @@ const DefaultStory = ({ exclusive }: StoryArgs) => {
   return (
     <div className='flex flex-col gap-2 w-full max-w-lg p-4'>
       <div className='flex gap-2'>
-        <Button onClick={() => setOpen(new Set(sections.map(({ id }) => id)))}>Expand all</Button>
-        <Button onClick={() => setOpen(new Set())}>Collapse all</Button>
+        <Button.Root onClick={() => setOpen(new Set(sections.map(({ id }) => id)))}>Expand all</Button.Root>
+        <Button.Root onClick={() => setOpen(new Set())}>Collapse all</Button.Root>
       </div>
       {sections.map(({ id, title, body }) => (
         <Collapsible.Root

@@ -4,8 +4,8 @@
 
 import React, { type ComponentType, useCallback, useMemo, useRef, useState } from 'react';
 
-import { Column } from '@dxos/react-ui';
 import { Window, type WindowController, type WindowState, useListModel } from '@dxos/react-ui-virtual';
+import * as Column from '@dxos/react-ui/Column';
 import { type Message } from '@dxos/types';
 
 import { HtmlBlock, MarkdownBlock, type MessageChromeProps } from '../components/index.ts';

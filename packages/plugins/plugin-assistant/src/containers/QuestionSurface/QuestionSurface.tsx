@@ -9,8 +9,11 @@ import { useActiveSpace, useObjectMenuItems } from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { EntityId } from '@dxos/keys';
-import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -36,7 +39,7 @@ export type QuestionSurfaceProps = {
  * history: an answer given here and one given from the task's row have to be the same answer.
  */
 export const QuestionSurface = ({ task: taskId, question: questionId }: QuestionSurfaceProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const space = useActiveSpace();
   // Validated before it reaches `Filter.id`, which asserts on its arguments: this id is written by
   // a model, so a truncated or hallucinated one is the expected case, and an unguarded filter
@@ -57,7 +60,7 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
       <Card.Header>
         <Card.Block>
           <CardIconSlot subject={object}>
-            <Icon icon='ph--question--regular' />
+            <Icon.Root icon='ph--question--regular' />
           </CardIconSlot>
         </Card.Block>
         {/* The task, not the question: a `Card.Title` truncates to one line by design, and the
@@ -66,7 +69,7 @@ export const QuestionSurface = ({ task: taskId, question: questionId }: Question
         {/* The task's actions, as a task card anywhere else offers them. */}
         <Card.Block end>
           <ActionMenu disabled={!menuItems.length} actions={menuItems}>
-            <IconButton
+            <IconButton.Root
               variant='ghost'
               density='sm'
               icon='ph--dots-three-vertical--regular'

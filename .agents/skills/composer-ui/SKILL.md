@@ -120,8 +120,8 @@ Icons are Phosphor sprite references named `ph--<icon>--<weight>` (weights: `reg
 `light`, `duotone`, `thin`). Use the `Icon` primitive or any primitive that takes an `icon` prop:
 
 ```tsx
-import { Icon } from '@dxos/react-ui';
-<Icon icon='ph--plus--regular' size={5} />;
+import * as Icon from '@dxos/react-ui/Icon';
+<Icon.Root icon='ph--plus--regular' size={5} />;
 ```
 
 `size` is a numeric `Size` (Tailwind scale), or inherit from the `--dx-icon-size` CSS var.

@@ -13,9 +13,11 @@ import React, {
   useRef,
 } from 'react';
 
-import { type ComposableProps, composable, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Next } from '@dxos/react-ui/next';
+import * as Util from '@dxos/react-ui/Util';
 import { osTranslations } from '@dxos/ui-theme';
+import { type ComposableProps } from '@dxos/ui-types';
 
 import { useListDisclosure, useReorderAutoScroll, useReorderItem, useReorderList } from '../../hooks/index.ts';
 import {
@@ -123,7 +125,7 @@ type OrderedListContentProps = Next.ContainerProps &
 /** The `list`: a stack Container (`inset` gutter by default) whose children are the rows. */
 const OrderedListContent: ForwardRefExoticComponent<
   ComposableProps<OrderedListContentProps> & RefAttributes<HTMLDivElement>
-> = composable<HTMLDivElement, OrderedListContentProps>(
+> = Util.composable<HTMLDivElement, OrderedListContentProps>(
   ({ gutter = 'inset', scroll = true, mode, width, children, ...props }, forwardedRef) => {
     const autoScrollRef = useReorderAutoScroll();
     const list = (
@@ -194,7 +196,7 @@ const OrderedListItem = ({ id, canDrag = true, children, ...props }: OrderedList
  * moves. Disabled when the list is readonly or the row opts out.
  */
 const OrderedListDragHandle = () => {
-  const { t } = useTranslation(osTranslations);
+  const { t } = Hooks.useTranslation(osTranslations);
   const { readonly, move } = useOrderedListContext('OrderedList.DragHandle');
   const { id, canDrag, handleRef } = useOrderedListItemContext('OrderedList.DragHandle');
   return (

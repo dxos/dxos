@@ -10,7 +10,11 @@ import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Icon, Menu, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Bitbar, JsonView } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -253,7 +257,7 @@ const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ item
         return (
           <div key={id} role='treeitem'>
             <div className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
-              <Icon icon={iconName} />
+              <Icon.Root icon={iconName} />
               {Element}
             </div>
             {items && items.length > 0 && (

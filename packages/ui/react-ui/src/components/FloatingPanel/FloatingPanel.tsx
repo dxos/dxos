@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // `FloatingPanel` — a draggable, resizable window over the page, on Ark's floating-panel machine.
 // The machine owns the open state, the position and size (published as `--x`/`--y`/`--width`/
 // `--height` on the positioner), dragging and resizing from the trigger parts, the stack order of
@@ -18,17 +20,16 @@ import { type SlottableProps } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { ElevationProvider } from '../../providers/index.ts';
+import * as ElevationProvider from '../../providers/ElevationProvider/ElevationProvider.tsx';
 import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
-import { IconButton, type IconButtonProps } from '../Button/index.ts';
+import * as IconButton from '../Button/IconButton.tsx';
+type FloatingPanelPoint = { x: number; y: number };
 
-export type FloatingPanelPoint = { x: number; y: number };
+type FloatingPanelSize = { width: number; height: number };
 
-export type FloatingPanelSize = { width: number; height: number };
+type FloatingPanelStage = 'default' | 'minimized' | 'maximized';
 
-export type FloatingPanelStage = 'default' | 'minimized' | 'maximized';
-
-export type FloatingPanelResizeAxis = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
+type FloatingPanelResizeAxis = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw';
 
 const RESIZE_AXES: readonly FloatingPanelResizeAxis[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
 
@@ -100,7 +101,7 @@ const FloatingPanelRoot: FC<FloatingPanelRootProps> = ({
   return (
     // The panel floats in the dialog band (see `POSITIONER_STYLE`), so what opens from inside it —
     // menus, tooltips — takes the dialog elevation and outranks it.
-    <ElevationProvider elevation='dialog'>
+    <ElevationProvider.Root elevation='dialog'>
       {/* Closed content is not in the DOM at all. */}
       <FloatingPanelPrimitive.Root
         {...props}
@@ -117,7 +118,7 @@ const FloatingPanelRoot: FC<FloatingPanelRootProps> = ({
       >
         {children}
       </FloatingPanelPrimitive.Root>
-    </ElevationProvider>
+    </ElevationProvider.Root>
   );
 };
 
@@ -281,7 +282,7 @@ const STAGE_ICONS: Record<FloatingPanelStage, string> = {
   default: 'ph--arrows-in-simple--regular',
 };
 
-type FloatingPanelStageTriggerProps = Omit<IconButtonProps, 'icon' | 'label' | 'iconOnly'> & {
+type FloatingPanelStageTriggerProps = Omit<IconButton.RootProps, 'icon' | 'label' | 'iconOnly'> & {
   /** The stage the button moves the panel to; the machine hides the one that does not apply. */
   stage: FloatingPanelStage;
   icon?: string;
@@ -300,7 +301,7 @@ const FloatingPanelStageTrigger = ({ stage, icon, label, ...props }: FloatingPan
   return (
     <FloatingPanelPrimitive.StageTrigger stage={stage} asChild>
       {/* The child's `aria-label` wins over the machine's, so the tooltip and the name agree. */}
-      <IconButton
+      <IconButton.Root
         variant='ghost'
         density='sm'
         {...props}
@@ -315,7 +316,7 @@ const FloatingPanelStageTrigger = ({ stage, icon, label, ...props }: FloatingPan
 
 FloatingPanelStageTrigger.displayName = 'FloatingPanel.StageTrigger';
 
-type FloatingPanelCloseTriggerProps = Omit<IconButtonProps, 'icon' | 'label' | 'iconOnly'> & {
+type FloatingPanelCloseTriggerProps = Omit<IconButton.RootProps, 'icon' | 'label' | 'iconOnly'> & {
   icon?: string;
   label?: string;
 };
@@ -326,7 +327,7 @@ const FloatingPanelCloseTrigger = ({ icon, label, ...props }: FloatingPanelClose
   const name: string = label ?? t('system-button.close.label');
   return (
     <FloatingPanelPrimitive.CloseTrigger asChild>
-      <IconButton
+      <IconButton.Root
         variant='ghost'
         density='sm'
         {...props}
@@ -394,34 +395,40 @@ FloatingPanelResizers.displayName = 'FloatingPanel.Resizers';
 //
 // FloatingPanel
 //
-
-export const FloatingPanel = {
-  Root: FloatingPanelRoot,
-  Trigger: FloatingPanelTrigger,
-  Portal: FloatingPanelPortal,
-  Content: FloatingPanelContent,
-  Header: FloatingPanelHeader,
-  DragTrigger: FloatingPanelDragTrigger,
-  Title: FloatingPanelTitle,
-  Control: FloatingPanelControl,
-  StageTrigger: FloatingPanelStageTrigger,
-  CloseTrigger: FloatingPanelCloseTrigger,
-  Body: FloatingPanelBody,
-  ResizeTrigger: FloatingPanelResizeTrigger,
-  Resizers: FloatingPanelResizers,
-};
-
 export type {
-  FloatingPanelBodyProps,
-  FloatingPanelCloseTriggerProps,
-  FloatingPanelContentProps,
-  FloatingPanelControlProps,
-  FloatingPanelDragTriggerProps,
-  FloatingPanelHeaderProps,
-  FloatingPanelPortalProps,
-  FloatingPanelResizeTriggerProps,
-  FloatingPanelRootProps,
-  FloatingPanelStageTriggerProps,
-  FloatingPanelTitleProps,
-  FloatingPanelTriggerProps,
+  FloatingPanelBodyProps as BodyProps,
+  FloatingPanelCloseTriggerProps as CloseTriggerProps,
+  FloatingPanelContentProps as ContentProps,
+  FloatingPanelControlProps as ControlProps,
+  FloatingPanelDragTriggerProps as DragTriggerProps,
+  FloatingPanelHeaderProps as HeaderProps,
+  FloatingPanelPortalProps as PortalProps,
+  FloatingPanelResizeTriggerProps as ResizeTriggerProps,
+  FloatingPanelRootProps as RootProps,
+  FloatingPanelStageTriggerProps as StageTriggerProps,
+  FloatingPanelTitleProps as TitleProps,
+  FloatingPanelTriggerProps as TriggerProps,
 };
+
+export {
+  FloatingPanelBody as Body,
+  FloatingPanelCloseTrigger as CloseTrigger,
+  FloatingPanelContent as Content,
+  FloatingPanelControl as Control,
+  FloatingPanelDragTrigger as DragTrigger,
+  FloatingPanelHeader as Header,
+  FloatingPanelPortal as Portal,
+  FloatingPanelResizers as Resizers,
+  FloatingPanelResizeTrigger as ResizeTrigger,
+  FloatingPanelRoot as Root,
+  FloatingPanelStageTrigger as StageTrigger,
+  FloatingPanelTitle as Title,
+  FloatingPanelTrigger as Trigger,
+};
+export type {
+  FloatingPanelPoint as Point,
+  FloatingPanelResizeAxis as ResizeAxis,
+  FloatingPanelSize as Size,
+  FloatingPanelStage as Stage,
+};
+export * from './FloatingPanel.theme.ts';

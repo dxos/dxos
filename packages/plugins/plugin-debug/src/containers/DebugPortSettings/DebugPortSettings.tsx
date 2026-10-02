@@ -5,9 +5,12 @@
 import React, { useCallback, useSyncExternalStore } from 'react';
 
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import { Field, Flex, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { Logger, type LogRow } from '@dxos/react-ui-debug';
 import { Form } from '@dxos/react-ui-form';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
 
 import { meta } from '#meta';
 
@@ -35,7 +38,7 @@ export type DebugPortSettingsProps = {
  * flipped, the session id is regenerated on every activation, and nothing survives a reload.
  */
 export const DebugPortSettings = ({ controller = getDebugPortController(), disabled }: DebugPortSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const subscribe = useCallback((listener: () => void) => controller.subscribe(listener), [controller]);
   const getStatus = useCallback(() => controller.getStatus(), [controller]);
   const status = useSyncExternalStore(subscribe, getStatus);
@@ -53,7 +56,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
       description={t('settings.debug-port.section.description')}
     >
       <Form.Field standalone label={t('settings.debug-port.label')} description={t('settings.debug-port.description')}>
-        <Flex gap='md' align='center'>
+        <Flex.Root gap='md' align='center'>
           {status.running && (
             <span className='text-sm text-description'>
               {t('settings.debug-port.running.label')} <span className='font-mono'>{status.origin}</span>
@@ -62,7 +65,7 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
           <Field.Root>
             <Field.Switch checked={status.running} disabled={disabled} onCheckedChange={handleToggle} />
           </Field.Root>
-        </Flex>
+        </Flex.Root>
       </Form.Field>
 
       {status.running && (
@@ -72,14 +75,14 @@ export const DebugPortSettings = ({ controller = getDebugPortController(), disab
             label={t('settings.debug-port.session.label')}
             description={t('settings.debug-port.session.description')}
           >
-            <Flex gap='sm' align='center'>
+            <Flex.Root gap='sm' align='center'>
               <span className='grow truncate font-mono text-sm'>{status.session}</span>
               <SystemIconButton.Clipboard
                 iconOnly
                 label={t('settings.debug-port.copy-session.label')}
                 value={status.session ?? ''}
               />
-            </Flex>
+            </Flex.Root>
           </Form.Field>
 
           {/* The settings variant puts the control in a right-hand column; log rows need the full

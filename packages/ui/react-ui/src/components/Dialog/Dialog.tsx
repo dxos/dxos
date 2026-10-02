@@ -2,6 +2,8 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Dialog` and `AlertDialog` are one implementation over Ark's dialog machine, which owns focus
 // trapping, scroll locking, dismissal and the `aria-labelledby`/`aria-describedby` wiring (present
 // only when a `Title`/`Description` is rendered). DXOS owns the layout parts — `Overlay` as the
@@ -19,11 +21,11 @@ import { elevationAttrs, elevationSurface, osTranslations } from '@dxos/ui-theme
 import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
 import { useThemeContext } from '../../hooks/index.ts';
-import { ElevationProvider } from '../../providers/index.ts';
+import * as ElevationProvider from '../../providers/ElevationProvider/ElevationProvider.tsx';
 import { type DialogSize } from '../../theme/index.ts';
 import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
-import { IconButton } from '../Button/index.ts';
-import { Column } from '../Column/index.ts';
+import * as IconButton from '../Button/IconButton.tsx';
+import * as Column from '../Column/Column.tsx';
 import {
   type DialogContentHandlers,
   DialogProvider,
@@ -135,12 +137,12 @@ const DialogRootImpl = ({
   );
 
   return (
-    <ElevationProvider elevation='dialog'>
+    <ElevationProvider.Root elevation='dialog'>
       {/* Closed content is not in the DOM at all. */}
       <DialogPrimitive.RootProvider value={dialog} lazyMount unmountOnExit>
         <DialogProvider {...context}>{children}</DialogProvider>
       </DialogPrimitive.RootProvider>
-    </ElevationProvider>
+    </ElevationProvider.Root>
   );
 };
 
@@ -312,7 +314,7 @@ const DialogActionIconButton = forwardRef<HTMLButtonElement, DialogActionIconBut
   ({ action, label, ...props }, forwardedRef) => {
     const { t } = useTranslation(osTranslations);
     return (
-      <IconButton
+      <IconButton.Root
         {...props}
         label={label ?? t(DIALOG_ACTION_LABEL_KEYS[action])}
         icon={DIALOG_ACTION_ICONS[action]}
@@ -415,36 +417,36 @@ const DialogClose = DialogPrimitive.CloseTrigger;
 //
 // Dialog
 //
-
-export const Dialog = {
-  Root: DialogRoot,
-  Trigger: DialogTrigger,
-  Portal: DialogPortal,
-  Overlay: DialogOverlay,
-  Content: DialogContent,
-  Header: DialogHeader,
-  Body: DialogBody,
-  Title: DialogTitle,
-  Description: DialogDescription,
-  ActionBar: DialogActionBar,
-  Close: DialogClose,
-  ActionIconButton: DialogActionIconButton,
-};
-
-export { DialogRootImpl };
+export { DialogRootImpl as RootImpl };
 
 export type {
-  DialogActionBarProps,
-  DialogActionIconButtonAction,
-  DialogActionIconButtonProps,
-  DialogBodyProps,
-  DialogCloseProps,
-  DialogContentProps,
-  DialogDescriptionProps,
-  DialogHeaderProps,
-  DialogOverlayProps,
-  DialogPortalProps,
-  DialogRootProps,
-  DialogTitleProps,
-  DialogTriggerProps,
+  DialogActionBarProps as ActionBarProps,
+  DialogActionIconButtonAction as ActionIconButtonAction,
+  DialogActionIconButtonProps as ActionIconButtonProps,
+  DialogBodyProps as BodyProps,
+  DialogCloseProps as CloseProps,
+  DialogContentProps as ContentProps,
+  DialogDescriptionProps as DescriptionProps,
+  DialogHeaderProps as HeaderProps,
+  DialogOverlayProps as OverlayProps,
+  DialogPortalProps as PortalProps,
+  DialogRootProps as RootProps,
+  DialogTitleProps as TitleProps,
+  DialogTriggerProps as TriggerProps,
 };
+
+export {
+  DialogActionBar as ActionBar,
+  DialogActionIconButton as ActionIconButton,
+  DialogBody as Body,
+  DialogClose as Close,
+  DialogContent as Content,
+  DialogDescription as Description,
+  DialogHeader as Header,
+  DialogOverlay as Overlay,
+  DialogPortal as Portal,
+  DialogRoot as Root,
+  DialogTitle as Title,
+  DialogTrigger as Trigger,
+};
+export * from './Dialog.theme.ts';

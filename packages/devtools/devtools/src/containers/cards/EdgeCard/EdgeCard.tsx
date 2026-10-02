@@ -10,7 +10,9 @@ import {
   type QueryEdgeStatusResponse,
   type EdgeStatus as SocketStatus,
 } from '@dxos/protocols/buf/dxos/client/services_pb';
-import { Flex, SystemIconButton, Tooltip } from '@dxos/react-ui';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { Unit } from '../util.tsx';
@@ -102,7 +104,7 @@ const HealthRows = ({ rows }: { rows: HealthRow[] }) => (
 
 /** Tooltip body for a space row: its name where known, then each red flag and any fetch error. */
 const SpaceDetail = ({ row }: { row: SpaceRow }) => (
-  <Flex column gap='xs' classNames='max-w-64 text-xs'>
+  <Flex.Root column gap='xs' classNames='max-w-64 text-xs'>
     <span>{row.name ?? 'Unknown space'}</span>
     {row.flags.map((flag) => (
       <span key={flag} className='text-error-text'>
@@ -110,7 +112,7 @@ const SpaceDetail = ({ row }: { row: SpaceRow }) => (
       </span>
     ))}
     {row.fetchError && <span className='text-error-text'>fetch: {row.fetchError}</span>}
-  </Flex>
+  </Flex.Root>
 );
 
 /** One row per space: a copyable id chip (as the Sync card) and the count of EDGE's red flags for it. */

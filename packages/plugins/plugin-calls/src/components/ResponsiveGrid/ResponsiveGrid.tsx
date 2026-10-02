@@ -6,7 +6,7 @@ import React, { type ComponentType, type FC, useCallback, useEffect, useLayoutEf
 import { useResizeDetector } from 'react-resize-detector';
 
 import { invariant } from '@dxos/invariant';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type ResponsiveGridItemProps } from './ResponsiveGridItem.tsx';
@@ -22,7 +22,7 @@ const maxImageSize = 'w-[2560px] h-[1440px]';
 /**
  * Props for the ResponsiveGrid component.
  */
-export type ResponsiveGridProps<T extends object = any> = ThemedClassName<{
+export type ResponsiveGridProps<T extends object = any> = Util.ThemedClassName<{
   /** Cell component. */
   Cell: ComponentType<ResponsiveGridItemProps<T>>;
 

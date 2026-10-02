@@ -7,7 +7,9 @@
 import React, { type ReactNode, createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 import { DXOSHorizontalType } from '@dxos/brand';
-import { IconButton, ScrollArea, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -125,7 +127,7 @@ const Root = ({ guildId = DXOS_GUILD_ID, teamMembers, channels, children }: Disc
 };
 
 const Header = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { data, unavailable, guildId } = useWidgetContext();
 
   return (
@@ -238,14 +240,14 @@ const Content = () => {
 };
 
 const StatusBar = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { data } = useWidgetContext();
   if (!data?.instant_invite) {
     return null;
   }
 
   return (
-    <IconButton
+    <IconButton.Root
       icon='ph--discord-logo--regular'
       label={t('join-discord.button')}
       variant='primary'

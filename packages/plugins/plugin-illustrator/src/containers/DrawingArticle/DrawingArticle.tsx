@@ -12,8 +12,8 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { EID, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Drawing, IllustratorCapabilities } from '#types';
@@ -30,7 +30,7 @@ export type DrawingArticleProps = AppSurface.ObjectArticleProps<Drawing.Drawing>
  * reads one source regardless of which renderer drew the picture.
  */
 export const DrawingArticle = ({ role, attendableId, subject: drawing, extrinsic }: DrawingArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const variants = useCapabilities(IllustratorCapabilities.VariantProvider);
   const ref = drawing.canvas;
   // Subscribe via the snapshot for load/re-render, but hand variants the LIVE object —

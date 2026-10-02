@@ -9,7 +9,7 @@ import { mx } from '@dxos/ui-theme';
 import { ThemedClassName } from '@dxos/ui-types';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { ScrollArea, type ScrollAreaRootProps } from './ScrollArea.tsx';
+import * as ScrollArea from './ScrollArea.tsx';
 
 random.seed(123);
 
@@ -67,7 +67,7 @@ const sizes: Record<string, string> = {
   all: 'w-96 h-96',
 };
 
-const Story = ({ orientation = 'vertical', ...props }: ScrollAreaRootProps) => (
+const Story = ({ orientation = 'vertical', ...props }: ScrollArea.RootProps) => (
   <Container classNames={sizes[orientation]}>
     <ScrollArea.Root orientation={orientation} {...props}>
       <ScrollArea.Viewport>
@@ -82,7 +82,7 @@ const Story = ({ orientation = 'vertical', ...props }: ScrollAreaRootProps) => (
 export default {
   title: 'ui/react-ui-core/components/ScrollArea',
   component: ScrollArea.Root,
-  render: (args: ScrollAreaRootProps) => <Story {...args} />,
+  render: (args: ScrollArea.RootProps) => <Story {...args} />,
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
@@ -106,7 +106,7 @@ export default {
     centered: false,
     thin: false,
     snap: false,
-  } satisfies ScrollAreaRootProps,
+  } satisfies ScrollArea.RootProps,
 };
 
 export const Vertical = {
@@ -129,7 +129,7 @@ export const Native = {
 /** Nesting is not expressible through the controls panel: a vertical scroller inside a horizontal one. */
 export const Nested = {
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
-  render: ({ orientation: _orientation, ...props }: ScrollAreaRootProps) => {
+  render: ({ orientation: _orientation, ...props }: ScrollArea.RootProps) => {
     const columns = useMemo(
       () =>
         Array.from({ length: 8 }).map((_, index) => ({

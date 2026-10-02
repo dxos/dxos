@@ -13,7 +13,11 @@ import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Focus, Icon, Tag, useTranslation } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Tag from '@dxos/react-ui/Tag';
 import { CardAnnotation } from '@dxos/schema';
 import { getStyles, osTranslations } from '@dxos/ui-theme';
 
@@ -39,7 +43,7 @@ export const TileAdapter = ({ data }: { data: TileData | undefined; index: numbe
 
 /** Selectable header-only card for a single object. */
 export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
@@ -111,7 +115,7 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
         <Card.Header>
           <Card.Block>
             <CardIconSlot subject={live}>
-              <Icon icon={icon} classNames={iconStyles?.text} />
+              <Icon.Root icon={icon} classNames={iconStyles?.text} />
             </CardIconSlot>
           </Card.Block>
           <Card.Title>{label}</Card.Title>
@@ -119,7 +123,7 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
         </Card.Header>
         {archived && (
           <Card.Row>
-            <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
+            <Tag.Root classNames='justify-self-start'>{t('archived.label')}</Tag.Root>
           </Card.Row>
         )}
         {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}

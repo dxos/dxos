@@ -4,8 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { Card, Icon, IconButton, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 
@@ -21,7 +24,7 @@ export type RelatedCardsProps = Pick<PullRequestBody, 'artifacts' | 'claudeCode'
 
 /** What {@link RelatedCards} would show; empty when the pull request links to nothing beyond its diff. */
 export const useRelatedItems = ({ artifacts, claudeCode, previewUrl }: RelatedCardsProps): RelatedItem[] => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return useMemo(() => {
     const items: RelatedItem[] = artifacts.map((artifact) => ({ kind: 'artifact', id: artifact.url, artifact }));
     if (previewUrl) {
@@ -62,7 +65,7 @@ export const RelatedCards = ({ items }: { items: readonly RelatedItem[] }) => (
 );
 
 const RelatedCard = ({ data: item }: { data: RelatedItem }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (item.kind === 'link') {
     return (
       <Card.Root data-testid={`pull-request.related.${item.id}`}>
@@ -112,16 +115,16 @@ const CardHeading = ({
   title: string;
   href?: string;
 }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <Card.Header>
       <Card.Block>
-        <Icon icon={icon} classNames={iconClassNames} />
+        <Icon.Root icon={icon} classNames={iconClassNames} />
       </Card.Block>
       <Card.Title>{title}</Card.Title>
       {href && (
         <Card.Block end>
-          <IconButton
+          <IconButton.Root
             iconOnly
             variant='ghost'
             icon='ph--arrow-square-out--regular'

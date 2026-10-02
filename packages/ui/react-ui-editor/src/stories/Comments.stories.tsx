@@ -12,12 +12,13 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
-import { IconButton, useThemeContext } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Listbox } from '@dxos/react-ui-list';
 import { createMenuAction } from '@dxos/react-ui-menu';
+import * as IconButton from '@dxos/react-ui/IconButton';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   Cursor,
   EditorView,
@@ -47,7 +48,7 @@ type StoryArgs = {
 };
 
 const DefaultStory = ({ content, comments: commentsProp = [] }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const registry = useContext(RegistryContext);
   const editorRef = useRef<EditorController>(null);
   const attentionAttrs = useAttentionAttributes(DOCUMENT_ID);
@@ -197,7 +198,7 @@ const CommentsList = ({
                 title={(range && view?.state.doc.sliceString(range.from, range.to)) || comment.cursor || comment.id}
                 description={range ? `${range.from}–${range.to}` : comment.cursor}
               />
-              <IconButton
+              <IconButton.Root
                 variant='ghost'
                 iconOnly
                 icon='ph--x--regular'

@@ -19,7 +19,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useActiveSpace, useProgressMonitors } from '@dxos/app-toolkit/Hooks';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
-import { EffectEx, createKvsStore } from '@dxos/effect';
+import { createKvsStore } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, PublicKey } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -52,10 +53,12 @@ import * as Trip from '@dxos/plugin-trip/Trip';
 import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Panel, Select, Toolbar } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { TagIndex, Text } from '@dxos/schema';
 import {
   ModuleContainer,

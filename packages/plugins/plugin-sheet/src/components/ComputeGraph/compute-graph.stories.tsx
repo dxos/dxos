@@ -10,9 +10,11 @@ import * as Operation from '@dxos/compute/Operation';
 import { Filter, Obj } from '@dxos/echo';
 import { useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Field, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { withComputeGraphDecorator } from '#testing';
 import { Sheet } from '#types';
@@ -73,7 +75,7 @@ const DefaultStory = () => {
         <Field.Root>
           <Field.Input ref={inputRef} placeholder='Formula' value={text} onChange={(ev) => setText(ev.target.value)} />
         </Field.Root>
-        <Button onClick={handleTest}>Test</Button>
+        <Button.Root onClick={handleTest}>Test</Button.Root>
       </Toolbar.Root>
       <JsonHighlighter data={{ space: space?.id, graph: graph?.id, sheet: sheet?.id, model: model?.id, result }} />
     </div>

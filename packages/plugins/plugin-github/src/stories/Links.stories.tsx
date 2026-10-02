@@ -10,18 +10,21 @@ import { Surface } from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
 import {
   EditorPreviewProvider,
   type EditorPreviewProviderProps,
   useEditorPreview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -55,7 +58,7 @@ const PreviewCard = () => {
           <Card.Root border={false} classNames='dx-card-popover'>
             <Card.Header>
               <Card.Block>
-                <Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
+                <Icon.Root icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
               </Card.Block>
               <Card.Title>{Obj.getLabel(target.object) ?? target.label}</Card.Title>
               <Popover.Close asChild>
@@ -81,7 +84,7 @@ type StoryArgs = {
  * surface renders the card.
  */
 const DefaultStory = ({ text }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
   const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
   const handleLookup = useCallback<NonNullable<EditorPreviewProviderProps['onLookup']>>(
     async (ref) => {

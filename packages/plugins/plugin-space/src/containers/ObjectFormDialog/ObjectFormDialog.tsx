@@ -19,11 +19,14 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { useSubmitOnEnter } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { FactoryAnnotation, ViewAnnotation } from '@dxos/schema';
 
 import { makeCreateObjectEntryForDatabaseType } from '#capabilities';
@@ -64,7 +67,7 @@ export const ObjectFormDialog = ({
   shouldNavigate: _shouldNavigate,
   targetNodeId,
 }: ObjectFormDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const manager = usePluginManager();
   // Demand signal: load policy-parked CreateObjectEntry providers; the picker below reads them
   // reactively, so entries pop in as their chunks arrive.
@@ -80,7 +83,7 @@ export const ObjectFormDialog = ({
   const db = Database.isDatabase(target) ? target : target && Obj.getDatabase(target);
   const allTypes = useQuery(db, TypeOptions.allTypesQuery);
   const space = useMemo(() => spaces.find((s) => s.db === db), [spaces, db]);
-  const spaceLabel = useMemo(() => space && toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
+  const spaceLabel = useMemo(() => space && ThemeProvider.toLocalizedString(getSpaceDisplayName(space), t), [space, t]);
 
   // Index all types by typename for label/icon lookups.
   const typeByTypename = useMemo(() => {
@@ -372,11 +375,11 @@ export const ObjectFormDialog = ({
       {object ? (
         <Dialog.ActionBar>
           <Dialog.Close asChild>
-            <Button data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button>
+            <Button.Root data-testid='object-form.cancel'>{t('object-form-cancel.label')}</Button.Root>
           </Dialog.Close>
-          <Button variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
+          <Button.Root variant='primary' onClick={handleConfirm} data-testid='object-form.confirm'>
             {t('object-form-confirm.label')}
-          </Button>
+          </Button.Root>
         </Dialog.ActionBar>
       ) : (
         showTypeSelector &&

@@ -9,11 +9,11 @@ import { random } from '@dxos/random';
 import { mx } from '@dxos/ui-theme';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { Tabs, TabsRootProps } from './Tabs.tsx';
+import * as Tabs from './Tabs.tsx';
 
 random.seed(1234);
 
-const DefaultStory = ({ orientation }: TabsRootProps) => {
+const DefaultStory = ({ orientation }: Tabs.RootProps) => {
   return (
     <Tabs.Root asChild orientation={orientation} defaultValue={Object.keys(content)[3]} defaultActivePart='list'>
       <Tabs.Viewport

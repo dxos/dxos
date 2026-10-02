@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Main } from '@dxos/react-ui';
+import * as Main from '@dxos/react-ui/Main';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

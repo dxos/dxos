@@ -5,7 +5,10 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Client } from '@dxos/agent-claude/client';
-import { Field, Icon, IconButton, Panel } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
 import { ContentBlock } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -141,7 +144,7 @@ export const AgentModule = () => {
     <Panel.Root classNames='dx-fill flex flex-col gap-2 p-2 overflow-hidden'>
       <Panel.Toolbar classNames='shrink-0 justify-end'>
         <div className='flex items-center gap-1 text-xs text-description'>
-          <Icon icon='ph--git-commit--regular' size={4} />
+          <Icon.Root icon='ph--git-commit--regular' size={4} />
           {session ? `session ${session.slice(0, 8)}` : 'no session'}
         </div>
       </Panel.Toolbar>
@@ -182,14 +185,14 @@ export const AgentModule = () => {
             }}
           />
         </Field.Root>
-        <IconButton
+        <IconButton.Root
           classNames='shrink-0'
           icon='ph--paper-plane-right--regular'
           label='Send'
           disabled={running}
           onClick={() => void send()}
         />
-        <IconButton
+        <IconButton.Root
           classNames='shrink-0'
           icon='ph--git-branch--regular'
           label='Fork'

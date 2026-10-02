@@ -5,16 +5,18 @@
 import type * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, useCallback, useState } from 'react';
 
-import { Popover, type ThemedClassName, composable, useTranslation } from '@dxos/react-ui';
 import { Combobox } from '@dxos/react-ui-list';
 import { useSearchListResults } from '@dxos/react-ui-search';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Util from '@dxos/react-ui/Util';
 
 import { translationKey } from '#translations';
 import { type CreateOptions, type RefOption } from '#types';
 
 import { Form } from '../Form/index.ts';
 
-export type ObjectPickerContentProps = ThemedClassName<
+export type ObjectPickerContentProps = Util.ThemedClassName<
   CreateOptions & {
     options: RefOption[];
     selectedIds?: string[];
@@ -31,7 +33,7 @@ export type ObjectPickerContentProps = ThemedClassName<
   }
 >;
 
-const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>(
+const ObjectPickerContent = Util.composable<HTMLDivElement, ObjectPickerContentProps>(
   (
     {
       options,
@@ -47,7 +49,7 @@ const ObjectPickerContent = composable<HTMLDivElement, ObjectPickerContentProps>
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const [showForm, setShowForm] = useState(false);
     const [formInitialValue, setFormInitialValue] = useState<string>('');
 
@@ -165,7 +167,7 @@ const CreateItem = ({
   createOptionIcon: string;
   onCreateItemSelect: (query: string) => void;
 }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const label = createOptionLabel
     ? t(createOptionLabel[0], { ns: createOptionLabel[1].ns, text: query })

@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef, memo } from 'react';
 
@@ -15,7 +17,7 @@ import {
 
 import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 import { BUTTON_GROUP_NAME, BUTTON_NAME, ButtonGroupProvider, useButtonGroupContext } from './ButtonGroupContext.ts';
 
 type ButtonProps = ThemedClassName<ComponentPropsWithRef<typeof ark.button>> & {
@@ -76,7 +78,7 @@ const Button = memo(
           {caretDown && !asChild ? (
             <>
               {children}
-              <Icon icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
+              <Icon.Root icon='ph--caret-down--bold' size={3} classNames='mx-0.5' />
             </>
           ) : (
             children
@@ -113,6 +115,9 @@ const ButtonGroup = forwardRef<HTMLDivElement, ButtonGroupProps>(
 
 ButtonGroup.displayName = BUTTON_GROUP_NAME;
 
-export { Button, ButtonGroup };
+export { ButtonGroup as Group, Button as Root };
 
-export type { ButtonGroupProps, ButtonProps };
+export type { ButtonGroupProps as GroupProps, ButtonProps as RootProps };
+
+export * from './Button.theme.ts';
+export { BUTTON_GROUP_NAME, useButtonGroupContext } from './ButtonGroupContext.ts';

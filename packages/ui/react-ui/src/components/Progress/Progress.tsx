@@ -2,13 +2,15 @@
 // Copyright 2023 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type ComponentPropsWithRef, forwardRef, useEffect, useRef } from 'react';
 
 import { useThemeContext } from '../../hooks/index.ts';
 import { type ProgressStyleProps } from '../../theme/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
 
-export type ProgressProps = ThemedClassName<
+type ProgressProps = ThemedClassName<
   ComponentPropsWithRef<'span'> &
     Omit<ProgressStyleProps, 'countdown'> & {
       /** How far through, 0..1. Ignored when `indeterminate` or `countdown`. */
@@ -24,7 +26,7 @@ export type ProgressProps = ThemedClassName<
  * A fill bar: a fraction of a track, or an indeterminate sweep, for a host that supplies its own
  * chrome. {@link Steps} draws a plan instead, and `ProgressMeter` is the readout built from both.
  */
-export const Progress = forwardRef<HTMLSpanElement, ProgressProps>(
+const Progress = forwardRef<HTMLSpanElement, ProgressProps>(
   ({ classNames, children, progress = 0, indeterminate, countdown, paused, error, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     // A run with nothing to count cannot say how far it got, so a failure fills the whole bar: what
@@ -66,3 +68,7 @@ export const Progress = forwardRef<HTMLSpanElement, ProgressProps>(
 );
 
 Progress.displayName = 'Progress';
+
+export { Progress as Root };
+export type { ProgressProps as RootProps };
+export * from './Progress.theme.ts';

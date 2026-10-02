@@ -6,7 +6,7 @@ import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useObject } from '@dxos/echo-react';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 
 import { Bookmark } from '#types';
 

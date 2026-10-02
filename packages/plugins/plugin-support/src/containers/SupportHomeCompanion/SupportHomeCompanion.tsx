@@ -6,7 +6,12 @@ import React, { memo, useMemo } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { usePluginManager } from '@dxos/app-framework/PluginManagerProvider';
-import { Carousel, Flex, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Carousel from '@dxos/react-ui/Carousel';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 import { HelpOperation } from '#types';
@@ -17,7 +22,7 @@ const WELCOME_SLIDE = {
 };
 
 export const SupportHomeCompanion = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
 
   return (
@@ -44,7 +49,7 @@ export const SupportHomeCompanion = () => {
 };
 
 const WelcomePanel = memo(() => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const manager = usePluginManager();
 
   const slides = useMemo(() => {
@@ -68,7 +73,7 @@ const WelcomePanel = memo(() => {
   }, [manager]);
 
   return (
-    <Flex column gap='lg' align='center'>
+    <Flex.Root column gap='lg' align='center'>
       <h1 className='text-lg font-semibold'>{t('welcome.title')}</h1>
       <p className='text-center text-balance text-description'>{t('welcome.description')}</p>
       {slides.length > 0 && (
@@ -86,7 +91,7 @@ const WelcomePanel = memo(() => {
           </Carousel.Content>
         </Carousel.Root>
       )}
-    </Flex>
+    </Flex.Root>
   );
 });
 

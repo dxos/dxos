@@ -10,7 +10,12 @@ import { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } from '
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Field, Icon, Panel, ScrollArea, Toolbar, useFileDownload } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { arrayToString, decodeUint8ArrayFromJson, isEncodedUint8Array } from '@dxos/util';
 
 import { type ArticleProps } from '../../types.ts';
@@ -60,7 +65,7 @@ const toNumber = (value: unknown): number | undefined => {
 
 export const SqliteArticle = ({ role }: ArticleProps) => {
   const devtoolsHost = useDevtools();
-  const fileDownload = useFileDownload();
+  const fileDownload = Hooks.useFileDownload();
 
   const [query, setQuery] = useState(DEFAULT_QUERY);
   const [params, setParams] = useState('');
@@ -338,7 +343,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
                       onClick={() => handleSelectTable(tableName)}
                       disabled={isRunning}
                     >
-                      <Icon icon='ph--table--regular' size={4} />
+                      <Icon.Root icon='ph--table--regular' size={4} />
                       {tableName}
                     </button>
                   ))}

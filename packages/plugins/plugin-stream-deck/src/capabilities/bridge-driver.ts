@@ -11,7 +11,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
 import { type SpaceDashboard, toMetrics, toSlots } from '@dxos/plugin-space/Dashboard';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { getIconRegistry } from '@dxos/react-ui';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { isTauri } from '@dxos/util';
 
 import { StreamDeckBridge } from '#bridge';
@@ -121,7 +121,7 @@ export default Capability.makeModule(
       },
     });
 
-    const unsubscribeIcons = getIconRegistry().subscribe(publish);
+    const unsubscribeIcons = ThemeProvider.getIconRegistry().subscribe(publish);
 
     bridge.open();
 

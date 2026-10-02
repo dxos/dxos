@@ -6,7 +6,6 @@ import { type Extension, Prec } from '@codemirror/state';
 import React, { forwardRef, useCallback, useMemo, useRef } from 'react';
 
 import { type BuildResult, QueryBuilder } from '@dxos/echo-query';
-import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
 import {
   Editor,
   type EditorController,
@@ -15,6 +14,9 @@ import {
   type UseEditorMenuProps,
   createMenuGroup,
 } from '@dxos/react-ui-editor';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Util from '@dxos/react-ui/Util';
 import { createBasicExtensions, createThemeExtensions, keymap } from '@dxos/ui-editor';
 
 import { translationKey } from '#translations';
@@ -22,7 +24,7 @@ import { translationKey } from '#translations';
 import { type CompletionOptions, completions } from './autocomplete.ts';
 import { query } from './query-extension.ts';
 
-export type QueryEditorProps = ThemedClassName<
+export type QueryEditorProps = Util.ThemedClassName<
   {
     value?: string;
     readonly?: boolean;
@@ -43,7 +45,7 @@ export type QueryEditorProps = ThemedClassName<
  */
 export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
   ({ db, tags, value, readonly, numItems = 8, onChange, onFilterChange, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
 
     const getOptions = useMemo(() => completions({ db, tags }), [db, tags]);
     const getMenu = useCallback<NonNullable<UseEditorMenuProps['getMenu']>>(
@@ -78,7 +80,7 @@ export const QueryEditor = forwardRef<EditorController, QueryEditorProps>(
     const tagsRef = useRef(tags);
     tagsRef.current = tags;
 
-    const { themeMode } = useThemeContext();
+    const { themeMode } = ThemeProvider.useThemeContext();
     const extensions = useMemo<Extension[]>(
       () => [
         createBasicExtensions({

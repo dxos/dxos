@@ -8,20 +8,20 @@ import React, { useEffect, useState } from 'react';
 import { random } from '@dxos/random';
 
 import { withTheme } from '../../testing/index.ts';
-import { Toolbar } from '../Toolbar/index.ts';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
 import { textCrawlSizes } from './sizes.ts';
-import { TextCrawl } from './TextCrawl.tsx';
+import * as TextCrawl from './TextCrawl.tsx';
 
 random.seed(1234);
 
 const meta = {
   title: 'ui/react-ui-core/components/TextCrawl',
-  component: TextCrawl,
+  component: TextCrawl.Root,
   decorators: [withTheme()],
   parameters: {
     layout: 'centered',
   },
-} satisfies Meta<typeof TextCrawl>;
+} satisfies Meta<typeof TextCrawl.Root>;
 
 export default meta;
 
@@ -30,7 +30,7 @@ const createLines = () => {
   return Array.from({ length }, (_, i) => `[${i + 1}/${length}] ${random.lorem.paragraph()}`);
 };
 
-type Story = StoryObj<typeof TextCrawl>;
+type Story = StoryObj<typeof TextCrawl.Root>;
 
 export const Default: Story = {
   args: {
@@ -67,7 +67,7 @@ export const Controlled: Story = {
           <Toolbar.Button onClick={() => setLines(createLines())}>Generate</Toolbar.Button>
           <Toolbar.Button onClick={() => setLines([])}>Clear</Toolbar.Button>
         </Toolbar.Root>
-        <TextCrawl lines={lines} autoAdvance greedy />
+        <TextCrawl.Root lines={lines} autoAdvance greedy />
       </div>
     );
   },
@@ -90,7 +90,7 @@ export const Numbers: Story = {
         {textCrawlSizes.map((size) => (
           <div className='flex' key={size}>
             {Array.from({ length: n }).map((_, i) => (
-              <TextCrawl
+              <TextCrawl.Root
                 key={i}
                 classNames={['font-mono', i === n - 1 && 'text-red-500']}
                 size={size}

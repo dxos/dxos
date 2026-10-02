@@ -11,18 +11,14 @@ import { CardMenuSlot } from '@dxos/app-toolkit/CardMenuSlot';
 import { useObjectMenuItems } from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { createContext } from '@dxos/react-hooks';
-import {
-  Card,
-  Icon,
-  IconButton,
-  Popover,
-  type PopoverContentInteractOutsideEvent,
-  toLocalizedString,
-  useMediaQuery,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { getStyles } from '@dxos/ui-theme';
 
 import { useDeckState } from '#hooks';
@@ -86,7 +82,7 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
 };
 
 export const PopoverContent = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { state, updateEphemeral } = useDeckState();
   const { setOpen } = useDeckPopoverContext('PopoverContent');
   const popoverSubject =
@@ -98,7 +94,7 @@ export const PopoverContent = () => {
   const objectMenuItems = useObjectMenuItems(popoverSubject, pivotId);
   const menu = useMenuActions();
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
-  const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
+  const title = state.popoverTitle ? ThemeProvider.toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const iconAnnotation = isObjectPopover ? Obj.getIcon(popoverSubject) : undefined;
   const icon = isObjectPopover ? (iconAnnotation?.icon ?? 'ph--circle-dashed--regular') : undefined;
   // Same hue treatment as the masonry ObjectTile, so the card depicts the type consistently.
@@ -110,7 +106,7 @@ export const PopoverContent = () => {
   const isRename = state.popoverKind === 'rename';
 
   // Anchor to the right of the row on wide displays; drop centered below on narrow ones.
-  const [isLg] = useMediaQuery('lg', { fallback: [true] });
+  const [isLg] = Hooks.useMediaQuery('lg', { fallback: [true] });
   const side = isRename ? (isLg ? 'right' : 'bottom') : state.popoverSide;
 
   const handleClose = useCallback(() => {
@@ -125,7 +121,7 @@ export const PopoverContent = () => {
   }, [updateEphemeral]);
 
   const handleInteractOutside = useCallback(
-    (event: KeyboardEvent | PopoverContentInteractOutsideEvent) => {
+    (event: KeyboardEvent | Popover.ContentInteractOutsideEvent) => {
       // Focus leaving the popover (clicking into the card surfaces a portaled menu, or CodeMirror
       // re-focusing itself) must not dismiss it — only a pointer-down genuinely outside the card, or
       // Escape, closes. (Clicks inside the card never reach here; Radix scopes them to the content.)
@@ -191,7 +187,7 @@ export const PopoverContent = () => {
               <Card.Header>
                 <Card.Block>
                   <CardIconSlot subject={popoverSubject}>
-                    {icon && <Icon icon={icon} classNames={iconStyles?.text} />}
+                    {icon && <Icon.Root icon={icon} classNames={iconStyles?.text} />}
                   </CardIconSlot>
                 </Card.Block>
                 <Card.Title>{title}</Card.Title>
@@ -199,7 +195,7 @@ export const PopoverContent = () => {
                 <Card.Block end>
                   {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
                   <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                    <IconButton
+                    <IconButton.Root
                       variant='ghost'
                       density='sm'
                       icon='ph--dots-three-vertical--regular'

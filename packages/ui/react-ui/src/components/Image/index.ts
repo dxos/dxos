@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './Image.tsx';
+export * as Image from './Image.tsx';

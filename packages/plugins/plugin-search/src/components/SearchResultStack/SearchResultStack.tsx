@@ -8,12 +8,13 @@ import { Surface } from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/Hooks';
 import { Entity } from '@dxos/echo';
-import { Card, IconButton } from '@dxos/react-ui';
-import { ScrollArea } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
+import * as Card from '@dxos/react-ui/Card';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
 //
 // SearchResultStack
@@ -24,7 +25,7 @@ export type SearchResultStackProps = {
   query: string;
 };
 
-export const SearchResultStack = composable<HTMLDivElement, SearchResultStackProps>(
+export const SearchResultStack = Util.composable<HTMLDivElement, SearchResultStackProps>(
   ({ results, query, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(() => results.map((result) => ({ result, query })), [results, query]);
@@ -37,7 +38,7 @@ export const SearchResultStack = composable<HTMLDivElement, SearchResultStackPro
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild>
           <ScrollArea.Root orientation='vertical' padding centered>
             <ScrollArea.Viewport ref={setViewport}>
@@ -98,7 +99,7 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
               </Card.Title>
               <Card.Block end>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                  <IconButton.Root iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                 </ActionMenu>
               </Card.Block>
             </Card.Header>

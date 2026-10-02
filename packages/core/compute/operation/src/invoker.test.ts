@@ -14,7 +14,7 @@ import * as Stream from 'effect/Stream';
 import * as TestClock from 'effect/testing/TestClock';
 import { describe, expect, test } from 'vitest';
 
-import { NoHandlerError } from '@dxos/compute';
+import { NoHandlerError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 

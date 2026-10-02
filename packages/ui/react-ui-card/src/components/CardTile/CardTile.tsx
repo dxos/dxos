@@ -4,8 +4,9 @@
 
 import React, { type MouseEvent, PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
-import { Card, type ThemedClassName } from '@dxos/react-ui';
 import { Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { Row } from '../Row/index.ts';
 
@@ -13,7 +14,7 @@ import { Row } from '../Row/index.ts';
 // Root
 //
 
-type CardTileRootProps = ThemedClassName<
+type CardTileRootProps = Util.ThemedClassName<
   PropsWithChildren<
     Pick<MosaicTileProps<unknown>, 'data' | 'location' | 'current'> & {
       'id': string;

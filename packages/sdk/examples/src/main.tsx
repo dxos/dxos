@@ -14,8 +14,11 @@ import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
-import { Field, Icon, Progress, ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Progress from '@dxos/react-ui/Progress';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { Text } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
@@ -80,7 +83,7 @@ const main = async () => {
     const [batching, setBatching] = useState(false);
 
     return (
-      <ThemeProvider tx={defaultTx} themeMode='light'>
+      <ThemeProvider.Root tx={ThemeProvider.defaultTx} themeMode='light'>
         <div className='demo'>
           <Tooltip.Provider>
             <div className='buttons'>
@@ -93,7 +96,7 @@ const main = async () => {
                     return handleToggleNetwork(e);
                   }}
                 >
-                  <Icon icon='ph--airplane--regular' size={28} classNames={mx(offline && 'active')} />
+                  <Icon.Root icon='ph--airplane--regular' size={28} classNames={mx(offline && 'active')} />
                 </Field.Switch>
               </Tooltip.Trigger>
               <Tooltip.Trigger content='Write batching' className='flex'>
@@ -105,7 +108,7 @@ const main = async () => {
                     return handleToggleBatching(e);
                   }}
                 >
-                  <Icon icon='ph--stack--regular' size={28} classNames={mx(batching && 'active')} />
+                  <Icon.Root icon='ph--stack--regular' size={28} classNames={mx(batching && 'active')} />
                 </Field.Switch>
               </Tooltip.Trigger>
             </div>
@@ -116,7 +119,7 @@ const main = async () => {
             </ClientProvider>
           ))}
         </div>
-      </ThemeProvider>
+      </ThemeProvider.Root>
     );
   };
 
@@ -125,11 +128,11 @@ const main = async () => {
 
 const fallback = () => {
   root.render(
-    <ThemeProvider tx={defaultTx}>
+    <ThemeProvider.Root tx={ThemeProvider.defaultTx}>
       <div className='flex h-[100dvh] justify-center items-center'>
-        <Progress indeterminate aria-label='Initializing' />
+        <Progress.Root indeterminate aria-label='Initializing' />
       </div>
-    </ThemeProvider>,
+    </ThemeProvider.Root>,
   );
 };
 

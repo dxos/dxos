@@ -4,29 +4,30 @@
 
 import React from 'react';
 
-import { type SelectRootProps, Toolbar, Select as UiSelect } from '@dxos/react-ui';
+import * as SelectModule from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
-export type SelectProps = SelectRootProps & {
+export type SelectProps = SelectModule.RootProps & {
   items?: { value: string; label: string }[];
 };
 
 export const Select = ({ items = [], ...props }: SelectProps) => {
   return (
-    <UiSelect.Root {...props}>
+    <SelectModule.Root {...props}>
       <Toolbar.Button asChild>
-        <UiSelect.TriggerButton placeholder={'Select value'} />
+        <SelectModule.TriggerButton placeholder={'Select value'} />
       </Toolbar.Button>
-      <UiSelect.Portal>
-        <UiSelect.Content>
-          <UiSelect.Viewport>
+      <SelectModule.Portal>
+        <SelectModule.Content>
+          <SelectModule.Viewport>
             {items?.map(({ value, label }) => (
-              <UiSelect.Option key={value} value={value}>
+              <SelectModule.Option key={value} value={value}>
                 <span className='font-mono'>{label}</span>
-              </UiSelect.Option>
+              </SelectModule.Option>
             ))}
-          </UiSelect.Viewport>
-        </UiSelect.Content>
-      </UiSelect.Portal>
-    </UiSelect.Root>
+          </SelectModule.Viewport>
+        </SelectModule.Content>
+      </SelectModule.Portal>
+    </SelectModule.Root>
   );
 };

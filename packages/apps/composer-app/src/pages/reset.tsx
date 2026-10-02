@@ -10,7 +10,8 @@ import { createRoot } from 'react-dom/client';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
-import { ThemeProvider, Tooltip, defaultTx } from '@dxos/react-ui';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { ResetDialog } from '../components/index.ts';
 import { resetComposerStorage } from '../recovery/index.ts';
@@ -42,10 +43,10 @@ const root = document.getElementById('root');
 invariant(root);
 createRoot(root).render(
   <StrictMode>
-    <ThemeProvider tx={defaultTx} resourceExtensions={translations}>
+    <ThemeProvider.Root tx={ThemeProvider.defaultTx} resourceExtensions={translations}>
       <Tooltip.Provider>
         <ResetDialog logStore={logStore} onReset={handleReset} onRefresh={() => (window.location.href = '/')} />
       </Tooltip.Provider>
-    </ThemeProvider>
+    </ThemeProvider.Root>
   </StrictMode>,
 );

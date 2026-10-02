@@ -6,7 +6,8 @@ import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
 import { CardMasonry } from '@dxos/plugin-space/CardMasonry';
-import { Column, useTranslation } from '@dxos/react-ui';
+import * as Column from '@dxos/react-ui/Column';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -20,7 +21,7 @@ export type TaskArtifactsProps = {
  * Absent rather than empty for a task with no artifacts.
  */
 export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // The property, not the whole task: the query re-emits on membership only, so an artifact recorded
   // on the open task would otherwise not reach the grid until the reader selected away and back.
   const [artifacts] = useObject(task, 'artifacts');

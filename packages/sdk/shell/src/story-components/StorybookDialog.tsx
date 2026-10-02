@@ -4,12 +4,12 @@
 
 import React, { type PropsWithChildren } from 'react';
 
-import { Dialog, Tooltip } from '@dxos/react-ui';
-import { type DialogSize } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 export type StorybookDialogProps = PropsWithChildren & {
   /** Passed to `Dialog.Content` (default `md`). */
-  size?: DialogSize;
+  size?: Dialog.DialogSize;
   /** Passed to `Dialog.Overlay` (default `center`). */
   blockAlign?: 'center' | 'start' | 'end';
 };

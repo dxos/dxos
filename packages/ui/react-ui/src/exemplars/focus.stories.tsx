@@ -6,9 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 
 import { findFirstFocusable, useFocusGroup } from '@dxos/react-focus';
-import { Field, ScrollArea, useMergeRefs } from '@dxos/react-ui';
+import { useMergeRefs } from '@dxos/react-hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
+
+import * as Field from '../components/Field/Field.tsx';
+import * as ScrollArea from '../components/ScrollArea/ScrollArea.tsx';
 
 // TODO(burdon): Implement horizontal movement between columns when column is selected.
 // TODO(burdon): Prevent tab out of app.

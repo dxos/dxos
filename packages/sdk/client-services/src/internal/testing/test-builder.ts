@@ -22,7 +22,9 @@ import { CredentialGenerator, createCredentialSignerWithChain } from '@dxos/cred
 import { failUndefined } from '@dxos/debug';
 import { EchoHost, EchoHostService, MeshEchoReplicator } from '@dxos/echo-host';
 import { type EdgeHttpClient } from '@dxos/edge-client';
-import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { HypercoreFactory, HypercoreStore, HypercoreStoreService } from '@dxos/feed-store';
 import { type KeyringApi, KeyringApiService, SqliteKeyring } from '@dxos/keyring';
 import {

@@ -402,7 +402,7 @@ export const meta: Plugin.Meta = {
 // Copyright 2026 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '#meta';
 
@@ -422,7 +422,7 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies ThemeProvider.Resource[];
 ```
 
 - [ ] **Step 5: Create `src/index.ts`**
@@ -868,7 +868,7 @@ git commit -m "feat(plugin-trip): define Booking and Trip ECHO types"
 import { format } from 'date-fns';
 import React, { forwardRef, useCallback } from 'react';
 
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 
 import { type Segment } from '#types';
@@ -976,7 +976,7 @@ git commit -m "feat(plugin-trip): add SegmentCard tile component"
 
 import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
 import { composable, composableProps } from '@dxos/ui-theme';
 
@@ -1223,7 +1223,11 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useShowItem } from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/react-client/echo';
-import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+
 import { linkedSegment, useSelected } from '@dxos/react-ui-attention';
 import { Calendar as NaturalCalendar } from '@dxos/react-ui-calendar';
 
@@ -1240,7 +1244,7 @@ const byPrimaryDate = (a: Segment.Any, b: Segment.Any): number => {
 };
 
 export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) => {
-  const { t } = useTranslation(meta.id);
+  const { t } = Hooks.useTranslation(meta.id);
   const { invokePromise } = useOperationInvoker();
   const showItem = useShowItem();
   const [trip] = useObject(subject);
@@ -1307,7 +1311,7 @@ export const TripArticle = ({ role, subject, attendableId }: TripArticleProps) =
         <Panel.Root>
           <Panel.Toolbar asChild>
             <Toolbar.Root>
-              <IconButton icon='ph--plus--regular' label={t('segment.add.label')} onClick={handleAddSegment} />
+              <IconButton.Root icon='ph--plus--regular' label={t('segment.add.label')} onClick={handleAddSegment} />
             </Toolbar.Root>
           </Panel.Toolbar>
           <Panel.Content asChild>

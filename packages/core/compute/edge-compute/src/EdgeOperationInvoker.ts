@@ -8,8 +8,8 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type Client, ClientService } from '@dxos/client';
-import { FunctionError } from '@dxos/compute';
 import { RemoteOperationInvoker } from '@dxos/compute-runtime';
+import { FunctionError } from '@dxos/compute/Errors';
 import { type Context as DxosContext } from '@dxos/context';
 import { type SpaceId } from '@dxos/keys';
 

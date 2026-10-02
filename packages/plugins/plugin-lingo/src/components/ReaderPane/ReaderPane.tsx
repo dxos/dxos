@@ -6,8 +6,9 @@ import { tooltips } from '@codemirror/view';
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
 import { type Segmentation } from '@dxos/nlp';
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   type Extension,
   createBasicExtensions,
@@ -21,7 +22,7 @@ import { isTruthy } from '@dxos/util';
 
 import { type SegmentSide, type SegmentsOptions, hideImages, segments, setSegments, setSelected } from '#extensions';
 
-export type ReaderPaneProps = ThemedClassName<
+export type ReaderPaneProps = Util.ThemedClassName<
   Pick<SegmentsOptions, 'render' | 'onSelect' | 'onActivate'> & {
     content: string;
     /** Render markdown decorations; pass `false` to read the source with its markup intact. */
@@ -54,7 +55,7 @@ export const ReaderPane = ({
   onActivate,
   classNames,
 }: ReaderPaneProps) => {
-  const { themeMode } = useThemeContext();
+  const { themeMode } = ThemeProvider.useThemeContext();
 
   // Callbacks are read through a ref so they stay out of the extension identity. An extension array
   // that changes rebuilds the editor, and a caller passing an inline handler would then tear the

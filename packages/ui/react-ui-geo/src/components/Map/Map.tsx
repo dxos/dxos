@@ -27,8 +27,9 @@ import {
 } from 'react-leaflet';
 
 import { createContext } from '@dxos/react-hooks';
-import { type ThemedClassName, ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { composable, composableProps, defaultTx } from '@dxos/react-ui';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type GeoMarker } from '../../types.ts';
@@ -115,7 +116,7 @@ MapRoot.displayName = 'Map.Root';
 // Viewport
 //
 
-type MapViewportProps = ThemedClassName<Omit<MapContainerProps, 'children'> & PropsWithChildren>;
+type MapViewportProps = Util.ThemedClassName<Omit<MapContainerProps, 'children'> & PropsWithChildren>;
 
 /**
  * https://react-leaflet.js.org/docs/api-map
@@ -202,7 +203,7 @@ const MapPinchZoom = () => {
  * (Slot), so it reconciles an injected `className` via `composableProps`. Leaflet owns the underlying
  * container element, so the forwarded DOM ref can't be attached and is intentionally unused.
  */
-const MapViewport = composable<HTMLDivElement, MapViewportProps>((props, _forwardedRef) => {
+const MapViewport = Util.composable<HTMLDivElement, MapViewportProps>((props, _forwardedRef) => {
   const {
     scrollWheelZoom = true,
     doubleClickZoom = true,
@@ -243,7 +244,7 @@ const MapViewport = composable<HTMLDivElement, MapViewportProps>((props, _forwar
 
   return (
     <MapContainer
-      {...composableProps(rest, {
+      {...Util.composableProps(rest, {
         // Frame classes (formerly on Map.Root): focusable grid container.
         classNames: 'dx-expand overflow-hidden group relative grid dx-focus-ring-inset bg-base-surface!',
       })}
@@ -474,9 +475,9 @@ const CustomControl = ({
       // Initial render — covers mount and any map/position remount; the effect below
       // handles subsequent children-only updates.
       root.render(
-        <ThemeProvider tx={defaultTx}>
+        <ThemeProvider.Root tx={ThemeProvider.defaultTx}>
           <Tooltip.Provider>{children}</Tooltip.Provider>
-        </ThemeProvider>,
+        </ThemeProvider.Root>,
       );
       return container;
     };
@@ -494,9 +495,9 @@ const CustomControl = ({
   // Re-render children into the persistent root whenever they change.
   useEffect(() => {
     rootRef.current?.render(
-      <ThemeProvider tx={defaultTx}>
+      <ThemeProvider.Root tx={ThemeProvider.defaultTx}>
         <Tooltip.Provider>{children}</Tooltip.Provider>
-      </ThemeProvider>,
+      </ThemeProvider.Root>,
     );
   }, [children]);
 

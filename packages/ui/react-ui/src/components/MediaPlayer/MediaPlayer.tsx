@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
@@ -32,7 +34,7 @@ const CLOUDFLARE_STREAM_IFRAME_PATTERN =
 
 const isCloudflareStreamEmbed = (src: string): boolean => CLOUDFLARE_STREAM_IFRAME_PATTERN.test(src);
 
-export type MediaPlayerProps = ThemedClassName<{
+type MediaPlayerProps = ThemedClassName<{
   src: string;
   alt?: string;
   /** Override auto-detection. When omitted, `detectMediaKind(src)` is used and falls back to 'video'. */
@@ -60,7 +62,7 @@ export type MediaPlayerProps = ThemedClassName<{
  * - Everything else → `<img>` that hides itself on load failure (broken images
  *   are common in feeds and the placeholder is uglier than nothing).
  */
-export const MediaPlayer = ({
+const MediaPlayer = ({
   classNames,
   src,
   kind,
@@ -151,3 +153,7 @@ const IframePlayer = ({ src, alt, classNames }: IframePlayerProps) => {
     </div>
   );
 };
+
+export { MediaPlayer as Root };
+export type { MediaPlayerProps as RootProps };
+export { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind.ts';

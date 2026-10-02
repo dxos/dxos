@@ -5,8 +5,11 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Panel, Show, Toolbar, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Show from '@dxos/react-ui/Show';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { Journal as JournalComponent, type JournalProps } from '#components';
@@ -16,12 +19,12 @@ import { Journal } from '#types';
 export type JournalArticleProps = AppSurface.ObjectArticleProps<Journal.Journal>;
 
 export const JournalArticle = ({ role, attendableId: _attendableId, subject: journal }: JournalArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [showCalendar, setShowCalendar] = useState(false);
   const controllerRef = useRef<CalendarController>(null);
 
   // TODO(burdon): Instead of media query should check physical geometry of plank.
-  const [isNotMobile] = useMediaQuery('md');
+  const [isNotMobile] = Hooks.useMediaQuery('md');
 
   const handleSelect = useCallback<NonNullable<JournalProps['onSelect']>>(({ date }) => {
     controllerRef.current?.scrollTo(date);
@@ -56,7 +59,7 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
               : 'contents',
           )}
         >
-          <Show when={showCalendar}>
+          <Show.Root when={showCalendar}>
             <Calendar.Root ref={controllerRef}>
               <Panel.Root>
                 <Panel.Toolbar asChild>
@@ -67,7 +70,7 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
                 </Panel.Content>
               </Panel.Root>
             </Calendar.Root>
-          </Show>
+          </Show.Root>
 
           <JournalComponent journal={journal} classNames='dx-document' onSelect={handleSelect} />
         </div>

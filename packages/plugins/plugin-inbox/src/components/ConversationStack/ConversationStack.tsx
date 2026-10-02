@@ -13,20 +13,16 @@ import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
 import { createContext } from '@dxos/react-hooks';
-import {
-  Card,
-  Collapsible,
-  Icon,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Html, emailDialect } from '@dxos/react-ui-components';
 import { ActionToolbar, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Card from '@dxos/react-ui/Card';
+import * as Collapsible from '@dxos/react-ui/Collapsible';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
@@ -254,7 +250,7 @@ ConversationStackRoot.displayName = CONVERSATION_STACK_ROOT_NAME;
 
 const CONVERSATION_STACK_CONTENT_NAME = 'ConversationStack.Content';
 
-export type ConversationStackContentProps = ThemedClassName<{ testId?: string }>;
+export type ConversationStackContentProps = Util.ThemedClassName<{ testId?: string }>;
 
 /**
  * Renders the opened conversation (email thread) as a vertical Mosaic stack: one tile per message, each
@@ -262,7 +258,7 @@ export type ConversationStackContentProps = ThemedClassName<{ testId?: string }>
  * (conversation order is chronological); view controls apply to the whole thread from the
  * {@link ConversationStackToolbar}. This is the thread-detail counterpart to the mailbox list `InboxStack`.
  */
-const ConversationStackContent = composable<HTMLDivElement, ConversationStackContentProps>(
+const ConversationStackContent = Util.composable<HTMLDivElement, ConversationStackContentProps>(
   ({ testId, ...props }, forwardedRef) => {
     const { items, conversationSummary } = useConversationStackContext(CONVERSATION_STACK_CONTENT_NAME);
     const viewportRef = useRef<HTMLDivElement>(null);
@@ -323,7 +319,7 @@ const ConversationStackContent = composable<HTMLDivElement, ConversationStackCon
     return (
       <Mosaic.Container asChild orientation='vertical'>
         <ScrollArea.Root
-          {...composableProps(props)}
+          {...Util.composableProps(props)}
           orientation='vertical'
           centered
           padding
@@ -418,7 +414,7 @@ const modelLabel = (model: string): string => model.replace(/^.*\.model\./, '').
  * reader whether it predates the newest replies — a summary is advisory, so it must be datable.
  */
 const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Recomputed per render rather than ticked: the tile re-renders whenever the annotation feed does,
   // and an age this coarse does not warrant a timer.
   const age = formatAge(new Date(summary.created), new Date());
@@ -436,7 +432,7 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
     >
       <div className='p-2'>
         <div className={mx('flex items-center justify-center', MESSAGE_AVATAR_GUTTER)}>
-          <Icon icon='ph--text-align-left--regular' size={5} classNames='text-subdued' />
+          <Icon.Root icon='ph--text-align-left--regular' size={5} classNames='text-subdued' />
         </div>
       </div>
       <div className='col-start-2 col-span-2 flex flex-col gap-1 min-w-0 py-2 pe-3'>
@@ -760,7 +756,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
               {recipients.length === 1 ? (
                 <Avatar actor={{ email: recipients[0] }} size={5} />
               ) : (
-                <Icon icon='ph--users--regular' />
+                <Icon.Root icon='ph--users--regular' />
               )}
             </Card.Block>
             <Card.Text classNames='text-sm text-description'>{recipients.join(', ')}</Card.Text>
@@ -920,7 +916,7 @@ type DraftTileProps = {
  * always defined) so they stay unconditional while the live object resolves.
  */
 const DraftTile = ({ id, message }: DraftTileProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { mailbox, runtime, sendOperations, onDelete } = useConversationStackContext(MESSAGE_DRAFT_NAME);
   const db = Obj.getDatabase(mailbox ? mailbox : message);
   const live = useQuery(db, Filter.id(message.id))[0];
@@ -1045,24 +1041,26 @@ const useThreadViewActions = ({ options, onCollapseAll, onExpandAll }: UseThread
 
 const CONVERSATION_STACK_TOOLBAR_NAME = 'ConversationStack.Toolbar';
 
-export type ConversationStackToolbarProps = ThemedClassName;
+export type ConversationStackToolbarProps = Util.ThemedClassName;
 
-const ConversationStackToolbar = composable<HTMLDivElement, ConversationStackToolbarProps>((props, forwardedRef) => {
-  const { attendableId, options, onCollapseAll, onExpandAll } = useConversationStackContext(
-    CONVERSATION_STACK_TOOLBAR_NAME,
-  );
-  const menuActions = useThreadViewActions({ options, onCollapseAll, onExpandAll });
+const ConversationStackToolbar = Util.composable<HTMLDivElement, ConversationStackToolbarProps>(
+  (props, forwardedRef) => {
+    const { attendableId, options, onCollapseAll, onExpandAll } = useConversationStackContext(
+      CONVERSATION_STACK_TOOLBAR_NAME,
+    );
+    const menuActions = useThreadViewActions({ options, onCollapseAll, onExpandAll });
 
-  return (
-    <ActionToolbar
-      {...menuActions}
-      attendableId={attendableId}
-      alwaysActive
-      {...composableProps(props)}
-      ref={forwardedRef}
-    />
-  );
-});
+    return (
+      <ActionToolbar
+        {...menuActions}
+        attendableId={attendableId}
+        alwaysActive
+        {...Util.composableProps(props)}
+        ref={forwardedRef}
+      />
+    );
+  },
+);
 
 ConversationStackToolbar.displayName = CONVERSATION_STACK_TOOLBAR_NAME;
 

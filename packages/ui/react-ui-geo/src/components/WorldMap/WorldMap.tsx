@@ -4,7 +4,9 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 
-import { IconButton, useControlledState, useThemeContext, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { translationKey } from '#translations';
 
@@ -29,15 +31,15 @@ export type WorldMapProps = {
  * On the globe a change of selection turns the earth about its axis to the selected marker.
  */
 export const WorldMap = ({ markers = [], selected, view: viewProp = 'map', onViewChange }: WorldMapProps) => {
-  const { t } = useTranslation(translationKey);
-  const { themeMode } = useThemeContext();
+  const { t } = Hooks.useTranslation(translationKey);
+  const { themeMode } = ThemeProvider.useThemeContext();
   // No graticule: the map is a backdrop for the markers, and the grid competes with them.
   const styles = useMemo(() => {
     const { graticule: _graticule, ...styles } = globeStyles(themeMode);
     return styles;
   }, [themeMode]);
   const topology = useTopology();
-  const [view, setView] = useControlledState<WorldMapView>(viewProp, onViewChange);
+  const [view, setView] = Hooks.useControlledState<WorldMapView>(viewProp, onViewChange);
   const [controller, setController] = useState<GlobeController | null>(null);
 
   const location = markers.find((marker) => marker.id === selected)?.location;
@@ -74,7 +76,7 @@ export const WorldMap = ({ markers = [], selected, view: viewProp = 'map', onVie
           features={features}
         />
         <Globe.Panel position='topright'>
-          <IconButton
+          <IconButton.Root
             data-testid='worldMap.toggle'
             icon={view === 'globe' ? 'ph--map-trifold--regular' : 'ph--globe-hemisphere-west--regular'}
             iconOnly

@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
 import { mx } from '@dxos/ui-theme';
 
 import { type RelatedType } from '#hooks';
@@ -23,14 +24,14 @@ export type RelatedTypeFilterProps = {
  * no toolbar to supply the roving-focus context `Toolbar.ToggleGroup` requires.
  */
 export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFilterProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Filtering by the only type present cannot narrow anything.
   if (types.length < 2) {
     return null;
   }
 
   return (
-    <ToggleGroup
+    <ToggleGroup.Root
       type='multiple'
       aria-label={t('type-filter.label')}
       // Gapped, so each type reads as its own control rather than one segmented bar; grouped
@@ -39,7 +40,7 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
       value={types.filter(({ visible }) => visible).map(({ typename }) => typename)}
     >
       {types.map(({ typename, label, icon, count }) => (
-        <ToggleGroupIconItem
+        <ToggleGroup.IconItem
           key={typename}
           iconOnly
           value={typename}
@@ -52,7 +53,7 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
           onClick={() => onToggle(typename)}
         />
       ))}
-    </ToggleGroup>
+    </ToggleGroup.Root>
   );
 };
 

@@ -16,7 +16,7 @@ import * as Schema from 'effect/Schema';
 import * as Tracer from 'effect/Tracer';
 
 import { AiService } from '@dxos/ai';
-import { ServiceNotAvailableError } from '@dxos/compute';
+import { ServiceNotAvailableError } from '@dxos/compute/Errors';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Runnable from '@dxos/compute/Runnable';

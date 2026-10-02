@@ -15,8 +15,12 @@ import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxo
 import { useInvitationStatus } from '@dxos/react-client/invitations';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import { Avatar, Field, SystemIconButton, Toolbar, useId, useTranslation } from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemIconButton from '@dxos/react-ui/SystemIconButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import { CloseButton, Heading, Viewport } from '../../components/index.ts';
@@ -51,7 +55,7 @@ const IdentityHeading = ({
   onManageCredentials,
 }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(requirePublicKey(identity.identityKey));
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
   const [hue, setHueDirectly] = useState<string | undefined>(getHueValue(identity));
@@ -180,7 +184,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     onManageCredentials,
     ...rest
   } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const title = useMemo(() => {
     switch (activeView) {
       case 'device-invitation-manager':
@@ -273,7 +277,7 @@ export const IdentityPanel = ({
   initialDisposition = 'default',
   ...props
 }: IdentityPanelProps) => {
-  const titleId = useId('identityPanel__heading', propsTitleId);
+  const titleId = Hooks.useId('identityPanel__heading', propsTitleId);
   const client = useClient();
   const devices = useDevices();
   const identity = useIdentity();

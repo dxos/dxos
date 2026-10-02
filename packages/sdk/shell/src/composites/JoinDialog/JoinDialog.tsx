@@ -4,19 +4,20 @@
 
 import React from 'react';
 
-import { AlertDialog, type AlertDialogContentProps, useId, useTranslation, useVisualViewport } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { JoinPanel, type JoinPanelProps } from '../../panels/index.ts';
 import { translationKey } from '../../translations.ts';
 
 export interface JoinDialogProps
-  extends Omit<AlertDialogContentProps, 'children'>, Omit<JoinPanelProps, 'exitActionParent' | 'doneActionParent'> {}
+  extends Omit<AlertDialog.ContentProps, 'children'>, Omit<JoinPanelProps, 'exitActionParent' | 'doneActionParent'> {}
 
 export const JoinDialog = (joinPanelProps: JoinDialogProps) => {
-  const { t } = useTranslation(translationKey);
-  const titleId = useId('joinDialog__title');
+  const { t } = Hooks.useTranslation(translationKey);
+  const titleId = Hooks.useId('joinDialog__title');
   // todo(thure): This doesn’t work within an iframe on iOS Safari.
-  const { height } = useVisualViewport();
+  const { height } = Hooks.useVisualViewport();
   return (
     <AlertDialog.Root
       defaultOpen

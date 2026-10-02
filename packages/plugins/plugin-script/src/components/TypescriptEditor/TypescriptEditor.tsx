@@ -15,9 +15,9 @@ import { type HoverInfo, tsAutocomplete, tsFacet, tsHover, tsLinter, tsSync } fr
 import React from 'react';
 
 import { composeRefs } from '@dxos/react-hooks';
-import { type ThemedClassName, type ThemeMode, useThemeContext } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
 import { type UseTextEditorProps, useTextEditor } from '@dxos/react-ui-editor';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Util from '@dxos/react-ui/Util';
 import { Domino } from '@dxos/ui';
 import {
   type BasicExtensionsOptions,
@@ -27,9 +27,10 @@ import {
   defaultStyles,
 } from '@dxos/ui-editor';
 import { type EditorInputMode } from '@dxos/ui-editor/types';
+import { type ThemeMode } from '@dxos/ui-types';
 import { isNonNullable } from '@dxos/util';
 
-export type TypescriptEditorProps = ThemedClassName<
+export type TypescriptEditorProps = Util.ThemedClassName<
   {
     id: string;
     role?: string;
@@ -40,7 +41,7 @@ export type TypescriptEditorProps = ThemedClassName<
   } & Pick<UseTextEditorProps, 'initialValue' | 'extensions' | 'scrollTo' | 'selection'>
 >;
 
-export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps>(
+export const TypescriptEditor = Util.composable<HTMLDivElement, TypescriptEditorProps>(
   (
     {
       classNames,
@@ -57,7 +58,7 @@ export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps
     },
     forwardedRef,
   ) => {
-    const { themeMode } = useThemeContext();
+    const { themeMode } = ThemeProvider.useThemeContext();
     const { parentRef, focusAttributes } = useTextEditor(
       () => ({
         id,
@@ -104,7 +105,10 @@ export const TypescriptEditor = composable<HTMLDivElement, TypescriptEditorProps
     );
 
     return (
-      <div {...composableProps(props, { classNames, ...focusAttributes })} ref={composeRefs(parentRef, forwardedRef)} />
+      <div
+        {...Util.composableProps(props, { classNames, ...focusAttributes })}
+        ref={composeRefs(parentRef, forwardedRef)}
+      />
     );
   },
 );

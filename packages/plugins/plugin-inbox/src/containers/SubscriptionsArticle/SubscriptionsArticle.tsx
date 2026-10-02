@@ -8,9 +8,15 @@ import { useOperationInvoker } from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
-import { Banner, Card, Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Card from '@dxos/react-ui/Card';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -26,7 +32,7 @@ type SubscriptionTileData = {
 const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<SubscriptionTileData>, 'data' | 'location'>>(
   ({ data, location }, forwardedRef) => {
     const { subscription, selected, onToggle } = data;
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
     return (
       <Mosaic.Tile
         asChild
@@ -71,7 +77,7 @@ export type SubscriptionsArticleProps = AppSurface.ObjectArticleProps<Mailbox.Ma
  * unsubscribe (`UnsubscribeSender`). Already-filtered senders drop out of the list.
  */
 export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const feed = useResolveRef(mailbox.feed);
   const db = Obj.getDatabase(mailbox);

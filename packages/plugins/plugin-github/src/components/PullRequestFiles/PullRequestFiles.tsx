@@ -4,7 +4,11 @@
 
 import React, { useMemo } from 'react';
 
-import { Banner, Field, Grid, ScrollArea, useTranslation } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Field from '@dxos/react-ui/Field';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -42,7 +46,7 @@ export const PullRequestFiles = ({
   onReviewedChange,
   onLineComment,
 }: PullRequestFilesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const fence = useMemo(() => (file && file.hunks.length > 0 ? diffFence(file) : undefined), [file]);
 
   if (error) {
@@ -53,7 +57,7 @@ export const PullRequestFiles = ({
   }
 
   return (
-    <Grid cols={['minmax(0, 1fr)', '18rem']} data-testid='pull-request.files'>
+    <Grid.Root cols={['minmax(0, 1fr)', '18rem']} data-testid='pull-request.files'>
       {fence ? (
         // Keyed by file so the next file opens at its top rather than at the previous one's scroll.
         <WalkthroughView key={file?.path} value={fence} onLineComment={onLineComment} />
@@ -74,6 +78,6 @@ export const PullRequestFiles = ({
           />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Grid>
+    </Grid.Root>
   );
 };

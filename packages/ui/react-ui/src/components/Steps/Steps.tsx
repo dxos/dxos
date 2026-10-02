@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // `Steps` — a fixed plan drawn as circles joined by lines, built on `@ark-ui/react`'s Steps
 // (zag state machine). The machine owns which stage is complete, in flight or still ahead, and
 // stamps that onto every part as `data-complete` / `data-current` / `data-incomplete` plus the
@@ -37,7 +39,7 @@ export const defaultStepOptions: StepOptions = {
   duration: 500,
 };
 
-export type StepsProps = ThemedClassName<{
+type StepsProps = ThemedClassName<{
   /**
    * The plan: a count when the stages are anonymous, or the stages themselves when they have
    * identity. Either way the number is fixed and every stage is drawn.
@@ -75,7 +77,7 @@ export type StepsProps = ThemedClassName<{
  * bar. A stage with nothing to count cannot be drawn that way, so it spins instead, which is the
  * honest reading rather than a line resting at a number that means nothing.
  */
-export const Steps = composable<HTMLDivElement, StepsProps>(
+const Steps = composable<HTMLDivElement, StepsProps>(
   (
     { steps, active, fraction = 0, indeterminate, error, selected, onSelect, options = defaultStepOptions, ...props },
     forwardedRef,
@@ -327,3 +329,7 @@ const connectorFraction = (completed: boolean, current: boolean, handover: boole
   // one this stage is leaving, so it holds full rather than snapping back to the new count.
   return handover ? 1 : fraction;
 };
+
+export { Steps as Root };
+export type { StepsProps as RootProps };
+export * from './Steps.theme.ts';

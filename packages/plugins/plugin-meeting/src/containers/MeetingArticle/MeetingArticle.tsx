@@ -10,8 +10,9 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
 import * as CallsCapabilities from '@dxos/plugin-calls/CallsCapabilities';
-import { Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 import { Meeting, MeetingOperation } from '#types';
@@ -34,7 +35,7 @@ export type MeetingArticleProps = AppSurface.ObjectArticleProps<Meeting.Meeting>
  * area that renders the selected component as an article surface.
  */
 export const MeetingArticle = ({ role, subject: meeting, attendableId }: MeetingArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const [tab, setTab] = useState<MeetingTab>('notes');
   // The Call tab is offered only when the calls plugin contributes a transport provider.

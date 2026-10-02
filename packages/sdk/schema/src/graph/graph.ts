@@ -3,7 +3,7 @@
 //
 
 import { Entity, Ref, Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import * as GraphEdge from '@dxos/graph/GraphEdge';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';

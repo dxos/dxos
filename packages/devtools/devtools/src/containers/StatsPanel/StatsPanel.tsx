@@ -4,7 +4,13 @@
 
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Flex, Icon, IconButton, Panel, ScrollArea, Toggle, Toolbar } from '@dxos/react-ui';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as IconButton from '@dxos/react-ui/IconButton';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toggle from '@dxos/react-ui/Toggle';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 const LIVE_INTERVAL = 5_000;
 
@@ -32,7 +38,7 @@ export const StatsPanel = ({ children, role, onRefresh }: StatsPanelProps) => {
         <Toolbar.Root>
           <Toolbar.Text>Stats</Toolbar.Text>
           <Toolbar.Separator variant='gap' />
-          <IconButton
+          <IconButton.Root
             iconOnly
             variant='ghost'
             icon='ph--arrow-clockwise--regular'
@@ -40,17 +46,17 @@ export const StatsPanel = ({ children, role, onRefresh }: StatsPanelProps) => {
             disabled={!onRefresh}
             onClick={onRefresh}
           />
-          <Toggle pressed={live} disabled={!onRefresh} onPressedChange={setLive}>
-            <Icon icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
-          </Toggle>
+          <Toggle.Root pressed={live} disabled={!onRefresh} onPressedChange={setLive}>
+            <Icon.Root icon={live ? 'ph--pause--regular' : 'ph--play--regular'} />
+          </Toggle.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root thin>
           <ScrollArea.Viewport classNames='p-2'>
-            <Flex column gap='sm'>
+            <Flex.Root column gap='sm'>
               {children}
-            </Flex>
+            </Flex.Root>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>

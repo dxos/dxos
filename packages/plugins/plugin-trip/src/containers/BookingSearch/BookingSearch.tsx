@@ -7,8 +7,12 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { useCapabilities, useOperationInvoker } from '@dxos/app-framework/Hooks';
 import { PluginRegistryButton } from '@dxos/app-toolkit/PluginRegistryButton';
 import { Obj, Ref } from '@dxos/echo';
-import { Banner, Flex, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
+import * as Separator from '@dxos/react-ui/Separator';
 import { trim } from '@dxos/util';
 
 import { OfferStack } from '#components';
@@ -48,7 +52,7 @@ export type BookingSearchProps = {
 };
 
 const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const kind = Segment.getKind(segment);
 
@@ -193,7 +197,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
   const flightOffers = offers?.filter((offer): offer is BookingSearch.FlightOffer => offer._tag === 'flight');
 
   return (
-    <Flex column classNames='dx-expand'>
+    <Flex.Root column classNames='dx-expand'>
       {/* Query form: content-height (Viewport without `scroll`) — does not expand; offers fill the rest. */}
       <Form.Root
         schema={BookingSearch.FlightSearchFields}
@@ -234,7 +238,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
       {/* Offers list: reuses the mosaic stack (own ScrollArea) so offers share the segment list affordances. */}
       {flightOffers && (
         <>
-          <Separator />
+          <Separator.Root />
           {flightOffers.length === 0 ? (
             <Banner.Empty label={t('booking.no-offers.message')} />
           ) : (
@@ -242,7 +246,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
           )}
         </>
       )}
-    </Flex>
+    </Flex.Root>
   );
 };
 

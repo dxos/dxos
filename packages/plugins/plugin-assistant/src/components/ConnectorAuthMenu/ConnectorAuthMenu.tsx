@@ -13,8 +13,9 @@ import { Connection } from '@dxos/link';
 import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { useActionRunner } from '@dxos/plugin-graph/Hooks';
-import { IconButton, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useGraphMenuActions, useMenuGraph } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as IconButton from '@dxos/react-ui/IconButton';
 
 import { meta } from '#meta';
 
@@ -44,7 +45,7 @@ export type ConnectorAuthMenuProps = {
  * with an auth flow. Renders nothing when there is nothing to offer.
  */
 export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }: ConnectorAuthMenuProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const registry = useContext(RegistryContext);
   const runAction = useActionRunner();
   const allConnectors = useCapabilities(ConnectorSpec.Connector).flat();
@@ -87,7 +88,7 @@ export const ConnectorAuthMenu = ({ connectorIds, db, existingTarget, onSelect }
 
   return (
     <ActionMenu {...menuActions} onAction={handleAction}>
-      <IconButton variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
+      <IconButton.Root variant='ghost' icon='ph--plugs--regular' label={t('connect.label')} />
     </ActionMenu>
   );
 };

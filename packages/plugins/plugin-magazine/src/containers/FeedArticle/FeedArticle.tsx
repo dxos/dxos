@@ -9,8 +9,8 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { useProgressMonitor } from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Panel } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';

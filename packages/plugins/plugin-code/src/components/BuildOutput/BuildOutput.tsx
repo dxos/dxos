@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -23,7 +23,7 @@ export type BuildOutputProps = {
  * recent run's stdout / stderr lines.
  */
 export const BuildOutput = ({ state }: BuildOutputProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const build = state?.lastBuild;
   const run = state?.lastRun;
 
@@ -52,7 +52,7 @@ type BuildStatusProps = {
 };
 
 const BuildStatus = ({ build, run }: BuildStatusProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   if (!build) {
     return null;
   }
@@ -72,7 +72,7 @@ type DiagnosticsListProps = {
 };
 
 const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <div className='dx-expand flex flex-col overflow-auto'>
       <SectionHeader label={t('diagnostics.section.label')} count={diagnostics.length} />
@@ -111,7 +111,7 @@ type ConsoleViewProps = {
 };
 
 const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const total = stdout.length + stderr.length;
   return (
     <div className='dx-expand flex flex-col overflow-auto'>

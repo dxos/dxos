@@ -16,7 +16,7 @@ import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { Connection } from '@dxos/link';
 import { useClient } from '@dxos/react-client';
-import { useAsyncEffect } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { useConnector } from '#hooks';
 
@@ -86,7 +86,7 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
     [testConnection, connection, accessToken, client],
   );
 
-  useAsyncEffect(
+  Hooks.useAsyncEffect(
     async (controller) => {
       // Every early exit clears `testing`, including these: a probe may already have been in flight
       // when its subject went away, and the superseding run returns here without ever reaching the

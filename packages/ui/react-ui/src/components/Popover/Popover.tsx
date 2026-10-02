@@ -2,6 +2,8 @@
 // Copyright 2022 DXOS.org
 //
 
+// @import-as-namespace
+
 // The machine owns positioning, dismissal, focus and presence; this file is anatomy plus the DXOS
 // additions: a virtual anchor, the `Viewport` clip, the `[data-popover-collision-boundary]` ancestor, and the safe-area
 // collision padding.
@@ -29,7 +31,7 @@ import { DX_POPOVER_CONTENT_ATTR, type ElevationLevel } from '@dxos/ui-types';
 
 import { useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
 import { type ThemedClassName } from '../../util/index.ts';
-import { ColumnContext } from '../Column/index.ts';
+import * as Column from '../Column/Column.tsx';
 import {
   POPOVER_NAME,
   type PopoverContentHandlers,
@@ -188,7 +190,7 @@ const PopoverPortal = ({ children, container }: PopoverPortalProps) => {
           so content declared inside a Column would otherwise believe it still has that host's
           gutter and place itself in a content track no ancestor provides — rendering flush
           against the popover's own edges. */}
-      <ColumnContext.Provider value={false}>{children}</ColumnContext.Provider>
+      <Column.ColumnContext.Provider value={false}>{children}</Column.ColumnContext.Provider>
     </Portal>
   );
 };
@@ -373,31 +375,38 @@ type PopoverContentInteractOutsideEvent = PopoverInteractOutsideEvent;
 //
 // Popover
 //
-
-export const Popover = {
-  Root: PopoverRoot,
-  Anchor: PopoverAnchor,
-  Trigger: PopoverTrigger,
-  VirtualTrigger: PopoverVirtualTrigger,
-  Portal: PopoverPortal,
-  Content: PopoverContent,
-  Close: PopoverClose,
-  Arrow: PopoverArrow,
-  Viewport: PopoverViewport,
-};
-
 export type {
-  PopoverAnchorProps,
-  PopoverArrowProps,
-  PopoverCloseProps,
-  PopoverContentInteractOutsideEvent,
-  PopoverContentProps,
-  PopoverEscapeKeyDownEvent,
-  PopoverFocusOutsideEvent,
-  PopoverPointerDownOutsideEvent,
-  PopoverPortalProps,
-  PopoverRootProps,
-  PopoverTriggerProps,
-  PopoverViewportProps,
-  PopoverVirtualTriggerProps,
+  PopoverAnchorProps as AnchorProps,
+  PopoverArrowProps as ArrowProps,
+  PopoverCloseProps as CloseProps,
+  PopoverContentInteractOutsideEvent as ContentInteractOutsideEvent,
+  PopoverContentProps as ContentProps,
+  PopoverEscapeKeyDownEvent as EscapeKeyDownEvent,
+  PopoverFocusOutsideEvent as FocusOutsideEvent,
+  PopoverPointerDownOutsideEvent as PointerDownOutsideEvent,
+  PopoverPortalProps as PortalProps,
+  PopoverRootProps as RootProps,
+  PopoverTriggerProps as TriggerProps,
+  PopoverViewportProps as ViewportProps,
+  PopoverVirtualTriggerProps as VirtualTriggerProps,
 };
+
+export {
+  PopoverAnchor as Anchor,
+  PopoverArrow as Arrow,
+  PopoverClose as Close,
+  PopoverContent as Content,
+  PopoverPortal as Portal,
+  PopoverRoot as Root,
+  PopoverTrigger as Trigger,
+  PopoverViewport as Viewport,
+  PopoverVirtualTrigger as VirtualTrigger,
+};
+export * from './Popover.theme.ts';
+export {
+  type PopoverAlign,
+  type PopoverContentHandlers,
+  type PopoverPlacementOptions,
+  type PopoverSide,
+  usePopoverContext,
+} from './PopoverContext.ts';
