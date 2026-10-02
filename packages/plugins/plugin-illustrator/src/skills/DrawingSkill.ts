@@ -9,13 +9,13 @@ import { trim } from '@dxos/util';
 
 import { DrawingOperation } from '#types';
 
-const SKILL_KEY = 'org.dxos.skill.drawing';
+export const key = 'org.dxos.skill.drawing';
 
 const operations = [DrawingOperation.Create, DrawingOperation.Read, DrawingOperation.Edit];
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key: key,
     name: 'Drawing',
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
@@ -63,10 +63,3 @@ const make = () =>
       `,
     }),
   });
-
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;

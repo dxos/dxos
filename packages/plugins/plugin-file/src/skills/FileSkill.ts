@@ -9,13 +9,19 @@ import { trim } from '@dxos/util';
 
 import { FileOperation } from '#types';
 
-export const SKILL_KEY = 'org.dxos.skill.file';
+export const key = 'org.dxos.skill.file';
 
-const operations = [FileOperation.Read, FileOperation.CreateFromSource, FileOperation.CreateFromUpload];
+// Carried on the definition so a host that serves it over MCP can map its tool ids back to
+// operations without the plugin being activated.
+export const operations: readonly Operation.Definition.Any[] = [
+  FileOperation.Read,
+  FileOperation.CreateFromSource,
+  FileOperation.CreateFromUpload,
+];
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key: key,
     name: 'File',
     description: 'Read the contents of files (images, videos, PDFs), and add new files to a space.',
     tools: Skill.toolDefinitions({
@@ -63,13 +69,3 @@ const make = () =>
     // other half of their `createUpload` tool — is discoverable and invocable there.
     mcpPrompt: true,
   });
-
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-  // Carried on the definition so a host that serves it over MCP can map its tool ids back to
-  // operations without the plugin being activated.
-  operations,
-};
-
-export default skill;

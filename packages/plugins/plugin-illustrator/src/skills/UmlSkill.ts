@@ -9,7 +9,7 @@ import { trim } from '@dxos/util';
 
 import { DrawingOperation } from '#types';
 
-const SKILL_KEY = 'org.dxos.skill.uml';
+export const key = 'org.dxos.skill.uml';
 
 const operations = [
   DrawingOperation.Create,
@@ -20,9 +20,9 @@ const operations = [
   DrawingOperation.Score,
 ];
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key: key,
     name: 'UML',
     tools: Skill.toolDefinitions({ operations }),
     instructions: Template.make({
@@ -159,10 +159,3 @@ const make = () =>
       `,
     }),
   });
-
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;

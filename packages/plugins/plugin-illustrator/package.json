@@ -84,10 +84,15 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./Skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
+    "./DrawingSkill": {
+      "source": "./src/skills/DrawingSkill.ts",
+      "types": "./dist/types/src/skills/DrawingSkill.d.ts",
+      "import": "./dist/lib/DrawingSkill.mjs"
+    },
+    "./UmlSkill": {
+      "source": "./src/skills/UmlSkill.ts",
+      "types": "./dist/types/src/skills/UmlSkill.d.ts",
+      "import": "./dist/lib/UmlSkill.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

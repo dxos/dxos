@@ -11,7 +11,7 @@ import { Database, Ref } from '@dxos/echo';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import { SvgBuilder } from '@dxos/plugin-illustrator/IllustratorModel';
 import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
-import { UmlSkill } from '@dxos/plugin-illustrator/Skills';
+import * as UmlSkill from '@dxos/plugin-illustrator/UmlSkill';
 import { trim } from '@dxos/util';
 
 import { findObject } from '../assertions.ts';
