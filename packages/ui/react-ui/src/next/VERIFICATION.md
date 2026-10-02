@@ -23,13 +23,15 @@ Grouped by screen or component; IDs are global and never reused.
 
 ### Shell: navtree, menus
 
-| ID   | Bug                                                           | Screenshot                     | Repro                                           | Status | Fix        |
-| ---- | ------------------------------------------------------------- | ------------------------------ | ----------------------------------------------- | ------ | ---------- |
-| V002 | Navtree not compact like main (caret cell, indent, icon)      | `V002-navtree-properties.webp` | app home; Tree story `Test` geometry            | fixed  | 54c81f0ad1 |
-| V003 | Disclosure (caret) button must always be half a block wide    | —                              | Tree story `Test` asserts half-block caret cell | fixed  | 54c81f0ad1 |
-| V005 | Navtree item menu clipped under the sidebar                   | `V005-navmenu-clipped.png`     | app: navtree item ⋮                             | fixed  | 953fc36cf5 |
-| V006 | L0 (hamburger) menu does not appear                           | `V006-l0-menu.png`             | app: `click:button >> nth=0`                    | fixed  | 953fc36cf5 |
-| V007 | Plank heading sigil menu crashed (`Menu.Item` without `item`) | —                              | app: click the README heading icon              | fixed  | 55f9a378a2 |
+| ID   | Bug                                                                                                                                     | Screenshot                     | Repro                                                                     | Status | Fix        |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------- | ------ | ---------- |
+| V002 | Navtree not compact like main (caret cell, indent, icon)                                                                                | `V002-navtree-properties.webp` | app home; Tree story `Test` geometry                                      | fixed  | 54c81f0ad1 |
+| V003 | Disclosure (caret) button must always be half a block wide                                                                              | —                              | Tree story `Test` asserts half-block caret cell                           | fixed  | 54c81f0ad1 |
+| V005 | Navtree item menu clipped under the sidebar                                                                                             | `V005-navmenu-clipped.png`     | app: navtree item ⋮                                                       | fixed  | 953fc36cf5 |
+| V006 | L0 (hamburger) menu does not appear                                                                                                     | `V006-l0-menu.png`             | app: `click:button >> nth=0`                                              | fixed  | 953fc36cf5 |
+| V007 | Plank heading sigil menu crashed (`Menu.Item` without `item`)                                                                           | —                              | app: click the README heading icon                                        | fixed  | 55f9a378a2 |
+| V024 | Navtree section labels (CONTENT, SYSTEM) should look like `Field.Label` (size, case, colour, weight) instead of large tracked uppercase | `V024-navtree.png`             | app home; Tree `Groups` story; compare computed font with `Field.Label`   | open   |            |
+| V025 | Navtree icons look more muted (or smaller) than on main; compare hue intensity and icon size with the previous version                  | `V024-navtree.png`             | app home vs preview.composer.space; measure icon size and computed colour | open   |            |
 
 ### Plugin registry
 
