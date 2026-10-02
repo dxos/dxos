@@ -93,6 +93,7 @@ Grouped by screen or component; IDs are global and never reused.
 | V028 | Input controls (Select triggers etc.) inside raised surfaces (settings cards, dialogs) have no contrast against the surface              | `V026-settings-top.webp`      | app settings; Dialog and Field-row stories: control bg ≠ surface bg                | open     |            |
 | V029 | Settings body is cut off at the bottom after scrolling (last card clipped, no bottom inset)                                              | `V026-settings-scrolled.webp` | app settings: scroll to the end; Form `Settings` story at small height             | open     |            |
 | V030 | Right-align all settings controls in the control track (Selects, inputs, toggles at their own width at the end, as main's `justify-end`) | `V026-settings-top.webp`      | app settings; Form `Settings` story asserts control right edge == track right edge | open     |            |
+| V045 | Settings description text should be `text-base` (now `text-sm`; supersedes the earlier text-sm decision for settings rows)               | `V026-settings-top.webp`      | app settings; Form `Settings` story asserts description font-size == text-base     | open     |            |
 
 ### Editor
 
