@@ -159,11 +159,11 @@ export type FormContentProps = ThemedClassName<PropsWithChildren<{}>>;
 
 // The viewed body: centered in the viewport's gutter. Pure body — the gutter Column is owned by `Form.Viewport`.
 export const FormContent = composable<HTMLDivElement, FormContentProps>(({ children, ...props }, forwardedRef) => {
-  const { form, testId, variant = 'default' } = useFormContext(FORM_CONTENT_NAME);
+  const { form, readonly, testId, variant = 'default' } = useFormContext(FORM_CONTENT_NAME);
   const styles = formTheme.styles({ variant });
   const localRef = useRef<HTMLDivElement>(null);
   const mergedRef = useMergeRefs([forwardedRef, localRef]);
-  useKeyHandler(localRef, form);
+  useKeyHandler(localRef, form, { readonly });
 
   return (
     <div
