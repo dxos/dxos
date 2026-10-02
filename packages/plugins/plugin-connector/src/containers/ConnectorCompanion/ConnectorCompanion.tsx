@@ -106,48 +106,44 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
 
   return (
     <Next.Panel.Root role={role}>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root orientation='vertical'>
-          <Next.ScrollArea.Viewport>
-            <Form.Root variant='settings' schema={EMPTY_SCHEMA} values={EMPTY_VALUES}>
-              <Form.Viewport>
-                <Form.Content>
-                  <Form.FieldSet label={title} description={source}>
-                    <Form.Field
-                      standalone
-                      label={t('sync-target.label')}
-                      description={status}
-                      error={!targetMissing && !sourceMissing && subject.lastError ? subject.lastError : undefined}
+      <Next.Panel.Body>
+        <Form.Root variant='settings' schema={EMPTY_SCHEMA} values={EMPTY_VALUES}>
+          <Form.Viewport scroll>
+            <Form.Content>
+              <Form.FieldSet label={title} description={source}>
+                <Form.Field
+                  standalone
+                  label={t('sync-target.label')}
+                  description={status}
+                  error={!targetMissing && !sourceMissing && subject.lastError ? subject.lastError : undefined}
+                >
+                  {targetMissing || sourceMissing ? (
+                    <Next.Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Next.Button>
+                  ) : undefined}
+
+                  {connector?.sync?.optionsSchema && !targetMissing && !sourceMissing && (
+                    <Form.Root
+                      schema={connector.sync.optionsSchema}
+                      defaultValues={optionsDefaultValues}
+                      onValuesChanged={handleOptionsChanged}
                     >
-                      {targetMissing || sourceMissing ? (
-                        <Next.Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Next.Button>
-                      ) : undefined}
+                      <Form.Content>
+                        <Form.Fields />
+                      </Form.Content>
+                    </Form.Root>
+                  )}
+                </Form.Field>
 
-                      {connector?.sync?.optionsSchema && !targetMissing && !sourceMissing && (
-                        <Form.Root
-                          schema={connector.sync.optionsSchema}
-                          defaultValues={optionsDefaultValues}
-                          onValuesChanged={handleOptionsChanged}
-                        >
-                          <Form.Content>
-                            <Form.Fields />
-                          </Form.Content>
-                        </Form.Root>
-                      )}
-                    </Form.Field>
-
-                    {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
-                    {!sourceMissing && (
-                      <Form.Field standalone label={t('open-connection.label')}>
-                        <Next.Button onClick={handleOpenConnection}>{t('open-connection.label')}</Next.Button>
-                      </Form.Field>
-                    )}
-                  </Form.FieldSet>
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
+                {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
+                {!sourceMissing && (
+                  <Form.Field standalone label={t('open-connection.label')}>
+                    <Next.Button onClick={handleOpenConnection}>{t('open-connection.label')}</Next.Button>
+                  </Form.Field>
+                )}
+              </Form.FieldSet>
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
       </Next.Panel.Body>
     </Next.Panel.Root>
   );

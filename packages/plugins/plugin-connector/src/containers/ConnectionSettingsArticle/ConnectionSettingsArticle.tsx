@@ -64,46 +64,34 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
   );
 
   return (
-    <Next.Panel.Root>
-      <Next.Panel.Body asChild>
-        <Next.ScrollArea.Root orientation='vertical'>
-          <Next.ScrollArea.Viewport>
-            <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
-              <Form.Viewport>
-                <Form.Content>
-                  <Form.FieldSet label={t('connections.label')} description={t('connections.description')}>
-                    <Form.Field
-                      standalone
-                      label={t('add-connection.label')}
-                      description={t('connect-service.description')}
-                    >
-                      <Next.Button onClick={handleAdd}>{t('connect.label')}</Next.Button>
-                    </Form.Field>
-                  </Form.FieldSet>
+    <Form.Root variant='settings' schema={ACTIONS_SCHEMA} values={ACTIONS_VALUES}>
+      <Form.Viewport scroll>
+        <Form.Content>
+          <Form.FieldSet label={t('connections.label')} description={t('connections.description')}>
+            <Form.Field standalone label={t('add-connection.label')} description={t('connect-service.description')}>
+              <Next.Button onClick={handleAdd}>{t('connect.label')}</Next.Button>
+            </Form.Field>
+          </Form.FieldSet>
 
-                  {connections.length > 0 && (
-                    <Form.FieldSet label={t('connections.label')}>
-                      <Listbox.Root
-                        items={connections.map((connection) => ({
-                          value: connection.id,
-                          label: connection.name ?? connection.connectorId ?? connection.id,
-                        }))}
-                      >
-                        <Listbox.Content aria-label={t('connections.label')}>
-                          {connections.map((connection) => (
-                            <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
-                          ))}
-                        </Listbox.Content>
-                      </Listbox.Root>
-                    </Form.FieldSet>
-                  )}
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
-          </Next.ScrollArea.Viewport>
-        </Next.ScrollArea.Root>
-      </Next.Panel.Body>
-    </Next.Panel.Root>
+          {connections.length > 0 && (
+            <Form.FieldSet label={t('connections.label')}>
+              <Listbox.Root
+                items={connections.map((connection) => ({
+                  value: connection.id,
+                  label: connection.name ?? connection.connectorId ?? connection.id,
+                }))}
+              >
+                <Listbox.Content aria-label={t('connections.label')}>
+                  {connections.map((connection) => (
+                    <ConnectionRow key={connection.id} connection={connection} onSelect={handleSelect} />
+                  ))}
+                </Listbox.Content>
+              </Listbox.Root>
+            </Form.FieldSet>
+          )}
+        </Form.Content>
+      </Form.Viewport>
+    </Form.Root>
   );
 };
 
