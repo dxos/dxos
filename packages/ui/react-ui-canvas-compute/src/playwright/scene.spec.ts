@@ -138,10 +138,10 @@ test.describe('compute scene template', () => {
     await expect(text).toBeVisible();
     // `text` was claimed by both the compute output and the engine's free-text node, and one registry
     // holds one def per name: the engine's won, so the output rendered as an empty `NoteNodeView` —
-    // no icon, no title, no run control, and a `data-part` the compute chrome never emits.
+    // no icon, no title, no run control, and the note view's `data-part="text"`, which the compute chrome never emits.
     await expect(text.locator(ARTICLE)).not.toHaveCount(0);
     await expect(text.locator(RUN)).toHaveCount(1);
-    await expect(text.locator('[data-part]')).toHaveCount(0);
+    await expect(text.locator('[data-part="text"]')).toHaveCount(0);
   });
 });
 
