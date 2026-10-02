@@ -941,6 +941,7 @@ const perfScript: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
 
 export const PerfScripted: Story = {
   decorators: createDecorators({
+    config: config.offlinePersistent,
     skills: [CalculatorSkill.key],
     scripted: perfScript,
   }),
