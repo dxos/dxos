@@ -695,6 +695,59 @@ test QA-10: Invite a known contact to a second space
     - the guest is a member of the second space, reached purely from the host's contact picker
 ```
 
+```mdl
+test QA-11: Composer basics tour
+  desc: |
+    A single walk through the default space that touches the core surfaces: comment on the README,
+    write a linked document, enable plugins, draw a diagram, fill a table with the assistant while
+    editing a sheet, then plot the table's rows on a map and turn it into a globe. Recorded as a demo.
+  actors: human
+  covers: [assistant:F-1]
+  status: unverified        # 2026-09-29, driven end to end by autocue/composer-basics.mjs
+  given:
+    - a fresh identity whose default space holds the onboarding README
+    - an AI provider the assistant can reach; without one the assistant step reports `blocked`
+  steps:
+    - name: Open the README
+      do: From the default space's Home, open "README" under Recent.
+      expect: the README opens in a plank
+    - name: Comment near the bottom
+      do: Scroll to "What Composer stands for", select the heading and add the comment "Need to describe Composer".
+      expect: a comment thread with that text is anchored to the heading
+    - name: Add a Composer section linking a new document
+      do: Above "Need help?", add a "## Composer" section; type "@About Composer" and pick Add object → Document.
+      expect: the section ends in a link `[About Composer](echo://…)` and the new document is named "About Composer"
+    - name: Describe Composer
+      do: Open the linked document from its preview card and type two paragraphs describing Composer.
+      expect: the document holds both paragraphs
+    - name: Enable Maps and Canvas
+      do: In the plugin registry, enable Maps and Canvas.
+      expect: both show as enabled and their object types appear under Add to space
+    - name: Draw the relationships
+      do: Create a Canvas drawing with boxes Space, Object, Plugin and Surface, linking Space→Object, Plugin→Surface, Surface→Object and Plugin→Object.
+      expect: four labelled boxes and four connectors
+    - name: Create a table with a location
+      do: Create a table "Cloudflare data centers" with no type, then add a Geopoint column "Location".
+      expect: the table gets a type of its own and shows Title, Description and Location columns
+    - name: Ask the assistant to fill it
+      do: Open the table's assistant and ask for 10 Cloudflare data centers, with the city as Title, the country as Description and the Location as [longitude, latitude].
+      expect: the request starts running; the table fills while the next step happens
+    - name: Enter a sheet meanwhile
+      do: Create a sheet and type a header and five rows.
+      expect: the sheet shows all six rows
+    - name: Wait for the table
+      do: Return to the table.
+      expect: it holds 10 rows, each with a location
+    - name: Map the rows
+      do: Create a map, pick "Cloudflare data centers" as the pin type and "location" as the location property.
+      expect: a pin for each data center
+    - name: Turn it into a globe
+      do: Toggle the map to the globe.
+      expect: the whole globe shows, with the same pins
+  then:
+    - the default space holds the commented README, "About Composer", the drawing, the table and its type, the sheet and the map
+```
+
 ## Suites
 
 ```mdl
