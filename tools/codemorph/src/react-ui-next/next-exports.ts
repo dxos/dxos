@@ -10,6 +10,8 @@ import { type EntryExports } from './extract.ts';
 export const REACT_UI_NEXT: EntryExports = {
   values: [
     'Container',
+    'useDefaultGutter',
+    'useInGrid',
     'Block',
     'ScrollArea',
     'Toolbar',
@@ -72,6 +74,7 @@ export const REACT_UI_NEXT: EntryExports = {
     'MAIN_DRAWER_DEFAULT_HEIGHT',
     'MAIN_DRAWER_MAX_HEIGHT',
     'MAIN_DRAWER_MIN_HEIGHT',
+    'useMainLandmark',
     'useMainSidebars',
     'ErrorFallback',
     'ErrorStack',
@@ -308,6 +311,7 @@ export const REACT_UI_NEXT: EntryExports = {
     Card: [
       'Root',
       'Poster',
+      'Tile',
       'Header',
       'Title',
       'Description',
