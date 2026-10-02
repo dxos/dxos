@@ -341,8 +341,8 @@ const buildGridTemplate = ({
   hasActions: boolean;
 }): { columns: string; gridTemplateColumns: string } => {
   const candidates: (readonly [name: string | undefined, size: string] | false)[] = [
-    // The tree indents each level by one block, so a guide lands under its branch's chevron.
-    toggle && [undefined, 'var(--nx-block-size)'],
+    // The tree's disclosure cell and indent step are half a block, so a guide lands under its branch's chevron.
+    toggle && [undefined, 'var(--nx-half-block-size)'],
     showGutter && ['gutter', 'var(--nx-block-size)'],
     ['status', 'var(--nx-block-size)'],
     ['title', 'minmax(0, 1fr)'],

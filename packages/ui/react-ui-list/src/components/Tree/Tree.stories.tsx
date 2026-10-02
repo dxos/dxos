@@ -182,7 +182,7 @@ const renderComposedRow = (node: TreeNode<TestItem>) => (
 );
 
 /** Trailing columns on the Root's template: a custom icon cell, the label, then a figure and a control per row. */
-const COLUMNS = 'var(--nx-block-size) var(--nx-block-size) minmax(0, 1fr) min-content min-content';
+const COLUMNS = 'var(--nx-half-block-size) var(--nx-block-size) minmax(0, 1fr) min-content min-content';
 
 const renderColumnsRow = (node: TreeNode<TestItem>) => (
   <Tree.Item node={node}>
@@ -439,9 +439,13 @@ export const Test: Story = {
   args: { tree: createFixedTree, allSizes: true, draggable: true, testId: 'fixed' },
   play: async ({ canvasElement }) => {
     for (const row of canvasElement.querySelectorAll<HTMLElement>('[data-tree-row]')) {
-      // The disclosure cell is a Next.Block, one block square at the row's size.
-      const block = row.querySelector('.nx-block')?.getBoundingClientRect().width ?? 0;
+      // The icon cell is one block square at the row's size; the disclosure cell is half as wide and as tall.
+      const block = row.querySelector('.nx-tree-item-icon')?.getBoundingClientRect().width ?? 0;
+      const caret = row.querySelector('.nx-tree-item-indicator')?.getBoundingClientRect();
+      await expect(block, 'icon cell is sized').toBeGreaterThan(0);
       await expect(row.getBoundingClientRect().height, 'row is one block').toBeCloseTo(block, 0);
+      await expect(caret?.width, 'caret cell is half a block wide').toBeCloseTo(block / 2, 0);
+      await expect(caret?.height, 'caret cell is one block tall').toBeCloseTo(block, 0);
     }
 
     const tree = within(canvasElement).getAllByRole('tree')[2];
@@ -467,6 +471,15 @@ export const Test: Story = {
     await waitFor(() => expect(opening.events('Apple')).toEqual(['enter:nx-tree-row-enter']));
     await waitFor(() => expect(tree.querySelector('[data-disclosure]')).toBeNull());
     opening.stop();
+
+    // A child's guide is centred on its parent's half-block caret cell.
+    const apple = within(tree).getByRole('treeitem', { name: /Apple/ });
+    const guide = apple.querySelector('.nx-tree-indent-guide')?.getBoundingClientRect();
+    const parentCaret = within(tree)
+      .getByRole('treeitem', { name: /Fruit/ })
+      .querySelector('.nx-tree-item-indicator')
+      ?.getBoundingClientRect();
+    await expect(guide && parentCaret && guide.left - (parentCaret.left + parentCaret.width / 2)).toBeCloseTo(0, 0);
     within(tree).getByRole('treeitem', { name: /Fruit/ }).focus();
 
     // Branch disclosure from the keyboard, fed back through the model.

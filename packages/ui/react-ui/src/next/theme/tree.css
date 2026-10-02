@@ -1,5 +1,6 @@
 /*
- * Tree (`@dxos/react-ui-list`): rows are flat, one block tall and indented one block per level. Row states (hover,
+ * Tree (`@dxos/react-ui-list`): rows are flat, one block tall and indented half a block per level; the disclosure cell
+ * is half a block wide at every size, so each level's caret sits under its parent's icon. Row states (hover,
  * selected, focus, disabled, drag, the drop line) are the shared `nx-row` rules (row.css); this file keeps the tree's
  * layout, the `inside` ring and the line's indent.
  */
@@ -29,7 +30,7 @@
   .nx-tree-item {
     position: relative;
     grid-auto-rows: var(--nx-block-size);
-    padding-inline-start: calc(var(--nx-tree-depth) * var(--nx-block-size));
+    padding-inline-start: calc(var(--nx-tree-depth) * var(--nx-half-block-size));
     outline: none;
     user-select: none;
   }
@@ -55,7 +56,7 @@
     outline-style: dashed;
   }
   .nx-tree-item[data-drop-target]::after {
-    inset-inline-start: calc(var(--nx-tree-drop-level, 0) * var(--nx-block-size));
+    inset-inline-start: calc(var(--nx-tree-drop-level, 0) * var(--nx-half-block-size));
   }
   /* A link adds a reference and leaves the item where it is, so its line is dashed. */
   .nx-tree-item[data-drop-kind='link']::after {
@@ -67,6 +68,11 @@
   .nx-tree-item[data-virtual='variable'] {
     content-visibility: auto;
     contain-intrinsic-block-size: auto var(--nx-block-size);
+  }
+
+  /* Half a block wide and a full block tall; the doubled class outranks `.nx-block`'s square. */
+  .nx-block.nx-tree-item-indicator {
+    width: var(--nx-half-block-size);
   }
 
   .nx-tree-branch-trigger {
@@ -177,7 +183,7 @@
     display: flex;
     align-items: flex-end;
     block-size: var(--nx-block-size);
-    padding-inline-start: calc((var(--nx-tree-depth) + 1) * var(--nx-block-size));
+    padding-inline-start: calc(var(--nx-tree-depth) * var(--nx-half-block-size) + var(--nx-half-block-size));
     padding-block-end: 0.125rem;
     user-select: none;
   }
@@ -194,11 +200,11 @@
     min-block-size: var(--nx-block-size);
   }
 
-  /* One segment per ancestor, centred under that ancestor's disclosure block; segments join across rows. */
+  /* One segment per ancestor, centred under that ancestor's disclosure cell; segments join across rows. */
   .nx-tree-indent-guide {
     position: absolute;
     inset-block: 0;
-    inset-inline-start: calc((var(--nx-tree-guide-level) + 0.5) * var(--nx-block-size));
+    inset-inline-start: calc((var(--nx-tree-guide-level) + 0.5) * var(--nx-half-block-size));
     width: 0;
     border-inline-start: 1px solid var(--color-subdued-separator);
     pointer-events: none;

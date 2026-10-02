@@ -3,6 +3,7 @@
  * `data-size` and inherits the rest. Controls are inset in the block (decision 12); one icon scale serves rail Blocks
  * and controls. Labels read one text step below the body (`--nx-label-font-size`), and help text takes the next-smaller
  * size's label step (`--nx-helper-font-size`; xs and sm have no smaller step, so theirs equals the label's).
+ * `--nx-half-block-size` is redeclared per size (like `--nx-control-size`) so it resolves against that size's block.
  */
 
 @layer dx-components {
@@ -20,6 +21,7 @@
     --nx-control-inset: 2px;
     --nx-control-icon: 1rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --nx-half-block-size: calc(var(--nx-block-size) / 2);
   }
 
   :is(
@@ -36,7 +38,8 @@
     .nx-fieldset-legend,
     .nx-avatar,
     .nx-button,
-    .nx-card
+    .nx-card,
+    .nx-tree
   )[data-size='xs'] {
     --nx-block-size: 1.25rem;
     --nx-line-height: var(--text-xs--line-height);
@@ -50,6 +53,7 @@
     --nx-control-inset: 1px;
     --nx-control-icon: 0.75rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --nx-half-block-size: calc(var(--nx-block-size) / 2);
   }
 
   :is(
@@ -66,7 +70,8 @@
     .nx-fieldset-legend,
     .nx-avatar,
     .nx-button,
-    .nx-card
+    .nx-card,
+    .nx-tree
   )[data-size='sm'] {
     --nx-block-size: 1.5rem;
     --nx-line-height: var(--text-sm--line-height);
@@ -80,6 +85,7 @@
     --nx-control-inset: 2px;
     --nx-control-icon: 0.875rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --nx-half-block-size: calc(var(--nx-block-size) / 2);
   }
 
   :is(
@@ -96,7 +102,8 @@
     .nx-fieldset-legend,
     .nx-avatar,
     .nx-button,
-    .nx-card
+    .nx-card,
+    .nx-tree
   )[data-size='md'] {
     --nx-block-size: 2rem;
     --nx-line-height: var(--text-base--line-height);
@@ -110,6 +117,7 @@
     --nx-control-inset: 2px;
     --nx-control-icon: 1rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --nx-half-block-size: calc(var(--nx-block-size) / 2);
   }
 
   :is(
@@ -126,7 +134,8 @@
     .nx-fieldset-legend,
     .nx-avatar,
     .nx-button,
-    .nx-card
+    .nx-card,
+    .nx-tree
   )[data-size='lg'] {
     --nx-block-size: 2.5rem;
     --nx-line-height: var(--text-lg--line-height);
@@ -140,6 +149,7 @@
     --nx-control-inset: 3px;
     --nx-control-icon: 1.25rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --nx-half-block-size: calc(var(--nx-block-size) / 2);
   }
 
   :is(
@@ -156,7 +166,8 @@
     .nx-fieldset-legend,
     .nx-avatar,
     .nx-button,
-    .nx-card
+    .nx-card,
+    .nx-tree
   )[data-size='xl'] {
     --nx-block-size: 3rem;
     --nx-line-height: var(--text-xl--line-height);
@@ -170,5 +181,6 @@
     --nx-control-inset: 3px;
     --nx-control-icon: 1.5rem;
     --nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset));
+    --nx-half-block-size: calc(var(--nx-block-size) / 2);
   }
 }

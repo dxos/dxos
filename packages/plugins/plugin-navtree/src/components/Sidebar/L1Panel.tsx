@@ -161,7 +161,7 @@ const L1PanelContent = ({
 };
 
 /** Disclosure, icon, label, count, the actions menu, then the late item-end surface. */
-const COLUMNS = `var(--nx-block-size) var(--nx-block-size) minmax(0, 1fr) auto min-content minmax(${ITEM_END_SIZE}, min-content)`;
+const COLUMNS = `var(--nx-half-block-size) var(--nx-block-size) minmax(0, 1fr) auto min-content minmax(${ITEM_END_SIZE}, min-content)`;
 
 const renderRow = (node: TreeNode<NavTreeNode.NavTreeItemGraphNode>) => (
   <Tree.Item node={node}>

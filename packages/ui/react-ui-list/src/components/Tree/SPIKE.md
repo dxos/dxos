@@ -139,13 +139,15 @@ mid-drag cannot lose the drop. Indicators: `Next.DropIndicator edge='top'|'botto
 ## 5. Row layout on Container
 
 Each row is a Container row: Ark's element with Container attributes (`nx-grid`, `data-layout='row'`,
-`data-gutter='inherit'`, `data-columns`, `--nx-columns: block block minmax(0,1fr) auto`, for disclosure, icon, label,
-trailing). It is indented by `padding-inline-start: depth × --nx-block-size`, the indent token, in `tree.css`. Padding
-shifts every track, the `1fr` label absorbs it, and trailing cells stay aligned. Indent guides are one absolutely
-placed segment per ancestor, centred under that ancestor's disclosure block, and they join across rows, which
-also works windowed.
+`data-gutter='inherit'`, `data-columns`, `--nx-columns: half-block block minmax(0,1fr) auto`, for disclosure, icon,
+label, trailing). The disclosure cell is half a block wide (one block tall) at every size, and the row is indented by
+`padding-inline-start: depth × --nx-half-block-size` in `tree.css`, so a child's caret sits under its parent's icon.
+Padding shifts every track, the `1fr` label absorbs it, and trailing cells stay aligned. Indent guides are one
+absolutely placed segment per ancestor, centred under that ancestor's disclosure cell, and they join across rows,
+which also works windowed.
 
-- **One block tall at every size: yes.** `Test` checks every row at `xs`–`xl` against its disclosure `Next.Block`.
+- **One block tall at every size: yes.** `Test` checks every row at `xs`–`xl` against its icon `Next.Block`, and
+  that the disclosure cell is half that wide.
 - **Found a Container bug for trees:** Container's `@container (width < 24rem)` rule stacks a row's cells into one
   column (`.nx-grid[data-layout='row'] > :not([data-rail]) { grid-column: content }`, `theme/container.css`). A
   20 rem sidebar is under that threshold, so every row came out three blocks tall until `tree.css` opted out. Tree

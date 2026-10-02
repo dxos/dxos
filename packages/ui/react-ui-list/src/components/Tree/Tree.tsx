@@ -76,8 +76,8 @@ export type TreeSelectEvent<T extends { id: string } = any> = {
   current: boolean;
 } & SelectModifiers;
 
-/** The disclosure, icon, label and trailing tracks every row lays out on. */
-const DEFAULT_COLUMNS = 'var(--nx-block-size) var(--nx-block-size) minmax(0, 1fr) auto';
+/** The disclosure (half a block), icon, label and trailing tracks every row lays out on. */
+const DEFAULT_COLUMNS = 'var(--nx-half-block-size) var(--nx-block-size) minmax(0, 1fr) auto';
 
 /** How long recorded pointer modifiers stay valid for the machine's selection callback. */
 const MODIFIER_WINDOW = 500;
@@ -111,7 +111,10 @@ type TreeRootProps<T extends { id: string } = any> = {
    */
   path?: string[];
   size?: Next.Size;
-  /** Each row's grid template; the default is disclosure, icon, label and trailing tracks. */
+  /**
+   * Each row's grid template; the default is disclosure, icon, label and trailing tracks. A template that keeps
+   * `Tree.ItemIndicator` starts with its `var(--nx-half-block-size)` track.
+   */
   columns?: string;
   /**
    * Let a row grow past one block for cells placed on further grid lines (a description under the label): the first
@@ -1181,13 +1184,13 @@ type TreeItemIndicatorProps = {
 };
 
 /**
- * The disclosure cell: one block, holding the caret-only branch trigger on a branch and nothing on a leaf, so labels
+ * The disclosure cell: half a block wide and one block tall, holding the caret-only branch trigger on a branch and nothing on a leaf, so labels
  * align at every level.
  */
 const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
   const { node } = useTreeItemContext('Tree.ItemIndicator');
   return (
-    <Next.Block>
+    <Next.Block classNames='nx-tree-item-indicator'>
       {node.branch && (
         <TreeView.BranchTrigger className='nx-tree-branch-trigger'>
           <TreeView.BranchIndicator className='nx-tree-branch-indicator'>

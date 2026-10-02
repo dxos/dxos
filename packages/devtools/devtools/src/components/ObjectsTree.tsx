@@ -69,7 +69,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
         // min-content width, so a long relation typename on a deep row would widen the track and push the trailing
         // column instead of truncating. The role shares the actions' track: a `min-content` column of its own is sized
         // from the widest role across every row, so opening a node whose child has a role shifted every row's button.
-        columns='var(--nx-block-size) var(--nx-block-size) minmax(0, 1fr) min-content'
+        columns='var(--nx-half-block-size) var(--nx-block-size) minmax(0, 1fr) min-content'
         onOpenChange={handleOpenChange}
         onSelect={handleSelect}
       >
