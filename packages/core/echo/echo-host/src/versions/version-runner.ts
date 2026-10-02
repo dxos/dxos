@@ -46,6 +46,8 @@ export type VersionStore = {
   /** The space root document, which holds `links` and the branch registry. */
   readonly root: VersionDocHandle;
   load(url: string): Promise<VersionDocHandle>;
+  /** The document `links` names for `objectId`, read through the store so a caller can see which objects a pass depended on. */
+  link(objectId: string): string | undefined;
   /** Stores `doc` as a new document. */
   create(doc: VersionDoc): Promise<VersionDocHandle>;
   /** The objects whose documents reference `objectId`; without it, copies of a shared absorbed object do not exchange edits. */
@@ -155,21 +157,28 @@ const register = (store: VersionStore, objectId: string, version: string, url: s
 
 /**
  * One pass over `objectIds`: creates every missing version document, merges duplicates into the
- * registry's winner, and translates edits between the versions until none is left.
+ * registry's winner, and translates edits between the versions until none is left. Returns the objects
+ * the pass could not sync, which a caller retries.
  */
 export const syncVersionDocuments = async (
   store: VersionStore,
   edges: readonly Lens.VersionEdge[],
   objectIds: Iterable<string>,
   options: Omit<SyncVersionsOptions, 'objectIds'> = {},
-): Promise<void> => {
+): Promise<string[]> => {
+  // Derived roots follow the order of the lenses, and every device must derive the same root whatever order its
+  // index lists them in.
+  const ordered = [...edges].sort((one, two) => one.digest.localeCompare(two.digest));
+  const failed: string[] = [];
   for (const objectId of objectIds) {
     try {
-      await syncObject(store, edges, objectId, options);
+      await syncObject(store, ordered, objectId, options);
     } catch (err) {
       log.warn('version documents: could not sync object', { objectId, err });
+      failed.push(objectId);
     }
   }
+  return failed;
 };
 
 const syncObject = async (

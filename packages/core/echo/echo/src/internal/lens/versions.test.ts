@@ -170,6 +170,13 @@ describe('lenses between versions', () => {
       expect(Lens.fromStored(stored, OrderV1, OrderV2).digest).toBe(lens.digest);
     });
 
+    test('the digest of a nested mapping with inline code follows its inner renames', () => {
+      const city = { from: ['city'], get: (source: Record<string, unknown>) => source.city };
+      const fromStreet = Lens.make(OrderV1, OrderV2, { address: Lens.within('address', { line1: 'street', city }) });
+      const fromCity = Lens.make(OrderV1, OrderV2, { address: Lens.within('address', { line1: 'city', city }) });
+      expect(fromStreet.digest).not.toBe(fromCity.digest);
+    });
+
     test('a view reads and writes through the nested mapping', () => {
       const order = Obj.make(OrderV1, v1);
       expect(Lens.get(order, lens)).toMatchObject(v2);
@@ -280,6 +287,24 @@ describe('lenses between versions', () => {
       expect(link?.forward({ street: '1 Main', city: 'London' })).toEqual({ line1: '1 Main', city: 'London' });
       const resolve = (uri: string) => (uri === Type.getURI(Address) ? Address : undefined);
       expect(Lens.fromStored(stored, PersonV1, PersonV2, resolve).digest).toBe(lens.digest);
+    });
+
+    test('the digest of an extract with inline code follows its inner renames', () => {
+      const city = { from: ['city'], get: (source: Record<string, unknown>) => source.city };
+      const defaults = { defaults: { address: { street: '', city: '' } } };
+      const fromStreet = Lens.make(
+        PersonV1,
+        PersonV2,
+        { address: Lens.extract('address', Address, { line1: 'street', city }) },
+        defaults,
+      );
+      const fromCity = Lens.make(
+        PersonV1,
+        PersonV2,
+        { address: Lens.extract('address', Address, { line1: 'city', city }) },
+        defaults,
+      );
+      expect(fromStreet.digest).not.toBe(fromCity.digest);
     });
 
     test('the extracted struct needs a default for objects created at the newer version', () => {

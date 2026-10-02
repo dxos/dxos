@@ -38,6 +38,7 @@ import {
 // the same lenses, so two builds of one lens never both write.
 //
 
+/** A document holding one version of an object. */
 export type VersionDoc = A.Doc<DatabaseDirectory>;
 
 type Data = Record<string, unknown>;
@@ -631,6 +632,10 @@ export const translateBetween = ({
       owned = true;
     }
   };
+  // Edits whose translation wrote nothing, in this call or an earlier one: their ancestors stand in for them.
+  const empty = new Set<string>();
+  const hasEmptyImage = (original: string): boolean =>
+    empty.has(original) || (!imageOf.has(original) && settled?.has(`${original}>${target.label}`) === true);
   for (const change of sourceChanges) {
     const key = `${change.hash}>${target.label}`;
     if (settled?.has(key) || sourceRoots.has(change.hash) || isTranslation(change.message)) {
@@ -649,6 +654,7 @@ export const translateBetween = ({
       targetGraph,
       targetLabel: target.label,
       movesOf,
+      hasEmptyImage,
       rootFork,
     });
     if (fork === 'waiting') {
@@ -677,6 +683,7 @@ export const translateBetween = ({
     const probeChange = probe.newHeads ? A.getLastLocalChange(probe.newDoc) : undefined;
     if (!probe.newHeads || !probeChange) {
       mirror = undefined;
+      empty.add(change.hash);
       settled?.add(key);
       continue;
     }
@@ -705,8 +712,9 @@ export const translateBetween = ({
 /**
  * Where a translation of `change` forks: the frontier of its ancestors' images in the target. The walk
  * stops at an ancestor with an image, since that image was forked at the images of the ancestor's own
- * ancestors; a change that moves nothing the target holds has no image, and its ancestors stand in for it
- * (a translation included, as one from a third side that touches only what the target lacks).
+ * ancestors; a change that moves nothing the target holds, or whose translation wrote nothing, has no
+ * image, and its ancestors stand in for it (a translation included, as one from a third side that touches
+ * only what the target lacks). It waits while the target lacks an image the source already builds on.
  */
 const forkOf = ({
   change,
@@ -716,6 +724,7 @@ const forkOf = ({
   targetGraph,
   targetLabel,
   movesOf,
+  hasEmptyImage,
   rootFork,
 }: {
   change: A.ChangeMetadata;
@@ -725,6 +734,7 @@ const forkOf = ({
   targetGraph: ChangeGraph;
   targetLabel: string;
   movesOf: (change: A.ChangeMetadata) => Move[];
+  hasEmptyImage: (original: string) => boolean;
   rootFork: Heads;
 }): Heads | 'waiting' => {
   const images: string[] = [];
@@ -743,8 +753,11 @@ const forkOf = ({
     const original = translation?.original ?? meta.hash;
     const image = translation?.source === targetLabel ? original : imageOf.get(original);
     if (image) {
+      if (!targetGraph.has(image)) {
+        return 'waiting';
+      }
       images.push(image);
-    } else if (movesOf(meta).length > 0) {
+    } else if (movesOf(meta).length > 0 && !hasEmptyImage(original)) {
       return 'waiting';
     } else {
       stack.push(...meta.deps);

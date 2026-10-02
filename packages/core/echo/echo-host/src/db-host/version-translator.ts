@@ -13,7 +13,7 @@ import {
 
 import { type Context } from '@dxos/context';
 import { Lens, Type } from '@dxos/echo';
-import { type DatabaseDirectory } from '@dxos/echo-protocol';
+import { type DatabaseDirectory, EntityStructure } from '@dxos/echo-protocol';
 import { EntityId, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
@@ -26,8 +26,9 @@ import { type VersionSettled, type VersionStore, syncVersionDocuments } from '..
 // documents, so it runs once per device, whether or not a client has the space open.
 //
 // It runs after each index pass, as convergence-key merging does. An object is synced again only when one
-// of its documents, its registry entries or the space's lenses changed since it was last synced; the first
-// pass after startup syncs every versioned object, so nothing a crashed pass left undone is lost.
+// of the documents or links its last sync read, its registry entries or the space's lenses changed since; an
+// object whose sync failed is retried on the next pass. The first pass after startup syncs every versioned
+// object, so nothing a crashed pass left undone is lost.
 //
 
 export type VersionTranslatorDeps = {
@@ -35,7 +36,11 @@ export type VersionTranslatorDeps = {
   rootDocumentId: (spaceId: SpaceId) => DocumentId | undefined;
   /** Every indexed object of type `typeDXN` in the space, one row per document holding it. */
   queryType: (spaceId: SpaceId, typeDXN: URI.URI) => Promise<readonly { objectId: string; documentId: string }[]>;
-  loadDoc: (ctx: Context, documentId: DocumentId) => Promise<DocumentLease<DatabaseDirectory> | null>;
+  loadDoc: (
+    ctx: Context,
+    documentId: DocumentId,
+    opts: { timeout: number; fetchFromNetwork: boolean },
+  ) => Promise<DocumentLease<DatabaseDirectory> | null>;
   /** Stores `doc`, history included, as a new document. */
   createDoc: (doc: Doc<DatabaseDirectory>) => Promise<DocumentLease<DatabaseDirectory>>;
   /** The indexed objects referencing `objectId`, so copies of one absorbed object exchange edits. */
@@ -43,6 +48,16 @@ export type VersionTranslatorDeps = {
 };
 
 const LENS_TYPE = Type.getURI(Lens.Stored);
+
+/**
+ * Documents are read from local storage only: a document no peer has delivered yet arrives through space
+ * replication, whose index pass runs the translator again, and waiting on the network here would hold back
+ * every other space. The timeout bounds the local load itself.
+ */
+const LOAD_OPTIONS = { fetchFromNetwork: false, timeout: 10_000 };
+
+/** What an object's sync read beyond its own documents. */
+type Related = { urls: Set<string>; links: Set<string> };
 
 /** The documents holding any version of `objectId`, on main or on a branch. */
 const documentsOf = (root: DatabaseDirectory, objectId: string): AutomergeUrl[] => {
@@ -65,13 +80,17 @@ const documentsOf = (root: DatabaseDirectory, objectId: string): AutomergeUrl[] 
   return [...urls].filter((url): url is AutomergeUrl => isValidAutomergeUrl(url));
 };
 
+/**
+ * Keeps the version documents of every space's versioned objects in sync with the space's stored lenses,
+ * one pass at a time.
+ */
 export class VersionTranslator {
   readonly #deps: VersionTranslatorDeps;
   /** Per space: what each object looked like when it was last synced. */
   readonly #synced = new Map<SpaceId, Map<string, string>>();
   readonly #settled = new Map<SpaceId, VersionSettled>();
-  /** Per space: documents outside an object's own that its last sync read, such as the objects extracted from it. */
-  readonly #related = new Map<SpaceId, Map<string, Set<string>>>();
+  /** Per space: documents and links outside an object's own that its last sync read, such as the objects extracted from it. */
+  readonly #related = new Map<SpaceId, Map<string, Related>>();
   #running: Promise<void> | undefined;
   #again = false;
 
@@ -118,7 +137,7 @@ export class VersionTranslator {
     }
     const leases: Disposable[] = [];
     const lease = async (documentId: DocumentId): Promise<DocumentLease<DatabaseDirectory>> => {
-      const loaded = await this.#deps.loadDoc(ctx, documentId);
+      const loaded = await this.#deps.loadDoc(ctx, documentId, LOAD_OPTIONS);
       if (!loaded) {
         throw new Error(`document unavailable: ${documentId}`);
       }
@@ -126,25 +145,22 @@ export class VersionTranslator {
       return loaded;
     };
     try {
-      const edges: Lens.VersionEdge[] = [];
+      const byDigest = new Map<string, Lens.VersionEdge>();
       for (const { objectId, documentId } of await this.#deps.queryType(spaceId, LENS_TYPE)) {
         if (!isValidDocumentId(documentId)) {
           continue;
         }
-        const stored = (await lease(documentId)).doc().objects?.[objectId]?.data;
-        const edge = Lens.storedVersionEdge(stored);
+        const entity = (await lease(documentId)).doc().objects?.[objectId];
+        const edge = entity && !EntityStructure.isDeleted(entity) ? Lens.storedVersionEdge(entity.data) : undefined;
         if (edge) {
-          edges.push(edge);
+          byDigest.set(edge.digest, edge);
         }
       }
-
+      const edges = [...byDigest.values()];
       if (edges.length === 0) {
         return;
       }
-      const lensesKey = edges
-        .map((edge) => edge.digest)
-        .sort()
-        .join('\n');
+      const lensesKey = [...byDigest.keys()].sort().join('\n');
       const objectIds = new Set<string>();
       for (const type of new Set(edges.flatMap((edge) => [edge.source, edge.target]))) {
         for (const { objectId } of await this.#deps.queryType(spaceId, type)) {
@@ -153,13 +169,20 @@ export class VersionTranslator {
       }
 
       const root = await lease(rootId);
+      // What the object being synced reads beyond its own documents.
+      let reading: Related | undefined;
       const store: VersionStore = {
         root,
         load: async (url) => {
           if (!isValidAutomergeUrl(url)) {
             throw new TypeError(`not a document url: ${url}`);
           }
+          reading?.urls.add(url);
           return lease(interpretAsDocumentId(url));
+        },
+        link: (objectId) => {
+          reading?.links.add(objectId);
+          return root.doc().links?.[objectId]?.toString();
         },
         create: async (doc) => {
           const created = await this.#deps.createDoc(doc);
@@ -177,12 +200,16 @@ export class VersionTranslator {
       this.#synced.set(spaceId, synced);
       const settled = this.#settled.get(spaceId) ?? new Map();
       this.#settled.set(spaceId, settled);
-      const related = this.#related.get(spaceId) ?? new Map<string, Set<string>>();
+      const related = this.#related.get(spaceId) ?? new Map<string, Related>();
       this.#related.set(spaceId, related);
-      // Heads of the documents themselves: stored heads can lag a document that is loaded and changing.
+      // Live heads, since stored heads lag a loaded document; a link found missing counts, so a later arrival re-syncs.
       const stateOf = async (objectId: string): Promise<string> => {
+        const read = related.get(objectId);
         const parts = [lensesKey];
-        for (const url of new Set([...documentsOf(root.doc(), objectId), ...(related.get(objectId) ?? [])])) {
+        for (const linked of [...(read?.links ?? [])].sort()) {
+          parts.push(`${linked}->${root.doc().links?.[linked]?.toString() ?? ''}`);
+        }
+        for (const url of new Set([...documentsOf(root.doc(), objectId), ...(read?.urls ?? [])])) {
           parts.push(`${url}:${A.getHeads((await store.load(url)).doc()).join(',')}`);
         }
         return parts.join('\n');
@@ -191,17 +218,30 @@ export class VersionTranslator {
         if (ctx.disposed) {
           return;
         }
-        const before = await stateOf(objectId);
-        if (synced.get(objectId) === before) {
-          continue;
+        // A document of one object that is not available yet holds back only that object.
+        try {
+          const before = await stateOf(objectId);
+          if (synced.get(objectId) === before) {
+            continue;
+          }
+          const read: Related = { urls: new Set(), links: new Set() };
+          reading = read;
+          const failed = await syncVersionDocuments(store, edges, [objectId], {
+            settled,
+            onHandle: (_, handle) => handle.url && read.urls.add(handle.url),
+          });
+          reading = undefined;
+          related.set(objectId, read);
+          if (failed.length > 0) {
+            synced.delete(objectId);
+            continue;
+          }
+          synced.set(objectId, await stateOf(objectId));
+        } catch (err) {
+          reading = undefined;
+          synced.delete(objectId);
+          log.warn('version documents: could not sync object', { objectId, err });
         }
-        const touched = new Set<string>();
-        await syncVersionDocuments(store, edges, [objectId], {
-          settled,
-          onHandle: (_, handle) => handle.url && touched.add(handle.url),
-        });
-        related.set(objectId, touched);
-        synced.set(objectId, await stateOf(objectId));
       }
     } finally {
       for (const held of leases) {

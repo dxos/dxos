@@ -77,8 +77,8 @@ type Linked = { objectId: string; handle: VersionDocHandle };
 type Live = Linked & { key: string; deleted: boolean; merged: Linked[] };
 
 const loadObject = async (store: VersionStore, objectId: string): Promise<VersionDocHandle | undefined> => {
-  const url = store.root.doc().links?.[objectId];
-  return url === undefined ? undefined : store.load(url.toString());
+  const url = store.link(objectId);
+  return url === undefined ? undefined : store.load(url);
 };
 
 const idOf = (ref: unknown): EntityId | undefined => {
@@ -493,12 +493,21 @@ const syncAbsorb = async ({
       }
       const target: Side = { objectId: sibling, handle: copy, label: `${sibling}:${version}` };
       const into = absorbedToParent({ edges, edge, link, version });
+      const outOf = parentToAbsorbed({ edges, edge, link, version });
+      // Both ways, so a parent that starts absorbing the object also receives the edits siblings made before it.
       pairs.push(
-        ...embedding.map(({ version: from, side }) => ({
-          source: side,
-          target,
-          project: absorbedCopy(into, parentToAbsorbed({ edges, edge, link, version: from })),
-        })),
+        ...embedding.flatMap(({ version: other, side }) => [
+          {
+            source: side,
+            target,
+            project: absorbedCopy(into, parentToAbsorbed({ edges, edge, link, version: other })),
+          },
+          {
+            source: target,
+            target: side,
+            project: absorbedCopy(absorbedToParent({ edges, edge, link, version: other }), outOf),
+          },
+        ]),
       );
       onHandle?.(objectId, copy);
     }

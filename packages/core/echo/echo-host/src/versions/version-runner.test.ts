@@ -95,6 +95,10 @@ class MemoryStore implements VersionStore {
     return this.#handle(url);
   }
 
+  link(objectId: string): string | undefined {
+    return this.root.doc().links?.[objectId]?.toString();
+  }
+
   async create(doc: VersionDoc): Promise<VersionDocHandle> {
     const url = generateAutomergeUrl();
     this.docs.set(url, doc);
@@ -708,6 +712,20 @@ describe('absorbed objects', () => {
     expect(store.state()).toBe(before);
   });
 
+  test('a parent that starts absorbing an object later receives the edits other parents made to their copies', async () => {
+    const store = setup();
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    store.editVersion(OBJECT_ID, '0.2.0', (data) => {
+      data.address.city = 'Paris';
+    });
+    await syncVersionDocuments(store, edges, [OBJECT_ID]);
+    // Only the new parent syncs: the first parent's edit is a translation in the object, so it reaches the new
+    // parent's copy only from the first parent's copy.
+    store.addObject(SECOND_ID, PersonV1, { name: 'Grace', address: refTo(ADDRESS_ID) });
+    await syncVersionDocuments(store, edges, [SECOND_ID]);
+    expect(store.dataOf(SECOND_ID, '0.2.0')?.address).toEqual({ street: '1 Main', city: 'Paris' });
+  });
+
   test('a repointed reference leaves the struct following the object it was absorbed from', async () => {
     const store = setup();
     store.addObject(OTHER_ID, Address, { line1: '9 Elm', city: 'Oslo' });
@@ -729,5 +747,60 @@ describe('absorbed objects', () => {
     store.addObject(ADDRESS_ID, Address, { line1: '1 Main', city: 'London' });
     await syncVersionDocuments(store, edges, [OBJECT_ID]);
     expect(store.dataAt('0.2.0')?.address).toEqual({ street: '1 Main', city: 'London' });
+  });
+});
+
+describe('lens order', () => {
+  const ADDRESS_ID = '01J00000000000000000000010';
+  const COMPANY_ID = '01J00000000000000000000020';
+  const Address = Type.makeObject(DXN.make('org.dxos.test.address', '0.1.0'))(Schema.Struct({ line1: Schema.String }));
+  const Company = Type.makeObject(DXN.make('org.dxos.test.company', '0.1.0'))(Schema.Struct({ title: Schema.String }));
+  const PersonV1 = Type.makeObject(DXN.make('org.dxos.test.person', '0.1.0'))(
+    Schema.Struct({
+      name: Schema.String,
+      address: Schema.optional(Ref.Ref(Address)),
+      employer: Schema.optional(Ref.Ref(Company)),
+    }),
+  );
+  const PersonV2 = Type.makeObject(DXN.make('org.dxos.test.person', '0.2.0'))(
+    Schema.Struct({
+      name: Schema.String,
+      address: Schema.Struct({ street: Schema.String }),
+      employer: Schema.optional(Ref.Ref(Company)),
+    }),
+  );
+  const PersonV3 = Type.makeObject(DXN.make('org.dxos.test.person', '0.3.0'))(
+    Schema.Struct({
+      name: Schema.String,
+      address: Schema.Struct({ street: Schema.String }),
+      employer: Schema.Struct({ name: Schema.String }),
+    }),
+  );
+  const edges = [
+    Lens.versionEdge(Lens.make(PersonV1, PersonV2, { address: Lens.absorb('address', Address, { street: 'line1' }) })),
+    Lens.versionEdge(Lens.make(PersonV2, PersonV3, { employer: Lens.absorb('employer', Company, { name: 'title' }) })),
+  ];
+  const refTo = (objectId: string) => EncodedReference.fromURI(EID.make({ entityId: EntityId.make(objectId) }));
+
+  test('devices whose indexes list the lenses in different orders derive the same roots', async () => {
+    const one = MemoryStore.make({ name: 'Ada', address: refTo(ADDRESS_ID), employer: refTo(COMPANY_ID) }, PersonV1);
+    one.addObject(ADDRESS_ID, Address, { line1: '1 Main' });
+    one.addObject(COMPANY_ID, Company, { title: 'Analytical' });
+    const two = one.fork();
+    await syncVersionDocuments(one, edges, [OBJECT_ID]);
+    await syncVersionDocuments(two, [...edges].reverse(), [OBJECT_ID]);
+
+    const rootOf = (store: MemoryStore) => {
+      const url = DatabaseDirectory.getVersionDocUrls(store.root.doc(), OBJECT_ID)['0.3.0'];
+      const doc = url && store.docs.get(url);
+      invariant(doc, 'no v3');
+      return A.getChangesMetaSince(doc, [])[0].hash;
+    };
+    expect(rootOf(one)).toBe(rootOf(two));
+    expect(one.dataAt('0.3.0')).toEqual({
+      name: 'Ada',
+      address: { street: '1 Main' },
+      employer: { name: 'Analytical' },
+    });
   });
 });

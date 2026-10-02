@@ -1523,8 +1523,8 @@ export class EntityManager implements IDatabaseBinding {
    */
   async bindCoreToBranch(objectId: string, name: string): Promise<{ core: ObjectCore; dispose: () => void }> {
     invariant(name !== 'main', "binding to 'main' resolves the live object; no core binding needed");
-    const rootId = this.getBranchRegistry(objectId) ? objectId : this._findBranchRootFor(objectId);
-    const record = rootId ? this.getBranchRegistry(rootId)?.[name] : undefined;
+    const rootId = this._userBranches(objectId)?.[name] ? objectId : this._findBranchRootFor(objectId);
+    const record = rootId ? this._userBranches(rootId)?.[name] : undefined;
     invariant(record, `branch not found: ${name}`);
     const url = this.#routedBranchUrl(record, objectId);
     invariant(url && isValidAutomergeUrl(url), `object is not a member of branch: ${name}`);
@@ -1908,6 +1908,21 @@ export class EntityManager implements IDatabaseBinding {
     return urls.find(
       (url): url is AutomergeUrl => url !== undefined && isValidAutomergeUrl(url) && toDocumentId(url) === documentId,
     );
+  }
+
+  /**
+   * Of documents holding `objectId`, the one to read it from: the one it is routed to, else the newest version the
+   * registry records among them, else the first.
+   */
+  preferredDocument(objectId: string, documentIds: readonly string[]): string | undefined {
+    const routed = this.routedDocumentUrl(objectId);
+    if (routed && documentIds.includes(toDocumentId(routed))) {
+      return toDocumentId(routed);
+    }
+    const [newest] = DatabaseDirectory.getVersionDocs(this.getSpaceRootDocHandle().doc(), objectId)
+      .filter(({ url }) => isValidAutomergeUrl(url) && documentIds.includes(toDocumentId(url)))
+      .sort((left, right) => Lens.compareVersions(right.version, left.version));
+    return newest && isValidAutomergeUrl(newest.url) ? toDocumentId(newest.url) : documentIds[0];
   }
 
   /** The url of the object's document holding version `type` (a type URI), if the registry records one. */

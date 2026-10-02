@@ -137,7 +137,9 @@ describe('version documents', () => {
 
     // An edit in the legacy version reaches the newer ones, and one in a newer version reaches back.
     v1.change((doc) => {
-      doc.objects![task.id].data.tags.push('b');
+      const data = doc.objects?.[task.id]?.data;
+      invariant(data, 'no task');
+      data.tags.push('b');
     });
     await settle(host, db);
     expect(dataOf(v3.doc(), task.id).labels).toEqual(['a', 'b']);
@@ -371,6 +373,22 @@ describe('version documents on branches', () => {
     await settle(host, db);
     expect((await mainData(db, id, '0.3.0')).labels).toEqual(['branch']);
     expect((await mainData(db, id, '0.1.0')).tags).toEqual(['branch']);
+  });
+
+  test("a versioned object that is a member of another root's branch binds to that branch", async () => {
+    const { db, host } = await builder.createDatabase({ types, registry: lenses });
+    const task = db.add(Obj.make(TaskV1, { title: 'Plan', tags: [] }));
+    const board = db.add(Obj.make(OldBoard, { task: Ref.make(task), backlog: [] }));
+    await db.flush();
+    await settle(host, db);
+    expect(Object.keys(DatabaseDirectory.getVersionDocUrls(db._getSpaceRootDocHandle().doc(), task.id))).toHaveLength(
+      3,
+    );
+
+    await createBranch(board, 'draft');
+    const binding = await db.branch(task, 'draft');
+    expect(binding.object.id).toBe(task.id);
+    binding.dispose();
   });
 
   test('a branch opened before an upgrade gains the new versions and merges back once', async () => {

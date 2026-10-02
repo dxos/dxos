@@ -129,9 +129,11 @@ export class EchoClient extends Resource {
     this._graph.registerQuerySourceProvider(this._indexQuerySourceProvider);
   }
 
-  /** The schema versions the database of a space reads, which its queries name to the host. */
-  readonly #versionsFor = (spaceId: SpaceId): readonly string[] =>
-    this._databases.get(spaceId)?._entityManager.knownVersionTypes ?? [];
+  /** The schema versions the database of a space reads, or every open database, which its queries name to the host. */
+  readonly #versionsFor = (spaceId?: SpaceId): readonly string[] =>
+    spaceId === undefined
+      ? [...this._databases.values()].flatMap((db) => db._entityManager.knownVersionTypes)
+      : (this._databases.get(spaceId)?._entityManager.knownVersionTypes ?? []);
 
   protected override async _close(ctx: Context): Promise<void> {
     if (this._indexQuerySourceProvider) {

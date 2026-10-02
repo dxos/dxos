@@ -281,7 +281,7 @@ export class EchoHost extends Resource {
       rootDocumentId: (spaceId) => this._spaceStateManager.getSpaceRootDocumentId(spaceId),
       queryType: (spaceId, typeDXN) =>
         this.indexEngine.queryType({ spaceId, typeDXN }).pipe(RuntimeProvider.runPromise(this._runtime)),
-      loadDoc: (ctx, documentId) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId),
+      loadDoc: (ctx, documentId, opts) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId, opts),
       createDoc: (doc) => this._automergeHost.createDoc<DatabaseDirectory>(doc, { preserveHistory: true }),
       queryReferrers: (spaceId, objectId) =>
         this.indexEngine

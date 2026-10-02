@@ -12,7 +12,14 @@ import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
 import { creationChange, isTranslation } from './version-history.ts';
-import { type VersionDoc, deriveVersionDoc, isDerived, translate, versionOfDoc } from './version-translation.ts';
+import {
+  type VersionDoc,
+  deriveVersionDoc,
+  isDerived,
+  translate,
+  translateBetween,
+  versionOfDoc,
+} from './version-translation.ts';
 
 const TYPENAME = 'org.dxos.test.task';
 const OBJECT_ID = '01J00000000000000000000000';
@@ -111,7 +118,11 @@ class Device {
   edit(version: string, mutate: (data: Record<string, any>) => void): void {
     this.docs.set(
       version,
-      A.change(this.doc(version), (draft) => mutate(draft.objects![OBJECT_ID].data)),
+      A.change(this.doc(version), (draft) => {
+        const entry = draft.objects?.[OBJECT_ID];
+        invariant(entry, 'no object');
+        mutate(entry.data);
+      }),
     );
   }
 }
@@ -139,7 +150,8 @@ const settle = (devices: readonly Device[]): void => {
   throw new Error('version documents did not settle');
 };
 
-const dataOf = (doc: VersionDoc): Record<string, unknown> => JSON.parse(JSON.stringify(doc.objects![OBJECT_ID].data));
+const dataOf = (doc: VersionDoc): Record<string, unknown> =>
+  JSON.parse(JSON.stringify(doc.objects?.[OBJECT_ID]?.data ?? {}));
 
 const sorted = (doc: VersionDoc, key: string): unknown[] => {
   const value = dataOf(doc)[key];
@@ -275,6 +287,59 @@ describe('version translation', () => {
     expect(headsOf(top.doc('0.3.0'))).toBe(headsOf(full.doc('0.3.0')));
   });
 
+  test('an edit translates once the image of an ancestor it builds on reaches the target', () => {
+    const { newA, newB, devices } = setup();
+    newA.edit('0.3.0', (data) => {
+      data.name = 'Renamed';
+    });
+    newA.translate();
+    newA.edit('0.1.0', (data) => data.tags.push('after'));
+    // `newB` receives v1, which builds on the translation of the v3 edit, before v3 itself.
+    newB.docs.set('0.1.0', A.merge(newB.doc('0.1.0'), A.clone(newA.doc('0.1.0'))));
+    expect(() => newB.translate()).not.toThrow();
+
+    settle(devices);
+    for (const device of [newA, newB]) {
+      expect(dataOf(device.doc('0.3.0')).name).toBe('Renamed');
+      expect(sorted(device.doc('0.3.0'), 'labels')).toEqual(['a', 'after', 'early']);
+    }
+    expect(headsOf(newA.doc('0.3.0'))).toBe(headsOf(newB.doc('0.3.0')));
+  });
+
+  test('an edit whose translation writes nothing does not hold back the edits after it', () => {
+    const counter = (count: number): VersionDoc =>
+      A.change(A.init<DatabaseDirectory>(), (draft) => {
+        draft.version = SpaceDocVersion.CURRENT;
+        draft.objects = { [OBJECT_ID]: { system: { kind: 'object' }, meta: { keys: [] }, data: { count } } };
+      });
+    const setCount = (doc: VersionDoc, count: number): VersionDoc =>
+      A.change(doc, (draft) => {
+        const entry = draft.objects?.[OBJECT_ID];
+        invariant(entry, 'no object');
+        entry.data.count = count;
+      });
+    const project = (entry: Record<string, unknown> | undefined) => {
+      const data = entry?.data;
+      return [{ at: ['data'], value: typeof data === 'object' && data !== null ? { ...data } : undefined }];
+    };
+    const settled = new Set<string>();
+    const translateFrom = (source: VersionDoc, target: VersionDoc) =>
+      translateBetween({
+        source: { doc: source, objectId: OBJECT_ID, label: 'source' },
+        target: { doc: target, objectId: OBJECT_ID, label: 'target' },
+        project,
+        settled,
+      });
+
+    // The target already holds the value the first edit sets, so its translation writes nothing.
+    const target = counter(2);
+    const first = setCount(counter(1), 2);
+    expect(headsOf(translateFrom(first, target))).toBe(headsOf(target));
+
+    const second = setCount(first, 3);
+    expect(dataOf(translateFrom(second, target)).count).toBe(3);
+  });
+
   test('translations are never translated back', () => {
     const { old, newA, devices } = setup();
     old.edit('0.1.0', (data) => data.tags.push('once'));
@@ -308,13 +373,15 @@ describe('version translation', () => {
     newA.docs.set(
       '0.3.0',
       A.change(newA.doc('0.3.0'), (draft) => {
-        const entry = draft.objects![OBJECT_ID];
+        const entry = draft.objects?.[OBJECT_ID];
+        invariant(entry?.system, 'no object');
         entry.meta.tags = ['pinned'];
-        entry.system!.deleted = true;
+        entry.system.deleted = true;
       }),
     );
     settle(devices);
-    const entry = old.doc('0.1.0').objects![OBJECT_ID];
+    const entry = old.doc('0.1.0').objects?.[OBJECT_ID];
+    invariant(entry, 'no object');
     expect(JSON.parse(JSON.stringify(entry.meta.tags))).toEqual(['pinned']);
     expect(entry.system?.deleted).toBe(true);
     expect(entry.system?.type).toEqual(EncodedReference.fromURI(Type.getURI(TaskV1)));

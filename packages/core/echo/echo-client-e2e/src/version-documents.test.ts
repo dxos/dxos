@@ -48,6 +48,13 @@ type DocumentUrl = Extract<Parameters<TestDatabase['_repo']['find']>[0], string>
 
 const isDocumentUrl = (url: string): url is DocumentUrl => url.startsWith('automerge:');
 
+/** The data of `objectId` in a document being changed. */
+const dataIn = (doc: DatabaseDirectory, objectId: string) => {
+  const data = doc.objects?.[objectId]?.data;
+  invariant(data, `no object ${objectId}`);
+  return data;
+};
+
 const versionDoc = async (db: TestDatabase, objectId: string, version: string) => {
   const url = versionUrl(db, objectId, version);
   if (!url || !isDocumentUrl(url)) {
@@ -112,10 +119,10 @@ describe('version documents across peers', () => {
     });
     expect(versionUrl(db1, task.id, '0.3.0')).not.toBe(versionUrl(db2, task.id, '0.3.0'));
     (await versionDoc(db1, task.id, '0.3.0')).change((doc) => {
-      doc.objects![task.id].data.labels.push('one');
+      dataIn(doc, task.id).labels.push('one');
     });
     (await versionDoc(db2, task.id, '0.3.0')).change((doc) => {
-      doc.objects![task.id].data.labels.push('two');
+      dataIn(doc, task.id).labels.push('two');
     });
     await settle(peer1, db1);
     await settle(peer2, db2);
@@ -182,6 +189,11 @@ describe('version documents across peers', () => {
     // Without lenses, the object's live instance reads the version `links` names.
     const type = Obj.getType(seen);
     expect(type && Type.getURI(type)).toBe(Type.getURI(TaskV1));
+    // A query naming no version matches the object in every version's document, and returns it once, live.
+    const hits = (await old.query(Filter.everything()).runEntries()).filter(
+      ({ id, resolution }) => id === created.id && resolution?.source === 'index',
+    );
+    expect(hits.map(({ result }) => result)).toEqual([seen]);
 
     Obj.update(seen, (seen) => {
       seen.tags.push('old');
@@ -222,7 +234,7 @@ describe('version documents across peers', () => {
       timeout: 20_000,
     });
     (await versionDoc(db1, task.id, '0.3.0')).change((doc) => {
-      doc.objects![task.id].data.labels.push('waited');
+      dataIn(doc, task.id).labels.push('waited');
     });
     const [current] = await db1.query(Filter.type(TaskV3)).run();
     await createBranch(current, 'b1');
