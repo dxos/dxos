@@ -40,7 +40,11 @@ export const SearchArticle = ({ space }: AppSurface.SpaceArticleProps) => {
       <Next.Panel.Root>
         <Next.Panel.Header>
           <Next.Toolbar.Root>
-            <SearchList.Input placeholder='Search...' autoFocus={autoFocus} />
+            <SearchList.Input
+              placeholder='Search...'
+              autoFocus={autoFocus}
+              end={<Next.Icon icon='ph--magnifying-glass--regular' />}
+            />
           </Next.Toolbar.Root>
         </Next.Panel.Header>
         <Next.Panel.Body asChild>

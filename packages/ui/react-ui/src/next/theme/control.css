@@ -783,6 +783,11 @@
    * The gap is one control inset: square icon-only Buttons already sit in an inset cell, and every other control takes the
    * same inline margin, so any two adjacent items are three insets apart.
    */
+  /* A field in a toolbar (a search or filter input) takes the row's remaining width. */
+  .nx-toolbar > .nx-field {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
   .nx-toolbar {
     display: flex;
     flex-shrink: 0;

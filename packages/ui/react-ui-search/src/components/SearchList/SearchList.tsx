@@ -179,6 +179,9 @@ type SearchListInputProps = ThemedClassName<
     variant?: InputVariant;
     /** What Escape does while the query is non-empty; defaults to `clear`. */
     escapeBehavior?: EscapeBehavior;
+    /** Adornments inside the input's frame, e.g. a trailing search icon. */
+    start?: ReactNode;
+    end?: ReactNode;
   }
 >;
 

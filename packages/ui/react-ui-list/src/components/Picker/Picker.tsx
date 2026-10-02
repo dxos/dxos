@@ -182,6 +182,9 @@ type PickerInputProps = ThemedClassName<
     /** Defaults to `clear`. */
     escapeBehavior?: EscapeBehavior;
     variant?: InputVariant;
+    /** Adornments inside the input's frame (`Next.Input`'s slots), e.g. a trailing search icon. */
+    start?: ReactNode;
+    end?: ReactNode;
   }
 >;
 
