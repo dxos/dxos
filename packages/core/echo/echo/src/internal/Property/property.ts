@@ -147,18 +147,24 @@ const toPaths = (path: PathImplementation['path']): readonly string[] => (typeof
 export const getPaths = (implementation: Implementation): readonly string[] =>
   isPathImplementation(implementation) ? toPaths(implementation.path) : [];
 
+const isRecord = (value: unknown): value is AnyProperties => typeof value === 'object' && value !== null;
+
+// Root-prefixed paths (`$.name`) predate `JsonPath` validation and may sit in persisted schemas; an empty
+// path names the object itself, which is neither a field to read nor one to write.
+const toJsonPath = (path: string): SchemaEx.JsonPath | undefined => {
+  const relative = path.startsWith('$.') ? path.slice(2) : path;
+  return relative.length > 0 && SchemaEx.isJsonPath(relative) ? relative : undefined;
+};
+
 /**
  * Whether the implementation can write the property back onto the object; templates are one-way.
  */
-export const isWritable = (implementation: Implementation): boolean =>
-  isPathImplementation(implementation) && toPaths(implementation.path).length > 0;
-
-const isRecord = (value: unknown): value is AnyProperties => typeof value === 'object' && value !== null;
-
-// Root-prefixed paths (`$.name`) predate `JsonPath` validation and may sit in persisted schemas.
-const toJsonPath = (path: string): SchemaEx.JsonPath | undefined => {
-  const relative = path.startsWith('$.') ? path.slice(2) : path;
-  return SchemaEx.isJsonPath(relative) ? relative : undefined;
+export const isWritable = (implementation: Implementation): boolean => {
+  if (!isPathImplementation(implementation)) {
+    return false;
+  }
+  const [path] = toPaths(implementation.path);
+  return path !== undefined && toJsonPath(path) !== undefined;
 };
 
 // An unreadable path counts as absent so a bad annotation cannot throw from a label render.

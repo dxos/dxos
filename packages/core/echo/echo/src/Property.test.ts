@@ -108,6 +108,23 @@ describe('Property', () => {
     expect(Obj.getLabel(invalid)).toBeUndefined();
   });
 
+  test('empty paths read as absent and are not writable', ({ expect }) => {
+    for (const path of ['', '$.']) {
+      const obj = Obj.make(
+        Type.makeObject(DXN.make('com.example.type.propertyEmptyPath', '0.1.0'))(
+          Schema.Struct({ name: Schema.optional(Schema.String) }).pipe(Annotation.LabelAnnotation.set([path])),
+        ),
+        { name: 'Ignored' },
+      );
+      expect(Obj.getLabel(obj)).toBeUndefined();
+      expect(Property.isWritable(obj, Property.Title)).toBe(false);
+      Obj.update(obj, (obj) => {
+        expect(Property.set(obj, Property.Title, 'Renamed')).toBe(false);
+      });
+      expect(obj.name).toBe('Ignored');
+    }
+  });
+
   test('implementations survive JSON-schema serialization', ({ expect }) => {
     const jsonSchema = toJsonSchema(Type.getSchema(Contact));
     expect(JSON.parse(JSON.stringify(jsonSchema)).annotations.properties).toEqual({
