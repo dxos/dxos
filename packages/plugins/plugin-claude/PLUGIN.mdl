@@ -14,6 +14,11 @@ locally and pushed to Anthropic by an explicit deploy step, so a half-configured
 agent never reaches the API. Session events are not mirrored into the space; the
 transcript is fetched on demand from the session id.
 
+In the desktop app the plugin also offers Claude Code on this computer as an
+agent a project's tasks can be assigned to. plugin-code's agent helper runs it
+through the Claude Code ACP adapter this plugin ships, against the user's own
+`claude`, and the chat holds its session.
+
 ## Extensions
 
 The following extension dialects are used in this document.
@@ -251,6 +256,31 @@ feat F-7: Session credentials
       reporting a revocation that did not happen
 ```
 
+```mdl
+feat F-8: Claude Code on this computer
+
+  req F-8.1:
+    when: the plugin is enabled in the desktop app and `claude` is installed
+    then: Claude Code is a registered agent, and a task's menu offers "Assign to Claude Code"
+
+  req F-8.2:
+    when: the plugin is enabled outside the desktop app, or `claude` is not found
+    then: the menu entry is shown disabled with the reason
+
+  req F-8.3:
+    when: a task is assigned to Claude Code
+    then: |
+      Claude Code works in a git worktree of the project's code folder on this
+      device, its session streams into the chat, and a tool call it asks
+      permission for waits on a card in the chat until someone answers it
+
+  req F-8.4:
+    when: Claude Code runs a session
+    then: |
+      Composer's operations are offered as the `composer` MCP server, scoped to
+      the chat's space; its read-only tools run without asking
+```
+
 ## Acceptance
 
 ```mdl
@@ -356,6 +386,52 @@ test QA-1: Configure, deploy and run a Claude managed agent
       do: Right-click "QA Agent" in the navtree and choose Delete.
       invoke: org.dxos.operation.space.removeObjects { objects: [$created.id], target: $given.collection }
       expect: the row leaves the navtree
+```
+
+```mdl
+test QA-2: Assign a project task to Claude Code
+  desc: |
+    A project task goes to Claude Code on this computer, which works in its own
+    git worktree, asks before running a command, marks the task through
+    Composer's tools, and continues the same session in a follow-up. Walked by
+    the autocue flow `packages/plugins/plugin-claude/autocue/claude-code-task.mjs`.
+  actors: human
+  covers: [F-8.1, F-8.3, F-8.4]
+  status: verified
+  given:
+    - Composer is the desktop app (or a `DX_TAURI=true` build with plugin-code's
+      autocue desktop bridge)
+    - `claude` is installed and signed in on this computer
+    - a git repository on this computer for the project (the flow seeds one)
+    - space: a space is open
+  steps:
+    - name: Enable the Claude plugin
+      do: Open Plugins, filter for "Claude" and switch it on.
+      expect: Claude is enabled, and the Code plugin with it
+    - name: Create a project
+      do: Click + on the space, choose Project, name it "Greeter" and save.
+      expect: the project opens on its Overview, which has a "Code folder on this device" section
+    - name: Choose the project's code folder
+      do: Click "Choose folder…" and pick the repository.
+      expect: the folder's path replaces "Not set"
+    - name: Add a task
+      do: |
+        Open Tasks and add "Add a --shout flag to greet.js", described as "With
+        --shout, print the greeting in capitals. Document the flag in the README."
+      expect: the task is listed
+    - name: Assign the task to Claude Code
+      do: Open the task's menu and choose "Assign to Claude Code".
+      expect: the task is started, and the project's chat holds the task brief as a context panel
+    - name: Watch Claude work, allowing what it asks to run
+      do: Open the Assistant companion and answer each permission card with Yes.
+      expect: |
+        commands, edits and Composer tool calls stream in, the turn ends with a
+        summary, and the task is in review or done
+    - name: Ask for more in a follow-up
+      do: Send "Also accept -s as a short form of --shout, then commit." and allow what it asks to run.
+      expect: |
+        the same session continues and commits on a `composer/` branch of the
+        repository, where `node greet.js Ada -s` prints HELLO, ADA!; `main` is unchanged
 ```
 
 ---
