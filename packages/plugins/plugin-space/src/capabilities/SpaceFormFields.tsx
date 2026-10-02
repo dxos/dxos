@@ -5,17 +5,17 @@
 // Form-input surfaces. Each consumes the whole surface envelope — the form renderer's own props ride
 // alongside `data` — so they are registered without a `props` mapper.
 
+import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
 import { type Surface } from '@dxos/app-framework/ui';
 import { type AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
 import { Database, Obj } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
 import { Field } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
 
-import { type TypeInputOptions, TypeInputOptionsAnnotationId } from '../types/SpaceForm.ts';
+import { type TypeInputOptions, getTypeInputOptions } from '../types/SpaceForm.ts';
 
 /** The form renderer's own props ride alongside `data`; `type` comes from the field AST. */
 export type SpaceFormFieldProps = Surface.ComponentProps<AppSurface.FormInputData> &
@@ -59,7 +59,11 @@ export const TypenameField = ({ data, ...inputProps }: SpaceFormFieldProps) => {
   const ast = data.fieldPropertyAst;
   const target = data.target;
   const db = Database.isDatabase(target) ? target : Obj.isObject(target) ? Obj.getDatabase(target) : undefined;
-  const annotation = SchemaEx.findAnnotation<TypeInputOptions>(data.schema.ast, TypeInputOptionsAnnotationId)!;
+  // The surface filter only matches a field that declares the options, so a miss reads as none.
+  const annotation = Option.getOrElse(getTypeInputOptions(data.schema.ast), (): TypeInputOptions => ({
+    location: [],
+    kind: [],
+  }));
   const options = useTypeOptions({ db, annotation });
 
   if (!ast) {
@@ -68,5 +72,11 @@ export const TypenameField = ({ data, ...inputProps }: SpaceFormFieldProps) => {
 
   const props: FormFieldRendererProps = { ...inputProps, type: ast };
 
-  return <SelectField {...props} options={options} />;
+  // A provided field owns its row, so it carries its own label as the other fields here do.
+  return (
+    <Field.Root>
+      <Field.Label>{inputProps.label}</Field.Label>
+      <SelectField {...props} options={options} />
+    </Field.Root>
+  );
 };
