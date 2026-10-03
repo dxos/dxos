@@ -1,14 +1,207 @@
 # ECHO types (`@dxos/echo`).
 #
-# An ECHO type is a schema piped through `Type.Obj` / `Type.Relation`, or a class extending
-# `Type.makeObject`. Both forms carry the typename and version in the piped call's argument, which
-# the parser does not read — a snippet shows it, and a JS reasoner could lift it later.
+# An ECHO type is declared by `Type.makeObject(dxn)(schema)` / `Type.makeRelation(dxn)({…})(schema)`:
+# as a class heritage (`class X extends Type.makeObject<X>(dxn)(schema) {}`, the current form), as
+# an initializer (`const X = Type.makeObject(dxn)(schema)`), or piped (`schema.pipe(Type.makeObject(dxn))`,
+# deprecated). The parser names the head callee of a curried chain, so all three reduce to one edge.
 
 @prefix deus: <https://dxos.org/vocab/deus#>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 
-{ ?s deus:pipedThrough <https://dxos.org/deus/module/%40dxos%2Fecho#Type.Obj> } => { ?s rdf:type deus:EchoType }.
-{ ?s deus:pipedThrough <https://dxos.org/deus/module/%40dxos%2Fecho#Type.Relation> }
-  => { ?s rdf:type deus:EchoRelation }.
-{ ?s deus:extends <https://dxos.org/deus/module/%40dxos%2Fecho#Type.makeObject> } => { ?s rdf:type deus:EchoType }.
-{ ?s deus:extends <https://dxos.org/deus/module/%40dxos%2Fecho#Type.makeRelation> } => { ?s rdf:type deus:EchoRelation }.
+# The factories, under every address a declaration reaches them by: the package barrel, the
+# `@dxos/echo/Type` subpath, the `@dxos/react-client/echo` re-export, and — inside `@dxos/echo` itself,
+# which imports `./Type` relatively — the declaring module.
+<https://dxos.org/deus/module/%40dxos%2Fecho#Type.makeObject> deus:echoFactoryOf deus:EchoType.
+<https://dxos.org/deus/module/%40dxos%2Fecho%2FType#makeObject> deus:echoFactoryOf deus:EchoType.
+<https://dxos.org/deus/module/%40dxos%2Freact-client%2Fecho#Type.makeObject> deus:echoFactoryOf deus:EchoType.
+<https://dxos.org/deus/file/packages%2Fcore%2Fecho%2Fecho%2Fsrc%2FType.ts#makeObject> deus:echoFactoryOf deus:EchoType.
+<https://dxos.org/deus/module/%40dxos%2Fecho#Type.makeRelation> deus:echoFactoryOf deus:EchoRelation.
+<https://dxos.org/deus/module/%40dxos%2Fecho%2FType#makeRelation> deus:echoFactoryOf deus:EchoRelation.
+<https://dxos.org/deus/module/%40dxos%2Freact-client%2Fecho#Type.makeRelation> deus:echoFactoryOf deus:EchoRelation.
+<https://dxos.org/deus/file/packages%2Fcore%2Fecho%2Fecho%2Fsrc%2FType.ts#makeRelation> deus:echoFactoryOf deus:EchoRelation.
+
+{ ?factory deus:echoFactoryOf ?class. ?s deus:extends ?factory } => { ?s rdf:type ?class }.
+{ ?factory deus:echoFactoryOf ?class. ?s deus:constructedBy ?factory } => { ?s rdf:type ?class }.
+{ ?factory deus:echoFactoryOf ?class. ?s deus:pipedThrough ?factory } => { ?s rdf:type ?class }.
+
+# ---------------------------------------------------------------------------------------------------
+# Identity: the typename and version are the literals of the `DXN.make('<typename>', '<version>')`
+# the declaration is built from. A declaration with more than one literal `DXN.make` (a DXN in an
+# annotation as well, say) is ambiguous, and gets neither.
+# ---------------------------------------------------------------------------------------------------
+
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+
+<https://dxos.org/deus/module/%40dxos%2Fecho#DXN.make> a deus:EchoDxnFactory.
+<https://dxos.org/deus/module/%40dxos%2Fkeys#DXN.make> a deus:EchoDxnFactory.
+
+{ ?s a deus:EchoType. ?typename deus:echoDxnOf ?s } => { ?s deus:echoTypename ?typename }.
+{ ?s a deus:EchoRelation. ?typename deus:echoDxnOf ?s } => { ?s deus:echoTypename ?typename }.
+{ ?s a deus:EchoType. ?version deus:echoDxnVersionOf ?s } => { ?s deus:echoVersion ?version }.
+{ ?s a deus:EchoRelation. ?version deus:echoDxnVersionOf ?s } => { ?s deus:echoVersion ?version }.
+
+# Backward rules: helpers evaluated on demand, so they add no vocabulary to the derived graph.
+{ ?typename deus:echoDxnOf ?s } <= {
+  ?s deus:passesLiteral ?a. ?a deus:slot "0"; deus:callee ?dxn; deus:literal ?typename. ?dxn a deus:EchoDxnFactory.
+  (?t { ?s deus:passesLiteral ?b. ?b deus:slot "0"; deus:callee ?d; deus:literal ?t. ?d a deus:EchoDxnFactory } ?all)
+    log:collectAllIn ?scope.
+  ?all list:length 1.
+}.
+{ ?version deus:echoDxnVersionOf ?s } <= {
+  ?s deus:passesLiteral ?a. ?a deus:slot "1"; deus:callee ?dxn; deus:literal ?version. ?dxn a deus:EchoDxnFactory.
+  (?v { ?s deus:passesLiteral ?b. ?b deus:slot "1"; deus:callee ?d; deus:literal ?v. ?d a deus:EchoDxnFactory } ?all)
+    log:collectAllIn ?scope.
+  ?all list:length 1.
+}.
+
+# ---------------------------------------------------------------------------------------------------
+# Structure: what a type is built from, what it references, and what a relation connects. Each reads
+# an argument the declaration passes (`deus:passes`) and follows it to the declaration it denotes.
+# ---------------------------------------------------------------------------------------------------
+
+<https://dxos.org/deus/module/%40dxos%2Fecho#Ref.Ref> a deus:EchoRefFactory.
+<https://dxos.org/deus/file/packages%2Fcore%2Fecho%2Fecho%2Fsrc%2FRef.ts#Ref> a deus:EchoRefFactory.
+
+# The schema argument of the factory: `Type.makeObject(dxn)(PersonSchema)`. Slot 0 of a curried
+# factory is also where a non-literal DXN goes, so only a declaration classified `deus:Schema` counts.
+{
+  ?factory deus:echoFactoryOf ?class. ?s a ?class.
+  ?s deus:passes ?a. ?a deus:callee ?factory; deus:slot "0". ?a deus:echoDenotes ?schema. ?schema deus:echoIsSchema true.
+} => { ?s deus:echoSchema ?schema }.
+# Piped, deprecated: `PersonSchema.pipe(Type.makeObject(dxn))`.
+{
+  ?factory deus:echoFactoryOf ?class. ?s a ?class; deus:pipedThrough ?factory; deus:derivedFrom ?schema.
+  ?schema deus:echoIsSchema true.
+} => { ?s deus:echoSchema ?schema }.
+
+# A schema: classified so, or refined from one (`PersonSchema.pipe(Schema.fieldsAssign(…))`).
+{ ?x deus:echoIsSchema true } <= { ?x a deus:Schema }.
+{ ?x deus:echoIsSchema true } <= { ?x deus:derivedFrom ?base. ?base deus:echoIsSchema true }.
+
+# A `Ref.Ref(Target)` field, anywhere in the type's schema.
+{
+  ?factory deus:echoFactoryOf ?class. ?s a ?class.
+  ?s deus:passes ?a. ?a deus:callee ?ref; deus:slot "0". ?ref a deus:EchoRefFactory.
+  ?a deus:echoDenotes ?target. ?target a ?targetClass. ?targetClass deus:echoClass true.
+} => { ?s deus:echoReferences ?target }.
+
+# The same, in the named schema the type is built from (and the schemas that one refines).
+{
+  ?s deus:echoSchema ?schema. ?schema deus:echoRefines ?base.
+  ?base deus:passes ?a. ?a deus:callee ?ref; deus:slot "0". ?ref a deus:EchoRefFactory.
+  ?a deus:echoDenotes ?target. ?target a ?targetClass. ?targetClass deus:echoClass true.
+} => { ?s deus:echoReferences ?target }.
+{ ?schema deus:echoRefines ?schema } <= { ?schema deus:echoIsSchema true }.
+{ ?schema deus:echoRefines ?base } <= { ?schema deus:derivedFrom ?parent. ?parent deus:echoRefines ?base }.
+
+deus:EchoType deus:echoClass true.
+deus:EchoRelation deus:echoClass true.
+
+# A relation's endpoints: `Type.makeRelation(dxn)({ source: A, target: B })`.
+{
+  ?factory deus:echoFactoryOf deus:EchoRelation. ?s a deus:EchoRelation.
+  ?s deus:passes ?a. ?a deus:callee ?factory; deus:slot "0.source". ?a deus:echoDenotes ?end. ?end a ?endClass.
+  ?endClass deus:echoClass true.
+} => { ?s deus:relationSource ?end }.
+{
+  ?factory deus:echoFactoryOf deus:EchoRelation. ?s a deus:EchoRelation.
+  ?s deus:passes ?a. ?a deus:callee ?factory; deus:slot "0.target". ?a deus:echoDenotes ?end. ?end a ?endClass.
+  ?endClass deus:echoClass true.
+} => { ?s deus:relationTarget ?end }.
+
+# What a passed reference denotes: the declaration itself, the declaration behind a barrel's named
+# re-export (one or two hops), or the member of a namespace (`Person.Person` over `export * as Person`).
+{ ?a deus:echoDenotes ?t } <= {
+  ?a deus:reference ?t.
+  (?p { ?a deus:referencePath ?p } ?paths) log:collectAllIn ?scope. ?paths list:length 0.
+}.
+{ ?a deus:echoDenotes ?t } <= {
+  ?a deus:reference ?alias. ?alias deus:aliasOf ?t.
+  (?p { ?a deus:referencePath ?p } ?paths) log:collectAllIn ?scope. ?paths list:length 0.
+}.
+{ ?a deus:echoDenotes ?t } <= {
+  ?a deus:reference ?alias. ?alias deus:aliasOf ?via. ?via deus:aliasOf ?t.
+  (?p { ?a deus:referencePath ?p } ?paths) log:collectAllIn ?scope. ?paths list:length 0.
+}.
+{ ?a deus:echoDenotes ?t } <= {
+  ?a deus:reference ?namespace; deus:referencePath ?name.
+  ?namespace deus:namespaceOf ?module. ?module deus:declares ?t. ?t deus:name ?name.
+}.
+
+# Through a package barrel that re-exports an imported namespace (`import * as Text from './Text';
+# export { Text }`), which leaves no symbol at the address the reference lands on. The member IRI
+# still names the package and the path: `@dxos/schema` and `Text.Text` find the ECHO type `Text` in
+# that package's `Text.ts`, and `@dxos/types` and `Person` the one exported ECHO type `Person` there.
+# Only an unambiguous match counts.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+
+{ ?a deus:echoDenotes ?t } <= {
+  ?a deus:reference ?member. ?member deus:echoMemberPath (?package ?namespace ?name).
+  (?c {
+    ?c deus:name ?name. ?class deus:echoClass true. ?c a ?class.
+    ?f deus:declares ?c; deus:inPackage ?p; deus:path ?path. ?p deus:name ?package.
+    (?path "([A-Za-z0-9_$]+)\\.tsx?$") string:scrape ?namespace.
+  } ?candidates) log:collectAllIn ?scope.
+  ?candidates list:length 1.
+  ?candidates list:first ?t.
+}.
+{ ?a deus:echoDenotes ?t } <= {
+  ?a deus:reference ?member. ?member deus:echoMemberName (?package ?name).
+  (?c {
+    ?c deus:name ?name; deus:exported true. ?class deus:echoClass true. ?c a ?class.
+    ?f deus:declares ?c; deus:inPackage ?p. ?p deus:name ?package.
+  } ?candidates) log:collectAllIn ?scope.
+  ?candidates list:length 1.
+  ?candidates list:first ?t.
+}.
+
+# A member of a TypeScript `namespace` is its own symbol, named `TestSchema.Person`.
+{ ?a deus:echoDenotes ?t } <= {
+  ?a deus:reference ?member. ?member deus:echoMemberPath (?package ?namespace ?name).
+  (?namespace "." ?name) string:concatenation ?qualified.
+  (?c {
+    ?c deus:name ?qualified. ?class deus:echoClass true. ?c a ?class.
+    ?f deus:declares ?c; deus:inPackage ?p. ?p deus:name ?package.
+  } ?candidates) log:collectAllIn ?scope.
+  ?candidates list:length 1.
+  ?candidates list:first ?t.
+}.
+# The same barrel reached by a relative import (`import { Person } from '../types'`): the reference
+# lands on `<barrel>#Person`, and the barrel imports the module `Person.ts` that declares the type.
+{ ?a deus:echoDenotes ?t } <= {
+  ?a deus:reference ?symbol; deus:referencePath ?name.
+  ?symbol log:uri ?u. ?u string:startsWith "https://dxos.org/deus/file/".
+  (?u "^https://dxos\\.org/deus/file/([^#]*)#") string:scrape ?barrelPath.
+  (?u "#([A-Za-z0-9_$]+)$") string:scrape ?namespace.
+  ?barrel deus:path ?barrelPath.
+  (?c {
+    ?barrel deus:echoBarrelOf ?f. ?f deus:path ?path. (?path "([A-Za-z0-9_$]+)\\.tsx?$") string:scrape ?namespace.
+    ?f deus:declares ?c. ?c deus:name ?name. ?class deus:echoClass true. ?c a ?class.
+  } ?candidates) log:collectAllIn ?scope.
+  ?candidates list:length 1.
+  ?candidates list:first ?t.
+}.
+
+# `export { Person }` of an imported namespace is not a value use, so the edge may be `importsType`.
+{ ?barrel deus:echoBarrelOf ?f } <= { ?barrel deus:imports ?f }.
+{ ?barrel deus:echoBarrelOf ?f } <= { ?barrel deus:importsType ?f }.
+
+# `module:%40dxos%2Fschema#Text.Text` → ("@dxos/schema" "Text" "Text"); a subpath specifier
+# (`@dxos/plugin-markdown/types`) names its package.
+{ ?member deus:echoMemberPath (?package ?namespace ?name) } <= {
+  ?member deus:echoMemberString ?u.
+  (?u "^https://dxos\\.org/deus/module/(@[^/#]+/[^/#]+|[^@/#][^/#]*)") string:scrape ?package.
+  (?u "#([A-Za-z0-9_$]+)\\.[A-Za-z0-9_$]+$") string:scrape ?namespace.
+  (?u "#[A-Za-z0-9_$]+\\.([A-Za-z0-9_$]+)$") string:scrape ?name.
+}.
+{ ?member deus:echoMemberName (?package ?name) } <= {
+  ?member deus:echoMemberString ?u.
+  (?u "^https://dxos\\.org/deus/module/(@[^/#]+/[^/#]+|[^@/#][^/#]*)") string:scrape ?package.
+  (?u "#([A-Za-z0-9_$]+)$") string:scrape ?name.
+}.
+# The IRI as text, percent-escapes of `/` and `@` undone, whichever form the reasoner hands over.
+{ ?member deus:echoMemberString ?u } <= {
+  ?member log:uri ?raw. ?raw string:startsWith "https://dxos.org/deus/module/".
+  (?raw "%2F" "/") string:replace ?slashes. (?slashes "%40" "@") string:replace ?u.
+}.

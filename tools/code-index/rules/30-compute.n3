@@ -2,51 +2,393 @@
 
 @prefix deus: <https://dxos.org/vocab/deus#>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+@prefix op: <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperation#>.
+@prefix set: <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperationHandlerSet#>.
+@prefix skill: <https://dxos.org/deus/module/%40dxos%2Fcompute%2FSkill#>.
+@prefix compute: <https://dxos.org/deus/module/%40dxos%2Fcompute#>.
+@prefix opFile: <https://dxos.org/deus/file/packages%2Fcore%2Fcompute%2Fcompute%2Fsrc%2FOperation.ts#>.
+@prefix setFile: <https://dxos.org/deus/file/packages%2Fcore%2Fcompute%2Fcompute%2Fsrc%2FOperationHandlerSet.ts#>.
+@prefix skillFile: <https://dxos.org/deus/file/packages%2Fcore%2Fcompute%2Fcompute%2Fsrc%2Ftypes%2FSkill.ts#>.
+
+# --- The API, by every IRI it is addressed by -------------------------------------------------------
+#
+# A callee is named by the subpath importers write (`@dxos/compute/Operation`), by the root barrel's
+# namespace member (`@dxos/compute` → `Operation.make`), and by its declaring file — the only IRI a
+# relative import inside `@dxos/compute` itself produces. These are facts of this file, not
+# conclusions: EYE reads them as premises and derives nothing from stating them.
+
+op:make deus:computeRole "operation".
+compute:Operation.make deus:computeRole "operation".
+opFile:make deus:computeRole "operation".
+
+op:withHandler deus:computeRole "handler".
+compute:Operation.withHandler deus:computeRole "handler".
+opFile:withHandler deus:computeRole "handler".
+op:lazyHandler deus:computeRole "handler".
+compute:Operation.lazyHandler deus:computeRole "handler".
+opFile:lazyHandler deus:computeRole "handler".
+
+set:make deus:computeRole "handlerSet".
+set:merge deus:computeRole "handlerSet".
+set:lazy deus:computeRole "handlerSet".
+set:reactive deus:computeRole "handlerSet".
+set:OperationHandlerSet deus:computeRole "handlerSet".
+compute:OperationHandlerSet.make deus:computeRole "handlerSet".
+compute:OperationHandlerSet.merge deus:computeRole "handlerSet".
+compute:OperationHandlerSet.lazy deus:computeRole "handlerSet".
+compute:OperationHandlerSet.reactive deus:computeRole "handlerSet".
+compute:OperationHandlerSet.OperationHandlerSet deus:computeRole "handlerSet".
+setFile:make deus:computeRole "handlerSet".
+setFile:merge deus:computeRole "handlerSet".
+setFile:lazy deus:computeRole "handlerSet".
+setFile:reactive deus:computeRole "handlerSet".
+setFile:OperationHandlerSet deus:computeRole "handlerSet".
+set:lazy deus:computeRole "lazyHandlerSet".
+compute:OperationHandlerSet.lazy deus:computeRole "lazyHandlerSet".
+setFile:lazy deus:computeRole "lazyHandlerSet".
+
+skill:toolDefinitions deus:computeRole "toolDefinitions".
+compute:Skill.toolDefinitions deus:computeRole "toolDefinitions".
+skillFile:toolDefinitions deus:computeRole "toolDefinitions".
+
+<https://dxos.org/deus/module/%40dxos%2Fecho#DXN.make> deus:computeRole "dxn".
+<https://dxos.org/deus/module/%40dxos%2Fkeys#DXN.make> deus:computeRole "dxn".
+
+skill:make deus:computeRole "skill".
+skill:Definition deus:computeRole "skill".
+compute:Skill.make deus:computeRole "skill".
+compute:Skill.Definition deus:computeRole "skill".
+skillFile:make deus:computeRole "skill".
+skillFile:Definition deus:computeRole "skill".
+skill:Skill deus:computeRole "skillObject".
+compute:Skill.Skill deus:computeRole "skillObject".
+skillFile:Skill deus:computeRole "skillObject".
+
+# --- Operations --------------------------------------------------------------------------------------
 
 # `Operation.make({ … })`.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperation#make> }
-  => { ?s rdf:type deus:Operation }.
+{ ?s deus:constructedBy ?callee. ?callee deus:computeRole "operation" } => { ?s rdf:type deus:Operation }.
 
-# A handler is an operation piped through `Operation.withHandler`, so it names the operation it
-# implements: `SentenceNormalization.pipe(Operation.withHandler(fn))`.
-{
-  ?s deus:pipedThrough <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperation#withHandler>.
-  ?s deus:derivedFrom ?operation.
-} => {
-  ?s rdf:type deus:OperationHandler.
-  ?s deus:implementsOperation ?operation.
-}.
+# What a reference stands for. Most references land on a barrel's re-export rather than on the
+# declaration, so the alias chain is followed to the `Operation.make` it ends at.
+{ ?s rdf:type deus:Operation } => { ?s deus:denotes ?s }.
+{ ?alias deus:aliasOf ?origin. ?origin deus:denotes ?operation } => { ?alias deus:denotes ?operation }.
 
-# Handler sets bundle handlers; the members they reference are their implementation.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperationHandlerSet#make> }
-  => { ?s rdf:type deus:OperationHandlerSet }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperationHandlerSet#merge> }
-  => { ?s rdf:type deus:OperationHandlerSet }.
+# `export * from './definitions'` re-exports without naming anything, so nothing declares the
+# barrel's name for the operation. A reference through it is the barrel's IRI plus the name, which is
+# matched as text (EYE's `log:uri` decodes `%2F`, so an IRI cannot be built from the text) among the
+# references of the files importing that barrel — unless the barrel declares the name itself, since
+# a local declaration shadows a star export.
+{ ?module deus:declares ?operation. ?operation rdf:type deus:Operation; deus:exported true }
+  => { ?module deus:exportsOperation ?operation }.
+# Only across a bare `export *`: `export * as N` publishes the names qualified, and `export { a }`
+# publishes `a` alone (and declares it, so `deus:aliasOf` already covers it).
 {
-  ?s rdf:type deus:OperationHandlerSet.
-  ?s deus:implDependsOn ?handler.
-  ?handler rdf:type deus:OperationHandler.
-} => {
-  ?s deus:bundlesHandler ?handler.
-}.
+  ?barrel deus:reexports ?module.
+  ?module deus:exportsOperation ?operation.
+  (?namespace { ?barrel deus:declares ?namespace. ?namespace deus:namespaceOf ?module } ?namespaces) log:collectAllIn ?scope.
+  ?namespaces list:length 0.
+  (?alias { ?barrel deus:declares ?alias. ?alias deus:aliasOf ?origin. ?module deus:declares ?origin } ?aliases) log:collectAllIn ?scope.
+  ?aliases list:length 0.
+} => { ?barrel deus:exportsOperation ?operation }.
+{
+  ?barrel deus:exportsOperation ?operation.
+  ?operation deus:name ?name.
+  (?declared { ?barrel deus:declares ?declared. ?declared deus:name ?name } ?shadowing) log:collectAllIn ?scope.
+  ?shadowing list:length 0.
+  ?barrel log:uri ?barrelText.
+  (?barrelText "#" ?name) string:concatenation ?text.
+  ?importer deus:imports ?barrel; deus:declares ?s.
+  ?s deus:implDependsOn ?ref.
+  ?ref log:uri ?text.
+} => { ?ref deus:denotes ?operation }.
 
-# `Skill.make({ tools: Skill.toolDefinitions({ operations: [...] }) })` — the operations a skill
-# names are ordinary implementation references, so the join is enough to find them.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fcompute%2FSkill#make> }
-  => { ?s rdf:type deus:Skill }.
+# A module published whole (`export * as FileOperation from './FileOperation'`) that declares
+# operations, and each barrel name re-exporting it. A reference through it (`FileOperation.Create`)
+# binds to the namespace symbol; only the member IRI recorded beside it keeps the member's name, so
+# the two are joined per referencing symbol below.
 {
-  ?s rdf:type deus:Skill.
-  ?s deus:implDependsOn ?operation.
+  ?namespace deus:namespaceOf ?module.
+  ?module deus:declares ?operation.
   ?operation rdf:type deus:Operation.
-} => {
-  ?s deus:exposesOperation ?operation.
-}.
-# Skills name operations through a barrel as often as not.
+} => { ?namespace deus:operationNamespace ?module }.
+{ ?alias deus:aliasOf ?namespace. ?namespace deus:operationNamespace ?module } => { ?alias deus:operationNamespace ?module }.
+
+# --- What an operation is defined with --------------------------------------------------------------
+
+# Its key: `meta: { key: 'org.dxos.operation.x' }`, or `meta: { key: DXN.make('org.dxos.operation.x') }`
+# when that is the only DXN the definition builds.
 {
-  ?s rdf:type deus:Skill.
-  ?s deus:implDependsOn ?alias.
-  ?alias deus:aliasOf ?operation.
-  ?operation rdf:type deus:Operation.
-} => {
-  ?s deus:exposesOperation ?operation.
-}.
+  ?s rdf:type deus:Operation; deus:passesLiteral ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.meta.key"; deus:literal ?key.
+  ?callee deus:computeRole "operation".
+} => { ?s deus:operationKey ?key }.
+{
+  ?s rdf:type deus:Operation; deus:passesLiteral ?argument.
+  ?argument deus:callee ?callee; deus:slot "0"; deus:literal ?key.
+  ?callee deus:computeRole "dxn".
+  (?other { ?s deus:passesLiteral ?any. ?any deus:callee ?dxn; deus:slot "0"; deus:literal ?other. ?dxn deus:computeRole "dxn" } ?keys)
+    log:collectAllIn ?scope.
+  ?keys list:length 1.
+} => { ?s deus:operationKey ?key }.
+
+# Its schemas and services, where the definition names them (`input: Input`, `output: Schema.Void`,
+# `services: [Database.Service]`); an inline `Schema.Struct# Its schemas and services, where the definition names them (`input: Input`, `output: Schema.Void`,
+# `services: [Database.Service]`); an inline `Schema.Struct({ … })` is a call, not a name, and yields
+# nothing. A name is concluded once: the repository symbol when the reference has one, else the
+# member of the external module; through a namespace (`MyTypes.Input`), the member its module declares.
+
+{
+  ?s rdf:type deus:Operation; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.input"; deus:reference ?target.
+  ?callee deus:computeRole "operation".
+  (?path { ?argument deus:referencePath ?path } ?paths) log:collectAllIn ?scope.
+  ?paths list:length 0.
+  ?target log:uri ?text.
+  ?text string:startsWith "https://dxos.org/deus/file/".
+} => { ?s deus:operationInput ?target }.
+{
+  ?s rdf:type deus:Operation; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.input"; deus:reference ?target.
+  ?callee deus:computeRole "operation".
+  (?path { ?argument deus:referencePath ?path } ?paths) log:collectAllIn ?scope.
+  ?paths list:length 0.
+  (?file { ?argument deus:reference ?file. ?file log:uri ?fileText. ?fileText string:startsWith "https://dxos.org/deus/file/" } ?files)
+    log:collectAllIn ?scope.
+  ?files list:length 0.
+} => { ?s deus:operationInput ?target }.
+{
+  ?s rdf:type deus:Operation; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.input"; deus:reference ?namespace; deus:referencePath ?name.
+  ?callee deus:computeRole "operation".
+  ?namespace deus:namespaceOf ?module.
+  ?module deus:declares ?target.
+  ?target deus:name ?name.
+} => { ?s deus:operationInput ?target }.
+
+{
+  ?s rdf:type deus:Operation; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.output"; deus:reference ?target.
+  ?callee deus:computeRole "operation".
+  (?path { ?argument deus:referencePath ?path } ?paths) log:collectAllIn ?scope.
+  ?paths list:length 0.
+  ?target log:uri ?text.
+  ?text string:startsWith "https://dxos.org/deus/file/".
+} => { ?s deus:operationOutput ?target }.
+{
+  ?s rdf:type deus:Operation; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.output"; deus:reference ?target.
+  ?callee deus:computeRole "operation".
+  (?path { ?argument deus:referencePath ?path } ?paths) log:collectAllIn ?scope.
+  ?paths list:length 0.
+  (?file { ?argument deus:reference ?file. ?file log:uri ?fileText. ?fileText string:startsWith "https://dxos.org/deus/file/" } ?files)
+    log:collectAllIn ?scope.
+  ?files list:length 0.
+} => { ?s deus:operationOutput ?target }.
+{
+  ?s rdf:type deus:Operation; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.output"; deus:reference ?namespace; deus:referencePath ?name.
+  ?callee deus:computeRole "operation".
+  ?namespace deus:namespaceOf ?module.
+  ?module deus:declares ?target.
+  ?target deus:name ?name.
+} => { ?s deus:operationOutput ?target }.
+
+{
+  ?s rdf:type deus:Operation; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.services"; deus:reference ?target.
+  ?callee deus:computeRole "operation".
+  (?path { ?argument deus:referencePath ?path } ?paths) log:collectAllIn ?scope.
+  ?paths list:length 0.
+  ?target log:uri ?text.
+  ?text string:startsWith "https://dxos.org/deus/file/".
+} => { ?s deus:operationRequires ?target }.
+{
+  ?s rdf:type deus:Operation; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.services"; deus:reference ?target.
+  ?callee deus:computeRole "operation".
+  (?path { ?argument deus:referencePath ?path } ?paths) log:collectAllIn ?scope.
+  ?paths list:length 0.
+  (?file { ?argument deus:reference ?file. ?file log:uri ?fileText. ?fileText string:startsWith "https://dxos.org/deus/file/" } ?files)
+    log:collectAllIn ?scope.
+  ?files list:length 0.
+} => { ?s deus:operationRequires ?target }.
+{
+  ?s rdf:type deus:Operation; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.services"; deus:reference ?namespace; deus:referencePath ?name.
+  ?callee deus:computeRole "operation".
+  ?namespace deus:namespaceOf ?module.
+  ?module deus:declares ?target.
+  ?target deus:name ?name.
+} => { ?s deus:operationRequires ?target }.
+
+# --- References to operations ------------------------------------------------------------------------
+
+# The implementation of `?s` names `?operation`: directly, through barrels, or as a namespace member.
+{ ?ref deus:denotes ?operation. ?s deus:implDependsOn ?ref } => { ?s deus:referencesOperation ?operation }.
+{
+  ?namespace deus:operationNamespace ?module; deus:name ?namespaceName.
+  ?s deus:implDependsOn ?namespace.
+  ("#" ?namespaceName "\\.(\\w+)(\\.pipe)?$") string:concatenation ?pattern.
+  ?s deus:implDependsOn ?member.
+  ?member log:uri ?text.
+  (?text ?pattern) string:scrape ?name.
+  ?module deus:declares ?operation.
+  ?operation rdf:type deus:Operation; deus:name ?name.
+} => { ?s deus:referencesOperation ?operation }.
+
+# --- Handlers ----------------------------------------------------------------------------------------
+
+# `Op.pipe(Operation.withHandler(fn))`, or `Operation.lazyHandler(…)`: derived from the operation it
+# implements.
+{
+  ?s deus:pipedThrough ?callee. ?callee deus:computeRole "handler".
+  ?s deus:derivedFrom ?ref. ?ref deus:denotes ?operation.
+} => { ?s rdf:type deus:OperationHandler; deus:implementsOperation ?operation }.
+{
+  ?s deus:pipedThrough ?callee. ?callee deus:computeRole "handler".
+  ?s deus:derivedFrom ?namespace.
+  ?namespace deus:operationNamespace ?module; deus:name ?namespaceName.
+  ("#" ?namespaceName "\\.(\\w+)$") string:concatenation ?pattern.
+  ?s deus:derivedFrom ?member.
+  ?member log:uri ?text.
+  (?text ?pattern) string:scrape ?name.
+  ?module deus:declares ?operation.
+  ?operation rdf:type deus:Operation; deus:name ?name.
+} => { ?s rdf:type deus:OperationHandler; deus:implementsOperation ?operation }.
+
+# Data-first: `Operation.withHandler(Op, fn)` — the operation is the first argument.
+{
+  ?s deus:constructedBy ?callee. ?callee deus:computeRole "handler".
+  ?s deus:argument ?ref. ?ref deus:denotes ?operation.
+} => { ?s rdf:type deus:OperationHandler; deus:implementsOperation ?operation }.
+{
+  ?s deus:constructedBy ?callee. ?callee deus:computeRole "handler".
+  ?s deus:argument ?namespace.
+  ?namespace deus:operationNamespace ?module; deus:name ?namespaceName.
+  ("#" ?namespaceName "\\.(\\w+)$") string:concatenation ?pattern.
+  ?s deus:argument ?member.
+  ?member log:uri ?text.
+  (?text ?pattern) string:scrape ?name.
+  ?module deus:declares ?operation.
+  ?operation rdf:type deus:Operation; deus:name ?name.
+} => { ?s rdf:type deus:OperationHandler; deus:implementsOperation ?operation }.
+
+# `export default handler` (or a further pipe over it) is the same handler under its module's name.
+{ ?s deus:derivedFrom ?handler. ?handler rdf:type deus:OperationHandler; deus:implementsOperation ?operation }
+  => { ?s rdf:type deus:OperationHandler; deus:implementsOperation ?operation }.
+
+# --- Handler sets ------------------------------------------------------------------------------------
+
+# `OperationHandlerSet.{make,merge,lazy,reactive}(…)`, or anything typed `OperationHandlerSet`.
+{ ?s deus:constructedBy ?callee. ?callee deus:computeRole "handlerSet" } => { ?s rdf:type deus:OperationHandlerSet }.
+{ ?file deus:declares ?s. ?s deus:hasType ?type. ?type deus:typeHead ?head. ?head deus:computeRole "handlerSet" }
+  => { ?s rdf:type deus:OperationHandlerSet }.
+
+# The handlers a set names.
+{ ?s rdf:type deus:OperationHandlerSet; deus:implDependsOn ?handler. ?handler rdf:type deus:OperationHandler }
+  => { ?s deus:bundlesHandler ?handler }.
+
+# The operations a set serves: those of the handlers it bundles, and those of the sets it merges.
+{ ?s deus:bundlesHandler ?handler. ?handler deus:implementsOperation ?operation } => { ?s deus:handlesOperation ?operation }.
+{
+  ?s rdf:type deus:OperationHandlerSet; deus:implDependsOn ?inner.
+  ?inner rdf:type deus:OperationHandlerSet; deus:handlesOperation ?operation.
+} => { ?s deus:handlesOperation ?operation }.
+# `OperationHandlerSet.lazy([Op.pipe(Operation.lazyHandler(() => import('./op')))])`: each entry pairs
+# an operation with a loader, and the handler bodies live in the loaded modules — so every operation
+# the initializer names is one the set serves.
+{ ?s deus:constructedBy ?callee. ?callee deus:computeRole "lazyHandlerSet". ?s deus:referencesOperation ?operation }
+  => { ?s deus:handlesOperation ?operation }.
+
+# `OperationHandlerSet.make(Op.pipe(Operation.withHandler(fn)), …)`: the first entry's base is the
+# constructing call's first argument. Later entries are not told apart from the operations their
+# inline handler bodies invoke, so they are not concluded.
+{
+  ?s deus:constructedBy ?callee. ?callee deus:computeRole "handlerSet".
+  ?s deus:argument ?ref. ?ref deus:denotes ?operation.
+} => { ?s deus:handlesOperation ?operation }.
+
+# A lazy set's handlers live in the modules its entries load: the default export of each, when it
+# implements one of the operations the set pairs with a loader.
+{
+  ?s rdf:type deus:OperationHandlerSet; deus:loads ?file.
+  ?file deus:declares ?handler.
+  ?handler deus:name "default"; rdf:type deus:OperationHandler; deus:implementsOperation ?operation.
+  ?s deus:handlesOperation ?operation.
+} => { ?s deus:bundlesHandler ?handler }.
+
+{
+  ?s rdf:type deus:OperationHandlerSet; deus:loads ?file.
+  ?file deus:declares ?alias.
+  ?alias deus:name "default"; deus:aliasOf ?handler.
+  ?handler rdf:type deus:OperationHandler; deus:implementsOperation ?operation.
+  ?s deus:handlesOperation ?operation.
+} => { ?s deus:bundlesHandler ?handler }.
+
+# --- Skills ------------------------------------------------------------------------------------------
+
+# `Skill.make({ … })`, or a `Skill.Definition` — the `{ key, make }` record a plugin registers.
+{ ?s deus:constructedBy ?callee. ?callee deus:computeRole "skill" } => { ?s rdf:type deus:Skill }.
+{ ?file deus:declares ?s. ?s deus:hasType ?type. ?type deus:typeHead ?head. ?head deus:computeRole "skill" } => { ?s rdf:type deus:Skill }.
+# A factory returning one — `make = (): Skill.Skill => Skill.make(…)` — where a module is the skill.
+{
+  ?file deus:declares ?s. ?s deus:hasType ?type. ?type deus:returnType ?returned.
+  ?returned deus:typeHead ?head. ?head deus:computeRole "skillObject".
+} => { ?s rdf:type deus:Skill }.
+
+# The operations a skill offers as tools: those passed to `Skill.toolDefinitions({ operations })` —
+# written in the skill itself, in the factory a definition points at, or kept in a list of the same
+# file (`toolDefinitions({ operations })`, `[...operations]`). Only that slot counts: a skill also
+# names operations it binds as hooks or reads in its instructions, which it does not offer as tools.
+{
+  ?s rdf:type deus:Skill; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.operations"; deus:reference ?ref.
+  ?callee deus:computeRole "toolDefinitions".
+  ?ref deus:denotes ?operation.
+} => { ?s deus:exposesOperation ?operation }.
+{
+  ?s rdf:type deus:Skill; deus:implDependsOn ?part.
+  ?file deus:declares ?s, ?part.
+  ?part deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.operations"; deus:reference ?ref.
+  ?callee deus:computeRole "toolDefinitions".
+  ?ref deus:denotes ?operation.
+} => { ?s deus:exposesOperation ?operation }.
+{
+  ?s rdf:type deus:Skill; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.operations"; deus:reference ?namespace; deus:referencePath ?name.
+  ?callee deus:computeRole "toolDefinitions".
+  ?namespace deus:operationNamespace ?module.
+  ?module deus:declares ?operation.
+  ?operation rdf:type deus:Operation; deus:name ?name.
+} => { ?s deus:exposesOperation ?operation }.
+{
+  ?s rdf:type deus:Skill; deus:implDependsOn ?part.
+  ?file deus:declares ?s, ?part.
+  ?part deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.operations"; deus:reference ?namespace; deus:referencePath ?name.
+  ?callee deus:computeRole "toolDefinitions".
+  ?namespace deus:operationNamespace ?module.
+  ?module deus:declares ?operation.
+  ?operation rdf:type deus:Operation; deus:name ?name.
+} => { ?s deus:exposesOperation ?operation }.
+{
+  ?s rdf:type deus:Skill; deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.operations"; deus:reference ?list.
+  ?callee deus:computeRole "toolDefinitions".
+  ?file deus:declares ?s, ?list.
+  ?list deus:referencesOperation ?operation.
+} => { ?s deus:exposesOperation ?operation }.
+{
+  ?s rdf:type deus:Skill; deus:implDependsOn ?part.
+  ?file deus:declares ?s, ?part.
+  ?part deus:passes ?argument.
+  ?argument deus:callee ?callee; deus:slot "0.operations"; deus:reference ?list.
+  ?callee deus:computeRole "toolDefinitions".
+  ?file deus:declares ?list.
+  ?list deus:referencesOperation ?operation.
+} => { ?s deus:exposesOperation ?operation }.

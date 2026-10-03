@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Ontology from '../../Ontology.ts';
 import { type Node } from '../analyzers/ast.ts';
 import { memberIri } from './Boundary.ts';
 import * as Term from './Term.ts';
@@ -58,7 +59,11 @@ const layerOf = (output: Term.Type, error: Term.Type, input: Term.Type) => Term.
 const parts = (type: Term.Type, head: string): readonly [Term.Type, Term.Type, Term.Type] =>
   type.kind === 'ref' && type.iri === head && type.args.length === 3
     ? [type.args[0], type.args[1], type.args[2]]
-    : [Term.unknown, Term.unknown, Term.unknown];
+    : [
+        Term.unresolved('model:not-effect-or-layer'),
+        Term.unresolved('model:not-effect-or-layer'),
+        Term.unresolved('model:not-effect-or-layer'),
+      ];
 
 const membersOf = (type: Term.Type): readonly Term.Type[] => (type.kind === 'union' ? type.members : [type]);
 
@@ -67,23 +72,23 @@ const membersOf = (type: Term.Type): readonly Term.Type[] => (type.kind === 'uni
  * Exact for service identities, which are distinct classes; any unknown keeps the position unknown.
  */
 const exclude = (from: Term.Type, remove: Term.Type): Term.Type => {
-  if (from.kind === 'unknown' || remove.kind === 'unknown') {
-    return Term.unknown;
+  if (from.kind === 'unresolved' || remove.kind === 'unresolved') {
+    return Term.unresolved('model:exclude');
   }
   const removed = new Set(membersOf(remove).map(Term.text));
   const kept = membersOf(from);
   if (kept.some((member) => member.kind !== 'ref' && !(member.kind === 'primitive' && member.name === 'never'))) {
-    return Term.unknown;
+    return Term.unresolved('model:exclude');
   }
   return Term.union(kept.filter((member) => !removed.has(Term.text(member))));
 };
 
 /** A union that stays unknown if any part is: `E1 | ?` is not a union we can state. */
 const knownUnion = (members: readonly Term.Type[]): Term.Type =>
-  members.some((member) => member.kind === 'unknown') ? Term.unknown : Term.union(members);
+  members.some((member) => member.kind === 'unresolved') ? Term.unresolved('model:union-part') : Term.union(members);
 
 const tagIdentity = (tag: Node | undefined, context: ModelContext): Term.Type =>
-  (tag && context.serviceKey(tag)?.[0]) ?? Term.unknown;
+  (tag && context.serviceKey(tag)?.[0]) ?? Term.unresolved('model:service-tag-not-local');
 
 const merge = (self: Term.Type, that: Term.Type): Term.Type => {
   const [selfOut, selfError, selfIn] = parts(self, LAYER);
@@ -97,6 +102,17 @@ const provide = (self: Term.Type, that: Term.Type): Term.Type => {
   return layerOf(selfOut, knownUnion([thatError, selfError]), knownUnion([thatIn, exclude(selfIn, thatOut)]));
 };
 
+/** `Layer<ROut | ROut2, E | E2, RIn | Exclude<RIn2, ROut>>`: `provide` that also keeps `that`'s outputs. */
+const provideMerge = (self: Term.Type, that: Term.Type): Term.Type => {
+  const [selfOut, selfError, selfIn] = parts(self, LAYER);
+  const [thatOut, thatError, thatIn] = parts(that, LAYER);
+  return layerOf(
+    knownUnion([thatOut, selfOut]),
+    knownUnion([thatError, selfError]),
+    knownUnion([thatIn, exclude(selfIn, thatOut)]),
+  );
+};
+
 /** An argument that is an array literal is the `Layers` tuple overload — not modeled. */
 const isArrayArgument = (node: Node | undefined) => node?.type === 'ArrayExpression';
 
@@ -106,21 +122,29 @@ const values = new Map<string, Model>([
     effect('Effect', 'succeed'),
     {
       call: ([value], _node, context) =>
-        effectOf(value ? Term.widen(context.expression(value)) : Term.unknown, Term.never, Term.never),
+        effectOf(
+          value ? Term.widen(context.expression(value)) : Term.unresolved('model:Effect.succeed'),
+          Term.never,
+          Term.never,
+        ),
     },
   ],
   [
     effect('Effect', 'fail'),
     {
       call: ([error], _node, context) =>
-        effectOf(Term.never, error ? Term.widen(context.expression(error)) : Term.unknown, Term.never),
+        effectOf(
+          Term.never,
+          error ? Term.widen(context.expression(error)) : Term.unresolved('model:Effect.fail'),
+          Term.never,
+        ),
     },
   ],
   [
     effect('Effect', 'sync'),
     {
       call: ([thunk], _node, context) =>
-        effectOf(thunk ? context.returned(thunk) : Term.unknown, Term.never, Term.never),
+        effectOf(thunk ? context.returned(thunk) : Term.unresolved('model:Effect.sync'), Term.never, Term.never),
     },
   ],
   [
@@ -129,7 +153,7 @@ const values = new Map<string, Model>([
       call: (args, _node, context) => {
         const summary = args.length === 1 ? context.generator(args[0]) : undefined;
         if (!summary) {
-          return Term.unknown;
+          return Term.unresolved('model:Effect.gen');
         }
         const errors: Term.Type[] = [];
         const requirements: Term.Type[] = [];
@@ -152,14 +176,18 @@ const values = new Map<string, Model>([
     effect('Layer', 'succeed'),
     {
       call: (args, _node, context) =>
-        args.length === 2 ? layerOf(tagIdentity(args[0], context), Term.never, Term.never) : Term.unknown,
+        args.length === 2
+          ? layerOf(tagIdentity(args[0], context), Term.never, Term.never)
+          : Term.unresolved('model:Layer.succeed'),
     },
   ],
   [
     effect('Layer', 'sync'),
     {
       call: (args, _node, context) =>
-        args.length === 2 ? layerOf(tagIdentity(args[0], context), Term.never, Term.never) : Term.unknown,
+        args.length === 2
+          ? layerOf(tagIdentity(args[0], context), Term.never, Term.never)
+          : Term.unresolved('model:Layer.sync'),
     },
   ],
   [
@@ -167,7 +195,7 @@ const values = new Map<string, Model>([
     {
       call: (args, _node, context) => {
         if (args.length !== 2) {
-          return Term.unknown;
+          return Term.unresolved('model:Layer.effect');
         }
         const [, error, requirements] = parts(context.expression(args[1]), EFFECT);
         return layerOf(tagIdentity(args[0], context), error, exclude(requirements, Term.ref(SCOPE)));
@@ -179,7 +207,7 @@ const values = new Map<string, Model>([
     {
       call: (args, _node, context) => {
         if (args.length === 0) {
-          return Term.unknown;
+          return Term.unresolved('model:Layer.mergeAll');
         }
         const layers = args.map((arg) => parts(context.expression(arg), LAYER));
         return layerOf(
@@ -196,9 +224,11 @@ const values = new Map<string, Model>([
       call: (args, _node, context) =>
         args.length === 2 && !isArrayArgument(args[1])
           ? merge(context.expression(args[0]), context.expression(args[1]))
-          : Term.unknown,
+          : Term.unresolved('model:Layer.merge'),
       pipe: (args, self, context) =>
-        args.length === 1 && !isArrayArgument(args[0]) ? merge(self, context.expression(args[0])) : Term.unknown,
+        args.length === 1 && !isArrayArgument(args[0])
+          ? merge(self, context.expression(args[0]))
+          : Term.unresolved('model:Layer.merge'),
     },
   ],
   [
@@ -207,9 +237,36 @@ const values = new Map<string, Model>([
       call: (args, _node, context) =>
         args.length === 2 && !isArrayArgument(args[1])
           ? provide(context.expression(args[0]), context.expression(args[1]))
-          : Term.unknown,
+          : Term.unresolved('model:Layer.provide'),
       pipe: (args, self, context) =>
-        args.length === 1 && !isArrayArgument(args[0]) ? provide(self, context.expression(args[0])) : Term.unknown,
+        args.length === 1 && !isArrayArgument(args[0])
+          ? provide(self, context.expression(args[0]))
+          : Term.unresolved('model:Layer.provide'),
+    },
+  ],
+  [
+    effect('Layer', 'provideMerge'),
+    {
+      call: (args, _node, context) =>
+        args.length === 2 && !isArrayArgument(args[1])
+          ? provideMerge(context.expression(args[0]), context.expression(args[1]))
+          : Term.unresolved('model:Layer.provideMerge'),
+      pipe: (args, self, context) =>
+        args.length === 1 && !isArrayArgument(args[0])
+          ? provideMerge(self, context.expression(args[0]))
+          : Term.unresolved('model:Layer.provideMerge'),
+    },
+  ],
+  [
+    effect('Layer', 'effectDiscard'),
+    {
+      call: (args, _node, context) => {
+        if (args.length !== 1) {
+          return Term.unresolved('model:Layer.effectDiscard');
+        }
+        const [, error, requirements] = parts(context.expression(args[0]), EFFECT);
+        return layerOf(Term.never, error, exclude(requirements, Term.ref(SCOPE)));
+      },
     },
   ],
   [effect('Schema', 'String'), { value: Term.ref(effect('Schema', 'String')) }],
@@ -220,8 +277,13 @@ const values = new Map<string, Model>([
     effect('Schema', 'Struct'),
     {
       call: ([fields], _node, context) => {
-        const type = fields?.type === 'ObjectExpression' ? context.constExpression(fields) : Term.unknown;
-        return type.kind === 'object' ? Term.ref(effect('Schema', 'Struct'), [type]) : Term.unknown;
+        const type =
+          fields?.type === 'ObjectExpression'
+            ? context.constExpression(fields)
+            : Term.unresolved('model:Schema.Struct');
+        return type.kind === 'object'
+          ? Term.ref(effect('Schema', 'Struct'), [type])
+          : Term.unresolved('model:Schema.Struct');
       },
     },
   ],
@@ -229,8 +291,10 @@ const values = new Map<string, Model>([
     effect('Schema', 'Literal'),
     {
       call: ([value], _node, context) => {
-        const type = value ? Term.settle(context.expression(value)) : Term.unknown;
-        return type.kind === 'literal' ? Term.ref(effect('Schema', 'Literal'), [type]) : Term.unknown;
+        const type = value ? Term.settle(context.expression(value)) : Term.unresolved('model:Schema.Literal');
+        return type.kind === 'literal'
+          ? Term.ref(effect('Schema', 'Literal'), [type])
+          : Term.unresolved('model:Schema.Literal');
       },
     },
   ],
@@ -250,4 +314,6 @@ export const MODELS = {
   serviceIri: SERVICE,
   effectIri: EFFECT,
   genIri: effect('Effect', 'gen'),
+  /** Every `effect/<Module>` member IRI starts with this. */
+  effectModuleBase: `${Ontology.MODULE_BASE}${encodeURIComponent('effect/')}`,
 } as const;
