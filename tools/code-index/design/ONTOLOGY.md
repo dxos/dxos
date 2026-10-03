@@ -405,7 +405,7 @@ and, by kind:
 | `deus:typeHead`                        | `ref`, `typeof`         | The named type (`ref`) or value (`typeof`): a symbol, member, or `lib:` IRI — the same IRIs `deus:constructedBy` uses. |
 | `deus:typeArg0` … `typeArg7`           | `ref`                   | Type arguments, positional; defaults are filled in where `tsc` would report them.                                      |
 | `deus:typeMember`                      | `union`, `intersection` | Each member.                                                                                                           |
-| `deus:typeProperty`                    | `object`                | A `deus:TypeProperty` node: `deus:name`, `deus:hasType`, `deus:optional`, `deus:readonly`.                             |
+| `deus:typeProperty`                    | `object`                | A `deus:TypeProperty` node: `deus:name`, `deus:hasType`, and `deus:optional` / `deus:readonly` when true.              |
 | `deus:typeElement0` …                  | `tuple`                 | Element types, positional.                                                                                             |
 | `deus:typeParam0` …, `deus:returnType` | `function`              | Parameter types, positional, and the return type.                                                                      |
 | `deus:literalValue`                    | `literal`               | The literal as written in the canonical text (`"a"`, `1`, `true`).                                                     |
