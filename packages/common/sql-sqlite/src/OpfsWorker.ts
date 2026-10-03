@@ -31,6 +31,7 @@ import {
 import { recordSqliteQueryMetrics } from './internal/query-log.ts';
 import { readRow } from './internal/row-decode.ts';
 import { instantiateSqliteModule } from './internal/sqlite-module.ts';
+import { recordStatement, statementKind } from './internal/vfs-metrics.ts';
 
 /** @internal */
 type OpfsWorkerMessage =
@@ -159,8 +160,11 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
               // Column names ride per row rather than once per reply: a multi-statement query returns
               // rows from statements with different columns, and the client pairs them by index.
               const columns: Array<Array<string>> = [];
+              const kind = statementKind(sql);
+              const writes = kind === 'insert' || kind === 'update' || kind === 'delete';
               for (const stmt of sqlite3.statements(db, sql)) {
                 let statementColumns: Array<string> | undefined;
+                const rowsBefore = results.length;
                 sqlite3.bind_collection(stmt, params as any);
                 while (sqlite3.step(stmt) === WaSqlite.SQLITE_ROW) {
                   const decoded = readRow(sqlite3, stmt, sql, statementColumns);
@@ -168,6 +172,7 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
                   results.push(decoded.row);
                   columns.push(statementColumns);
                 }
+                recordStatement(kind, results.length - rowsBefore, writes ? sqlite3.changes(db) : 0);
               }
               options.port.postMessage([id, undefined, [columns, results]]);
               recordSqliteQueryMetrics(sql, params, results.length, begin);

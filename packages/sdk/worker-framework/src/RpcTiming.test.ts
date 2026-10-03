@@ -147,6 +147,8 @@ describe('rpc timing middleware', () => {
     expect(readout.clientCalls).toBe(150);
     expect(readout.serviceSumMs).toBe(150);
     expect(readout.roundTripSumMs).toBe(300);
+    // Per method too, and cumulative like the totals rather than bounded like the rings.
+    expect(readout.callsByMethod).toEqual({ evicted: 150 });
   });
 
   test('resetStats clears the totals as well as the samples', ({ expect }) => {
