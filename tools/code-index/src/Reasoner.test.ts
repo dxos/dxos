@@ -522,6 +522,113 @@ describe('plugin rules', () => {
   });
 });
 
+describe('surface rules', () => {
+  let root: string;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), 'code-index-surfaces-'));
+    await mkdir(join(root, 'src', 'capabilities'), { recursive: true });
+  });
+
+  afterAll(async () => {
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const sources: Record<string, string> = {
+    'src/meta.ts': [
+      "import * as Plugin from '@dxos/app-framework/Plugin';",
+      "export const meta = Plugin.makeMeta({ key: 'org.example.plugin.demo' });",
+    ].join('\n'),
+    'src/capabilities/react-surface.ts': [
+      "import * as Effect from 'effect/Effect';",
+      "import * as Capabilities from '@dxos/app-framework/Capabilities';",
+      "import * as Capability from '@dxos/app-framework/Capability';",
+      "import { Surface } from '@dxos/app-framework/ui';",
+      "import { Article, Dialog } from '../components';",
+      "const DIALOG = 'dialog';",
+      'export default Capability.makeModule(() =>',
+      '  Effect.succeed(',
+      '    Capability.contribute(Capabilities.ReactSurface, [',
+      "      Surface.create({ id: 'article', component: Article }),",
+      '      Surface.create({ id: DIALOG, component: Dialog }),',
+      '    ]),',
+      '  ),',
+      ');',
+    ].join('\n'),
+    'src/capabilities/index.ts': [
+      "import * as Capability from '@dxos/app-framework/Capability';",
+      "export const ReactSurface = Capability.lazyModule('ReactSurface', { provides: [] }, () => import('./react-surface'));",
+    ].join('\n'),
+    // Reached by no module the plugin adds, so only the one-plugin-per-package fallback places it.
+    'src/capabilities/orphan.ts': [
+      "import * as Capability from '@dxos/app-framework/Capability';",
+      "import { Surface } from '@dxos/app-framework/ui';",
+      "export const Orphan = Capability.makeModule(() => [Surface.create({ id: 'orphan' })]);",
+    ].join('\n'),
+    'src/plugin.ts': [
+      "import * as Plugin from '@dxos/app-framework/Plugin';",
+      "import { ReactSurface } from './capabilities';",
+      "import { meta } from './meta';",
+      'export const DemoPlugin = Plugin.define(meta).pipe(Plugin.addModule(ReactSurface), Plugin.make);',
+    ].join('\n'),
+    // A story's fixture plugin is not one the package ships, so the fallback still finds one plugin.
+    'src/demo.stories.tsx': [
+      "import * as Plugin from '@dxos/app-framework/Plugin';",
+      "import { Surface } from '@dxos/app-framework/ui';",
+      "import { meta } from './meta';",
+      "export const Story = () => Surface.create({ id: 'story' });",
+      'export const StoryPlugin = Plugin.define(meta).pipe(Plugin.make);',
+    ].join('\n'),
+  };
+
+  test('a surface carries its id and the plugin that registers its module', async () => {
+    const resolve = createResolver(root);
+    for (const [path, source] of Object.entries(sources)) {
+      await writeFile(join(root, path), source);
+    }
+    const documents = Object.entries(sources).map(([path, source]) =>
+      analyzeTypeScript({ root, path, source, mtime: 1, resolve, packageOf: () => '@dxos/test' }),
+    );
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        for (const document of documents) {
+          yield* store.putDocument(document);
+        }
+        const [composer] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '40-composer.n3'));
+        yield* store.reason(composer.name, composer.rules, { materialize: true });
+        const [surfaces] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '42-surfaces.n3'));
+        const derived = yield* store.reason(surfaces.name, surfaces.rules);
+        const local = (iri: string) =>
+          decodeURIComponent(
+            /^https:\/\/dxos\.org\/deus\/file\//.test(iri)
+              ? iri.replace(/^https:\/\/dxos\.org\/deus\/file\//, '')
+              : iri.slice(iri.lastIndexOf('#') + 1),
+          );
+        return derived
+          .map((quad) => `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`)
+          .sort();
+      }).pipe(Effect.provide(Store.layer(join(root, 'store'))), Effect.scoped),
+    );
+    expect(facts).toEqual([
+      'src/capabilities/orphan.ts#Orphan/call/Surface.create/0 providedBy src/plugin.ts#DemoPlugin',
+      'src/capabilities/orphan.ts#Orphan/call/Surface.create/0 surfaceId orphan',
+      'src/capabilities/orphan.ts#Orphan/call/Surface.create/0 type Surface',
+      // Reached through the lazy module that loads the file the module is declared in.
+      'src/capabilities/react-surface.ts#default/call/Surface.create/0 providedBy src/plugin.ts#DemoPlugin',
+      'src/capabilities/react-surface.ts#default/call/Surface.create/0 surfaceId article',
+      'src/capabilities/react-surface.ts#default/call/Surface.create/0 type Surface',
+      'src/capabilities/react-surface.ts#default/call/Surface.create/1 providedBy src/plugin.ts#DemoPlugin',
+      // A same-file string constant.
+      'src/capabilities/react-surface.ts#default/call/Surface.create/1 surfaceId dialog',
+      'src/capabilities/react-surface.ts#default/call/Surface.create/1 type Surface',
+      // A story builds its own fixture plugin, so the package's plugin is not its provider.
+      'src/demo.stories.tsx#Story/call/Surface.create/0 surfaceId story',
+      'src/demo.stories.tsx#Story/call/Surface.create/0 type Surface',
+    ]);
+  });
+});
+
 describe('compute rules', () => {
   let root: string;
 

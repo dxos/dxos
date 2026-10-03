@@ -402,6 +402,11 @@ feat F-8: Structure now, meaning later
   req F-8.3: Every stored snippet is valid TypeScript, or absent.
   req F-8.4: IRIs are written as the path or specifier reads (`module:@dxos/compute/Operation#make`);
     only characters an IRI cannot carry, `#`, `?`, `%` and `.`/`..` segments are percent-encoded.
+  req F-8.5: Every call to a resolvable callee that carries a literal or a configuration object, and
+    every call such a call is an argument of, is a `deus:CallSite`, keyed by enclosing symbol, callee
+    as written and ordinal — never by line.
+  req F-8.6: Call-site literals are bounded: 8 positions, 3 object keys deep, 16 array elements,
+    256 characters with no newline, 32 literals per site and 2000 sites per file.
 ```
 
 ```mdl
@@ -528,6 +533,16 @@ test T-3: TypeScript analyzer
     - snippets abbreviate implementation and stay valid TypeScript
     - an anonymous default export is named default
     - a parse failure still yields a file node
+    - call sites carry callee, enclosing symbol, line and flattened literals
+    - nested call sites point at the call they are an argument of
+    - IRIs are keyed by enclosing symbol, callee and ordinal, not line
+    - file-level calls are enclosed by the file
+    - only resolvable callees, and only sites that carry something
+    - curried chains are one site, arguments numbered across the chain
+    - literals are capped in length, count and array size
+    - a file stops at 2000 call sites
+    - a same-file string const is read as its value
+    - a surface carries its id and the plugin that registers its module (src/Reasoner.test.ts)
 ```
 
 ```mdl

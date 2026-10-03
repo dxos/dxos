@@ -43,7 +43,7 @@ export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}
  * dropped and rebuilt on open: the ledger keys commits by graph IRI, so mixing schemes would leave
  * graphs no row points at and rules matching only half the facts.
  */
-export const VERSION = 4;
+export const VERSION = 5;
 
 /** IRI of a file resource; stable across revisions of that file. */
 export const fileIri = (path: string): NamedNode => DataFactory.namedNode(`${FILE_BASE}${escapePath(path)}`);
@@ -84,6 +84,13 @@ export const extensionUseIri = (path: string, term: string): NamedNode =>
 
 /** The block-type definition an Extensions table names by URI (`org.dxos.mdl.op@1.1`). */
 export const extensionIri = (uri: string): NamedNode => DataFactory.namedNode(`${EXTENSION_BASE}${escapePath(uri)}`);
+
+/**
+ * A call inside a declaration, or at file level: `…#default/call/Surface.create/0` — see ONTOLOGY
+ * "CallSite". Symbol names never hold `/`, so it collides with no symbol IRI.
+ */
+export const callSiteIri = (enclosing: string, callee: string, ordinal: number): NamedNode =>
+  DataFactory.namedNode(`${enclosing}${enclosing.includes('#') ? '' : '#'}/call/${escapeFragment(callee)}/${ordinal}`);
 
 /** A glob resolved against the repository root. */
 export const globIri = (glob: string): NamedNode => DataFactory.namedNode(`${GLOB_BASE}${escapePath(glob)}`);
@@ -130,6 +137,7 @@ export const Extension = iri('Extension');
 export const FileGlob = iri('FileGlob');
 export const Type = iri('Type');
 export const TypeProperty = iri('TypeProperty');
+export const CallSite = iri('CallSite');
 
 // File properties.
 export const path = iri('path');
@@ -235,6 +243,14 @@ export const typePartial = iri('typePartial');
 export const optional = iri('optional');
 export const readonly = iri('readonly');
 
+// CallSite properties (`deus:callee`, `deus:calleePath`, `deus:line` and `deus:literal` are shared).
+/** The innermost declaration whose span holds the call, or the File for a top-level statement. */
+export const enclosedBy = iri('enclosedBy');
+/** The call this one is an argument of, through literals and wrappers only. */
+export const argOf = iri('argOf');
+/** Where it sits in that call: `"1"`, or an object path such as `"meta.key"`. */
+export const argKey = iri('argKey');
+
 /** Positional slots are numbered predicates, so a rule matches `deus:typeArg0` directly. */
 export const POSITIONS = 8;
 export const typeArg = (index: number) => iri(`typeArg${index}`);
@@ -328,6 +344,12 @@ export const pluginId = iri('pluginId');
 export const loadsPlugin = iri('loadsPlugin');
 /** A `Package` and each `Plugin` declared in it. */
 export const definesPlugin = iri('definesPlugin');
+/** A `Surface.create` call site (`rules/42-surfaces.n3`). */
+export const Surface = iri('Surface');
+/** A surface's `id` literal. */
+export const surfaceId = iri('surfaceId');
+/** The `Plugin` that registers the module a surface is created in. */
+export const providedBy = iri('providedBy');
 
 export const importsTestFile = iri('importsTestFile');
 
@@ -392,6 +414,7 @@ export const CONTEXT = {
   ExtensionUse: 'deus:ExtensionUse',
   Extension: 'deus:Extension',
   FileGlob: 'deus:FileGlob',
+  CallSite: 'deus:CallSite',
   // File.
   path: 'deus:path',
   language: 'deus:language',
@@ -460,6 +483,10 @@ export const CONTEXT = {
   pending: 'deus:pending',
   callee: id('callee'),
   moduleFile: id('moduleFile'),
+  // CallSite.
+  enclosedBy: id('enclosedBy'),
+  argOf: id('argOf'),
+  argKey: 'deus:argKey',
   // Type terms.
   Type: 'deus:Type',
   TypeProperty: 'deus:TypeProperty',
@@ -524,6 +551,21 @@ export const LiteralArgumentNode = Schema.Struct({
 });
 
 export type LiteralArgumentNode = typeof LiteralArgumentNode.Type;
+
+/** One call to a resolvable callee that carries literals or configuration — see `deus:CallSite`. */
+export const CallSiteNode = Schema.Struct({
+  '@id': Schema.String,
+  '@type': Schema.Literal('CallSite'),
+  'callee': Schema.Array(Schema.String),
+  'calleePath': Schema.optional(Schema.String),
+  'enclosedBy': Schema.String,
+  'line': Schema.Number,
+  'argOf': Schema.optional(Schema.String),
+  'argKey': Schema.optional(Schema.String),
+  'literal': Schema.optional(Schema.Array(Schema.String)),
+});
+
+export type CallSiteNode = typeof CallSiteNode.Type;
 
 /** The document shapes `design/ONTOLOGY.md` fixes, decoded by the RPC layer on the way in. */
 export const SymbolNode = Schema.Struct({
@@ -727,8 +769,9 @@ export const FileDocument = Schema.Struct({
   'frontmatter': Schema.optional(Schema.Array(Schema.String)),
   'usesExtension': Schema.optional(Schema.Array(ExtensionUseNode)),
   'parseError': Schema.optional(Schema.Array(Schema.String)),
-  // Type terms the symbols' `hasType` point at: graph content with no edge from the file itself.
-  '@included': Schema.optional(Schema.Array(Schema.Union([TypeNode, TypePropertyNode, ModuleNode]))),
+  // Type terms the symbols' `hasType` point at, modules and call sites: graph content with no edge
+  // from the file itself.
+  '@included': Schema.optional(Schema.Array(Schema.Union([TypeNode, TypePropertyNode, ModuleNode, CallSiteNode]))),
 });
 
 export type FileDocument = typeof FileDocument.Type;

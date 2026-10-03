@@ -47,6 +47,9 @@ export const TERMS: Readonly<Record<string, Term>> = {
   Symbol: cls('A top-level declaration in a file (function, class, variable, type, …).'),
   Member: cls('A named export of a module as imported: module:effect/Layer#effect, module:@dxos/echo#Type.Obj.'),
   Argument: cls('One reference or string literal a declaration passes into a call (deus:passes, deus:passesLiteral).'),
+  CallSite: cls(
+    'One call to a resolvable callee that carries literals or a configuration object (or is an argument of one): deus:callee, deus:enclosedBy, deus:line, deus:literal "key=value", deus:argOf.',
+  ),
   Module: cls('Where a bare import specifier resolves inside the repository (deus:moduleFile).'),
   SpecBlock: cls('One block of a .mdl document (a fence may hold several).'),
   SpecField: cls('One field or list item of a spec block, nested as written.'),
@@ -88,6 +91,10 @@ export const TERMS: Readonly<Record<string, Term>> = {
     'deus:Symbol',
   ),
   Capability: cls('Constructed by Capability.make / makeSingleton (rules/41-capabilities.n3).', 'deus:Symbol'),
+  Surface: cls(
+    'A Surface.create / createWeb call site from @dxos/app-framework/ui: deus:surfaceId, deus:providedBy (rules/42-surfaces.n3).',
+    'deus:CallSite',
+  ),
   EchoDxnFactory: cls(
     'Rule-internal marker: the DXN.make members whose literals name an ECHO typename (rules/20-echo.n3).',
     'deus:Member',
@@ -182,7 +189,11 @@ export const TERMS: Readonly<Record<string, Term>> = {
     'function, class, variable, type, interface, enum, namespace, reexport (an alias symbol of export { x } from) or unknown.',
   ),
   exported: prop('deus:Symbol', 'xsd:boolean', 'Module-public: the declaration leaves its module.'),
-  line: prop('deus:Symbol | deus:SpecBlock | deus:SpecField', 'xsd:integer', '1-based line of the declaration.'),
+  line: prop(
+    'deus:Symbol | deus:SpecBlock | deus:SpecField | deus:CallSite',
+    'xsd:integer',
+    '1-based line of the declaration (of the call, on a CallSite).',
+  ),
   extends: prop('deus:Symbol', SYMBOL_OR_MEMBER, 'Heritage clause target; when the clause is a call, the callee.'),
   constructedBy: prop(
     'deus:Symbol',
@@ -236,11 +247,11 @@ export const TERMS: Readonly<Record<string, Term>> = {
 
   // Argument.
   callee: prop(
-    'deus:Argument | deus:Type',
+    'deus:Argument | deus:CallSite | deus:Type',
     SYMBOL_OR_MEMBER,
-    "The called function (and a returnOf type term's callee).",
+    "The called function (and a returnOf type term's callee); join rdf:type deus:CallSite to mean a call site.",
   ),
-  calleePath: prop('deus:Argument', 'xsd:string', "Path left over after the callee's symbol IRI."),
+  calleePath: prop('deus:Argument | deus:CallSite', 'xsd:string', "Path left over after the callee's symbol IRI."),
   slot: prop(
     'deus:Argument',
     'xsd:string',
@@ -248,7 +259,24 @@ export const TERMS: Readonly<Record<string, Term>> = {
   ),
   reference: prop('deus:Argument', SYMBOL_OR_MEMBER, 'What the argument references.'),
   referencePath: prop('deus:Argument', 'xsd:string', "Path left over after the reference's symbol IRI."),
-  literal: prop('deus:Argument', 'xsd:string', 'On a deus:passesLiteral argument: the string as written.'),
+  literal: prop(
+    'deus:Argument | deus:CallSite',
+    'xsd:string',
+    'On a CallSite, "key=value" per scalar: "0=Store" positionally, "meta.key=org.dxos.operation.x" under object keys; on a deus:passesLiteral argument, the string as written.',
+  ),
+
+  // CallSite.
+  enclosedBy: prop(
+    'deus:CallSite',
+    'deus:Symbol | deus:File',
+    'The innermost declaration whose span holds the call, or the File for a top-level statement.',
+  ),
+  argOf: prop(
+    'deus:CallSite',
+    'deus:CallSite',
+    'The call this one is an argument of, through literals and wrappers only (never across a function).',
+  ),
+  argKey: prop('deus:CallSite', 'xsd:string', 'Where it sits in that call: "1", or an object path such as "meta.key".'),
 
   // Type terms.
   typeKind: prop(
@@ -353,6 +381,14 @@ export const TERMS: Readonly<Record<string, Term>> = {
   ),
   loadsPlugin: prop('deus:Symbol', 'deus:Symbol', 'A LazyPlugin and the Plugin body it defers loading.'),
   definesPlugin: prop('deus:Package', 'deus:Symbol', 'A Package and each Plugin declared in it.'),
+
+  // Derived: surfaces (rules/42-surfaces.n3).
+  surfaceId: prop('deus:CallSite', 'xsd:string', "A Surface's id literal, e.g. surface.document."),
+  providedBy: prop(
+    'deus:CallSite',
+    'deus:Symbol',
+    "The Plugin registering the module a Surface is created in (through its lazy module, else the package's one plugin).",
+  ),
 
   // Derived: ECHO (rules/20-echo.n3).
   echoTypename: prop('deus:Symbol', 'xsd:string', "An ECHO type's typename: slot 0 of its DXN.make(…)."),

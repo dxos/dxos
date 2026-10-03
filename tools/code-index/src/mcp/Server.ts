@@ -230,7 +230,13 @@ export const Query = readOnly(
       'prefixes (see the server instructions) are declared automatically when a query omits them, and ' +
       '`warnings` names any deus: term the vocabulary lacks. Call `vocabulary` first for the classes and ' +
       'predicates. Example — the operations of a package and their keys: SELECT ?op ?key WHERE { ?op a ' +
-      'deus:Operation ; deus:operationKey ?key ; ^deus:declares/deus:inPackage pkg:@dxos/plugin-markdown }',
+      'deus:Operation ; deus:operationKey ?key ; ^deus:declares/deus:inPackage pkg:@dxos/plugin-markdown }. ' +
+      "Operation X's key, and where its definition is: SELECT ?key ?path ?line WHERE { ?op a deus:Operation ; " +
+      'deus:name "Create" ; deus:operationKey ?key ; ^deus:declares/deus:path ?path . ?c deus:enclosedBy ?op ; a ' +
+      'deus:CallSite ; deus:line ?line FILTER NOT EXISTS { ?c deus:argOf ?outer } }. The surfaces plugin X ' +
+      'registers: SELECT ?id ?path ?line WHERE { ?plugin a deus:Plugin ; deus:pluginId "org.dxos.plugin.markdown" . ' +
+      '?surface deus:providedBy ?plugin ; deus:line ?line ; deus:enclosedBy/^deus:declares/deus:path ?path ' +
+      'OPTIONAL { ?surface deus:surfaceId ?id } }',
     parameters: Schema.Struct({
       sparql: Schema.String.annotate({ description: 'A SPARQL SELECT query.' }),
       limit: count(`Maximum rows to return (default ${QUERY_DEFAULT_LIMIT}, max ${QUERY_MAX_LIMIT}).`),
