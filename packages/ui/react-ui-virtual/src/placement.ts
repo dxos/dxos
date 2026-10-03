@@ -87,6 +87,7 @@ export class Placement {
   #extents: Extents;
   #viewport: number;
   #overscan: number;
+  #budget = Infinity;
   #reserve: number;
 
   /** Measured extents by message id, so that reordering the model cannot invalidate them. */
@@ -141,6 +142,15 @@ export class Placement {
   /** Narrowed by the binding while a jump settles, so the rows the reader can see mount first. */
   setOverscan(overscan: number): void {
     this.#overscan = overscan;
+  }
+
+  get budget(): number {
+    return this.#budget;
+  }
+
+  /** At most this many rows mounted from the first visible one down; unbounded unless a jump is settling. */
+  setBudget(budget: number): void {
+    this.#budget = budget;
   }
 
   /**
@@ -393,7 +403,7 @@ export class Placement {
 
     return {
       first: Math.max(0, first - this.#overscan),
-      last: Math.min(this.#count - 1, last + this.#overscan),
+      last: Math.min(this.#count - 1, last + this.#overscan, first + this.#budget - 1),
       visible: { first, last },
     };
   }

@@ -10,8 +10,8 @@
     "unit": "ms"
   },
   "wall > scroll-thread": {
-    "target": 4100,
-    "limit": 6150,
+    "target": 2600,
+    "limit": 3900,
     "unit": "ms"
   },
   "cpu > boot": {
@@ -25,8 +25,8 @@
     "unit": "ms"
   },
   "cpu > scroll-thread": {
-    "target": 4900,
-    "limit": 7350,
+    "target": 3100,
+    "limit": 4650,
     "unit": "ms"
   },
   "cpu > idle": {
@@ -57,8 +57,8 @@
     "unit": "bytes"
   },
   "run > worst tab lag p95": {
-    "target": 1500,
-    "limit": 2250,
+    "target": 250,
+    "limit": 375,
     "unit": "ms"
   },
   "run > worst worker lag p95": {
@@ -72,8 +72,8 @@
     "unit": "bytes"
   },
   "run > total blocking time": {
-    "target": 17000,
-    "limit": 25500,
+    "target": 7000,
+    "limit": 10500,
     "unit": "ms"
   }
 }
