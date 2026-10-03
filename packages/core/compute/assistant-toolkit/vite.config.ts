@@ -6,6 +6,7 @@ import { defineConfig } from '../../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/DelegationStrategy': 'src/DelegationStrategy.ts',
     'ns/WebSearchSkill': 'src/skills/websearch/WebSearchSkill.ts',
     'ns/SlashCommand': 'src/SlashCommand.ts',
     'ns/SkillManagerSkill': 'src/skills/skill-manager/SkillManagerSkill.ts',

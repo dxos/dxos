@@ -21,7 +21,7 @@ import { trim } from '@dxos/util';
 
 import { ToolkitError } from '../errors.ts';
 import { RunInstructions } from '../operations/index.ts';
-import { DelegationSkill } from '../skills/index.ts';
+import * as DelegationSkill from '../skills/delegation/DelegationSkill.ts';
 
 /**
  * Normalizes an LLM-reported artifact reference (bare entity id or full ECHO URI) to a
