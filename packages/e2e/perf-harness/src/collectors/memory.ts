@@ -8,6 +8,9 @@ import { type FootprintReading, type HeapReading } from '../types.ts';
 /** Ample for a full GC of a large realm; a shared worker never answers the call at all. */
 const GC_TIMEOUT_MS = 10_000;
 
+/** The reads after the GC answer in milliseconds; a target that stops answering must not hang the stage. */
+const READ_TIMEOUT_MS = 10_000;
+
 /**
  * Repeated collection with a turn between passes.
  *
@@ -42,10 +45,11 @@ const WASM_EXPRESSION = `(() => {
 type WasmReading = { bytes: number; sharedBytes: number; instances: number; byModule: Record<string, number> };
 
 const readWasmMemory = async (target: Attached): Promise<WasmReading | undefined> => {
-  const response = await target.cdp.trySend<{ result?: { value?: unknown } }>('Runtime.evaluate', {
-    expression: WASM_EXPRESSION,
-    returnByValue: true,
-  });
+  const response = await target.cdp.trySend<{ result?: { value?: unknown } }>(
+    'Runtime.evaluate',
+    { expression: WASM_EXPRESSION, returnByValue: true },
+    { timeoutMs: READ_TIMEOUT_MS },
+  );
   const serialized = response?.result?.value;
   if (typeof serialized !== 'string') {
     return undefined;
@@ -87,7 +91,7 @@ export const readHeap = async (
       totalSize: number;
       backingStorageSize?: number;
       embedderHeapUsedSize?: number;
-    }>('Runtime.getHeapUsage');
+    }>('Runtime.getHeapUsage', {}, { timeoutMs: READ_TIMEOUT_MS });
     if (!usage) {
       continue;
     }
