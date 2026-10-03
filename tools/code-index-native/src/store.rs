@@ -414,6 +414,23 @@ impl NativeStore {
         Ok(count)
     }
 
+    /// `put_document` for quads already in N-Quads form (their graph is replaced by `graph`).
+    pub fn put_document_nquads(&self, graph: &str, drop: &[String], nquads: &str) -> Result<usize> {
+        let graph = NamedNode::new(graph).map_err(|error| Error(error.to_string()))?;
+        let quads: Vec<Quad> = Self::parse_nquads(nquads)?
+            .into_iter()
+            .map(|quad| Quad::new(quad.subject, quad.predicate, quad.object, graph.clone()))
+            .collect();
+        let count = quads.len();
+        let mut graphs: Vec<GraphName> = drop
+            .iter()
+            .map(|name| NamedNode::new_unchecked(name.as_str()).into())
+            .collect();
+        graphs.push(graph.into());
+        self.swap(&graphs, quads)?;
+        Ok(count)
+    }
+
     pub fn drop_graphs(&self, graphs: &[String]) -> Result<()> {
         let graphs: Vec<GraphName> = graphs
             .iter()

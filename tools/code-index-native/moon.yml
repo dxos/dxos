@@ -25,3 +25,9 @@ tasks:
       - /tools/code-index/rules/*.n3
     options:
       runInCI: false
+  # The synthetic engine benchmark; CODE_INDEX_BENCH_FILES scales it.
+  cargo-bench:
+    command: cargo bench
+    options:
+      cache: false
+      runInCI: false

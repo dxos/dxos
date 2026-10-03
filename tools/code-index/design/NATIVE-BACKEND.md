@@ -160,4 +160,19 @@ left to the reviewers.
 
 ## Benchmarks
 
-See the PR body; reproduced with `tools/code-index-native/scripts/bench.sh`.
+Two, both rerunnable, both local-only (no Rust in CI):
+
+- `moon run code-index-native:cargo-bench` — a synthetic corpus shaped like a real index (exported
+  symbols with references, layers over service tags, operations and handlers, plugins adding
+  modules through barrels, namespace barrels, test imports), so every shipped rule file has work,
+  including the negation. Times cold commit, full reasoning, a journalled one-file and ten-file
+  commit with incremental reasoning, and the store size. It asserts incremental equals
+  recomputation, so a fast wrong answer fails rather than reports. `CODE_INDEX_BENCH_FILES` scales
+  it (default 5000).
+- `moon run code-index:bench` (`bun scripts/bench.ts`) — this repository through the CLI, per
+  backend: cold index into an empty store, then a warm pass after touching one file (content
+  unchanged, mtime restored), then the store size. Prints the markdown table the PR carries.
+
+Conclusions were checked against EYE on this repository: every rule file's count matches except
+`60-canonical` (files added since the baseline) and `90-aliases`, where 1,310 of 1,373 native
+conclusions restate a premise (the documented difference above) and the remaining 63 are EYE's 63.

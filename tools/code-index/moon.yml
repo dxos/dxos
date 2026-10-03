@@ -19,3 +19,11 @@ tasks:
       - code-index-native:cargo-build
     options:
       runInCI: false
+  # Cold index, warm one-file reindex and store size on this repository, for each backend.
+  bench:
+    command: bun scripts/bench.ts
+    deps:
+      - code-index-native:cargo-build
+    options:
+      cache: false
+      runInCI: false
