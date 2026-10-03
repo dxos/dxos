@@ -61,6 +61,12 @@ export type FileState = FileRecord & {
   readonly graph: string;
 };
 
+/** A file whose mtime moved while its content did not. */
+export type FileTouch = {
+  readonly path: string;
+  readonly mtime: number;
+};
+
 export type FileFilter = {
   readonly language?: string;
 };
@@ -82,8 +88,19 @@ export type ReasonOutcome = Graph.ReasonOutcome;
 
 export type Backend = 'js' | 'native';
 
-/** `CODE_INDEX_BACKEND=native` selects the native backend wherever a store is opened without one. */
-export const defaultBackend = (): Backend => (process.env.CODE_INDEX_BACKEND === 'native' ? 'native' : 'js');
+const isBackend = (value: string | undefined): value is Backend => value === 'js' || value === 'native';
+
+/** The backend `CODE_INDEX_BACKEND` names, if it names one. */
+const envBackend = (): Backend | undefined => {
+  const value = process.env.CODE_INDEX_BACKEND;
+  return isBackend(value) ? value : undefined;
+};
+
+/**
+ * What a new store is written with when not given a backend: `CODE_INDEX_BACKEND`, else `js`. An
+ * existing store opened without one keeps the backend it was written with.
+ */
+export const defaultBackend = (): Backend => envBackend() ?? 'js';
 
 export type LayerOptions = {
   /**
@@ -120,6 +137,12 @@ export interface Api {
    * costs at most the batch in flight.
    */
   readonly putDocuments: (documents: readonly EncodedDocument[]) => Effect.Effect<void, StoreError>;
+  /**
+   * Record new mtimes for files whose content is unchanged: the ledger row and the `deus:mtime` fact
+   * move, the rest of the graph stays. The generation does not advance, since no rule reads mtimes,
+   * so a touch leaves the reasoners' conclusions current.
+   */
+  readonly touchFiles: (touches: readonly FileTouch[]) => Effect.Effect<void, StoreError>;
   /** Drop a file's graph and ledger row (the file is gone from the working tree). */
   readonly removeFile: (path: string) => Effect.Effect<void, StoreError>;
   /** Discard graphs left behind by an interrupted commit. Runs automatically when the store opens. */
@@ -190,7 +213,12 @@ const fail = (message: string) => (cause: unknown) => {
 
 const FILE_COLUMNS = 'path, language, size, hash, mtime';
 
+const XSD_INTEGER = 'http://www.w3.org/2001/XMLSchema#integer';
+
 const VERSION_KEY = 'ontologyVersion';
+
+/** The backend whose graphs the ledger describes; recorded with {@link VERSION_KEY}. */
+const BACKEND_KEY = 'backend';
 
 /** Advanced by every write, before it lands, so a reasoning pass can tell its premises moved since. */
 const GENERATION_KEY = 'generation';
@@ -207,19 +235,29 @@ const DERIVED_GRAPHS_KEY = 'derivedGraphs';
 
 const DerivedGraphs = Schema.fromJsonString(Schema.Array(Schema.String));
 
-/**
- * Empty a store written under another {@link Ontology.VERSION} before the graph opens, so the next
- * pass reindexes everything. The version is recorded last: a crash part-way leaves it unset and
- * the next open simply resets again.
- */
-const resetIfStale = (dir: string): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
+/** The ontology version and backend the store was last reset under; both absent before its first open. */
+const readStamp = (): Effect.Effect<{ version?: string; backend?: string }, StoreError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
-    const [row] = yield* sql<{ value: string }>`SELECT value FROM meta WHERE key = ${VERSION_KEY}`.pipe(
-      Effect.mapError(fail('Failed to read store version')),
-    );
+    const rows = yield* sql<{ key: string; value: string }>`SELECT key, value FROM meta
+        WHERE key IN (${VERSION_KEY}, ${BACKEND_KEY})`.pipe(Effect.mapError(fail('Failed to read store version')));
+    const value = (key: string) => rows.find((row) => row.key === key)?.value;
+    return { version: value(VERSION_KEY), backend: value(BACKEND_KEY) };
+  });
+
+/**
+ * Empty a store written under another {@link Ontology.VERSION} or by the other backend before the
+ * graph opens, so the next pass reindexes everything: the ledger's mtimes and the reasoning marks
+ * describe the graphs of whoever wrote them. A store without a recorded backend predates the stamp
+ * and resets too. Both are recorded last, in one statement: a crash part-way leaves them unset and
+ * the next open simply resets again.
+ */
+const resetIfStale = (dir: string, backend: Backend): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const stamp = yield* readStamp();
     const version = String(Ontology.VERSION);
-    if (row?.value === version) {
+    if (stamp.version === version && stamp.backend === backend) {
       return;
     }
     // Both backends' directories go, so switching backend after an upgrade cannot revive old graphs.
@@ -231,36 +269,50 @@ const resetIfStale = (dir: string): Effect.Effect<void, StoreError, SqlClient.Sq
     }
     yield* sql`DELETE FROM files`.pipe(Effect.mapError(fail('Failed to drop stale ledger')));
     yield* sql`DELETE FROM meta`.pipe(Effect.mapError(fail('Failed to drop stale meta')));
-    yield* sql`INSERT INTO meta (key, value) VALUES (${VERSION_KEY}, ${version})`.pipe(
+    yield* sql`INSERT INTO meta (key, value) VALUES (${VERSION_KEY}, ${version}), (${BACKEND_KEY}, ${backend})`.pipe(
       Effect.mapError(fail('Failed to record store version')),
     );
   });
 
-/** A reader cannot reset a stale store, so it refuses one rather than answering from old graphs. */
-const requireCurrent = (dir: string): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
+/**
+ * A reader cannot reset a stale store, so it refuses one rather than answering from old graphs, and
+ * returns the backend to open: the recorded one, which an explicit `requested` must match.
+ */
+const requireCurrent = (
+  dir: string,
+  requested: Backend | undefined,
+): Effect.Effect<Backend, StoreError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
-    const sql = yield* SqlClient.SqlClient;
-    const [row] = yield* sql<{ value: string }>`SELECT value FROM meta WHERE key = ${VERSION_KEY}`.pipe(
-      Effect.mapError(fail('Failed to read store version')),
-    );
-    if (row?.value !== String(Ontology.VERSION)) {
-      return yield* Effect.fail(
-        new StoreError({
-          message: `The store at ${dir} was written by ontology version ${row?.value ?? 'unknown'}, not ${Ontology.VERSION}; run \`code-index index\` to rebuild it.`,
-        }),
+    const stamp = yield* readStamp();
+    const rebuild = 'run `code-index index` to rebuild it';
+    const refuse = (message: string) => Effect.fail(new StoreError({ message: `The store at ${dir} ${message}.` }));
+    if (stamp.version !== String(Ontology.VERSION)) {
+      return yield* refuse(
+        `was written by ontology version ${stamp.version ?? 'unknown'}, not ${Ontology.VERSION}; ${rebuild}`,
       );
     }
+    if (!isBackend(stamp.backend)) {
+      return yield* refuse(`does not record which backend wrote it; ${rebuild}`);
+    }
+    if (requested !== undefined && requested !== stamp.backend) {
+      return yield* refuse(
+        `was written by the ${stamp.backend} backend, not ${requested}; read it with CODE_INDEX_BACKEND=${stamp.backend}, or ${rebuild} with ${requested}`,
+      );
+    }
+    return stamp.backend;
   });
 
 const make = (
   dir: string,
-  backend: Backend,
+  requested: Backend | undefined,
   readOnly: boolean,
 ): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
+    // Settled before the graph opens, so a reader never creates the other backend's directory.
+    let backend: Backend;
     if (readOnly) {
-      yield* requireCurrent(dir);
+      backend = yield* requireCurrent(dir, requested);
     } else {
       // WAL with FULL fsyncs every commit; NORMAL fsyncs at checkpoints and still survives a process
       // crash at any point. Only an OS crash can lose the last commits, and the quad stores (RocksDB,
@@ -270,7 +322,10 @@ const make = (
         // A schema the store cannot create is a construction failure, not something a caller recovers from.
         Effect.orDie,
       );
-      yield* resetIfStale(dir);
+      // Without an explicit backend a writer keeps the recorded one: `code-index query` must not wipe it.
+      const recorded = (yield* readStamp()).backend;
+      backend = requested ?? (isBackend(recorded) ? recorded : 'js');
+      yield* resetIfStale(dir, backend);
     }
 
     const graphs: Graph.Graph<StoreError> = yield* backend === 'native'
@@ -450,6 +505,48 @@ const make = (
             }),
           );
 
+    const touchFiles: Api['touchFiles'] = (touches) =>
+      touches.length === 0
+        ? Effect.void
+        : exclusive(
+            Effect.gen(function* () {
+              const rows = yield* Effect.forEach(touches, ({ path, mtime }) =>
+                Effect.map(
+                  sql<{ graph: string }>`SELECT graph FROM files WHERE path = ${path} AND pending_graph IS NULL`.pipe(
+                    Effect.mapError(fail('Failed to read ledger')),
+                  ),
+                  ([row]) => (row ? [{ path, mtime, graph: DataFactory.namedNode(row.graph) }] : []),
+                ),
+              ).pipe(Effect.map((found) => found.flat()));
+              const stale = (yield* Effect.forEach(rows, ({ path, graph }) =>
+                match(Ontology.fileIri(path), Ontology.mtime, undefined, graph),
+              )).flat();
+              // The fact moves before the row: a crash between them leaves the old mtime in the ledger,
+              // so the next pass sees the touch again and repeats it.
+              yield* graphs.delQuads(stale);
+              yield* graphs.putQuads(
+                rows.map(({ path, mtime, graph }) =>
+                  DataFactory.quad(
+                    Ontology.fileIri(path),
+                    Ontology.mtime,
+                    DataFactory.literal(String(mtime), DataFactory.namedNode(XSD_INTEGER)),
+                    graph,
+                  ),
+                ),
+              );
+              yield* transaction(
+                Effect.forEach(
+                  rows,
+                  ({ path, mtime }) =>
+                    sql`UPDATE files SET mtime = ${mtime} WHERE path = ${path}`.pipe(
+                      Effect.mapError(fail('Failed to record mtime')),
+                    ),
+                  { discard: true },
+                ),
+              );
+            }),
+          );
+
     const removeFile: Api['removeFile'] = (path) =>
       exclusive(
         Effect.gen(function* () {
@@ -516,6 +613,7 @@ const make = (
 
       putDocument: (document) => putDocuments([encodeDocument(document)]),
       putDocuments,
+      touchFiles,
       removeFile,
       reconcile,
       putQuads: (quads) => exclusive(Effect.andThen(advance(), graphs.putQuads(quads))),
@@ -638,11 +736,13 @@ const make = (
 
 /**
  * Opens (creating if absent, unless `readOnly`) the store rooted at `dir`; each database is a file
- * or directory inside it. Scoped — both databases close when the enclosing scope ends.
+ * or directory inside it. Scoped — both databases close when the enclosing scope ends. `backend`
+ * defaults to `CODE_INDEX_BACKEND`; with neither, the store keeps the backend it records (`js` if new).
+ * An explicit backend the store was not written with resets a writer's store and fails a reader.
  */
 export const layer = (
   dir: string,
-  backend: Backend = defaultBackend(),
+  backend: Backend | undefined = envBackend(),
   options: LayerOptions = {},
 ): Layer.Layer<Store, StoreError> => {
   const readOnly = options.readOnly ?? false;

@@ -45,6 +45,9 @@ const LANGUAGES: Record<string, string> = {
 
 export const language = (path: string): string => LANGUAGES[extname(path)] ?? 'other';
 
+/** The `deus:hash` of a file's text: what tells a touched file from an edited one. */
+export const contentHash = (source: string): string => createHash('sha256').update(source).digest('hex');
+
 const TEST_FILE = /\.(test|spec)\.[cm]?[jt]sx?$/;
 
 /** The bare `File` node: what a file is before any analyzer has looked inside it. */
@@ -58,7 +61,7 @@ export const fileNode = (context: AnalyzeContext): Ontology.FileDocument => {
     'language': language(context.path),
     'size': Buffer.byteLength(context.source),
     'mtime': context.mtime,
-    'hash': createHash('sha256').update(context.source).digest('hex'),
+    'hash': contentHash(context.source),
     ...(packageName ? { inPackage: Ontology.packageIri(packageName).value } : {}),
     ...(TEST_FILE.test(context.path) ? { testFile: true } : {}),
     'imports': [],

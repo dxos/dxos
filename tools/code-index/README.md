@@ -77,7 +77,8 @@ island — is transformed from the working tree with nothing to rebuild first.
 
 `code-index mcp` serves the index to an MCP client (Claude Code, Claude Desktop) over stdio. It is
 read-only: it opens an existing store, never indexes or writes, and takes the same `--root` /
-`--store` flags and `CODE_INDEX_BACKEND` as every other command. Index first, then register it:
+`--store` flags as every other command. A store records the backend that wrote it, which the server
+adopts; a `CODE_INDEX_BACKEND` naming the other one is refused. Index first, then register it:
 
 ```bash
 bun tools/code-index/bin/code-index.ts index
