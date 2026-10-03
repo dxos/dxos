@@ -21,7 +21,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Button } from '../Button/index.ts';
-import { Container } from '../Container/index.ts';
+import { Container, DefaultGutterProvider } from '../Container/index.ts';
 import { Group } from '../Group/index.ts';
 import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
 import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
@@ -259,7 +259,10 @@ type DialogBodyProps = ThemedClassName<Pick<ScrollAreaRootProps, 'mode' | 'width
 const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ classNames, children, ...props }, forwardedRef) => (
   <ScrollArea.Root {...props} classNames={mx(recipes.dialogBody(), classNames)} ref={forwardedRef}>
     <ScrollArea.Viewport asChild>
-      <Container gutter='md'>{children}</Container>
+      <Container gutter='md'>
+        {/* Its direct content (a form's Viewport) joins these rails rather than nesting a second inset. */}
+        <DefaultGutterProvider gutter='inherit'>{children}</DefaultGutterProvider>
+      </Container>
     </ScrollArea.Viewport>
   </ScrollArea.Root>
 ));
