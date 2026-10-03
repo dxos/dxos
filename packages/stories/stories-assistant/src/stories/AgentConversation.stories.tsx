@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { waitFor, within } from 'storybook/test';
 
 import * as Chat from '@dxos/assistant/Chat';
-import { type Database, Filter, Obj, Query } from '@dxos/echo';
+import { type Database, Filter, Query } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
+import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as FactEntry from '@dxos/plugin-agent/FactEntry';
 import * as Goal from '@dxos/plugin-agent/Goal';
 import * as Memory from '@dxos/plugin-agent/Memory';
@@ -88,8 +89,12 @@ let storyDb: Database.Database | undefined;
 
 /** The agent's messages in a participant's chat, oldest first. */
 const assistantMessages = async (db: Database.Database, participant: Participant): Promise<Message.Message[]> => {
+  // By participant rather than URI: setup records participant chats by a ref URI whose form differs from `Obj.getURI`.
+  const person = (await db.query(Filter.type(Person.Person)).run()).find(
+    ({ preferredName }) => preferredName === participant,
+  );
   const chat = (await db.query(Filter.type(Chat.Chat)).run()).find(
-    (chat) => Obj.getURI(chat) === refs.chats[participant],
+    (chat) => person !== undefined && ChatParticipant.get(chat) === person.id,
   );
   const feed = await chat?.feed.load();
   if (!feed) {
@@ -100,8 +105,8 @@ const assistantMessages = async (db: Database.Database, participant: Participant
 };
 
 /**
- * Waits until the agent has answered in `participant`'s chat: more assistant messages than `before`,
- * ending in text, and nothing new for {@link SETTLE_MS}.
+ * Waits until the agent has answered in `participant`'s chat: a new assistant message with text since
+ * `before`, and nothing new for {@link SETTLE_MS}.
  */
 const waitForReply = async (db: Database.Database, participant: Participant, before: number) => {
   let count = -1;
@@ -113,8 +118,8 @@ const waitForReply = async (db: Database.Database, participant: Participant, bef
         count = messages.length;
         changedAt = Date.now();
       }
-      const last = messages.at(-1);
-      const answered = count > before && last?.blocks.some((block) => block._tag === 'text');
+      // A turn ends with a stats message that has no text, so any new message with text counts as the answer.
+      const answered = messages.slice(before).some(({ blocks }) => blocks.some((block) => block._tag === 'text'));
       if (!answered || Date.now() - changedAt < SETTLE_MS) {
         throw new Error(`${participant} is still waiting for Kai (${count - before} new messages).`);
       }
