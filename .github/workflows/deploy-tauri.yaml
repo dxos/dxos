@@ -576,8 +576,15 @@ jobs:
           identity="$(security find-identity -v -p codesigning "$keychain" | awk '/Apple Distribution/ { print $2; exit }')"
           test -n "$identity" || { echo "::error::No Apple Distribution identity in IOS_CERTIFICATE"; exit 1; }
 
+          # The build leaves app_iOS.entitlements empty on this runner; sign with the committed declaration.
+          echo "::group::Entitlements on disk after the build"
+          cat app_iOS/app_iOS.entitlements
+          git status --short .
+          echo "::endgroup::"
+          git show HEAD:./app_iOS/app_iOS.entitlements > "$work/declared.plist"
+
           codesign -d --entitlements - --xml "$app" > "$work/entitlements.plist"
-          python3 - "$work/entitlements.plist" app_iOS/app_iOS.entitlements <<'EOF'
+          python3 - "$work/entitlements.plist" "$work/declared.plist" <<'EOF'
           import plistlib, sys
           with open(sys.argv[1], 'rb') as signed, open(sys.argv[2], 'rb') as declared:
               entitlements = plistlib.load(signed)
