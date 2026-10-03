@@ -4,8 +4,8 @@
 # provided and piped layers, and layers whose type is only written in an annotation.
 #
 # A type names a service as its file imported it (`file:<barrel>#Store`, `module:@dxos/x#Store`);
-# `deus:resolvesTo`, concluded by `rules/10-effect.n3` for exactly these names, gives the
-# declaration, which is what is stated when there is one.
+# `deus:resolvesTo`, from the `resolve-refs` pass and `rules/10-effect.n3`, gives the declaration,
+# which is what is stated when there is one.
 
 @prefix deus: <https://dxos.org/vocab/deus#>.
 @prefix rule: <https://dxos.org/vocab/deus/rule#>.

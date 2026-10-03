@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Tool from 'effect/ai/Tool';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as Schema from 'effect/Schema';
@@ -17,7 +18,7 @@ import { EffectEx } from '@dxos/effect';
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
 import * as Summary from '../Summary.ts';
-import { indexFixture, writeFixture } from './fixture.ts';
+import { indexFixture, indexUsageFixture, writeFixture, writeUsageFixture } from './fixture.ts';
 import * as Server from './Server.ts';
 
 describe('mcp Server', () => {
@@ -336,5 +337,98 @@ describe('mcp Server', () => {
     } finally {
       await rm(empty, { recursive: true, force: true });
     }
+  });
+});
+
+describe('mcp usages', () => {
+  let root: string;
+  let scope: Scope.Closeable;
+  let toolkit: Effect.Success<typeof Server.CodeIndexToolkit>;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), 'code-index-usages-'));
+    const dir = join(root, 'node_modules', '.code-index');
+    await writeUsageFixture(root);
+    await indexUsageFixture(root, dir);
+    scope = await EffectEx.runPromise(Scope.make());
+    toolkit = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Server.open(dir);
+        return yield* Effect.provide(Server.CodeIndexToolkit, Server.CodeIndexToolkit.toLayer(Server.handlers(store)));
+      }).pipe(Scope.provide(scope)),
+    );
+  }, 60_000);
+
+  afterAll(async () => {
+    await EffectEx.runPromise(Scope.close(scope, Exit.void));
+    await rm(root, { recursive: true, force: true });
+  });
+
+  const usages = (parameters: Tool.Parameters<typeof Server.Usages>) =>
+    EffectEx.runPromise(
+      Effect.flatMap(toolkit.handle('usages', parameters), Stream.runCollect).pipe(
+        Effect.flatMap((results) =>
+          Schema.decodeUnknownEffect(Server.Usages.successSchema)(results[results.length - 1].result),
+        ),
+      ),
+    );
+
+  const LEGACY = 'packages/lib/src/impl.ts#legacy';
+
+  test('uses through a star barrel, an alias and a relative import are grouped by package and role', async () => {
+    const result = await usages({ symbol: LEGACY });
+    expect(result.declaration).toBe(Ontology.symbolIri('packages/lib/src/impl.ts', 'legacy').value);
+    expect(result.packages).toEqual([
+      {
+        package: '@test/app',
+        counts: { impl: 1, test: 1, story: 1 },
+        files: [
+          // Through the alias `old`.
+          { path: 'packages/app/src/use.stories.tsx', role: 'story', symbols: ['Story'], via: 'barrel' },
+          { path: 'packages/app/src/use.test.ts', role: 'test', symbols: ['tested'], via: 'barrel' },
+          // One symbol per use, however many twins of the import it depends on.
+          { path: 'packages/app/src/use.ts', role: 'impl', symbols: ['typed', 'usesLegacy'], via: 'barrel' },
+        ],
+      },
+      {
+        package: '@test/lib',
+        counts: { impl: 1, test: 0, story: 0 },
+        files: [{ path: 'packages/lib/src/direct.ts', role: 'impl', symbols: ['local'], via: 'direct' }],
+      },
+    ]);
+    expect(result.reexportedBy).toEqual(['packages/lib/src/index.ts']);
+    expect(result.total).toEqual({ symbols: 5, files: 4, packages: 2, impl: 2, test: 1, story: 1 });
+    expect(result.truncated).toBe(false);
+  });
+
+  test('kind and includeTests narrow the uses, and the totals follow', async () => {
+    const api = await usages({ symbol: LEGACY, kind: 'api' });
+    // Only `typed` names it in a signature.
+    expect(api.packages.flatMap((group) => group.files)).toEqual([
+      { path: 'packages/app/src/use.ts', role: 'impl', symbols: ['typed'], via: 'barrel' },
+    ]);
+    const noTests = await usages({ symbol: LEGACY, includeTests: false });
+    expect(noTests.total).toMatchObject({ test: 0 });
+    const capped = await usages({ symbol: LEGACY, limit: 1 });
+    expect(capped.truncated).toBe(true);
+    expect(capped.total.files).toBe((await usages({ symbol: LEGACY })).total.files);
+  });
+
+  test('a namespace member is found through export * as N', async () => {
+    const result = await usages({ symbol: 'packages/lib/src/order.ts#natural' });
+    expect(result.packages.flatMap((group) => group.files)).toEqual([]);
+  });
+
+  test('an alias is followed to its declaration, and an ambiguous name lists candidates', async () => {
+    const alias = await usages({ symbol: 'packages/lib/src/index.ts#old' });
+    expect(alias.declaration).toBe(Ontology.symbolIri('packages/lib/src/impl.ts', 'legacy').value);
+    const ambiguous = await usages({ symbol: 'legacy' });
+    expect(ambiguous.declaration).toBeUndefined();
+    expect(ambiguous.candidates.map((candidate) => candidate.iri).sort()).toEqual([
+      Ontology.symbolIri('packages/app/src/other.ts', 'legacy').value,
+      Ontology.symbolIri('packages/lib/src/impl.ts', 'legacy').value,
+    ]);
+    const missing = await usages({ symbol: 'no-such-thing' });
+    expect(missing.hint).toContain('Accepted forms');
   });
 });

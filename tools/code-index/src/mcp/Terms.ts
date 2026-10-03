@@ -409,10 +409,19 @@ export const TERMS: Readonly<Record<string, Term>> = {
     SYMBOL_OR_MEMBER,
     "A layer's RIn: each service its inferred Layer type still needs.",
   ),
+
+  // Derived: references (the resolve-refs pass, rules/67-usage.n3).
   resolvesTo: prop(
     SYMBOL_OR_MEMBER,
     'deus:Symbol',
-    'A reference IRI as an importer wrote it and the declaration it denotes; only for service keys.',
+    'A reference IRI as an importer wrote it (through export *, aliases, namespaces, bare specifiers) and the ' +
+      'declaration it denotes (the resolve-refs pass). Users of D: ?u deus:implDependsOn|deus:apiDependsOn ?r . ' +
+      '?r deus:resolvesTo? D.',
+  ),
+  usesDeprecated: prop(
+    'deus:Symbol',
+    'deus:Symbol',
+    'A symbol depending on a deprecated declaration, directly or through a barrel (rules/67-usage.n3).',
   ),
 
   // Derived: packages, names and examples.
