@@ -1,0 +1,11 @@
+layer: tool
+language: typescript
+tags:
+  - ts-compile
+  - ts-test
+
+tasks:
+  test:
+    options:
+      mergeOutputs: replace
+    outputs: []

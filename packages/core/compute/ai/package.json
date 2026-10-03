@@ -26,6 +26,11 @@
       "types": "./dist/types/src/resolvers/index.d.ts",
       "import": "./dist/lib/resolvers.mjs"
     },
+    "./chat-completions": {
+      "source": "./src/resolvers/ChatCompletionsAdapter.ts",
+      "types": "./dist/types/src/resolvers/ChatCompletionsAdapter.d.ts",
+      "import": "./dist/lib/chat-completions.mjs"
+    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
