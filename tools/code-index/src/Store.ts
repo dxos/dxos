@@ -22,6 +22,7 @@ import { join } from 'node:path';
 
 import type * as Graph from './internal/graph.ts';
 import * as Native from './internal/native.ts';
+import { encodeDocument } from './internal/ntriples.ts';
 import * as Quadstore from './internal/quadstore.ts';
 import { clientLayer } from './internal/sqlite.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
@@ -48,6 +49,11 @@ export type FileRecord = {
   readonly size: number;
   readonly hash: string;
   readonly mtime: number;
+};
+
+/** A file's ledger record and its document as N-Triples — what a worker sends back. */
+export type EncodedDocument = FileRecord & {
+  readonly triples: string;
 };
 
 /** What the ledger knows about a file — the incremental-indexing comparison key. */
@@ -104,10 +110,11 @@ export interface Api {
    */
   readonly putDocument: (document: Ontology.FileDocument) => Effect.Effect<void, StoreError>;
   /**
-   * {@link Api.putDocument} for a batch: the ledger is announced and committed in one SQLite
-   * transaction each, around the per-file graph swaps, so a crash costs at most the batch in flight.
+   * {@link Api.putDocument} for a batch already encoded (by a worker): the ledger is announced and
+   * committed in one SQLite transaction each, around one graph swap of the whole batch, so a crash
+   * costs at most the batch in flight.
    */
-  readonly putDocuments: (documents: readonly Ontology.FileDocument[]) => Effect.Effect<void, StoreError>;
+  readonly putDocuments: (documents: readonly EncodedDocument[]) => Effect.Effect<void, StoreError>;
   /** Drop a file's graph and ledger row (the file is gone from the working tree). */
   readonly removeFile: (path: string) => Effect.Effect<void, StoreError>;
   /** Discard graphs left behind by an interrupted commit. Runs automatically when the store opens. */
@@ -375,13 +382,15 @@ const make = (
         ? Effect.void
         : exclusive(
             Effect.gen(function* () {
+              // The batch is one graph swap, so a path named twice keeps only its last revision.
+              const latest = [...new Map(documents.map((document) => [document.path, document])).values()];
               // 1. Announce every write in the batch. A crash from here on leaves each previous graph
               //    live and each new one reachable only through `pending_graph`, which `reconcile`
               //    deletes on the next open.
               const plans = yield* transaction(
                 Effect.andThen(
                   advance(),
-                  Effect.forEach(documents, (document) =>
+                  Effect.forEach(latest, (document) =>
                     Effect.gen(function* () {
                       const graph = Ontology.graphIri(document.path, document.mtime);
                       const [current] = yield* sql<{
@@ -401,13 +410,16 @@ const make = (
                 ),
               );
 
-              // 2. Swap each file's graphs in one backend batch. Both the live graph and the target are
+              // 2. Swap every file's graphs in one backend batch. Both the live graph and the target are
               //    cleared: a reindex at an unchanged mtime targets the graph it is replacing, and
               //    merging into it would leave the previous revision's quads behind forever.
-              for (const { document, graph, current } of plans) {
-                const clear = [...new Set([current, graph.value].filter((value) => value !== undefined))];
-                yield* graphs.swap(clear, graph, document);
-              }
+              yield* graphs.swap(
+                plans.map(({ document, graph, current }) => ({
+                  clear: [...new Set([current, graph.value].filter((value) => value !== undefined))],
+                  graph: graph.value,
+                  triples: document.triples,
+                })),
+              );
 
               // 3. Commit: the ledger rows are what make the new graphs the live ones.
               yield* transaction(
@@ -483,7 +495,7 @@ const make = (
       getMeta,
       setMeta,
 
-      putDocument: (document) => putDocuments([document]),
+      putDocument: (document) => putDocuments([encodeDocument(document)]),
       putDocuments,
       removeFile,
       reconcile,

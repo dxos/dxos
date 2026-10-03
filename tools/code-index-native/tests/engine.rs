@@ -316,6 +316,21 @@ fn random_quad(rng: &mut Rng, constants: &[String], graphs: &[String]) -> Quad {
 
 #[test]
 fn incremental_maintenance_matches_recomputation() {
+    maintenance_matches_recomputation(|_| NativeStore::in_memory(100_000).unwrap());
+}
+
+/// On disk, each run after the first starts from the premises the previous one kept, plus the
+/// journal: a premise it got wrong shows up as a recomputed stratum that diverges.
+#[test]
+fn kept_premises_match_recomputation() {
+    let dir = tempfile::tempdir().unwrap();
+    maintenance_matches_recomputation(|seed| {
+        NativeStore::open(dir.path().join(seed.to_string())).unwrap()
+    });
+    assert!(dir.path().join("1").join("premises.bin").exists());
+}
+
+fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
     let strata = shipped();
     // Every IRI the rules name (prefixed or not) as the parser resolves it, plus the classes the
     // rules conclude, so random premises hit the rules' constants.
@@ -342,7 +357,7 @@ fn incremental_maintenance_matches_recomputation() {
 
     for seed in 1..=40u64 {
         let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15));
-        let store = NativeStore::in_memory(100_000).unwrap();
+        let store = open(seed);
         let initial: Vec<Quad> = (0..120)
             .map(|_| random_quad(&mut rng, &constants, &graphs))
             .collect();

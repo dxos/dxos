@@ -28,7 +28,15 @@ const CLI = fileURLToPath(new URL('../bin/code-index.ts', import.meta.url));
 type Pass = {
   readonly indexed: number;
   readonly derived: number;
-  readonly timings: { scanMs: number; parseMs: number; commitMs: number; reasonMs: number; totalMs: number };
+  readonly timings: {
+    scanMs: number;
+    parseMs: number;
+    analyzeMs?: number;
+    encodeMs?: number;
+    commitMs: number;
+    reasonMs: number;
+    totalMs: number;
+  };
   readonly reasoners: readonly { name: string; derived: number; durationMs: number; incremental?: boolean }[];
 };
 
@@ -109,6 +117,8 @@ const rows: [string, (result: Result) => string][] = [
   ['quads', (result) => String(result.quads)],
   ['cold: total (wall)', (result) => seconds(result.cold.timings.totalMs)],
   ['cold: parse (summed over batches)', (result) => seconds(result.cold.timings.parseMs)],
+  ['cold: of which analyze (in workers)', (result) => seconds(result.cold.timings.analyzeMs ?? 0)],
+  ['cold: of which encode (in workers)', (result) => seconds(result.cold.timings.encodeMs ?? 0)],
   ['cold: commit (summed over batches)', (result) => seconds(result.cold.timings.commitMs)],
   ['cold: reason', (result) => seconds(result.cold.timings.reasonMs)],
   ['warm, one file: total', (result) => seconds(result.warm.timings.totalMs)],

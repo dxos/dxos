@@ -30,6 +30,8 @@ export type Options = {
   readonly workers?: number;
   /** Files per RPC batch (default 64). */
   readonly batchSize?: number;
+  /** Files committed to the store at once (default 512): one ledger transaction and one graph write. */
+  readonly commitSize?: number;
   /** Reindex every file, ignoring recorded mtimes. */
   readonly force?: boolean;
   readonly extensions?: readonly string[];
@@ -44,6 +46,9 @@ export type Options = {
 export type Timings = {
   readonly scanMs: number;
   readonly parseMs: number;
+  /** Of `parseMs`, worker time analyzing files and encoding documents; the rest is transfer and queueing. */
+  readonly analyzeMs: number;
+  readonly encodeMs: number;
   readonly commitMs: number;
   readonly reasonMs: number;
   readonly totalMs: number;
@@ -66,6 +71,8 @@ export type Result = {
 };
 
 export const DEFAULT_BATCH_SIZE = 64;
+
+export const DEFAULT_COMMIT_SIZE = 512;
 
 const millis = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<[number, A], E, R> =>
   Effect.map(Effect.timed(effect), ([duration, value]) => [Duration.toMillis(duration), value]);
@@ -103,6 +110,7 @@ export const run = (
     });
     const workers = options.workers ?? Math.min(availableParallelism(), 8);
     const batchSize = options.batchSize ?? DEFAULT_BATCH_SIZE;
+    const commitSize = options.commitSize ?? DEFAULT_COMMIT_SIZE;
 
     const started = Date.now();
     const [scanMs, { entries, changed, removed }] = yield* millis(
@@ -127,7 +135,17 @@ export const run = (
 
     const skipped: Protocol.SkippedFile[] = [];
     let parseMs = 0;
+    let analyzeMs = 0;
+    let encodeMs = 0;
     let indexed = 0;
+    const pending: Store.EncodedDocument[] = [];
+    const commit = () =>
+      Effect.gen(function* () {
+        const documents = pending.splice(0);
+        const [batchCommitMs] = yield* millis(store.putDocuments(documents));
+        commitMs += batchCommitMs;
+        indexed += documents.length;
+      });
 
     if (changed.length > 0) {
       const batches = chunk(changed, batchSize);
@@ -140,15 +158,20 @@ export const run = (
           Effect.gen(function* () {
             const [batchParseMs, response] = yield* millis(client.AnalyzeBatch({ root, files: batch }));
             parseMs += batchParseMs;
+            analyzeMs += response.analyzeMs;
+            encodeMs += response.encodeMs;
             skipped.push(...response.skipped);
-            // One ledger transaction per batch rather than per file: an interruption costs at most
-            // the batch in flight, which the next pass reindexes.
-            const [batchCommitMs] = yield* millis(store.putDocuments(response.analyzed.map((file) => file.document)));
-            commitMs += batchCommitMs;
-            indexed += response.analyzed.length;
+            pending.push(...response.analyzed);
+            // Documents are committed several batches at a time: one write of the quad store per
+            // commit is what dominates, and it costs less per quad the more it carries. An
+            // interruption costs at most the commit in flight, which the next pass reindexes.
+            if (pending.length >= commitSize) {
+              yield* commit();
+            }
           }),
         { concurrency: poolSize, discard: true },
       );
+      yield* commit();
     }
 
     yield* store.setMeta('root', root);
@@ -177,6 +200,6 @@ export const run = (
       derived,
       reasoned: willReason,
       reasoners: outcomes,
-      timings: { scanMs, parseMs, commitMs, reasonMs, totalMs: Date.now() - started },
+      timings: { scanMs, parseMs, analyzeMs, encodeMs, commitMs, reasonMs, totalMs: Date.now() - started },
     };
   });
