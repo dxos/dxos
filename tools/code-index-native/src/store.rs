@@ -138,6 +138,46 @@ struct BaseFacts<'a> {
 }
 
 impl BaseFacts<'_> {
+    /// The base quads matching the pattern; `None` when no quad can (a literal subject).
+    fn lookup(&self, pattern: &Pattern) -> Option<impl Iterator<Item = Quad>> {
+        let subject = self.subject(pattern[0]);
+        let predicate = match pattern[1].map(|id| self.dict.term(id)) {
+            Some(Term::NamedNode(node)) => Some(node),
+            Some(_) => return None,
+            None => None,
+        };
+        if pattern[0].is_some() && subject.is_none() {
+            return None;
+        }
+        let object = pattern[2].map(|id| self.dict.term(id));
+        let quads = self.store.quads_for_pattern(
+            subject.as_ref().map(Into::into),
+            predicate.as_ref().map(Into::into),
+            object.as_ref().map(Into::into),
+            None,
+        );
+        Some(
+            quads
+                .flatten()
+                .filter(|quad| is_base_graph(quad.graph_name.as_ref())),
+        )
+    }
+
+    /// Every matching triple until `sink` returns false.
+    fn each(&self, pattern: &Pattern, sink: &mut dyn FnMut(facts::Triple) -> bool) {
+        let Some(quads) = self.lookup(pattern) else {
+            return;
+        };
+        for quad in quads {
+            let s = pattern[0].unwrap_or_else(|| self.dict.intern(&quad.subject.into()));
+            let p = pattern[1].unwrap_or_else(|| self.dict.intern(&quad.predicate.into()));
+            let o = pattern[2].unwrap_or_else(|| self.dict.intern(&quad.object));
+            if !sink([s, p, o]) {
+                return;
+            }
+        }
+    }
+
     fn subject(&self, id: Option<Id>) -> Option<NamedOrBlankNode> {
         id.and_then(|id| match self.dict.term(id) {
             Term::NamedNode(node) => Some(NamedOrBlankNode::NamedNode(node)),
@@ -149,40 +189,20 @@ impl BaseFacts<'_> {
 
 impl Facts for BaseFacts<'_> {
     fn scan(&self, pattern: &Pattern, sink: &mut dyn FnMut(facts::Triple)) {
-        let subject = self.subject(pattern[0]);
-        let predicate = match pattern[1].map(|id| self.dict.term(id)) {
-            Some(Term::NamedNode(node)) => Some(node),
-            Some(_) => return,
-            None => None,
-        };
-        if pattern[0].is_some() && subject.is_none() {
-            return;
-        }
-        let object = pattern[2].map(|id| self.dict.term(id));
-        let quads = self.store.quads_for_pattern(
-            subject.as_ref().map(Into::into),
-            predicate.as_ref().map(Into::into),
-            object.as_ref().map(Into::into),
-            None,
-        );
-        for quad in quads.flatten() {
-            if !is_base_graph(quad.graph_name.as_ref()) {
-                continue;
-            }
-            let s = pattern[0].unwrap_or_else(|| self.dict.intern(&quad.subject.into()));
-            let p = pattern[1].unwrap_or_else(|| self.dict.intern(&quad.predicate.into()));
-            let o = pattern[2].unwrap_or_else(|| self.dict.intern(&quad.object));
-            sink([s, p, o]);
-        }
+        self.each(pattern, &mut |triple| {
+            sink(triple);
+            true
+        });
+    }
+
+    fn estimate(&self, pattern: &Pattern, cap: usize) -> usize {
+        self.lookup(pattern)
+            .map_or(0, |quads| quads.take(cap).count())
     }
 
     fn contains(&self, triple: &facts::Triple) -> bool {
-        let mut found = false;
-        self.scan(
-            &[Some(triple[0]), Some(triple[1]), Some(triple[2])],
-            &mut |_| found = true,
-        );
-        found
+        self.lookup(&[Some(triple[0]), Some(triple[1]), Some(triple[2])])
+            .is_some_and(|mut quads| quads.next().is_some())
     }
 }
 
@@ -200,6 +220,14 @@ impl Facts for Layered<'_> {
 
     fn contains(&self, triple: &facts::Triple) -> bool {
         self.layers.iter().any(|layer| layer.contains(triple))
+    }
+
+    fn estimate(&self, pattern: &Pattern, cap: usize) -> usize {
+        self.layers
+            .iter()
+            .map(|layer| layer.estimate(pattern, cap))
+            .sum::<usize>()
+            .min(cap)
     }
 }
 
@@ -530,6 +558,20 @@ impl NativeStore {
         Ok(self.store.len()?)
     }
 
+    /// Quads in one named graph, counted here so none is serialised across the binding.
+    pub fn graph_len(&self, graph: &str) -> Result<usize> {
+        let graph = NamedNode::new(graph).map_err(|error| Error(error.to_string()))?;
+        let mut count = 0;
+        for quad in self
+            .store
+            .quads_for_pattern(None, None, None, Some(graph.as_ref().into()))
+        {
+            quad?;
+            count += 1;
+        }
+        Ok(count)
+    }
+
     pub fn clear(&self) -> Result<()> {
         self.store.clear()?;
         self.meta.clear()?;
@@ -577,6 +619,30 @@ impl NativeStore {
         }
     }
 
+    /// The base triples with these predicates.
+    fn snapshot(&self, predicates: &FxHashSet<Id>, dict: &Dict) -> Result<TripleSet> {
+        let mut set = TripleSet::default();
+        for predicate in predicates {
+            let Term::NamedNode(node) = dict.term(*predicate) else {
+                continue;
+            };
+            for quad in self
+                .store
+                .quads_for_pattern(None, Some(node.as_ref()), None, None)
+            {
+                let quad = quad?;
+                if is_base_graph(quad.graph_name.as_ref()) {
+                    set.insert([
+                        dict.intern(&quad.subject.into()),
+                        *predicate,
+                        dict.intern(&quad.object),
+                    ]);
+                }
+            }
+        }
+        Ok(set)
+    }
+
     fn graph_set(&self, graph: &str, dict: &Dict) -> Result<TripleSet> {
         let mut set = TripleSet::default();
         for quad in self.store.quads_for_pattern(
@@ -596,6 +662,10 @@ impl NativeStore {
     }
 
     fn quad_of(dict: &Dict, triple: &facts::Triple, graph: &NamedNode) -> Option<Quad> {
+        // A list term lives only inside one engine run.
+        if triple.iter().any(|id| dict.is_list(*id)) {
+            return None;
+        }
         let subject = match dict.term(triple[0]) {
             Term::NamedNode(node) => NamedOrBlankNode::NamedNode(node),
             Term::BlankNode(node) => NamedOrBlankNode::BlankNode(node),
@@ -632,8 +702,9 @@ impl NativeStore {
                 }
             }
         }
+        let base = facts::Cached::new(&base);
         let premises = Layered {
-            layers: vec![&base, &others],
+            layers: vec![&base, &others, &rules.axioms],
         };
         let derived = eval::full(&rules, &premises, &dict);
         let graph_node = NamedNode::new_unchecked(graph);
@@ -706,12 +777,37 @@ impl NativeStore {
             }
         }
 
-        let base = BaseFacts {
+        let stored_base = BaseFacts {
             store: &self.store,
             dict: &dict,
         };
+        // Every base fact the rules can read, loaded once: a join then probes a hash index rather
+        // than seeking RocksDB and re-interning what it finds, which dominated reasoning.
+        let snapshot = match compiled
+            .iter()
+            .map(|rules| rules.predicates.as_ref())
+            .collect::<Option<Vec<_>>>()
+        {
+            Some(sets) => Some(
+                self.snapshot(
+                    &sets
+                        .into_iter()
+                        .flatten()
+                        .copied()
+                        .collect::<FxHashSet<_>>(),
+                    &dict,
+                )?,
+            ),
+            None => None,
+        };
+        // Without a snapshot, an unbound scan is still decoded from the store only once.
+        let cached_base = facts::Cached::new(&stored_base);
+        let base: &dyn Facts = match &snapshot {
+            Some(snapshot) => snapshot,
+            None => &cached_base,
+        };
         let before_base = facts::Before {
-            after: &base,
+            after: base,
             plus: &plus,
             minus: &minus,
         };
@@ -723,15 +819,20 @@ impl NativeStore {
         for (stratum, rules) in strata.iter().zip(&compiled) {
             let started = Instant::now();
             let stored = self.graph_set(&stratum.graph, &dict)?;
-            let mut layers: Vec<&dyn Facts> = vec![&base];
+            let mut layers: Vec<&dyn Facts> = vec![base];
             layers.extend(materialised.iter().map(|set| set as &dyn Facts));
+            // The file's own ground facts are its premises alone, never its output.
+            layers.push(&rules.axioms);
             let premises = Layered { layers };
+            // A stratum that proves on demand or aggregates is recomputed: DRed cannot see through it.
+            let maintained = incremental && rules.maintainable;
 
-            let (derived, change) = if incremental {
+            let (derived, change) = if maintained {
                 // This stratum's premises changed where the base or an earlier stratum did, unless
                 // another layer still (or already) asserts the triple.
                 let mut before_layers: Vec<&dyn Facts> = vec![&before_base];
                 before_layers.extend(previous.iter().map(|set| set as &dyn Facts));
+                before_layers.push(&rules.axioms);
                 let before = Layered {
                     layers: before_layers,
                 };
@@ -790,7 +891,7 @@ impl NativeStore {
                 added: change.added.len(),
                 removed: change.removed.len(),
                 duration_ms: started.elapsed().as_secs_f64() * 1000.0,
-                incremental,
+                incremental: maintained,
             });
             previous.push(stored);
             materialised.push(derived);

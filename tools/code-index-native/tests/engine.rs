@@ -47,6 +47,13 @@ fn shipped() -> Vec<Stratum> {
         .collect()
 }
 
+/// Whether DRed maintains the stratum, rather than recomputing it each pass.
+fn maintainable(stratum: &Stratum) -> bool {
+    rules::compile(&stratum.rules, &Dict::default())
+        .unwrap()
+        .maintainable
+}
+
 fn derived(store: &NativeStore, graph: &str) -> Vec<String> {
     let mut quads: Vec<String> = store
         .match_quads(
@@ -84,11 +91,11 @@ fn unsupported_builtins_are_rejected_by_name() {
         "a non-builtin namespace is an ordinary predicate"
     );
     let error = rules::compile(
-        "@prefix log: <http://www.w3.org/2000/10/swap/log#>. { ?a <urn:p> ?b. ?b log:uri ?c } => { ?a <urn:q> ?c }.",
+        "@prefix log: <http://www.w3.org/2000/10/swap/log#>. { ?a <urn:p> ?b. ?b log:semantics ?c } => { ?a <urn:q> ?c }.",
         &dict,
     )
     .unwrap_err();
-    assert!(error.to_string().contains("log#uri"), "{error}");
+    assert!(error.to_string().contains("log#semantics"), "{error}");
     let error = rules::compile(
         "@prefix log: <http://www.w3.org/2000/10/swap/log#>. @prefix list: <http://www.w3.org/2000/10/swap/list#>.
          { ?a <urn:p> ?b. (?x { ?x <urn:q> ?b } ?l) log:collectAllIn ?s. ?l list:length 0 } => { ?a <urn:q> ?b }.",
@@ -366,10 +373,14 @@ fn incremental_maintenance_matches_recomputation() {
             }
 
             let outcomes = store.reason_all(&strata).unwrap();
-            assert!(
-                outcomes.iter().all(|outcome| outcome.incremental),
-                "seed {seed}: expected the incremental path"
-            );
+            for (stratum, outcome) in strata.iter().zip(&outcomes) {
+                assert_eq!(
+                    outcome.incremental,
+                    maintainable(stratum),
+                    "seed {seed}: {} took the wrong path",
+                    stratum.graph
+                );
+            }
             let incremental: Vec<Vec<String>> = strata
                 .iter()
                 .map(|stratum| derived(&store, &stratum.graph))
@@ -416,12 +427,90 @@ fn an_overflowing_journal_falls_back_to_recomputation() {
             &[(file("c.ts"), "path", "\"c.ts\"".into())],
         ))
         .unwrap();
+    let outcomes = store.reason_all(&strata).unwrap();
     assert!(
-        store
-            .reason_all(&strata)
-            .unwrap()
+        strata
             .iter()
-            .all(|outcome| outcome.incremental)
+            .zip(&outcomes)
+            .all(|(stratum, outcome)| outcome.incremental == maintainable(stratum))
+    );
+}
+
+/// Reasons one rule file over N-Quads premises and returns its conclusions, sorted.
+fn conclude(premises: &str, rules: &str) -> Vec<String> {
+    let store = NativeStore::in_memory(1000).unwrap();
+    store.insert_quads(premises).unwrap();
+    let graph = format!("{DERIVED}test");
+    store
+        .reason_all(&[Stratum {
+            graph: graph.clone(),
+            rules: rules.into(),
+        }])
+        .unwrap();
+    derived(&store, &graph)
+}
+
+const PREFIXES: &str = "@prefix : <urn:>. @prefix list: <http://www.w3.org/2000/10/swap/list#>.
+    @prefix log: <http://www.w3.org/2000/10/swap/log#>. @prefix string: <http://www.w3.org/2000/10/swap/string#>.";
+
+#[test]
+fn backward_rules_are_proved_for_their_caller_and_never_stored() {
+    let premises = "<urn:a> <urn:alias> <urn:b> <urn:g> .\n<urn:b> <urn:alias> <urn:c> <urn:g> .\n<urn:c> <urn:kind> \"decl\" <urn:g> .\n";
+    // `?x :origin ?x` binds its object only from its subject, which the caller supplies; the alias
+    // chain recurses through the same predicate.
+    let rules = format!(
+        "{PREFIXES}
+        {{ ?x :origin ?x }} <= {{ ?x :kind \"decl\" }}.
+        {{ ?x :origin ?d }} <= {{ ?x :alias ?y. ?y :origin ?d }}.
+        {{ ?x :alias ?y. ?x :origin ?d }} => {{ ?x :resolves ?d }}."
+    );
+    assert_eq!(
+        conclude(premises, &rules),
+        vec![
+            "<urn:a> <urn:resolves> <urn:c>",
+            "<urn:b> <urn:resolves> <urn:c>"
+        ]
+    );
+}
+
+#[test]
+fn a_call_waits_for_the_atoms_written_before_it() {
+    // Proved with `?s` unbound, the counts would be over every symbol's stages and never agree.
+    let premises = "<urn:a> <urn:stage> <urn:keep> <urn:g> .\n<urn:b> <urn:stage> <urn:drop> <urn:g> .\n<urn:a> <urn:type> <urn:Layer> <urn:g> .\n";
+    let rules = format!(
+        "{PREFIXES}
+        {{ ?s :keeps true }} <= {{
+          (?x {{ ?s :stage ?x }} ?all) log:collectAllIn ?scope.
+          (?x {{ ?s :stage ?x. ?x list:in (:keep) }} ?kept) log:collectAllIn ?scope.
+          ?all list:length ?n. ?kept list:length ?n.
+        }}.
+        {{ ?s :type :Layer. ?s :keeps true }} => {{ ?s :kept true }}."
+    );
+    assert_eq!(
+        conclude(premises, &rules),
+        vec!["<urn:a> <urn:kept> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"]
+    );
+}
+
+#[test]
+fn ground_facts_lists_and_string_builtins() {
+    let premises = "<https://x.org/file/a.ts#make> <urn:calls> <urn:Type.makeObject> <urn:g> .\n";
+    let rules = format!(
+        "{PREFIXES}
+        :Type.makeObject :factoryOf :EchoType.
+        {{ (?s ?f) :pair ?f }} <= {{ ?s :calls ?f }}.
+        {{ ?s :calls ?f. (?s ?f) :pair ?g. ?g :factoryOf ?class }} => {{ ?s :a ?class }}.
+        {{ ?s :calls ?f. ?s log:uri ?text. ?text string:startsWith \"https://x.org/\".
+           (\"/\" \"file\" \"/(.*)#\") string:concatenation ?pattern. (?text ?pattern) string:scrape ?path.
+           ?f log:notEqualTo ?s }} => {{ ?s :path ?path }}."
+    );
+    // The ground fact is a premise of the file, not one of its conclusions; nor is the pair.
+    assert_eq!(
+        conclude(premises, &rules),
+        vec![
+            "<https://x.org/file/a.ts#make> <urn:a> <urn:EchoType>",
+            "<https://x.org/file/a.ts#make> <urn:path> \"a.ts\""
+        ]
     );
 }
 

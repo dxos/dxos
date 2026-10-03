@@ -30,8 +30,9 @@ derived graph with the result, so a conclusion never outlives the fact that enta
 Reachability is **not** among those rules — `deus:imports+` walks the import graph as a query, in a
 fraction of the time a materialized closure costs; `rules/50-example.n3` explains when a rule is the
 wrong tool. That phase is whole-graph and by
-far the most expensive one, so it is skipped when a pass changed nothing, and `--no-reason` skips it
-outright (leaving the derived graph as stale as the last pass that did run it).
+far the most expensive one, so it is skipped when the store records that the same rules already ran
+over the facts it holds now. `--no-reason` skips it outright, leaving the derived graph stale until
+the next pass that reasons, which catches up even if no file changed in between.
 
 ## Reasoning about it in a browser
 
