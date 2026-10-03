@@ -9,7 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
 import { RuntimeProvider } from '@dxos/effect';
-import { type MaybePromise } from '@dxos/util';
+import { type MaybePromise, countWork } from '@dxos/util';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks/index.ts';
 
@@ -28,6 +28,22 @@ export type SqliteStorageAdapterProps = {
 
 export type SqliteStorageCallbacks = {
   afterSave?(path: StorageKey): MaybePromise<void>;
+};
+
+/** automerge-repo's chunk kinds (the second key segment), mapped to counter names. */
+const SAVE_COUNTERS: Record<string, string> = {
+  'snapshot': 'automerge.snapshotSaves',
+  'incremental': 'automerge.incrementalSaves',
+  'sync-state': 'automerge.syncStateSaves',
+};
+
+/**
+ * Counts one stored chunk by kind: a snapshot is a whole compacted document, an incremental one
+ * change batch, a sync state one peer's progress through a document.
+ */
+const countSave = (key: StorageKey, bytes: number): void => {
+  countWork(SAVE_COUNTERS[key[1] ?? ''] ?? 'automerge.otherSaves');
+  countWork('automerge.saveBytes', bytes);
 };
 
 /**
@@ -99,6 +115,8 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     }
     // SQLite returns BLOB columns as Buffer in Node.js; coerce to plain Uint8Array.
     const chunk = toUint8Array(rows[0].data);
+    countWork('automerge.chunkLoads');
+    countWork('automerge.loadBytes', chunk.byteLength);
     this.#monitor?.recordBytesLoaded(chunk.byteLength);
     this.#monitor?.recordLoadDuration(Date.now() - startMs);
     return chunk;
@@ -110,6 +128,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     }
     const startMs = Date.now();
     await this.enqueue(upsertChunks([[encodeKey(keyArray), binary]]));
+    countSave(keyArray, binary.byteLength);
     this.#monitor?.recordBytesStored(binary.byteLength);
     this.#monitor?.recordStoreDuration(Date.now() - startMs);
     await this.#callbacks?.afterSave?.(keyArray);
@@ -124,6 +143,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     let bytesStored = 0;
     for (const [keyArray, binary] of entries) {
       bytesStored += binary.byteLength;
+      countSave(keyArray, binary.byteLength);
       await this.#callbacks?.afterSave?.(keyArray);
     }
     this.#monitor?.recordBytesStored(bytesStored);
@@ -175,6 +195,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const encoded = encodeKey(keyArray);
+    countWork('automerge.chunkRemoves');
     await this.enqueue(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
@@ -214,6 +235,9 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       bytesLoaded += data.byteLength;
       return { key: decodeKey(row.key), data };
     });
+    countWork('automerge.rangeLoads');
+    countWork('automerge.chunkLoads', chunks.length);
+    countWork('automerge.loadBytes', bytesLoaded);
     this.#monitor?.recordBytesLoaded(bytesLoaded);
     this.#monitor?.recordLoadDuration(Date.now() - startMs);
     return chunks;

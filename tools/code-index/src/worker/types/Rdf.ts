@@ -6,6 +6,7 @@ import type { Quad } from '@rdfjs/types';
 import { DataFactory } from 'n3';
 import { createHash } from 'node:crypto';
 
+import { escapeFragment } from '../../internal/iri.ts';
 import * as Ontology from '../../Ontology.ts';
 import * as Term from './Term.ts';
 
@@ -100,7 +101,7 @@ export const collector = () => {
       }
       case 'object':
         node.typeProperty = type.properties.map((property) => {
-          const propertyIri = `${iri}/${encodeURIComponent(property.name)}`;
+          const propertyIri = `${iri}/${escapeFragment(property.name)}`;
           const propertyType = emit(property.type);
           nodes.set(propertyIri, {
             '@id': propertyIri,

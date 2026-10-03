@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { escapeFragment } from '../../internal/iri.ts';
 import * as Ontology from '../../Ontology.ts';
 import { applyTypes } from './Call.ts';
 import * as Term from './Term.ts';
@@ -47,7 +48,7 @@ const split = (iri: string): { file: string; path: readonly string[] } | undefin
   return name.length > 0 ? { file: iri.slice(0, hash), path: name.split('.') } : undefined;
 };
 
-const symbolIri = (file: string, path: readonly string[]): string => `${file}#${encodeURIComponent(path.join('.'))}`;
+const symbolIri = (file: string, path: readonly string[]): string => `${file}#${escapeFragment(path.join('.'))}`;
 
 const propertyType = (term: Term.Type, name: string): Term.Type | undefined => {
   if (term.kind !== 'object') {

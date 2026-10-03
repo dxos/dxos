@@ -28,27 +28,27 @@ capx:contribute capx:named "contribute", "contributeAll".
 capx:module capx:named "lazyModule", "inlineModule".
 capx:maker capx:named "moduleMaker".
 
-<https://dxos.org/deus/file/packages%2Fsdk%2Fapp-framework%2Fsrc%2Fcore%2Fcapability.ts#make> capx:role capx:define.
-<https://dxos.org/deus/file/packages%2Fsdk%2Fapp-framework%2Fsrc%2Fcore%2Fcapability.ts#makeSingleton> capx:role capx:define.
-<https://dxos.org/deus/file/packages%2Fsdk%2Fapp-framework%2Fsrc%2Fcore%2Fcapability.ts#contribute> capx:role capx:contribute.
-<https://dxos.org/deus/file/packages%2Fsdk%2Fapp-framework%2Fsrc%2Fcore%2Fcapability.ts#contributeAll> capx:role capx:contribute.
-<https://dxos.org/deus/file/packages%2Fsdk%2Fapp-framework%2Fsrc%2Fcore%2Fcapability.ts#lazyModule> capx:role capx:module.
-<https://dxos.org/deus/file/packages%2Fsdk%2Fapp-framework%2Fsrc%2Fcore%2Fcapability.ts#inlineModule> capx:role capx:module.
-<https://dxos.org/deus/file/packages%2Fsdk%2Fapp-framework%2Fsrc%2Fcore%2Fcapability.ts#moduleMaker> capx:role capx:maker.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#make> capx:role capx:define.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#makeSingleton> capx:role capx:define.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#contribute> capx:role capx:contribute.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#contributeAll> capx:role capx:contribute.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#lazyModule> capx:role capx:module.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#inlineModule> capx:role capx:module.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#moduleMaker> capx:role capx:maker.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework#Capability.make> capx:role capx:define.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework#Capability.makeSingleton> capx:role capx:define.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework#Capability.contribute> capx:role capx:contribute.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework#Capability.contributeAll> capx:role capx:contribute.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework#Capability.lazyModule> capx:role capx:module.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework#Capability.inlineModule> capx:role capx:module.
-<https://dxos.org/deus/module/%40dxos%2Fapp-framework#Capability.moduleMaker> capx:role capx:maker.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#make> capx:role capx:define.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#makeSingleton> capx:role capx:define.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#contribute> capx:role capx:contribute.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#contributeAll> capx:role capx:contribute.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#lazyModule> capx:role capx:module.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#inlineModule> capx:role capx:module.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#moduleMaker> capx:role capx:maker.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#make> capx:role capx:define.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#makeSingleton> capx:role capx:define.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#contribute> capx:role capx:contribute.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#contributeAll> capx:role capx:contribute.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#lazyModule> capx:role capx:module.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#inlineModule> capx:role capx:module.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#moduleMaker> capx:role capx:maker.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.make> capx:role capx:define.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.makeSingleton> capx:role capx:define.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.contribute> capx:role capx:contribute.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.contributeAll> capx:role capx:contribute.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.lazyModule> capx:role capx:module.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.inlineModule> capx:role capx:module.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.moduleMaker> capx:role capx:maker.
 
 # Where a reference written `R.path` lands when resolution stopped at `R`: a member of the module a
 # namespace publishes (`import { MapCapabilities } from '#types'`, `Capability$` inside the framework),

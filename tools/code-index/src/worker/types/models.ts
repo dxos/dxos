@@ -315,5 +315,5 @@ export const MODELS = {
   effectIri: EFFECT,
   genIri: effect('Effect', 'gen'),
   /** Every `effect/<Module>` member IRI starts with this. */
-  effectModuleBase: `${Ontology.MODULE_BASE}${encodeURIComponent('effect/')}`,
+  effectModuleBase: `${Ontology.MODULE_BASE}effect/`,
 } as const;

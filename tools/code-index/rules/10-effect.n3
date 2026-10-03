@@ -6,11 +6,11 @@
 
 @prefix deus: <https://dxos.org/vocab/deus#>.
 @prefix rule: <https://dxos.org/vocab/deus/rule#>.
-@prefix effect: <https://dxos.org/deus/module/effect%2F>.
-@prefix Context: <https://dxos.org/deus/module/effect%2FContext#>.
-@prefix Layer: <https://dxos.org/deus/module/effect%2FLayer#>.
-@prefix RpcMiddleware: <https://dxos.org/deus/module/effect%2Frpc%2FRpcMiddleware#>.
-@prefix errors: <https://dxos.org/deus/module/%40dxos%2Ferrors#>.
+@prefix effect: <https://dxos.org/deus/module/effect/>.
+@prefix Context: <https://dxos.org/deus/module/effect/Context#>.
+@prefix Layer: <https://dxos.org/deus/module/effect/Layer#>.
+@prefix RpcMiddleware: <https://dxos.org/deus/module/effect/rpc/RpcMiddleware#>.
+@prefix errors: <https://dxos.org/deus/module/@dxos/errors#>.
 @prefix list: <http://www.w3.org/2000/10/swap/list#>.
 @prefix log: <http://www.w3.org/2000/10/swap/log#>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
@@ -72,8 +72,8 @@
 # references the service facts below need — not repo-wide.
 #
 
-# `file:<path>#<name>` → the file it is addressed in, and the local name. `log:uri` decodes the
-# IRI and cannot build one back, so the file is found by its `deus:path`.
+# `file:<path>#<name>` → the file it is addressed in, and the local name. `log:uri` cannot build an
+# IRI back from text, so the file is found by its `deus:path`.
 { ?r rule:addressedIn ?file } <= {
   ?r log:uri ?iri.
   (?iri "^https://dxos\\.org/deus/file/([^#]*)#") string:scrape ?path.
@@ -234,7 +234,7 @@
 { ?s rule:readsKey ?r } <= {
   ?s deus:constructedBy ?f.
   ?f list:in (Layer:effect Layer:scoped Layer:effectDiscard).
-  (?x { ?s deus:implDependsOn <https://dxos.org/deus/module/effect%2FEffect#serviceOption> } ?optional) log:collectAllIn ?scope.
+  (?x { ?s deus:implDependsOn <https://dxos.org/deus/module/effect/Effect#serviceOption> } ?optional) log:collectAllIn ?scope.
   ?optional list:length 0.
   ?s deus:implDependsOn ?r.
 }.
@@ -245,18 +245,18 @@
 # Schemas.
 #
 
-{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FSchema#Struct> } => { ?s rdf:type deus:Schema }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FSchema#TaggedStruct> } => { ?s rdf:type deus:Schema }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FSchema#Union> } => { ?s rdf:type deus:Schema }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FSchema#Literal> } => { ?s rdf:type deus:Schema }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2FSchema#Array> } => { ?s rdf:type deus:Schema }.
-{ ?s deus:extends <https://dxos.org/deus/module/effect%2FSchema#Schema.Type> } => { ?s rdf:type deus:Schema }.
-{ ?s deus:extends <https://dxos.org/deus/module/effect%2FSchema#Class> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/Schema#Struct> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/Schema#TaggedStruct> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/Schema#Union> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/Schema#Literal> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/Schema#Array> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect/Schema#Schema.Type> } => { ?s rdf:type deus:Schema }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect/Schema#Class> } => { ?s rdf:type deus:Schema }.
 
 # Domain errors: the repo's `BaseError.extend`, plus Effect's own tagged errors.
 { ?s deus:extends errors:BaseError.extend } => { ?s rdf:type deus:DomainError }.
-{ ?s deus:extends <https://dxos.org/deus/module/effect%2FData#TaggedError> } => { ?s rdf:type deus:DomainError }.
-{ ?s deus:extends <https://dxos.org/deus/module/effect%2FSchema#TaggedError> } => { ?s rdf:type deus:DomainError }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect/Data#TaggedError> } => { ?s rdf:type deus:DomainError }.
+{ ?s deus:extends <https://dxos.org/deus/module/effect/Schema#TaggedError> } => { ?s rdf:type deus:DomainError }.
 
 # RPC groups.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2Frpc%2FRpcGroup#make> } => { ?s rdf:type deus:Rpc }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect/rpc/RpcGroup#make> } => { ?s rdf:type deus:Rpc }.

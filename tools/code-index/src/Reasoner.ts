@@ -19,8 +19,9 @@ import * as TypeBinding from './TypeBinding.ts';
  * each sees the file graphs and the graphs of reasoners ordered before it, never its own previous
  * output. Filename order is the only dependency mechanism.
  *
- * Two kinds: N3 rule files, and JS reasoners (`derive`) for conclusions that need a computation
- * rather than a join — the cross-file type binding (`TypeBinding.ts`) is the first.
+ * Two kinds: N3 rule files, and JS passes (`derive`) for conclusions that need a computation rather
+ * than a join — the cross-file type binding (`TypeBinding.ts`) is the first. A pass reads only the
+ * file graphs and runs before every rule file, so each rule file sees every pass's graph.
  */
 
 export class ReasonerError extends Data.TaggedError('code-index/ReasonerError')<{
@@ -34,27 +35,25 @@ export type RuleFile = {
   readonly rules: string;
 };
 
-export type JsReasoner = {
+export type Pass = {
   readonly name: string;
-  /** Reads the store and returns its conclusions; `run` replaces its graph with them. */
+  /** Reads the file graphs and returns its conclusions; `run` replaces its graph with them. */
   readonly derive: (store: Store.Api) => Effect.Effect<Quad[], Store.StoreError>;
 };
 
-export type Reasoner = RuleFile | JsReasoner;
+export type Reasoner = RuleFile | Pass;
 
-export type Outcome = {
-  readonly name: string;
-  readonly derived: number;
-  readonly durationMs: number;
-};
+export type Outcome = Store.ReasonOutcome;
 
-/** JS reasoners shipped with the tool, ordered among the rule files by name. */
-const BUILTIN: readonly Reasoner[] = [{ name: TypeBinding.NAME, derive: TypeBinding.derive }];
+const PASSES_KEY = 'passes';
+
+/** JS passes shipped with the tool. */
+const BUILTIN: readonly Pass[] = [{ name: TypeBinding.NAME, derive: TypeBinding.derive }];
 
 /** The rule files shipped with the tool. */
 export const BUNDLED_DIR = fileURLToPath(new URL('../rules', import.meta.url));
 
-/** Every `.n3` file in `dir`, in filename order. */
+/** The built-in passes, then every `.n3` file in `dir` in filename order. */
 export const load = (dir: string): Effect.Effect<Reasoner[], ReasonerError> =>
   Effect.tryPromise({
     catch: (cause) => new ReasonerError({ message: `Cannot read rules from ${dir}`, cause }),
@@ -66,10 +65,7 @@ export const load = (dir: string): Effect.Effect<Reasoner[], ReasonerError> =>
           rules: await readFile(join(dir, name), 'utf8'),
         })),
       );
-      // Built-in JS reasoners take their place in filename order, so a rule file can depend on them.
-      return [...rules, ...BUILTIN].sort((left, right) =>
-        left.name < right.name ? -1 : left.name > right.name ? 1 : 0,
-      );
+      return [...BUILTIN, ...rules];
     },
   });
 
@@ -80,21 +76,32 @@ export const loadFile = (path: string): Effect.Effect<RuleFile[], ReasonerError>
     try: async () => [{ name: basename(path, extname(path)), rules: await readFile(path, 'utf8') }],
   });
 
-/** Run each reasoner in order, replacing its graph. Returns what each concluded. */
+/** Run each reasoner in order, replacing (or, natively, maintaining) its graph. Returns what each concluded. */
 export const run = (reasoners: readonly Reasoner[]): Effect.Effect<Outcome[], Store.StoreError, Store.Store> =>
   Effect.gen(function* () {
     const store = yield* Store.Store;
     const outcomes: Outcome[] = [];
     for (const reasoner of reasoners) {
-      const started = Date.now();
-      const derived =
-        'rules' in reasoner
-          ? yield* store.reason(reasoner.name, reasoner.rules, { materialize: true })
-          : yield* reasoner.derive(store);
-      if (!('rules' in reasoner)) {
-        yield* store.materialize(reasoner.name, derived);
+      if (!('derive' in reasoner)) {
+        continue;
       }
-      outcomes.push({ name: reasoner.name, derived: derived.length, durationMs: Date.now() - started });
+      const started = Date.now();
+      const derived = yield* reasoner.derive(store);
+      yield* store.writePass(reasoner.name, derived);
+      outcomes.push({
+        name: reasoner.name,
+        derived: derived.length,
+        durationMs: Date.now() - started,
+        incremental: false,
+      });
     }
-    return outcomes;
+    // A pass that ran before but not now must leave no premise behind; the meta row names them.
+    const ran = outcomes.map((outcome) => outcome.name);
+    const previous = ((yield* store.getMeta(PASSES_KEY)) ?? '').split('\n').filter((name) => name.length > 0);
+    for (const stale of previous.filter((name) => !ran.includes(name))) {
+      yield* store.writePass(stale, []);
+    }
+    yield* store.setMeta(PASSES_KEY, ran.join('\n'));
+    const rules = reasoners.filter((reasoner): reasoner is RuleFile => 'rules' in reasoner);
+    return [...outcomes, ...(yield* store.reasonAll(rules))];
   });

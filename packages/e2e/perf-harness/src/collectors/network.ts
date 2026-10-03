@@ -4,7 +4,7 @@
 
 import { type Page } from '@playwright/test';
 
-import { type NetworkMetrics } from '../types.ts';
+import { type EndpointTraffic, type NetworkMetrics } from '../types.ts';
 
 /** Extensions that are the app itself arriving, whatever the request's declared type. */
 const CODE_EXTENSIONS = /\.(m?js|cjs|ts|tsx|css|wasm|woff2?|ttf|map|html)(\?|$)/i;
@@ -129,6 +129,24 @@ const EMPTY: NetworkMetrics = {
   edgeSocketBytes: 0,
   edgeSocketFrames: 0,
   analyticsBytes: 0,
+  socketFrames: 0,
+  byEndpoint: {},
+};
+
+/**
+ * An endpoint's stable label: host plus the first path segment (`dxos.network/ai`).
+ *
+ * The first segment only, so ids and hashes deeper in the path collapse into the route that
+ * served them rather than minting one entry per object.
+ */
+export const endpointOf = (url: string): string => {
+  try {
+    const { hostname, pathname } = new URL(url);
+    const segment = pathname.split('/').find((part) => part.length > 0);
+    return segment ? `${hostname}/${segment}` : hostname;
+  } catch {
+    return 'invalid';
+  }
 };
 
 export type TrackNetworkOptions = {
@@ -152,19 +170,34 @@ export type TrackNetworkOptions = {
  * snapshot, so a caller can diff two of them across a stage boundary.
  */
 export const trackNetwork = (page: Page, options: TrackNetworkOptions = {}): (() => NetworkMetrics) => {
-  const totals: NetworkMetrics = { ...EMPTY };
+  const totals: NetworkMetrics = { ...EMPTY, byEndpoint: {} };
+  const trafficOf = (endpoint: string): EndpointTraffic => {
+    const existing = totals.byEndpoint[endpoint];
+    if (existing) {
+      return existing;
+    }
+    const created = { requests: 0, bytes: 0, frames: 0 };
+    totals.byEndpoint[endpoint] = created;
+    return created;
+  };
   const edgeHosts = options.edgeHosts ?? DEFAULT_EDGE_HOSTS;
 
   // Frame-level, because a socket fires exactly one `response` — the 101, with an empty body — so
   // every byte ECHO replicates is invisible to the handler below. Frames are counted in both
   // directions: a sync is a conversation, and an upload regression is as real as a download one.
   page.on('websocket', (socket) => {
-    if (classifyOrigin(socket.url(), edgeHosts) !== 'edge') {
-      return;
-    }
+    const edge = classifyOrigin(socket.url(), edgeHosts) === 'edge';
+    const endpoint = endpointOf(socket.url());
     const count = (payload: string | Buffer) => {
-      totals.edgeSocketBytes += frameBytes(payload);
-      totals.edgeSocketFrames += 1;
+      const bytes = frameBytes(payload);
+      totals.socketFrames += 1;
+      const traffic = trafficOf(endpoint);
+      traffic.frames += 1;
+      traffic.bytes += bytes;
+      if (edge) {
+        totals.edgeSocketBytes += bytes;
+        totals.edgeSocketFrames += 1;
+      }
     };
     socket.on('framesent', (frame) => count(frame.payload));
     socket.on('framereceived', (frame) => count(frame.payload));
@@ -175,7 +208,9 @@ export const trackNetwork = (page: Page, options: TrackNetworkOptions = {}): (()
     const bucket = classify(response.url(), request.resourceType());
     const origin = classifyOrigin(response.url(), edgeHosts);
     const resourceType = request.resourceType();
+    const traffic = trafficOf(endpointOf(response.url()));
     totals.requests += 1;
+    traffic.requests += 1;
     if (bucket === 'api') {
       totals.apiRequests += 1;
       // A socket handshake is in the `api` bucket but is NOT a request: counting it here would
@@ -191,6 +226,7 @@ export const trackNetwork = (page: Page, options: TrackNetworkOptions = {}): (()
         const body = await response.body().catch(() => null);
         bytes = body?.byteLength ?? 0;
       }
+      traffic.bytes += bytes;
       if (bucket === 'code') {
         totals.codeBytes += bytes;
       } else if (bucket === 'api') {
@@ -217,7 +253,10 @@ export const trackNetwork = (page: Page, options: TrackNetworkOptions = {}): (()
     // `vite preview` run that is API traffic, not the bundle.
   });
 
-  return () => ({ ...totals });
+  return () => ({
+    ...totals,
+    byEndpoint: Object.fromEntries(Object.entries(totals.byEndpoint).map(([key, value]) => [key, { ...value }])),
+  });
 };
 
 /** Difference of two running totals — the bytes and requests a single stage accounted for. */
@@ -232,4 +271,26 @@ export const diffNetwork = (before: NetworkMetrics, after: NetworkMetrics): Netw
   edgeSocketBytes: after.edgeSocketBytes - before.edgeSocketBytes,
   edgeSocketFrames: after.edgeSocketFrames - before.edgeSocketFrames,
   analyticsBytes: after.analyticsBytes - before.analyticsBytes,
+  socketFrames: after.socketFrames - before.socketFrames,
+  byEndpoint: diffEndpoints(before.byEndpoint, after.byEndpoint),
 });
+
+/** Per-endpoint deltas, keeping only endpoints the stage touched. */
+const diffEndpoints = (
+  before: Record<string, EndpointTraffic>,
+  after: Record<string, EndpointTraffic>,
+): Record<string, EndpointTraffic> => {
+  const delta: Record<string, EndpointTraffic> = {};
+  for (const [endpoint, traffic] of Object.entries(after)) {
+    const previous = before[endpoint] ?? { requests: 0, bytes: 0, frames: 0 };
+    const entry = {
+      requests: traffic.requests - previous.requests,
+      bytes: traffic.bytes - previous.bytes,
+      frames: traffic.frames - previous.frames,
+    };
+    if (entry.requests > 0 || entry.bytes > 0 || entry.frames > 0) {
+      delta[endpoint] = entry;
+    }
+  }
+  return delta;
+};

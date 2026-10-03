@@ -15,16 +15,16 @@ import * as TypeRdf from './worker/types/Rdf.ts';
 import * as Term from './worker/types/Term.ts';
 
 /**
- * The cross-file type pass as a reasoner (`design/TYPES.md`, "Binding"): reads every symbol's term
- * from the file graphs, binds the `typeof`/`returnOf` names it holds to the declaring symbols' terms,
- * and asserts the bound type as a further `deus:hasType` in its own derived graph. Ordered before
- * `15-types`, so the type rules see bound layers.
+ * The cross-file type pass (`design/TYPES.md`, "Binding"): reads every symbol's term from the file
+ * graphs, binds the `typeof`/`returnOf` names it holds to the declaring symbols' terms, and asserts
+ * the bound type as a further `deus:hasType` in its pass graph — a premise of every rule file, so
+ * `15-types` sees bound layers.
  */
 
-export const NAME = '12-bind-types';
+export const NAME = 'bind-types';
 
-/** File graphs only: a derived graph — this one's previous run included — is never a premise. */
-const asserted = (quads: readonly Quad[]) => quads.filter((quad) => !Ontology.isDerivedGraph(quad.graph.value));
+/** File graphs only: neither a derived graph nor this pass's previous run is a premise. */
+const asserted = (quads: readonly Quad[]) => quads.filter((quad) => Ontology.isFileGraph(quad.graph.value));
 
 export const derive = (store: Store.Api): Effect.Effect<Quad[], Store.StoreError> =>
   Effect.gen(function* () {

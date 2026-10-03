@@ -5,13 +5,13 @@
 @prefix log: <http://www.w3.org/2000/10/swap/log#>.
 @prefix list: <http://www.w3.org/2000/10/swap/list#>.
 @prefix string: <http://www.w3.org/2000/10/swap/string#>.
-@prefix op: <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperation#>.
-@prefix set: <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperationHandlerSet#>.
-@prefix skill: <https://dxos.org/deus/module/%40dxos%2Fcompute%2FSkill#>.
-@prefix compute: <https://dxos.org/deus/module/%40dxos%2Fcompute#>.
-@prefix opFile: <https://dxos.org/deus/file/packages%2Fcore%2Fcompute%2Fcompute%2Fsrc%2FOperation.ts#>.
-@prefix setFile: <https://dxos.org/deus/file/packages%2Fcore%2Fcompute%2Fcompute%2Fsrc%2FOperationHandlerSet.ts#>.
-@prefix skillFile: <https://dxos.org/deus/file/packages%2Fcore%2Fcompute%2Fcompute%2Fsrc%2Ftypes%2FSkill.ts#>.
+@prefix op: <https://dxos.org/deus/module/@dxos/compute/Operation#>.
+@prefix set: <https://dxos.org/deus/module/@dxos/compute/OperationHandlerSet#>.
+@prefix skill: <https://dxos.org/deus/module/@dxos/compute/Skill#>.
+@prefix compute: <https://dxos.org/deus/module/@dxos/compute#>.
+@prefix opFile: <https://dxos.org/deus/file/packages/core/compute/compute/src/Operation.ts#>.
+@prefix setFile: <https://dxos.org/deus/file/packages/core/compute/compute/src/OperationHandlerSet.ts#>.
+@prefix skillFile: <https://dxos.org/deus/file/packages/core/compute/compute/src/types/Skill.ts#>.
 
 # --- The API, by every IRI it is addressed by -------------------------------------------------------
 #
@@ -54,8 +54,8 @@ skill:toolDefinitions deus:computeRole "toolDefinitions".
 compute:Skill.toolDefinitions deus:computeRole "toolDefinitions".
 skillFile:toolDefinitions deus:computeRole "toolDefinitions".
 
-<https://dxos.org/deus/module/%40dxos%2Fecho#DXN.make> deus:computeRole "dxn".
-<https://dxos.org/deus/module/%40dxos%2Fkeys#DXN.make> deus:computeRole "dxn".
+<https://dxos.org/deus/module/@dxos/echo#DXN.make> deus:computeRole "dxn".
+<https://dxos.org/deus/module/@dxos/keys#DXN.make> deus:computeRole "dxn".
 
 skill:make deus:computeRole "skill".
 skill:Definition deus:computeRole "skill".
@@ -79,7 +79,7 @@ skillFile:Skill deus:computeRole "skillObject".
 
 # `export * from './definitions'` re-exports without naming anything, so nothing declares the
 # barrel's name for the operation. A reference through it is the barrel's IRI plus the name, which is
-# matched as text (EYE's `log:uri` decodes `%2F`, so an IRI cannot be built from the text) among the
+# matched as text (`log:uri` cannot build an IRI from text) among the
 # references of the files importing that barrel — unless the barrel declares the name itself, since
 # a local declaration shadows a star export.
 { ?module deus:declares ?operation. ?operation rdf:type deus:Operation; deus:exported true }

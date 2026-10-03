@@ -5,6 +5,7 @@
 import { dirname, isAbsolute, relative, resolve as resolvePath } from 'node:path';
 import { parseSync } from 'oxc-parser';
 
+import { escapeFragment } from '../../internal/iri.ts';
 import * as Ontology from '../../Ontology.ts';
 import { type ImportBinding, importBindings } from '../types/Boundary.ts';
 import { infer } from '../types/Infer.ts';
@@ -1116,7 +1117,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       }
       const key = [callee.name, ...callee.path].join('.') + `/${slot}/` + [ref.name, ...ref.path].join('.');
       nodes.set(key, {
-        '@id': `${self}~${encodeURIComponent(key)}`,
+        '@id': `${self}~${escapeFragment(key)}`,
         '@type': 'Argument',
         'callee': to.targets,
         ...(to.rest.length > 0 ? { calleePath: to.rest.join('.') } : {}),
@@ -1135,7 +1136,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
         ? []
         : [
             {
-              '@id': `${self}~${encodeURIComponent([callee.name, ...callee.path].join('.'))}/${slot}@${start}`,
+              '@id': `${self}~${escapeFragment([callee.name, ...callee.path].join('.'))}/${slot}@${start}`,
               '@type': 'Argument' as const,
               'callee': to.targets,
               ...(to.rest.length > 0 ? { calleePath: to.rest.join('.') } : {}),

@@ -11,14 +11,14 @@
 # The factories, under every address a declaration reaches them by: the package barrel, the
 # `@dxos/echo/Type` subpath, the `@dxos/react-client/echo` re-export, and — inside `@dxos/echo` itself,
 # which imports `./Type` relatively — the declaring module.
-<https://dxos.org/deus/module/%40dxos%2Fecho#Type.makeObject> deus:echoFactoryOf deus:EchoType.
-<https://dxos.org/deus/module/%40dxos%2Fecho%2FType#makeObject> deus:echoFactoryOf deus:EchoType.
-<https://dxos.org/deus/module/%40dxos%2Freact-client%2Fecho#Type.makeObject> deus:echoFactoryOf deus:EchoType.
-<https://dxos.org/deus/file/packages%2Fcore%2Fecho%2Fecho%2Fsrc%2FType.ts#makeObject> deus:echoFactoryOf deus:EchoType.
-<https://dxos.org/deus/module/%40dxos%2Fecho#Type.makeRelation> deus:echoFactoryOf deus:EchoRelation.
-<https://dxos.org/deus/module/%40dxos%2Fecho%2FType#makeRelation> deus:echoFactoryOf deus:EchoRelation.
-<https://dxos.org/deus/module/%40dxos%2Freact-client%2Fecho#Type.makeRelation> deus:echoFactoryOf deus:EchoRelation.
-<https://dxos.org/deus/file/packages%2Fcore%2Fecho%2Fecho%2Fsrc%2FType.ts#makeRelation> deus:echoFactoryOf deus:EchoRelation.
+<https://dxos.org/deus/module/@dxos/echo#Type.makeObject> deus:echoFactoryOf deus:EchoType.
+<https://dxos.org/deus/module/@dxos/echo/Type#makeObject> deus:echoFactoryOf deus:EchoType.
+<https://dxos.org/deus/module/@dxos/react-client/echo#Type.makeObject> deus:echoFactoryOf deus:EchoType.
+<https://dxos.org/deus/file/packages/core/echo/echo/src/Type.ts#makeObject> deus:echoFactoryOf deus:EchoType.
+<https://dxos.org/deus/module/@dxos/echo#Type.makeRelation> deus:echoFactoryOf deus:EchoRelation.
+<https://dxos.org/deus/module/@dxos/echo/Type#makeRelation> deus:echoFactoryOf deus:EchoRelation.
+<https://dxos.org/deus/module/@dxos/react-client/echo#Type.makeRelation> deus:echoFactoryOf deus:EchoRelation.
+<https://dxos.org/deus/file/packages/core/echo/echo/src/Type.ts#makeRelation> deus:echoFactoryOf deus:EchoRelation.
 
 { ?factory deus:echoFactoryOf ?class. ?s deus:extends ?factory } => { ?s rdf:type ?class }.
 { ?factory deus:echoFactoryOf ?class. ?s deus:constructedBy ?factory } => { ?s rdf:type ?class }.
@@ -33,8 +33,8 @@
 @prefix list: <http://www.w3.org/2000/10/swap/list#>.
 @prefix log: <http://www.w3.org/2000/10/swap/log#>.
 
-<https://dxos.org/deus/module/%40dxos%2Fecho#DXN.make> a deus:EchoDxnFactory.
-<https://dxos.org/deus/module/%40dxos%2Fkeys#DXN.make> a deus:EchoDxnFactory.
+<https://dxos.org/deus/module/@dxos/echo#DXN.make> a deus:EchoDxnFactory.
+<https://dxos.org/deus/module/@dxos/keys#DXN.make> a deus:EchoDxnFactory.
 
 { ?s a deus:EchoType. ?typename deus:echoDxnOf ?s } => { ?s deus:echoTypename ?typename }.
 { ?s a deus:EchoRelation. ?typename deus:echoDxnOf ?s } => { ?s deus:echoTypename ?typename }.
@@ -60,8 +60,8 @@
 # an argument the declaration passes (`deus:passes`) and follows it to the declaration it denotes.
 # ---------------------------------------------------------------------------------------------------
 
-<https://dxos.org/deus/module/%40dxos%2Fecho#Ref.Ref> a deus:EchoRefFactory.
-<https://dxos.org/deus/file/packages%2Fcore%2Fecho%2Fecho%2Fsrc%2FRef.ts#Ref> a deus:EchoRefFactory.
+<https://dxos.org/deus/module/@dxos/echo#Ref.Ref> a deus:EchoRefFactory.
+<https://dxos.org/deus/file/packages/core/echo/echo/src/Ref.ts#Ref> a deus:EchoRefFactory.
 
 # The schema argument of the factory: `Type.makeObject(dxn)(PersonSchema)`. Slot 0 of a curried
 # factory is also where a non-literal DXN goes, so only a declaration classified `deus:Schema` counts.
@@ -187,7 +187,7 @@ deus:EchoRelation deus:echoClass true.
 { ?barrel deus:echoBarrelOf ?f } <= { ?barrel deus:imports ?f }.
 { ?barrel deus:echoBarrelOf ?f } <= { ?barrel deus:importsType ?f }.
 
-# `module:%40dxos%2Fschema#Text.Text` → ("@dxos/schema" "Text" "Text"); a subpath specifier
+# `module:@dxos/schema#Text.Text` → ("@dxos/schema" "Text" "Text"); a subpath specifier
 # (`@dxos/plugin-markdown/types`) names its package.
 { ?member deus:echoMemberPath (?package ?namespace ?name) } <= {
   ?member deus:echoMemberString ?u.
@@ -200,8 +200,7 @@ deus:EchoRelation deus:echoClass true.
   (?u "^https://dxos\\.org/deus/module/(@[^/#]+/[^/#]+|[^@/#][^/#]*)") string:scrape ?package.
   (?u "#([A-Za-z0-9_$]+)$") string:scrape ?name.
 }.
-# The IRI as text, percent-escapes of `/` and `@` undone, whichever form the reasoner hands over.
+# The IRI as text; module IRIs keep `/` and `@` literal, so the specifier reads as written.
 { ?member deus:echoMemberString ?u } <= {
-  ?member log:uri ?raw. ?raw string:startsWith "https://dxos.org/deus/module/".
-  (?raw "%2F" "/") string:replace ?slashes. (?slashes "%40" "@") string:replace ?u.
+  ?member log:uri ?u. ?u string:startsWith "https://dxos.org/deus/module/".
 }.

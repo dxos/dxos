@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, test } from 'vitest';
 
-import { EVENT_NAME, toPosthogEvent, writePosthogBatch } from './report.ts';
+import { DATA_COUNTER_COLUMNS, EVENT_NAME, dataColumn, toPosthogEvent, writePosthogBatch } from './report.ts';
 import { type Comparability, type StageRow } from './types.ts';
 
 /** Zeroed so a row fixture states only the fields its assertion is about. */
@@ -21,6 +21,10 @@ const EMPTY_REALM_THREAD = {
   processTimeMs: 0,
   layoutCount: 0,
   recalcStyleCount: 0,
+  taskOtherMs: 0,
+  devToolsCommandMs: 0,
+  layoutObjects: 0,
+  frames: 0,
 };
 
 const comparability: Comparability = {
@@ -398,6 +402,67 @@ describe('disjoint memory categories', () => {
   });
 });
 
+describe('work counter columns', () => {
+  test('getMetrics counts are published beside the durations', ({ expect }) => {
+    const { properties } = toPosthogEvent(row());
+    expect(properties).toMatchObject({ layoutCount: 12, recalcStyleCount: 30, layoutObjects: 5_000, requests: 9 });
+  });
+
+  test('a counter that did not run publishes no column, so absence never reads as zero work', ({ expect }) => {
+    const { properties } = toPosthogEvent(row());
+    expect(properties).not.toHaveProperty('styleRecalcElements');
+    expect(properties).not.toHaveProperty('jsCallsTotal');
+    expect(properties).not.toHaveProperty('reactRenders');
+  });
+
+  test('trace, call and React counters land in fixed columns with their integrity readings', ({ expect }) => {
+    const { properties } = toPosthogEvent(
+      row({
+        traceCounters: {
+          render: { styleRecalcs: 3, styleRecalcElements: 400, layouts: 2, layoutDirtyObjects: 90, forcedLayouts: 1 },
+          instructions: [],
+          events: 1_200,
+          dataLoss: false,
+        },
+        jsCalls: [
+          { kind: 'page', name: 'page', calls: 50_000, functions: 900 },
+          { kind: 'worker', name: 'worker:dedicated.js', calls: 20_000, functions: 300 },
+        ],
+        react: { commits: 4, renders: 120, mounts: 30, wastedRenders: 25, renderers: 1 },
+      }),
+    );
+    expect(properties).toMatchObject({
+      styleRecalcElements: 400,
+      forcedLayouts: 1,
+      // No PMU: zero threads reported a count, and the realm columns are zero-filled beside it.
+      instructionThreads: 0,
+      instructionsTab: 0,
+      jsCallsTotal: 70_000,
+      jsCallsTab: 50_000,
+      jsCallsWorker: 20_000,
+      jsCallRealms: 2,
+      reactRenders: 120,
+      reactWastedRenders: 25,
+    });
+  });
+
+  test('data counters map to zero-filled columns, unlisted ones staying in the row only', ({ expect }) => {
+    const { properties } = toPosthogEvent(
+      row({
+        data: { counters: { 'sqlite.rowsRead': 40, 'automerge.incrementalSaves': 3, 'echo.newThing': 1 }, realms: 3 },
+      }),
+    );
+    expect(properties).toMatchObject({
+      sqliteRowsRead: 40,
+      automergeIncrementalSaves: 3,
+      echoQueryRuns: 0,
+      dataRealms: 3,
+    });
+    expect(properties).not.toHaveProperty('echoNewThing');
+    expect(DATA_COUNTER_COLUMNS.map(dataColumn)).toContain('automergeSaveBytes');
+  });
+});
+
 const row = (overrides: Partial<StageRow> = {}): StageRow => ({
   flow: 'projects-tasks',
   stage: 'open-tasks',
@@ -419,6 +484,10 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
     processTimeMs: 1100,
     layoutCount: 12,
     recalcStyleCount: 30,
+    taskOtherMs: 20,
+    devToolsCommandMs: 3,
+    layoutObjects: 5_000,
+    frames: 1,
   },
   threadByRealm: [
     { kind: 'page', name: 'page', ...EMPTY_REALM_THREAD },
@@ -465,6 +534,8 @@ const row = (overrides: Partial<StageRow> = {}): StageRow => ({
     edgeSocketBytes: 640_000,
     edgeSocketFrames: 210,
     analyticsBytes: 500,
+    socketFrames: 220,
+    byEndpoint: { 'dxos.network/ai': { requests: 3, bytes: 1_500, frames: 0 } },
   },
   disk: { readBytes: 2_400_000, writeBytes: 900_000, reads: 600, writes: 210, syncs: 18, realms: 1 },
   rpc: [

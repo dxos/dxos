@@ -32,19 +32,31 @@ opening implementations. Two principles follow, and everything below is derived 
 
 Resource IRIs are derived, never invented:
 
-| Thing         | IRI                                                              | Note                                                                                                        |
-| ------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| File          | `file:` + `encodeURIComponent(<repo-relative path>)`             | Stable across revisions of the file.                                                                        |
-| Symbol        | `<file IRI>` + `#` + `encodeURIComponent(<name>)`                | Scoped to its file.                                                                                         |
-| Package       | `pkg:` + `encodeURIComponent(<package.json name>)`               | The `name` field, e.g. `pkg:%40dxos%2Fecho`.                                                                |
-| Member        | `module:` + `encodeURIComponent(<specifier>)` + `#` + `<path>`   | A named export of a module _as imported_: `module:effect%2FLayer#effect`, `module:%40dxos%2Fecho#Type.Obj`. |
-| Spec block    | `<file IRI>` + `#` + `<block type>` + `:` + `<block id or name>` | One ` ```mdl ` block in a `.mdl` document.                                                                  |
-| File graph    | `graph:` + `encodeURIComponent(<path>)` + `#` + `<mtime>`        | Changes on every reindex — see Graphs.                                                                      |
-| Derived graph | `graph:derived/` + `<reasoner name>`                             | One per reasoner — see Reasoning.                                                                           |
+| Thing         | IRI                                                              | Note                                                                                                  |
+| ------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| File          | `file:` + `<repo-relative path>`                                 | Stable across revisions of the file.                                                                  |
+| Symbol        | `<file IRI>` + `#` + `<name>`                                    | Scoped to its file. A private member `#field` is `…#%23field`.                                        |
+| Package       | `pkg:` + `<package.json name>`                                   | The `name` field, e.g. `pkg:@dxos/echo`.                                                              |
+| Member        | `module:` + `<specifier>` + `#` + `<path>`                       | A named export of a module _as imported_: `module:effect/Layer#effect`, `module:@dxos/echo#Type.Obj`. |
+| Spec block    | `<file IRI>` + `#` + `<block type>` + `:` + `<block id or name>` | One ` ```mdl ` block in a `.mdl` document; split on the first `:`.                                    |
+| File graph    | `graph:file/` + `<path>` + `#` + `<mtime>`                       | Changes on every reindex — see Graphs.                                                                |
+| Derived graph | `graph:derived/` + `<reasoner name>`                             | One per reasoner — see Reasoning.                                                                     |
+
+Every component is written as it is, with one shared escaping rule (`src/internal/iri.ts`) instead
+of `encodeURIComponent`: `/`, `@` and `:` stay literal, because they are legal in an IRI path and
+the IRI should read like the import or path it names. Only `%`, `#`, `?`, space, `<`, `>`, `"`,
+`{`, `}`, `|`, `\`, `^`, `` ` `` and control characters are percent-encoded, plus a path segment that
+is exactly `.` or `..` (IRI resolution would collapse it). Fragments use the same rule, so a `#` in a
+name never opens a second fragment; a spec block's type additionally escapes `:`, the separator.
+Windows `\` separators are normalised to `/` first. File graphs live under `graph:file/` and derived
+graphs under `graph:derived/`, so no file path can name a reasoner's graph.
+
+The scheme is versioned (`Ontology.VERSION`). A store recorded under another version is emptied
+when it opens and the next pass reindexes everything, rather than mixing two schemes in one graph.
 
 `Member` is the hinge between the agnostic parser and the framework rules. When a file imports
 `Layer` from `'effect/Layer'` and writes `Layer.effect(...)`, the parser can name the callee as
-`module:effect%2FLayer#effect` from the import binding alone. For a workspace import (a bare
+`module:effect/Layer#effect` from the import binding alone. For a workspace import (a bare
 specifier that resolves inside the repository) **both** addressings are recorded: the resolved
 symbol IRI (for analysis) and the member IRI under the specifier as written (for rules, which
 should not break when an implementation file moves). Relative imports resolve to symbol IRIs only.
@@ -52,8 +64,8 @@ should not break when an implementation file moves). Relative imports resolve to
 ## Graphs
 
 Every file owns one named graph, keyed by path **and** mtime. Nothing about a file is written to
-the default graph, so reindexing a file is: write the new `<path>#<mtime>` graph, then drop the
-previous one. The mtime in the key is what makes the swap safe — a partially written new graph is
+the default graph, so reindexing a file is: write the new `graph:file/<path>#<mtime>` graph, then
+drop the previous one. The mtime in the key is what makes the swap safe — a partially written new graph is
 never confused with the live one, because the live graph IRI is recorded in SQLite (`files.graph`)
 and only advances when the write has completed. See `Store.putDocument` for the commit order.
 
@@ -102,23 +114,23 @@ typescript analyzer walks up from its file to the nearest `package.json` to asse
 The class hierarchy lives in `ontology/deus.ttl` (loaded as facts) so `?s a deus:Symbol` keeps
 matching and LDkit gets one lens per class.
 
-| Class                      | Recognized by                                                                                                                                                                                                    | Rule file                  |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
-| `deus:EffectService`       | `deus:extends module:effect%2FContext#Service`                                                                                                                                                                   | `rules/effect.n3`          |
-| `deus:EffectLayer`         | `deus:constructedBy` one of `module:effect%2FLayer#{effect,succeed,scoped,mergeAll,unwrap,provide}`                                                                                                              | `rules/effect.n3`          |
-| `deus:Schema`              | `deus:constructedBy module:effect%2FSchema#{Struct,TaggedStruct,Class,Union,…}`                                                                                                                                  | `rules/effect.n3`          |
-| `deus:DomainError`         | `deus:extends module:%40dxos%2Ferrors#BaseError.extend` or `module:effect%2FData#TaggedError`                                                                                                                    | `rules/effect.n3`          |
-| `deus:EchoType`            | `deus:extends`/`deus:constructedBy`/`deus:pipedThrough` `module:%40dxos%2Fecho#Type.makeObject` (also the `@dxos/echo/Type` subpath, the `@dxos/react-client/echo` re-export, and `Type.ts` inside `@dxos/echo`) | `rules/20-echo.n3`         |
-| `deus:EchoRelation`        | The same, through `Type.makeRelation`                                                                                                                                                                            | `rules/20-echo.n3`         |
-| `deus:Operation`           | `deus:constructedBy` `Operation.make` — addressed as `@dxos/compute/Operation#make`, `@dxos/compute#Operation.make`, or its declaring file                                                                       | `rules/30-compute.n3`      |
-| `deus:OperationHandler`    | `Op.pipe(Operation.withHandler(fn))` / `Operation.lazyHandler`, or data-first `Operation.withHandler(Op, fn)`, whose operation resolves; and `export default handler`                                            | `rules/30-compute.n3`      |
-| `deus:OperationHandlerSet` | `deus:constructedBy OperationHandlerSet.{make,merge,lazy,reactive}`, or a symbol typed `OperationHandlerSet`                                                                                                     | `rules/30-compute.n3`      |
-| `deus:Skill`               | `deus:constructedBy Skill.make`, a symbol typed `Skill.Definition`, or a factory typed `() => Skill.Skill`                                                                                                       | `rules/30-compute.n3`      |
-| `deus:Capability`          | `deus:constructedBy …app-framework…Capability#{make,makeSingleton}` (any addressing, incl. `deus:constructedByPath`)                                                                                             | `rules/41-capabilities.n3` |
-| `deus:Plugin`              | `deus:constructedBy module:%40dxos%2Fapp-framework%2FPlugin#define` — the body, with its modules                                                                                                                 | `rules/composer.n3`        |
-| `deus:LazyPlugin`          | `deus:constructedBy …Plugin#lazy` — the shim that defers loading the body                                                                                                                                        | `rules/composer.n3`        |
-| `deus:PluginMeta`          | `deus:constructedBy …Plugin#{getMetaFromConfig,makeMeta}`                                                                                                                                                        | `rules/composer.n3`        |
-| `deus:Rpc`                 | `deus:constructedBy module:effect%2Frpc%2FRpcGroup#make`                                                                                                                                                         | `rules/effect.n3`          |
+| Class                      | Recognized by                                                                                                                                                                                                | Rule file                  |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------- |
+| `deus:EffectService`       | `deus:extends module:effect/Context#Service`                                                                                                                                                                 | `rules/effect.n3`          |
+| `deus:EffectLayer`         | `deus:constructedBy` one of `module:effect/Layer#{effect,succeed,scoped,mergeAll,unwrap,provide}`                                                                                                            | `rules/effect.n3`          |
+| `deus:Schema`              | `deus:constructedBy module:effect/Schema#{Struct,TaggedStruct,Class,Union,…}`                                                                                                                                | `rules/effect.n3`          |
+| `deus:DomainError`         | `deus:extends module:@dxos/errors#BaseError.extend` or `module:effect/Data#TaggedError`                                                                                                                      | `rules/effect.n3`          |
+| `deus:EchoType`            | `deus:extends`/`deus:constructedBy`/`deus:pipedThrough` `module:@dxos/echo#Type.makeObject` (also the `@dxos/echo/Type` subpath, the `@dxos/react-client/echo` re-export, and `Type.ts` inside `@dxos/echo`) | `rules/20-echo.n3`         |
+| `deus:EchoRelation`        | The same, through `Type.makeRelation`                                                                                                                                                                        | `rules/20-echo.n3`         |
+| `deus:Operation`           | `deus:constructedBy` `Operation.make` — addressed as `@dxos/compute/Operation#make`, `@dxos/compute#Operation.make`, or its declaring file                                                                   | `rules/30-compute.n3`      |
+| `deus:OperationHandler`    | `Op.pipe(Operation.withHandler(fn))` / `Operation.lazyHandler`, or data-first `Operation.withHandler(Op, fn)`, whose operation resolves; and `export default handler`                                        | `rules/30-compute.n3`      |
+| `deus:OperationHandlerSet` | `deus:constructedBy OperationHandlerSet.{make,merge,lazy,reactive}`, or a symbol typed `OperationHandlerSet`                                                                                                 | `rules/30-compute.n3`      |
+| `deus:Skill`               | `deus:constructedBy Skill.make`, a symbol typed `Skill.Definition`, or a factory typed `() => Skill.Skill`                                                                                                   | `rules/30-compute.n3`      |
+| `deus:Capability`          | `deus:constructedBy …app-framework…Capability#{make,makeSingleton}` (any addressing, incl. `deus:constructedByPath`)                                                                                         | `rules/41-capabilities.n3` |
+| `deus:Plugin`              | `deus:constructedBy module:@dxos/app-framework/Plugin#define` — the body, with its modules                                                                                                                   | `rules/composer.n3`        |
+| `deus:LazyPlugin`          | `deus:constructedBy …Plugin#lazy` — the shim that defers loading the body                                                                                                                                    | `rules/composer.n3`        |
+| `deus:PluginMeta`          | `deus:constructedBy …Plugin#{getMetaFromConfig,makeMeta}`                                                                                                                                                    | `rules/composer.n3`        |
+| `deus:Rpc`                 | `deus:constructedBy module:effect/rpc/RpcGroup#make`                                                                                                                                                         | `rules/effect.n3`          |
 
 Adding a framework is adding a rule file. The member IRIs above are stable because they follow the
 specifier as written in source, not the file the specifier resolves to.
@@ -294,10 +306,10 @@ and, by kind:
 An `unresolved` term is a node like any other (`typeKind "unresolved"`, `deus:unresolvedReason`).
 Deferred terms are `typeof` (`typeHead` = the value) and `returnOf` (`deus:callee`, `typeArg<i>` = the
 argument types), with `deus:pending` for owed operations. A symbol also carries `deus:typeTerm`, its
-term as JSON, and the `12-bind-types` reasoner asserts the cross-file-bound term as a further
-`deus:hasType` in its derived graph. A `deus:Module` node (`deus:moduleFile`) records where a bare
+term as JSON, and the `bind-types` pass asserts the cross-file-bound term as a further
+`deus:hasType` in its pass graph. A `deus:Module` node (`deus:moduleFile`) records where a bare
 specifier resolves inside the repository. A term over 64 nodes is not emitted. Rules match a type by its
-head: `?layer deus:hasType ?t. ?t deus:typeHead <module:effect%2FLayer#Layer>; deus:typeArg0 ?out` is
+head: `?layer deus:hasType ?t. ?t deus:typeHead <module:effect/Layer#Layer>; deus:typeArg0 ?out` is
 the layer's `ROut` (`rules/15-types.n3`).
 
 ## API vs implementation
@@ -319,9 +331,9 @@ exposes, which are the ones that must be `peerDependencies` or otherwise public.
 ## Resolution
 
 The typescript analyzer binds identifier references to declarations using **import bindings and
-top-level declarations only**. `Layer.effect` → import `Layer` → `module:effect%2FLayer#effect`;
+top-level declarations only**. `Layer.effect` → import `Layer` → `module:effect/Layer#effect`;
 `make(dir)` → top-level `make` in the same file → its symbol IRI; `Store` → import from
-`'./Store.ts'` → resolved file → `file:…%2FStore.ts#Store`. A declaration inside a TypeScript `namespace` (`TestSchema.Person`) also
+`'./Store.ts'` → resolved file → `file:…/Store.ts#Store`. A declaration inside a TypeScript `namespace` (`TestSchema.Person`) also
 sees its sibling members by bare name, innermost namespace first. Local shadowing inside bodies is not
 modeled; a reference that binds to nothing is counted in `deus:unresolvedReferences` on the file,
 so the approximation stays measurable. Full scope analysis is a later step, not a design change.
@@ -392,48 +404,48 @@ One document per file. A typescript document:
 ```json
 {
   "@context": { "deus": "https://dxos.org/vocab/deus#", "…": "…" },
-  "@id": "https://dxos.org/deus/file/src%2FStore.ts",
+  "@id": "https://dxos.org/deus/file/src/Store.ts",
   "@type": "File",
   "path": "src/Store.ts",
   "language": "typescript",
   "size": 120,
   "mtime": 1730000000000,
   "hash": "9f86d0…",
-  "inPackage": "https://dxos.org/deus/package/%40dxos%2Fcode-index",
-  "imports": ["https://dxos.org/deus/file/src%2FOntology.ts"],
-  "importsType": ["https://dxos.org/deus/file/src%2Fworker%2FProtocol.ts"],
+  "inPackage": "https://dxos.org/deus/package/@dxos/code-index",
+  "imports": ["https://dxos.org/deus/file/src/Ontology.ts"],
+  "importsType": ["https://dxos.org/deus/file/src/worker/Protocol.ts"],
   "importsModule": ["effect/Layer", "quadstore"],
   "reexports": [],
   "unresolvedReferences": 0,
   "declares": [
     {
-      "@id": "https://dxos.org/deus/file/src%2FStore.ts#Store",
+      "@id": "https://dxos.org/deus/file/src/Store.ts#Store",
       "@type": "Symbol",
       "name": "Store",
       "kind": "class",
       "exported": true,
       "line": 96,
-      "extends": ["https://dxos.org/deus/module/effect%2FContext#Service"],
-      "apiDependsOn": ["https://dxos.org/deus/file/src%2FStore.ts#Api"],
+      "extends": ["https://dxos.org/deus/module/effect/Context#Service"],
+      "apiDependsOn": ["https://dxos.org/deus/file/src/Store.ts#Api"],
       "implDependsOn": [],
       "snippet": "export class Store extends Context.Service<Store, Api>()('code-index/Store') {}",
       "doc": "The whole persistence surface of the index."
     },
     {
-      "@id": "https://dxos.org/deus/file/src%2FStore.ts#layer",
+      "@id": "https://dxos.org/deus/file/src/Store.ts#layer",
       "@type": "Symbol",
       "name": "layer",
       "kind": "variable",
       "exported": true,
       "line": 340,
-      "constructedBy": ["https://dxos.org/deus/module/effect%2FLayer#unwrap"],
+      "constructedBy": ["https://dxos.org/deus/module/effect/Layer#unwrap"],
       "apiDependsOn": [
-        "https://dxos.org/deus/module/effect%2FLayer#Layer",
-        "https://dxos.org/deus/file/src%2FStore.ts#Store"
+        "https://dxos.org/deus/module/effect/Layer#Layer",
+        "https://dxos.org/deus/file/src/Store.ts#Store"
       ],
       "implDependsOn": [
-        "https://dxos.org/deus/file/src%2FStore.ts#make",
-        "https://dxos.org/deus/file/src%2Finternal%2Fsqlite.ts#clientLayer"
+        "https://dxos.org/deus/file/src/Store.ts#make",
+        "https://dxos.org/deus/file/src/internal/sqlite.ts#clientLayer"
       ],
       "snippet": "export const layer = (dir: string): Layer.Layer<Store, StoreError> => { /*...*/ };"
     }

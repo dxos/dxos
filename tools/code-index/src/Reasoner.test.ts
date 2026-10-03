@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import { DataFactory } from 'n3';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -459,7 +460,12 @@ describe('plugin rules', () => {
         }
         const [reasoner] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '40-composer.n3'));
         const derived = yield* store.reason(reasoner.name, reasoner.rules);
-        const local = (iri: string) => decodeURIComponent(iri.slice(iri.lastIndexOf('/') + 1));
+        const local = (iri: string) =>
+          decodeURIComponent(
+            /^https:\/\/dxos\.org\/deus\/(file|module|package)\//.test(iri)
+              ? iri.replace(/^https:\/\/dxos\.org\/deus\/(file|module|package)\//, '')
+              : iri.slice(iri.lastIndexOf('/') + 1),
+          );
         return derived
           .filter((quad) => quad.predicate.value !== Ontology.type.value || quad.object.value.includes('Plugin'))
           .map((quad) => `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`)
@@ -588,7 +594,12 @@ describe('compute rules', () => {
         }
         const [reasoner] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '30-compute.n3'));
         const derived = yield* store.reason(reasoner.name, reasoner.rules);
-        const local = (iri: string) => decodeURIComponent(iri.slice(iri.lastIndexOf('/') + 1));
+        const local = (iri: string) =>
+          decodeURIComponent(
+            /^https:\/\/dxos\.org\/deus\/(file|module|package)\//.test(iri)
+              ? iri.replace(/^https:\/\/dxos\.org\/deus\/(file|module|package)\//, '')
+              : iri.slice(iri.lastIndexOf('/') + 1),
+          );
         // The published relations; `denotes` and the like are the joins that reach them.
         const shown = new Set(
           [
@@ -727,7 +738,12 @@ describe('echo rules', () => {
           const [reasoner] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, name));
           yield* store.reason(reasoner.name, reasoner.rules, { materialize: true });
         }
-        const local = (iri: string) => decodeURIComponent(iri.slice(iri.lastIndexOf('/') + 1));
+        const local = (iri: string) =>
+          decodeURIComponent(
+            /^https:\/\/dxos\.org\/deus\/(file|module|package)\//.test(iri)
+              ? iri.replace(/^https:\/\/dxos\.org\/deus\/(file|module|package)\//, '')
+              : iri.slice(iri.lastIndexOf('/') + 1),
+          );
         return (yield* store.derived('20-echo'))
           .map((quad) => `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`)
           .sort();
@@ -799,7 +815,7 @@ describe('cross-file type binding', () => {
         return yield* store.select(`
           PREFIX deus: <https://dxos.org/vocab/deus#>
           SELECT ?name ?text WHERE {
-            GRAPH <${Ontology.derivedGraphIri(TypeBinding.NAME).value}> { ?symbol deus:hasType ?type }
+            GRAPH <${Ontology.passGraphIri(TypeBinding.NAME).value}> { ?symbol deus:hasType ?type }
             ?symbol deus:name ?name. ?type deus:typeText ?text.
           }`);
       }).pipe(Effect.provide(Store.layer(join(dir, 'store'))), Effect.scoped),
@@ -811,5 +827,47 @@ describe('cross-file type binding', () => {
     expect(texts.get('widenedRemote')).toBe('number');
     expect(texts.get('fromRemote')).toBe('1');
     expect(texts.get('boxedRemote')).toBe('{ value: string }');
+  });
+});
+
+describe('ordered reasoners', () => {
+  let dir: string;
+
+  beforeAll(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'code-index-strata-'));
+  });
+
+  afterAll(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  // The earlier file negates a predicate the later file concludes. Run twice: on the second pass the
+  // later file's graph from the first pass exists, and must stay invisible to the earlier file.
+  const earlier: Reasoner.Reasoner = {
+    name: '10-earlier',
+    rules: `@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+{ ?s <urn:p> ?o. (?x { ?s <urn:q> ?x } ?l) log:collectAllIn ?scope. ?l list:length 0 } => { ?s <urn:r> ?o }.`,
+  };
+  const later: Reasoner.Reasoner = { name: '20-later', rules: '{ ?s <urn:p> ?o } => { ?s <urn:q> ?o }.' };
+
+  test('a reasoner never sees the conclusions of reasoners ordered after it', async () => {
+    const concluded = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        yield* store.putQuads([
+          DataFactory.quad(
+            DataFactory.namedNode('urn:s'),
+            DataFactory.namedNode('urn:p'),
+            DataFactory.namedNode('urn:o'),
+            DataFactory.namedNode('urn:graph'),
+          ),
+        ]);
+        yield* Reasoner.run([earlier, later]);
+        yield* Reasoner.run([earlier, later]);
+        return (yield* store.derived(earlier.name)).map((quad) => quad.predicate.value);
+      }).pipe(Effect.provide(Store.layer(join(dir, 'store'))), Effect.scoped),
+    );
+    expect(concluded).toEqual(['urn:r']);
   });
 });
