@@ -372,13 +372,15 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
       {adding ? (
         <McpForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
-        <Button
-          variant='ghost'
-          icon='ph--plus--regular'
-          label={t('mcp-server-add.label')}
-          onClick={() => setAdding(true)}
-          data-testid='assistant.mcp-server.add'
-        />
+        <Flex classNames='p-1'>
+          <Button
+            variant='ghost'
+            icon='ph--plus--regular'
+            label={t('mcp-server-add.label')}
+            onClick={() => setAdding(true)}
+            data-testid='assistant.mcp-server.add'
+          />
+        </Flex>
       )}
     </Flex>
   );
@@ -542,7 +544,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
           data-testid='assistant.mcp-server.api-key'
         />
       </Field.Root>
-      <div className='flex gap-2'>
+      <div className='flex justify-end'>
         <SystemButton.Save
           type='submit'
           variant='ghost'
