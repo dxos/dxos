@@ -15,6 +15,8 @@ import {
 } from 'd3-force';
 import { For, Show, createMemo, createSignal } from 'solid-js';
 
+import { Snippet } from './Snippet.tsx';
+
 /**
  * The exploration view of a `display.graph` presentation: a force layout where size and opacity
  * encode relevance, groups cluster and collapse on click, a node's card opens on click, and the
@@ -305,7 +307,10 @@ export const ForceGraph = (props: { content: string }) => {
                 <div class='mt-1'>
                   <span class='text-description'>{key}: </span>
                   {key === 'snippet' ? (
-                    <pre class='bg-baseSurface mt-1 overflow-x-auto rounded p-1'>{String(value)}</pre>
+                    <Snippet
+                      code={String(value)}
+                      path={typeof node().card?.path === 'string' ? String(node().card?.path) : undefined}
+                    />
                   ) : (
                     <span>{String(value)}</span>
                   )}
