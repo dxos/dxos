@@ -505,13 +505,11 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     const { runtime, dispose } = createTestSqliteRuntime();
     onTestFinished(() => dispose());
     const run = RuntimeProvider.runPromise(runtime);
-    const rows = () =>
-      run(
-        Effect.gen(function* () {
-          const sql = yield* SqlClient.SqlClient;
-          return yield* sql<{ space_id: string }>`SELECT space_id FROM echo_spaces`;
-        }),
-      );
+    const selectRows = Effect.flatMap(
+      SqlClient.SqlClient,
+      (sql) => sql<{ space_id: string }>`SELECT space_id FROM echo_spaces`,
+    );
+    const rows = () => run(selectRows);
     const automergeHost = new AutomergeHost({ runtime });
     await openAndClose(automergeHost);
 
@@ -530,12 +528,7 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     const manager = new SpaceStateManager({ runtime });
     await openAndClose(manager);
     // Dropping the row behind the manager's back makes any later save visible as a reappearing row.
-    await run(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DELETE FROM echo_spaces`;
-      }),
-    );
+    await run(Effect.flatMap(SqlClient.SqlClient, (sql) => sql`DELETE FROM echo_spaces`));
 
     await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(saved.documentId));
     expect(await rows()).toHaveLength(0);

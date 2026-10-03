@@ -28,21 +28,11 @@ const setup = async () => {
     await store.load();
     return store;
   };
-  const rows = () =>
-    run(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        return yield* sql<{ key: string }>`SELECT key FROM space_metadata`;
-      }),
-    );
+  const selectRows = Effect.flatMap(SqlClient.SqlClient, (sql) => sql<{ key: string }>`SELECT key FROM space_metadata`);
   // Dropping the row behind the store's back makes any later save visible as a reappearing row.
-  const dropRows = () =>
-    run(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`DELETE FROM space_metadata`;
-      }),
-    );
+  const deleteRows = Effect.flatMap(SqlClient.SqlClient, (sql) => sql`DELETE FROM space_metadata`);
+  const rows = () => run(selectRows);
+  const dropRows = () => run(deleteRows);
   return { open, rows, dropRows };
 };
 

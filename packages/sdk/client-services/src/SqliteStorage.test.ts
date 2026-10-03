@@ -63,21 +63,14 @@ describe('SqliteStorage', () => {
     await run(storage.migrate);
     onTestFinished(() => storage.close());
 
-    const stored = () =>
-      run(
-        Effect.gen(function* () {
-          const sql = yield* SqlClient.SqlClient;
-          return yield* sql<{ data: Uint8Array }>`SELECT data FROM hypercore_files`;
-        }),
-      );
+    const selectRows = Effect.flatMap(
+      SqlClient.SqlClient,
+      (sql) => sql<{ data: Uint8Array }>`SELECT data FROM hypercore_files`,
+    );
     // Dropping the row behind the file's back makes any later save visible as a reappearing row.
-    const dropRow = () =>
-      run(
-        Effect.gen(function* () {
-          const sql = yield* SqlClient.SqlClient;
-          yield* sql`DELETE FROM hypercore_files`;
-        }),
-      );
+    const deleteRows = Effect.flatMap(SqlClient.SqlClient, (sql) => sql`DELETE FROM hypercore_files`);
+    const stored = () => run(selectRows);
+    const dropRow = () => run(deleteRows);
 
     const file = storage.createDirectory('feeds').getOrCreateFile('feed/bitfield');
     await file.write(0, Buffer.from('abc'));
