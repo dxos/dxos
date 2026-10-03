@@ -166,12 +166,20 @@ export const make = <E>(
     const reason: Graph<E>['reason'] = (graph, rules, materialize) => reasonWith(graph, rules, materialize, new Set());
 
     const graph: Graph<E> = {
-      swap: (clear, target, document) =>
+      swap: (writes) =>
         Effect.gen(function* () {
-          const quads = yield* attempt('Failed to parse document', () => parseJsonLd(document, target));
+          const quads: Quad[] = [];
           const stale: Quad[] = [];
-          for (const name of clear) {
-            stale.push(...(yield* ofGraph(name)));
+          for (const { clear, graph, triples } of writes) {
+            const target = DataFactory.namedNode(graph);
+            const parsed = yield* Effect.try({
+              try: () => new Parser({ format: 'N-Triples' }).parse(triples),
+              catch: fail('Failed to parse document'),
+            });
+            quads.push(...parsed.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, target)));
+            for (const name of clear) {
+              stale.push(...(yield* ofGraph(name)));
+            }
           }
           yield* patch(stale, quads);
         }),

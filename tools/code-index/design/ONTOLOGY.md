@@ -174,6 +174,7 @@ Any other block type stays a plain `deus:SpecBlock`.
 | `deus:mtime`                | `xsd:integer`  | Modification time, epoch milliseconds — the incremental-indexing key.                          |
 | `deus:hash`                 | `xsd:string`   | SHA-256 of the contents, hex.                                                                  |
 | `deus:inPackage`            | `deus:Package` | Nearest enclosing `package.json`.                                                              |
+| `deus:testFile`             | `xsd:boolean`  | `true` on a `*.test.*` / `*.spec.*` script; absent otherwise, so rules join on it.             |
 | `deus:imports`              | `deus:File`    | Resolved import used at runtime (value position).                                              |
 | `deus:importsType`          | `deus:File`    | Resolved import used **only** in type positions, or written `import type` — erased at runtime. |
 | `deus:importsModule`        | `xsd:string`   | Unresolved specifier, verbatim (bare package, virtual module, missing file).                   |
