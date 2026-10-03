@@ -125,6 +125,56 @@ conversation.
   `ConversationSummary` per chat is the fallback if topic ranking, cross-space or semantic recall
   are needed. The EDGE follow-ups are tracked in the Interlocutor project (M3).
 
+## Primary use case: priorities, status and relay
+
+Decided 2026-10-03. The agent tracks each person's and group's priorities, can tell other team
+members what everyone is working on, and carries messages between them.
+
+### Memory lifespans
+
+Every memory has a lifespan. The agent classifies what it hears into one of these, by intent rather
+than wording:
+
+| Said                                      | Becomes                                      | Lifespan                                  |
+| ----------------------------------------- | -------------------------------------------- | ----------------------------------------- |
+| "This week I'm on the Discord bot"        | `Memory` `kind: 'status'` about the speaker  | Short — expires (default 7 days)          |
+| "Our priority this quarter is the demo"   | `Goal`, horizon `quarter`, owner person/team | Until achieved or dropped                 |
+| "I'm out until Thursday"                  | `Memory` `kind: 'event'`                     | Expires at the stated time                |
+| "Remember to tell Josiah about this"      | A **relay task** (below), not a memory       | Due in ~2 days, then escalates or expires |
+| "Don't do this again" / "always cc Priya" | `Memory` `kind: 'directive'`, scoped         | Durable — until retracted                 |
+| Facts, preferences, relationships         | `Memory` `kind: 'fact' \| 'preference' \| …` | Durable — until superseded                |
+
+Schema additions to `Memory`: `expiresAt?: DateTime` (absent means durable) and
+`scope?: { space?, guild?, channel?, person? }` (who and where it applies; recall filters on it).
+Expired memories stay in the graph for history but are never recalled; the consolidation routine
+summarises expired status memories into the person's profile ("worked on X in early October").
+
+Directives are **pinned**: recall always includes the directives in scope for the current
+conversation, so "don't do this again" holds in every thread, not only the one it was said in.
+
+### Relay
+
+"Remember to tell Josiah about this" is a request with a recipient and a deadline, so it is a
+`Task` in the **agent's own task list** (a `TaskSet` in its home space, goal 4), not a memory:
+
+- `title` (what to tell), `assignee` the agent, a ref to the **recipient** (`Person` or team),
+  the **requester**, the source message, and a due date (default 2 days).
+- **Delivery** — at the first natural opportunity: the next time the recipient talks to the agent in
+  any conversation the requester's audience allows, or in the agent's digest at the end of a session
+  (when a conversation goes quiet). Delivered tasks are marked done with the delivery recorded
+  (where, when, the message).
+- **Overdue** — past the due date the agent tells the requester it couldn't deliver and asks whether
+  to keep trying, DM, or drop it.
+- Only what the requester asked to relay is relayed; the agent never forwards other memories of
+  theirs on its own.
+
+### "What is everyone working on?"
+
+Answered from the graph, not from re-reading conversations: for each member of the team (people in
+the same server or space), their confirmed goals for the current horizon plus their unexpired status
+memories, newest first, each with when it was said. Visibility follows the same-server rule; a
+status said in a DM is not shared.
+
 ## Notes, concepts and the agent's own tasks
 
 Goals 2, 4 and 6 in [DESIGN.md](./DESIGN.md) extend the graph:
