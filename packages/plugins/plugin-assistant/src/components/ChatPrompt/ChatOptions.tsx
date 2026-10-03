@@ -48,7 +48,7 @@ import { resolveProvider } from '../../processor/index.ts';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
-  toolbar: 'p-0 gap-0 border-t border-separator',
+  toolbar: 'px-1 gap-1 border-t border-separator',
 };
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
@@ -111,7 +111,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
               <EnvironmentPanel chat={chat} />
             </Tabs.Content>
-            <Tabs.List classNames={[styles.toolbar]}>
+            <Tabs.List classNames={styles.toolbar}>
               <Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
               <Tabs.Trigger value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
               <Tabs.Trigger value='mcp-servers' icon='ph--plugs-connected--regular' label={t('options.mcp.title')} />
@@ -166,7 +166,9 @@ const SkillsPanel = ({ registry, db, context }: Pick<ChatOptionsProps, 'registry
             );
           })}
         </SearchList.Viewport>
-        <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
+        <Toolbar.Root>
+          <SearchList.Input placeholder={t('search.placeholder')} classNames='border-t border-separator' autoFocus />
+        </Toolbar.Root>
       </SearchList.Content>
     </SearchList.Root>
   );
@@ -190,7 +192,7 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
       {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
       <Listbox.Content gutter='none' aria-label={t('chat-view.title')}>
         {Assistant.ChatViews.map((view) => (
-          <Listbox.Item key={view} id={view} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+          <Listbox.Item key={view} id={view} classNames='dx-focus-ring rounded-xs'>
             <Listbox.ItemText>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemText>
             <Listbox.ItemIndicator />
           </Listbox.Item>
@@ -232,7 +234,7 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
       {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
       <Listbox.Content gutter='none' aria-label={t('options.environment.title')}>
         {environments.map((environment) => (
-          <Listbox.Item key={environment} id={environment} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
+          <Listbox.Item key={environment} id={environment} classNames='dx-focus-ring rounded-xs'>
             <Listbox.ItemText>{t(`chat-environment.${environment}.label`)}</Listbox.ItemText>
             <Listbox.ItemIndicator />
           </Listbox.Item>
@@ -242,9 +244,9 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
   );
 };
 
-type ChatEnvironment = (typeof CHAT_ENVIRONMENTS)[number];
-
 const CHAT_ENVIRONMENTS = ['local', 'remote'] as const;
+
+type ChatEnvironment = (typeof CHAT_ENVIRONMENTS)[number];
 
 const ModelsPanel = ({
   presets,
@@ -252,22 +254,18 @@ const ModelsPanel = ({
   onPresetChange,
 }: Pick<ChatOptionsProps, 'presets' | 'preset' | 'onPresetChange'>) => {
   const { t } = useTranslation(meta.profile.key);
+
   return (
-    <div className='dx-expand flex flex-col'>
+    <Flex column classNames='dx-expand'>
       <Listbox.Root
         value={preset}
         onValueChange={onPresetChange}
         autoFocus
         items={(presets ?? []).map(({ id, label }) => ({ value: id, label: label }))}
       >
-        <Listbox.Content aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
+        <Listbox.Content gutter='none' aria-label={t('options.chat-model.title')} data-testid='assistant.models'>
           {presets?.map(({ id, label }) => (
-            <Listbox.Item
-              key={id}
-              id={id}
-              classNames='px-2 py-1 dx-focus-ring rounded-xs'
-              data-testid={`assistant.models.${id}`}
-            >
+            <Listbox.Item key={id} id={id} classNames='dx-focus-ring rounded-xs' data-testid={`assistant.models.${id}`}>
               <Listbox.ItemText>{label}</Listbox.ItemText>
               <Listbox.ItemIndicator />
             </Listbox.Item>
@@ -277,7 +275,7 @@ const ModelsPanel = ({
       <Toolbar.Root>
         <OnlineSwitch />
       </Toolbar.Root>
-    </div>
+    </Flex>
   );
 };
 
@@ -315,15 +313,15 @@ const OnlineSwitch = () => {
   );
 };
 
-type McpServersPanelProps = {
-  db: Database.Database;
-};
-
 type McpServerDraft = {
   name: string;
   url: string;
   protocol: McpServer.Spec['protocol'];
   apiKey?: string;
+};
+
+type McpServersPanelProps = {
+  db: Database.Database;
 };
 
 const McpServersPanel = ({ db }: McpServersPanelProps) => {
