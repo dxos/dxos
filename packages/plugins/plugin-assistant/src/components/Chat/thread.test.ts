@@ -92,6 +92,38 @@ describe('projectThread', () => {
     expect(text(messages)).toEqual(['first', 'answer']);
   });
 
+  // The agent sends a turn's prompt to the thread before the feed has it; with no lineage of its own it
+  // must continue from the rewind point, not chain onto the abandoned reply that sorts before it.
+  test('a turn message the feed has not recorded yet follows the rewound head', ({ expect }) => {
+    const first = message('first');
+    const answer = message('answer');
+    const asked = message('asked');
+    const replied = message('replied');
+    const revised = message('revised');
+
+    const { messages } = projectThread({
+      feedMessages: [first, answer, asked, replied],
+      pendingMessages: [replied, revised],
+      rewindFrom: asked.id,
+    });
+    expect(text(messages)).toEqual(['first', 'answer', 'revised']);
+  });
+
+  test('a recorded continuation ends the rewind before its pointer is cleared', ({ expect }) => {
+    const first = message('first');
+    const answer = message('answer');
+    const asked = message('asked');
+    const replied = message('replied');
+    const revised = message('revised');
+    Feed.setParent(revised, answer);
+
+    const { messages } = projectThread({
+      feedMessages: [first, answer, asked, replied, revised],
+      rewindFrom: asked.id,
+    });
+    expect(text(messages)).toEqual(['first', 'answer', 'revised']);
+  });
+
   test('an empty feed projects nothing', ({ expect }) => {
     expect(projectThread({ feedMessages: [] }).messages).toEqual([]);
   });

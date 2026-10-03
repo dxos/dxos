@@ -286,7 +286,13 @@ export class Request {
         }
       }
 
-      yield* this._submitMessage(yield* formatUserPrompt({ prompt, history }));
+      const userMessage = yield* formatUserPrompt({ prompt, history });
+      // Also sent on the ephemeral channel, as the reply's blocks are: the feed shows the prompt only
+      // once its index catches up, which can be after the reply has started streaming in.
+      for (const block of userMessage.blocks) {
+        yield* Trace.write(Trace.PartialBlock, { messageId: userMessage.id, role: 'user', block });
+      }
+      yield* this._submitMessage(userMessage);
     }).pipe(Effect.withSpan('AiRequest.begin'));
 
   /**

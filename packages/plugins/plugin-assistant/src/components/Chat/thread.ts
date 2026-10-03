@@ -58,10 +58,18 @@ export const projectThread = ({
   rewindFrom?: string;
 }): ThreadProjection => {
   const all = Array.dedupeWith([...feedMessages, ...pendingMessages], ({ id: a }, { id: b }) => a === b);
+  // A turn's messages that the feed has not caught up with yet continue from the thread's head, so
+  // they follow the lineage rather than join it: with no parent of their own, lineage would chain them
+  // to whatever sorts before them, which after a rewind is the abandoned reply.
+  const feedIds = new Set(feedMessages.map((message) => message.id));
+  const unrecorded = Array.sort(
+    pendingMessages.filter((message) => !feedIds.has(message.id) && !isQueued(message)),
+    byAppendOrder,
+  );
   // A queue entry is not a turn: the turn the agent runs from one appends its own user message, so an
   // entry never joins the thread. While it waits it belongs to the queue stack instead.
   const sorted = Array.sort(
-    all.filter((message) => !isQueued(message)),
+    feedMessages.filter((message) => !isQueued(message)),
     byAppendOrder,
   );
   // An in-flight entry is already speaking through the thread's user message, and its ack does not
@@ -75,16 +83,21 @@ export const projectThread = ({
     const index = sorted.findIndex((message) => message.id === rewindFrom);
     if (index === 0) {
       // Rewound to the first turn: nothing precedes it.
-      return { messages: [], queued };
+      return { messages: collapseToolRuns(unrecorded), queued };
     }
-    if (index > 0) {
-      return { messages: collapseToolRuns(Feed.history(sorted, { head: sorted[index - 1].id }).items), queued };
+    // Once a recorded message continues from the rewind head the fork is lineage, whether or not the
+    // pointer has been cleared yet.
+    if (index > 0 && !sorted.some((message) => Feed.getParent(message) === sorted[index - 1].id)) {
+      return {
+        messages: collapseToolRuns([...Feed.history(sorted, { head: sorted[index - 1].id }).items, ...unrecorded]),
+        queued,
+      };
     }
-    // Not present — a stale pointer (e.g. the message never replicated); fall through to the feed's
-    // own lineage rather than blanking the thread.
+    // Not present — a stale pointer (e.g. the message never replicated) — or already continued; fall
+    // through to the feed's own lineage rather than blanking the thread.
   }
 
-  return { messages: collapseToolRuns(Feed.history(sorted).items), queued };
+  return { messages: collapseToolRuns([...Feed.history(sorted).items, ...unrecorded]), queued };
 };
 
 /**

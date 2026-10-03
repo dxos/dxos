@@ -35,7 +35,7 @@ import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../reque
 import { ToolExecutionServices } from '../tool-runtime/index.ts';
 import * as AiContext from './AiContext.ts';
 import * as Harness from './Harness.ts';
-import { SessionStore } from './SessionStore.ts';
+import { SessionStore, isQueued } from './SessionStore.ts';
 import * as SkillHooks from './SkillHooks.ts';
 import { createToolkit } from './toolkit.ts';
 
@@ -175,21 +175,27 @@ export class Session extends Resource {
     const rewindFrom = this._feed.rewindFrom;
     const parent = rewindFrom !== undefined ? await this.#parentForRewind(rewindFrom) : undefined;
 
-    return RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
-      Effect.gen({ self: this }, function* () {
-        yield* Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined);
-        if (rewindFrom !== undefined) {
-          Obj.update(this._feed, (feed) => {
-            feed.rewindFrom = undefined;
-          });
-        }
-      }),
+    await RuntimeProvider.runPromise(Effect.succeed(this._runtime))(
+      Feed.append(this._feed, [message], parent !== undefined ? { parent } : undefined),
     );
+    if (rewindFrom !== undefined) {
+      // Cleared only once feed queries see the continuation: the thread truncates on the pointer, and
+      // clearing it before the index has the continuation shows the abandoned turn again until it does.
+      await this.#messagesInAppendOrder();
+      Obj.update(this._feed, (feed) => {
+        feed.rewindFrom = undefined;
+      });
+    }
   }
 
-  /** The message preceding `rewindFrom` in append order, which the continuation parents to. */
+  /**
+   * The message preceding `rewindFrom` in append order, which the continuation parents to.
+   *
+   * Queue entries are skipped: a turn's own user message is appended right after the entry it was
+   * taken from, and an entry never joins the thread, so parenting to one cuts the lineage off.
+   */
   async #parentForRewind(rewindFrom: string): Promise<string | undefined> {
-    const messages = await this.#messagesInAppendOrder();
+    const messages = (await this.#messagesInAppendOrder()).filter((message) => !isQueued(message));
     const index = messages.findIndex((message) => message.id === rewindFrom);
     return index > 0 ? messages[index - 1].id : undefined;
   }

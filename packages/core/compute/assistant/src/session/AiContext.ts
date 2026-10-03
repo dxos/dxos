@@ -191,9 +191,10 @@ export class Binder extends Resource {
         log.warn('bindings sync failed; keeping the current bindings', { error });
         return;
       }
-      this.#readWrites = writes;
       log('sync', { bindingItems: results.length });
       await this._updateBindings(results);
+      // Only after the update lands, so one that fails is retried by the next sync.
+      this.#readWrites = writes;
       log('sync complete', {
         skills: this._registry.get(this._skills).length,
         // Read the meta key directly: `Skill.getKey` throws on a space-authored skill, which would
