@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -9,7 +11,7 @@ import { trim } from '@dxos/util';
 
 import { DeleteMemory, QueryMemories, SaveMemory } from './operations/definitions.ts';
 
-const SKILL_KEY = 'org.dxos.skill.memory';
+export const key = 'org.dxos.skill.memory';
 
 const instructions = trim`
   You have the ability to save and recall memories.
@@ -21,9 +23,9 @@ const instructions = trim`
   You can also delete outdated or incorrect memories.
 `;
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Memory',
     description: 'Persistent memory storage and retrieval.',
     agentCanEnable: true,
@@ -33,9 +35,5 @@ const make = () =>
     tools: Skill.toolDefinitions({ operations: [SaveMemory, QueryMemories, DeleteMemory] }),
   });
 
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;
+export { MemoryHandlers as Handlers } from './operations/index.ts';
+export * as Operations from './operations/definitions.ts';

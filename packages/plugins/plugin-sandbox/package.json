@@ -136,8 +136,8 @@
       "import": "./dist/lib/RepositoryService.mjs"
     },
     "./SandboxSkill": {
-      "source": "./src/SandboxSkill.ts",
-      "types": "./dist/types/src/SandboxSkill.d.ts",
+      "source": "./src/skills/SandboxSkill.ts",
+      "types": "./dist/types/src/skills/SandboxSkill.d.ts",
       "import": "./dist/lib/ns/SandboxSkill.mjs"
     }
   },

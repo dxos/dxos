@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
 import { RepositoryOperation, Sandbox, SandboxOperation } from '#types';
 
-const make = () =>
+export const make = () =>
   Skill.make({
     key: Sandbox.SKILL_KEY,
     name: 'Sandbox',
@@ -59,9 +61,4 @@ const make = () =>
     }),
   });
 
-const skill: Skill.Definition = {
-  key: Sandbox.SKILL_KEY,
-  make,
-};
-
-export default skill;
+export const key = Sandbox.SKILL_KEY;

@@ -2,17 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
 import { DelegateTask, DelegateTasks } from './operations/definitions.ts';
 
-const SKILL_KEY = 'org.dxos.skill.delegation';
+export const key = 'org.dxos.skill.delegation';
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Delegation',
     description: 'Delegates work to sub-agents and tracks it as plan tasks.',
     tools: Skill.toolDefinitions({ operations: [DelegateTask, DelegateTasks] }),
@@ -29,9 +31,6 @@ const make = () =>
     }),
   });
 
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;
+export { DelegationSkillHandlers as Handlers } from './operations/index.ts';
+export * as Operations from './operations/definitions.ts';
+export { makeDelegationStrategy } from '../../supervisor/delegation-strategy.ts';

@@ -6,7 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    'ns/SandboxSkill': 'src/SandboxSkill.ts',
+    'ns/SandboxSkill': 'src/skills/SandboxSkill.ts',
     'index': 'src/index.ts',
     'SandboxPlugin': 'src/SandboxPlugin.ts',
     'skills': 'src/skills/index.ts',

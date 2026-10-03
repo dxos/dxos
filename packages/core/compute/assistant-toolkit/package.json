@@ -38,48 +38,48 @@
       "import": "./dist/lib/ns/AgentOperationHandlerSet.mjs"
     },
     "./AgentSkill": {
-      "source": "./src/AgentSkill.ts",
-      "types": "./dist/types/src/AgentSkill.d.ts",
+      "source": "./src/skills/agent/AgentSkill.ts",
+      "types": "./dist/types/src/skills/agent/AgentSkill.d.ts",
       "import": "./dist/lib/ns/AgentSkill.mjs"
     },
     "./AlarmSkill": {
-      "source": "./src/AlarmSkill.ts",
-      "types": "./dist/types/src/AlarmSkill.d.ts",
+      "source": "./src/skills/alarm/AlarmSkill.ts",
+      "types": "./dist/types/src/skills/alarm/AlarmSkill.d.ts",
       "import": "./dist/lib/ns/AlarmSkill.mjs"
     },
     "./AutomationSkill": {
-      "source": "./src/AutomationSkill.ts",
-      "types": "./dist/types/src/AutomationSkill.d.ts",
+      "source": "./src/skills/automation/AutomationSkill.ts",
+      "types": "./dist/types/src/skills/automation/AutomationSkill.d.ts",
       "import": "./dist/lib/ns/AutomationSkill.mjs"
     },
     "./BrowserSkill": {
-      "source": "./src/BrowserSkill.ts",
-      "types": "./dist/types/src/BrowserSkill.d.ts",
+      "source": "./src/skills/browser/BrowserSkill.ts",
+      "types": "./dist/types/src/skills/browser/BrowserSkill.d.ts",
       "import": "./dist/lib/ns/BrowserSkill.mjs"
     },
     "./ChatContextSkill": {
-      "source": "./src/ChatContextSkill.ts",
-      "types": "./dist/types/src/ChatContextSkill.d.ts",
+      "source": "./src/skills/chat-context/ChatContextSkill.ts",
+      "types": "./dist/types/src/skills/chat-context/ChatContextSkill.d.ts",
       "import": "./dist/lib/ns/ChatContextSkill.mjs"
     },
     "./DelegationSkill": {
-      "source": "./src/DelegationSkill.ts",
-      "types": "./dist/types/src/DelegationSkill.d.ts",
+      "source": "./src/skills/delegation/DelegationSkill.ts",
+      "types": "./dist/types/src/skills/delegation/DelegationSkill.d.ts",
       "import": "./dist/lib/ns/DelegationSkill.mjs"
     },
     "./MemorySkill": {
-      "source": "./src/MemorySkill.ts",
-      "types": "./dist/types/src/MemorySkill.d.ts",
+      "source": "./src/skills/memory/MemorySkill.ts",
+      "types": "./dist/types/src/skills/memory/MemorySkill.d.ts",
       "import": "./dist/lib/ns/MemorySkill.mjs"
     },
     "./PlanningSkill": {
-      "source": "./src/PlanningSkill.ts",
-      "types": "./dist/types/src/PlanningSkill.d.ts",
+      "source": "./src/skills/planning/PlanningSkill.ts",
+      "types": "./dist/types/src/skills/planning/PlanningSkill.d.ts",
       "import": "./dist/lib/ns/PlanningSkill.mjs"
     },
     "./SkillManagerSkill": {
-      "source": "./src/SkillManagerSkill.ts",
-      "types": "./dist/types/src/SkillManagerSkill.d.ts",
+      "source": "./src/skills/skill-manager/SkillManagerSkill.ts",
+      "types": "./dist/types/src/skills/skill-manager/SkillManagerSkill.d.ts",
       "import": "./dist/lib/ns/SkillManagerSkill.mjs"
     },
     "./SlashCommand": {
@@ -88,8 +88,8 @@
       "import": "./dist/lib/ns/SlashCommand.mjs"
     },
     "./WebSearchSkill": {
-      "source": "./src/WebSearchSkill.ts",
-      "types": "./dist/types/src/WebSearchSkill.d.ts",
+      "source": "./src/skills/websearch/WebSearchSkill.ts",
+      "types": "./dist/types/src/skills/websearch/WebSearchSkill.d.ts",
       "import": "./dist/lib/ns/WebSearchSkill.mjs"
     }
   },

@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -9,7 +11,7 @@ import { trim } from '@dxos/util';
 
 import { ContextAdd, ContextRemove } from './operations/definitions.ts';
 
-const SKILL_KEY = 'org.dxos.skill.chatContext';
+export const key = 'org.dxos.skill.chatContext';
 
 const instructions = trim`
   You can bind objects into the chat's context so later turns can see them, and unbind them again.
@@ -17,9 +19,9 @@ const instructions = trim`
   Database skill's job (plugin-space).
 `;
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Chat context',
     description: "Bind objects into the chat's context, and unbind them.",
     agentCanEnable: true,
@@ -31,9 +33,5 @@ const make = () =>
     }),
   });
 
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;
+export { ChatContextHandlers as Handlers } from './operations/index.ts';
+export * as Operations from './operations/definitions.ts';

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -9,7 +11,7 @@ import { Ref, Type } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-const SKILL_KEY = 'org.dxos.skill.automation';
+export const key = 'org.dxos.skill.automation';
 
 const instructions = trim`
   Automation allows you to automatically initiate actions based on events.
@@ -89,19 +91,12 @@ const instructions = trim`
   }
 `;
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Triggers',
     description: 'Trigger management and automation.',
     instructions: {
       source: Ref.make(Text.make({ content: instructions })),
     },
   });
-
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;
