@@ -139,13 +139,76 @@ const relationQuery = (kind: Graph.EdgeKind, iris: readonly string[]): string =>
       }`;
   }
   // Symbol-level relations are lifted to their files: a symbol IRI is its file IRI plus a fragment.
+  // The third branch finds users who reached a declaration through a barrel's named re-export.
   return `PREFIX deus: <${D}>
     SELECT ?from ?to WHERE {
       { VALUES ?file { ${set} } ?file deus:declares ?from . ?from deus:${kind} ?to }
       UNION
       { VALUES ?file { ${set} } ?file deus:declares ?to . ?from deus:${kind} ?to }
+      UNION
+      { VALUES ?file { ${set} } ?file deus:declares ?to . ?alias deus:aliasOf ?to . ?from deus:${kind} ?alias }
     }`;
 };
+
+/**
+ * The files among `iris` that only forward: they re-export at least one file and declare nothing
+ * but re-exports. Such a file is how code is reached, not a component of it.
+ */
+export const barrelFiles = (store: Store.Api, iris: readonly string[]): Effect.Effect<Set<string>, Store.StoreError> =>
+  Effect.gen(function* () {
+    const barrels = new Set<string>();
+    for (const batch of chunks([...new Set(iris)], 40)) {
+      const rows = yield* store.select(`PREFIX deus: <${D}>
+        SELECT DISTINCT ?file WHERE {
+          VALUES ?file { ${values(batch)} }
+          ?file deus:reexports ?forwarded .
+          FILTER NOT EXISTS { ?file deus:declares ?symbol . FILTER NOT EXISTS { ?symbol deus:kind "reexport" } }
+        }`);
+      for (const row of rows) {
+        barrels.add(row.file);
+      }
+    }
+    return barrels;
+  });
+
+/**
+ * The declaration behind each symbol IRI that names a re-export: the barrel's `aliasOf` for a named
+ * re-export, else the symbol of that name in a file the barrel reaches through `export *`. Without
+ * this a dependency on `@dxos/x` lands on the package's `index.ts` rather than on what it uses.
+ */
+export const resolveReexports = (
+  store: Store.Api,
+  iris: readonly string[],
+): Effect.Effect<Map<string, string>, Store.StoreError> =>
+  Effect.gen(function* () {
+    const resolved = new Map<string, string>();
+    const symbols = [...new Set(iris)].filter((iri) => isFileIri(iri) && iri.includes('#'));
+    for (const batch of chunks(symbols, 40)) {
+      const rows = yield* store.select(`PREFIX deus: <${D}>
+        SELECT ?target ?decl WHERE { VALUES ?target { ${values(batch)} } ?target deus:aliasOf ?decl }`);
+      for (const row of rows) {
+        resolved.set(row.target, row.decl);
+      }
+    }
+    const starred = symbols.filter((iri) => !resolved.has(iri));
+    for (const batch of chunks(starred, 40)) {
+      const triples = batch
+        .map((iri) => `(<${iri}> <${Graph.fileOfSymbol(iri)}> ${JSON.stringify(iri.slice(iri.indexOf('#') + 1))})`)
+        .join(' ');
+      const rows = yield* store.select(`PREFIX deus: <${D}>
+        SELECT ?target ?decl WHERE {
+          VALUES (?target ?barrel ?name) { ${triples} }
+          ?barrel deus:reexports+ ?file . ?file deus:declares ?decl . ?decl deus:name ?name .
+          FILTER NOT EXISTS { ?decl deus:kind "reexport" }
+        }`);
+      for (const row of rows) {
+        if (!resolved.has(row.target)) {
+          resolved.set(row.target, row.decl);
+        }
+      }
+    }
+    return resolved;
+  });
 
 /** Every lifted edge of the given kinds touching any of `iris`, file → file, components only. */
 export const edgesTouching = (
@@ -154,25 +217,35 @@ export const edgesTouching = (
   kinds: readonly Graph.EdgeKind[],
 ): Effect.Effect<Graph.Edge[], Store.StoreError> =>
   Effect.gen(function* () {
-    const edges: Graph.Edge[] = [];
+    const raw: { from: string; to: string; kind: Graph.EdgeKind }[] = [];
     for (const kind of kinds) {
       for (const batch of chunks(iris, 40)) {
         const rows = yield* store.select(relationQuery(kind, batch));
-        for (const row of rows) {
-          const from = Graph.fileOfSymbol(row.from);
-          const to = Graph.fileOfSymbol(row.to);
-          if (
-            from !== to &&
-            isFileIri(from) &&
-            isFileIri(to) &&
-            isComponentPath(Graph.pathOf(from, Ontology.FILE_BASE)) &&
-            isComponentPath(Graph.pathOf(to, Ontology.FILE_BASE))
-          ) {
-            edges.push({ from, to, kind });
-          }
-        }
+        raw.push(...rows.map((row) => ({ from: row.from, to: row.to, kind })));
       }
     }
+    const declarations = yield* resolveReexports(
+      store,
+      raw.map((edge) => edge.to),
+    );
+    const lifted = raw.map((edge) => ({
+      from: Graph.fileOfSymbol(edge.from),
+      to: Graph.fileOfSymbol(declarations.get(edge.to) ?? edge.to),
+      kind: edge.kind,
+    }));
+    // An import of a barrel that `resolveReexports` could not see through names no component; the
+    // symbol relations from the same file carry the dependency to what it actually uses.
+    const barrels = yield* barrelFiles(store, lifted.flatMap((edge) => [edge.from, edge.to]).filter(isFileIri));
+    const edges = lifted.filter(
+      ({ from, to }) =>
+        from !== to &&
+        isFileIri(from) &&
+        isFileIri(to) &&
+        !barrels.has(from) &&
+        !barrels.has(to) &&
+        isComponentPath(Graph.pathOf(from, Ontology.FILE_BASE)) &&
+        isComponentPath(Graph.pathOf(to, Ontology.FILE_BASE)),
+    );
     return Graph.dedupe(edges);
   });
 
@@ -269,6 +342,14 @@ export const expand = (
         return iri;
       });
       frontier = added;
+    }
+    // Seeds and seed-package siblings arrive without an edge test, so a barrel can still be here.
+    const barrels = yield* barrelFiles(store, [...nodes.keys()]);
+    if (barrels.size < nodes.size) {
+      for (const iri of barrels) {
+        nodes.delete(iri);
+      }
+      frontier = frontier.filter((iri) => !barrels.has(iri));
     }
     // The edges among the final set, including those between nodes added on the last hop.
     const lastEdges = frontier.length > 0 ? yield* edgesTouching(store, frontier, relations) : [];
