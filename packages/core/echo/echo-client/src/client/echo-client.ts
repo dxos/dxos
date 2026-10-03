@@ -6,7 +6,7 @@ import * as EffectContext from 'effect/Context';
 
 import { type CleanupFn, Event } from '@dxos/async';
 import { type Context, ContextDisposedError, LifecycleState, Resource } from '@dxos/context';
-import type { Entity } from '@dxos/echo';
+import type { Entity, Hypergraph } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -20,7 +20,10 @@ import { IndexQuerySourceProvider, type LoadObjectProps, type ObjectUpdate } fro
 /** A root that has not linked an index hit by then may never; `linksAdded` re-hydrates it if it does. */
 const ROOT_LINK_WAIT_TIMEOUT = 2_000;
 
-export type EchoClientProps = {};
+export type EchoClientProps = {
+  /** Storage for `graph.localDatabase`; without it local databases are unavailable. */
+  localDatabaseFactory?: Hypergraph.LocalDatabaseFactory;
+};
 
 export type ConnectToServiceProps = {
   dataService: DataService.Client;
@@ -81,8 +84,9 @@ export class EchoClient extends Resource {
   private readonly _objectsUpdated = new Event<ObjectUpdate>();
   private readonly _dbUpdateSubscriptions = new Map<SpaceId, CleanupFn>();
 
-  constructor(_: EchoClientProps = {}) {
+  constructor({ localDatabaseFactory }: EchoClientProps = {}) {
     super();
+    this._graph._setLocalDatabaseFactory(localDatabaseFactory);
   }
 
   get graph(): HypergraphImpl {
@@ -141,6 +145,7 @@ export class EchoClient extends Resource {
       await db.close();
     }
     this._databases.clear();
+    await this._graph._closeLocalDatabases();
   }
 
   // TODO(dmaretskyi): Make async?

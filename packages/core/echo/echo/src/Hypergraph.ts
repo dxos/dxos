@@ -16,6 +16,7 @@ import type * as Entity from './Entity.ts';
 import type * as Key from './Key.ts';
 import type * as Ref from './Ref.ts';
 import type * as Registry from './Registry.ts';
+import type * as Type from './Type.ts';
 
 /**
  * Resolution context.
@@ -90,6 +91,15 @@ export interface Hypergraph extends Database.Queryable {
   getDatabase(spaceId: Key.SpaceId): Database.Database | undefined;
 
   /**
+   * The device-local database named `name`, opened on first use. It is not a space: nothing in it
+   * replicates, it is absent from {@link query} and {@link getDatabase}, and the same name reopens
+   * the same objects. Fails when the graph was built without a {@link LocalDatabaseFactory}.
+   *
+   * @performance O(1); returns at once and opens storage on the database's first read or write.
+   */
+  localDatabase(name: string): Database.Database;
+
+  /**
    * Registers a pluggable blob storage backend under `name`, claiming its declared URI schemes.
    * Registering a scheme already claimed by another backend is an error.
    *
@@ -107,6 +117,30 @@ export interface Hypergraph extends Database.Queryable {
    */
   get defaultBlobStorage(): string;
 }
+
+/**
+ * A database opened by {@link LocalDatabaseFactory}; its owner closes it.
+ */
+export interface LocalDatabase extends Database.Database {
+  /** Flushes pending writes and releases the database. */
+  close(): Promise<void>;
+}
+
+export type LocalDatabaseOptions = {
+  /** Static types to hydrate stored objects with. */
+  readonly types: readonly Type.AnyEntity[];
+};
+
+/**
+ * Opens the local database for a name; supplied by the storage backend (e.g. `@dxos/echo-sqlite`).
+ */
+export type LocalDatabaseFactory = (name: string, options: LocalDatabaseOptions) => LocalDatabase;
+
+/** The graph has no {@link LocalDatabaseFactory}, so it cannot open local databases. */
+export class LocalDatabaseNotAvailableError extends BaseError.extend(
+  'LocalDatabaseNotAvailableError',
+  'Local databases are not available.',
+) {}
 
 /**
  * Effect service tag for Hypergraph dependency injection.

@@ -48,6 +48,7 @@ import { LiveQueryResult } from './query-result.ts';
 import { localEntityId, toRecord } from './record.ts';
 import { SimpleRegistry, matchRegistry } from './registry.ts';
 import { type CompiledQuery, compileQuery } from './sql/compile.ts';
+import { type StoreDriver, makeLocalDriver, runWith } from './store-driver.ts';
 
 export type OpenOptions = {
   /**
@@ -78,7 +79,12 @@ export type Diagnostics = {
   readonly tracked: number;
 };
 
-type Run = <A>(effect: Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>) => Promise<A>;
+export type MakeOptions = {
+  spaceId: SpaceId;
+  /** Storage for {@link spaceId}; in this process, or across an RPC boundary. */
+  driver: StoreDriver;
+  types?: readonly Type.AnyEntity[];
+};
 
 /**
  * ECHO {@link Database.Database} backed by SQLite, which is the source of truth: the space is never
@@ -87,12 +93,13 @@ type Run = <A>(effect: Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>)
  * is garbage-collected; mutations are observed with `Entity.subscribe` and written behind, batched per
  * microtask, and held strongly until durable.
  */
-export class SqliteDatabase implements Database.Database, EntitySource {
+export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
   readonly [Database.TypeId]: Database.TypeId = Database.TypeId;
 
   readonly #spaceId: SpaceId;
-  readonly #store: ObjectStore;
-  readonly #run: Run;
+  readonly #driver: StoreDriver;
+  /** Settles once migrations ran and persisted types are registered; every storage call waits on it. */
+  #ready: Promise<void> = Promise.resolve();
   readonly #registry: SimpleRegistry;
   readonly #resolver: DatabaseRefResolver;
   readonly #graph: SqliteHypergraph;
@@ -124,10 +131,9 @@ export class SqliteDatabase implements Database.Database, EntitySource {
   readonly #committed = new Event<ReadonlySet<string>>();
   readonly #counters = { hydrated: 0, queries: 0, loads: 0 };
 
-  private constructor(spaceId: SpaceId, run: Run, types: readonly Type.AnyEntity[]) {
+  private constructor(spaceId: SpaceId, driver: StoreDriver, types: readonly Type.AnyEntity[]) {
     this.#spaceId = spaceId;
-    this.#store = new ObjectStore(spaceId);
-    this.#run = run;
+    this.#driver = driver;
     // The meta-type is registered so persisted `Type.Type` rows decode.
     this.#registry = new SimpleRegistry([Type.Type, ...types]);
     this.#resolver = new DatabaseRefResolver(this);
@@ -144,18 +150,28 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     return Effect.acquireRelease(
       Effect.gen(function* () {
         const context = yield* Effect.context<SqlClient.SqlClient>();
-        const db = new SqliteDatabase(
-          options.spaceId ?? SpaceId.random(),
-          Effect.runPromiseWith(context),
-          options.types ?? [],
-        );
-        yield* db.#store.migrate();
-        const types = yield* db.#store.loadTypes();
+        const spaceId = options.spaceId ?? SpaceId.random();
+        // Initialized here rather than through the driver so failures keep their `SqlError` type.
+        const store = new ObjectStore(spaceId);
+        yield* store.migrate();
+        const types = yield* store.loadTypes();
+        const db = new SqliteDatabase(spaceId, makeLocalDriver(spaceId, runWith(context)), options.types ?? []);
         yield* Effect.promise(() => db.#registerTypes(types));
         return db;
       }),
       (db) => Effect.promise(() => db.close()),
     ).pipe(Effect.withSpan('SqliteDatabase.open'));
+  }
+
+  /**
+   * Returns the database at once and opens storage in the background; reads and writes wait for it.
+   * The caller owns the database and must {@link close} it. A failed open fails every later storage call.
+   */
+  static make({ spaceId, driver, types = [] }: MakeOptions): SqliteDatabase {
+    const db = new SqliteDatabase(spaceId, driver, types);
+    db.#ready = driver.open().then((rows) => db.#registerTypes(rows));
+    db.#ready.catch((error) => log.catch(error));
+    return db;
   }
 
   /**
@@ -205,7 +221,8 @@ export class SqliteDatabase implements Database.Database, EntitySource {
    * `EXPLAIN QUERY PLAN` detail lines for a query's compiled statement.
    */
   explain(query: Query.Any | Filter.Any): Promise<string[]> {
-    return this.#run(this.#store.explain(this.compile(query)));
+    const compiled = this.compile(query);
+    return this.#storage().then((driver) => driver.explain(compiled));
   }
 
   /**
@@ -258,6 +275,8 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
   async addType<T extends Type.AnyEntity>(type: T): Promise<T> {
     invariant(Type.isType(type), 'addType expects a Type entity');
+    // Persisted types are not known until open has read them.
+    await this.#ready;
     const typename = Type.getTypename(type);
     const version = Type.getVersion(type);
     for (const existing of this.#types.values()) {
@@ -348,7 +367,7 @@ export class SqliteDatabase implements Database.Database, EntitySource {
 
   async stats(): Promise<Database.DatabaseStats> {
     await this.flush();
-    const objects = await this.#run(this.#store.counts());
+    const objects = await (await this.#storage()).counts();
     const { resident } = this.diagnostics();
     return {
       objects,
@@ -374,7 +393,7 @@ export class SqliteDatabase implements Database.Database, EntitySource {
    */
   async runGarbageCollection(_options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
     await this.flush();
-    const ids = await this.#run(this.#store.deletedIds());
+    const ids = await (await this.#storage()).deletedIds();
     for (const id of ids) {
       const entity = this.#live.get(id)?.deref();
       if (entity) {
@@ -561,8 +580,13 @@ export class SqliteDatabase implements Database.Database, EntitySource {
       return hydrating;
     }
     this.#counters.loads++;
-    const stored = await this.#run(this.#store.load(id));
+    const stored = await (await this.#storage()).load(id);
     return stored ? this.#hydrate(stored) : undefined;
+  }
+
+  async #storage(): Promise<StoreDriver> {
+    await this.#ready;
+    return this.#driver;
   }
 
   #entityIdOf(uri: string): string | undefined {
@@ -576,7 +600,7 @@ export class SqliteDatabase implements Database.Database, EntitySource {
   async #execute(compiled: CompiledQuery): Promise<Entity.Unknown[]> {
     await this.flush();
     this.#counters.queries++;
-    const rows = await this.#run(this.#store.query(compiled));
+    const rows = await (await this.#storage()).query(compiled);
     const entities = await Promise.all(rows.map((row) => this.#hydrate(row)));
     return entities.filter((entity): entity is Entity.Unknown => entity !== undefined);
   }
@@ -603,7 +627,7 @@ export class SqliteDatabase implements Database.Database, EntitySource {
     if (!hydrating) {
       hydrating = (async () => {
         try {
-          const snapshot = await objectFromJSON(stored.body, {
+          const snapshot = await objectFromJSON(JSON.parse(stored.body), {
             refResolver: this.#resolver,
             uri: EID.make({ spaceId: this.#spaceId, entityId: stored.id }),
             database: this,
@@ -741,7 +765,7 @@ export class SqliteDatabase implements Database.Database, EntitySource {
       const records = [...batch.values()].map((entity) => toRecord(entity, this.#spaceId));
       this.#writes = this.#writes.then(async () => {
         try {
-          await this.#run(this.#store.write(records, purged));
+          await (await this.#storage()).write(records, purged);
           // Deletion cascades and purges reach rows of any type, so they invalidate every query.
           const everything = deletionChanged || purged.length > 0;
           this.#committed.emit(new Set(everything ? [ANY_TYPE] : records.map((record) => record.typeDxn)));

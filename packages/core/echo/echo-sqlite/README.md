@@ -26,6 +26,24 @@ const program = Effect.gen(function* () {
 `SqliteDatabase.layer(options)` provides `Database.Service` instead. `QueryResult.runSync()` returns the
 last execution (empty before the first) and never blocks; use `run()` or `subscribe()`.
 
+## Local databases
+
+`Hypergraph.localDatabase(name)` (in `@dxos/echo`) returns a device-local database: not a space, never
+replicated, absent from graph queries, and reopened by name. This package supplies its storage:
+
+```ts
+const echo = new EchoClient({ localDatabaseFactory: yield* localDatabaseFactory }); // needs SqlClient
+const settings = echo.graph.localDatabase('settings');
+```
+
+The call returns at once; `SqliteDatabase.make` opens storage in the background and every read or write
+waits for it. Each name maps to a space id (`localSpaceId`), so all local databases share one file.
+
+Storage goes through a `StoreDriver`: `makeLocalDriver` runs the statements in this process, and
+`RemoteStoreDriver` / `serveStore` carry each driver call (a query, a row load, a write batch) over a
+`MessagePort` to wherever SQLite lives — one round trip per call, not per statement. See
+[`BENCHMARKS.md`](./BENCHMARKS.md#rpc-boundary) for what the boundary costs.
+
 ## Supported
 
 | Area        | Support                                                                                         |
@@ -48,6 +66,7 @@ Feeds, branches, history, aggregates, external blob backends and `retainObjects`
 moon run echo-sqlite:test                                     # e2e, residency (GC), differential, EXPLAIN
 DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run            # throughput (this package)
 DX_RUN_MANUAL_TESTS=1 pnpm exec vitest run src/memory.report.test.ts   # heap vs. space size
+moon run echo-sqlite:build && DX_RUN_MANUAL_TESTS=1 pnpm exec vitest bench --run src/testing/rpc.bench.ts  # RPC boundary
 ```
 
 Results: [`BENCHMARKS.md`](./BENCHMARKS.md).

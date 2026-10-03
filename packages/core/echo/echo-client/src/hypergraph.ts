@@ -6,7 +6,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { type BlobBackend } from '@dxos/blob';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, type Entity, Feed, Filter, type Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
+import { type Database, type Entity, Feed, Filter, Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
@@ -73,6 +73,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   readonly #loadOpTable = new LoadOpTable((uri) => this.#routeBackend(uri));
   readonly #spaceBackends = new Map<SpaceId, LoadBackend>();
   readonly #blobManager = new BlobManager();
+
+  #localDatabaseFactory: Hypergraph.LocalDatabaseFactory | undefined;
+  readonly #localDatabases = new Map<string, Hypergraph.LocalDatabase>();
 
   constructor() {
     this._registry = makeRegistry();
@@ -201,6 +204,37 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
 
   getDatabase(spaceId: SpaceId): DatabaseImpl | undefined {
     return this._databases.get(spaceId);
+  }
+
+  localDatabase(name: string): Database.Database {
+    let db = this.#localDatabases.get(name);
+    if (!db) {
+      if (!this.#localDatabaseFactory) {
+        throw new Hypergraph.LocalDatabaseNotAvailableError({ context: { name } });
+      }
+      // Static types registered so far; types added to the registry later are not seen by an open database.
+      db = this.#localDatabaseFactory(name, { types: this._registry.list().filter(Type.isType) });
+      this.#localDatabases.set(name, db);
+    }
+    return db;
+  }
+
+  /**
+   * Sets the storage backend {@link localDatabase} opens databases with.
+   * @internal
+   */
+  _setLocalDatabaseFactory(factory: Hypergraph.LocalDatabaseFactory | undefined): void {
+    this.#localDatabaseFactory = factory;
+  }
+
+  /**
+   * Closes every open local database; a later {@link localDatabase} call reopens it.
+   * @internal
+   */
+  async _closeLocalDatabases(): Promise<void> {
+    const databases = [...this.#localDatabases.values()];
+    this.#localDatabases.clear();
+    await Promise.all(databases.map((db) => db.close()));
   }
 
   /**

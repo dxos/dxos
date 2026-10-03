@@ -58,6 +58,7 @@
     "eventemitter3": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-sqlite": "workspace:*",
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/test-utils": "workspace:*",
     "fast-deep-equal": "catalog:"

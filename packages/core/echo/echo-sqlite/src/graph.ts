@@ -133,6 +133,11 @@ export class SqliteHypergraph implements Hypergraph.Hypergraph {
     return spaceId === this._db.spaceId ? this._db : undefined;
   }
 
+  localDatabase(_name: string): Database.Database {
+    // This graph already is one local database; opening siblings belongs to the graph that owns storage.
+    throw new UnsupportedOperationError('localDatabase');
+  }
+
   registerBlobBackend(): CleanupFn {
     throw new UnsupportedOperationError('registerBlobBackend');
   }

@@ -38,6 +38,7 @@
   "devDependencies": {
     "@dxos/effect": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
+    "@effect/sql-sqlite-wasm": "catalog:",
     "@effect/vitest": "catalog:"
   }
 }
