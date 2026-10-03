@@ -114,12 +114,18 @@ const text = (turnId: string, value: string): EdgeProtocol.Output => ({
 
 const API_KEY: EdgeProtocol.AnthropicCredential = { kind: 'api-key', value: 'sk-ant-test' };
 
-const setup = Effect.fn(function* (script: Script) {
+const setup = Effect.fn(function* (script: Script, mode?: string) {
   const feed = yield* Database.add(Feed.make());
   const chat = yield* Database.add(Chat.make({ feed: Ref.make(feed), session: { harness: 'edge' } }));
   const edge = new FakeEdge(script);
   const options: EdgeAgent.Options = {
-    definition: { id: 'edge', label: 'Edge agent', icon: 'icon', credential: Effect.succeed(API_KEY) },
+    definition: {
+      id: 'edge',
+      label: 'Edge agent',
+      icon: 'icon',
+      credential: Effect.succeed(API_KEY),
+      ...(mode !== undefined && { mode: () => mode }),
+    },
     control: () => edge,
   };
   return { feed, chat, edge, options };
@@ -149,12 +155,15 @@ describe('EdgeAgent', () => {
 
   it.live('spawns the chat its process once, lends the credential, and folds the turn into the chat', () =>
     Effect.gen(function* () {
-      const { feed, chat, edge, options } = yield* setup((turnId) => [
-        { _tag: 'status', status: 'ready' },
-        text(turnId, 'hello '),
-        text(turnId, 'world'),
-        { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
-      ]);
+      const { feed, chat, edge, options } = yield* setup(
+        (turnId) => [
+          { _tag: 'status', status: 'ready' },
+          text(turnId, 'hello '),
+          text(turnId, 'world'),
+          { _tag: 'turn-end', turnId, stopReason: 'end_turn' },
+        ],
+        'bypassPermissions',
+      );
       yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'say hello' });
       yield* EdgeAgent.runTurn(options, { chat, feed }, { prompt: 'again' });
 
@@ -169,7 +178,10 @@ describe('EdgeAgent', () => {
       expect(edge.spawned).toHaveLength(1);
       expect(edge.spawned[0]).toMatchObject({
         key: EdgeProtocol.PROCESS_KEY,
-        annotations: { [EdgeProtocol.Annotation.unattended]: true },
+        annotations: {
+          [EdgeProtocol.Annotation.unattended]: true,
+          [EdgeProtocol.Annotation.mode]: 'bypassPermissions',
+        },
       });
       expect(Obj.getKeys(chat, EdgeAgent.processKeySource('edge')).map(({ id }) => id)).toEqual(['process-1']);
       expect(edge.credentials).toEqual([API_KEY, API_KEY]);

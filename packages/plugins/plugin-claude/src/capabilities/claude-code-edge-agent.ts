@@ -4,10 +4,12 @@
 
 import * as Effect from 'effect/Effect';
 
+import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import { Database, Query } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
+import * as CodeCapabilities from '@dxos/plugin-code/CodeCapabilities';
 import * as EdgeAgent from '@dxos/plugin-code/EdgeAgent';
 import { isManagedAccessToken } from '@dxos/protocols';
 
@@ -22,6 +24,13 @@ const OAUTH_TOKEN_PREFIX = 'sk-ant-oat';
  */
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
+    const manager = yield* Capability.Service;
+    // The Code plugin's permission setting governs both coding agents; a chat keeps the mode it was spawned with.
+    const mode = (): string | undefined => {
+      const [settings] = manager.getAll(CodeCapabilities.Settings);
+      const [registry] = manager.getAll(Capabilities.AtomRegistry);
+      return settings && registry ? registry.get(settings).agentPermissionMode : undefined;
+    };
     return Capability.contribute(
       AssistantCapabilities.Agent,
       yield* EdgeAgent.make({
@@ -29,6 +38,7 @@ export default Capability.makeModule(
         label: 'Claude Code (cloud)',
         icon: 'px--anthropic--regular',
         credential: anthropicCredential,
+        mode,
       }),
     );
   }),
