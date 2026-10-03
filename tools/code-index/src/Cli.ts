@@ -92,7 +92,9 @@ const index = Command.make(
       const { timings } = result;
       yield* emit(json, result, () =>
         [
-          `${result.root}: ${result.indexed} indexed, ${result.unchanged} unchanged, ${result.removed} removed` +
+          `${result.root}: ${result.indexed} indexed, ` +
+            (result.touched > 0 ? `${result.touched} touched, ` : '') +
+            `${result.unchanged} unchanged, ${result.removed} removed` +
             (result.skipped.length > 0 ? `, ${result.skipped.length} skipped` : '') +
             (noReason ? '' : `, ${result.derived} derived`),
           // parse and commit are summed across concurrent batches, so on a wide pool they exceed total.

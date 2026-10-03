@@ -379,6 +379,49 @@ describe('typescript analyzer', () => {
     expect(person?.implDependsOn).not.toContain(sym('src/ns.ts', 'Task'));
   });
 
+  test('an import used only in top-level statements is a value import', () => {
+    const suite = analyzeTypeScript({
+      ...context,
+      path: 'src/Store.test.ts',
+      source: [
+        "import { describe, test } from 'vitest';",
+        "import { load } from './config.ts';",
+        "import { Normalize } from './normalize.ts';",
+        "import { StoreError } from './errors.ts';",
+        "import { type Input } from './input.ts';",
+        '',
+        "describe('store', () => {",
+        "  test('loads', () => {",
+        '    const input: Input = load();',
+        '    let error: StoreError | undefined;',
+        '  });',
+        '});',
+        '',
+        'Normalize.register();',
+      ].join('\n'),
+    });
+    expect(suite.imports).toEqual(expect.arrayContaining([file('src/config.ts'), file('src/normalize.ts')]));
+    // Inside a top-level call, a type annotation is still erased.
+    expect(suite.importsType).toEqual([file('src/errors.ts'), file('src/input.ts')]);
+    // No declaration exists to carry an edge, so nothing is attributed to a symbol.
+    expect(suite.declares).toEqual([]);
+  });
+
+  test('a local re-export keeps a value import, a type re-export does not', () => {
+    const barrel = analyzeTypeScript({
+      ...context,
+      path: 'src/barrel.ts',
+      source: [
+        "import { load } from './config.ts';",
+        "import { StoreError } from './errors.ts';",
+        'export { load };',
+        'export type { StoreError };',
+      ].join('\n'),
+    });
+    expect(barrel.imports).toEqual([file('src/config.ts')]);
+    expect(barrel.importsType).toEqual([file('src/errors.ts')]);
+  });
+
   test('a parse failure still yields a file node', () => {
     const broken = analyzeTypeScript({ ...context, path: 'src/e.ts', source: 'const = ;\n' });
     expect(broken.parseError?.length).toBeGreaterThan(0);

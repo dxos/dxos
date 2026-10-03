@@ -350,11 +350,15 @@ feat F-2: One graph per file revision
 
 ```mdl
 feat F-3: Incremental by mtime
-  desc: The crawl compares mtimes against the ledger; unchanged files are never read or parsed.
+  desc: |
+    The crawl compares mtimes against the ledger; unchanged files are never read or parsed. A file
+    whose mtime moved is hashed first, and one whose content still matches the ledger's hash only has
+    its mtime recorded.
   req F-3.1: A second pass over an unchanged tree indexes nothing.
-  req F-3.2: Touching one file reindexes exactly that file.
+  req F-3.2: Editing one file reindexes exactly that file.
   req F-3.3: `--force` reindexes everything regardless of mtime.
   req F-3.4: A file deleted from the working tree is removed from both databases.
+  req F-3.5: A touch that leaves the content unchanged reindexes nothing and does not rerun the reasoners.
 ```
 
 ```mdl
@@ -432,6 +436,7 @@ feat F-6: Derived relations are rules, recomputed with the index
   req F-6.4: A pass skips reasoning, leaving the derived graphs as they are, only when the same reasoners already ran over the facts the store holds now.
   req F-6.6: Premises are narrowed to the predicates the rules name; an unbound predicate disables the narrowing.
   req F-6.5: `--no-reason` skips the phase; the derived graph is then only as fresh as the last pass that ran it.
+  req F-6.7: On the JS backend the premises reach EYE deduplicated and split across input files of at most 100k facts, every fact naming a blank node in one file, so a whole repository's facts parse within EYE's stack.
 ```
 
 ```mdl

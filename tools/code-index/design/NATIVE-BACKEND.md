@@ -3,6 +3,8 @@
 Status: design + first vertical slice (`tools/code-index-native`). The JS backend
 (Quadstore/LevelDB + `eyereasoner`) stays the default until the native one has
 run in anger; `CODE_INDEX_BACKEND=native` selects it (`Store.layer(dir, 'native')` in code).
+A store records the backend that wrote it beside the ontology version: opened without one it keeps
+that backend, and naming the other resets a writer's store and fails a reader.
 
 ## Why
 
