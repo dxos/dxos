@@ -249,11 +249,14 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
     // the list it opens onto, so a collapsed run reads as one line of prose in the feed.
     //
     // The body animates: the Collapsible measures its own `--height`, so the reveal ramps instead
-    // of the content appearing and vanishing in one frame. Content stays mounted and the machine
-    // hides it, which is what lets the ramp have a height to animate to.
+    // of the content appearing and vanishing in one frame. Content mounts on first open and then
+    // stays mounted while the machine hides it, which is what lets the ramp have a height to animate to.
     <TogglePanel.Root
       open={open}
       onChangeOpen={setOpen}
+      // A thread is a column of these, nearly all left closed; building each payload at mount was
+      // most of the cost of scrolling one into view.
+      lazyMount
       // `w-0 min-w-full`: the editor sizes its content line to its widest child, so a wide payload
       // would stretch the whole line — carrying the summary row out of view and scrolling the
       // editor instead of the payload. Zero width removes this widget from that calculation, and

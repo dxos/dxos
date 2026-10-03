@@ -105,6 +105,9 @@ export type WindowProps = ThemedClassName<{
   children: (index: number, id: string) => ReactNode;
 }>;
 
+/** Overscan rows restored per frame, each side, after a jump. */
+const OVERSCAN_STEP = 2;
+
 /** Extent of the mounted rows, which is the parent's own size in content space. */
 const windowExtentOf = (placement: Placement, first: number, last: number): number => {
   let extent = 0;
@@ -263,14 +266,35 @@ export const useWindow = ({
     });
 
     observer.observe(scroller);
+
+    // A jump lands where nothing is mounted, and building the overscan with the visible rows doubles
+    // the one task the reader is waiting on; the overscan is restored a few rows per frame instead.
+    const overscan = placement.overscan;
+    let frame = 0;
+    const grow = () => {
+      placement.setOverscan(Math.min(overscan, placement.overscan + OVERSCAN_STEP));
+      invalidate();
+      frame = placement.overscan < overscan ? requestAnimationFrame(grow) : 0;
+    };
+
     const onScroll = () => {
+      const mounted = placement.range();
       placement.scrollTo(axis === 'block' ? scroller.scrollTop : scroller.scrollLeft);
+      const { visible } = placement.range();
+      if (overscan > 0 && (visible.first > mounted.last || visible.last < mounted.first)) {
+        placement.setOverscan(0);
+        cancelAnimationFrame(frame);
+        frame = requestAnimationFrame(grow);
+      }
+
       invalidate();
     };
 
     scroller.addEventListener('scroll', onScroll, { passive: true });
     invalidate();
     return () => {
+      cancelAnimationFrame(frame);
+      placement.setOverscan(overscan);
       observer.disconnect();
       scroller.removeEventListener('scroll', onScroll);
     };
