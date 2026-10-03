@@ -12,7 +12,7 @@ import { Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { Person } from '@dxos/types';
 
 /**
- * The properties panel of the first Person in the space — where plugin-interlocutor appends the
+ * The properties panel of the first Person in the space — where plugin-agent appends the
  * goals and memories its agents hold about them — so an interview can be watched filling it in.
  */
 export const ProfileModule = () => {

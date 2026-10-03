@@ -358,6 +358,9 @@
       "path": "packages/core/compute/pipeline-transcription/tsconfig.json"
     },
     {
+      "path": "packages/plugins/plugin-agent/tsconfig.json"
+    },
+    {
       "path": "packages/plugins/plugin-assistant/tsconfig.json"
     },
     {
@@ -488,9 +491,6 @@
     },
     {
       "path": "packages/plugins/plugin-inbox/tsconfig.json"
-    },
-    {
-      "path": "packages/plugins/plugin-interlocutor/tsconfig.json"
     },
     {
       "path": "packages/plugins/plugin-iroh-beacon/tsconfig.json"

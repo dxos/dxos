@@ -8,12 +8,12 @@ import { expect, waitFor, within } from 'storybook/test';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Operation from '@dxos/compute/Operation';
 import { type Database, Filter } from '@dxos/echo';
+import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
+import * as Goal from '@dxos/plugin-agent/Goal';
+import * as Memory from '@dxos/plugin-agent/Memory';
+import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
+import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
 import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
-import * as Goal from '@dxos/plugin-interlocutor/Goal';
-import * as InterlocutorPlugin from '@dxos/plugin-interlocutor/InterlocutorPlugin';
-import * as Memory from '@dxos/plugin-interlocutor/Memory';
-import * as MemoryOperation from '@dxos/plugin-interlocutor/MemoryOperation';
-import { translations as interlocutorTranslations } from '@dxos/plugin-interlocutor/translations';
 import { HasSubject, Organization, Person } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
@@ -24,7 +24,7 @@ const meta: Meta<typeof ModuleContainer> = {
   render: ModuleContainer,
   parameters: {
     ...storyParameters,
-    translations: [...storyParameters.translations, ...interlocutorTranslations],
+    translations: [...storyParameters.translations, ...agentTranslations],
   },
 };
 
@@ -36,7 +36,7 @@ const { text, toolCall, promptIncludes } = ScriptedLanguageModel;
 
 const tool = Operation.toolName;
 
-// Not exported by plugin-interlocutor, whose skills module is internal.
+// Not exported by plugin-agent, whose skills module is internal.
 const INTERVIEW_SKILL_KEY = 'org.dxos.skill.interview';
 
 const PERSON_NAME = 'Rich Burdon';
@@ -188,7 +188,7 @@ const decorators = createDecorators({
     name: 'Interlocutor',
     instructions: 'You interview the people you talk to and remember what you learn about them.',
   },
-  plugins: [InterlocutorPlugin.make()],
+  plugins: [AgentPlugin.make()],
   types: [
     Person.Person,
     Organization.Organization,

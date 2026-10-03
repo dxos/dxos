@@ -236,6 +236,7 @@
     ],
     [
       "@dxos/cli",
+      "@dxos/plugin-agent",
       "@dxos/plugin-assistant",
       "@dxos/plugin-atproto",
       "@dxos/plugin-attention",
@@ -280,7 +281,6 @@
       "@dxos/plugin-ideogram",
       "@dxos/plugin-illustrator",
       "@dxos/plugin-inbox",
-      "@dxos/plugin-interlocutor",
       "@dxos/plugin-iroh-beacon",
       "@dxos/plugin-jmap",
       "@dxos/plugin-kanban",
