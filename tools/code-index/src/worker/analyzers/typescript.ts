@@ -723,6 +723,353 @@ const passedLiteralsOf = (node: Node): PassedLiteral[] => {
 };
 
 // ---------------------------------------------------------------------------------------------------
+// Call sites
+// ---------------------------------------------------------------------------------------------------
+
+/** Object-literal keys followed into an argument: `plugin.icon.key` is three. */
+const CALL_PATH_DEPTH = 3;
+const CALL_LITERALS_MAX = 32;
+const CALL_ARRAY_MAX = 16;
+const CALL_POSITIONS = 8;
+/** Past this a file is generated rather than written; later calls are not counted, so IRIs stay stable. */
+const CALL_SITES_MAX = 2000;
+
+/** Nodes that do not change what an expression is, looked through between a call and its argument. */
+const EXPRESSION_WRAPPERS = new Set([
+  'TSAsExpression',
+  'TSSatisfiesExpression',
+  'TSNonNullExpression',
+  'TSInstantiationExpression',
+  'TSTypeAssertion',
+  'ParenthesizedExpression',
+  'ChainExpression',
+]);
+
+const PROPERTY_KEY = /^[A-Za-z_$][\w$-]*$/;
+
+/** A plain property's key, when a rule could name it in a `key=value` literal. */
+const propertyKeyOf = (property: Node): string | undefined => {
+  if (property.type !== 'Property' || property.computed === true || !isNode(property.key)) {
+    return undefined;
+  }
+  const key = nameOf(property.key) ?? (typeof property.key.value === 'string' ? property.key.value : undefined);
+  return key !== undefined && PROPERTY_KEY.test(key) ? key : undefined;
+};
+
+/** `f(a)(b)` → head `f` and its calls, innermost first. */
+const curriedOf = (call: Node): { callee: Node; calls: Node[] } => {
+  const calls: Node[] = [];
+  let current = call;
+  for (;;) {
+    if ((current.type === 'CallExpression' || current.type === 'NewExpression') && isNode(current.callee)) {
+      calls.unshift(current);
+      current = current.callee;
+    } else if (EXPRESSION_WRAPPERS.has(current.type) && isNode(current.expression)) {
+      current = current.expression;
+    } else {
+      return { callee: current, calls };
+    }
+  }
+};
+
+const argumentsOf = (call: Node): Node[] => (Array.isArray(call.arguments) ? call.arguments.filter(isNode) : []);
+
+/** 1-based line of an offset, by binary search over the line starts. */
+const lineIndex = (source: string): ((offset: number) => number) => {
+  const starts = [0];
+  for (let index = 0; index < source.length; index++) {
+    if (source[index] === '\n') {
+      starts.push(index + 1);
+    }
+  }
+  return (offset) => {
+    let low = 0;
+    let high = starts.length - 1;
+    while (low < high) {
+      const middle = (low + high + 1) >> 1;
+      if (starts[middle] <= offset) {
+        low = middle;
+      } else {
+        high = middle - 1;
+      }
+    }
+    return low + 1;
+  };
+};
+
+type Landing = { readonly targets: readonly string[]; readonly rest: readonly string[] };
+
+type CallSiteInput = {
+  readonly program: Node;
+  readonly path: string;
+  readonly source: string;
+  readonly declared: readonly Declaration[];
+  /** Where a callee lands from inside the named declaration (or at file level). */
+  readonly land: (ref: ExpressionRef, enclosing: string | undefined) => Landing;
+};
+
+type CallDraft = {
+  readonly iri: string;
+  readonly landing: Landing;
+  readonly enclosedBy: string;
+  readonly line: number;
+  /** Where each call of a curried chain starts numbering its arguments. */
+  readonly offsets: Map<Node, number>;
+  readonly literals: string[];
+  readonly parent: { readonly draft: CallDraft; readonly key: string } | undefined;
+  hasConfig: boolean;
+  keep: boolean;
+};
+
+/**
+ * Every call whose head callee resolves, with the scalar literals its arguments spell out, its
+ * enclosing declaration and the call it is an argument of — framework-agnostic: rules give a callee
+ * meaning. Only calls that carry a literal or a configuration object, and the calls those are
+ * arguments of, are emitted.
+ */
+const callSitesOf = ({ program, path, source, declared, land: resolve }: CallSiteInput): Ontology.CallSiteNode[] => {
+  // Calls repeat their callee (`expect`, `Effect.gen`); resolving one builds escaped IRIs.
+  const landings = new Map<string, Landing>();
+  const land = (ref: ExpressionRef, within: string | undefined): Landing => {
+    const key = `${within ?? ''}\0${ref.name}.${ref.path.join('.')}`;
+    let landing = landings.get(key);
+    if (!landing) {
+      landing = resolve(ref, within);
+      landings.set(key, landing);
+    }
+    return landing;
+  };
+  const lineOfOffset = lineIndex(source);
+  const fileIri = Ontology.fileIri(path).value;
+  const enclosing = new Map(
+    declared.map((declaration) => [
+      declaration.node,
+      { name: declaration.name, iri: Ontology.symbolIri(path, declaration.name).value },
+    ]),
+  );
+  const constants = new Map<string, string>();
+  for (const declaration of declared) {
+    const variable =
+      declaration.statement.type === 'ExportNamedDeclaration' && isNode(declaration.statement.declaration)
+        ? declaration.statement.declaration
+        : declaration.statement;
+    if (
+      variable.type === 'VariableDeclaration' &&
+      variable.kind === 'const' &&
+      declaration.node.type === 'VariableDeclarator' &&
+      isNode(declaration.node.init)
+    ) {
+      const value = stringLiteralOf(unwrapped(declaration.node.init));
+      if (value !== undefined) {
+        constants.set(declaration.name, value);
+      }
+    }
+  }
+
+  /** A scalar as text: a string, number or boolean literal, a same-file string const, or `f('x')` with resolvable `f`. */
+  const scalarOf = (node: Node, enclosing: string | undefined): string | undefined => {
+    const bare = unwrapped(node);
+    const text = stringLiteralOf(bare);
+    if (text !== undefined) {
+      return text;
+    }
+    if (bare.type === 'Literal' && (typeof bare.value === 'number' || typeof bare.value === 'boolean')) {
+      return String(bare.value);
+    }
+    if (
+      bare.type === 'UnaryExpression' &&
+      bare.operator === '-' &&
+      isNode(bare.argument) &&
+      bare.argument.type === 'Literal' &&
+      typeof bare.argument.value === 'number'
+    ) {
+      return `-${bare.argument.value}`;
+    }
+    const name = bare.type === 'Identifier' ? nameOf(bare) : undefined;
+    if (name !== undefined) {
+      return constants.get(name);
+    }
+    if (bare.type === 'CallExpression' && isNode(bare.callee)) {
+      const [only, ...more] = argumentsOf(bare);
+      const inner = only && more.length === 0 ? stringLiteralOf(unwrapped(only)) : undefined;
+      const ref = expressionRef(headCallee(bare.callee).callee);
+      if (inner !== undefined && ref && land(ref, enclosing).targets.length > 0) {
+        return inner;
+      }
+    }
+    return undefined;
+  };
+
+  const collect = (draft: CallDraft, enclosing: string | undefined, argument: Node, index: number) => {
+    const push = (key: string, value: string) => {
+      const fact = `${key}=${value}`;
+      if (
+        value.length <= LITERAL_MAX &&
+        !value.includes('\n') &&
+        draft.literals.length < CALL_LITERALS_MAX &&
+        !draft.literals.includes(fact)
+      ) {
+        draft.literals.push(fact);
+      }
+    };
+    const scalars = (array: Node): string[] =>
+      (Array.isArray(array.elements) ? array.elements.filter(isNode) : [])
+        .slice(0, CALL_ARRAY_MAX)
+        .flatMap((element) => scalarOf(element, enclosing) ?? []);
+    const object = (node: Node, prefix: string, depth: number) => {
+      for (const property of Array.isArray(node.properties) ? node.properties.filter(isNode) : []) {
+        const key = propertyKeyOf(property);
+        if (key === undefined || !isNode(property.value)) {
+          continue;
+        }
+        const value = scalarOf(property.value, enclosing);
+        if (value !== undefined) {
+          push(`${prefix}${key}`, value);
+          continue;
+        }
+        const bare = unwrapped(property.value);
+        if (bare.type === 'ObjectExpression' && depth < CALL_PATH_DEPTH) {
+          object(bare, `${prefix}${key}.`, depth + 1);
+        } else if (bare.type === 'ArrayExpression') {
+          scalars(bare).forEach((element) => push(`${prefix}${key}`, element));
+        }
+      }
+    };
+    if (index >= CALL_POSITIONS) {
+      return;
+    }
+    const value = scalarOf(argument, enclosing);
+    if (value !== undefined) {
+      push(String(index), value);
+      return;
+    }
+    const bare = unwrapped(argument);
+    if (bare.type === 'ObjectExpression') {
+      draft.hasConfig ||= Array.isArray(bare.properties) && bare.properties.length > 0;
+      object(bare, '', 1);
+    } else if (bare.type === 'ArrayExpression') {
+      scalars(bare).forEach((element) => push(String(index), element));
+    }
+  };
+
+  /** The call `node` is an argument of, through literals and wrappers only — never a function or member access. */
+  const parentOf = (node: Node, ancestors: readonly Node[], drafts: ReadonlyMap<Node, CallDraft>) => {
+    const keys: string[] = [];
+    let child = node;
+    for (let index = ancestors.length - 1; index >= 0; index--) {
+      const parent = ancestors[index];
+      if (
+        EXPRESSION_WRAPPERS.has(parent.type) ||
+        parent.type === 'ArrayExpression' ||
+        parent.type === 'ObjectExpression' ||
+        parent.type === 'SpreadElement'
+      ) {
+        child = parent;
+        continue;
+      }
+      if (parent.type === 'Property' && parent.value === child) {
+        const key = propertyKeyOf(parent);
+        if (key === undefined) {
+          return undefined;
+        }
+        keys.unshift(key);
+        child = parent;
+        continue;
+      }
+      if (parent.type === 'CallExpression' || parent.type === 'NewExpression') {
+        const draft = drafts.get(parent);
+        const position = argumentsOf(parent).indexOf(child);
+        // An unresolvable call, or `node` is its callee rather than an argument.
+        if (!draft || position < 0) {
+          return undefined;
+        }
+        return {
+          draft,
+          key: keys.length > 0 ? keys.join('.') : String((draft.offsets.get(parent) ?? 0) + position),
+        };
+      }
+      return undefined;
+    }
+    return undefined;
+  };
+
+  const drafts = new Map<Node, CallDraft>();
+  const ordered: CallDraft[] = [];
+  const ordinals = new Map<string, number>();
+  walk(program, [], (node, ancestors) => {
+    if ((node.type !== 'CallExpression' && node.type !== 'NewExpression') || drafts.has(node)) {
+      return undefined;
+    }
+    if (ordered.length >= CALL_SITES_MAX) {
+      return false;
+    }
+    const { callee, calls } = curriedOf(node);
+    const ref = expressionRef(callee);
+    // `x.pipe(…)` applies its arguments; the stages are the calls worth recording.
+    if (!ref || ref.path.at(-1) === 'pipe') {
+      return undefined;
+    }
+    // The innermost declaration node on the path from the root is the enclosing declaration.
+    let span = enclosing.get(node);
+    for (let index = ancestors.length - 1; index >= 0 && !span; index--) {
+      span = enclosing.get(ancestors[index]);
+    }
+    const landing = land(ref, span?.name);
+    if (landing.targets.length === 0) {
+      return undefined;
+    }
+    const enclosedBy = span?.iri ?? fileIri;
+    const text = [ref.name, ...ref.path].join('.');
+    const counter = `${enclosedBy} ${text}`;
+    const ordinal = ordinals.get(counter) ?? 0;
+    ordinals.set(counter, ordinal + 1);
+    // Pre-order: the call this one is an argument of was visited, and drafted, first.
+    const parent = parentOf(node, ancestors, drafts);
+    const draft: CallDraft = {
+      iri: Ontology.callSiteIri(enclosedBy, text, ordinal).value,
+      landing,
+      enclosedBy,
+      line: lineOfOffset(node.start),
+      offsets: new Map(),
+      literals: [],
+      parent,
+      hasConfig: false,
+      keep: false,
+    };
+    let offset = 0;
+    for (const call of calls) {
+      drafts.set(call, draft);
+      draft.offsets.set(call, offset);
+      const callArguments = argumentsOf(call);
+      callArguments.forEach((argument, index) => collect(draft, span?.name, argument, offset + index));
+      offset += callArguments.length;
+    }
+    ordered.push(draft);
+    return undefined;
+  });
+
+  for (const draft of ordered) {
+    if (draft.literals.length > 0 || draft.hasConfig) {
+      for (let current: CallDraft | undefined = draft; current && !current.keep; current = current.parent?.draft) {
+        current.keep = true;
+      }
+    }
+  }
+  return ordered
+    .filter((draft) => draft.keep)
+    .map((draft) => ({
+      '@id': draft.iri,
+      '@type': 'CallSite' as const,
+      'callee': [...draft.landing.targets],
+      ...(draft.landing.rest.length > 0 ? { calleePath: draft.landing.rest.join('.') } : {}),
+      'enclosedBy': draft.enclosedBy,
+      'line': draft.line,
+      ...(draft.parent ? { argOf: draft.parent.draft.iri, argKey: draft.parent.key } : {}),
+      ...(draft.literals.length > 0 ? { literal: draft.literals } : {}),
+    }));
+};
+
+// ---------------------------------------------------------------------------------------------------
 // Snippets
 // ---------------------------------------------------------------------------------------------------
 
@@ -1060,6 +1407,13 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
   const namespaceNames = new Set(
     declared.filter((declaration) => declaration.kind === 'namespace').map((declaration) => declaration.name),
   );
+  /** The namespaces enclosing a declaration, innermost first. */
+  const namespacesOf = (name: string): string[] => {
+    const segments = name.split('.');
+    return segments
+      .map((_, index) => segments.slice(0, segments.length - index).join('.'))
+      .filter((prefix) => namespaceNames.has(prefix));
+  };
   /** The namespaces enclosing the declaration being analyzed, innermost first; set per declaration. */
   let scope: readonly string[] = [];
   /** A name declared in an enclosing `namespace` shadows imports and top-level declarations. */
@@ -1150,10 +1504,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     });
 
   const symbols: Ontology.SymbolNode[] = declared.map((declaration) => {
-    const segments = declaration.name.split('.');
-    scope = segments
-      .map((_, index) => segments.slice(0, segments.length - index).join('.'))
-      .filter((prefix) => namespaceNames.has(prefix));
+    scope = namespacesOf(declaration.name);
     const api = new Set<string>();
     const impl = new Set<string>();
     const self = Ontology.symbolIri(path, declaration.name).value;
@@ -1390,6 +1741,16 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
         '@type': 'Module',
         'moduleFile': Ontology.fileIri(file).value,
       })),
+      ...callSitesOf({
+        program: programNode(parsed),
+        path,
+        source,
+        declared,
+        land: (ref, enclosing) => {
+          scope = enclosing === undefined ? [] : namespacesOf(enclosing);
+          return landingOf(ref);
+        },
+      }),
     ]),
     ...(errors.length > 0 ? { parseError: errors } : {}),
   };
