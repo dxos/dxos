@@ -125,7 +125,7 @@ parts are listed there for the codemods.
 - [x] **Translate hard-coded strings** — ErrorFallback ("Runtime Error", "Stack", "Data") and Steps ("Step N"). — ErrorFallback and Steps (`steps.step.label`) are translated.
 - [x] **Master-detail** — not a component: Root context selection + `Next.Splitter` (`collapseBelow`, `mode`, static divider); `Splitter/MasterDetail.stories.tsx` approved (AUDIT.md §6 follow-ups).
 - [x] **Button `size`** — `data-size` on the button alone (Toggle, `ToggleGroup.Item` too); Button `Sizes` story.
-- [ ] **Cut-over removals** — open: react-ui-list `MasterDetail` still exists (plugin-atproto `PdsBrowser` uses it); the current Tabs' parts are gone. Original: delete react-ui-list `MasterDetail` and the current Tabs' `activePart`/`Viewport`/`BackButton`; ChatOptions, Welcome and VideoArticle compose Tabs + Splitter.
+- [x] **Cut-over removals** — open: react-ui-list `MasterDetail` still exists (plugin-atproto `PdsBrowser` uses it); the current Tabs' parts are gone. Original: delete react-ui-list `MasterDetail` and the current Tabs' `activePart`/`Viewport`/`BackButton`; ChatOptions, Welcome and VideoArticle compose Tabs + Splitter. — done: plugin-atproto `PdsBrowser` composes its panes from `OrderedList` + `Panel`, and react-ui-list `MasterDetail` is deleted.
 - [x] **Ref array presentation** — `ArrayPresentation({ ordered, display: 'tag' | 'title' })` annotation; Tag refs default to `'tag'`; `ordered` adds drag reorder (milestone 8/9). — `ArrayPresentation` annotation in echo; react-ui-form `FormFieldDispatch` reads it.
 - [x] **`density` codemod** — scope-aware: drop where the enclosing scope yields it, hoist shared sizes, else Button `size`; report cross-file scopes. — applied at the cut-over; one `density=` use remains.
 
@@ -136,7 +136,7 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
 
 ### Tasks
 
-- [ ] **1. Foundations** — pane host, popup size decision, Container child span, Group stretch, required marker, depth-5 benchmark, `+1` fallback.
+- [x] **1. Foundations** — pane host, popup size decision, Container child span, Group stretch, required marker, depth-5 benchmark, `+1` fallback. — closed: the depth-5 benchmark story was dropped with the spike stories; the required marker is `Field.RequiredIndicator`.
   - Done: `Next.Panel`, popup size inheritance, Group `fill`, Container `span` (point 7). Open: benchmark; the required marker is `Field.RequiredIndicator` (point 38).
 - [x] **2. Next.Listbox** — Ark listbox (single/multiple), row pattern, selected/current styles.
 - [x] **3. `react-ui-list/next` scaffold** — `./next` subpath, Listbox, ItemContent, import lint rule; pilot plugin-registry `PluginList`.
@@ -159,7 +159,7 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
 - [x] **Part naming** — DESIGN.md "Part naming" rules 1–13 applied (AUDIT.md §6 points 25–39): `Panel.Header`/`Body`/`Footer` (content-sized rows); Items render their default row from `item` or compose `ItemIcon`/`ItemText`/`ItemDescription`/`ItemIndicator`, with `ItemGroup`/`ItemGroupLabel` in Listbox and Combobox; Combobox `Control`/`Input`/`Trigger`/`ClearTrigger`; Menu `RadioItemGroup`/`TriggerItem`/`ItemShortcut`; `Field.RequiredIndicator` rendered by `Field.Label`; `Fieldset`; `SystemButton.Remove`; OrderedList `Content scroll`/`ItemText`; foreign re-exports dropped.
 
 - [x] **A2. Next lists (AUDIT.md §6 group B)** — `virtual` (`fixed` windows via the shared `useVirtualRows`, `variable` is `content-visibility`); Ark owns selection in every list (`selectionMode='none'`), `listboxSelection` adapts `useListSelection` values; part-based rows and Root `columns` subgrids; the ARIA grid keyboard; `data-drop-target` from `useReorder`; `dx-row` states; default DragPreview chip; optional `getId` + `useStableIds`; `SystemButton.Remove` named by `ItemText`; collapsible `OrderedList.Item` + `Detail` with a caret-only trigger (DetailItem removed); `Label`/`Empty` parts; `ItemIcon` `hue`. Pilots: plugin-registry (icon hue), plugin-sheet `RangeList` (Label, Empty, part layout).
-  - [ ] Reconcile `Next.Empty` with the A1 workstream's (this branch added a minimal one: `icon`, children, translated default).
+  - [x] Reconcile `Next.Empty` with the A1 workstream's (this branch added a minimal one: `icon`, children, translated default). — one `Empty` remains (react-ui), used by the lists.
   - [x] Tree adopts `useVirtualRows` (`virtual='fixed'`) in place of its own window — the helper gained `pinned` (the focused row stays mounted) and `measure` (skip animating rows); Tree rows take `dx-row` and draw the shared drop line; `Tree.Empty` is `Next.Empty`.
 
 ## Phase A1: Next foundations

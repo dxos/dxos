@@ -22862,9 +22862,6 @@ importers:
       '@dxos/react-ui':
         specifier: workspace:*
         version: link:../react-ui
-      '@dxos/react-ui-menu':
-        specifier: workspace:*
-        version: link:../react-ui-menu
       '@dxos/ui-theme':
         specifier: workspace:*
         version: link:../ui-theme

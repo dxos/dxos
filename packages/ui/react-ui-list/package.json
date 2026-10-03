@@ -35,7 +35,6 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "catalog:",
     "@dxos/react-focus": "workspace:*",
     "@dxos/react-ui": "workspace:*",
-    "@dxos/react-ui-menu": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@dxos/util": "workspace:*",
