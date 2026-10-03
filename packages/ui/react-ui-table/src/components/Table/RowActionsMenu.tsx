@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { Menu, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Menu, toLocalizedString, useTranslation, virtualAnchor } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';
 
@@ -21,38 +21,42 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
     return null;
   }
   return (
-    <Menu.Root modal={false} open={true} onOpenChange={modals.close}>
-      <Menu.VirtualTrigger virtualRef={modals.trigger} />
+    <Menu.Root
+      open={true}
+      onOpenChange={({ open }) => !open && modals.close()}
+      positioning={virtualAnchor(modals.trigger)}
+    >
       <Menu.Content>
-        <Menu.Viewport>
-          {/* Custom actions */}
-          {model.rowActions?.length > 0 && (
-            <>
-              <Menu.Group>
-                {model.rowActions?.map((action) => (
-                  <Menu.Item
-                    key={action.id}
-                    data-testid={`row-action-${action.id}`}
-                    onClick={() => {
-                      modals.close();
-                      model.handleRowAction(action.id, state.rowIndex);
-                    }}
-                  >
-                    {toLocalizedString(action.label, t)}
-                  </Menu.Item>
-                ))}
-              </Menu.Group>
-              <Menu.Separator />
-            </>
-          )}
-          {/* Default actions */}
-          {model.features.dataEditable !== false && (
-            <Menu.Item data-testid='row-menu-delete' onClick={() => model.deleteRow(state.rowIndex)}>
-              {t(hasSelection ? 'bulk-delete-row.label' : 'delete-row.label')}
-            </Menu.Item>
-          )}
-        </Menu.Viewport>
-        <Menu.Arrow />
+        {/* Custom actions */}
+        {model.rowActions?.length > 0 && (
+          <>
+            <Menu.ItemGroup>
+              {model.rowActions?.map((action) => (
+                <Menu.Item
+                  key={action.id}
+                  data-testid={`row-action-${action.id}`}
+                  onClick={() => {
+                    modals.close();
+                    model.handleRowAction(action.id, state.rowIndex);
+                  }}
+                  item={{ value: action.id, label: toLocalizedString(action.label, t) }}
+                />
+              ))}
+            </Menu.ItemGroup>
+            <Menu.Separator />
+          </>
+        )}
+        {/* Default actions */}
+        {model.features.dataEditable !== false && (
+          <Menu.Item
+            data-testid='row-menu-delete'
+            onClick={() => model.deleteRow(state.rowIndex)}
+            item={{
+              value: t(hasSelection ? 'bulk-delete-row.label' : 'delete-row.label'),
+              label: t(hasSelection ? 'bulk-delete-row.label' : 'delete-row.label'),
+            }}
+          />
+        )}
       </Menu.Content>
     </Menu.Root>
   );

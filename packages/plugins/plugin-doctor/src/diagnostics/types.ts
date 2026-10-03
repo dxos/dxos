@@ -5,7 +5,7 @@
 import * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
 import { type Hypergraph } from '@dxos/echo';
 import { type Space } from '@dxos/halo';
-import type { Label } from '@dxos/react-ui';
+import { type Label } from '@dxos/react-ui';
 
 export type DiagnosticSeverity = 'info' | 'warning' | 'error';
 

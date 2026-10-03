@@ -32,7 +32,8 @@ envelope (`ciCommitSha`, `ciBranch`, `ciRunId`, …), so the harness emits `wall
 
 ### Comparability — pinned in every `WHERE`
 
-`ciServingMode`, `ciPluginSet`, `ciProfileState`, `ciSettleMs`, `ciInstruments`. A trend that mixes
+`ciServingMode`, `ciPluginSet`, `ciProfileState`, `ciSettleMs`, `ciInstruments`, and `ciCounters`
+(the costed work counters that ran, e.g. `trace+react`; absent on rows from before it existed). A trend that mixes
 `vite preview` with `vite serve` moves ~2.5x on main-thread cost alone, which reads exactly like a
 regression. Filter on them rather than trusting them to be constant.
 
@@ -71,6 +72,44 @@ regression. Filter on them rather than trusting them to be constant.
 | `ciSqliteReads`, `ciSqliteWrites`, `ciSqliteSyncs`        | count         | `syncs` is where write amplification shows up                                       |
 | `ciSqliteRealms`                                          | count         | **read this first**: `0` means nothing was instrumented, not that I/O was zero      |
 | `ciRealms`                                                | count         | how many realms the row read, so a `0` column is readable as absent                 |
+
+#### Work counters — deterministic, for tight budgets
+
+Counts of work rather than time: they do not move with runner load. The costed ones are present
+only when their counter ran (`ciCounters`, from `DX_PERF_COUNTERS`); **filter on the column
+existing**, since a missing column is "not measured", not zero.
+
+| property                                                                                        | unit          | note                                                                                     |
+| ----------------------------------------------------------------------------------------------- | ------------- | ---------------------------------------------------------------------------------------- |
+| `ciLayoutCount`, `ciRecalcStyleCount`                                                           | count         | tab main thread, `Performance.getMetrics`; always present                                |
+| `ciLayoutObjects`                                                                               | count         | a LEVEL: layout objects alive at the stage's end — the render tree's size                |
+| `ciTaskOtherMs`, `ciV8CompileMs`, `ciDevToolsCommandMs`                                         | ms            | the rest of the getMetrics split; `DevToolsCommand` is the harness's own cost to the tab |
+| `ciStyleRecalcs`, `ciStyleRecalcElements`                                                       | count         | `trace` — `UpdateLayoutTree` events and the elements they restyled                       |
+| `ciLayouts`, `ciLayoutDirtyObjects`                                                             | count         | `trace` — `Layout` events and the objects each had to lay out                            |
+| `ciForcedLayouts`                                                                               | count         | `trace` — layouts run synchronously inside script (layout thrash)                        |
+| `ciTraceCounterEvents`, `ciTraceDataLoss`                                                       | —             | `trace` integrity: events parsed, and whether Chrome dropped any                         |
+| `ciInstructions*`                                                                               | count         | `trace` — instructions retired, `…Tab` `…Worker` `…SharedWorker` `…ServiceWorker`        |
+| `ciInstructionThreads`                                                                          | count         | **read this before `ciInstructions*`**: `0` means no PMU on the runner, not zero work    |
+| `ciJsCalls*`, `ciJsCallsTotal`, `ciJsCallRealms`                                                | count         | `calls` — exact JS function calls per realm, V8 precise coverage                         |
+| `ciReactCommits`, `ciReactRenders`, `ciReactMounts`                                             | count         | `react` — commits, component renders, and the renders that were first mounts             |
+| `ciReactWastedRenders`                                                                          | count         | `react` — re-renders with shallow-equal props and unchanged state and context            |
+| `ciSqliteSelects` … `ciSqliteOtherStatements`, `ciSqliteStatementErrors`                        | count         | statements by leading keyword, from the OPFS client                                      |
+| `ciSqliteRowsRead`, `ciSqliteRowsChanged`                                                       | count         | rows returned; rows changed by writes (`sqlite3_changes`)                                |
+| `ciSqliteCacheHits`, `ciSqliteCacheMisses`                                                      | count         | page-cache lookups (`sqlite3_db_status`)                                                 |
+| `ciAutomergeSnapshotSaves`, `…IncrementalSaves`, `…SyncStateSaves`, `…OtherSaves`, `…SaveBytes` | count / bytes | chunks the storage adapter wrote, by automerge-repo kind                                 |
+| `ciAutomergeChunkLoads`, `…RangeLoads`, `…LoadBytes`, `…ChunkRemoves`                           | count / bytes | storage adapter reads and deletes                                                        |
+| `ciAutomergeDocLoads`, `ciAutomergeEvictions`                                                   | count         | documents leased into, and evicted from, the host's repo                                 |
+| `ciAutomergeMutationsApplied` / `…Sent`, `…MutationAppliedBytes` / `…SentBytes`                 | count / bytes | client↔host document mutations through the documents synchronizer                        |
+| `ciEchoQueryExecutions`, `ciEchoQueryResultsSent`, `ciEchoQueryResultRows`                      | count         | host-side query runs and the result batches sent to clients                              |
+| `ciEchoQueryRuns`, `ciEchoQueryRecomputes`, `ciEchoQueryResultObjects`                          | count         | client-side one-shot runs and reactive recomputes, and the objects they presented        |
+| `ciEchoQuerySubscriberCallbacks`                                                                | count         | subscriber callbacks fired by reactive query updates                                     |
+| `ciEchoIndexPasses`, `ciEchoIndexedObjects`                                                     | count         | index-engine passes and the objects they indexed                                         |
+| `ciDataRealms`                                                                                  | count         | realms that published a data probe; `0` means uninstrumented                             |
+| `ciRequests`, `ciSocketFrames`                                                                  | count         | every response, and every WebSocket frame to any host                                    |
+
+`rpcCallsByMethod`, `network.byEndpoint`, and the per-stage `counters/<stage>-calls.json` /
+`<stage>-react.json` breakdowns stay in the NDJSON row and artifacts: a column per method,
+endpoint, function or component would mint a series per name.
 
 **The realm columns are keyed by KIND, not by script name.** A name-keyed column
 (`cpuMs_shared_worker_client_js`) minted a new permanent property on every bundle rename and left

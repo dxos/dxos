@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { Toolbar, type ToolbarRootProps } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Button, ToggleGroup, Toolbar, type ToolbarRootProps, composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';
 import { type Hue } from '@dxos/ui-theme';
 
@@ -70,16 +69,10 @@ export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
           onValueChange={(value) => value && onToolModeChange(value as ToolMode)}
         >
           {TOOL_OPTIONS.map((tool) => (
-            <Toolbar.ToggleGroupIconItem
-              key={tool.value}
-              value={tool.value}
-              icon={tool.icon}
-              iconOnly
-              label={tool.label}
-            />
+            <ToggleGroup.Item key={tool.value} value={tool.value} icon={tool.icon} iconOnly label={tool.label} />
           ))}
         </Toolbar.ToggleGroup>
-        <Toolbar.IconButton
+        <Button
           icon={showGrid ? 'ph--grid-four--fill' : 'ph--grid-four--regular'}
           iconOnly
           variant='ghost'
@@ -87,20 +80,12 @@ export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
           onClick={onToggleGrid}
         />
         {onGenerate && (
-          <Toolbar.IconButton
-            icon='ph--shapes--regular'
-            iconOnly
-            variant='ghost'
-            label='Generate shape'
-            onClick={onGenerate}
-          />
+          <Button icon='ph--shapes--regular' iconOnly variant='ghost' label='Generate shape' onClick={onGenerate} />
         )}
-        {onClear && (
-          <Toolbar.IconButton icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />
-        )}
+        {onClear && <Button icon='ph--trash--regular' iconOnly variant='ghost' label='Clear' onClick={onClear} />}
         <Toolbar.Separator />
         {onSeedLife && (
-          <Toolbar.IconButton
+          <Button
             icon='ph--dna--regular'
             iconOnly
             variant='ghost'
@@ -109,7 +94,7 @@ export const VoxelToolbar = composable<HTMLDivElement, VoxelToolbarProps>(
           />
         )}
         {onToggleLife && (
-          <Toolbar.IconButton
+          <Button
             icon={lifeRunning ? 'ph--pause--fill' : 'ph--play--fill'}
             iconOnly
             variant='ghost'

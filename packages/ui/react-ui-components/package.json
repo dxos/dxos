@@ -10,6 +10,7 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
+  "sideEffects": false,
   "type": "module",
   "imports": {
     "#translations": {
@@ -53,6 +54,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@lezer/common": "catalog:",
     "@lezer/highlight": "catalog:",
     "dompurify": "catalog:",

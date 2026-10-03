@@ -37,9 +37,7 @@ const FIXED_TIMESTAMP = '2026-05-19T20:34:24.000Z';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>
-    <Dialog.Overlay>
-      <AboutDialog />
-    </Dialog.Overlay>
+    <AboutDialog />
   </Dialog.Root>
 );
 

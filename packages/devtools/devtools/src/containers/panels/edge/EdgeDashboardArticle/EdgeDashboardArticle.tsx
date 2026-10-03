@@ -21,9 +21,9 @@ export const EdgeDashboardArticle = ({ role }: ArticleProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild classNames='flex-1 flex-row'>
+      <Panel.Body asChild classNames='flex-1 flex-row'>
         <JsonHighlighter data={formatData(serviceCredentials)} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

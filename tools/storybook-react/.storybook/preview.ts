@@ -19,6 +19,8 @@ import './cubes.css';
 import { withThemeByClassName } from '@storybook/addon-themes';
 import { type Preview } from '@storybook/react-vite';
 
+// Next components style through `.dx-*` rules that ship separately from the theme.
+import '@dxos/react-ui/theme.css';
 import { StorybookErrorFallback } from '@dxos/storybook-addon-logger/StorybookErrorFallback';
 
 import { docsTheme } from './theme.tsx';

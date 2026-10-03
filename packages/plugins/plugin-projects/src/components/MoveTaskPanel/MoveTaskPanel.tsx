@@ -41,7 +41,7 @@ export const MoveTaskPanel = ({ projects, onSelect }: MoveTaskPanelProps) => {
         ))}
       </SearchList.Viewport>
       {sorted.length === 0 && (
-        <p className='p-form-padding text-description' data-testid='move-task-panel.empty'>
+        <p className='p-form-padding text-fg-muted' data-testid='move-task-panel.empty'>
           {t('move-task-empty.message')}
         </p>
       )}

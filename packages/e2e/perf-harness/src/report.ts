@@ -160,6 +160,113 @@ const wasmByLibrary = (readings: readonly HeapReading[]): Record<string, number>
 };
 
 /**
+ * Data-layer counters published as columns, by the name the app's probe counts them under.
+ *
+ * A fixed list, zero-filled, for the reason {@link REALM_SUFFIX} is fixed: a column is a permanent
+ * schema entry, so a counter the app adds later stays in the NDJSON row until it is listed here.
+ */
+export const DATA_COUNTER_COLUMNS = [
+  'sqlite.selects',
+  'sqlite.inserts',
+  'sqlite.updates',
+  'sqlite.deletes',
+  'sqlite.otherStatements',
+  'sqlite.statementErrors',
+  'sqlite.rowsRead',
+  'sqlite.rowsChanged',
+  'sqlite.cacheHits',
+  'sqlite.cacheMisses',
+  'automerge.snapshotSaves',
+  'automerge.incrementalSaves',
+  'automerge.syncStateSaves',
+  'automerge.otherSaves',
+  'automerge.saveBytes',
+  'automerge.chunkLoads',
+  'automerge.rangeLoads',
+  'automerge.loadBytes',
+  'automerge.chunkRemoves',
+  'automerge.docLoads',
+  'automerge.evictions',
+  'automerge.mutationsApplied',
+  'automerge.mutationAppliedBytes',
+  'automerge.mutationsSent',
+  'automerge.mutationSentBytes',
+  'echo.queryExecutions',
+  'echo.queryResultsSent',
+  'echo.queryResultRows',
+  'echo.queryRuns',
+  'echo.queryRecomputes',
+  'echo.queryResultObjects',
+  'echo.querySubscriberCallbacks',
+  'echo.indexPasses',
+  'echo.indexedObjects',
+] as const;
+
+/** `sqlite.rowsRead` → `sqliteRowsRead`. */
+export const dataColumn = (name: string): string => {
+  const [namespace, counter = ''] = name.split('.');
+  return `${namespace}${counter.charAt(0).toUpperCase()}${counter.slice(1)}`;
+};
+
+/**
+ * The costed counters' columns, present only when the counter ran: a zero from a counter that was
+ * off would read as "no work", which is the one thing these columns must never say falsely.
+ */
+const counterColumns = (row: StageRow): Record<string, number | boolean> => {
+  const columns: Record<string, number | boolean> = {};
+  const trace = row.traceCounters;
+  if (trace) {
+    Object.assign(columns, {
+      styleRecalcs: trace.render.styleRecalcs,
+      styleRecalcElements: trace.render.styleRecalcElements,
+      layouts: trace.render.layouts,
+      layoutDirtyObjects: trace.render.layoutDirtyObjects,
+      forcedLayouts: trace.render.forcedLayouts,
+      traceCounterEvents: trace.events,
+      traceDataLoss: trace.dataLoss,
+      // Integrity first: `0` threads means the PMU is unavailable here, not that nothing ran.
+      instructionThreads: trace.instructions.reduce((total, realm) => total + realm.threads, 0),
+      ...byRealm(
+        'instructions',
+        trace.instructions,
+        (realm) => realm.kind,
+        (realm) => realm.instructions,
+      ),
+    });
+  }
+  if (row.jsCalls) {
+    Object.assign(columns, {
+      jsCallsTotal: row.jsCalls.reduce((total, realm) => total + realm.calls, 0),
+      jsCallRealms: row.jsCalls.length,
+      ...byRealm(
+        'jsCalls',
+        row.jsCalls,
+        (realm) => realm.kind,
+        (realm) => realm.calls,
+      ),
+    });
+  }
+  if (row.react) {
+    Object.assign(columns, {
+      reactCommits: row.react.commits,
+      reactRenders: row.react.renders,
+      reactMounts: row.react.mounts,
+      reactWastedRenders: row.react.wastedRenders,
+      reactRenderers: row.react.renderers,
+    });
+  }
+  if (row.data) {
+    const counters = row.data.counters;
+    Object.assign(
+      columns,
+      Object.fromEntries(DATA_COUNTER_COLUMNS.map((name) => [dataColumn(name), counters[name] ?? 0])),
+      { dataRealms: row.data.realms },
+    );
+  }
+  return columns;
+};
+
+/**
  * Maps one stage row to its PostHog event, refusing the rows that must not be trended.
  *
  * Throws rather than returning undefined: both refusals are caller errors, and a silent skip here
@@ -308,6 +415,15 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       scriptMs: row.thread.scriptMs,
       layoutMs: row.thread.layoutMs,
       recalcStyleMs: row.thread.recalcStyleMs,
+      // `Performance.getMetrics` counts beside the durations above: the same readings, but a count
+      // does not move with the runner's speed.
+      layoutCount: row.thread.layoutCount,
+      recalcStyleCount: row.thread.recalcStyleCount,
+      layoutObjects: row.thread.layoutObjects,
+      taskOtherMs: row.thread.taskOtherMs,
+      v8CompileMs: row.thread.v8CompileMs,
+      devToolsCommandMs: row.thread.devToolsCommandMs,
+      ...counterColumns(row),
 
       ...(row.cpuMsByRealm ? { cpuMsWorkers, ...cpuByRealm } : {}),
 
@@ -350,6 +466,8 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       domNodes: row.domNodes,
       domListeners: row.domListeners,
 
+      requests: row.network.requests,
+      socketFrames: row.network.socketFrames,
       codeBytes: row.network.codeBytes,
       apiBytes: row.network.apiBytes,
       apiRequests: row.network.apiRequests,
@@ -398,6 +516,7 @@ export const toPosthogEvent = (row: StageRow, timestamp?: string): PosthogEvent 
       profileState: row.comparability.profileState,
       settleMs: row.comparability.settleMs,
       instruments: row.comparability.instruments,
+      ...(row.comparability.counters ? { counters: row.comparability.counters } : {}),
       ...(row.comparability.snapshotStages?.length
         ? { snapshotStages: row.comparability.snapshotStages.join(',') }
         : {}),

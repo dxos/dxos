@@ -4,16 +4,9 @@
 
 import React, { type KeyboardEvent, type Ref, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Card, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Card, Focus, ScrollArea, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { CardTile } from '@dxos/react-ui-card';
-import {
-  Focus,
-  Mosaic,
-  type MosaicScrollController,
-  type MosaicTileProps,
-  useMosaicContainer,
-} from '@dxos/react-ui-mosaic';
+import { Mosaic, type MosaicScrollController, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { type Event } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -86,7 +79,7 @@ export const EventStack = composable<HTMLDivElement, EventStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root padding centered>
+          <ScrollArea.Root>
             <ScrollArea.Viewport classNames='py-2' ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={EventTile}

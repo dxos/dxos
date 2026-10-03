@@ -5,7 +5,7 @@
 import React, { type FC } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { ThemeProvider } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { type RenderCallback } from '@dxos/ui-editor/types';
 
@@ -22,9 +22,7 @@ export const createRenderer =
   (el, props) => {
     createRoot(el).render(
       <ThemeProvider tx={defaultTx}>
-        <Tooltip.Provider>
-          <Component {...props} />
-        </Tooltip.Provider>
+        <Component {...props} />
       </ThemeProvider>,
     );
   };

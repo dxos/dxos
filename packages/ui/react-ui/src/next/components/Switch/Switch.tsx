@@ -9,6 +9,8 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
+import { useFieldsetDisabled } from '../Fieldset/index.ts';
+import { useToolbarItem } from '../Toolbar/index.ts';
 
 export type SwitchProps = ThemedClassName<Omit<SwitchPrimitive.RootProps, 'children'>> & {
   /** Visible label beside the track; without one pass `aria-label`. */
@@ -16,18 +18,30 @@ export type SwitchProps = ThemedClassName<Omit<SwitchPrimitive.RootProps, 'child
   'aria-label'?: string;
 };
 
-/** Ark switch with an icon-tall track; the root is a block-tall row so it lines up with other controls. */
+/**
+ * Ark switch with an icon-tall track; the root is a block-tall row so it lines up with other controls. In a Toolbar its
+ * input joins the roving focus.
+ */
 export const Switch = forwardRef<HTMLLabelElement, SwitchProps>(
-  ({ classNames, label, 'aria-label': ariaLabel, ...props }, forwardedRef) => (
-    <SwitchPrimitive.Root {...props} className={mx(recipes.switch(), classNames)} ref={forwardedRef}>
-      <SwitchPrimitive.Control className={recipes.switchControl()}>
-        <SwitchPrimitive.Thumb className={recipes.switchThumb()} />
-      </SwitchPrimitive.Control>
-      {label && <SwitchPrimitive.Label>{label}</SwitchPrimitive.Label>}
-      {/* The zag machine implements the switch keyboard contract (Space toggles), so the role is earned (follow-up 21). */}
-      <SwitchPrimitive.HiddenInput role='switch' aria-label={ariaLabel} />
-    </SwitchPrimitive.Root>
-  ),
+  ({ classNames, label, 'aria-label': ariaLabel, disabled: disabledProp, ...props }, forwardedRef) => {
+    const disabled = useFieldsetDisabled(disabledProp);
+    const toolbarItem = useToolbarItem(disabled);
+    return (
+      <SwitchPrimitive.Root
+        {...props}
+        disabled={disabled || toolbarItem?.disabled}
+        className={mx(recipes.switch(), classNames)}
+        ref={forwardedRef}
+      >
+        <SwitchPrimitive.Control className={recipes.switchControl()}>
+          <SwitchPrimitive.Thumb className={recipes.switchThumb()} />
+        </SwitchPrimitive.Control>
+        {label && <SwitchPrimitive.Label>{label}</SwitchPrimitive.Label>}
+        {/* The zag machine implements the switch keyboard contract (Space toggles), so the role is earned (follow-up 21). */}
+        <SwitchPrimitive.HiddenInput {...toolbarItem} role='switch' aria-label={ariaLabel} />
+      </SwitchPrimitive.Root>
+    );
+  },
 );
 
-Switch.displayName = 'Next.Switch';
+Switch.displayName = 'Switch';

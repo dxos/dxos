@@ -7,4 +7,6 @@ export { publishPosthogBatch } from '../report.ts';
 
 export * from './events.ts';
 export * from './render.ts';
+export * from './run.ts';
 export * from './score.ts';
+export * from './stages.ts';

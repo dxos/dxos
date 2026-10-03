@@ -11,7 +11,7 @@ import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
-import { Banner, Button, Flex, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Container, Flex, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { type PublishFieldNote } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
@@ -202,10 +202,10 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             <Flex column gap='md' classNames='p-3'>
@@ -215,63 +215,51 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                 valence={statusMeta?.valence ?? 'neutral'}
                 icon={statusMeta?.icon ?? 'ph--circle-notch--regular'}
               >
-                <Banner.Content>
-                  <Banner.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Banner.Title>
-                </Banner.Content>
+                <Banner.Title>{t(statusMeta?.key ?? 'status-checking.label')}</Banner.Title>
               </Banner.Root>
 
               {/* Reasons publishing is unavailable. */}
               {!connection && (
                 <Banner.Root valence='info'>
-                  <Banner.Content>
-                    <Banner.Body>{t('no-connection.label')}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{t('no-connection.label')}</Banner.Body>
                 </Banner.Root>
               )}
               {ineligibleReason && (
                 <Banner.Root valence={reasonValence}>
-                  <Banner.Content>
-                    <Banner.Body>{ineligibleReason}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{ineligibleReason}</Banner.Body>
                 </Banner.Root>
               )}
               {error && (
                 <Banner.Root valence='error'>
-                  <Banner.Content>
-                    <Banner.Body>{error}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{error}</Banner.Body>
                 </Banner.Root>
               )}
 
               {/* First-publish confirmation. */}
               {confirming && (
                 <Banner.Root valence='warning'>
-                  <Banner.Content>
-                    <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
-                    <Banner.Body asChild>
-                      <Flex gap='sm' classNames='pt-2'>
-                        <Button variant='primary' disabled={busy} onClick={handlePublish}>
-                          {t('confirm-publish.label')}
-                        </Button>
-                        <Button disabled={busy} onClick={() => setConfirming(false)}>
-                          {t('cancel.label')}
-                        </Button>
-                      </Flex>
-                    </Banner.Body>
-                  </Banner.Content>
+                  <Banner.Body>{t('confirm-publish.message')}</Banner.Body>
+                  <Banner.Body asChild>
+                    <Flex gap='sm' classNames='pt-2'>
+                      <Button variant='primary' disabled={busy} onClick={handlePublish}>
+                        {t('confirm-publish.label')}
+                      </Button>
+                      <Button disabled={busy} onClick={() => setConfirming(false)}>
+                        {t('cancel.label')}
+                      </Button>
+                    </Flex>
+                  </Banner.Body>
                 </Banner.Root>
               )}
 
               {/* Public projection: what the network sees, as a treegrid. Each leaf is tagged Published (we
                   publish it), Mirrored (the network sees it via a linked upstream record), or Private;
                   fields whose local value diverges from the mirrored record are flagged Diverged (not pushed). */}
-              <Flex column gap='xs'>
-                <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
+              <Container gap='sm' gutter='none'>
+                <h2 className='text-xs uppercase tracking-wide text-fg-muted'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Banner.Root valence='warning'>
-                    <Banner.Content>
-                      <Banner.Body>{t('mirror-unresolved.label')}</Banner.Body>
-                    </Banner.Content>
+                    <Banner.Body>{t('mirror-unresolved.label')}</Banner.Body>
                   </Banner.Root>
                 )}
                 {/* A read-only field listing: three columns, no disclosure and nothing focusable, so it
@@ -312,11 +300,11 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                           className='flex items-center'
                           style={field.depth > 0 ? { paddingInlineStart: `${field.depth * INDENT_REM}rem` } : undefined}
                         >
-                          <span className={`truncate text-sm ${field.group || visible ? '' : 'text-description'}`}>
+                          <span className={`truncate text-sm ${field.group || visible ? '' : 'text-fg-muted'}`}>
                             {field.name}
                           </span>
                         </div>
-                        <div role='cell' className='truncate text-sm text-description'>
+                        <div role='cell' className='truncate text-sm text-fg-muted'>
                           {value}
                         </div>
                         <div role='cell' className='flex shrink-0 items-center justify-end gap-1'>
@@ -337,11 +325,11 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                     );
                   })}
                 </div>
-              </Flex>
+              </Container>
             </Flex>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

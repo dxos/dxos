@@ -2,12 +2,22 @@
 // Copyright 2024 DXOS.org
 //
 
-import React, { type MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type MouseEvent, type PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AppSurface } from '@dxos/app-toolkit/ui';
-import { IconButton, type Label, Main, Panel, Tabs, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  type Label,
+  Main,
+  Panel,
+  Tabs,
+  Toolbar,
+  toLocalizedString,
+  useMainLandmark,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { iconSize, mx } from '@dxos/ui-theme';
 
@@ -65,25 +75,31 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
     }
   }, [hasPersistedPanel, invokePromise]);
 
+  // R0 follows the R1 panel beside it.
+  const railLandmark = useMainLandmark(2.5);
+
   return (
     <Main.ComplementarySidebar
+      // The rail and the panel are focus areas of their own.
+      landmark={false}
       label={label}
       classNames={[topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]']}
     >
       {/* R0 Tabs */}
       <Tabs.Root classNames='contents' orientation='vertical' value={selectedVariant} keepMounted>
         <div
-          data-tauri-drag-region
+          {...railLandmark}
+          data-tauri-drag-region='deep'
           style={iconSize(5)}
           className={mx(
             'absolute z-5 inset-y-0 end-0 w-(--dx-r0-size)!',
-            'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-subdued-separator',
+            'py-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] border-s border-separator-subtle',
             'grid grid-cols-1 grid-rows-[1fr_min-content] dx-r0-surface dx-contain-layout dx-app-drag',
           )}
         >
-          <Tabs.Tablist classNames='grid grid-cols-1 auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
+          <Tabs.List classNames='grid grid-cols-1 justify-items-center auto-rows-(--dx-rail-action) overflow-y-auto scrollbar-none gap-1 p-1'>
             {companions.map((companion) => (
-              <Tabs.IconButton
+              <Tabs.Trigger
                 key={Attention.getLinkedVariant(companion.id)}
                 value={Attention.getLinkedVariant(companion.id)}
                 classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
@@ -103,28 +119,26 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 onClick={handleTabClick}
               />
             ))}
-          </Tabs.Tablist>
+          </Tabs.List>
           <div
-            className='grid grid-cols-1 auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
+            className='grid grid-cols-1 justify-items-center auto-rows-(--dx-rail-item) py-0.5 gap-0.5 overflow-y-auto scrollbar-none'
             style={iconSize(4)}
           >
             <Surface.Surface type={AppSurface.StatusIndicator} />
           </div>
-          <div className='hidden lg:grid grid-cols-1 auto-rows-(--dx-rail-action) p-1'>
-            <ToggleComplementarySidebarButton />
+          <div className='hidden lg:grid grid-cols-1 justify-items-center auto-rows-(--dx-rail-action) p-1'>
+            {/* Rail-action sized like the tab triggers above it, so the glyphs share one centre line. */}
+            <ToggleComplementarySidebarButton classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0' />
           </div>
         </div>
 
         {/* R1 Content. */}
         {companions.map((companion) => (
-          <Tabs.Panel
+          <ComplementarySidebarContent
             key={Attention.getLinkedVariant(companion.id)}
             value={Attention.getLinkedVariant(companion.id)}
-            classNames={[
-              'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
-              'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
-            ]}
-            {...(state.complementarySidebarState !== 'expanded' && { inert: true })}
+            selected={selectedVariant === Attention.getLinkedVariant(companion.id)}
+            inert={state.complementarySidebarState !== 'expanded'}
           >
             <ComplementarySidebarPanel
               companion={companion}
@@ -135,7 +149,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
                 sidebarState: state.fullscreen ? 'closed' : state.complementarySidebarState,
               })}
             />
-          </Tabs.Panel>
+          </ComplementarySidebarContent>
         ))}
       </Tabs.Root>
     </Main.ComplementarySidebar>
@@ -157,9 +171,10 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild size='lg'>
-        <Toolbar.Root style={iconSize(5)} classNames='dx-header-surface'>
-          <IconButton
+      <Panel.Header>
+        {/* The rail's height, like a plank's `Pane.Toolbar`, so the toolbars below line up across the deck. */}
+        <Toolbar.Root size='lg' style={iconSize(5)} classNames='h-(--dx-rail-content) dx-header-surface'>
+          <Button
             classNames='w-(--dx-rail-action) h-(--dx-rail-action) min-h-0 px-0'
             label={toLocalizedString(companion.properties.label, t)}
             icon={companion.properties.icon}
@@ -170,17 +185,37 @@ const ComplementarySidebarPanel = ({ companion, mounted }: ComplementarySidebarP
           />
           <div className='px-1'>{toLocalizedString(companion.properties.label, t)}</div>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='dx-r1-surface'>
+      </Panel.Header>
+      <Panel.Body classNames='dx-r1-surface'>
         <Surface.Surface
           type={AppSurface.deckCompanion(Attention.getLinkedVariant(companion.id))}
           data={data}
           fallback={PlankErrorFallback}
           placeholder={<PlankLoading />}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
 
 ComplementarySidebar.displayName = 'ComplementarySidebar';
+
+type ComplementarySidebarContentProps = PropsWithChildren<{ value: string; selected: boolean; inert: boolean }>;
+
+/** An R1 panel; the selected one is a focus area of the shell (the hidden ones stay mounted beneath it). */
+const ComplementarySidebarContent = ({ value, selected, inert, children }: ComplementarySidebarContentProps) => {
+  const landmark = useMainLandmark(2);
+  return (
+    <Tabs.Content
+      {...(selected && !inert && landmark)}
+      value={value}
+      classNames={[
+        'absolute data-[state="inactive"]:-z-[1] overflow-hidden',
+        'inset-y-0 start-0 w-full lg:w-(--dx-r1-size)',
+      ]}
+      {...(inert && { inert: true })}
+    >
+      {children}
+    </Tabs.Content>
+  );
+};

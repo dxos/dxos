@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent, type RefObject, useCallback } from 'react';
 
-import { Button, Field, Flex, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Flex, Popover, Textarea, useTranslation, virtualAnchor } from '@dxos/react-ui';
 import { type DiffLineTarget } from '@dxos/ui-editor';
 
 import { meta } from '#meta';
@@ -43,12 +43,12 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
   return (
     <>
       {target && (
-        <span className='text-sm text-description'>
+        <span className='text-sm text-fg-muted'>
           {t('comment-line.label', { file: target.file, line: target.line })}
         </span>
       )}
       <Field.Root>
-        <Field.Textarea
+        <Textarea
           autoFocus
           rows={4}
           placeholder={t('comment-placeholder.label')}
@@ -87,19 +87,17 @@ export type LineCommentPopoverProps = CommentComposerProps & {
 export const LineCommentPopover = ({ open, anchorRef, ...props }: LineCommentPopoverProps) => (
   <Popover.Root
     open={open}
-    onOpenChange={(next) => {
+    onOpenChange={({ open: next }) => {
       if (!next) {
         props.onCancel();
       }
     }}
+    positioning={{ ...virtualAnchor(anchorRef), placement: 'bottom-start' }}
   >
-    <Popover.VirtualTrigger virtualRef={anchorRef} />
-    <Popover.Portal>
-      <Popover.Content side='bottom' align='start' classNames='w-[28rem] max-w-[90cqi]'>
-        <Popover.Viewport classNames='flex flex-col gap-2 p-2'>
-          <CommentComposer {...props} />
-        </Popover.Viewport>
-      </Popover.Content>
-    </Popover.Portal>
+    <Popover.Content classNames='w-[28rem] max-w-[90cqi]'>
+      <Popover.Body classNames='flex flex-col gap-2 p-2'>
+        <CommentComposer {...props} />
+      </Popover.Body>
+    </Popover.Content>
   </Popover.Root>
 );

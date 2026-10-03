@@ -30,7 +30,7 @@ const archive = {
 };
 
 const fetch = handler.fetch!;
-const env = { ASSETS: assets, ASSET_ARCHIVE: archive } as unknown as Parameters<typeof fetch>[1];
+const env = { ASSETS: assets, ASSET_ARCHIVE: archive, APPLE_TEAM_ID: 'TEAM' } as unknown as Parameters<typeof fetch>[1];
 
 const get = (path: string, secFetchMode?: string) =>
   fetch(
@@ -98,5 +98,19 @@ describe('feedback logs', () => {
     const { key } = await response.json();
     expect(key).toMatch(/\.ndjson$/);
     expect(puts).toEqual([{ key, contentType: 'application/x-ndjson' }]);
+  });
+});
+
+describe('apple-app-site-association', () => {
+  // DX-1324: a channel signed under its own App ID gets passkeys only when the domain names it.
+  test('passkeys are shared with the prerelease channels, universal links are not', async () => {
+    const response = await get('/.well-known/apple-app-site-association');
+    const document = await response.json();
+    expect(document.webcredentials.apps).toEqual([
+      'TEAM.org.dxos.composer',
+      'TEAM.org.dxos.composer.dev',
+      'TEAM.org.dxos.composer.preview',
+    ]);
+    expect(document.applinks.details[0].appIDs).toEqual(['TEAM.org.dxos.composer']);
   });
 });

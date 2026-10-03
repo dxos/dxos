@@ -5,24 +5,32 @@
 import React from 'react';
 
 import { ComputeValueType } from '@dxos/conductor';
-import { Select, type SelectRootProps } from '@dxos/react-ui';
+import { Select } from '@dxos/react-ui';
 
 // TODO(burdon): Factor out.
-export const TypeSelect = ({ value, onValueChange }: Pick<SelectRootProps, 'value' | 'onValueChange'>) => {
+export type TypeSelectProps = {
+  value?: ComputeValueType;
+  onValueChange: (value: ComputeValueType) => void;
+};
+
+export const TypeSelect = ({ value, onValueChange }: TypeSelectProps) => {
   return (
-    <Select.Root value={value} onValueChange={onValueChange}>
-      <Select.TriggerButton variant='ghost' classNames='w-full px-0!' />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {ComputeValueType.literals.map((type) => (
-              <Select.Option key={type} value={type}>
-                {type}
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+    <Select.Root
+      value={value === undefined ? [] : [value]}
+      onValueChange={({ value: [next] }) => {
+        const type = ComputeValueType.literals.find((literal) => literal === next);
+        if (type) {
+          onValueChange(type);
+        }
+      }}
+      items={ComputeValueType.literals.map((type) => ({ value: type, label: type }))}
+    >
+      <Select.Trigger classNames='w-full px-0!' />
+      <Select.Content>
+        {ComputeValueType.literals.map((type) => (
+          <Select.Item key={type} item={{ value: type, label: type }} />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

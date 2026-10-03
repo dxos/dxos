@@ -54,6 +54,7 @@
   "devDependencies": {
     "@dxos/agent-claude": "workspace:*",
     "@dxos/assistant-toolkit": "workspace:*",
+    "@dxos/compute-runtime": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/effect": "workspace:*",
     "@dxos/errors": "workspace:*",

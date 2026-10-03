@@ -1,0 +1,78 @@
+/*
+ * Progress: a 4px rounded track (separator-coloured, since the bar is drawn on a surface) and an accent range. Ark
+ * sizes a determinate range inline (`width: <percent>%`); the indeterminate sweep and the countdown are animations.
+ */
+
+@layer dx-components {
+  .dx-progress {
+    display: block;
+    min-width: 0;
+  }
+
+  .dx-progress-track {
+    position: relative;
+    display: block;
+    height: 4px;
+    border-radius: 9999px;
+    overflow: hidden;
+    background: var(--color-separator);
+  }
+
+  .dx-progress-range {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    border-radius: 9999px;
+    background: var(--color-accent-bg);
+    transition: width 200ms linear;
+  }
+  .dx-progress[data-error] .dx-progress-range {
+    background: var(--color-error-surface);
+  }
+  .dx-progress[data-mode='failed'] .dx-progress-range {
+    width: 100%;
+  }
+  .dx-progress[data-mode='indeterminate'] .dx-progress-range {
+    animation: dx-progress-sweep 2s ease-out infinite;
+  }
+  .dx-progress[data-mode='countdown'] .dx-progress-range {
+    width: 100%;
+    transition: none;
+    animation: dx-progress-countdown 5s linear forwards;
+  }
+
+  @keyframes dx-progress-sweep {
+    0% {
+      inset-inline-start: 0;
+      width: 0%;
+    }
+    25% {
+      inset-inline-start: 25%;
+      width: 50%;
+    }
+    100% {
+      inset-inline-start: 100%;
+      width: 0%;
+    }
+  }
+  @keyframes dx-progress-countdown {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .dx-progress-range {
+      transition: none;
+    }
+    .dx-progress[data-mode='indeterminate'] .dx-progress-range {
+      animation: none;
+      inset-inline-start: 0;
+      width: 100%;
+      opacity: 0.5;
+    }
+  }
+}
