@@ -9,6 +9,8 @@
      * Aspects multiply their offset by this instead of branching on light-dark(), which resolves
      * unreliably when nested inside a relative-color expression. */
     --dx-lift: -1;
+    /* How far a control's fill sits off its host surface, in OKLCH lightness, in either theme (`--color-input-bg`). */
+    --dx-control-offset: 0.07;
     /*
      * Light attenuation.
      *

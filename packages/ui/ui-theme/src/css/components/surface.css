@@ -75,12 +75,21 @@
     --surface-bg: var(--dx-surface-raised);
   }
 
+  /* Controls keep the same offset from these surfaces as from the base (`--color-input-bg`, `theme/roles.css`). */
   [data-surface='overlay'] {
     --surface-bg: var(--dx-surface-overlay);
+    --color-input-bg: light-dark(
+      oklch(calc(0.995 - var(--dx-control-offset)) 0.001 190),
+      oklch(calc(0.269 + var(--dx-control-offset)) 0.001 190)
+    );
   }
 
   [data-surface='popup'] {
     --surface-bg: var(--dx-surface-popup);
+    --color-input-bg: light-dark(
+      oklch(calc(1 - var(--dx-control-offset)) 0.001 190),
+      oklch(calc(0.295 + var(--dx-control-offset)) 0.001 190)
+    );
   }
 
   /* Every zone paints its published surface and takes the default ink. */

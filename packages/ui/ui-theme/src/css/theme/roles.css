@@ -24,13 +24,14 @@
    * reads lighter than the topmost surface. Do not map it to an elevation level.
    */
   /*
-   * Light is not a ramp stop: neutral-250 sat 0.14 below the near-white canvas, so a default button
-   * read as a dark slab next to an input fill 0.025 below it. Dark sits midway between neutral-750 and the popup
-   * surface (neutral-775): any lighter reads as a slab on the chrome and attention surfaces, any darker vanishes on a popup.
+   * One offset in both themes: the fill sits `--dx-control-offset` off the base surface, darker in light and lighter in
+   * dark, so the two read with the same contrast. Overlay and popup zones re-derive it from their own surface
+   * (`components/surface.css`), where a base-relative fill would sink into the surface. The lightnesses are the base
+   * surface's (`theme/surfaces.css`) as literals: a relative colour cannot read through `light-dark()`.
    */
   --color-input-bg: light-dark(
-    oklch(0.87 0.001 190),
-    color-mix(in oklch, var(--color-neutral-750) 50%, var(--color-neutral-775) 50%)
+    oklch(calc(0.98 - var(--dx-control-offset)) 0.001 190),
+    oklch(calc(0.205 + var(--dx-control-offset)) 0.001 190)
   );
 
   /*
