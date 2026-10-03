@@ -46,7 +46,6 @@ export type AgentStateProps = {
 /** What the agent is doing: its identity and mode, counts of what it tracks and the conversations it holds. */
 export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
   const db = Obj.getDatabase(agent);
-  const [name] = useObject(agent, 'name');
   const [did] = useObject(agent, 'did');
 
   // Child-of filters rather than `.children()` traversals, which EDGE's query planner cannot run.
@@ -125,7 +124,7 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
   const channels = useChannels(agent, chats, people);
 
   return (
-    <AgentStateComponent.Root role={role} name={name} actions={actions}>
+    <AgentStateComponent.Root role={role} actions={actions}>
       <AgentStateComponent.Identity did={did} skills={skills} />
       <AgentStateComponent.Summary counts={counts} />
       <AgentStateComponent.Conversations channels={channels} />

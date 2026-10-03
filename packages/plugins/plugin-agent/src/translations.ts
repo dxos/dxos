@@ -86,7 +86,6 @@ export const translations = [
         'memory-kind-directive.label': 'Directive',
         'memory-origin-stated.label': 'Stated',
         'memory-origin-inferred.label': 'Inferred',
-        'agent-state-unnamed.label': 'Agent',
         'agent-state-identity.heading': 'Identity',
         'agent-state-did.label': 'DID',
         'agent-state-did-missing.label': 'No DID provisioned',

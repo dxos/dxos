@@ -40,7 +40,6 @@ const CHANNELS: AgentStateChannel[] = [
 ];
 
 type StoryProps = {
-  name?: string;
   did?: string;
   skills: AgentStateSkill[];
   /** Named rather than passed as objects, because storybook clones args and ECHO objects reject the writes. */
@@ -49,10 +48,10 @@ type StoryProps = {
   channels?: AgentStateChannel[];
 };
 
-const DefaultStory = ({ name, did, skills, scenario, counts, channels = [] }: StoryProps) => {
+const DefaultStory = ({ did, skills, scenario, counts, channels = [] }: StoryProps) => {
   const knowledge = useMemo(() => SCENARIOS[scenario](), [scenario]);
   return (
-    <AgentState.Root name={name}>
+    <AgentState.Root>
       <AgentState.Identity did={did} skills={skills} />
       <AgentState.Summary counts={counts ?? countsOf(knowledge)} />
       <AgentState.Conversations channels={channels} />
@@ -76,7 +75,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    name: 'Interlocutor',
     did: 'did:halo:9f2c4e1a7b3d5f6e8a0c2b4d6f8e0a1c',
     skills: SKILLS,
     scenario: 'default',

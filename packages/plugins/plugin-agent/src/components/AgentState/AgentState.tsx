@@ -21,14 +21,13 @@ const AgentStateContext = createContext<AgentStateView>('identity');
 
 type AgentStateRootProps = PropsWithChildren<{
   role?: string;
-  name?: string;
   /** Extra toolbar items after the tabs, e.g. a host's actions on the agent. */
   actions?: ReactNode;
   defaultView?: AgentStateView;
 }>;
 
-/** The agent's state panel: its name and tabs over identity, counts and conversations. */
-const AgentStateRoot = ({ role, name, actions, defaultView = 'identity', children }: AgentStateRootProps) => {
+/** The agent's state panel: tabs over its identity, counts and conversations. */
+const AgentStateRoot = ({ role, actions, defaultView = 'identity', children }: AgentStateRootProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [view, setView] = useState<AgentStateView>(defaultView);
   return (
@@ -41,7 +40,6 @@ const AgentStateRoot = ({ role, name, actions, defaultView = 'identity', childre
       <Panel.Root role={role}>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Toolbar.Text>{name || t('agent-state-unnamed.label')}</Toolbar.Text>
             <Tabs.Tablist>
               {AGENT_STATE_VIEWS.map((value) => (
                 <Tabs.Button key={value} value={value} data-testid={`agent-state-tab-${value}`}>
