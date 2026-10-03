@@ -15,7 +15,6 @@ const ENV_LABELS: Record<string, string> = {
   'dev.dxos.network': 'Dev',
   'preview.dxos.network': 'Preview',
   'dxos.network': 'Production',
-
   'edge.dxos.workers.dev': 'Dev',
   'edge-preview.dxos.workers.dev': 'Preview',
   'edge-main.dxos.workers.dev': 'Main (retired)',
