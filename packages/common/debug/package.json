@@ -10,7 +10,10 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "DXOS.org",
-  "sideEffects": true,
+  "sideEffects": [
+    "./src/devtools-formatter.ts",
+    "./dist/lib/**/index.mjs"
+  ],
   "type": "module",
   "exports": {
     ".": {
