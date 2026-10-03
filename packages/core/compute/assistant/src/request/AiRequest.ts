@@ -184,6 +184,9 @@ export class Request {
   /** Turns of this request spent reporting a tool call the toolkit could not resolve. */
   #unresolvedTools = 0;
 
+  /** The turn's prompt, sent on the ephemeral channel once the next model call is under way. */
+  #announcement: Message.Message | undefined;
+
   constructor(private readonly _options: Options = {}) {
     this._observer = _options.observer ?? GenerationObserver.noop();
     this._onOutput = _options.onOutput ?? (() => Effect.void);
@@ -289,9 +292,7 @@ export class Request {
       const userMessage = yield* formatUserPrompt({ prompt, history });
       // Also sent on the ephemeral channel, as the reply's blocks are: the feed shows the prompt only
       // once its index catches up, which can be after the reply has started streaming in.
-      for (const block of userMessage.blocks) {
-        yield* Trace.write(Trace.PartialBlock, { messageId: userMessage.id, role: 'user', block });
-      }
+      this.#announcement = userMessage;
       yield* this._submitMessage(userMessage);
     }).pipe(Effect.withSpan('AiRequest.begin'));
 
@@ -362,10 +363,26 @@ export class Request {
       // Counts attempts at the provider rather than turns: the retry below re-runs the whole
       // collect, so `Stream.unwrap` re-evaluates this on each attempt and the reader sees the
       // request being re-issued instead of an unexplained stall.
+      // Forked to run once the call has gone out rather than written before it: rendering the prompt
+      // is the reader's page work, so it runs while the provider answers instead of delaying the request.
+      // Detached, since the effect that opens the stream returns at once and would take a child with it.
+      const announce = Effect.suspend(() => {
+        const announcement = this.#announcement;
+        this.#announcement = undefined;
+        return announcement === undefined
+          ? Effect.void
+          : Effect.forEach(
+              announcement.blocks,
+              (block) => Trace.write(Trace.PartialBlock, { messageId: announcement.id, role: 'user', block }),
+              { discard: true },
+            );
+      });
+
       let attempt = 0;
       const stream = Stream.unwrap(
         Effect.gen(function* () {
           yield* Trace.emitRequestPhase('contacting-provider', { attempt: ++attempt });
+          yield* Effect.yieldNow.pipe(Effect.andThen(announce), Effect.forkDetach);
           return openStream();
         }),
       );
@@ -390,6 +407,9 @@ export class Request {
         Stream.mapEffect(
           (block) =>
             Effect.gen({ self: this }, function* () {
+              // A model that answers before the forked announcement runs must not show its reply
+              // ahead of the prompt; a no-op once the prompt has gone out.
+              yield* announce;
               if (block._tag === 'stats' && block.finishReason !== undefined) {
                 finishReason = block.finishReason;
               }
