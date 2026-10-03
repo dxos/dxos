@@ -55,7 +55,9 @@ import {
   type ChatContextValue,
   ChatReportContextProvider,
   type ChatRequestTiming,
+  ChatThreadContextProvider,
   useChatContext,
+  useChatThreadContext,
 } from './context.ts';
 import { type ChatEvent } from './events.ts';
 import { objectCardWidget } from './ObjectCardWidget.tsx';
@@ -315,19 +317,22 @@ const ChatRoot = ({
       event={event}
       db={db}
       chat={chat}
-      messages={messages}
-      queued={queued}
-      alarms={alarms}
       onCancel={handleCancel}
       processor={processor}
-      requestTiming={requestTiming}
-      controller={controller}
       setController={setController}
-      visibleRange={visibleRange}
       setVisibleRange={setVisibleRange}
       {...props}
     >
-      <ChatReportContextProvider submit={handleReport}>{children}</ChatReportContextProvider>
+      <ChatThreadContextProvider
+        messages={messages}
+        queued={queued}
+        alarms={alarms}
+        requestTiming={requestTiming}
+        controller={controller}
+        visibleRange={visibleRange}
+      >
+        <ChatReportContextProvider submit={handleReport}>{children}</ChatReportContextProvider>
+      </ChatThreadContextProvider>
     </ChatContextProvider>
   );
 };
@@ -502,7 +507,8 @@ type ChatThreadProps = ThemedClassName<{
 
 const ChatThread = ({ classNames, viewType, tailLines, onViewUsage }: ChatThreadProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { db, debug, event, messages, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { db, debug, event, processor, setController, setVisibleRange } = useChatContext(CHAT_THREAD_NAME);
+  const { messages } = useChatThreadContext(CHAT_THREAD_NAME);
   const identity = useIdentity();
   // Embedded objects resolve against the chat's database (the fallback one while it is transient).
   const objectImage = useMemo(() => objectCardWidget(db), [db]);
@@ -642,7 +648,7 @@ type ChatOutlineProps = ThemedClassName<{}>;
  * same navigation seam as the toolbar and the arrow keys.
  */
 const ChatOutline = ({ classNames }: ChatOutlineProps) => {
-  const { messages, visibleRange, controller } = useChatContext(CHAT_OUTLINE_NAME);
+  const { messages, visibleRange, controller } = useChatThreadContext(CHAT_OUTLINE_NAME);
 
   const markers = useMemo(() => buildMarkers(messages), [messages]);
   const handleSelect = useCallback(
@@ -925,7 +931,8 @@ const QUEUE_REVEAL_DELAY = 1_000;
 type ChatQueueProps = Omit<NaturalChatQueueProps, 'messages' | 'onCancel'>;
 
 const ChatQueue = (props: ChatQueueProps) => {
-  const { queued, onCancel } = useChatContext(CHAT_QUEUE_NAME);
+  const { onCancel } = useChatContext(CHAT_QUEUE_NAME);
+  const { queued } = useChatThreadContext(CHAT_QUEUE_NAME);
   const messages = useSettled(queued, QUEUE_REVEAL_DELAY);
 
   return <NaturalChatQueue {...props} messages={messages} onCancel={onCancel} />;
@@ -945,7 +952,8 @@ const CHAT_ACTIVITY_NAME = 'Chat.Activity';
  * beside the prompt with the rest of the presentational parts and only the binding is here.
  */
 const ChatActivity = ({ classNames }: ThemedClassName) => {
-  const { processor, alarms } = useChatContext(CHAT_ACTIVITY_NAME);
+  const { processor } = useChatContext(CHAT_ACTIVITY_NAME);
+  const { alarms } = useChatThreadContext(CHAT_ACTIVITY_NAME);
   const activity = useAtomValue(getProcessorState(processor).activity);
 
   // Earliest pending alarm: the agent wakes at the first one, so a later one says nothing about the
