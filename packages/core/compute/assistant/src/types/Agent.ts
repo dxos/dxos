@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 
 import * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
-import { Annotation, Database, DXN, type Error as EchoError, Feed, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, type Error as EchoError, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { IdentityDid } from '@dxos/keys';
 
@@ -100,10 +100,11 @@ export const loadInstructions = (
  */
 export const loadChat = (agent: Agent): Effect.Effect<Chat.Chat | undefined, never, Database.Service> =>
   Effect.gen(function* () {
-    const children = yield* Database.query(Query.select(Filter.id(agent.id)).children()).run;
+    // A child-of filter rather than a `.children()` traversal: EDGE's query planner has no hierarchy
+    // traversal, so an agent hosted there could not resolve its chat.
+    const chats = yield* Database.query(Filter.and(Filter.type(Chat.Chat), Filter.childOf(agent))).run;
     return (
-      children
-        .filter(Obj.instanceOf(Chat.Chat))
+      chats
         // Chats bridged from an external conversation (a Discord thread) carry its foreign key; they are
         // the agent's too, but never its own primary chat.
         .filter((chat) => Obj.getMeta(chat).keys.length === 0)

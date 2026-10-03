@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import * as Agent from '@dxos/assistant/Agent';
-import { Annotation, Database, DXN, Filter, Obj, Query, Ref, Type } from '@dxos/echo';
+import { Annotation, Database, DXN, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
 
 /** `Obj.Meta` key source for Discord entities; matches plugin-discord's `DISCORD_SOURCE`. */
@@ -77,7 +77,8 @@ export const make = ({ agent, channels, ...props }: MakeProps): DiscordBinding =
 
 /** Resolves the agent's Discord binding, if any. */
 export const loadForAgent = (agent: Agent.Agent): Effect.Effect<DiscordBinding | undefined, never, Database.Service> =>
-  Database.query(Query.select(Filter.id(agent.id)).children()).run.pipe(
-    Effect.map((children) => children.find(Obj.instanceOf(DiscordBinding))),
+  // A child-of filter rather than a `.children()` traversal, which EDGE's query planner cannot run.
+  Database.query(Filter.and(Filter.type(DiscordBinding), Filter.childOf(agent))).run.pipe(
+    Effect.map((bindings) => bindings.at(0)),
     Effect.orDie,
   );
