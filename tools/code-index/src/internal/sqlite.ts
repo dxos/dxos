@@ -11,14 +11,17 @@ import type * as SqlClient from 'effect/sql/SqlClient';
  * suite on Node (`node:sqlite`). Selected by dynamic import because neither driver loads
  * under the other runtime.
  */
-export const clientLayer = (filename: string): Layer.Layer<SqlClient.SqlClient> =>
+export const clientLayer = (
+  filename: string,
+  options?: { readonly readonly?: boolean },
+): Layer.Layer<SqlClient.SqlClient> =>
   Layer.unwrap(
     Effect.promise(async (): Promise<Layer.Layer<SqlClient.SqlClient>> => {
       if (typeof globalThis.Bun !== 'undefined') {
         const { SqliteClient } = await import('@effect/sql-sqlite-bun');
-        return SqliteClient.layer({ filename });
+        return SqliteClient.layer({ filename, readonly: options?.readonly });
       }
       const { SqliteClient } = await import('@effect/sql-sqlite-node');
-      return SqliteClient.layer({ filename });
+      return SqliteClient.layer({ filename, readonly: options?.readonly });
     }),
   );

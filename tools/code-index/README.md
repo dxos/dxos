@@ -66,6 +66,46 @@ live session saw and there is no second copy to keep in step. The project id is 
 through the `source` condition, so the UI — Solid, with `@dxos/react-ui-thread` mounted as a React
 island — is transformed from the working tree with nothing to rebuild first.
 
+## Querying it from an MCP client
+
+`code-index mcp` serves the index to an MCP client (Claude Code, Claude Desktop) over stdio. It is
+read-only: it opens an existing store, never indexes or writes, and takes the same `--root` /
+`--store` flags and `CODE_INDEX_BACKEND` as every other command. Index first, then register it:
+
+```bash
+bun tools/code-index/bin/code-index.ts index
+claude mcp add code-index -- bun tools/code-index/bin/code-index.ts mcp
+```
+
+Or, for everyone working in a checkout, in that project's `.mcp.json` (this repository does not ship
+one — add it locally):
+
+```json
+{
+  "mcpServers": {
+    "code-index": {
+      "command": "bun",
+      "args": ["tools/code-index/bin/code-index.ts", "mcp"]
+    }
+  }
+}
+```
+
+| Tool         | What it answers |
+| ------------ | --------------- |
+| `vocabulary` | The `deus:` classes and predicates in the graph, asserted and derived, with quad counts, plus the namespace prefixes. Start here. |
+| `describe`   | A resource's outgoing and incoming triples (bounded), from an IRI or a file path, package name or symbol name; an ambiguous name returns candidates. |
+| `query`      | A SPARQL SELECT as `{ vars, rows }`, capped at `limit` (default 200, at most 2000) with `truncated` reported. |
+| `ask`        | A SPARQL ASK, as a boolean. |
+| `files`      | Indexed files, filtered by path prefix and language. |
+| `stats`      | Files, quads and per-reasoner derived counts, and the backend in use. |
+
+stdout belongs to the protocol; the startup line and every log go to stderr. The store is
+single-writer and neither backend can be read beside a live writer — LevelDB has no read-only mode,
+and oxigraph documents a read-only RocksDB open next to a writer as undefined behaviour — so `mcp`
+cannot run while `serve` or `index` holds the store. It fails at startup naming the process that
+does; stop it, or point `--store` at a copy of the store directory.
+
 Tests run on Node under vitest (the CLI runs on Bun; the SQLite driver and the worker platform are
 chosen from the ambient runtime). The sandbox tests spawn the real child process and skip where Bun
 is absent:
@@ -74,5 +114,5 @@ is absent:
 moon run code-index:test
 ```
 
-The store is single-writer (LevelDB), so `serve` and any other `code-index` command cannot run at
-the same time.
+The store is single-writer (LevelDB or RocksDB), so `serve` and any other `code-index` command,
+`mcp` included, cannot run at the same time.
