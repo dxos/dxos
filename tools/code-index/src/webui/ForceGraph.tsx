@@ -139,6 +139,9 @@ export const ForceGraph = (props: { content: string }) => {
       return next;
     });
 
+  // Declared before `layout`: Solid runs a memo as soon as it is created, so a later `const` is still unbound.
+  const radius = (node: Placed) => (node.members ? 10 + Math.sqrt(node.members) * 3 : 4 + 10 * node.score);
+
   const layout = createMemo(() => {
     const visible = data().nodes.filter((node) => showAll() || node.kept);
     const folded = collapsed();
@@ -183,8 +186,8 @@ export const ForceGraph = (props: { content: string }) => {
     const anchor = (group: string | undefined) => {
       const index = names.indexOf(group ?? '');
       const angle = (2 * Math.PI * index) / Math.max(1, names.length);
-      const radius = names.length > 1 ? Math.min(WIDTH, HEIGHT) * 0.3 : 0;
-      return { x: WIDTH / 2 + radius * Math.cos(angle), y: HEIGHT / 2 + radius * Math.sin(angle) };
+      const ring = names.length > 1 ? Math.min(WIDTH, HEIGHT) * 0.3 : 0;
+      return { x: WIDTH / 2 + ring * Math.cos(angle), y: HEIGHT / 2 + ring * Math.sin(angle) };
     };
     const list = [...nodes.values()];
     const simulation = forceSimulation<Placed>(list)
@@ -206,8 +209,6 @@ export const ForceGraph = (props: { content: string }) => {
     simulation.tick(300);
     return { nodes: list, links };
   });
-
-  const radius = (node: Placed) => (node.members ? 10 + Math.sqrt(node.members) * 3 : 4 + 10 * node.score);
 
   const bounds = createMemo(() => {
     const { nodes } = layout();
@@ -243,10 +244,10 @@ export const ForceGraph = (props: { content: string }) => {
           </button>
         </Show>
       </div>
-      <svg viewBox={bounds()} class='h-[28rem] w-full'>
+      <svg viewBox={bounds()} class='text-description h-[28rem] w-full'>
         <defs>
           <marker id='force-head' viewBox='0 0 10 10' refX='10' refY='5' markerWidth='6' markerHeight='6' orient='auto'>
-            <path d='M 0 0 L 10 5 L 0 10 z' class='fill-description' />
+            <path d='M 0 0 L 10 5 L 0 10 z' fill='currentColor' />
           </marker>
         </defs>
         <For each={layout().links}>
@@ -259,7 +260,7 @@ export const ForceGraph = (props: { content: string }) => {
                 y1={from.y}
                 x2={to.x}
                 y2={to.y}
-                class='stroke-description'
+                stroke='currentColor'
                 stroke-opacity={0.45}
                 stroke-dasharray={link.kind === 'relay' ? '3 3' : undefined}
                 marker-end='url(#force-head)'
@@ -281,7 +282,7 @@ export const ForceGraph = (props: { content: string }) => {
                 stroke={selected()?.id === node.id ? 'currentColor' : 'none'}
               />
               <Show when={node.score >= 0.5 || node.members}>
-                <text y={-radius(node) - 3} text-anchor='middle' class='fill-baseText text-[10px]'>
+                <text y={-radius(node) - 3} text-anchor='middle' fill='currentColor' class='text-baseText text-[10px]'>
                   {node.members ? `${node.label} ×${node.members}` : node.label}
                 </text>
               </Show>
