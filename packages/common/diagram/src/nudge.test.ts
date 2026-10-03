@@ -13,7 +13,8 @@ const orthogonal = (points: readonly Scene.Point[]) =>
 
 /** Whether two orthogonal polylines share a collinear stretch of positive length. */
 const overlapping = (first: readonly Scene.Point[], second: readonly Scene.Point[]) => {
-  const segments = (points: readonly Scene.Point[]) => points.slice(1).map((end, index) => [points[index], end] as const);
+  const segments = (points: readonly Scene.Point[]) =>
+    points.slice(1).map((end, index) => [points[index], end] as const);
   return segments(first).some(([a0, a1]) =>
     segments(second).some(([b0, b1]) => {
       if (a0.x === a1.x && b0.x === b1.x && a0.x === b0.x) {
