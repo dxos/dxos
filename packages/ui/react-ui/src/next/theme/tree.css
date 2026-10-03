@@ -126,11 +126,16 @@
     }
   }
 
+  /* The row grows while transparent and fades in once it has room, so a half-grown row's clipped text never crowds the
+     row below it; a closing row fades out first, then shrinks. */
   @keyframes dx-tree-row-enter {
     from {
       opacity: 0;
       block-size: 0;
       overflow-y: clip;
+    }
+    50% {
+      opacity: 0;
     }
     to {
       opacity: 1;
@@ -153,6 +158,9 @@
       opacity: 1;
       block-size: var(--dx-block-size);
       overflow-y: clip;
+    }
+    50% {
+      opacity: 0;
     }
     to {
       opacity: 0;
