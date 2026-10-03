@@ -5,8 +5,9 @@
 //! The quad store (oxigraph over RocksDB) with journalled graph swaps, and the reasoning driver that
 //! keeps each rule file's derived graph up to date from the journal.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
 
 use oxigraph::io::{RdfFormat, RdfParser, RdfSerializer};
@@ -17,17 +18,20 @@ use oxigraph::model::{
 use oxigraph::sparql::results::{QueryResultsFormat, QueryResultsSerializer};
 use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use oxigraph::store::Store;
-use rustc_hash::FxHashSet;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::eval::{self, Change};
 use crate::facts::{self, Dict, Facts, Id, Pattern, TripleSet};
 use crate::rules::{self, RuleSet};
+use crate::snapshot;
 
 pub const DERIVED_PREFIX: &str = "https://dxos.org/deus/graph/derived/";
 
 const ENGINE: &str = "urn:code-index:engine";
 const SIGNATURE: &str = "urn:code-index:signature";
 const OVERFLOW: &str = "urn:code-index:overflow";
+/// The token the premises file was written under, recorded only once the run that wrote it commits.
+const SNAPSHOT: &str = "urn:code-index:snapshot";
 /// Journal entries record a triple's presence in the base *before* the first change since the last
 /// reasoning pass: `(s, <prefix + p>, o)` in the journal store.
 const WAS_PRESENT: &str = "urn:code-index:journal:present:";
@@ -129,6 +133,26 @@ pub struct Outcome {
     pub incremental: bool,
 }
 
+/// One snapshot thread's triples, over a dictionary of its own.
+#[derive(Default)]
+struct Part {
+    ids: FxHashMap<Term, u32>,
+    terms: Vec<Term>,
+    triples: Vec<(u32, Id, u32)>,
+}
+
+impl Part {
+    fn intern(&mut self, term: Term) -> u32 {
+        if let Some(id) = self.ids.get(&term) {
+            return *id;
+        }
+        let id = u32::try_from(self.terms.len()).expect("snapshot dictionary overflow");
+        self.terms.push(term.clone());
+        self.ids.insert(term, id);
+        id
+    }
+}
+
 pub struct NativeStore {
     store: Store,
     /// Engine bookkeeping, kept out of the main store so no query can see it: the journal, the rule
@@ -137,6 +161,8 @@ pub struct NativeStore {
     meta: Store,
     journal: Mutex<JournalState>,
     journal_limit: usize,
+    /// Where the premises of the last reasoning run are kept (`snapshot.rs`); none in memory.
+    snapshot_path: Option<PathBuf>,
 }
 
 /// The file graphs, read through oxigraph's indexes and interned on the way out.
@@ -281,19 +307,26 @@ impl NativeStore {
             Store::open(path.join("oxigraph"))?,
             Store::open(path.join("journal"))?,
             DEFAULT_JOURNAL_LIMIT,
+            Some(path.join("premises.bin")),
         )
     }
 
     pub fn in_memory(journal_limit: usize) -> Result<Self> {
-        Self::from_stores(Store::new()?, Store::new()?, journal_limit)
+        Self::from_stores(Store::new()?, Store::new()?, journal_limit, None)
     }
 
-    fn from_stores(store: Store, meta: Store, journal_limit: usize) -> Result<Self> {
+    fn from_stores(
+        store: Store,
+        meta: Store,
+        journal_limit: usize,
+        snapshot_path: Option<PathBuf>,
+    ) -> Result<Self> {
         let native = Self {
             store,
             meta,
             journal: Mutex::new(JournalState::default()),
             journal_limit,
+            snapshot_path,
         };
         native.reload_journal_state()?;
         Ok(native)
@@ -647,24 +680,55 @@ impl NativeStore {
     }
 
     /// The base triples with these predicates.
+    ///
+    /// Decoding a quad is a RocksDB read per non-inline term, which made this load most of a warm
+    /// pass; so predicates are decoded on every core, each thread interning into a dictionary of its
+    /// own that is merged into `dict` once per distinct term.
     fn snapshot(&self, predicates: &FxHashSet<Id>, dict: &Dict) -> Result<TripleSet> {
+        let predicates: Vec<(Id, NamedNode)> = predicates
+            .iter()
+            .filter_map(|id| match dict.term(*id) {
+                Term::NamedNode(node) => Some((*id, node)),
+                _ => None,
+            })
+            .collect();
+        let next = AtomicUsize::new(0);
+        let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
+        let parts: Vec<Result<Part>> = std::thread::scope(|scope| {
+            let workers: Vec<_> = (0..threads.min(predicates.len()))
+                .map(|_| {
+                    scope.spawn(|| {
+                        let mut part = Part::default();
+                        while let Some((predicate, node)) =
+                            predicates.get(next.fetch_add(1, Ordering::Relaxed))
+                        {
+                            for quad in
+                                self.store
+                                    .quads_for_pattern(None, Some(node.as_ref()), None, None)
+                            {
+                                let quad = quad?;
+                                if is_base_graph(quad.graph_name.as_ref()) {
+                                    let subject = part.intern(quad.subject.into());
+                                    let object = part.intern(quad.object);
+                                    part.triples.push((subject, *predicate, object));
+                                }
+                            }
+                        }
+                        Ok(part)
+                    })
+                })
+                .collect();
+            workers
+                .into_iter()
+                .map(|worker| worker.join().expect("snapshot thread panicked"))
+                .collect()
+        });
         let mut set = TripleSet::default();
-        for predicate in predicates {
-            let Term::NamedNode(node) = dict.term(*predicate) else {
-                continue;
-            };
-            for quad in self
-                .store
-                .quads_for_pattern(None, Some(node.as_ref()), None, None)
-            {
-                let quad = quad?;
-                if is_base_graph(quad.graph_name.as_ref()) {
-                    set.insert([
-                        dict.intern(&quad.subject.into()),
-                        *predicate,
-                        dict.intern(&quad.object),
-                    ]);
-                }
+        for part in parts {
+            let part = part?;
+            let ids: Vec<Id> = part.terms.iter().map(|term| dict.intern(term)).collect();
+            for (subject, predicate, object) in part.triples {
+                set.insert([ids[subject as usize], predicate, ids[object as usize]]);
             }
         }
         Ok(set)
@@ -815,16 +879,28 @@ impl NativeStore {
             .map(|rules| rules.predicates.as_ref())
             .collect::<Option<Vec<_>>>()
         {
-            Some(sets) => Some(
-                self.snapshot(
-                    &sets
-                        .into_iter()
-                        .flatten()
-                        .copied()
-                        .collect::<FxHashSet<_>>(),
-                    &dict,
-                )?,
-            ),
+            Some(sets) => {
+                let predicates: FxHashSet<Id> = sets.into_iter().flatten().copied().collect();
+                let kept = if incremental {
+                    self.kept_premises(&dict)
+                } else {
+                    None
+                };
+                Some(match kept {
+                    // The kept premises plus the journal's changes are the base now: every base
+                    // write since that run is journalled, or the run would not be incremental.
+                    Some(mut kept) => {
+                        for triple in plus.iter().filter(|triple| predicates.contains(&triple[1])) {
+                            kept.insert(*triple);
+                        }
+                        for triple in minus.iter() {
+                            kept.remove(triple);
+                        }
+                        kept
+                    }
+                    None => self.snapshot(&predicates, &dict)?,
+                })
+            }
             None => None,
         };
         // Without a snapshot, an unbound scan is still decoded from the store only once.
@@ -944,13 +1020,46 @@ impl NativeStore {
             }
         }
         transaction.commit()?;
+        let kept = snapshot
+            .as_ref()
+            .and_then(|snapshot| self.keep_premises(snapshot, &signature, &dict));
         self.meta.clear()?;
         self.set_engine_value(
             SIGNATURE,
             Some(Literal::new_simple_literal(signature).into()),
         )?;
+        if let Some(token) = kept {
+            self.set_engine_value(SNAPSHOT, Some(Literal::new_simple_literal(token).into()))?;
+        }
         self.reload_journal_state()?;
         Ok(outcomes)
+    }
+
+    /// The premises the last run kept, if the engine state still vouches for them. A file that cannot
+    /// be read is only a lost shortcut: the caller decodes the premises from the store instead.
+    fn kept_premises(&self, dict: &Dict) -> Option<TripleSet> {
+        let path = self.snapshot_path.as_ref()?;
+        let Ok(Some(Term::Literal(token))) = self.engine_value(SNAPSHOT) else {
+            return None;
+        };
+        snapshot::read(path, token.value(), dict).ok().flatten()
+    }
+
+    /// Writes `premises` for the next run and returns the token to record once this run commits;
+    /// `None` if there is nowhere to write or the write failed, which costs the next run a decode.
+    fn keep_premises(&self, premises: &TripleSet, signature: &str, dict: &Dict) -> Option<String> {
+        let path = self.snapshot_path.as_ref()?;
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |elapsed| elapsed.as_nanos());
+        let token = format!("{signature}:{nanos}");
+        match snapshot::write(path, &token, premises, dict) {
+            Ok(()) => Some(token),
+            Err(_) => {
+                let _ = std::fs::remove_file(path);
+                None
+            }
+        }
     }
 
     /// Serialises quads as N-Quads.
