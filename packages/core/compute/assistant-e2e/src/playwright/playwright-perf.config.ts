@@ -56,8 +56,8 @@ export default defineConfig({
           command: `pnpm exec vite preview --outDir ${PERF_STORYBOOK_OUT} --port ${PERF_PORT} --strictPort`,
           cwd: STORYBOOK_DIR,
           port: PERF_PORT,
-          // The preview serves whatever is on disk, so a running one already reflects the latest build.
-          reuseExistingServer: true,
+          // Never reused: a preview already on the port may serve another checkout's build.
+          reuseExistingServer: false,
           timeout: 60_000,
         },
 });
