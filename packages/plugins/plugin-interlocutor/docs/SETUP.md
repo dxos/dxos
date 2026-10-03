@@ -64,9 +64,11 @@ holds `op://` references, and `pnpm dev:env` resolves them with `op inject` and 
 files. It needs the 1Password desktop app with CLI integration on (Settings → Developer); it prompts
 for approval, so no `op signin` is needed.
 
-1. Store the bot token in 1Password at the item compute-service's `secrets.jsonc` references for
-   `DISCORD_BOT_TOKEN_DEV` (field `credential`). In a dev environment it overrides the token stored in
-   the space, so you can test without managing tokens in Composer.
+1. Store the bot token in 1Password following the key standard: vault `eng-dev`, item named in
+   reverse-DNS form, field `credential` (e.g. `op://eng-dev/com.discord.bot.kai/credential`). Item
+   names must not contain `/`, which `op://` references reject. Point `DISCORD_BOT_TOKEN_DEV` in
+   compute-service's `secrets.jsonc` (top-level block) at that reference. In a dev environment it
+   overrides the token stored in the space, so you can test without managing tokens in Composer.
 
 2. From the root of `<edge>` (the script is defined in the root `package.json`), write the `.env`
    files:
@@ -74,6 +76,8 @@ for approval, so no `op signin` is needed.
    ```bash
    pnpm dev:env
    ```
+
+   If it reports "no account found", pin the account: `OP_ACCOUNT=<account>.1password.com pnpm dev:env`.
 
 3. Start (or restart) the stack, also from the root of `<edge>`. EDGE listens on `:8787`:
 
