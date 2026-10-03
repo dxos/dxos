@@ -22,7 +22,8 @@ import type { Graph, ReasonOutcome } from './graph.ts';
  * The JavaScript backend: Quadstore over LevelDB, Comunica for SPARQL, EYE (WASM) for rules.
  */
 
-const GRAPH_DIR = 'graph';
+/** The LevelDB directory inside a store. */
+export const DIR = 'graph';
 
 // Comunica result streams are typed as bare EventEmitters, so they are drained by event rather than
 // through the `toArray` the concrete implementation happens to have.
@@ -77,7 +78,7 @@ export const make = <E>(
     const attempt = <A>(message: string, thunk: () => Promise<A>): Effect.Effect<A, E> =>
       Effect.tryPromise({ try: thunk, catch: fail(message) });
 
-    const quadstore = new Quadstore({ backend: new ClassicLevel(join(dir, GRAPH_DIR)), dataFactory: DataFactory });
+    const quadstore = new Quadstore({ backend: new ClassicLevel(join(dir, DIR)), dataFactory: DataFactory });
     // Comunica keeps working on a query after its stream ends (cardinality metadata, for one), and
     // touching a closed store throws asynchronously. Queries are counted so the finalizer can wait
     // for the stragglers instead of closing under them.

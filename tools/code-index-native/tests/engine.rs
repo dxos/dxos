@@ -10,6 +10,19 @@ use code_index_native::rules;
 use code_index_native::store::{NativeStore, Stratum};
 use oxigraph::model::{GraphName, NamedNode, Quad};
 
+/// The IRIs a rule file names, as the N3 parser resolves its prefixes.
+fn named_nodes(rules: &str) -> Vec<String> {
+    let mut iris = Vec::new();
+    for quad in oxttl::n3::N3Parser::new().for_slice(rules).flatten() {
+        for term in [quad.subject, quad.predicate, quad.object] {
+            if let oxttl::n3::N3Term::NamedNode(node) = term {
+                iris.push(node.into_string());
+            }
+        }
+    }
+    iris
+}
+
 const DEUS: &str = "https://dxos.org/vocab/deus#";
 const DERIVED: &str = "https://dxos.org/deus/graph/derived/";
 
@@ -86,14 +99,11 @@ fn unsupported_builtins_are_rejected_by_name() {
 }
 
 fn symbol(path: &str, name: &str) -> String {
-    format!(
-        "https://dxos.org/deus/file/{}#{name}",
-        path.replace('/', "%2F")
-    )
+    format!("https://dxos.org/deus/file/{}#{name}", path)
 }
 
 fn file(path: &str) -> String {
-    format!("https://dxos.org/deus/file/{}", path.replace('/', "%2F"))
+    format!("https://dxos.org/deus/file/{path}")
 }
 
 fn nquads(graph: &str, triples: &[(String, &str, String)]) -> String {
@@ -300,16 +310,12 @@ fn random_quad(rng: &mut Rng, constants: &[String], graphs: &[String]) -> Quad {
 #[test]
 fn incremental_maintenance_matches_recomputation() {
     let strata = shipped();
+    // Every IRI the rules name (prefixed or not) as the parser resolves it, plus the classes the
+    // rules conclude, so random premises hit the rules' constants.
     let constants: Vec<String> = strata
         .iter()
-        .flat_map(|stratum| {
-            stratum
-                .rules
-                .split(['<', '>'])
-                .filter(|part| part.starts_with("https://dxos.org/deus/"))
-                .map(str::to_owned)
-                .collect::<Vec<_>>()
-        })
+        .flat_map(|stratum| named_nodes(&stratum.rules))
+        .filter(|iri| iri.starts_with("https://dxos.org/deus/"))
         .chain(
             [
                 "EffectService",

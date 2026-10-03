@@ -14,7 +14,7 @@ import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import { type Lens, type Schema } from 'ldkit';
 import { DataFactory, Parser, Writer } from 'n3';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type * as Graph from './internal/graph.ts';
@@ -135,11 +135,41 @@ export interface Api {
 export class Store extends Context.Service<Store, Api>()('code-index/Store') {}
 
 const SQLITE_FILE = 'index.sqlite';
-const GRAPH_DIR = 'graph';
 
 const fail = (message: string) => (cause: unknown) => new StoreError({ message, cause });
 
 const FILE_COLUMNS = 'path, language, size, hash, mtime';
+
+const VERSION_KEY = 'ontologyVersion';
+
+/**
+ * Empty a store written under another {@link Ontology.VERSION} before the graph opens, so the next
+ * pass reindexes everything. The version is recorded last: a crash part-way leaves it unset and
+ * the next open simply resets again.
+ */
+const resetIfStale = (dir: string): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const [row] = yield* sql<{ value: string }>`SELECT value FROM meta WHERE key = ${VERSION_KEY}`.pipe(
+      Effect.mapError(fail('Failed to read store version')),
+    );
+    const version = String(Ontology.VERSION);
+    if (row?.value === version) {
+      return;
+    }
+    // Both backends' directories go, so switching backend after an upgrade cannot revive old graphs.
+    for (const graphDir of [Quadstore.DIR, Native.DIR]) {
+      yield* Effect.tryPromise({
+        try: () => rm(join(dir, graphDir), { recursive: true, force: true }),
+        catch: fail('Failed to drop stale graph'),
+      });
+    }
+    yield* sql`DELETE FROM files`.pipe(Effect.mapError(fail('Failed to drop stale ledger')));
+    yield* sql`DELETE FROM meta`.pipe(Effect.mapError(fail('Failed to drop stale meta')));
+    yield* sql`INSERT INTO meta (key, value) VALUES (${VERSION_KEY}, ${version})`.pipe(
+      Effect.mapError(fail('Failed to record store version')),
+    );
+  });
 
 const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
   Effect.gen(function* () {
@@ -148,6 +178,7 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
       // A schema the store cannot create is a construction failure, not something a caller recovers from.
       Effect.orDie,
     );
+    yield* resetIfStale(dir);
 
     const graphs: Graph.Graph<StoreError> = yield* backend === 'native'
       ? Native.make(dir, fail)

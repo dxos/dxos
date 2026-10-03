@@ -47,7 +47,7 @@ fn shipped() -> Vec<Stratum> {
 
 fn file_iri(index: usize) -> String {
     format!(
-        "https://dxos.org/deus/file/pkg{}%2Fsrc%2Ff{index}.ts",
+        "https://dxos.org/deus/file/pkg{}/src/f{index}.ts",
         index % 50
     )
 }
@@ -121,13 +121,13 @@ fn file_quads(file: usize, revision: usize, files: usize) -> String {
             0 => quad(
                 &iri,
                 &format!("{DEUS}extends"),
-                format!("<{MODULE}effect%2FContext#Service>"),
+                format!("<{MODULE}effect/Context#Service>"),
             ),
             1 => {
                 quad(
                     &iri,
                     &format!("{DEUS}constructedBy"),
-                    format!("<{MODULE}effect%2FLayer#effect>"),
+                    format!("<{MODULE}effect/Layer#effect>"),
                 );
                 quad(
                     &iri,
@@ -138,13 +138,13 @@ fn file_quads(file: usize, revision: usize, files: usize) -> String {
             2 => quad(
                 &iri,
                 &format!("{DEUS}constructedBy"),
-                format!("<{MODULE}%40dxos%2Fcompute%2FOperation#make>"),
+                format!("<{MODULE}@dxos/compute/Operation#make>"),
             ),
             3 => {
                 quad(
                     &iri,
                     &format!("{DEUS}pipedThrough"),
-                    format!("<{MODULE}%40dxos%2Fcompute%2FOperation#withHandler>"),
+                    format!("<{MODULE}@dxos/compute/Operation#withHandler>"),
                 );
                 quad(
                     &iri,
@@ -156,7 +156,7 @@ fn file_quads(file: usize, revision: usize, files: usize) -> String {
                 quad(
                     &iri,
                     &format!("{DEUS}constructedBy"),
-                    format!("<{MODULE}%40dxos%2Fapp-framework%2FPlugin#define>"),
+                    format!("<{MODULE}@dxos/app-framework/Plugin#define>"),
                 );
                 for module in 0..4 {
                     quad(
@@ -169,7 +169,7 @@ fn file_quads(file: usize, revision: usize, files: usize) -> String {
             5 => quad(
                 &iri,
                 &format!("{DEUS}constructedBy"),
-                format!("<{MODULE}%40dxos%2Fapp-framework%2FCapability#makeModule>"),
+                format!("<{MODULE}@dxos/app-framework/Capability#makeModule>"),
             ),
             6 => quad(
                 &iri,

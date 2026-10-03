@@ -421,6 +421,92 @@ The separation is not fastidiousness, it is a measured effect:
 `writePosthogBatch` drops every non-`measure` row rather than trusting a caller to remember, and
 `toPosthogEvent` throws on one.
 
+## Work counters
+
+Counts of work done, for budgets that sit within a few percent of the measured value. Wall time and
+CPU move 10–30% between runs with the runner's load; a count moves only when the code does more
+or less work. Each is a delta over the stage unless marked a level. The costed ones run per
+`DX_PERF_COUNTERS` (`trace`, `calls`, `react`; recorded as `comparability.counters`), and a counter
+that did not run leaves its fields absent rather than zero.
+
+### `thread.layoutCount`, `recalcStyleCount`, `layoutObjects` — free
+
+The counts `Performance.getMetrics` was already returning, now published. `layoutObjects` is a
+level, the size of the render tree at the stage's end. `devToolsCommandMs` is the time the tab
+spent answering CDP: the harness's own cost, published so a jump in it is attributable.
+
+### `traceCounters` — a trace per stage (`trace`)
+
+Chrome records one trace at a time. The boot trace (`startTracing`, `counters: true`) carries
+`devtools.timeline` so `boot` gets the counts from it; every other stage gets its own short trace,
+started before the opening boundary and stopped before the footprint read (which needs the tracing
+slot itself). Only events between the stage's `perf-stage:` marks count, so the harness's own
+boundary reads do not.
+
+- `render.styleRecalcs` / `styleRecalcElements` — `UpdateLayoutTree` events and the summed
+  `elementCount`: how much styling the stage invalidated.
+- `render.layouts` / `layoutDirtyObjects` — `Layout` events and the summed `dirtyObjects`.
+- `render.forcedLayouts` — `Layout` events nested inside a script event (`FunctionCall`,
+  `EventDispatch`, `TimerFire`, `FireAnimationFrame`, `RunMicrotasks`, …) on the same thread:
+  script read geometry it had invalidated. A virtualized list that measures its rows in a scroll
+  handler shows up here as one forced layout per scroll step.
+- `instructions[]` — instructions retired per realm kind, summed over the OUTERMOST `toplevel`
+  tasks' `tidelta` (nested ones carry their own delta and would double count). `threads` is the
+  integrity column.
+- `events`, `dataLoss` — how many events the pass read, and whether Chrome reported dropping any;
+  with `dataLoss` every count is a lower bound.
+
+Task time from the same pass (`tracedCpuMsByRealm`) counts only `toplevel` events, so adding
+`devtools.timeline` to the boot trace does not inflate it.
+
+### `jsCalls[]` — V8 precise coverage (`calls`)
+
+`Profiler.startPreciseCoverage({ callCount: true, detailed: false })` in every attached realm,
+left on across stages; `takePreciseCoverage` zeroes the counters as it reads them, so each stage
+reads once at its start (discarded) and once at its end. `calls` is the sum of every function's
+invocation count, exact rather than sampled; `functions` is how many distinct functions ran.
+`<stage>-calls.json` lists the top 50 per realm with script and offset. A realm that appears
+mid-stage is not counted until the next stage, which is why `boot` has the page alone.
+
+### `react` — the devtools global hook (`react`)
+
+`installReactProbe` defines `__REACT_DEVTOOLS_GLOBAL_HOOK__` from an init script, before React
+loads; `react-dom` injects into it and calls `onCommitFiberRoot` after every commit. Per commit
+the probe visits only the fibers that rendered: React sets `PerformedWork` on a component whose
+render ran and bubbles it into `subtreeFlags` only along paths that were not bailed out.
+
+- `commits` — React commits. `renders` — component renders (function, class, `forwardRef`, `memo`).
+- `mounts` — renders with no previous fiber.
+- `wastedRenders` — re-renders whose props were shallow-equal to the previous ones and whose
+  stateful hooks and context values were identical: renders `memo` would have skipped. Effects and
+  memos rebuild their cells every render, so only hooks with an update queue are compared.
+
+`<stage>-react.json` lists the top 50 components by renders. Production bundles minify component
+names, so `projects-tasks` (`vite preview`) names fewer components than `assistant-chat`
+(storybook dev); the totals are unaffected.
+
+### `data` — the app's probes (free)
+
+`countWork(name, by)` in `@dxos/util` adds to a running total published as `__dxosWorkCounters`;
+the SQLite counters extend `__dxosSqliteIo`. Both are read in every realm at the boundaries the
+harness already crosses and summed over realms, keyed by name:
+
+- `sqlite.*` — statements by leading keyword, rows returned, rows changed (`sqlite3_changes`, read
+  after writes only), statement errors, and page-cache hits and misses sampled from
+  `sqlite3_db_status` when the counters are read rather than per statement.
+- `automerge.*` — storage-adapter chunk saves by automerge-repo kind (snapshot, incremental,
+  sync-state) and bytes, chunk and range loads and bytes, removes; documents leased into and
+  evicted from the host's repo; mutations applied from and sent to clients by the documents
+  synchronizer, with bytes.
+- `echo.*` — host query executions and the result batches and rows sent; client one-shot runs,
+  reactive recomputes, the objects they presented, and the subscriber callbacks fired; index
+  passes and the objects indexed.
+
+`rpcCallsByMethod` is the served-call count per Effect RPC method (`rpc._tag`), from the timing
+middleware. It has no byte counts: page↔worker messages are structured-cloned with no
+serialization step to measure, and walking every payload to estimate one would cost more than the
+call. `network.byEndpoint` groups requests, bytes and socket frames by host and first path segment.
+
 ## Instrument cost, measured
 
 One sample per configuration of the same flow, whole-flow wall time:
@@ -451,6 +537,34 @@ On this evidence the profiler runs in **both** modes, which makes `cpuMsByRealm`
 rather than a diagnose artifact, and its profiles are kept in both (a whole run's artifacts come to
 ~19 MB, including one screenshot per stage — not the "hundreds of MB" an earlier revision of this
 file guessed at).
+
+### The work counters' cost
+
+Three iterations per configuration, interleaved (`none`, `trace`, `react`, `calls`, then again) so
+drift lands on all four alike, in the Claude Code cloud sandbox (4 cores). Medians of the flow's
+summed stages; `assistant-chat` (`blank`) excludes `seed`, whose cold storybook compile dominates
+it. `none` already includes the free counters (getMetrics, data probes, the instruction-count
+flag), so these are each costed counter's own increment.
+
+| counters | projects-tasks wall | CPU, all processes | tab task time | assistant-chat wall | CPU, all processes | tab task time |
+| -------- | ------------------- | ------------------ | ------------- | ------------------- | ------------------ | ------------- |
+| `none`   | 57.1 s              | 103.3 s            | 28.4 s        | 67.1 s              | 98.1 s             | 38.1 s        |
+| `react`  | +5.3%               | +4.2%              | +3.5%         | +3.1%               | +4.6%              | +4.8%         |
+| `trace`  | +7.2%               | +10.5%             | +8.2%         | +6.7%               | +14.5%             | +10.4%        |
+| `calls`  | +29.3%              | +26.0%             | +66.3%        | +11.7%              | +8.9%              | +22.5%        |
+
+So the default is `react` alone: a few percent, the same order as the profiler. `trace` costs
+past that in CPU — `devtools.timeline` records an event per script entry in every realm — and
+`calls` far past it, since precise coverage keeps every function's invocation counter live; both
+run on request (`DX_PERF_COUNTERS=trace,react` for a counting run) rather than inside the
+trended one.
+
+Across the same three iterations, the counts held where the stage is user-driven: on
+`assistant-turns`, `scroll-*`, `open-*` and `reopen-project` the coefficient of variation of
+`recalcStyleCount`, `styleRecalcElements`, `layoutDirtyObjects`, `reactRenders` and `jsCalls` was
+0–5% and mostly under 1%, against 1–5% for wall time and 2–8% for CPU on the same stages. Stages
+paced by the network (`await-replication`, `seed`) vary in counts too, because how much work they
+do depends on what arrived.
 
 ## Known gaps
 
@@ -525,6 +639,25 @@ Recorded here so nobody rediscovers them as bugs.
    expired stage lowers the sample count instead of dragging anything.
 8. **`boot` carries no profile** in either mode: there is no target to attach to until the page
    exists, so boot-time attribution belongs to the startup harness, not this one.
+9. **Instruction counts need a hardware PMU, and the machines measured so far have none.**
+   `--enable-thread-instruction-count` reads per-thread instruction counters through
+   `perf_event_open`, which needs a kernel PMU driver. The Claude Code cloud sandbox is a
+   Firecracker VM whose kernel logs `Performance Events: … no PMU driver, software events only`
+   (`perf_event_paranoid` is 2, which would otherwise allow user-space counting), and Chrome then
+   emits no `tidelta` at all. The flag stays on because it costs nothing without a PMU, and
+   `instructionThreads` says per row whether the counts exist — so the first nightly on the Depot
+   runner answers whether it has one. If it reads `0` there too, the runner is virtualized without
+   PMU passthrough and instructions need a bare-metal runner.
+10. **No valgrind instruction counts for the node ECHO benchmarks.** `cachegrind` on
+    `node --predictable --single-threaded` would give deterministic instruction counts with no PMU,
+    but it runs the benchmark 20–50x slower and needs valgrind on the runner; it was left out of
+    this change as optional.
+11. **RPC has call counts per method, not bytes.** See `rpcCallsByMethod` above: the transport is
+    structured clone, so there is no serialized size to read without walking every payload.
+12. **`calls` and `react` skip what happened before they could attach.** Coverage starts in a
+    realm at the first stage boundary that sees it, so a worker created during `boot` is counted
+    from the next stage; the React probe only sees commits after `react-dom` loads, which is all of
+    them only because the init script runs before the bundle.
 
 ## Where the numbers go
 

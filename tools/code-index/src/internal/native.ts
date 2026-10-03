@@ -24,7 +24,8 @@ import type { Binding, Graph } from './graph.ts';
 /** Where `moon run code-index-native:cargo-build` leaves the addon. */
 export const ADDON_PATH = fileURLToPath(new URL('../../../code-index-native/code-index-native.node', import.meta.url));
 
-const NATIVE_DIR = 'native';
+/** The oxigraph and journal directories' parent inside a store. */
+export const DIR = 'native';
 
 type Outcome = {
   readonly graph: string;
@@ -243,7 +244,7 @@ export const make = <E>(
     // RocksDB holds a lock on its directory, so the store is closed with the scope rather than left
     // to the garbage collector — a reopen in the same process would otherwise fail.
     const native = yield* Effect.acquireRelease(
-      attempt('Failed to open native store', () => load().NativeStore.open(join(dir, NATIVE_DIR))),
+      attempt('Failed to open native store', () => load().NativeStore.open(join(dir, DIR))),
       (store) => Effect.sync(() => store.close()),
     );
 
