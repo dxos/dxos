@@ -41,7 +41,7 @@ const storeFlag = Flag.String('store').pipe(
   Flag.optional,
 );
 
-const jsonFlag = Flag.Boolean('json').pipe(Flag.withDescription('Emit JSON.'));
+const jsonFlag = Flag.Boolean('json').pipe(Flag.withDefault(false), Flag.withDescription('Emit JSON.'));
 
 /** Both defaults come from git, so the same store is found from anywhere inside the repository. */
 const resolveRoot = (root: Option.Option<string>): Effect.Effect<string, Crawler.CrawlError> =>
@@ -61,13 +61,19 @@ const index = Command.make(
     root: rootFlag,
     store: storeFlag,
     json: jsonFlag,
-    force: Flag.Boolean('force').pipe(Flag.withDescription('Reindex every file, ignoring recorded mtimes.')),
+    force: Flag.Boolean('force').pipe(
+      Flag.withDefault(false),
+      Flag.withDescription('Reindex every file, ignoring recorded mtimes.'),
+    ),
     workers: Flag.Int('workers').pipe(Flag.withDescription('Parsing workers.'), Flag.optional),
     rules: Flag.String('rules').pipe(
       Flag.withDescription('N3 rules file or directory, recomputed at the end of the pass (default: bundled rules/).'),
       Flag.optional,
     ),
-    noReason: Flag.Boolean('no-reason').pipe(Flag.withDescription('Skip the reasoning phase.')),
+    noReason: Flag.Boolean('no-reason').pipe(
+      Flag.withDefault(false),
+      Flag.withDescription('Skip the reasoning phase.'),
+    ),
   },
   ({ root, store, json, force, workers, rules, noReason }) =>
     Effect.gen(function* () {
@@ -141,7 +147,7 @@ const query = Command.make(
     root: rootFlag,
     store: storeFlag,
     json: jsonFlag,
-    file: Flag.Boolean('file').pipe(Flag.withDescription('Read the query from a file.')),
+    file: Flag.Boolean('file').pipe(Flag.withDefault(false), Flag.withDescription('Read the query from a file.')),
   },
   ({ query, root, store, json, file }) =>
     withStore(root, store, (api) =>
@@ -167,7 +173,7 @@ const ask = Command.make(
     root: rootFlag,
     store: storeFlag,
     json: jsonFlag,
-    file: Flag.Boolean('file'),
+    file: Flag.Boolean('file').pipe(Flag.withDefault(false)),
   },
   ({ query, root, store, json, file }) =>
     withStore(root, store, (api) =>
