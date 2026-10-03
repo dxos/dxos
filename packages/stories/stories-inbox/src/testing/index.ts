@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './archive';
-export * from './plugins';
-export * from './seed';
-export * from './trip';
+export * from './archive.ts';
+export * from './plugins.ts';
+export * from './seed.ts';
+export * from './trip.ts';
 
 // NOTE: `./modules` (the `StoryModulesPlugin` surface registration) is intentionally NOT re-exported
 // here: the module components import testing helpers back through this barrel, so re-exporting the

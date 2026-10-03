@@ -5,8 +5,8 @@
 import { describe, it } from '@effect/vitest';
 import * as Config from 'effect/Config';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import { credentialsLayerConfig } from '@dxos/compute-runtime';
 import * as InboxResolver from '@dxos/extractor-lib';
@@ -14,13 +14,13 @@ import * as InboxResolver from '@dxos/extractor-lib';
 import { GoogleCalendar } from '#apis';
 import { GoogleCredentials } from '#services';
 
-import { mapEvent } from '../mapper';
+import { mapEvent } from '../mapper.ts';
 
 const TestLayer = Layer.mergeAll(
   credentialsLayerConfig([
     {
       service: 'google.com',
-      apiKey: Config.redacted('ACCESS_TOKEN'),
+      apiKey: Config.Redacted('ACCESS_TOKEN'),
     },
   ]),
   FetchHttpClient.layer,

@@ -65,6 +65,33 @@ export const DelegateTaskToChat = Operation.make({
   }),
 }).pipe(Operation.mutation('write'));
 
+/**
+ * Renders one task as a self-contained prompt for an external coding agent — the task's content, its
+ * addresses (task, task set, project, space), and what the project is about, so a session started
+ * from it can reach the live objects rather than work from a transcription.
+ *
+ * The prompt tells the agent to assign itself to the task first, which is what makes the handoff
+ * visible in the app: the row shows `started` and an assistant assignee the moment the agent picks
+ * it up, exactly as an in-app delegation does.
+ */
+export const CopyTaskPrompt = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.projects.copyTaskPrompt'),
+    name: 'Copy Task Prompt',
+    description: 'Builds an agent prompt for a task (content, addresses, project context) and returns it.',
+    icon: 'ph--clipboard-text--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    task: Ref.Ref(Task.Task).annotate({ description: 'The task to write a prompt for.' }),
+  }),
+  // Returned rather than copied: the clipboard write needs the user's click, which only the UI host
+  // holds (see the `copy-prompt` task action), and a headless caller wants the text itself.
+  output: Schema.Struct({
+    prompt: Schema.String,
+  }),
+}).pipe(Operation.mutation('none'));
+
 export const Create = Operation.make({
   meta: {
     // `projectCreate`, not `create`: the whole key derives the tool name, so a bare `create` would
@@ -148,6 +175,8 @@ export const ArtifactAdd = Operation.make({
       project's context, so the project owns it and it appears in the project's artifacts list.
       When the object was produced for a task on your checklist, pass that task too, so the finished
       task shows what it made. Adding the same object twice is a no-op.
+      A pull request is recorded on the task given — a sub-task fixed on its own carries its own PR;
+      it is refused only when that task already has a different open PR.
     `,
   },
   input: Schema.Struct({

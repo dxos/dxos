@@ -2,21 +2,21 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 import * as Option from 'effect/Option';
 import * as Path from 'effect/Path';
 import * as Record from 'effect/Record';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, print } from '@dxos/cli-util';
 import { DX_CONFIG, getProfileConfigPath } from '@dxos/client-protocol';
 import { EDGE_URLS } from '@dxos/config';
 import { trim } from '@dxos/util';
 
-import { printProfileCreated } from './util';
+import { printProfileCreated } from './util.ts';
 
 // `edgeFeatures` must match Composer's defaults (see composer-app/dx.yml): without
 // `signaling: true` the client silently falls back to an isolated in-memory signal manager and
@@ -49,11 +49,11 @@ const TEMPLATES = {
 export const create = Command.make(
   'create',
   {
-    template: Options.choice('template', Record.keys(TEMPLATES)).pipe(
+    template: Options.Literals('template', Record.keys(TEMPLATES)).pipe(
       Options.withDescription('Template to use'),
       Options.withDefault('default'),
     ),
-    name: Options.string('name').pipe(Options.withDescription('Profile name'), Options.optional),
+    name: Options.String('name').pipe(Options.withDescription('Profile name'), Options.optional),
   },
   Effect.fnUntraced(function* ({ template, name }) {
     const { json } = yield* CommandConfig;

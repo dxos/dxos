@@ -12,7 +12,7 @@ import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { Select } from '@dxos/react-ui';
 
-import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks';
+import { useDevtoolsDispatch, useDevtoolsState, useSpacesInfo } from '../hooks/index.ts';
 
 export const DataSpaceSelector = () => {
   const spaces = useSpaces({ all: true });
@@ -67,7 +67,6 @@ export const DataSpaceSelector = () => {
               </Select.Option>
             ))}
           </Select.Viewport>
-          <Select.Arrow />
         </Select.Content>
       </Select.Portal>
     </Select.Root>

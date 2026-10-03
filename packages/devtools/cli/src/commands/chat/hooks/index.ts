@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './useChatMessages';
-export * from './useSpinner';
+export * from './useChatMessages.ts';
+export * from './useSpinner.ts';

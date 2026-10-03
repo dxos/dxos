@@ -9,7 +9,7 @@ import { afterAll, afterEach, beforeAll, describe, test } from 'vitest';
 
 import { Shell } from '#shell';
 
-import { type Host, startHost } from './testing';
+import { type Host, startHost } from './testing.ts';
 
 /**
  * Exercises the prebaked editor the way the tool does: over the wire, through the one route the host

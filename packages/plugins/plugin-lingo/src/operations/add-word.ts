@@ -9,7 +9,7 @@ import { Database, Ref } from '@dxos/echo';
 
 import { LingoOperation } from '#types';
 
-import { addWord } from '../util';
+import { addWord } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LingoOperation.AddWord> = LingoOperation.AddWord.pipe(
   Operation.withHandler(

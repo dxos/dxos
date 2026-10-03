@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { ActivationEvent as ActivationEvent$ } from '../core';
+import { ActivationEvent as ActivationEvent$ } from '../core/index.ts';
 
 /**
  * Fired when the app is started.
@@ -30,14 +30,13 @@ export const SurfacesRequested = (role: string) =>
 export const CommandsRequested = ActivationEvent$.make('org.dxos.app-framework.event.commandsRequested');
 
 /**
- * Demand signal for sample spaces. Fired by whoever is about to offer a list of them — today the
- * debug plugin's space generator, when its panel mounts.
+ * Demand signal for space templates. Fired by whoever is about to offer a list of them — the create
+ * space dialog, and the debug plugin's space generator when its panel mounts.
  *
- * Sample content is bulky and of interest to nobody who has not opened that panel, so the modules
- * carrying it are gated here rather than contributing at startup. Like a command tree, the list is
- * read once: fire and await this before reading it.
+ * Template content is bulky, so the modules carrying it are gated here rather than contributing at
+ * startup. Like a command tree, the list is read once: fire and await this before reading it.
  */
-export const SampleSpacesRequested = ActivationEvent$.make('org.dxos.app-framework.event.sampleSpacesRequested');
+export const SpaceTemplatesRequested = ActivationEvent$.make('org.dxos.app-framework.event.spaceTemplatesRequested');
 
 /**
  * Fired once by the host at main-thread idle after the app is interactive.

@@ -9,7 +9,8 @@ import { Database, Obj, Ref } from '@dxos/echo';
 
 import { QaOperation, type TestCase } from '#types';
 
-import { loadCases } from './util';
+import { QaError } from '../errors.ts';
+import { loadCases } from './util.ts';
 
 const handler: Operation.WithHandler<typeof QaOperation.SetCaseOrder> = QaOperation.SetCaseOrder.pipe(
   Operation.withHandler(
@@ -21,18 +22,18 @@ const handler: Operation.WithHandler<typeof QaOperation.SetCaseOrder> = QaOperat
       // A repeat would store the same case twice and drop another, so the ordering is a permutation.
       const duplicate = keys.find((key, index) => keys.indexOf(key) !== index);
       if (duplicate !== undefined) {
-        return yield* Effect.fail(new Error(`Duplicate case key: ${duplicate}.`));
+        return yield* Effect.fail(new QaError({ message: `Duplicate case key: ${duplicate}.` }));
       }
       // A partial ordering would silently drop the cases it omits, so the ordering must name them all.
       if (keys.length !== cases.length) {
-        return yield* Effect.fail(new Error(`Ordering names ${keys.length} of ${cases.length} cases.`));
+        return yield* Effect.fail(new QaError({ message: `Ordering names ${keys.length} of ${cases.length} cases.` }));
       }
 
       const ordered: Ref.Ref<TestCase.TestCase>[] = [];
       for (const key of keys) {
         const testCase = byKey.get(key);
         if (!testCase) {
-          return yield* Effect.fail(new Error(`Not in the plan: ${key}.`));
+          return yield* Effect.fail(new QaError({ message: `Not in the plan: ${key}.` }));
         }
         ordered.push(Ref.make(testCase));
       }

@@ -4,15 +4,15 @@
 // @import-as-namespace
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import * as Docs from './Docs.ts';
 import * as Events from './Events.ts';

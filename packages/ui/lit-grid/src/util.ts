@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { defaultRowSize } from './defs';
+import { defaultRowSize } from './defs.ts';
 import {
   type DxGridAxis,
   type DxGridCellIndex,
@@ -18,7 +18,7 @@ import {
   type DxGridReadonlyValue,
   type DxGridSelectionProps,
   separator,
-} from './types';
+} from './types.ts';
 
 export const toPlaneCellIndex = (cellCoords: Partial<DxGridPosition> & DxGridPlanePosition): DxGridPlaneCellIndex =>
   `${cellCoords.col}${separator}${cellCoords.row}`;

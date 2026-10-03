@@ -7,7 +7,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type ChatProcessor } from './processor';
+import { type ChatProcessor } from './processor.ts';
 
 /**
  * Object kinds we track in `--prompt --json` output. The agent's CRM skill

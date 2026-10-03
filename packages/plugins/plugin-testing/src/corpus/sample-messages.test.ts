@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { SAMPLE_MESSAGES, type SampleMessage } from './sample-messages';
+import { SAMPLE_MESSAGES, type SampleMessage } from './sample-messages.ts';
 
 const TOPICS: SampleMessage['topic'][] = ['project', 'finance', 'scheduling', 'hiring', 'ops'];
 

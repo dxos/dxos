@@ -8,7 +8,7 @@ import { type MetricSpec, type Shortcut } from '@dxos/plugin-space/dashboard';
 
 import * as Protocol from '#protocol';
 
-import { buildFrame } from './frame';
+import { buildFrame } from './frame.ts';
 
 const device = Protocol.streamDeckPlus;
 const key: Shortcut = { target: 'root/space/db/notes/01', label: 'Notes', icon: 'ph--note--regular' };

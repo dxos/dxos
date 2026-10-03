@@ -7,7 +7,7 @@ import { keymap } from '@codemirror/view';
 import { vim } from '@replit/codemirror-vim';
 import { vscodeKeymap } from '@replit/codemirror-vscode-keymap';
 
-import { singleValueFacet } from '../../util';
+import { singleValueFacet } from '../../util/index.ts';
 
 export type EditorInputConfig = {
   type?: string;

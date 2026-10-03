@@ -6,7 +6,7 @@ import * as Match from 'effect/Match';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
-import { type Aspect, type Manager, define } from './ViewState';
+import { type Aspect, type Manager, define } from './ViewState.ts';
 
 export type SelectionMode = 'single' | 'multi' | 'range' | 'multi-range';
 

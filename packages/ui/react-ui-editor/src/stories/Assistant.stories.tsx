@@ -3,10 +3,10 @@
 //
 
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { AiService } from '@dxos/ai';
@@ -24,7 +24,7 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { Editor, type EditorViewProps } from '../components';
+import { Editor, type EditorViewProps } from '../components/index.ts';
 
 // TODO(burdon): Factor out.
 const useTestGenerate = () => {
@@ -32,7 +32,7 @@ const useTestGenerate = () => {
   useEffect(() => {
     let disposed = false;
     const rt = ManagedRuntime.make(
-      AiService.model('com.anthropic.model.claude-haiku-4-5.default').pipe(
+      AiService.languageModel('com.anthropic.model.claude-haiku-4-5.default').pipe(
         Layer.provide(AiServiceTestingPreset('edge-remote')),
         Layer.orDie,
       ),

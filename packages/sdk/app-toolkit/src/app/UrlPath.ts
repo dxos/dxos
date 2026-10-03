@@ -61,6 +61,12 @@ export const WORKSPACE_KEY = 'w';
  */
 export const COMPANION_KEY = 'companion';
 
+/**
+ * Joins the node-id segments of one URL id (`db/<typeSlug>+<objectId>`); the graph builder is configured
+ * with it (`GraphBuilder.UrlGrammar.tailSeparator`).
+ */
+export const TAIL_SEPARATOR = '+';
+
 // The workspace and companion keys are NOT reserved — they are the grammar's own configured keys.
 const RESERVED_KEYS = new Set(['reset', 'redirect', 'not-found']);
 
@@ -71,6 +77,32 @@ const RESERVED_KEYS = new Set(['reset', 'redirect', 'not-found']);
  */
 export const isReservedKey = (key: string): boolean =>
   RESERVED_KEYS.has(key) || Key.SpaceId.isValid(key) || Key.EntityId.isValid(key);
+
+/**
+ * Read the leading `/<anchor>/<workspace>` workspace token, without a key table. `Option.none()` for
+ * a pathname that does not open with the anchor key followed by a workspace segment.
+ */
+export const readWorkspace = (pathname: string): Option.Option<string> => {
+  const trimmed = decode(pathname);
+  if (trimmed === undefined) {
+    return Option.none();
+  }
+  const [anchor, workspace] = trimmed.split('/');
+  return anchor === WORKSPACE_KEY && workspace ? Option.some(workspace) : Option.none();
+};
+
+/**
+ * A pathname's decoded, slash-trimmed body, or `undefined` when it is not a valid encoding.
+ * `decodeURIComponent` throws on a stray `%`, which a pathname from the address bar or history can
+ * carry.
+ */
+const decode = (pathname: string): string | undefined => {
+  try {
+    return decodeURIComponent(pathname).replace(/^\/+|\/+$/g, '');
+  } catch {
+    return undefined;
+  }
+};
 
 /**
  * Parse a browser pathname into a workspace plus an ordered chain of pairs, against a
@@ -86,7 +118,10 @@ export const isReservedKey = (key: string): boolean =>
  * following workspace segment. Callers route a `none` to a not-found page.
  */
 export const parse = (pathname: string, table: KeyTable): Option.Option<ParsedUrl> => {
-  const trimmed = decodeURIComponent(pathname).replace(/^\/+|\/+$/g, '');
+  const trimmed = decode(pathname);
+  if (trimmed === undefined) {
+    return Option.none();
+  }
   const segments = trimmed.length > 0 ? trimmed.split('/') : [];
 
   const workspaceKey = segments[0];
@@ -133,6 +168,43 @@ export const parse = (pathname: string, table: KeyTable): Option.Option<ParsedUr
   }
 
   return Option.some({ workspace, workspaceKey, pairs });
+};
+
+/** An ECHO object id named by a URL, with the key it appeared under and the workspace in effect there. */
+export type Reference = {
+  key: string;
+  entityId: Key.EntityId;
+  workspace: string;
+};
+
+/**
+ * The ECHO object each pair of a pathname names, in order, without a key table. Keys can never be
+ * EntityId-shaped (the graph builder drops them at registration, mirroring {@link isReservedKey}), so
+ * a segment holding an EntityId is an id and the segment before it is its key. A tail joins the node's
+ * ancestors before it (`<mailboxId>+<messageId>`, `<schemaId>+<objectId>`), so the last EntityId is the
+ * object. Empty for a pathname that does not open with `/<anchor>/<workspace>`.
+ */
+export const readReferences = (pathname: string): Reference[] => {
+  const trimmed = decode(pathname);
+  const segments = trimmed ? trimmed.split('/') : [];
+  if (segments[0] !== WORKSPACE_KEY || !segments[1]) {
+    return [];
+  }
+
+  const references: Reference[] = [];
+  let workspace = segments[1];
+  for (let index = 2; index < segments.length; index++) {
+    const segment = segments[index];
+    if (segment === WORKSPACE_KEY && segments[index + 1]) {
+      workspace = segments[++index];
+      continue;
+    }
+    const entityId = segment.split(TAIL_SEPARATOR).filter(Key.EntityId.isValid).at(-1);
+    if (entityId) {
+      references.push({ key: segments[index - 1], entityId, workspace });
+    }
+  }
+  return references;
 };
 
 /**

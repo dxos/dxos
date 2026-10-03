@@ -4,14 +4,14 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import type * as HttpClient from 'effect/http/HttpClient';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
-import type * as HttpClient from 'effect/unstable/http/HttpClient';
 
 import { Jmap, JmapMail } from '#apis';
 
-import { JmapApiError } from '../errors';
-import { type JmapCredentials } from './jmap-credentials';
+import { JmapApiError } from '../errors.ts';
+import { type JmapCredentials } from './jmap-credentials.ts';
 
 /**
  * The requirements the underlying {@link Jmap}/{@link JmapMail} request functions carry (HTTP client

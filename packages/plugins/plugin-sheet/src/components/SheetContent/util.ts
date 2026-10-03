@@ -23,7 +23,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { SheetRange, SheetUtil } from '#types';
 
-import { type SheetModel } from '../../model';
+import { type SheetModel } from '../../model/index.ts';
 
 const createDxGridColumns = (model: SheetModel): DxGridAxisMeta => {
   return model.sheet.columns.reduce(

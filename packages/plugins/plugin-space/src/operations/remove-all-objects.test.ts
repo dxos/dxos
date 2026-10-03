@@ -19,7 +19,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 
 import { SpaceOperation } from '#types';
 
-import RemoveAllObjectsHandler from './remove-all-objects';
+import RemoveAllObjectsHandler from './remove-all-objects.ts';
 
 class TestObject extends Type.makeObject<TestObject>(DXN.make('com.example.type.testObject', '0.1.0'))(
   Schema.Struct({

@@ -38,10 +38,10 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
     }
   }, []);
 
-  // Dismiss the preview popover. The dxn/label/trigger fields are placeholders ignored on `state: false`.
+  // Dismiss the preview popover. The eid/label/trigger fields are placeholders ignored on `state: false`.
   const handleDismiss = useCallback(() => {
     document.defaultView?.dispatchEvent(
-      new DxAnchorActivate({ dxn: '', label: '', trigger: document.body, state: false }),
+      new DxAnchorActivate({ eid: '', label: '', trigger: document.body, state: false }),
     );
   }, []);
 
@@ -54,13 +54,13 @@ export const NeighborhoodCompanion = ({ role = 'article', subject }: Neighborhoo
     if (!obj || !Obj.isObject(obj)) {
       return;
     }
-    const dxn = Obj.getURI(obj);
-    if (!dxn) {
+    const eid = Obj.getURI(obj);
+    if (!eid) {
       return;
     }
 
     const target = event.target as HTMLElement;
-    target.dispatchEvent(new DxAnchorActivate({ dxn, kind: 'card', trigger: target, label: Obj.getLabel(obj) ?? dxn }));
+    target.dispatchEvent(new DxAnchorActivate({ eid, kind: 'card', trigger: target, label: Obj.getLabel(obj) ?? eid }));
   }, []);
 
   if (!subject || !model) {

@@ -2,13 +2,15 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import { describe, expect, onTestFinished, test } from 'vitest';
 
 import { asyncTimeout, latch, sleep } from '@dxos/async';
 import { Context } from '@dxos/context';
+import { MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 
-import { type Message } from './signal-methods';
-import { PAYLOAD_1, PAYLOAD_2, PAYLOAD_3, TestBuilder, messageEqual } from './testing';
+import { type Message } from './signal-methods.ts';
+import { PAYLOAD_1, PAYLOAD_2, PAYLOAD_3, TestBuilder, messageEqual } from './testing/index.ts';
 
 export const messengerTests = (signalManagerFactory: TestBuilder['createSignalManager']) => {
   test('Message between peers', async () => {
@@ -19,11 +21,11 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const peer1 = await builder.createPeer();
     const peer2 = await builder.createPeer();
 
-    const message: Message = {
+    const message: Message = create(MessageSchema, {
       author: peer1.peerInfo,
       recipient: peer2.peerInfo,
       payload: PAYLOAD_1,
-    };
+    });
 
     await sleep(1000);
 
@@ -44,11 +46,11 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const peer3 = await builder.createPeer();
 
     {
-      const message: Message = {
+      const message: Message = create(MessageSchema, {
         author: peer1.peerInfo,
         recipient: peer2.peerInfo,
         payload: PAYLOAD_1,
-      };
+      });
 
       const promise = peer2.waitTillReceive(message);
       await peer1.messenger.sendMessage(Context.default(), message);
@@ -56,11 +58,11 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     }
 
     {
-      const message: Message = {
+      const message: Message = create(MessageSchema, {
         author: peer1.peerInfo,
         recipient: peer3.peerInfo,
         payload: PAYLOAD_2,
-      };
+      });
 
       const promise = peer3.waitTillReceive(message);
       await peer1.messenger.sendMessage(Context.default(), message);
@@ -68,11 +70,11 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     }
 
     {
-      const message: Message = {
+      const message: Message = create(MessageSchema, {
         author: peer2.peerInfo,
         recipient: peer1.peerInfo,
         payload: PAYLOAD_3,
-      };
+      });
 
       const promise = peer1.waitTillReceive(message);
       await peer2.messenger.sendMessage(Context.default(), message);
@@ -92,7 +94,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const onMessage1: Message[] = [];
     await peer2.messenger.listen({
       peer: peer2.peerInfo,
-      payloadType: PAYLOAD_1.type_url,
+      payloadType: PAYLOAD_1.typeUrl,
       onMessage: async (message) => {
         onMessage1.push(message);
       },
@@ -102,7 +104,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const onMessage2: Message[] = [];
     await peer2.messenger.listen({
       peer: peer2.peerInfo,
-      payloadType: PAYLOAD_1.type_url,
+      payloadType: PAYLOAD_1.typeUrl,
       onMessage: async (message) => {
         onMessage2.push(message);
       },
@@ -112,7 +114,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const onMessage3: Message[] = [];
     await peer2.messenger.listen({
       peer: peer2.peerInfo,
-      payloadType: PAYLOAD_2.type_url,
+      payloadType: PAYLOAD_2.typeUrl,
       onMessage: async (message) => {
         onMessage3.push(message);
       },
@@ -120,11 +122,11 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     // Message from the 1st peer to the 2nd peer with payload type "2".
     {
-      const message: Message = {
+      const message: Message = create(MessageSchema, {
         author: peer1.peerInfo,
         recipient: peer2.peerInfo,
         payload: PAYLOAD_1,
-      };
+      });
       const promise = peer2.waitTillReceive(message);
 
       await peer1.messenger.sendMessage(Context.default(), message);
@@ -149,7 +151,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const messages1: Message[] = [];
     await peer2.messenger.listen({
       peer: peer2.peerInfo,
-      payloadType: PAYLOAD_1.type_url,
+      payloadType: PAYLOAD_1.typeUrl,
       onMessage: async (message) => {
         messages1.push(message);
       },
@@ -159,7 +161,7 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const messages2: Message[] = [];
     const listenerHandle2 = await peer2.messenger.listen({
       peer: peer2.peerInfo,
-      payloadType: PAYLOAD_1.type_url,
+      payloadType: PAYLOAD_1.typeUrl,
       onMessage: async (message) => {
         messages2.push(message);
       },
@@ -167,11 +169,11 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     // Message from the 1st peer to the 2nd peer with payload type "1".
     {
-      const message: Message = {
+      const message: Message = create(MessageSchema, {
         author: peer1.peerInfo,
         recipient: peer2.peerInfo,
         payload: PAYLOAD_1,
-      };
+      });
 
       const receivePromise = peer2.waitTillReceive(message);
       await peer1.messenger.sendMessage(Context.default(), message);
@@ -187,11 +189,11 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
 
     // Message from the 1st peer to the 2nd peer with payload type "1".
     {
-      const message: Message = {
+      const message: Message = create(MessageSchema, {
         author: peer1.peerInfo,
         recipient: peer2.peerInfo,
         payload: PAYLOAD_1,
-      };
+      });
 
       const receivePromise = peer2.waitTillReceive(message);
       await peer1.messenger.sendMessage(Context.default(), message);
@@ -212,11 +214,11 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
     const peer1 = await builder.createPeer();
     const peer2 = await builder.createPeer();
 
-    const message: Message = {
+    const message: Message = create(MessageSchema, {
       author: peer1.peerInfo,
       recipient: peer2.peerInfo,
       payload: PAYLOAD_1,
-    };
+    });
 
     {
       const receivePromise = peer2.waitTillReceive(message);
@@ -263,11 +265,11 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
       const peer2 = await builder.createPeer();
       await peer2.open();
 
-      const message = {
+      const message = create(MessageSchema, {
         author: peer2.peerInfo,
         recipient: peer1.peerInfo,
         payload: PAYLOAD_1,
-      };
+      });
 
       const receivePromise = peer1.defaultReceived.waitForCount(3);
       // Sending 3 messages.
@@ -301,11 +303,14 @@ export const messengerTests = (signalManagerFactory: TestBuilder['createSignalMa
         count = inc();
       });
       // sending message.
-      await peer2.messenger.sendMessage(Context.default(), {
-        author: peer2.peerInfo,
-        recipient: peer1.peerInfo,
-        payload: PAYLOAD_1,
-      });
+      await peer2.messenger.sendMessage(
+        Context.default(),
+        create(MessageSchema, {
+          author: peer2.peerInfo,
+          recipient: peer1.peerInfo,
+          payload: PAYLOAD_1,
+        }),
+      );
       // expect to receive 1 message.
       await asyncTimeout(promise(), 1000);
       expect(count).toEqual(1);

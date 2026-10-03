@@ -6,7 +6,7 @@ import { useMemo } from 'react';
 
 import { useHotkeys } from '@dxos/react-focus';
 
-import { useAttention } from '../components';
+import { useAttention } from '../components/index.ts';
 
 /**
  * Compute the id to select after pressing 'j' (delta = 1) or 'k' (delta = -1).

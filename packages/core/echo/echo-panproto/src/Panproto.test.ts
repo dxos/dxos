@@ -7,8 +7,8 @@ import { describe, test } from 'vitest';
 
 import { DXN, Obj, Type } from '@dxos/echo';
 
-import * as Panproto from './Panproto';
-import { migrate } from './wasm';
+import * as Panproto from './Panproto.ts';
+import { migrate } from './wasm.ts';
 
 // A minimal ECHO type exercising every adapter kind (nested catalog, array, ref, scalar, date).
 class Thing extends Type.makeObject<Thing>(DXN.make('org.dxos.test.LensThing', '0.1.0'))(

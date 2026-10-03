@@ -23,7 +23,7 @@ import {
 } from '@dxos/react-ui-geo';
 import { isNonNullable } from '@dxos/util';
 
-import { type GeoControlProps } from '../types';
+import { type GeoControlProps } from '../types.ts';
 
 export type GlobeControlProps = GeoControlProps &
   GlobeRootProps & {

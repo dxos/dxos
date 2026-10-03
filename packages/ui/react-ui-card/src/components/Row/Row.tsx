@@ -22,8 +22,8 @@ import { mx, toHue } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { useActorContact } from '../../hooks';
-import { Avatar, type AvatarProps, avatarName } from '../Avatar';
+import { useActorContact } from '../../hooks/index.ts';
+import { Avatar, type AvatarProps, avatarName } from '../Avatar/index.ts';
 
 /**
  * Shared Card-row primitives rendered inside a `Card.Body`. These are the single source for the
@@ -42,16 +42,16 @@ import { Avatar, type AvatarProps, avatarName } from '../Avatar';
  */
 const activateCard = ({
   trigger,
-  dxn,
+  eid,
   label,
   title,
 }: {
   trigger: HTMLElement | null;
-  dxn: URI.URI;
+  eid: URI.URI;
   label: string;
   title?: string;
 }) => {
-  trigger?.dispatchEvent(new DxAnchorActivate({ trigger, dxn: dxn.toString(), label, kind: 'card', title }));
+  trigger?.dispatchEvent(new DxAnchorActivate({ trigger, eid: eid.toString(), label, kind: 'card', title }));
 };
 
 /**
@@ -137,7 +137,7 @@ const AnchorIconButton = ({
 
   const openCard = useCallback(() => {
     if (value) {
-      activateCard({ trigger: buttonRef.current, dxn: value, label, title });
+      activateCard({ trigger: buttonRef.current, eid: value, label, title });
     }
   }, [value, label, title]);
   const { start: startHover, cancel: cancelHover } = useCardHover(openCard, !!hover && !!value);
@@ -317,7 +317,7 @@ export const ContactAvatar = ({
     if (contactDXN) {
       activateCard({
         trigger: anchorRef.current,
-        dxn: contactDXN,
+        eid: contactDXN,
         label: t('show-contact.label'),
         title: role ? `${role}: ${actor.name ?? actor.email}` : (actor.name ?? actor.email),
       });
@@ -443,7 +443,7 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
       <Card.Block>
         <Icon icon='ph--tag--regular' />
       </Card.Block>
-      <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='extracted-tags'>
+      <div className='flex flex-wrap gap-1 py-1' data-testid='extracted-tags'>
         {tags.map((tag) => (
           <Tag
             key={tag.id}
@@ -525,7 +525,7 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
       <Card.Block>
         <Icon icon='ph--paperclip--regular' />
       </Card.Block>
-      <div className='flex flex-wrap gap-1 py-1 -mx-0.5' data-testid='message-attachments'>
+      <div className='flex flex-wrap gap-1 py-1' data-testid='message-attachments'>
         {attachments.map((attachment, index) => (
           <Tag
             key={attachment.ref.uri}

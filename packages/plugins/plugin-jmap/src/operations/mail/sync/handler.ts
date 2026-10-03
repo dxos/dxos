@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Ref } from '@dxos/echo';
@@ -15,7 +15,7 @@ import { runMailSync } from '@dxos/plugin-inbox/sync';
 import { JmapCredentials, JmapMailApi } from '#services';
 import { JmapOperation } from '#types';
 
-import { jmapMailSyncProvider } from './sync-provider';
+import { jmapMailSyncProvider } from './sync-provider.ts';
 
 const handler = JmapOperation.JmapSync.pipe(
   Operation.withHandler(({ connection, priority }) =>

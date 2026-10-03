@@ -7,8 +7,8 @@ import { type RefObject, useEffect, useState } from 'react';
 import { type CleanupFn } from '@dxos/async';
 import { type EditorController, type EditorRootProps } from '@dxos/react-ui-canvas-editor';
 
-import { type ComputeGraphController } from '../graph';
-import { type ComputeShape } from '../shapes';
+import { type ComputeGraphController } from '../graph/index.ts';
+import { type ComputeShape } from '../shapes/index.ts';
 
 // TODO(burdon): Move to async/context?
 const combine = (...cbs: CleanupFn[]) => {

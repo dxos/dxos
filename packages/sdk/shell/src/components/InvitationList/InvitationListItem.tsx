@@ -15,8 +15,8 @@ import {
   Avatar,
   type AvatarContentProps,
   Button,
-  Clipboard,
   IconButton,
+  SystemIconButton,
   type ThemedClassName,
   Tooltip,
   useThemeContext,
@@ -26,9 +26,9 @@ import { Listbox } from '@dxos/react-ui-list';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
-import { translationKey } from '../../translations';
-import { AuthCode } from '../AuthCode/AuthCode';
-import { type SharedInvitationListProps } from './InvitationListProps';
+import { translationKey } from '../../translations.ts';
+import { AuthCode } from '../AuthCode/index.ts';
+import { type SharedInvitationListProps } from './InvitationListProps.ts';
 
 export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;
@@ -177,13 +177,13 @@ export const InvitationListItemImpl = ({
             <Button
               variant='ghost'
               classNames='grow justify-start font-medium'
-              onClick={() => send({ type: 'selectInvitation', invitation })}
               data-testid='show-qrcode'
+              onClick={() => send({ type: 'selectInvitation', invitation })}
             >
               <span>{t('open-share-panel.label')}</span>
             </Button>
           </Tooltip.Trigger>
-          <Clipboard.IconButton variant='ghost' value={invitationUrl} />
+          <SystemIconButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
         </>
       ) : showAuthCode ? (
         <AuthCode code={authCode} classNames='grow' />

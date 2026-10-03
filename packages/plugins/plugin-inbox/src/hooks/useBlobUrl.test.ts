@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { getAttachmentKind } from './useBlobUrl';
+import { getAttachmentKind } from './useBlobUrl.ts';
 
 describe('getAttachmentKind', () => {
   test('renders PDFs in the browser viewer', ({ expect }) => {

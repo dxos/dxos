@@ -29,7 +29,7 @@ import { AssistantPlugin } from '#plugin';
 import { translations } from '#translations';
 import { AssistantCapabilities } from '#types';
 
-import { Chat } from '../Chat';
+import { Chat } from '../Chat/index.ts';
 
 type StoryArgs = {
   /** Seed the chat's checklist, so the tasks toggle has something to show. */
@@ -52,7 +52,7 @@ const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs)
   const [chat] = useQuery(space?.db, Filter.type(ChatType.Chat));
   const settings = useAtomCapability(AssistantCapabilities.Settings);
   const registry = useRegistry();
-  const { preset, ...chatProps } = usePresets(settings);
+  const { preset, ...chatProps } = usePresets(settings, chat);
   const db = space?.db;
   const runtime = useChatServices({ id: db?.spaceId });
   const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });

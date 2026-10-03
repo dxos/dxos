@@ -4,7 +4,7 @@
 
 import { easeCubicOut, select } from 'd3';
 
-import { type D3Callable, type D3Selection } from '../util';
+import { type D3Callable, type D3Selection } from '../util/index.ts';
 
 const PROP_PULSAR_ACTIVE = 'dx-pulsar-active';
 

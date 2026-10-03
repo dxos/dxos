@@ -2,15 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Command$ from 'effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import type * as Exit$ from 'effect/Exit';
 import type * as Fiber$ from 'effect/Fiber';
 import type * as Layer$ from 'effect/Layer';
 import type * as ManagedRuntime$ from 'effect/ManagedRuntime';
 import * as Option from 'effect/Option';
-import type * as Command$ from 'effect/unstable/cli/Command';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import type { FC, PropsWithChildren } from 'react';
 
 import type {
@@ -25,13 +25,13 @@ import * as ServiceResolver$ from '@dxos/compute/ServiceResolver';
 import * as Trace$ from '@dxos/compute/Trace';
 import { OperationInvoker as OperationInvoker$ } from '@dxos/operation';
 
-import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core';
+import { Capability as Capability$, Plugin as Plugin$, type PluginManager as PluginManager$ } from '../core/index.ts';
 import type {
   HistoryTracker as HistoryTracker$,
   UndoMapping as UndoMapping$,
   UndoRegistry as UndoRegistry$,
-} from '../plugin-process-manager';
-import type { Surface } from '../ui';
+} from '../plugin-process-manager/index.ts';
+import type { Surface } from '../ui/index.ts';
 
 /**
  * @category Capability

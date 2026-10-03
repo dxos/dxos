@@ -8,8 +8,8 @@ import { afterEach, describe, expect, test } from 'vitest';
 
 import { CONTEXT_REQUEST_EVENT, createContext } from '@dxos/web-context';
 
-import { useWebComponentContext } from './consumer';
-import { ContextProtocolProvider } from './provider';
+import { useWebComponentContext } from './consumer.ts';
+import { ContextProtocolProvider } from './provider.tsx';
 
 describe('useWebComponentContext', () => {
   afterEach(() => {

@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import * as Credential from '@dxos/compute/Credential';
 
-import { createUrl, makeGoogleApiRequest } from '../google-api';
+import { createUrl, makeGoogleApiRequest } from '../google-api.ts';
 import {
   ErrorResponse,
   GoogleError,
@@ -18,7 +18,7 @@ import {
   Message,
   MessagePartBody,
   Profile,
-} from './types';
+} from './types.ts';
 
 // TODO(dmaretskyi): There's probably a better way to do it by moving this into the oauth client.
 const decodeAndHandleErrors =

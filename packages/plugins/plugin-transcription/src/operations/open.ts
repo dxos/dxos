@@ -10,7 +10,7 @@ import { Message } from '@dxos/types';
 
 import { TranscriptOperation } from '#types';
 
-import { renderByline } from '../util';
+import { renderByline } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof TranscriptOperation.Open> = TranscriptOperation.Open.pipe(
   Operation.withHandler(

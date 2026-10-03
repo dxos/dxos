@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SuggestionAuthors, type SuggestionAuthorsProps } from './SuggestionAuthors';
+import { SuggestionAuthors, type SuggestionAuthorsProps } from './SuggestionAuthors.tsx';
 
 const AUTHORS: SuggestionAuthorsProps['authors'] = [
   { author: 'did:alice', label: 'Alice Mercer', hue: 'violet', hidden: false },

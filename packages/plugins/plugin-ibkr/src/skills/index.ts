@@ -8,7 +8,7 @@ import { trim } from '@dxos/util';
 
 import { IbkrOperation } from '#types';
 
-import { IBKR_SKILL_KEY } from '../constants';
+import { IBKR_SKILL_KEY } from '../constants.ts';
 
 const make = () =>
   Skill.make({

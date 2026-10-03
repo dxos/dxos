@@ -2,10 +2,10 @@
 // Copyright 2025 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
 import { type ComponentType } from 'react';
 
 import { type Obj } from '@dxos/echo';
+import { createContext } from '@dxos/react-ui';
 import { type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { type ProjectionModel } from '@dxos/schema';
 

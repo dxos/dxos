@@ -5,12 +5,15 @@
 import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
+import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj } from '@dxos/echo';
-import { Task, TaskSet } from '@dxos/types';
+import { type Actor, Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
-import { InvalidOperationInput } from '../errors';
+import { InvalidOperationInput } from '../errors.ts';
+import { assignToSession } from './session-assignee.ts';
+import { validateAssignee } from './validate-assignee.ts';
 
 const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOperation.UpdateTask.pipe(
   Operation.withHandler(
@@ -22,10 +25,20 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
       priority,
       estimate,
       assignee,
+      remoteSession,
       milestone,
       parentTask,
     }) {
+      // A session supplies the subject itself, so only a bare actor is checked.
+      if (!remoteSession) {
+        yield* validateAssignee(assignee);
+      }
       const task = yield* Database.load(taskRef);
+      // Resolved before the patch so the actor it produces is what `Task.update` writes, and so a
+      // session that does not exist yet is created rather than dropping the assignment.
+      const sessionAssignee = remoteSession
+        ? yield* assignToSession(remoteSession, assignee ?? undefined, { defaultTitle: title ?? task.title })
+        : undefined;
       const taskSet =
         milestone !== undefined || parentTask !== undefined ? yield* TaskSet.findTaskSet(task) : undefined;
 
@@ -44,7 +57,18 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
 
       // Through `Task.edit`, so the change and the log entry that explains it land together and a
       // no-op patch records nothing. Milestone stays here: it is set membership, not a field edit.
-      Task.update(task, { title, description, status, priority, estimate, assignee });
+      const previousStatus = task.status;
+      Task.update(task, { title, description, status, priority, estimate, assignee: sessionAssignee ?? assignee });
+      // The resolved status, not the requested one: a task with reviewers lands in `review`. This is
+      // what cuts an agent session's timeline into per-task segments.
+      if (task.status !== undefined && task.status !== previousStatus) {
+        yield* Trace.write(Trace.TaskStatusChanged, {
+          taskId: task.id,
+          title: task.title,
+          status: task.status,
+          ...(previousStatus ? { previousStatus } : {}),
+        });
+      }
 
       if (milestone !== undefined) {
         Obj.update(task, (task) => {
@@ -58,14 +82,45 @@ const handler: Operation.WithHandler<typeof TaskOperation.UpdateTask> = TaskOper
         });
       }
 
-      // Set membership is untouched — the task never left; only its place in the tree moved.
+      // Appended to its new parent's sub-tasks (or the set's roots); the set it belongs to is unchanged.
       if (parentTask !== undefined) {
-        TaskSet.applyParentTask(taskSet, task, newParent);
+        TaskSet.moveTask(taskSet, task, { parentTask: newParent ?? null });
       }
+
+      // After any re-parent, so the cascade reaches the tree the task now belongs to.
+      yield* cascadeClaim(task, { assignee: sessionAssignee ?? assignee ?? undefined, started: status === 'started' });
 
       return { task: task };
     }),
   ),
 );
+
+/** Statuses a claim moves to `started`; anything further along keeps its own state. */
+const UNSTARTED: ReadonlySet<Task.Status | undefined> = new Set([undefined, 'todo', 'backlog']);
+
+/**
+ * A task with sub-tasks is one unit of work, so claiming any task in the tree — assigning it, or
+ * starting it — claims the root and every descendant with it; otherwise a sub-task can be picked up
+ * by a second session working against the first.
+ */
+const cascadeClaim = Effect.fnUntraced(function* (
+  task: Task.Task,
+  { assignee, started }: { assignee: Actor.Actor | undefined; started: boolean },
+) {
+  if (!assignee && !started) {
+    return;
+  }
+  const tree = yield* Task.collectTree(task);
+  for (const member of tree) {
+    if (member.id === task.id) {
+      continue;
+    }
+    Task.update(member, {
+      // A copy per task: ECHO refuses to store a record another object already owns.
+      ...(assignee ? { assignee: { ...assignee } } : {}),
+      ...(started && UNSTARTED.has(member.status) ? { status: 'started' as const } : {}),
+    });
+  }
+});
 
 export default handler;

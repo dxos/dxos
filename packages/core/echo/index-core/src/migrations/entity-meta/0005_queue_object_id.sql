@@ -1,0 +1,12 @@
+--
+-- Covering index for a bounded natural read of one feed: `WHERE queueId = ? ORDER BY objectId
+-- LIMIT ?` walks this index and stops at the limit, instead of scanning every row of the feed and
+-- sorting them. `queuePosition` (0004) cannot serve it — natural order is by entity id, and an
+-- unpositioned block has no position to sort on.
+--
+-- Superseded by 0006, which re-creates this index space-first once the read learned to scope by
+-- space. Left as applied: databases already carry it, and a migration is never edited in place.
+--
+-- Immutable: recorded in `entity_meta_migrations` and never re-run.
+--
+CREATE INDEX IF NOT EXISTS idx_object_index_queueObjectId ON objectMeta(queueId, objectId);

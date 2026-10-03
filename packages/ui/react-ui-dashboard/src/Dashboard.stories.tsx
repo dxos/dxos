@@ -8,8 +8,8 @@ import React, { useMemo, useState } from 'react';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Unit, type UnitFormat } from '@dxos/util';
 
-import { Dashboard } from './Dashboard';
-import { type ActivityDatum } from './util';
+import { Dashboard } from './Dashboard.tsx';
+import { type ActivityDatum } from './util.ts';
 
 const END_DATE = '2026-06-30';
 

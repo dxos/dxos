@@ -11,7 +11,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
-import { syncObjects } from './sync';
+import { syncObjects } from './sync.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

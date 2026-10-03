@@ -8,7 +8,7 @@ import * as Types from 'effect/Types';
 
 import { SpaceId, type URI } from '@dxos/keys';
 
-import type * as Process from './Process';
+import type * as Process from './Process.ts';
 
 // @import-as-namespace
 
@@ -24,6 +24,13 @@ export interface LayerSpec {
   readonly affinity: Affinity;
   readonly requires: readonly Context.Key<any, any>[];
   readonly provides: readonly Context.Key<any, any>[];
+
+  /**
+   * Build this spec when its slice initializes rather than when one of its tags is first
+   * requested. A spec whose point is a side effect — registering an rpc service, subscribing to
+   * lifecycle events — provides no tag to ask for, so nothing would ever pull it in.
+   */
+  readonly eager: boolean;
 
   // opaque service creation function, layer provides the specified services and requires the specified requirements.
   readonly make: (context: LayerContext) => Layer.Layer<unknown, never, unknown>;
@@ -66,6 +73,11 @@ interface MakeOpts {
   readonly affinity: Affinity;
   readonly requires: readonly Context.Key<any, any>[];
   readonly provides: readonly Context.Key<any, any>[];
+  /**
+   * @see LayerSpec.eager
+   * @default false
+   */
+  readonly eager?: boolean;
 }
 
 /**
@@ -86,6 +98,7 @@ export const make = <const Opts extends Types.NoExcessProperties<MakeOpts, Opts>
     affinity: opts.affinity,
     requires: opts.requires,
     provides: opts.provides,
+    eager: opts.eager ?? false,
     make: make as any,
   };
 };

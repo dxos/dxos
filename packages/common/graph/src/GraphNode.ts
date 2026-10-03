@@ -6,8 +6,18 @@
 
 import * as Schema from 'effect/Schema';
 
+import { BaseError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { type Specialize } from '@dxos/util';
+
+/**
+ * A node was required but is absent from the graph.
+ */
+export class NotFoundError extends BaseError.extend('NodeNotFoundError', 'Node not found') {
+  constructor(id: string) {
+    super({ context: { id } });
+  }
+}
 
 /**
  * Identity of the node a traversal or expansion starts from.

@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, describe, test } from 'vitest';
 
-import { ViewState } from '../types';
-import { LocalBackend } from './backends';
+import { ViewState } from '../types/index.ts';
+import { LocalBackend } from './backends.ts';
 
 const Editor = ViewState.define({
   key: 'editor',

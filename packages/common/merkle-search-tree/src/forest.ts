@@ -5,7 +5,7 @@
 import { invariant } from '@dxos/invariant';
 import { arraysEqual, arrayToHex } from '@dxos/util';
 
-import { formatDigest, getLevelHex } from './common';
+import { formatDigest, getLevelHex } from './common.ts';
 
 export class Forest {
   #nodes = new Map<DigestHex, Node>();

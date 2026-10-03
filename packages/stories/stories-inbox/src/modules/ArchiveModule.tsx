@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
@@ -22,7 +22,7 @@ import { TagIndex } from '@dxos/schema';
 import { type ContentBlock, Message } from '@dxos/types';
 import { downloadBlob } from '@dxos/util';
 
-import { exportFeedMessages, importMessages, resetMailbox } from '../testing';
+import { exportFeedMessages, importMessages, resetMailbox } from '../testing/index.ts';
 
 /** Stable fallback so the starred-ids atom stays unconditional while the tag index resolves. */
 const NO_STARRED_IDS = Atom.make<readonly EntityId[]>(() => []);

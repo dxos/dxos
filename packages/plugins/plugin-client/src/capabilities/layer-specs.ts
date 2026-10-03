@@ -11,7 +11,9 @@ import { ClientService, fromClient } from '@dxos/client';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
-import { Database } from '@dxos/echo';
+import { ConfigService } from '@dxos/config';
+import { Database, Hypergraph } from '@dxos/echo';
+import { EdgeHttpClientService } from '@dxos/edge-client';
 import { Identity, Space } from '@dxos/halo';
 import { layerIdentity, layerSpace } from '@dxos/halo-adapter-client';
 import { invariant } from '@dxos/invariant';
@@ -22,7 +24,7 @@ import { ClientCapabilities } from '#types';
 // Capability Module
 //
 // Contributes the core client/space service layer specs:
-//   - {@link ClientService} (application affinity).
+//   - {@link ClientService}, {@link ConfigService}, {@link EdgeHttpClientService} (application affinity).
 //   - {@link Database.Service}, {@link Credential.CredentialsService} (space affinity).
 //
 // Specs are declared at module level and resolve the underlying
@@ -58,6 +60,44 @@ const ClientLayerSpec = LayerSpec.make(
 );
 
 /**
+ * The client's runtime config as {@link ConfigService}, so operations read config values without
+ * depending on the client.
+ */
+const ConfigLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [ConfigService],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return Layer.succeed(ConfigService, client.config);
+      }),
+    ),
+);
+
+/**
+ * The client's EDGE HTTP client as {@link EdgeHttpClientService}, so operations call EDGE without
+ * depending on the client. Dies when the config names no EDGE URL.
+ */
+const EdgeHttpClientLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [EdgeHttpClientService],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return Layer.succeed(EdgeHttpClientService, client.edge.http);
+      }),
+    ),
+);
+
+/**
  * Space-scoped database/feed services resolved from the `Client`'s space
  * registry. One spec for both so the `client.spaces.get` / `waitUntilReady`
  * round-trip only happens once per space slice. Fails hard if the context is
@@ -79,6 +119,27 @@ const DatabaseLayerSpec = LayerSpec.make(
         invariant(space, `space not found on client: ${context.space}`);
         yield* Effect.promise(() => space.waitUntilReady());
         return Database.layer(space.db);
+      }),
+    ),
+);
+
+/**
+ * The cross-space graph, application-scoped because it is not about any one space: it is the handle
+ * for work that must find which space holds something before it can act on it — the case a
+ * space-affinity {@link Database.Service} cannot serve, since asking for it already presumes an
+ * answer.
+ */
+const HypergraphLayerSpec = LayerSpec.make(
+  {
+    affinity: 'application',
+    requires: [ClientService],
+    provides: [Hypergraph.Service],
+  },
+  () =>
+    Layer.unwrap(
+      Effect.gen(function* () {
+        const client = yield* ClientService;
+        return Hypergraph.layer(client.graph);
       }),
     ),
 );
@@ -153,7 +214,10 @@ export default Capability.makeModule(() =>
   Effect.succeed([
     Capability.contributeAll(Capabilities.LayerSpec, [
       ClientLayerSpec,
+      ConfigLayerSpec,
+      EdgeHttpClientLayerSpec,
       DatabaseLayerSpec,
+      HypergraphLayerSpec,
       AccessTokenResolverLayerSpec,
       CredentialsLayerSpec,
       IdentityLayerSpec,

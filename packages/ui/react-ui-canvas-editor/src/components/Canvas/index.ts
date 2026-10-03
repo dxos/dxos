@@ -2,13 +2,13 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './registry';
+export * from './registry.ts';
 
-export * from './anchor-defs';
-export * from './shape-defs';
+export * from './anchor-defs.ts';
+export * from './shape-defs.ts';
 
-export * from './Anchor';
-export * from './Canvas';
-export * from './Frame';
-export * from './Shape';
-export * from './Shapes';
+export * from './Anchor.tsx';
+export * from './Canvas.tsx';
+export * from './Frame.tsx';
+export * from './Shape.tsx';
+export * from './Shapes.tsx';

@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.1`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
@@ -239,7 +239,7 @@ feat F-6: Entity Extraction
 ## Acceptance
 
 ```mdl
-test T-1: Create meeting
+scenario T-1: Create meeting
   given: a call channel exists in an ECHO space
   when: op:Create is invoked with that channel
   then:
@@ -251,7 +251,7 @@ test T-1: Create meeting
 ```
 
 ```mdl
-test T-2: Set active meeting
+scenario T-2: Set active meeting
   given: a Meeting object exists
   when: op:SetActive is invoked with the meeting
   then:
@@ -260,7 +260,7 @@ test T-2: Set active meeting
 ```
 
 ```mdl
-test T-3: Clear active meeting
+scenario T-3: Clear active meeting
   given: a meeting is currently active
   when: op:SetActive is invoked with undefined
   then:
@@ -269,7 +269,7 @@ test T-3: Clear active meeting
 ```
 
 ```mdl
-test T-4: Handle incoming payload
+scenario T-4: Handle incoming payload
   given: a Meeting and Transcript feed exist in the space
   when: op:HandlePayload is invoked with meetingId, transcriptDXN, and transcriptionEnabled: true
   then:
@@ -279,7 +279,7 @@ test T-4: Handle incoming payload
 ```
 
 ```mdl
-test T-5: Generate summary
+scenario T-5: Generate summary
   given: a Meeting with transcript content and notes
   when: op:Summarize is invoked
   then:
@@ -290,7 +290,7 @@ test T-5: Generate summary
 ```
 
 ```mdl
-test T-6: Regenerate summary
+scenario T-6: Regenerate summary
   given: MeetingArticle is rendered with a non-empty summary
   when: user clicks the regenerate button
   then:
@@ -299,7 +299,7 @@ test T-6: Regenerate summary
 ```
 
 ```mdl
-test T-7: Transcription lifecycle
+scenario T-7: Transcription lifecycle
   given: user is in a call
   when: user joins the call
   then: TranscriptionManager is opened and stored in state
@@ -314,11 +314,11 @@ test T-7: Transcription lifecycle
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a meeting, set it active, and generate a summary
+test QA-1: Create a meeting, set it active, and generate a summary
   desc: The core meeting round-trip — create against a call channel, make it the active meeting, generate an AI summary.
   actors: agent
   covers: [F-1.1, F-1.2, F-1.3, F-1.4, F-2.1, F-2.2, F-4.1, F-4.2, T-1, T-2, T-5]
@@ -328,8 +328,8 @@ flow QA-1: Create a meeting, set it active, and generate a summary
     - space: a space is open
     - channel: a call Channel object exists in that space (plugin-calls) — meeting creation requires either a channel or an event anchor
     - plugin-meeting is enabled — it is OFF by default outside `isDev`/local dev builds (see `getDefaults` in `plugin-defs.tsx`, which only lists it under the `isDev` block)
-    - no Meeting named "QA Meeting" exists — ABORT rather than deleting one this flow did not create
-  test:
+    - no Meeting named "QA Meeting" exists — ABORT rather than deleting one this test did not create
+  steps:
     - name: Create the meeting
       do: In the call's MeetingsList panel, click "Create Meeting" and name it "QA Meeting".
       invoke: [op:Create] { name: "QA Meeting", channel: $given.channel }
@@ -351,7 +351,7 @@ flow QA-1: Create a meeting, set it active, and generate a summary
       note: |
         Calls a live AI model (claude-3-5-haiku-latest) — non-deterministic output and real
         inference cost/latency. Meaningful content requires the meeting's transcript or notes to
-        be non-empty first; against the empty fixture this flow creates on its own, prime notes
+        be non-empty first; against the empty fixture this test creates on its own, prime notes
         with a sentence before this step, or expect a thin/near-empty summary rather than an
         error.
   after:
@@ -390,8 +390,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

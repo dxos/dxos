@@ -14,10 +14,10 @@ import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 
-import { Memory } from '../../types/Memory';
-import { WebSearchToolkit } from '../websearch';
-import { MemoryHandlers } from './operations';
-import MemorySkill from './skill';
+import { Memory } from '../../types/Memory.ts';
+import { WebSearchToolkit } from '../websearch/index.ts';
+import { MemoryHandlers } from './operations/index.ts';
+import MemorySkill from './skill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -76,6 +76,8 @@ describe('Memory Skill', { tags: ['model-fixture'] }, () => {
             content: 'Discussed project timeline with Alice.',
           }),
         );
+        // The skill searches the full-text index, which lags the indexing pass until a flush drains it.
+        yield* Database.flush({ secondaryIndexes: true });
         const agent = yield* AgentService.createSession({
           skills: [MemorySkill.make()],
         });
@@ -98,6 +100,8 @@ describe('Memory Skill', { tags: ['model-fixture'] }, () => {
             content: 'The sky is green.',
           }),
         );
+        // The skill searches the full-text index, which lags the indexing pass until a flush drains it.
+        yield* Database.flush({ secondaryIndexes: true });
         const agent = yield* AgentService.createSession({
           skills: [MemorySkill.make()],
         });

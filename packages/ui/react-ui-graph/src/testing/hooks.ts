@@ -7,9 +7,9 @@ import update from 'immutability-helper';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { random } from '@dxos/random';
 
-import { useStateRef } from '../hooks';
-import { createEdge, createNode } from './data';
-import { type TestNode } from './model';
+import { useStateRef } from '../hooks/index.ts';
+import { createEdge, createNode } from './data.ts';
+import { type TestNode } from './model.ts';
 
 export type ObjectMutator<T> = [
   T, // Current value.

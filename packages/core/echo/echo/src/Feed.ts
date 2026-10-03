@@ -14,16 +14,16 @@ import { KEY_QUEUE_POSITION } from '@dxos/echo-protocol';
 import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId } from '@dxos/keys';
 
-import * as Annotation from './Annotation';
-import * as Database from './Database';
-import type * as Entity from './Entity';
-import type * as Filter from './Filter';
-import * as internal from './internal';
-import * as Obj from './Obj';
-import * as Query from './Query';
-import type * as QueryResult from './QueryResult';
-import * as Scope from './Scope';
-import * as Type from './Type';
+import * as Annotation from './Annotation.ts';
+import * as Database from './Database.ts';
+import type * as Entity from './Entity.ts';
+import type * as Filter from './Filter.ts';
+import * as internal from './internal/index.ts';
+import * as Obj from './Obj.ts';
+import * as Query from './Query.ts';
+import type * as QueryResult from './QueryResult.ts';
+import * as Scope from './Scope.ts';
+import * as Type from './Type.ts';
 
 /**
  * Runtime schema for a Feed object.
@@ -62,10 +62,7 @@ export class Feed extends Type.makeObject<Feed>(DXN.make('org.dxos.type.feed', '
      * order relative to the blocks.
      */
     rewindFrom: Schema.optional(Obj.ID.pipe(internal.FormInputAnnotation.set(false))),
-  }).pipe(
-    internal.HiddenAnnotation.set(true),
-    Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' }),
-  ),
+  }).pipe(Annotation.IconAnnotation.set({ icon: 'ph--rows--regular', hue: 'yellow' })),
 ) {}
 
 //
@@ -191,7 +188,11 @@ export class ContextFeedService extends Context.Service<
   }
 >()('@dxos/echo/Feed/ContextFeedService') {}
 
-/** Provides {@link ContextFeedService} so callers can scope operations to `feed`. */
+/**
+ * Provides {@link ContextFeedService} so callers can scope operations to `feed`.
+ *
+ * @performance O(1).
+ */
 export const layer = (feed: Feed) => Layer.succeed(ContextFeedService, { feed });
 
 //
@@ -205,6 +206,8 @@ export const layer = (feed: Feed) => Layer.succeed(ContextFeedService, { feed })
  * ```ts
  * const feed = Feed.make({ name: 'notifications', kind: 'org.dxos.plugin.notifications.v1' });
  * ```
+ *
+ * @performance O(1); allocates an in-memory feed object.
  */
 // TODO(wittjosiah): How to control the feed namespace (data/trace)? Why do feeds have namespaces?
 export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(Feed, props);
@@ -215,6 +218,8 @@ export const make = (props: Obj.MakeProps<typeof Feed> = {}): Feed => Obj.make(F
  * Private-ish and on track to be removed — prefer resolving feed scopes via higher-level APIs
  * (e.g. `Feed.query`) rather than threading the raw queue URI. Used internally by the feed service
  * layer.
+ *
+ * @performance O(1) URI parse.
  */
 // TODO(dmaretskyi): Remove — private-ish, prefer higher-level feed-scope APIs.
 export const getFeedUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.getURI(feed));
@@ -237,6 +242,8 @@ export const getFeedUri = (feed: Feed): EID.EID | undefined => EID.tryParse(Obj.
  * // Continue from an earlier item, leaving what followed it unreachable.
  * yield* Feed.append(feed, [Obj.make(Notification, { title: 'Take two' })], { parent: earlier });
  * ```
+ *
+ * @performance Async; O(n) in items encoded and appended in one batch.
  */
 export const append = (
   feed: Feed,
@@ -245,12 +252,14 @@ export const append = (
 ): Effect.Effect<void, never, Database.Service> =>
   Database.Service.pipe(
     Effect.flatMap(({ db }) =>
-      Effect.promise(() => {
-        if (options?.parent !== undefined && items.length > 0) {
-          setParent(items[0], options.parent);
-        }
-        return db.appendToFeed(feed, items);
-      }),
+      Effect.flatMap(Database.Origin, (origin) =>
+        Effect.promise(() => {
+          if (options?.parent !== undefined && items.length > 0) {
+            setParent(items[0], options.parent);
+          }
+          return db.appendToFeed(feed, items, { origin });
+        }),
+      ),
     ),
   ).pipe(Effect.withSpan('Feed.append'), Database.withSpaceId);
 
@@ -261,6 +270,8 @@ export const append = (
  * ```ts
  * yield* Feed.remove(feed, [item]);
  * ```
+ *
+ * @performance Async; O(n) in items, deleted by id in one batch.
  */
 // TODO(dmaretskyi): Should we allow snapshots here? - what does it mean to remove a snapshot?
 export const remove = (
@@ -322,6 +333,8 @@ export const POSITION_KEY = KEY_QUEUE_POSITION;
  * const inAppendOrder = Array.sort(messages, Order.mapInput(Order.number, Feed.getPosition));
  * const { items } = Feed.history(inAppendOrder);
  * ```
+ *
+ * @performance O(k) in the item foreign-key count.
  */
 export const getPosition = (item: Entity.Unknown | Entity.Snapshot): number => {
   const key = internal.getKeys(item, KEY_QUEUE_POSITION).at(0)?.id;
@@ -332,6 +345,8 @@ export const getPosition = (item: Entity.Unknown | Entity.Snapshot): number => {
 /**
  * The item's {@link Cursor}, or `undefined` when it has none — a block written locally and not yet
  * acknowledged by the position authority. Pass it to {@link query} to resume after this item.
+ *
+ * @performance O(k) in the item foreign-key count.
  */
 export const getCursor = (item: Entity.Unknown | Entity.Snapshot): Cursor | undefined => {
   const key = internal.getKeys(item, KEY_QUEUE_POSITION).at(0)?.id;
@@ -344,12 +359,16 @@ export const getCursor = (item: Entity.Unknown | Entity.Snapshot): Cursor | unde
  *
  * Also `undefined` for a malformed stored id; {@link history} tells the two apart and reports
  * a malformed parent as truncation.
+ *
+ * @performance O(k) in the item foreign-key count.
  */
 export const getParent = (item: Entity.Unknown | Entity.Snapshot): EntityId | undefined => readParent(item).id;
 
 /**
  * Sets (or, with `undefined`, clears) an item's explicit lineage parent.
  * Call before appending the item; {@link append}'s `parent` option does this for you.
+ *
+ * @performance O(k) in the item foreign-key count, applied in one change.
  */
 export const setParent = (
   item: Entity.Unknown,
@@ -382,6 +401,8 @@ export const setParent = (
  * const messages = yield* Feed.query(feed, Filter.type(Message.Message)).run;
  * const { items, shallow } = Feed.history(messages);
  * ```
+ *
+ * @performance O(n) in items; one pass to index ids and one backwards walk.
  */
 export const history = <T extends Entity.Unknown | Entity.Snapshot>(
   items: readonly T[],
@@ -454,6 +475,8 @@ export const history = <T extends Entity.Unknown | Entity.Snapshot>(
  * // Resume after a cursor, reading a bounded page of what is new:
  * const objects = yield* Feed.query(feed, Query.select(Filter.feedCursor(cursor)).limit(10)).run;
  * ```
+ *
+ * @performance O(1) to build; the result is lazy, so nothing executes until read.
  */
 export const query: {
   <Q extends Query.Any>(feed: Feed, query: Q): QueryResult.QueryResultEffect<Query.Type<Q>, never, Database.Service>;
@@ -479,6 +502,8 @@ export const query: {
  * yield* Feed.sync(feed);
  * yield* Feed.sync(feed, { shouldPush: false });
  * ```
+ *
+ * @performance Async; network-bound, proportional to the replication backlog.
  */
 export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, never, Database.Service> =>
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.syncFeed(feed, options)))).pipe(
@@ -493,6 +518,8 @@ export const sync = (feed: Feed, options?: SyncOptions): Effect.Effect<void, nev
  * ```ts
  * const { blocksToPull, blocksToPush } = yield* Feed.getSyncState(feed);
  * ```
+ *
+ * @performance Async; one service round trip.
  */
 export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, Database.Service> =>
   Database.Service.pipe(Effect.flatMap(({ db }) => Effect.promise(() => db.getFeedSyncState(feed)))).pipe(
@@ -508,6 +535,8 @@ export const getSyncState = (feed: Feed): Effect.Effect<SyncState, never, Databa
  * ```ts
  * yield* Feed.setRetention(feed, { count: 1000 });
  * ```
+ *
+ * @performance O(1); currently a no-op.
  */
 // TODO(dmaretskyi): Implement when feed retention is supported.
 export const setRetention = (_feed: Feed, _options: RetentionOptions): Effect.Effect<void, never, Database.Service> =>

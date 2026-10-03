@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { round } from '../results';
-import { type SkillMode } from './agent';
-import { type Judge, gradeCoverage, gradeFaithfulness, pairwiseWinner } from './judge';
+import { round } from '../results.ts';
+import { type SkillMode } from './agent.ts';
+import { type Judge, gradeCoverage, gradeFaithfulness, pairwiseWinner } from './judge.ts';
 
 // Scores the brain-vs-rag arms and renders them side-by-side. Each model's arms are graded against
 // the same gold set + corpus (see judge.ts); the report puts the metrics in one matrix (modes as

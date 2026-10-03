@@ -1,0 +1,856 @@
+---
+id: org.dxos.ui.react-ui-canvas
+name: SceneEngine
+version: 0.1.0
+---
+
+The scene engine: an infinite, multi-depth diagram surface. A scene is typed nodes and typed links in
+one flat coordinate space; a node of type `scene` is a portal into another scene, which is what depth
+means. The engine lives here rather than in a plugin because it is UI with no ECHO dependency —
+`plugin-canvas` and `plugin-conductor` are thin variant hosts that supply a store, a registry and a
+projection. `docs/DESIGN.md` carries the reasoning and the numbered decisions this document cites;
+`docs/MIGRATION.md` the plan that brought canvas-editor and canvas-compute onto it.
+
+The seam that makes one surface serve every host is the **projection** (decision 11): the surface
+reads a positioned `Scene` and emits `Intent`s, and never writes a coordinate itself. A projection may
+apply, rewrite or reject each intent and then re-emits the scene. Freehand is the identity projection;
+constrained, dynamic and compute projections own a model of their own and position the scene from it.
+
+Status 2026-09-22: **implemented** through migration milestone M3. Node types are open (`NodeBase` plus
+what a type adds), the editor surface is a superset of `react-ui-canvas-editor` minus auto layout, and
+`react-ui-canvas-compute` runs its shapes as node definitions over this engine. M4 (ECHO persistence,
+the `layout` intent and the plugin switch) is in flight; what M4 adds is marked below.
+
+## Extensions
+
+| Term        | URI                          |
+| ----------- | ---------------------------- |
+| `type`      | `org.dxos.mdl.type@1.0`      |
+| `component` | `org.dxos.mdl.component@1.0` |
+| `op`        | `org.dxos.mdl.op@1.0`        |
+| `feat`      | `org.dxos.mdl.feat@1.0`      |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`  |
+| `rule`      | `org.dxos.mdl.rule@1.0`      |
+| `test`      | `org.dxos.mdl.test@1.0`      |
+
+## Types
+
+Effect `Schema` structures in `src/model/types.ts`; plain schemas, so a host wraps them into an ECHO
+type without changing a field (decision 3).
+
+```mdl
+type Scene
+  desc: >
+    One diagram: nodes and links keyed by id in a single flat coordinate space (decision 4). Bounds are
+    NEVER stored — they are derived from the content, padded and grown to the major grid (decision 6),
+    so a scene has no edges to run out of. `createSceneSchema(nodes)` composes the schema from a
+    registry's node schemas; `OpenScene` is the same over `NodeBase`, which is what the engine itself
+    can validate for a host it does not know the types of.
+  fields:
+    id: SceneId
+    name?: string
+    nodes: Record<NodeId, Node>
+    links: Record<LinkId, Link>
+```
+
+```mdl
+type NodeBase
+  desc: >
+    What every node is, whatever its type adds (decision 1). The frame is `size` centred on `center`;
+    everything the engine does — hit testing, ports, resize, marquee, portal mapping — reads only these
+    fields, which is why a host type is a first-class citizen rather than a special case. `z` is a
+    fractional order key (`utils/order.ts`), shared with links: one namespace, one selection, one undo
+    log, one `update` intent for both.
+  fields:
+    id: NodeId
+    type: NodeType                    # 'rect' | 'ellipse' | 'class' | 'note' | 'scene' | a host's own
+    z: string                         # fractional order key
+    locked?: boolean                  # no intent moves, resizes or deletes it
+    center: Point
+    size: Size
+    ports?: Port[]                    # absent: the type's definition supplies them (decision 12)
+    style?: NodeStyle
+```
+
+```mdl
+type BuiltinNode
+  desc: >
+    The engine's own five, each `NodeBase` plus its own fields; `isRectNode`-style guards narrow to
+    them, sound because the registry maps one type name to one schema. A host's types are `NodeBase`
+    to the engine and render through their own `NodeDef.component`.
+  literals: RectNode | EllipseNode | ClassNode | TextNode | PortalNode
+  fields:
+    RectNode: { label?: string }
+    EllipseNode: { label?: string }       # inscribed in the frame; one port per side, at its centre
+    ClassNode: { name, attributes: string[], methods: string[] }   # UML compartments
+    TextNode: { text: string }
+    PortalNode: { scene: SceneId }        # renders the referenced scene scaled into this frame
+```
+
+```mdl
+type NodeStyle
+  desc: >
+    Presentation a node carries; every field optional, the frame supplying the default look. `hue` is a
+    theme hue colouring fill, text and border together (never a raw colour), so a scene stays themed in
+    both modes.
+  fields:
+    hue?: string                      # a theme hue, annotated for the Form's hue picker
+    rounded?: boolean
+    fill?: boolean
+    border?: boolean
+    guide?: boolean                   # dashed and unfilled: an annotation, not content
+    fontSize?: number                 # text size in the node's own scene units; overrides the view's class
+    className?: string                # a host's own look
+```
+
+```mdl
+type Link
+  desc: >
+    A typed edge: `line` (straight), `curve` (cubic Bézier leaving each port along its side's normal),
+    `spline` (the polyline through its control `points`, each interior point rounded by a quadratic that
+    takes the point as its control, so a corner reads as a corner) or `smart` (routed rather than drawn:
+    a stub leaves each port along its normal by half a major cell and one segment joins them, rounded the
+    same way — nothing stored, so the route follows the nodes). A link is NOT a node with a special
+    kind — node-only operations never have to filter links out (decision 9).
+  fields:
+    id: LinkId
+    type: 'line' | 'curve' | 'spline' | 'smart'
+    z: string
+    locked?: boolean
+    source: Endpoint
+    target: Endpoint
+    directed?: boolean                # shorthand for ends: { end: 'arrow' }
+    ends?: { start?: Marker, end?: Marker }    # 'arrow' | 'circle'; replaces what directed implies
+    points?: Point[]                  # spline only, in order
+```
+
+```mdl
+type Endpoint
+  desc: >
+    Either end of a link, and the reason a link can exist before both its ends do: `{node, port?}` with
+    no port pairs automatically (the closest appropriate pair, recomputed on every projection, so a
+    moved node re-routes), and `{point}` is a free end at a scene point (decision 3) — what a link tool
+    dragged on empty canvas draws, and what dragging an end off a node leaves behind.
+  literals: PortEndpoint | PointEndpoint
+  fields:
+    PortEndpoint: { node: NodeId, port?: PortId }
+    PointEndpoint: { point: Point }
+```
+
+```mdl
+type Port
+  desc: >
+    An attachment point on a node's frame. Ports come from the type, not the instance (decision 12);
+    `portsPerSide` spreads them along each side (never at a corner) and they draw at the major grid line
+    nearest each offset, so a link lands on a line rather than near one. `accepts` constrains which end
+    of a link may land here, and a link between two constrained ports is directed by that alone.
+  fields:
+    id: PortId                        # '<side><index>', e.g. 'e2'
+    side: 'n' | 'e' | 's' | 'w'
+    offset: number                    # 0..1 along that side
+    accepts?: 'in' | 'out' | 'any'    # default any
+```
+
+```mdl
+type Camera
+  desc: >
+    The view's position over one scene: screen = (scene + {x, y}) * zoom. Per-view state in an atom,
+    never in the model (two views of one scene stay independent), clamped to MIN_ZOOM..MAX_ZOOM (1/32,
+    32). Coordinates are per-scene and local (decision 5) — a global (x, y, depth) compounds float error
+    through the compositor after a few levels.
+  fields:
+    x: number
+    y: number
+    zoom: number
+```
+
+```mdl
+type NodeDef
+  desc: >
+    A node type's definition: its schema, what it renders, where its ports are, how it may be
+    manipulated, and how the palette presents it. Per type, never per instance, so the data stays small
+    and ports come for free. A host composes its registry (and with `createSceneSchema` its scene
+    schema) from the built-ins and its own — this is the whole of what "open node types" means.
+  fields:
+    type: NodeType
+    name: string
+    icon: string
+    key?: string                      # palette shortcut; a large registry leaves most without one
+    group?: string                    # palette group
+    schema: Schema.Codec<NodeBase>
+    component: Component<NodeViewProps>
+    create: (props: { id, z, center, size }) => Node
+    defaultSize: Size
+    ports?: (node: Node) => Port[]    # explicit layout; absent, portsPerSide spreads them
+    portsPerSide?: number             # default 3; the ellipse takes 1
+    resizable?: boolean
+    minSize?: Size
+    maxSize?: Size
+    openable?: boolean                # double-click opens it (a portal drills in)
+```
+
+```mdl
+type SceneStore
+  desc: >
+    Scenes by id behind atoms, so a view subscribes to exactly the scene it shows. The seam that lets
+    persistence change without the surface noticing: `createMemoryStore` for stories and tests,
+    `createEchoStore(board)` over `CanvasBoard.layout` for a plugin (M4).
+  fields:
+    scenes: Atom.Writable<Record<SceneId, Scene>>
+    scene: (id: SceneId) => Atom<Scene | undefined>
+```
+
+```mdl
+type Projection
+  desc: >
+    The only thing the surface knows about the model (decision 11). It reads a positioned scene and
+    receives intents; what an intent MEANS is the projection's business — freehand writes the
+    coordinates, constrained rewrites them as cardinal constraints, dynamic keeps a graph and positions
+    rows from it, compute mirrors creates and links into a compute graph. `snapshot` is opaque and
+    identical (`===`) when nothing changed, which is how the view keeps an undo log without knowing what
+    the model is.
+  fields:
+    scene: Atom<Scene>
+    apply: (intent: Intent) => void
+    capabilities: Capabilities        # move, resize, link, create, delete, update — each optional
+    snapshot: () => unknown
+    restore: (snapshot: unknown) => void
+```
+
+```mdl
+type Tool
+  desc: The active tool; a node type draws that node, a link type is what a port drag creates.
+  literals: { kind: 'select' } | { kind: 'hand' } | { kind: 'node', type } | { kind: 'link', type }
+```
+
+## Components
+
+One folder per component under `src/components`, stories beside it, all behind the `src/scene.ts`
+barrel. Rendering is DOM with the camera as one CSS transform, SVG for the link and control layers
+(decision 7); no third-party canvas engine, and d3 only as pure functions (decision 8).
+
+```mdl
+component SceneView
+  desc: >
+    The surface: one scene under a camera, with the palette, toolbar, breadcrumbs and control frame
+    around it. Owns the pointer state machine, the key table, navigation between depths and the undo
+    log; owns NO model — every change leaves through `projection.apply`.
+  props:
+    store: SceneStore
+    root: SceneId
+    nodes?: NodeRegistry              # defaults to the built-in five
+    links?: LinkRegistry
+    createProjection?: (options) => Projection     # per scene; freehand by default
+    projection?: Projection           # a host-owned one instead, shared with its panels
+    atoms?: SceneViewAtoms            # externally owned view state (two views, a persisted camera)
+    grid?: number                     # minor spacing in scene px (16)
+    liveDepth?: number                # nested levels that may mount live (decision 10)
+    showPalette?: boolean
+    showToolbar?: boolean
+    readonly?: boolean
+    overlay?: ReactNode               # extra layers in scene coordinates (e.g. compute's Bullets)
+  state:
+    camera: Camera
+    path: SceneId[]                   # root to the scene being edited; its length is the depth
+    selection: Set<ElementId>         # nodes and links together
+    hover, point, tool, linkType, snap, debug, drag, editing, history, undo, clipboard
+  layout: |
+    ┌─ scene-view ────────────────────────────────┐
+    │ [toolbar]                       [breadcrumbs]│
+    │ [palette]                                    │
+    │        grid (screen space, camera-fed)       │
+    │        scene layer (one CSS transform)       │
+    │        link layer (svg, same transform)      │
+    │        control frame (svg, same transform)   │
+    │        overlay (host's, same transform)      │
+    └──────────────────────────────────────────────┘
+```
+
+```mdl
+component SceneLayer
+  desc: >
+    The nodes and links of one scene, and — for a portal node — the child scene rendered live inside it
+    at the portal's scale, which is what makes depth continuous rather than a page change. Below
+    `liveDepth` a portal draws a preview instead; a portal being drilled into renders plain, as the
+    child will look once entered.
+  props:
+    scene: Scene
+    registry: NodeRegistry
+    zoom: number                      # camera zoom × the portal scales above it
+    depth: number
+    liveDepth: number
+```
+
+```mdl
+component ControlFrame
+  desc: >
+    Everything drawn about the selection rather than in the scene: the selection outline, eight resize
+    handles, the hover border, ports, the rubber band of a link drag, the marquee, a spline's control
+    points and the midpoint dots that add one, and the provisional frame a create gesture will land in.
+    Handles draw above ports, so a handle wins at a side centre.
+  props:
+    scene, selection, hover, drag, zoom
+    showPorts: boolean                # every node (a link tool) or only the hovered one
+    createFrame?: Bounds
+  emits:
+    onHandlePointerDown, onPortPointerDown, onEndPointerDown, onPointPointerDown
+```
+
+```mdl
+component Palette
+  desc: Node and link types from the registry, grouped, each with its shortcut; entries are pdnd drag sources.
+  props: { tool, nodes: NodeRegistry, links: LinkRegistry, capabilities }
+```
+
+```mdl
+component Toolbar
+  desc: >
+    Optional chrome (decision 5): up and breadcrumbs, fit, zoom, snap, undo/redo, cut/copy/paste/delete,
+    a create menu, auto layout, debug, and a readout of zoom, pointer and depth. Every label prints its
+    chord from `model/keys.ts` rather than naming one.
+  props: { actions, nodes, capabilities, snap, debug }
+```
+
+```mdl
+component Properties
+  desc: >
+    The schema-driven `Form` over the selected node or link's OWN schema — the registry already carries
+    it, so a host type gets a properties panel with no extra work. Edits leave as `update` intents;
+    `readonly` shows the fields without letting them change. Two field renderers are the canvas's own:
+    a UML compartment edits as one entry per line, and `center` / `size` edit as `GeometryField`.
+  props: { projection, atoms, nodes?, fields?, grid?, readonly? }
+```
+
+```mdl
+component GeometryField
+  desc: >
+    A node's `center` or `size` as one row of two labelled number cells (X / Y, W / H) rather than a
+    collapsible fieldset. It belongs to the canvas rather than `react-ui-form` because it answers to the
+    grid: an arrow steps a minor cell and Shift a major one — the units an arrow nudge moves a selected
+    node by — and a committed value snaps while snapping is on, so typing a number leaves a node as
+    snapped as dragging it. A step is a complete gesture like a toggle and saves at once; typing digits
+    waits for blur, so a half-written number never reaches the model.
+  props: { grid?, snap? }
+```
+
+```mdl
+component Breadcrumbs
+  desc: The path from the root to the scene being edited; a click drills out to that level.
+  props: { path: SceneId[], store }
+```
+
+```mdl
+component Grid
+  desc: >
+    Multi-resolution grid in screen space, fed the camera. Levels are a fourfold apart, from a quarter of
+    the minor grid to far past the major one, and a level's line weight follows its ON-SCREEN spacing
+    rather than its index among the drawn levels — so the same lines are drawn at the same weight either
+    side of a drill-in, which is what makes the swap invisible.
+  props: { camera, size }
+```
+
+```mdl
+component PartEditor
+  desc: >
+    In-place text editing: a `react-ui-editor` over one `TextPart` of a node (a rect or ellipse label, a
+    text body, a class's name, attributes or methods). Enter commits an `update` (Mod-Enter in
+    multi-line parts), Escape rejects, blur commits.
+  props: { node, part, bounds, onCommit, onCancel }
+```
+
+## Operations
+
+The projection seam IS the operation surface: these are the only ways the model changes, and every one
+of them is a value the view hands to `projection.apply`. `reduceIntent` is freehand's semantics as a
+pure reducer, which is what makes them testable without a DOM.
+
+```mdl
+op move
+  desc: Translate every unlocked node in `ids` by `delta`. The gesture snaps to the MINOR grid as it runs.
+  input:
+    ids: NodeId[]
+    delta: Point
+  output: Scene
+```
+
+```mdl
+op resize
+  desc: >
+    Set one unlocked node's frame. Shift keeps the centre, otherwise the opposite edge is fixed;
+    `minSize` and `maxSize` come from the type's definition (`utils/resize.ts`).
+  input:
+    id: NodeId
+    bounds: Bounds
+  output: Scene
+```
+
+```mdl
+op link
+  desc: >
+    Add a link. Rejected when a node end names a node that does not exist, or when both ends are the
+    same node; free ends need nothing, which is why a link tool works on empty canvas.
+  input:
+    link: Link
+  output: Scene
+  errors:
+    unknownNode: an end names a node not in the scene — the intent is dropped, not partially applied
+    selfLink: both ends are the same node
+```
+
+```mdl
+op create
+  desc: Add a node, built by its type's `NodeDef.create`. A new node arrives on the MAJOR grid.
+  input:
+    node: Node
+  output: Scene
+```
+
+```mdl
+op delete
+  desc: >
+    Remove nodes and links by id. A link loses its meaning with either end, so deleting a node deletes
+    its links too — the projection does this, never the view.
+  input:
+    ids: ElementId[]
+  output: Scene
+```
+
+```mdl
+op reorder
+  desc: Set one element's fractional `z`; nodes and links share the namespace and the key space.
+  input:
+    id: ElementId
+    z: string
+  output: Scene
+```
+
+```mdl
+op update
+  desc: >
+    Property edits — a label, a text body, geometry, a spline's control points, a style. `id` and `type`
+    are never changed by an update, whatever the values carry.
+  input:
+    id: ElementId
+    values: NodeValues | LinkValues
+  output: Scene
+```
+
+```mdl
+op batch
+  desc: Several intents as ONE model change, so a paste or a drill-in fix-up is one undo step.
+  input:
+    intents: Intent[]
+  output: Scene
+```
+
+```mdl
+op layout
+  desc: >
+    Arrange the scene into ranked rows along its links, through `@dxos/diagram`'s ranking — the engine
+    the dynamic projection already lays its graph out with, rather than a second one. Unlike the old
+    editor's `@antv` layout it keeps every node: type, size and content are untouched and only the
+    centre moves. An intent rather than a view action, so a projection that owns its own positions may
+    rewrite or refuse it, and a read-only view cannot invoke it.
+  input:
+    ids?: ElementId[]                 # absent: the whole scene
+  output: Scene
+  note: >
+    A row is as tall as its tallest node and a column as wide as its widest, so mixed sizes do not
+    overlap; every centre lands on the major grid; a locked node stays where it is. The toolbar's
+    button is enabled by `Capabilities.layout` and lays out the selection when two or more are
+    selected, otherwise the board.
+```
+
+## Features
+
+```mdl
+feat F-1: Depth and navigation
+  Scene nesting IS the hierarchy (decision 4); a portal node renders its child live, so moving between
+  levels is a camera move rather than a page change.
+  req F-1.1: Double-clicking a portal drills in; Escape drills out; the breadcrumbs drill to any level.
+  req F-1.2: Drill-in stops where the child would pass 1:1, so its text lands at natural size rather
+    than magnified to fill the view.
+  req F-1.3: Zooming past a portal drills in on its own; zooming out below the arrival coverage drills
+    out. Auto-exit measures against the coverage the view ARRIVED with, never an absolute threshold, so
+    a capped child (or a frame that shrinks as its first node is drawn) is not thrown straight back out.
+  req F-1.4: A portal's frame is the portal box times a power of the grid ratio, never once, placed on
+    the major grid scaled by that factor: the child's grid lines land on the parent's own lines, not
+    merely at their spacing, so the grids stay aligned through a drill-in.
+  req F-1.5: A scene entered through a portal keeps the frame it arrived with for the visit and exits
+    through that same frame; the root's bounds stay derived.
+  req F-1.6: At most `liveDepth` levels mount live; deeper portals draw as previews (decision 10).
+  req F-1.7: Alt+Left / Alt+Right walk the view's own camera history.
+```
+
+```mdl
+feat F-2: Grid and snapping
+  req F-2.1: The grid is drawn only while snapping is on (G toggles both): its lines are what a gesture
+    lands on, so drawing them when nothing snaps states a constraint the canvas is not applying.
+  req F-2.2: Gestures snap to the FINEST LEVEL THE GRID ACTUALLY DRAWS, read back through the same rule
+    the component filters by, so the lines and the snap cannot part company. A unit fixed in scene units
+    diverges as soon as the zoom moves: far enough in the drawn lines are finer than the snap, and in a
+    nested scene — entered at a fraction of the parent's zoom — they are coarser and the snap lands on
+    nothing visible.
+  req F-2.3: A created node arrives on the major level; a move, a resize or a dragged control point
+    snaps to the minor one, so placement is not coarse while a node's size and ports stay aligned.
+  req F-2.4: An arrow nudges by the minor grid, Shift+arrow by a major cell.
+  req F-2.5: A link band follows the pointer exactly and snaps once, as it lands.
+  req F-2.6: Snapping off means every gesture is free and the grid is hidden; nothing else changes.
+```
+
+```mdl
+feat F-3: Selection and editing
+  req F-3.1: Nodes and links are selected together in one set; Delete removes either.
+  req F-3.2: A marquee replaces the selection, Shift adds, Alt subtracts.
+  req F-3.3: A port drag creates a link; dropping on empty canvas leaves a free end; dragging an end
+    re-attaches it, previewed as created while hovering a valid drop.
+  req F-3.4: A selected spline offers the midpoint of every span; pressing one inserts a control point
+    there and moves it in the same gesture.
+  req F-3.5: A create drag previews the bounds the node will land in; a palette drop shows that frame
+    alone, since the pointer already carries the drag's own preview.
+  req F-3.6: A box drawn on the canvas is exactly what the pointer swept — no minimum and no fallback to
+    the type's default — and a gesture that snapped to nothing creates nothing rather than planting a
+    default-sized node under the click.
+  req F-3.7: A create with NO drawn box (a palette drop, the toolbar's create menu) takes the type's
+    default size divided by the camera zoom, so it covers the same screen area at any zoom and any
+    depth. The camera is the right quantity because it is independent of content: the portal's own
+    factor grows with the child's bounds, so scaling by it would feed back, each node enlarging the next.
+  req F-3.8: Picking a shape or link tool clears the selection; the node the gesture makes becomes it.
+  req F-3.9: Double-click edits a node's text part in place; Enter commits, Escape rejects.
+  req F-3.10: The properties panel edits the selected element's own schema through `update` intents,
+    `style.fontSize` among them: set, it overrides the view's own size class for every text part.
+```
+
+```mdl
+feat F-4: Undo and clipboard
+  req F-4.1: Undo is a snapshot log over the projection seam, so it works for any projection without
+    the view knowing what the model is.
+  req F-4.2: A restored snapshot reconciles the projection's own model (the compute projection takes
+    its nodes and edges along).
+  req F-4.3: Cut / copy / paste use a per-view clipboard: fresh ids, links rewired between the pasted
+    nodes only, applied as one `batch`.
+```
+
+```mdl
+feat F-5: Read-only
+  req F-5.1: `readonly` lets the view select, pan, zoom and drill, and nothing else.
+  req F-5.2: No handle, port, tool or toolbar edit is drawn or reachable, whatever the projection's
+    capabilities would allow — the stricter of the two wins.
+```
+
+```mdl
+feat F-6: Open registry
+  req F-6.1: The engine operates on `NodeBase`; a host's type is not a special case.
+  req F-6.2: A host composes its registry from the built-ins and its own defs, and its scene schema with
+    `createSceneSchema`.
+  req F-6.3: An unknown type still renders (`UnknownNodeView`) rather than throwing: a scene written by
+    a newer host opens.
+  req F-6.4: Ports come from the definition; a node may still carry its own.
+```
+
+```mdl
+feat F-7: Persistence (M4)
+  req F-7.1: `createEchoStore(board)` maps nodes to `CanvasBoard.layout.nodes` and links to
+    `layout.edges`, deriving `z` from array order on first read, so every board written by the old
+    editor opens unchanged.
+  req F-7.2: The store is the only seam that changes: `SceneView` takes the ECHO store exactly as it
+    takes the memory one.
+  req F-7.3: `plugin-conductor`'s `CanvasArticle` renders `SceneView` with the compute projection over
+    that store.
+```
+
+```mdl
+feat F-8: Links between shapes
+  req F-8.1: With a link tool a node's BODY is a source like a port is, so two shapes can be joined
+    without aiming at their dots; the endpoint carries no port and routing picks the side.
+  req F-8.2: A drop resolves the same way: a port claims it only while the pointer is within reach,
+    anywhere else on the node binds to the body, and a node whose ports all refuse the end takes a body
+    link rather than refusing the drop.
+  req F-8.3: Ports are drawn for the node under the pointer alone (and a drop target mid-drag, which
+    pointer capture hides from hover) — every node's ports at once is a field of dots over the diagram.
+  req F-8.4: A `smart` link is routed, not drawn: a stub leaves each port along its side's normal by
+    half a major cell and one segment joins them. Nothing is stored, so it follows the nodes; two ports
+    on the same side double back through the middle rather than cutting across their own nodes.
+```
+
+## Rules
+
+Conventions this engine's code must hold that a linter cannot express; each block is discovered by the
+agentic-review harness.
+
+```mdl
+rule intents-not-coordinates: The surface emits intents; only a projection writes coordinates
+  Every model change leaves the view through `projection.apply(intent)`. A component under
+  `src/components` must not write `center`, `size`, `z`, `points` or an endpoint into a scene, a
+  store or a node object — not through `updateScene`, not by constructing a `Scene` and putting it
+  back, not by mutating a node it read from the projection. Transient gesture state (the `drag`
+  atom's `delta`, `bounds`, `points`, a preview node or link that is never applied) is exactly what
+  that state is for and is not a violation. Flag a component that reaches `store`/`updateScene`/
+  `putScene` to change geometry, or that calls `reduceIntent` itself instead of applying an intent.
+  Do not flag projections (`src/model/projections/**`, `src/model/projection.ts`), stores, or a host's
+  own projection outside this package.
+  scope: dir
+  files:
+    - src/components/**/*.tsx
+    - src/components/**/*.ts
+  grep: updateScene|putScene|reduceIntent
+  severity: error
+```
+
+```mdl
+rule key-chords-live-in-the-table: Every chord is a KEY_BINDINGS entry, matched and labelled from it
+  A keyboard chord the engine honours is declared in `src/model/keys.ts` and matched with
+  `keyAction` / `matchesBinding`; a label or tooltip naming a shortcut prints it with `shortcutFor`.
+  Flag a handler comparing `event.key` to a literal, or a UI string containing a chord written out
+  ('⌘Z', 'Ctrl+C', 'Press G'), anywhere under `src/components`. Tool letters are the one exception:
+  they live on the registry entries as `NodeDef.key` / `LinkDef.key` and are matched by the palette
+  through `isToolKey`. Do not flag `keys.ts` itself or its test.
+  scope: dir
+  files:
+    - src/components/**/*.tsx
+    - src/components/**/*.ts
+  grep: event\.key|\.key ===|⌘|Ctrl\+|Cmd\+
+  severity: error
+```
+
+```mdl
+rule named-react-imports: Import React members by name, never through a `React.` namespace
+  Use `import { useMemo, type Ref } from 'react'` and call `useMemo(...)`; do not write
+  `React.useMemo`, `React.FC`, `React.ReactNode` or `import React from 'react'`. A forwarded ref is
+  named `forwardedRef`. Flag any `React.` member access and any default import of react in this
+  package's source. Do not flag `import type * as React from 'react'` used solely in a `.d.ts`
+  ambient declaration, nor the archived canvas under `src/archive`.
+  scope: dir
+  files:
+    - src/**/*.tsx
+    - src/**/*.ts
+  grep: React\.|import React
+  severity: warn
+```
+
+```mdl
+rule scene-bounds-are-derived: Never store a scene's bounds
+  A scene's extent is the union of its node frames, padded and grown to the major grid, computed where
+  it is needed (`utils/hit.ts`, `sceneBounds`). Do not add a bounds, extent, width or height field to
+  `Scene`, cache one on a store, or persist one — a stored extent is a second source of truth that
+  goes stale on every move and gives an infinite canvas an edge (decision 6). Flag a `Scene` literal,
+  schema or ECHO record carrying such a field. A `Bounds` VALUE passed around (a portal frame, a
+  marquee, a resize) is not a stored bound and is not a violation.
+  scope: dir
+  files:
+    - src/model/**/*.ts
+    - src/utils/**/*.ts
+  severity: error
+```
+
+## Acceptance
+
+```mdl
+scenario T-1: Drill in and back out
+  given: the Nested story, a portal visible in the root scene
+  when: double-clicking the portal, then pressing Escape
+  then:
+    - the camera animates into the portal and stops at or before 1:1 for the child's content
+    - the grid lines either side of the swap are drawn at the same spacing and weight
+    - the breadcrumbs gain a level, then lose it again; the camera returns to where it left
+```
+
+```mdl
+scenario T-2: A link survives its node moving
+  given: two nodes joined by a curve with no explicit ports
+  when: dragging one node across the scene
+  then: the link re-pairs to the closest appropriate ports on every frame, and still leaves each port
+    along its side's normal
+```
+
+```mdl
+scenario T-3: A free-ended link
+  given: the Freehand story with the line tool active
+  when: dragging on empty canvas, away from every node
+  then: a link with two free `{point}` ends is created; dragging one end onto a node's port attaches it
+```
+
+```mdl
+scenario T-4: Read-only
+  given: the Readonly story
+  when: clicking a node, then attempting to drag it, resize it, or press Delete
+  then: the node is selected, no handle or port is drawn, and the scene is unchanged
+```
+
+```mdl
+scenario T-5: Undo across a projection
+  given: the Constrained story
+  when: moving a node (which the projection rewrites into constraints), then pressing ⌘Z
+  then: both the positioned scene and the constraint list return to their previous state in one step
+```
+
+```mdl
+scenario T-6: An existing board opens unchanged (M4)
+  given: a `CanvasBoard` written by `react-ui-canvas-editor`, with nodes and edges in `layout`
+  when: opening it in the plugin on the scene engine
+  then: every node keeps its position and size, every edge its ends, and the z-order matches the array
+    order it was stored in
+```
+
+## QA
+
+Executable tests over the **storybook**, not the app: the engine ships no plugin of its own, and the
+stories are the surface a host composes. Run `moon run storybook-react:serve` (9009) or the e2e
+storybook (9006); `moon run react-ui-canvas:e2e` runs the automated subset.
+
+```mdl
+test QA-1: The editor surface end to end
+  desc: |
+    The gestures a host inherits by rendering `SceneView`. Ten of these steps are automated in
+    `src/playwright/scene.spec.ts` over the Freehand and Readonly stories; the rest are human because
+    they judge motion (the drill-in animation, grid continuity) rather than a DOM state.
+  actors: human, agent
+  covers: [F-1.1, F-1.2, F-2.1, F-2.2, F-3.1, F-3.2, F-3.3, F-5.1, T-1, T-3, T-4]
+  status: partially-automated
+  given:
+    - a storybook serving `ui/react-ui-canvas/scene/SceneView`
+  steps:
+    - name: Open Freehand
+      do: Open the Freehand story at 1400×800.
+      expect: four nodes and three links, fitted; the toolbar reads a zoom, a pointer and depth 0
+    - name: Marquee
+      do: Drag on empty canvas across two nodes, then repeat holding Alt.
+      expect: the first drag selects both; the Alt drag removes them from the selection
+    - name: Move and snap
+      do: Drag a node with snap on (G toggles it).
+      expect: the node's edges land on minor grid lines; the readout follows the pointer
+    - name: Draw a link
+      do: Hover a node, drag from one of its ports onto another node.
+      expect: a band follows the pointer, the target's ports show, and a link is created on release
+    - name: Drill in
+      do: Switch to the Nested story and double-click a portal.
+      expect: the camera animates in, stops at natural text size, and the grid does not jump at the swap
+    - name: Drill out
+      do: Press Escape.
+      expect: the camera returns to the parent, the breadcrumbs lose a level
+    - name: Read-only
+      do: Open the Readonly story and try to drag a node.
+      expect: it selects, draws no handles, and does not move
+  after:
+    - name: None
+      do: Stories hold no persistent state; reload to reset.
+      expect: the fixture is back
+```
+
+```mdl
+test QA-2: Persistence round trip (M4)
+  desc: |
+    The one thing stories cannot cover, because it needs a space: that a board written by the old
+    editor opens unchanged on the engine, and that an edit made on the engine survives a reload.
+  actors: human
+  covers: [F-7.1, F-7.2, F-7.3, T-6]
+  status: unverified
+  given:
+    - an identity and an open space
+    - a CanvasBoard created by the previous editor, with at least two nodes and one edge
+  steps:
+    - name: Open it
+      do: Open the board in Composer.
+      expect: every node is where it was, every edge joins the same two nodes
+    - name: Edit
+      do: Move a node, add one, and join them.
+      expect: the changes appear immediately
+    - name: Reload
+      do: Reload the app and reopen the board.
+      expect: the move, the new node and the new link are all still there
+```
+
+---
+
+## Appendix: Extension Definitions
+
+```mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  desc: A named data structure with typed fields and optional literals.
+  fields:
+    desc?: Prose
+    fields?: FieldMap
+    literals?: UnionList
+    extends?: TypeRef[]
+```
+
+```mdl
+ext component
+  uri: org.dxos.mdl.component@1.0
+  desc: A UI component with props, internal state, slots, actions, and events.
+  fields:
+    desc?: Prose
+    props?: FieldMap
+    state?: FieldMap
+    slots?: FieldMap
+    actions?: ActionMap
+    emits?: EventMap
+    layout?: CodeBlock
+```
+
+```mdl
+ext op
+  uri: org.dxos.mdl.op@1.0
+  desc: |
+    A named operation with typed inputs, outputs, and declared errors.
+    Pure ops have no effects or requires. Effectful ops declare both.
+  fields:
+    desc?: Prose
+    input?: FieldMap
+    output?: TypeExpr
+    errors?: ErrorMap
+    effects?: EffectList
+    requires?: ServiceList
+    note?: Prose
+```
+
+```mdl
+ext feat
+  uri: org.dxos.mdl.feat@1.0
+  desc: A named feature grouping one or more requirements.
+  fields:
+    desc?: Prose
+    req: RequirementList
+  nesting: self
+  inline-prose: true
+```
+
+```mdl
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
+  desc: An acceptance scenario expressed as given / when / then steps.
+  fields:
+    given?: Step | Step[]
+    when?: Step | Step[]
+    then: Step | Step[]
+    tags?: TagList
+```
+
+```mdl
+ext rule
+  uri: org.dxos.mdl.rule@1.0
+  desc: A machine-checked review rule applied by an LLM subagent to changed files.
+  inline-prose: true
+  fields:
+    files: Glob | Glob[]              # paths this rule reviews, relative to `scope`
+    grep?: Prose                      # optional regex pre-filter over file contents
+    severity?: warn | error           # defaults to warn
+    scope?: dir | repo                # glob base: this file's dir (default) or repo root
+```
+
+```mdl
+ext test
+  uri: org.dxos.mdl.test@1.0
+  desc: |
+    An executable QA test: ordered steps, each with a human instruction (`do`) and, where the step maps
+    to an invocable operation, an agent binding (`invoke`).
+  fields:
+    desc?: Prose
+    actors?: TagList                  # human | agent
+    covers?: TagList                  # feat req and scenario ids
+    status?: unverified | partially-automated | verified
+    given?: ProseList
+    steps: StepList
+    after?: StepList
+```

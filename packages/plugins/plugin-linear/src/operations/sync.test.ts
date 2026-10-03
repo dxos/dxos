@@ -11,9 +11,9 @@ import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { Milestone, Task, TaskSet } from '@dxos/types';
 
-import { LINEAR_SOURCE } from '../constants';
-import { LinearApi } from '../services';
-import { pushTeamUpdates, upsertMilestone, upsertProject, upsertTask } from './sync';
+import { LINEAR_SOURCE } from '../constants.ts';
+import { LinearApi } from '../services/index.ts';
+import { pushTeamUpdates, upsertMilestone, upsertProject, upsertTask } from './sync.ts';
 
 const issue = (overrides: Partial<LinearApi.Issue> = {}): LinearApi.Issue => ({
   id: 'issue-1',

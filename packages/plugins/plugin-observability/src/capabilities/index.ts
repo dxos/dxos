@@ -16,7 +16,7 @@ import { ObservabilityCapabilities, ObservabilityEvents, ObservabilityOptions } 
 export const ClientReady = Capability.lazyModule(
   'ClientReady',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [
       Capabilities.PluginManager,
       Capabilities.OperationInvoker,
@@ -29,7 +29,7 @@ export const ClientReady = Capability.lazyModule(
     // forked client initialization to have completed.
     activatesOn: ObservabilityCapabilities.ClientInitialized,
   },
-  () => import('./client-ready'),
+  () => import('./client-ready.ts'),
 );
 export const InvocationListener = Capability.lazyModule(
   'InvocationListener',
@@ -40,12 +40,12 @@ export const InvocationListener = Capability.lazyModule(
     // running before the first user action, not before the plugins that register events.
     activatesOn: ActivationEvents.Idle,
   },
-  () => import('./invocation-listener'),
+  () => import('./invocation-listener.ts'),
 );
 export const PrivacyNotice = Capability.lazyModule(
   'PrivacyNotice',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [
       Capabilities.OperationInvoker,
       Capabilities.AtomRegistry,
@@ -57,12 +57,12 @@ export const PrivacyNotice = Capability.lazyModule(
     // (mirrored by identifier — see `ObservabilityEvents.IdentityCreatedEvent`).
     activatesOn: ObservabilityEvents.IdentityCreatedEvent,
   },
-  () => import('./privacy-notice'),
+  () => import('./privacy-notice.ts'),
 );
 export const PrivacyBanner = Capability.lazyModule(
   'PrivacyBanner',
   {
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
     requires: [ObservabilityCapabilities.Namespace],
     provides: [],
     activatesOn: ObservabilityEvents.IdentityCreatedEvent,
@@ -74,7 +74,7 @@ export const Commands = AppCapability.commands(() => import('#commands'));
 export const Namespace = Capability.inlineModule(
   'namespace',
   {
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
     provides: [ObservabilityCapabilities.Namespace],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.namespace,
   },
@@ -83,7 +83,7 @@ export const Namespace = Capability.inlineModule(
 export const Observability = Capability.inlineModule(
   'observability',
   {
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
     provides: [ObservabilityCapabilities.Observability],
     props: (options: ObservabilityOptions.ObservabilityPluginOptions) => options.observability,
   },
@@ -95,21 +95,21 @@ export const Observability = Capability.inlineModule(
     }),
 );
 export const OperationHandler = AppCapability.operationHandler(() => import('#operation-handler'));
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: ['org.dxos.role.article'],
 });
-export const ObservabilitySettings = AppCapability.settings(() => import('./settings'), {
+export const ObservabilitySettings = AppCapability.settings(() => import('./settings.ts'), {
   provides: [ObservabilityCapabilities.Settings],
-  environments: [],
+  environments: ['browser', 'tauri'],
 });
 export const ObservabilityState = Capability.lazyModule(
   'ObservabilityState',
   {
-    environments: [],
+    environments: ['browser', 'tauri'],
     requires: [Capabilities.AtomRegistry],
     provides: [ObservabilityCapabilities.State],
     props: ({ namespace }: ObservabilityOptions.ObservabilityPluginOptions) => ({ namespace }),
   },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
 export const Translations = AppCapability.translations(translations);

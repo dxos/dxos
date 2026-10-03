@@ -25,7 +25,7 @@ const createRange = (n: number): Range =>
 const range = createRange(5);
 
 const sizes: Record<number, { range: Range; classNames: string; h: string }> = {
-  3: { range, classNames: 'w-3 h-3 gap-[1px]', h: 'w-[1px] h-[12px]' },
+  3: { range, classNames: 'size-3 gap-[1px]', h: 'w-[1px] h-[12px]' },
   4: { range, classNames: 'w-4 h-4 gap-[1px]', h: 'w-[1.5px] h-[14px]' },
   5: { range, classNames: 'w-5 h-5 gap-[2px]', h: 'w-[1.5px] h-[20px]' },
   6: { range, classNames: 'w-6 h-6 gap-[2px]', h: 'w-[2px] h-[22px]' },

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { decodeStringArray, defineState } from '../state';
+import { decodeStringArray, defineState } from '../state/index.ts';
 
 /**
  * Default list of URL patterns (chrome `match` form) the extension will scan
@@ -12,8 +12,8 @@ import { decodeStringArray, defineState } from '../state';
 export const DEFAULT_COMPOSER_URLS = [
   'http://localhost:5173/*',
   'http://localhost:4200/*',
-  'https://composer.dxos.org/*',
-  'https://labs.composer.space/*',
+  'https://preview.composer.space/*',
+  'https://composer.space/*',
 ];
 
 /** Configured Composer URL patterns, synced across the user's browsers (defaults to {@link DEFAULT_COMPOSER_URLS}). */

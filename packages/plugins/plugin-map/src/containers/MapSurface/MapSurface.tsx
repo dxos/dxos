@@ -14,7 +14,7 @@ import { type LatLngLiteral } from '@dxos/react-ui-geo';
 import { MapArticle } from '#containers';
 import { MapCapabilities } from '#types';
 
-import { buildTileUrl } from './build-tile-url';
+import { buildTileUrl } from './build-tile-url.ts';
 
 // MapTiler raster style used when an API key for `maptiler.com` is configured.
 

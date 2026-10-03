@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { extractArticle } from '../extraction';
-import { applyCorsProxy } from './cors';
+import { extractArticle } from '../extraction/index.ts';
+import { applyCorsProxy } from './cors.ts';
 
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_RESPONSE_BYTES = 2_000_000;

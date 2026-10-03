@@ -3,7 +3,7 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useContext, useEffect, useMemo, useRef } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
@@ -19,7 +19,7 @@ import { PostContent } from '#components';
 import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
 
-import { PostToolbar } from './PostToolbar';
+import { PostToolbar } from './PostToolbar.tsx';
 
 export type PostArticleProps = AppSurface.ObjectArticleProps<Subscription.Post>;
 

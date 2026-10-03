@@ -5,14 +5,17 @@
 import { describe, test } from 'vitest';
 
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
+import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
-import { Obj, Ref } from '@dxos/echo';
+import * as Skill from '@dxos/compute/Skill';
+import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import * as SpacePlugin from '@dxos/plugin-space/SpacePlugin';
 import * as TasksPlugin from '@dxos/plugin-tasks/TasksPlugin';
 import { createComposerTestApp } from '@dxos/plugin-testing/harness';
@@ -46,6 +49,30 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(Obj.getParent(task)).toBeUndefined();
   });
 
+  test("starts the chat on the project's session config", async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const { project } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.Create, { name: 'Voyage' }, { spaceId: space.id }),
+    );
+    const model = DXN.make('com.anthropic.model.claude-haiku-4-5.default');
+    Obj.update(project, (project) => {
+      project.session = { model };
+    });
+    const taskSet = await project.taskSet?.tryLoad();
+    invariant(taskSet, 'Expected the scaffolded task set.');
+    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Write a poem', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    expect(chat.session?.model).toBe(model);
+  });
+
   test('files the chat under the task project, marks it started, and names a reviewer', async ({ expect }) => {
     await using harness = await setup();
     const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
@@ -57,8 +84,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     );
     const taskSet = await project.taskSet?.tryLoad();
     invariant(taskSet, 'Expected the scaffolded task set.');
-    const task = space.db.add(Task.make({ title: 'Write a poem', status: 'todo' }));
-    Obj.setParent(task, taskSet);
+    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Write a poem', status: 'todo' }));
     await space.db.flush();
 
     const { chat } = await harness.runPromise(
@@ -76,10 +102,45 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // session has it, and the chat's agent is who holds it.
     expect(task.status).toBe('started');
     expect(task.assignee?.role).toBe('assistant');
+    // Held by that chat, named as the assignee's subject: a bare assistant role is the supervisor's
+    // spawn request, whose orphan sweep would fail a started task no sub-agent is running.
+    expect(Task.refEntityId(task.assignee?.subject)).toBe(chat.id);
 
     // The delegating identity reviews the result, which is what will send the task to `review`
     // rather than `done` when the work finishes.
     expect(task.reviewers).toHaveLength(1);
+  });
+
+  test('binds the skills the project instructions name, alongside the delegation set', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const { project } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.Create, { name: 'Studio' }, { spaceId: space.id }),
+    );
+    const instructions = await project.instructions?.tryLoad();
+    const taskSet = await project.taskSet?.tryLoad();
+    invariant(instructions && taskSet, 'Expected the scaffolded instructions and task set.');
+    // A template's skill: the project's tools for the work, which the delegation set cannot know.
+    const studioSkill = Skill.registryURI('org.dxos.skill.studio');
+    Obj.update(instructions, (instructions) => {
+      instructions.skills.push(Ref.fromURI(studioSkill));
+    });
+    const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title: 'Make a storyboard', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(task)] }, { spaceId: space.id }),
+    );
+
+    const feed = await chat.feed.load();
+    const bindings = await space.db.query(Query.select(Filter.type(AiContext.Binding)).from(feed)).run();
+    const bound = bindings.flatMap((binding) => binding.skills.added.map((ref) => ref.uri));
+    expect(bound).toContain(studioSkill);
+    // The delegation set still comes along, and the shared project skill is bound once.
+    expect(bound).toContain(Skill.registryURI('org.dxos.skill.planning'));
+    expect(bound.filter((uri) => uri === Skill.registryURI('org.dxos.skill.project'))).toHaveLength(1);
   });
 
   test('puts a whole checked set into one chat, in the order given', async ({ expect }) => {
@@ -111,6 +172,36 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     expect(tasks.map((task) => task.assignee?.role)).toEqual(['assistant', undefined, 'assistant']);
   });
 
+  test('a parent brings its subtasks, parent first', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const children = ['Read the guide', 'Write the plugin'].map((title) => Task.make({ title, status: 'todo' }));
+    const finished = Task.make({ title: 'Already shipped', status: 'done' });
+    const parent = space.db.add(
+      Task.make({
+        title: 'Build the plugin',
+        status: 'todo',
+        subtasks: [...children, finished].map((child) => Ref.make(child)),
+      }),
+    );
+    const sibling = space.db.add(Task.make({ title: 'Unrelated', status: 'todo' }));
+    await space.db.flush();
+
+    const { chat } = await harness.runPromise(
+      Operation.invoke(ProjectOperation.DelegateTaskToChat, { tasks: [Ref.make(parent)] }, { spaceId: space.id }),
+    );
+
+    // Ticking the parent is enough: the whole subtree joins the checklist, in tree order.
+    expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toEqual([parent.id, ...children.map((child) => child.id)]);
+    expect(chat.name).toBe('Build the plugin');
+    expect([parent, ...children].map((task) => task.status)).toEqual(['started', 'started', 'started']);
+    expect(sibling.status).toBe('todo');
+    // A finished subtask is not reopened.
+    expect(finished.status).toBe('done');
+  });
+
   test('refuses a list spanning two projects', async ({ expect }) => {
     await using harness = await setup();
     const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
@@ -125,8 +216,7 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
       );
       const taskSet = await project.taskSet?.tryLoad();
       invariant(taskSet, 'Expected the scaffolded task set.');
-      const task = space.db.add(Task.make({ title, status: 'todo' }));
-      Obj.setParent(task, taskSet);
+      const task = space.db.add(Task.make({ [Obj.Parent]: taskSet, title, status: 'todo' }));
       return task;
     };
 
@@ -147,21 +237,58 @@ describe('ProjectOperation.DelegateTaskToChat', () => {
     // Nothing was started: the refusal happens before any task is marked or any chat exists.
     expect([voyage.status, harbour.status]).toEqual(['todo', 'todo']);
   });
+
+  test('skips a task the agent already holds, and refuses a list of nothing else', async ({ expect }) => {
+    await using harness = await setup();
+    const space = AppSpace.getDefaultSpace(harness.get(ClientCapabilities.Client));
+    invariant(space, 'Expected a default space.');
+
+    const held = space.db.add(
+      Task.make({ title: 'Roast the beans', status: 'started', assignee: { role: 'assistant' } }),
+    );
+    const fresh = space.db.add(Task.make({ title: 'Grind the beans', status: 'todo' }));
+    await space.db.flush();
+
+    // A second invocation over a row already underway must not fork it into another session.
+    const { chat } = await harness.runPromise(
+      Operation.invoke(
+        ProjectOperation.DelegateTaskToChat,
+        { tasks: [Ref.make(held), Ref.make(fresh)] },
+        { spaceId: space.id },
+      ),
+    );
+    expect(chat.tasks.map((ref) => Task.refEntityId(ref))).toEqual([fresh.id]);
+    expect(fresh.status).toBe('started');
+
+    // Now both are held, so the same call has nothing to hand over.
+    await expect(
+      harness.runPromise(
+        Operation.invoke(
+          ProjectOperation.DelegateTaskToChat,
+          { tasks: [Ref.make(held), Ref.make(fresh)] },
+          { spaceId: space.id },
+        ),
+      ),
+    ).rejects.toThrow();
+  });
 });
 
 const setup = async () => {
   const harness = await createComposerTestApp({
     // Tasks is declared in Projects' `dependsOn`; Assistant supplies the `CreateChat` handler.
+    // Routine is what provides `RemoteProcessManager`, which Assistant's `AgentService` spec
+    // requires — without it that spec is pruned and every delegation fails to resolve `AgentService`.
     plugins: [
       ClientPlugin.make({}),
       SpacePlugin.make({}),
       TasksPlugin.make(),
       AssistantPlugin.make(),
+      RoutinePlugin.make(),
       ProjectsPlugin(),
     ],
   });
   const client = harness.get(ClientCapabilities.Client);
   await EffectEx.runAndForwardErrors(initializeIdentity(client));
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return harness;
 };

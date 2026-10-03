@@ -2,11 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
-import { describe, expect, test } from 'vitest';
+import * as Effect from 'effect/Effect';
+import * as Stream from 'effect/Stream';
+import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
-import { TimeoutError } from '@dxos/async';
+import { TimeoutError, Trigger, sleep } from '@dxos/async';
+import { EffectEx } from '@dxos/effect';
+import { RpcClosedError } from '@dxos/protocols';
+import { SystemStatus } from '@dxos/protocols/buf/dxos/client/services_pb';
+import { SystemService } from '@dxos/protocols/rpc';
 
-import { Client } from './client';
+import { TestBuilder } from '../testing/index.ts';
+import { Client } from './client.ts';
 
 describe('Client.waitUntilInitialized', () => {
   test('resolves once initialize completes', async () => {
@@ -63,5 +70,88 @@ describe('Client.waitUntilInitialized', () => {
     await client.initialize();
     await expect(client.waitUntilInitialized({ timeout: 100 })).resolves.toBeUndefined();
     await client.destroy();
+  });
+});
+
+describe('Client.fatalError', () => {
+  test('a status stream failure after open is fatal, destroying the client is not', async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    const closing = new Client({ services: testBuilder.createLocalClientServices() });
+    await closing.initialize();
+    await closing.destroy();
+    expect(closing.fatalError.get()).toBeNull();
+
+    const services = testBuilder.createLocalClientServices();
+    await services.open();
+    const system = await EffectEx.runPromise(
+      services.stack.getServiceResolver().resolve(SystemService.Tag, {}).pipe(Effect.orDie, Effect.scoped),
+    );
+    const lost = new Trigger();
+    const failure = new Error('status stream failed');
+    vi.spyOn(system, 'SystemService.queryStatus').mockImplementation(() =>
+      Stream.make({ status: SystemStatus.ACTIVE }).pipe(
+        Stream.concat(
+          Stream.fromEffect(Effect.promise(() => lost.wait())).pipe(Stream.flatMap(() => Stream.fail(failure))),
+        ),
+      ),
+    );
+
+    const client = new Client({ services });
+    await client.initialize();
+    expect(client.fatalError.get()).toBeNull();
+
+    lost.wake();
+    await expect.poll(() => client.fatalError.get()).toBe(failure);
+    await client.destroy();
+  });
+
+  test('a status stream closed by a lost connection is not fatal', async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    const services = testBuilder.createLocalClientServices();
+    await services.open();
+    const system = await EffectEx.runPromise(
+      services.stack.getServiceResolver().resolve(SystemService.Tag, {}).pipe(Effect.orDie, Effect.scoped),
+    );
+    const lost = new Trigger();
+    vi.spyOn(system, 'SystemService.queryStatus').mockImplementation(() =>
+      Stream.make({ status: SystemStatus.ACTIVE }).pipe(
+        Stream.concat(
+          Stream.fromEffect(Effect.promise(() => lost.wait())).pipe(
+            Stream.flatMap(() => Stream.fail(new RpcClosedError())),
+          ),
+        ),
+      ),
+    );
+
+    const client = new Client({ services });
+    await client.initialize();
+    onTestFinished(() => client.destroy());
+
+    lost.wake();
+    await sleep(100);
+    expect(client.fatalError.get()).toBeNull();
+  });
+});
+
+describe('Client.reset', () => {
+  test('completes when the host shuts down before answering', async () => {
+    const testBuilder = new TestBuilder();
+    onTestFinished(() => testBuilder.destroy());
+
+    const services = testBuilder.createLocalClientServices();
+    await services.open();
+    const system = await EffectEx.runPromise(
+      services.stack.getServiceResolver().resolve(SystemService.Tag, {}).pipe(Effect.orDie, Effect.scoped),
+    );
+    vi.spyOn(system, 'SystemService.reset').mockImplementation(() => Effect.fail(new RpcClosedError()));
+
+    const client = new Client({ services });
+    await client.initialize();
+
+    await expect(client.reset()).resolves.toBeUndefined();
   });
 });

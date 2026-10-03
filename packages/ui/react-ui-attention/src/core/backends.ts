@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 
-import { ViewState } from '../types';
+import { ViewState } from '../types/index.ts';
 
 // Only the stable `key` string is needed to form the map key; avoids variance issues with Aspect<T>.
 const cacheKey = (aspect: { key: string }, contextId: string) => `${aspect.key}:${contextId}`;

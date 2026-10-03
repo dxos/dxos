@@ -9,8 +9,8 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import * as Language from './Language';
-import * as Vocabulary from './Vocabulary';
+import * as Language from './Language.ts';
+import * as Vocabulary from './Vocabulary.ts';
 
 export const PartOfSpeech = Schema.Literals([
   'noun',
@@ -67,7 +67,11 @@ export class Word extends Type.makeObject<Word>(DXN.make('org.dxos.type.lingo.wo
     vocabulary: Ref.Ref(Vocabulary.Vocabulary),
     language: Ref.Ref(Language.Language),
     progress: Schema.optional(Progress),
-  }).pipe(LabelAnnotation.set(['term']), Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'teal' })),
+  }).pipe(
+    LabelAnnotation.set(['term']),
+    Annotation.IconAnnotation.set({ icon: 'ph--text-aa--regular', hue: 'teal' }),
+    Annotation.UserType.set(),
+  ),
 ) {}
 
 /** Creates a Word object. */

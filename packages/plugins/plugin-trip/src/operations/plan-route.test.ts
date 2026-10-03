@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -15,8 +15,8 @@ import { EffectEx } from '@dxos/effect';
 
 import { Booking, Routing, Segment, Trip, TripCapabilities } from '#types';
 
-import { fakeRoutingService } from '../testing/routing';
-import planRouteHandler from './plan-route';
+import { fakeRoutingService } from '../testing/routing.ts';
+import planRouteHandler from './plan-route.ts';
 
 const capabilityService = (service?: Routing.RoutingService) => {
   const manager = CapabilityManager.make({ registry: Registry.make() });

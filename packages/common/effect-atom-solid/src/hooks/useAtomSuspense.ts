@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as AsyncResult from 'effect/unstable/reactivity/AsyncResult';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as AsyncResult from 'effect/reactivity/AsyncResult';
+import type * as Atom from 'effect/reactivity/Atom';
 import { createResource, onCleanup } from 'solid-js';
 
-import { useRegistry } from '../registry';
+import { useRegistry } from '../registry.ts';
 
 /**
  * Hook to read an atom value with Suspense support

@@ -7,12 +7,12 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
+import type * as Rpc from 'effect/rpc/Rpc';
+import type * as RpcClient from 'effect/rpc/RpcClient';
+import type * as RpcGroup from 'effect/rpc/RpcGroup';
 import type * as Scope from 'effect/Scope';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import type * as Rpc from 'effect/unstable/rpc/Rpc';
-import type * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import type * as RpcGroup from 'effect/unstable/rpc/RpcGroup';
 
 import type * as Operation from '@dxos/compute/Operation';
 import * as Process from '@dxos/compute/Process';
@@ -24,8 +24,9 @@ import { log } from '@dxos/log';
 // same error shape as the domain type they extend.
 import type { SerializedError } from '@dxos/protocols';
 
-import type * as ProcessManager from './ProcessManager';
-import * as RemoteProcessHandle from './RemoteProcessHandle';
+import type * as ProcessManager from './ProcessManager.ts';
+import * as RemoteProcessHandle from './RemoteProcessHandle.ts';
+import type * as RemoteTraceMonitor from './RemoteTraceMonitor.ts';
 
 /**
  * Cancel target for a remote (EDGE) run — the {@link Manager.cancel} argument. Addressed by `trigger`
@@ -84,13 +85,25 @@ export interface EventPage {
   readonly snapshot: Snapshot;
 }
 
+/**
+ * Deduplication token for a command that may be delivered more than once.
+ *
+ * A queued client (`RemoteCommandQueue`) retries a command whose acknowledgement it never saw, so
+ * without it a redelivered spawn would start a second process and a redelivered input would be
+ * applied twice. A host that does not implement deduplication simply ignores the field, which is why
+ * it is optional: the at-most-once guarantee is the host's to give.
+ */
+export interface Idempotent {
+  readonly idempotencyKey?: string;
+}
+
 /** Addresses one process. Every verb is space-scoped because processes are per-space on the host. */
 export interface ProcessTarget {
   readonly spaceId: SpaceId;
   readonly pid: Process.ID;
 }
 
-export interface SpawnRequest {
+export interface SpawnRequest extends Idempotent {
   readonly spaceId: SpaceId;
   /** `Process.Process.key` of a process the host hosts; a definition cannot cross the wire. */
   readonly key: string;
@@ -133,7 +146,7 @@ export interface Control {
   status(target: ProcessTarget): Effect.Effect<Snapshot>;
 
   /** Submit an input already encoded via the process definition's input schema. */
-  submitInput(target: ProcessTarget & { readonly input: unknown }): Effect.Effect<void>;
+  submitInput(target: ProcessTarget & Idempotent & { readonly input: unknown }): Effect.Effect<void>;
 
   /**
    * Build a client for the process's declared RPC group. The host serves the group as
@@ -144,7 +157,7 @@ export interface Control {
     target: ProcessTarget & { readonly group: RpcGroup.RpcGroup<Rpcs> },
   ): Effect.Effect<RpcClient.RpcClient<Rpcs>, never, Scope.Scope>;
 
-  terminate(target: ProcessTarget): Effect.Effect<void>;
+  terminate(target: ProcessTarget & Idempotent): Effect.Effect<void>;
 
   /**
    * Read the process's outputs and ephemeral trace at or after `cursor`. Cursor-based rather than
@@ -226,6 +239,12 @@ export interface SpawnOptions<_Input = unknown, _Output = unknown, _Rpcs extends
   readonly target?: URI.URI;
   readonly notify?: Operation.NotifyOptions;
   readonly annotations?: Annotation.Dictionary;
+  /**
+   * Deduplication token for this spawn (see {@link Idempotent}). A caller that re-issues the same
+   * spawn under the same key — a retry, a reload, a second click — gets the process already spawned
+   * or already queued rather than a second one.
+   */
+  readonly idempotencyKey?: string;
 }
 
 /** {@link Manager.list} filters — `ListRequest` plus the one filter the host does not index. */
@@ -243,6 +262,8 @@ export const makeControlVerbs = (
   control: Control,
   registry: Registry.AtomRegistry,
   processTreeAtom: Atom.Writable<readonly Process.Info[]>,
+  /** Live trace source handed to every handle, so `subscribeEphemeral` is pushed rather than polled. */
+  remoteTrace?: RemoteTraceMonitor.Monitor,
 ): Required<Pick<Manager, 'spawn' | 'list' | 'attach' | 'refreshProcessTree'>> => {
   const refreshProcessTree = (spaceId: SpaceId): Effect.Effect<readonly Process.Info[]> =>
     control.list({ spaceId }).pipe(
@@ -262,6 +283,7 @@ export const makeControlVerbs = (
       spaceId,
       ...(definition !== undefined ? { definition } : {}),
       registry,
+      ...(remoteTrace !== undefined ? { remoteTrace } : {}),
       onLifecycleChange: refreshProcessTree(spaceId).pipe(Effect.ignore, Effect.asVoid),
     });
 
@@ -278,6 +300,7 @@ export const makeControlVerbs = (
       target,
       notify,
       annotations: extraAnnotations,
+      idempotencyKey,
     }: SpawnOptions<_Input, _Output, _Rpcs>) =>
       Effect.gen(function* () {
         const annotations = Annotation.buildDictionary((dictionary) => {
@@ -298,6 +321,7 @@ export const makeControlVerbs = (
           ...(name !== undefined ? { name } : {}),
           ...(parentProcessId !== undefined ? { parentPid: parentProcessId } : {}),
           ...(environment !== undefined ? { environment } : {}),
+          ...(idempotencyKey !== undefined ? { idempotencyKey } : {}),
           annotations,
         });
         log('remote process spawned', { pid: info.pid, key: info.key });

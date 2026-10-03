@@ -8,9 +8,9 @@ import * as Layer from 'effect/Layer';
 import * as Queue from 'effect/Queue';
 import * as Terminal from 'effect/Terminal';
 
-import type { TerminalBridge } from './bridge';
-import { isQuitInput } from './input';
-import { readLine } from './line-editor';
+import type { TerminalBridge } from './bridge.ts';
+import { isQuitInput } from './input.ts';
+import { readLine } from './line-editor.ts';
 
 /**
  * A Effect `Terminal` backed by xterm.

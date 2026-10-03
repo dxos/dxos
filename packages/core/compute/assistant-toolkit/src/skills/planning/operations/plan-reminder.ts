@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Effect from 'effect/Effect';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Prompt from 'effect/unstable/ai/Prompt';
 
 import { AiPreprocessor, AiService } from '@dxos/ai';
 import { Harness } from '@dxos/assistant';
@@ -13,7 +13,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { ContentBlock } from '@dxos/types';
 import { concat, trim } from '@dxos/util';
 
-import { PlanReminder } from './definitions';
+import { PlanReminder } from './definitions.ts';
 
 /**
  * End-request hook for the planning skill. When the conversation's checklist still has
@@ -55,7 +55,7 @@ export default PlanReminder.pipe(
           ],
         });
       },
-      Effect.provide(AiService.model('com.anthropic.model.claude-sonnet-5.default')),
+      Effect.provide(AiService.languageModel('com.anthropic.model.claude-sonnet-5.default')),
     ),
   ),
 );

@@ -24,6 +24,8 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Illustrator',
+        'scores.label': 'Scores',
+        'scores.empty.label': 'Nothing to score yet.',
         'create-panel.variant.label': 'Select renderer',
         'create-panel.variant.placeholder': 'Search renderers...',
         'unsupported-variant.label': 'Unsupported drawing variant',

@@ -9,7 +9,7 @@ import { DXN, Filter, Obj, Type } from '@dxos/echo';
 import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 
-import { SHADOW_KEY_SOURCE, findShadowObject, reanchorShadowObject } from './shadow';
+import { SHADOW_KEY_SOURCE, findShadowObject, reanchorShadowObject } from './shadow.ts';
 
 // Minimal writable type to exercise the shadow helpers without depending on a specific app schema.
 const Note = Type.makeObject(DXN.make('example.org.test.note', '0.1.0'))(
@@ -32,11 +32,9 @@ describe('shadow', () => {
     await builder.close();
   });
 
-  const addNote = (value: string): Type.InstanceType<typeof Note> => db.add(Obj.make(Note, { value }));
-
   test('finds and re-anchors a shadow from a draft to its synced copy', async ({ expect }) => {
-    const draft = addNote('Draft');
-    const synced = addNote('Synced');
+    const draft = db.add(Obj.make(Note, { value: 'Draft' }));
+    const synced = db.add(Obj.make(Note, { value: 'Synced' }));
     const draftUri = Obj.getURI(draft);
     const syncedUri = Obj.getURI(synced);
 

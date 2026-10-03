@@ -10,7 +10,7 @@
 // and threaded through the story it slowly becomes the story.
 //
 
-export * from './FeedStats';
+export * from './FeedStats.tsx';
 
-export * from './sweep';
-export * from './use-feed-debug';
+export * from './sweep.ts';
+export * from './use-feed-debug.ts';

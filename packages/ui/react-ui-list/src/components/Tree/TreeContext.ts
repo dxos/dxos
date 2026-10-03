@@ -3,14 +3,15 @@
 //
 
 import { type Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 import { type FC, type MutableRefObject, createContext, useContext } from 'react';
 
 import { raise } from '@dxos/debug';
 import { type Label } from '@dxos/react-ui';
 import { type Density } from '@dxos/ui-types';
 
-import { type TreeData } from './tree-data';
+import { type TreeData } from './tree-data.ts';
+import { type DropKind } from './TreeDropIndicator.tsx';
 
 // Kept out of the tree components: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and hook exported beside one force a full page reload on every edit.
@@ -74,6 +75,8 @@ export type TreeNodeEntry<T extends { id: string } = any> = {
   children?: TreeNodeEntry<T>[];
   /** Index path within the collection (groups spliced), assigned after the walk. */
   indexPath: number[];
+  /** Number of siblings in the collection (groups spliced), for `aria-setsize`. */
+  setsize: number;
 };
 
 /**
@@ -106,6 +109,18 @@ export type ColumnRenderer<T extends { id: string } = any> = FC<{
   setMenuOpen: (open: boolean) => void;
 }>;
 
+/** Keys held for a row activation; `meta` covers ctrl on non-Mac keyboards. */
+export type SelectModifiers = {
+  option: boolean;
+  shift: boolean;
+  meta: boolean;
+  /** Activated from the keyboard (Enter) rather than the pointer, so a consumer can move focus on. */
+  keyboard?: boolean;
+};
+
+/** A row activation: the keys it was made with, and the selection the row takes from it. */
+export type RowActivation = SelectModifiers & { current: boolean };
+
 /** Render-time context threaded to every row. */
 export type TreeRenderContextValue<T extends { id: string } = any> = {
   /** Stamped into every row's drag payload so a monitor can reject another tree's drags. */
@@ -120,27 +135,42 @@ export type TreeRenderContextValue<T extends { id: string } = any> = {
   renderColumns?: ColumnRenderer<T>;
   renderIcon?: IconRenderer<T>;
   renderHeading?: HeadingRenderer<T>;
-  blockInstruction?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => boolean;
   canDrop?: (params: { source: TreeData; target: TreeData }) => boolean;
+  getDropKind?: (params: { instruction: Instruction; source: TreeData; target: TreeData }) => DropKind;
   /** Whether a childless row can be dropped onto to adopt the dragged item. */
   leavesAcceptChildren?: boolean;
+  /** Remove the dragged row from the list instead of fading it. */
+  hideDragSource?: boolean;
   /** Paint every row's drop bands, so the zones can be seen without holding a drag. */
   debug?: boolean;
   /** Offer an open branch a reorder-below zone meaning "after this row and its subtree". */
   dropBelowExpanded?: boolean;
   onOpenChange?: (params: { item: T; path: string[]; open: boolean }) => void;
   onItemHover?: (params: { item: T }) => void;
-  /** Directs the machine's roving tabstop at a row, and takes DOM focus with it. */
-  focusNode: (id: string, value: string) => void;
   /** Applies the select-vs-toggle policy for a row activation. */
-  selectNode: (node: TreeNodeEntry<T>, modifiers: { option: boolean; shift: boolean }) => void;
+  selectNode: (node: TreeNodeEntry<T>, activation: RowActivation) => void;
+  canSelect?: (params: { item: T; path: string[] }) => boolean;
+  /** In `multiple` mode a plain click selects the row alone and a meta-click toggles it. */
+  selectionMode: 'single' | 'multiple';
   /** False during the tree's initial commit — disclosure inserted then must not animate. */
   mountedRef: MutableRefObject<boolean>;
-  /** Branch values currently running their conceal animation before the close commits. */
-  closingValues: ReadonlySet<string>;
-  /** Commits the model close for a branch once its conceal animation ends. */
-  commitClose: (node: TreeNodeEntry) => void;
+  /** Draw a vertical guide down the left of each open branch's children, under the branch's toggle. */
+  indentGuides: boolean;
+  /** Width of one level's indent: a block, or half of one in a `compact` tree. */
+  indentStep: string;
+  /** Whether the tree is windowed, in which case an open branch's children are rows of the window rather than its own. */
+  windowed: boolean;
+  /**
+   * A windowed branch mid-disclosure: its descendant rows animate in (`open`) or out, and a closing
+   * branch stays open in the model until they have, so its rows have something to animate.
+   */
+  disclosure?: WindowDisclosure;
+  /** Takes DOM focus for the row a drop left the tree waiting to focus, once the row is in the document. */
+  claimFocus: (value: string, row: HTMLElement) => void;
 };
+
+/** A windowed branch's disclosure in flight; see {@link TreeRenderContextValue.disclosure}. */
+export type WindowDisclosure = { path: readonly string[]; open: boolean };
 
 const TreeRenderContext = createContext<TreeRenderContextValue | null>(null);
 

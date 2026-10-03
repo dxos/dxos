@@ -11,8 +11,8 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import { Provider, RequestMapping, ResultMapping } from './Provider';
-import { Search } from './Search';
+import { Provider, RequestMapping, ResultMapping } from './Provider.ts';
+import { Search } from './Search.ts';
 
 /**
  * Fetches a page's HTML, rendering via the composer-crx extension when available. Hosted by the

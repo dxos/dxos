@@ -5,7 +5,7 @@
 import { addDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -22,7 +22,7 @@ import { Event } from '@dxos/types';
 import { meta } from '#meta';
 import { Segment, Trip, TripOperation } from '#types';
 
-import { getPlanningWindowDays } from '../operations/extractor/config';
+import { getPlanningWindowDays } from '../operations/extractor/config.ts';
 
 /**
  * Resolves the inclusive event window [from, to] for a calendar node: the user's committed
@@ -54,6 +54,7 @@ export default Capability.makeModule(
 
     const extension = yield* AppGraphBuilder.createExtension({
       id: 'tripSegment',
+      relation: AppNode.companion,
       match: (node) => (Trip.instanceOf(node.data) ? Option.some({ trip: node.data, nodeId: node.id }) : Option.none()),
       connector: (matched, get) => {
         const trip = matched.trip;

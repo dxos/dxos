@@ -14,9 +14,6 @@
       "path": "../../../common/async"
     },
     {
-      "path": "../../../common/codec-protobuf"
-    },
-    {
       "path": "../../../common/context"
     },
     {
@@ -24,6 +21,9 @@
     },
     {
       "path": "../../../common/effect"
+    },
+    {
+      "path": "../../../common/errors"
     },
     {
       "path": "../../../common/invariant"

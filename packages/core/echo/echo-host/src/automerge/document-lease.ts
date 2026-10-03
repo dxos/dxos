@@ -17,7 +17,7 @@ import {
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 
-import { type HandleQueryState } from './handle-state';
+import { type HandleQueryState, isLoaded } from './handle-state.ts';
 
 /** One loaded document as the repo holds it now. */
 export type DocumentPair<T> = { query: DocumentProgress<T>; handle: DocHandle<T> };
@@ -98,6 +98,11 @@ export class DocumentLease<T = any> implements Disposable {
     return this.#query.peek().state;
   }
 
+  /** Ready with the stored copy merged in — see {@link isLoaded}; what {@link waitUntilReady} waits for. */
+  get loaded(): boolean {
+    return isLoaded(this.#query.peek());
+  }
+
   get disposed(): boolean {
     return this.#release === undefined;
   }
@@ -139,7 +144,7 @@ export class DocumentLease<T = any> implements Disposable {
         if (settled) {
           return;
         }
-        if (state.state === 'ready') {
+        if (isLoaded(state)) {
           settled = true;
           unsubscribe?.();
           resolve();
@@ -234,8 +239,8 @@ export type DocumentLeaseRegistryParams = {
 
   /**
    * How long a document stays resident after its last lease is disposed. Faulting a document back in
-   * costs a fresh automerge document whose WASM memory is never returned, so a document released
-   * between two passes of the same workload has to survive the gap rather than be evicted into it.
+   * costs a load from storage, so a document released between two passes of the same workload has to
+   * survive the gap rather than be evicted into it.
    */
   evictionDelay?: number;
 

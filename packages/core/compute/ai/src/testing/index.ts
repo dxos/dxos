@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './calculator';
-export * from './defs';
-export * from './model-fixture';
-export * as ScriptedLanguageModel from './ScriptedLanguageModel';
-export * from './tap';
-export * from './test-data';
-export * from './test-layers';
-export * from './test-schema';
-export * from './toolkit';
-export * from './process-messages';
-export * as TestData from './TestData';
+export * from './calculator.ts';
+export * from './defs.ts';
+export * from './model-fixture/index.ts';
+export * as ScriptedLanguageModel from './ScriptedLanguageModel.ts';
+export * from './tap.ts';
+export * from './test-data.ts';
+export * from './test-layers.ts';
+export * from './test-schema.ts';
+export * from './toolkit.ts';
+export * from './process-messages.ts';
+export * as TestData from './TestData/index.ts';

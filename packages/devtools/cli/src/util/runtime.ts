@@ -13,19 +13,25 @@ import { AiModelResolver, type AiService } from '@dxos/ai';
 import { LMStudioResolver, OllamaResolver } from '@dxos/ai/resolvers';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import { spaceLayer } from '@dxos/cli-util';
-import { ClientService } from '@dxos/client';
+import { ClientService, ConfigService } from '@dxos/client';
 import { accessTokenResolverFromEdge, credentialsLayerFromDatabase } from '@dxos/compute-runtime';
 import type * as Credential from '@dxos/compute/Credential';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Trace from '@dxos/compute/Trace';
-import { type Database, type Key, Registry } from '@dxos/echo';
+import { type Database, Hypergraph, type Key, Registry } from '@dxos/echo';
 import { registryLayer } from '@dxos/echo-client';
+import { EdgeHttpClientService } from '@dxos/edge-client';
+import { type Identity } from '@dxos/halo';
+import { layerIdentity } from '@dxos/halo-adapter-client';
 
 export type AiChatServices =
   | AiService.AiService
+  | ConfigService
   | Credential.CredentialsService
   | Database.Service
+  | Hypergraph.Service
+  | Identity.Service
   | Operation.Service
   | Registry.Service
   | Trace.TraceService;
@@ -99,6 +105,25 @@ export const chatLayer = ({
       Layer.unwrap(Effect.map(ClientService, (client) => accessTokenResolverFromEdge(() => client.edge.http))),
     ),
     Layer.provideMerge(spaceLayer(spaceId, true)),
+    // The cross-space graph, beside the one space `spaceLayer` resolves: an operation that has to
+    // FIND its space (a session report, whose hook payload cannot name one) declares this instead
+    // of the database, and without it the call fails with "Service not found".
+    Layer.provideMerge(Layer.unwrap(Effect.map(ClientService, (client) => Hypergraph.layer(client.graph)))),
+    // What plugin operations declare in place of the client (e.g. the script skill's deploy and invoke).
+    Layer.provideMerge(
+      Layer.unwrap(Effect.map(ClientService, (client) => Layer.succeed(ConfigService, client.config))),
+    ),
+    // Only with an EDGE URL, since `client.edge` throws without one and non-EDGE providers must still start.
+    Layer.provideMerge(
+      Layer.unwrap(
+        Effect.map(ClientService, (client) =>
+          client.config.get('runtime.services.edge.url')
+            ? Layer.succeed(EdgeHttpClientService, client.edge.http)
+            : Layer.empty,
+        ),
+      ),
+    ),
+    Layer.provideMerge(Layer.unwrap(Effect.map(ClientService, (client) => layerIdentity(client)))),
     Layer.provideMerge(Trace.writerLayerNoop),
   );
 };

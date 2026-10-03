@@ -2,18 +2,21 @@
 // Copyright 2024 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+
 import { scheduleTaskInterval, sleep } from '@dxos/async';
 import { Context, cancelWithContext } from '@dxos/context';
 import { checkType } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { Runtime_Services_SignalSchema } from '@dxos/protocols/buf/dxos/config_pb';
 import { trace } from '@dxos/tracing';
 import { range } from '@dxos/util';
 
-import { type TraceEvent } from '../analysys';
-import { type ReplicantEnv, ReplicantRegistry } from '../env';
-import { TestBuilder, type TestPeer } from '../test-builder';
-import { randomArraySlice } from '../util';
+import { type TraceEvent } from '../analysys/index.ts';
+import { type ReplicantEnv, ReplicantRegistry } from '../env/index.ts';
+import { TestBuilder, type TestPeer } from '../test-builder.ts';
+import { randomArraySlice } from '../util.ts';
 
 export type ReplicantRunProps = {
   replicants: number;
@@ -54,7 +57,7 @@ export class SignalReplicant {
     const peers = await Promise.all(
       range(peersPerReplicant).map(() =>
         this.builder.createPeer({
-          signals: servers.map((server) => ({ server })),
+          signals: servers.map((server) => create(Runtime_Services_SignalSchema, { server })),
           peerId: PublicKey.random(),
         }),
       ),

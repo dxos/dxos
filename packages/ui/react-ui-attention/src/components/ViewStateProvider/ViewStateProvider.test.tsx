@@ -4,14 +4,14 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { act, renderHook } from '@testing-library/react';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import React, { type PropsWithChildren } from 'react';
 import { describe, test } from 'vitest';
 
-import { createDefaultBackends } from '../../core';
-import { ViewState } from '../../types';
-import { useSelection, useSelectionActions } from './view-state-hooks';
-import { ViewStateProvider } from './ViewStateProvider';
+import { createDefaultBackends } from '../../core/index.ts';
+import { ViewState } from '../../types/index.ts';
+import { useSelection, useSelectionActions } from './view-state-hooks.ts';
+import { ViewStateProvider } from './ViewStateProvider.tsx';
 
 describe('useSelection / useSelectionActions', () => {
   test('single select updates the resolved value', ({ expect }) => {

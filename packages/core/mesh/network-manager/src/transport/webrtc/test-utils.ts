@@ -6,7 +6,7 @@ import { expect } from 'vitest';
 
 import { sleep } from '@dxos/async';
 
-import { type Transport } from '../transport';
+import { type Transport } from '../transport.ts';
 
 export const handleChannelErrors = (channel: Transport) => {
   let handled = false;

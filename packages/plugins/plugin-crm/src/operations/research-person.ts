@@ -9,7 +9,7 @@ import { Database } from '@dxos/echo';
 
 import { CrmOperation } from '#types';
 
-import { personProfileContent, upsertProfile } from './research';
+import { personProfileContent, upsertProfile } from './research.ts';
 
 const handler: Operation.WithHandler<typeof CrmOperation.ResearchPerson> = CrmOperation.ResearchPerson.pipe(
   Operation.withHandler(

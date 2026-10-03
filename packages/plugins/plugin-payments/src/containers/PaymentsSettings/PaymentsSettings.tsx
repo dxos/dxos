@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useState } from 'react';
 
 import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
@@ -95,8 +95,11 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
     >
       <Form.Viewport scroll>
         <Form.Content>
-          <Form.Section title={meta.profile.name ?? meta.profile.key}>
-            <Form.FieldSet />
+          <Form.FieldSet
+            label={meta.profile.name ?? meta.profile.key}
+            actions={<SettingsScope prefix={meta.profile.key} />}
+          >
+            <Form.Fields />
             <Flex column gap='sm' classNames='my-2'>
               <Button disabled={pending || !paymentsUrl} onClick={handleBuyPremium}>
                 {pending ? t('pending.label') : t('buy-premium.label')}
@@ -116,7 +119,7 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
                 </Banner.Root>
               )}
             </Flex>
-          </Form.Section>
+          </Form.FieldSet>
         </Form.Content>
       </Form.Viewport>
     </Form.Root>

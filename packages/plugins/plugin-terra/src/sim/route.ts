@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Vec3, add, normalize, scale } from '../engine';
-import { angleBetween } from './geo';
-import { type Domain, type NavGrid, isPassable } from './nav-grid';
+import { type Vec3, add, normalize, scale } from '../engine/index.ts';
+import { angleBetween } from './geo.ts';
+import { type Domain, type NavGrid, isPassable } from './nav-grid.ts';
 
 export type RouteRequest = {
   grid: NavGrid;

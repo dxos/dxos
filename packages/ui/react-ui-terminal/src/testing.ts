@@ -7,6 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { EffectEx } from '@dxos/effect';
 
+import { TerminalTestError } from './errors.ts';
+
 const POLL_INTERVAL = Duration.millis(50);
 const DEFAULT_TIMEOUT = Duration.seconds(15);
 
@@ -46,7 +48,11 @@ export const waitForTerminal = (element: HTMLElement, text: string, timeout = DE
       Effect.timeoutOrElse({
         duration: timeout,
         orElse: () =>
-          Effect.fail(new Error(`Timed out waiting for "${text}". Terminal contents:\n${readTerminal(element)}`)),
+          Effect.fail(
+            new TerminalTestError({
+              message: `Timed out waiting for "${text}". Terminal contents:\n${readTerminal(element)}`,
+            }),
+          ),
       }),
     ),
   );

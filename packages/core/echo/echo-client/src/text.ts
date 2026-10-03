@@ -9,8 +9,8 @@ import { isProxy } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { getDeep } from '@dxos/util';
 
-import * as Doc from './automerge/Doc';
-import { getObjectCore } from './echo-handler';
+import * as Doc from './automerge/Doc.ts';
+import { getObjectCore } from './echo-handler/index.ts';
 
 // TODO(burdon): Handle assoc to associate with a previous character.
 export const toCursor = (accessor: Doc.Accessor, pos: number, assoc = 0): A.Cursor => {

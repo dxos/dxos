@@ -7,7 +7,6 @@ import type Redis from 'ioredis';
 
 import { scheduleMicroTask } from '@dxos/async';
 import { Context } from '@dxos/context';
-import { type AnyEnvelope } from '@dxos/protocols/service-contract';
 import { type RpcPort } from '@dxos/rpc';
 
 // TODO(mykola): createRpcPort(createRedisReadableStream(...), createRedisWritableStream(...))
@@ -85,12 +84,4 @@ export const subscribeToRedisQueue = ({
   return () => {
     void ctx.dispose();
   };
-};
-
-export const rpcCodec = {
-  encode: (value: any): AnyEnvelope => ({
-    type_url: 'google.protobuf.Any',
-    value: Buffer.from(JSON.stringify(value ?? [undefined])),
-  }),
-  decode: (value: AnyEnvelope): any => JSON.parse(Buffer.from(value.value).toString()),
 };

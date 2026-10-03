@@ -8,8 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
-import { Card, Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Banner, Card, Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 import { Message } from '@dxos/types';
@@ -39,13 +38,13 @@ const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Subscri
         <Card.Root fullWidth border={false} ref={forwardedRef} data-testid='subscription-card'>
           <Card.Header>
             <Card.Block>
-              <Input.Root>
-                <Input.Checkbox
+              <Field.Root>
+                <Field.Checkbox
                   checked={selected}
                   onCheckedChange={() => onToggle(subscription.email)}
                   data-testid='subscription-checkbox'
                 />
-              </Input.Root>
+              </Field.Root>
             </Card.Block>
             <Card.Title>{subscription.name ?? subscription.email}</Card.Title>
           </Card.Header>
@@ -163,14 +162,14 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
       <Panel.Root role={role}>
         <Panel.Toolbar asChild>
           <Toolbar.Root classNames='dx-document px-3'>
-            <Input.Root>
-              <Input.Checkbox
+            <Field.Root>
+              <Field.Checkbox
                 checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                 disabled={results.length === 0}
                 onCheckedChange={toggleAll}
                 data-testid='subscriptions-select-all'
               />
-            </Input.Root>
+            </Field.Root>
             <SearchList.Input classNames='grow' placeholder={t('subscriptions.filter.placeholder')} />
             <Toolbar.IconButton
               icon='ph--trash--regular'
@@ -184,7 +183,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
         </Panel.Toolbar>
         <Panel.Content asChild>
           {empty ? (
-            <Empty label={empty} />
+            <Banner.Empty label={empty} />
           ) : (
             <ScrollArea.Root orientation='vertical' padding thin>
               <ScrollArea.Viewport classNames='dx-document'>

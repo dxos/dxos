@@ -8,8 +8,8 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { Vec2 } from '../../util';
-import { type FlockBoid, FlockModel } from './FlockModel';
+import { Vec2 } from '../../util/index.ts';
+import { type FlockBoid, FlockModel } from './FlockModel.ts';
 
 // Boids flocking.
 // https://en.wikipedia.org/wiki/Boids

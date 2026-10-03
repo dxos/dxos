@@ -61,6 +61,14 @@ export type SceneManagerOptions = {
   canvas: HTMLCanvasElement;
 };
 
+/** An orbit camera's pose, in the shape the plugin persists (see `SceneView.Camera`). */
+export type CameraState = {
+  alpha: number;
+  beta: number;
+  radius: number;
+  target: { x: number; y: number; z: number };
+};
+
 /**
  * Manages the Babylon.js engine, scene, camera, and lighting.
  */
@@ -88,6 +96,8 @@ export class SceneManager {
     this._camera.lowerRadiusLimit = 2;
     this._camera.upperRadiusLimit = 50;
     this._camera.wheelPrecision = 20;
+    // Half of Babylon's default (0.9): an orbit settles soon after the drag ends rather than coasting.
+    this._camera.inertia = 0.45;
 
     // HemisphericLight direction = vector toward the sky.
     // Surfaces facing the sky get diffuse; surfaces facing away get groundColor.
@@ -117,6 +127,18 @@ export class SceneManager {
 
   get camera(): ArcRotateCamera {
     return this._camera;
+  }
+
+  getCameraState(): CameraState {
+    const { alpha, beta, radius, target } = this._camera;
+    return { alpha, beta, radius, target: { x: target.x, y: target.y, z: target.z } };
+  }
+
+  setCameraState({ alpha, beta, radius, target }: CameraState): void {
+    this._camera.alpha = alpha;
+    this._camera.beta = beta;
+    this._camera.radius = radius;
+    this._camera.target = new Vector3(target.x, target.y, target.z);
   }
 
   set showAxes(show: boolean) {

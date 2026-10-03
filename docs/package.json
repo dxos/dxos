@@ -22,9 +22,11 @@
     "@astrojs/rss": "catalog:",
     "@astrojs/starlight": "catalog:",
     "@bryanguffey/astro-standard-site": "catalog:",
+    "@bufbuild/protobuf": "catalog:",
     "@dxos/client-protocol": "workspace:*",
     "@dxos/config": "workspace:*",
     "@dxos/echo": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/schema": "workspace:*",
     "astro": "catalog:",
@@ -33,6 +35,7 @@
   },
   "devDependencies": {
     "@atproto/api": "catalog:",
+    "@dxos/app-framework": "workspace:*",
     "@dxos/client": "workspace:*",
     "@types/turndown": "catalog:",
     "turndown": "catalog:"

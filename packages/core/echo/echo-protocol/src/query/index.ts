@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * as QueryAST from './ast';
+export * as QueryAST from './ast.ts';

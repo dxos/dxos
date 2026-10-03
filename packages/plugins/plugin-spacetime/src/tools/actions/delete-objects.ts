@@ -5,8 +5,8 @@
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 
-import { type ActionHandler, disposeSceneObject } from '../action';
-import { type ToolContext, getSelectedObjectIds } from '../tool-context';
+import { type ActionHandler, disposeSceneObject } from '../action.ts';
+import { type ToolContext, getSelectedObjectIds } from '../tool-context.ts';
 
 /** Deletes selected objects from the ECHO scene and disposes their runtime resources. */
 export class DeleteObjectsAction implements ActionHandler {

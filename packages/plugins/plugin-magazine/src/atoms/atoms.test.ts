@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Feed, Obj, Ref, Tag } from '@dxos/echo';
@@ -11,10 +11,10 @@ import { StateMap, TagIndex } from '@dxos/schema';
 
 import { Magazine, Subscription } from '#types';
 
-import { postCurationAtom } from './post-curation';
-import { postDisplayAtom } from './post-display';
-import { postReadAtom } from './post-read';
-import { postTagsAtom } from './post-tags';
+import { postCurationAtom } from './post-curation.ts';
+import { postDisplayAtom } from './post-display.ts';
+import { postReadAtom } from './post-read.ts';
+import { postTagsAtom } from './post-tags.ts';
 
 describe('postReadAtom', () => {
   let builder: EchoTestBuilder;

@@ -7,14 +7,14 @@ import * as EffectStream from 'effect/Stream';
 
 import { raise } from '@dxos/debug';
 import { EffectEx } from '@dxos/effect';
-import { NotImplementedError, RuntimeServiceError } from '@dxos/errors';
+import { BaseError, NotImplementedError, RuntimeServiceError } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type EdgeFunctionEnv } from '@dxos/protocols';
+import { type EdgeFunctionEnv, toServiceError } from '@dxos/protocols';
 import { type DataService } from '@dxos/protocols/rpc';
 
-import { copyUint8Array } from './utils';
+import { copyUint8Array } from './utils.ts';
 
 export class DataServiceImpl implements DataService.Handlers {
   private 'dataSubscriptions' = new Map<
@@ -49,48 +49,80 @@ export class DataServiceImpl implements DataService.Handlers {
     });
   }
 
-  ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, Error> {
-    return Effect.tryPromise({
-      try: async () => {
-        const sub =
-          this.dataSubscriptions.get(request.subscriptionId) ??
-          raise(
-            new RuntimeServiceError({
-              message: 'Subscription not found.',
-              context: { subscriptionId: request.subscriptionId },
-            }),
-          );
+  ['DataService.updateSubscription'](request: DataService.UpdateSubscriptionRequest): Effect.Effect<void, BaseError> {
+    const addIds = request.addIds ?? [];
+    const self = this;
+    return Effect.gen(function* () {
+      const sub =
+        self.dataSubscriptions.get(request.subscriptionId) ??
+        raise(
+          new RuntimeServiceError({
+            message: 'Subscription not found.',
+            context: { subscriptionId: request.subscriptionId },
+          }),
+        );
 
-        if (request.addIds) {
-          log.verbose('request documents', { count: request.addIds.length });
-          // TODO(dmaretskyi): Batch.
-          for (const documentId of request.addIds) {
-            using document = await this._dataService.getDocument(this._executionContext, sub.spaceId, documentId);
-            log.verbose('document loaded', { documentId, spaceId: sub.spaceId, found: !!document });
-            if (!document) {
-              log.warn('not found', { documentId });
-              continue;
-            }
-            sub.next({
-              updates: [
-                {
-                  documentId,
-                  // Copy returned object to avoid hanging RPC stub
-                  // See https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/
-                  mutation: copyUint8Array(document.data),
-                },
-              ],
-            });
-          }
+      if (addIds.length === 0) {
+        return;
+      }
+
+      log.verbose('request documents', { count: addIds.length });
+      const loaded = yield* Effect.tryPromise({
+        try: () => self._loadDocuments(sub.spaceId, addIds),
+        catch: toServiceError,
+      }).pipe(
+        // The Durable Object round trip, span-separated from the fan-out below it, because only
+        // one of the two is a network cost and the two are optimized differently.
+        Effect.withSpan('DataService.getDocuments', {
+          attributes: { spaceId: sub.spaceId, documentCount: addIds.length },
+        }),
+      );
+
+      const missing: string[] = [];
+      for (const documentId of addIds) {
+        const mutation = loaded.get(documentId);
+        log.verbose('document loaded', { documentId, spaceId: sub.spaceId, found: !!mutation });
+        if (!mutation) {
+          missing.push(documentId);
+          continue;
         }
-      },
-      catch: (error) => error as Error,
-    });
+        sub.next({ updates: [{ documentId, mutation }] });
+      }
+      if (missing.length > 0) {
+        // This data plane has no other source for a document its store does not hold, so the
+        // subscriber is told so rather than left waiting: dropping these silently is what turned a
+        // missing space root into a 15s hang with nothing on the wire to explain it.
+        log.warn('documents not available on this data plane', { spaceId: sub.spaceId, documentIds: missing });
+        sub.next({ updates: missing.map((documentId) => ({ documentId, unavailable: true })) });
+      }
+      yield* Effect.annotateCurrentSpan('missingCount', missing.length);
+    }).pipe(
+      // Hydration is where an operation invoked over MCP spends most of its wall clock; without
+      // this span all of it sat inside `operation.handler` with no children to attribute it to.
+      Effect.withSpan('DataService.updateSubscription', { attributes: { documentCount: addIds.length } }),
+    );
+  }
+
+  /**
+   * Fetches the requested documents in one call.
+   *
+   * The host reads them one Durable Object round trip at a time otherwise, in series, so hydrating
+   * N objects cost N wake latencies end to end -- enough, at ~500ms each in production, for the
+   * client's 2s per-object load timeout to fire on everything queued behind the first few and for
+   * the query to return a partial result.
+   *
+   * Bytes are copied before the RPC stub is disposed: the stub's own buffers belong to memory the
+   * runtime reclaims when it is released.
+   * See <https://developers.cloudflare.com/workers/runtime-apis/rpc/lifecycle/>.
+   */
+  private async '_loadDocuments'(spaceId: SpaceId, documentIds: string[]): Promise<Map<string, Uint8Array>> {
+    using documents = await this._dataService.getDocuments(this._executionContext, spaceId, documentIds);
+    return new Map(documents.map((document) => [document.documentId, copyUint8Array(document.data)]));
   }
 
   ['DataService.createDocument'](
     request: DataService.CreateDocumentRequest,
-  ): Effect.Effect<DataService.CreateDocumentResponse, Error> {
+  ): Effect.Effect<DataService.CreateDocumentResponse, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         invariant(SpaceId.isValid(request.spaceId));
@@ -101,11 +133,11 @@ export class DataServiceImpl implements DataService.Handlers {
         );
         return { documentId: response.documentId };
       },
-      catch: (error) => error as Error,
-    });
+      catch: toServiceError,
+    }).pipe(Effect.withSpan('DataService.createDocument', { attributes: { spaceId: request.spaceId } }));
   }
 
-  ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, Error> {
+  ['DataService.update'](request: DataService.UpdateRequest): Effect.Effect<void, BaseError> {
     return Effect.tryPromise({
       try: async () => {
         const sub =
@@ -139,11 +171,14 @@ export class DataServiceImpl implements DataService.Handlers {
           })(error);
         }
       },
-      catch: (error) => error as Error,
-    });
+      catch: toServiceError,
+    }).pipe(
+      // Serial per-document round trips, so the span's count is what explains its duration.
+      Effect.withSpan('DataService.update', { attributes: { documentCount: request.updates?.length ?? 0 } }),
+    );
   }
 
-  ['DataService.flush'](_request: DataService.FlushRequest): Effect.Effect<void, Error> {
+  ['DataService.flush'](_request: DataService.FlushRequest): Effect.Effect<void, BaseError> {
     return Effect.void;
   }
 
@@ -159,7 +194,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   ['DataService.getDocumentHeads'](
     _request: DataService.GetDocumentHeadsRequest,
-  ): Effect.Effect<DataService.GetDocumentHeadsResponse, Error> {
+  ): Effect.Effect<DataService.GetDocumentHeadsResponse, BaseError> {
     return Effect.fail(
       new NotImplementedError({
         message: 'getDocumentHeads is not implemented.',
@@ -167,7 +202,7 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
-  ['DataService.reIndexHeads'](_request: DataService.ReIndexHeadsRequest): Effect.Effect<void, Error> {
+  ['DataService.reIndexHeads'](_request: DataService.ReIndexHeadsRequest): Effect.Effect<void, BaseError> {
     return Effect.fail(
       new NotImplementedError({
         message: 'reIndexHeads is not implemented.',
@@ -175,14 +210,14 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
-  ['DataService.updateIndexes'](): Effect.Effect<void, Error> {
+  ['DataService.updateIndexes'](_request: DataService.UpdateIndexesRequest): Effect.Effect<void, BaseError> {
     log.verbose('updateIndexes called, but it is a no-op in EDGE env.');
     return Effect.void;
   }
 
   ['DataService.waitUntilHeadsReplicated'](
     _request: DataService.WaitUntilHeadsReplicatedRequest,
-  ): Effect.Effect<void, Error> {
+  ): Effect.Effect<void, BaseError> {
     return Effect.fail(
       new NotImplementedError({
         message: 'waitUntilHeadsReplicated is not implemented.',
@@ -190,7 +225,9 @@ export class DataServiceImpl implements DataService.Handlers {
     );
   }
 
-  ['DataService.stats'](_request: DataService.DatabaseStatsRequest): Effect.Effect<DataService.DatabaseStats, Error> {
+  ['DataService.stats'](
+    _request: DataService.DatabaseStatsRequest,
+  ): Effect.Effect<DataService.DatabaseStats, BaseError> {
     // TODO(dmaretskyi): Implement per the EDGE section of `echo-host/docs/GARBAGE_COLLECTION.md`.
     return Effect.fail(
       new NotImplementedError({
@@ -201,7 +238,7 @@ export class DataServiceImpl implements DataService.Handlers {
 
   ['DataService.runGarbageCollection'](
     _request: DataService.RunGarbageCollectionRequest,
-  ): Effect.Effect<DataService.GarbageCollectionReport, Error> {
+  ): Effect.Effect<DataService.GarbageCollectionReport, BaseError> {
     // TODO(dmaretskyi): Implement per the EDGE section of `echo-host/docs/GARBAGE_COLLECTION.md`.
     return Effect.fail(
       new NotImplementedError({

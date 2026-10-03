@@ -7,12 +7,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { Button, Toolbar } from '@dxos/react-ui';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
-import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard';
-import { ChessModel } from './chess';
-import { Chessboard, type ChessboardProps } from './Chessboard';
+import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard/index.ts';
+import { ChessModel } from './chess.ts';
+import { Chessboard, type ChessboardProps } from './Chessboard.tsx';
 
 type StoryArgs = Pick<ChessboardProps, 'orientation' | 'showLabels' | 'debug'> & {
   pgn?: string;

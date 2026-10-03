@@ -25,7 +25,7 @@ export const ChessCard = ({ variant }: ChessCardProps) => {
           height budget (minus header chrome) so a tight anchor SHRINKS the board — the board draws
           at min(width, height) — instead of the card clipping its bottom. Outside a popover the
           variable is absent and the fallback leaves the square unconstrained. */}
-      <Card.Section classNames='aspect-square min-h-0 max-h-[calc(min(var(--radix-popper-available-height,800px),var(--spacing-card-max-height))-3rem)]'>
+      <Card.Section classNames='aspect-square min-h-0 max-h-[calc(min(var(--available-height,800px),var(--spacing-card-max-height))-3rem)]'>
         {/* `self-stretch`: the section centers its rows, so the row would sit at its content height —
             zero here, since the board sizes itself from the container rather than from its content. */}
         <Card.Row fullWidth classNames='self-stretch'>

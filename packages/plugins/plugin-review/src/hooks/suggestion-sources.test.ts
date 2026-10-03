@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { buildSuggestionSources, suggestionColour, suggestionGroups } from './suggestion-sources';
+import { buildSuggestionSources, suggestionColour, suggestionGroups } from './suggestion-sources.ts';
 
 const source = (author: string, content: string) => ({ author, colour: suggestionColour(author), content });
 

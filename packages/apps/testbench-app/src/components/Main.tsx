@@ -5,22 +5,34 @@
 import { randSentence, randWord } from '@ngneat/falso'; // TODO(burdon): Reconcile with echo-generator.
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Devtools, StatsPanel, useStats } from '@dxos/devtools';
+import {
+  DatabaseCard,
+  Devtools,
+  MemoryCard,
+  NetworkCard,
+  PerformanceCard,
+  QueriesCard,
+  ReplicatorCard,
+  ReplicatorMessagesCard,
+  StatsPanel,
+  useQueryMetrics,
+  useStats,
+} from '@dxos/devtools';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type PublicKey, useClient } from '@dxos/react-client';
 import { type Space, useQuery, useSpaces } from '@dxos/react-client/echo';
 import { useAsyncEffect, useFileDownload } from '@dxos/react-ui';
 
-import { Document, Item } from '../data';
-import { defs } from '../defs';
-import { exportData, importData } from '../util';
-import { AppToolbar } from './AppToolbar';
-import { DataToolbar, type DataView } from './DataToolbar';
-import { ItemList } from './ItemList';
-import { ItemTable } from './ItemTable';
-import { SpaceToolbar } from './SpaceToolbar';
-import { StatusBar } from './status';
+import { Document, Item } from '../data.ts';
+import { defs } from '../defs.ts';
+import { exportData, importData } from '../util/index.ts';
+import { AppToolbar } from './AppToolbar.tsx';
+import { DataToolbar, type DataView } from './DataToolbar.tsx';
+import { ItemList } from './ItemList.tsx';
+import { ItemTable } from './ItemTable.tsx';
+import { SpaceToolbar } from './SpaceToolbar.tsx';
+import { StatusBar } from './status/index.ts';
 
 export const Main = () => {
   const client = useClient();
@@ -35,6 +47,7 @@ export const Main = () => {
   const [showDevTools, setShowDevTools] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [stats, refreshStats] = useStats();
+  const { queries } = useQueryMetrics();
 
   const [view, setView] = useState<DataView>();
   const [type, setType] = useState<string>();
@@ -222,7 +235,15 @@ export const Main = () => {
           <StatusBar flushing={flushing} showStats={showStats} onShowStats={(show) => setShowStats(show)} />
           {showStats && (
             <div className='z-20 absolute right-0 bottom-[32px] w-[450px] border-l border-t border-neutral-500 dark:border-neutral-800'>
-              <StatsPanel stats={stats} onRefresh={refreshStats} />
+              <StatsPanel onRefresh={refreshStats}>
+                <MemoryCard memory={stats.memory} />
+                <NetworkCard network={stats.network} />
+                <PerformanceCard entries={stats.performanceEntries} />
+                <DatabaseCard database={stats.database} />
+                <ReplicatorCard database={stats.database} />
+                <ReplicatorMessagesCard database={stats.database} />
+                <QueriesCard queries={queries} />
+              </StatsPanel>
             </div>
           )}
         </div>

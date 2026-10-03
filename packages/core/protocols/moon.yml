@@ -7,7 +7,7 @@ tags:
 tasks:
   build:
     deps:
-      - ~:#prebuild
+      - ~:gen-buf
   gen-buf:
     command: buf generate
     # `buf.gen.yaml` reads the whole `src/proto` tree, so the declared inputs and outputs cover
@@ -17,21 +17,10 @@ tasks:
       - src/proto/**/*.proto
     outputs:
       - src/buf/proto/gen
-  prebuild:
-    command: build-protobuf
-    args:
-      - '--baseDir="./src/proto"'
-      - '--src="./src/proto/**/*.proto"'
-      - '--outDir="./src/proto/gen"'
-      - '--substitutions="./src/proto/substitutions.ts"'
-    deps:
-      - ^:build
-      - protobuf-compiler:build
-      - gen-buf
-    outputs:
-      - src/proto/gen
+    # Dependents resolve `^:#prebuild`, which is how they get the generated modules before their
+    # own sources are type-checked.
     tags:
       - prebuild
   test:
     deps:
-      - ~:#prebuild
+      - ~:gen-buf

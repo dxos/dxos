@@ -13,8 +13,8 @@ import { isSpace } from '@dxos/react-client/echo';
 
 import { type SearchDialog } from '#containers';
 
-import { SEARCH_DIALOG } from '../constants';
-import { SearchCompanionSurface, SearchDialogSurface, SearchInputSurface } from './SearchSurfaces';
+import { SEARCH_DIALOG } from '../constants.ts';
+import { SearchCompanionSurface, SearchDialogSurface, SearchInputSurface } from './SearchSurfaces.tsx';
 
 export default Capability.makeModule(() =>
   Effect.succeed(

@@ -4,13 +4,13 @@
 
 import React, { useMemo } from 'react';
 
+import { SvgHandler } from '@dxos/diagram';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import { Panel } from '@dxos/react-ui';
 
 import { SceneSvg } from '#components';
-import { SvgHandler } from '#model';
 import { Drawing, type IllustratorCapabilities } from '#types';
 
 export type SvgArticleProps = IllustratorCapabilities.DrawingVariantSurfaceProps;
@@ -26,9 +26,8 @@ export const SvgArticle = ({ canvas, selection, onSelectionChange, onActivate }:
 
   return (
     <Panel.Root classNames='dx-fill'>
-      <Panel.Content asChild>
+      <Panel.Content classNames='dx-attention-surface'>
         <SceneSvg
-          classNames='dx-attention-surface dx-fill'
           objects={objects}
           selection={selection}
           onSelectionChange={onSelectionChange}

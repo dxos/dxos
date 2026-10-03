@@ -29,7 +29,7 @@ import { createNotebook } from '#testing';
 import { translations } from '#translations';
 import { Notebook } from '#types';
 
-import { NotebookArticle } from './NotebookArticle';
+import { NotebookArticle } from './NotebookArticle.tsx';
 
 const meta: Meta<typeof NotebookArticle> = {
   title: 'plugins/plugin-script/containers/NotebookArticle',

@@ -2,17 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Trigger } from '@dxos/async';
-import { type ClientServices, type ClientServicesProvider, Rpc, serveBridgeService } from '@dxos/client-protocol';
+import { type ClientServices, type ClientServicesProvider, Rpc, serveRtcService } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
 import { Resource } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import type { MaybePromise } from '@dxos/util';
 import { WorkerProtocol } from '@dxos/worker-framework';
 import * as Client from '@dxos/worker-framework/Client';
 
-import { ClientServicesProxy } from '../service-proxy';
+import { ClientServicesProxy } from '../service-proxy.ts';
 
 export const LEADER_LOCK_KEY = '@dxos/client/DedicatedWorkerClientServices/LeaderLock';
 
@@ -34,8 +32,7 @@ export interface DedicatedWorkerClientServicesOptions {
 export class DedicatedWorkerClientServices extends Resource implements ClientServicesProvider {
   readonly #connection: Client.Connection;
   #services: ClientServicesProxy | undefined;
-  #bridgeServer: Rpc.GroupServer | undefined;
-  #releaseTabLock: (() => void) | undefined;
+  #rtcServer: Rpc.GroupServer | undefined;
 
   constructor(options: DedicatedWorkerClientServicesOptions) {
     super();
@@ -48,47 +45,29 @@ export class DedicatedWorkerClientServices extends Resource implements ClientSer
       onPersistentFailure: options.onPersistentFailure,
       onConnect: async ({ clientToWorker, workerToClient }) => {
         const config = options.config ?? new Config();
-        const origin = typeof location !== 'undefined' ? location.origin : 'unknown';
 
-        // Serve the tab's WebRTC BridgeService (RtcTransportService) to the worker over the
-        // worker→client port. Imported lazily so the RTC stack is only pulled in when a worker
-        // connection opens.
-        const { RtcTransportService, createIceProvider } = await import('@dxos/network-manager');
+        // Serve the tab's WebRTC RTCService to the worker over the worker→client port. Imported
+        // lazily so the RTC stack is only pulled in when a worker connection opens.
+        const { RtcService, createIceProvider } = await import('@dxos/network-manager');
         const iceProviders = config.get('runtime.services.iceProviders');
-        const transportService = new RtcTransportService(
+        const rtcService = new RtcService(
           { iceServers: [...(config.get('runtime.services.ice') ?? [])] },
           iceProviders ? createIceProvider(iceProviders) : undefined,
         );
-        this.#bridgeServer = serveBridgeService(workerToClient, transportService);
-        await this.#bridgeServer.open();
+        this.#rtcServer = serveRtcService(workerToClient, rtcService);
+        await this.#rtcServer.open();
 
-        // Client services (+ WorkerService control channel) over the client→worker port.
+        // Client services over the client→worker port. The framework's session lock tells the worker
+        // when this tab goes away.
         this.#services = new ClientServicesProxy(clientToWorker);
         await this.#services.open();
 
-        // Hold a tab-liveness lock and hand its key to the worker via WorkerService.start so the
-        // worker tears down this session when the tab goes away.
-        const lockKey = `${origin}-${crypto.randomUUID()}`;
-        const release = new Trigger();
-        this.#releaseTabLock = () => release.wake();
-        if (typeof navigator !== 'undefined' && typeof navigator.locks !== 'undefined') {
-          const acquired = new Trigger();
-          void navigator.locks.request(lockKey, async () => {
-            acquired.wake();
-            await release.wait();
-          });
-          await acquired.wait();
-        }
-        await EffectEx.runPromise(this.#services.rpc['WorkerService.start']({ origin, lockKey }));
-
         return {
           close: async () => {
-            this.#releaseTabLock?.();
-            this.#releaseTabLock = undefined;
             await this.#services?.close();
-            await this.#bridgeServer?.close();
+            await this.#rtcServer?.close();
             this.#services = undefined;
-            this.#bridgeServer = undefined;
+            this.#rtcServer = undefined;
           },
         };
       },

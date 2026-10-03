@@ -1,0 +1,38 @@
+{
+  "name": "@dxos/vite-plugin-module-url",
+  "version": "0.12.0",
+  "private": true,
+  "description": "Vite plugin that resolves `?module-url` imports to the URL of the module compiled as a standalone ES chunk.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./client": {
+      "types": "./client.d.ts"
+    }
+  },
+  "types": "dist/src/index.d.ts",
+  "files": [
+    "client.d.ts",
+    "dist",
+    "src"
+  ],
+  "devDependencies": {
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "vite": "catalog:"
+  }
+}

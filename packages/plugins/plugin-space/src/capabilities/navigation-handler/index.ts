@@ -8,9 +8,12 @@ import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 
 import { SpaceSchema } from '#types';
 
-export type { NavigationHandlerOptions } from './navigation-handler';
+export type { NavigationHandlerOptions } from './navigation-handler.ts';
 
-export const NavigationHandler = AppCapability.navigationHandler(() => import('./navigation-handler'), {
+export const NavigationHandler = AppCapability.navigationHandler(() => import('./navigation-handler.ts'), {
   requires: [Capabilities.OperationInvoker, ClientCapabilities.Client],
-  props: (options: SpaceSchema.SpacePluginOptions) => ({ invitationProp: options.invitationProp }),
+  props: (options: SpaceSchema.SpacePluginOptions) => ({
+    invitationProp: options.invitationProp,
+    joinSpaceKeyProp: options.joinSpaceKeyProp,
+  }),
 });

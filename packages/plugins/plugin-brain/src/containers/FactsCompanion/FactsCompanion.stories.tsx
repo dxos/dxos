@@ -18,8 +18,8 @@ import { translations as reactUiTranslations } from '@dxos/react-ui/translations
 
 import { BrainCapabilities } from '#types';
 
-import { makeFactStoreRegistry } from '../../capabilities/fact-store';
-import { FactsCompanion } from './FactsCompanion';
+import { makeFactStoreRegistry } from '../../capabilities/fact-store.ts';
+import { FactsCompanion } from './FactsCompanion.tsx';
 
 // A shared registry contributed as the `FactStoreRegistry` capability and seeded (below) for the story's
 // space, so `FactsCompanion` (space-scoped via `useActiveSpace`) renders real facts.

@@ -1,0 +1,36 @@
+/*
+ * Image: a fixed-ratio frame, so layout does not shift as the image loads, filled with the well until it does.
+ */
+
+@layer dx-components {
+  .nx-image {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    aspect-ratio: var(--nx-image-aspect, 16 / 9);
+    min-width: 0;
+    background: var(--color-input-surface);
+    color: var(--color-description);
+  }
+  .nx-image[data-status='loaded'] {
+    background: transparent;
+  }
+  .nx-image > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .nx-image[data-fit='contain'] > img {
+    object-fit: contain;
+  }
+
+  .nx-image-clickable {
+    cursor: pointer;
+  }
+  /* An outline, not the inset ring: the image fills the frame and would paint over an inset shadow. */
+  .nx-image-clickable:focus-visible {
+    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
+    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  }
+}

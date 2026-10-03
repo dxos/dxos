@@ -5,7 +5,7 @@
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -57,7 +57,6 @@ describe('excalidraw drawing variant', () => {
     Effect.fnUntraced(
       function* ({ expect }) {
         const { object: drawing } = yield* Operation.invoke(DrawingOperation.Create, { name: 'Portrait' });
-        yield* Database.add(drawing);
         yield* Database.flush();
         const ref = Ref.make(drawing);
 

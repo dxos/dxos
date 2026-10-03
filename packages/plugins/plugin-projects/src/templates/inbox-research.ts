@@ -16,7 +16,7 @@ import { trim } from '@dxos/util';
 
 import { ProjectCapabilities } from '#types';
 
-import { scaffoldProject } from './scaffold';
+import { scaffoldProject } from './scaffold.ts';
 
 /**
  * Skill keys composed into the project's instructions (chat sessions) and the starter routine.

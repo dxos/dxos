@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './automerge';
-export * from './awareness';
+export * from './automerge/index.ts';
+export * from './awareness/index.ts';

@@ -5,7 +5,7 @@
 import { line, range, select } from 'd3';
 import { type RefObject, useEffect, useMemo, useRef } from 'react';
 
-import { type SVGContext, useSvgContext } from './useSvgContext';
+import { type SVGContext, useSvgContext } from './useSvgContext.ts';
 
 const createLine = line();
 

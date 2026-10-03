@@ -11,7 +11,7 @@ import { ButtonGroup, type ButtonGroupProps, type ButtonProps, IconButton, useTr
 import { meta } from '#meta';
 import { DeckOperation } from '#types';
 
-import { type PlankCapabilities } from './useDeckPlank';
+import { type PlankCapabilities } from './useDeckPlank.ts';
 
 export type PlankControlHandler = (event: DeckOperation.PartAdjustment) => void;
 

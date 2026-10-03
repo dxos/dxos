@@ -2,10 +2,10 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './dynamic-table';
-export * from './query-ast';
-export * from './signals';
-export * from './sort';
-export * from './table-buttons';
-export * from './table-controls';
-export * from './schema';
+export * from './dynamic-table.ts';
+export * from './query-ast.ts';
+export * from './signals.ts';
+export * from './sort.ts';
+export * from './table-buttons.ts';
+export * from './table-controls.ts';
+export * from './schema.ts';

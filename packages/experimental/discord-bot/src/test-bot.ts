@@ -4,7 +4,7 @@
 
 import { Config, Profile } from '@dxos/config';
 
-import { DiscordBot } from './bot';
+import { DiscordBot } from './bot.ts';
 
 const main = async () => {
   const config = new Config(Profile());

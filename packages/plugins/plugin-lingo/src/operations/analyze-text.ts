@@ -14,7 +14,7 @@ import { type Segment, segmentText, sourceHash } from '@dxos/nlp';
 
 import { Analysis, Language, LingoOperation } from '#types';
 
-import { addWord, normalizeTerm } from '../util';
+import { addWord, normalizeTerm } from '../util/index.ts';
 
 const handler: Operation.WithHandler<typeof LingoOperation.AnalyzeText> = LingoOperation.AnalyzeText.pipe(
   Operation.withHandler(

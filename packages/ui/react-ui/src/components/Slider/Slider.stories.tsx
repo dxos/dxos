@@ -5,8 +5,8 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { withTheme } from '../../testing';
-import { Slider } from './Slider';
+import { withTheme } from '../../testing/index.ts';
+import { Slider } from './Slider.tsx';
 
 const meta = {
   title: 'ui/react-ui-core/components/Slider',

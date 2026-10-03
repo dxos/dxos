@@ -26,6 +26,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/invariant"
     },
     {
@@ -77,7 +80,13 @@
       "path": "../../core/echo/echo-react"
     },
     {
+      "path": "../../core/halo/halo"
+    },
+    {
       "path": "../../core/halo/halo-react"
+    },
+    {
+      "path": "../../core/mesh/edge-client"
     },
     {
       "path": "../../core/protocols"
@@ -111,6 +120,9 @@
     },
     {
       "path": "../../sdk/types"
+    },
+    {
+      "path": "../../ui/react-primitives/react-hooks"
     },
     {
       "path": "../../ui/react-ui"

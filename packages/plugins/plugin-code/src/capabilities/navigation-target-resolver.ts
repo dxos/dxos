@@ -10,7 +10,7 @@ import * as NavigationResolver from '@dxos/app-toolkit/NavigationResolver';
 
 import { CodeProject } from '#types';
 
-import { getCodeProjectPath } from '../paths';
+import { getCodeProjectPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {

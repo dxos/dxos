@@ -3,20 +3,29 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
-import * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { type ContentBlock } from '@dxos/types';
 
-import { callTool } from './call';
+import { callTool } from './call.ts';
 
 const EchoToolkit = Toolkit.make(
   Tool.make('echo', {
     description: 'Echoes its argument',
     parameters: Schema.Struct({ value: Schema.String }),
     success: Schema.String,
+  }),
+);
+
+const FailingToolkit = Toolkit.make(
+  Tool.make('fail', {
+    description: 'Fails with its argument',
+    parameters: Schema.Struct({ value: Schema.String }),
+    success: Schema.String,
+    failure: Schema.String,
   }),
 );
 
@@ -67,6 +76,23 @@ describe('callTool', () => {
 
       expect(result.error).toBeUndefined();
       expect(calls).toEqual(['hello']);
+    }),
+  );
+
+  it.effect(
+    'reports a string failure verbatim',
+    Effect.fn(function* ({ expect }) {
+      const toolkit = FailingToolkit.pipe(
+        Effect.provide(FailingToolkit.toLayer({ fail: ({ value }) => Effect.fail(value) })),
+      );
+
+      const result = yield* callTool(yield* toolkit, {
+        ...makeToolCall('{"value":"printed\\nError: boom"}'),
+        name: 'fail',
+      });
+
+      expect(result.error).toEqual('printed\nError: boom');
+      expect(result.result).toBeUndefined();
     }),
   );
 });

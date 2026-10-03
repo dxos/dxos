@@ -4,19 +4,19 @@
 
 import { it } from '@effect/vitest';
 import { SpanStatusCode } from '@opentelemetry/api';
+import * as LanguageModel from 'effect/ai/LanguageModel';
+import * as Telemetry from 'effect/ai/Telemetry';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as Telemetry from 'effect/unstable/ai/Telemetry';
 import { describe, expect, test } from 'vitest';
 
 import { AiTelemetry } from '@dxos/ai';
 import { makeTracer } from '@dxos/effect';
 
-import type * as ObservabilityExtension from '../ObservabilityExtension';
-import { AiSpanProcessor } from './AiObservability';
+import type * as ObservabilityExtension from '../ObservabilityExtension.ts';
+import { AiSpanProcessor } from './AiObservability.ts';
 
 const setup = async ({
   allowContent = () => true,

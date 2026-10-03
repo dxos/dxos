@@ -10,7 +10,7 @@ import { Entity } from '@dxos/echo';
 import { Card, IconButton } from '@dxos/react-ui';
 import { ScrollArea } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
-import { Menu } from '@dxos/react-ui-menu';
+import { ActionMenu } from '@dxos/react-ui-menu';
 import { Focus, Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
 
@@ -87,33 +87,24 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
     }, [result.id, setCurrentId]);
 
     return (
-      <Menu.Root>
-        <Mosaic.Tile
-          asChild
-          classNames='dx-hover dx-current dx-selected'
-          id={result.id}
-          data={data}
-          location={location}
-        >
-          <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-            <Card.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
-              <Card.Header ref={cardRef}>
-                <Card.Block />
-                <Card.Title>
-                  <Highlighted text={label} query={query} />
-                </Card.Title>
-                <Card.Block end>
-                  <Menu.Trigger asChild disabled={!menuItems?.length}>
-                    <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
-                  </Menu.Trigger>
-                  <Menu.Content items={menuItems} />
-                </Card.Block>
-              </Card.Header>
-              <Surface.Surface type={AppSurface.CardContent} data={{ subject: result.object }} limit={1} />
-            </Card.Root>
-          </Focus.Item>
-        </Mosaic.Tile>
-      </Menu.Root>
+      <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={result.id} data={data} location={location}>
+        <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
+          <Card.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
+            <Card.Header ref={cardRef}>
+              <Card.Block />
+              <Card.Title>
+                <Highlighted text={label} query={query} />
+              </Card.Title>
+              <Card.Block end>
+                <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
+                  <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                </ActionMenu>
+              </Card.Block>
+            </Card.Header>
+            <Surface.Surface type={AppSurface.CardContent} data={{ subject: result.object }} limit={1} />
+          </Card.Root>
+        </Focus.Item>
+      </Mosaic.Tile>
     );
   },
 );

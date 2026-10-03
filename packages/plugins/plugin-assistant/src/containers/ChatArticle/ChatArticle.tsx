@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useEffect, useMemo, useRef } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -14,7 +14,7 @@ import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { ClientOperation } from '@dxos/plugin-client';
 import { useRegistry } from '@dxos/react-client/echo';
-import { Panel } from '@dxos/react-ui';
+import { Flex, Panel } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { graphActions, isPromptAction } from '@dxos/react-ui-menu';
 import { Merge } from '@dxos/util';
@@ -24,7 +24,8 @@ import { useChatProcessor, useChatServices, usePlatform, usePresets, useSelectio
 import { AssistantCapabilities } from '#types';
 
 export type ChatArticleProps = Merge<
-  AppSurface.ObjectSectionProps<ChatType.Chat> & {
+  Omit<AppSurface.ObjectSectionProps<ChatType.Chat>, 'subject'> & {
+    subject?: ChatType.Chat;
     companionTo?: Obj.Unknown;
   },
   Pick<ChatRootProps, 'debug' | 'onEvent' | 'onSubmit'>
@@ -41,10 +42,10 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     const atomRegistry = useCapability(Capabilities.AtomRegistry);
     const stateAtom = useCapability(AssistantCapabilities.State);
     // Transient (pre-submit) chats have no database; fall back to the companion's.
-    const db = Obj.getDatabase(chat) ?? (companionTo && Obj.getDatabase(companionTo));
+    const db = (chat && Obj.getDatabase(chat)) ?? (companionTo && Obj.getDatabase(companionTo));
     const runtime = useChatServices({ id: db?.spaceId });
 
-    const { preset, ...chatProps } = usePresets(settings);
+    const { preset, ...chatProps } = usePresets(settings, chat);
     const processor = useChatProcessor({ db, chat, preset, runtime, registry, settings });
     const getContext = useSelectionContext(companionTo);
 
@@ -69,7 +70,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
     // plank. Filtered to the prompt surface for the same reason the id is: an action on the chat
     // acts on the chat, and only some of those belong beside the text being composed.
     const { graph } = useAppGraph();
-    const actionNodeId = nodeId ?? Obj.getURI(chat);
+    const actionNodeId = nodeId ?? (chat && Obj.getURI(chat));
     const customActions = useMemo(
       () => Atom.make((get) => graphActions(graph, get, actionNodeId, { filter: isPromptAction })),
       [graph, actionNodeId],
@@ -100,10 +101,6 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
       }
     }, [processor, attendableId, atomRegistry, stateAtom]);
 
-    if (!processor) {
-      return null;
-    }
-
     return (
       <ChatComponent.Root
         chat={chat}
@@ -121,30 +118,40 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
           <Panel.Content asChild>
             <ChatComponent.Content>
               <div className='dx-expand relative'>
-                {/* Thread outline. */}
+                {/* Thread outline (Table of Contents). */}
                 {!mobile && <ChatComponent.Outline classNames='absolute left-0 top-1/2 -translate-y-1/2 z-10' />}
+
                 {/* Main thread. */}
                 <ChatComponent.Thread viewType={viewType} tailLines={4} onViewUsage={handleViewUsage} />
-                {/* Floating thread status: what the request is doing, above the counters it has run up. */}
-                {!mobile && viewType !== 'summary' && (
-                  <div data-testid='assistant.chat-status' className='absolute bottom-2 left-0 right-0'>
-                    <ChatComponent.StatusStack
-                      rowClassNames='dx-document px-4'
-                      pillClassNames='px-3 rounded-sm bg-group-surface'
-                    />
+
+                {/** Floating info. */}
+                {!mobile && (
+                  <div
+                    className='absolute bottom-0 left-0 right-0 dx-document grid grid-cols-[minmax(0,1fr)_auto] gap-2 px-3 pb-2'
+                    data-testid='assistant.chat-status'
+                  >
+                    <div className='col-span-2'>
+                      <ChatComponent.Queue classNames='flex justify-end' />
+                    </div>
+                    {/* `min-w-0` so the activity line truncates in its column instead of widening it. */}
+                    <Flex align='center' classNames='min-w-0'>
+                      <ChatComponent.Activity />
+                    </Flex>
+                    <Flex justify='end'>
+                      <ChatComponent.Status classNames='bg-input-surface rounded-sm' />
+                    </Flex>
                   </div>
                 )}
               </div>
-              <div className='dx-document flex flex-col px-4 pb-4'>
-                {/* On mobile (and in the summary view) the floating stack is dropped, so the activity
-                    line keeps its in-flow slot above the composer. */}
-                {(mobile || viewType === 'summary') && <ChatComponent.Activity classNames='shrink-0' />}
-                {/* Queued prompts the agent has not taken up yet, stacked right above the composer. */}
-                <ChatComponent.Queue classNames='shrink-0 items-end pb-1' />
+
+              <div className='dx-document flex flex-col px-2 pb-2'>
+                <div className='grid grid-cols-2'>{mobile && <ChatComponent.Activity />}</div>
+
                 {/* Composer and checklist in one: `Chat.Prompt` owns the disclosure between them. */}
                 <ChatComponent.Prompt
                   {...chatProps}
                   outline
+                  autoFocus={!companionTo}
                   attendableId={attendableId}
                   companionTo={companionTo}
                   customActions={customActions}

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { type PropsWithChildren } from 'react';
+import React, { type ComponentProps, type ComponentPropsWithRef, type PropsWithChildren } from 'react';
 import ReactMarkdown, { type Options as ReactMarkdownOptions } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -11,11 +11,20 @@ import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
 
 export type MarkdownViewProps = ThemedClassName<
-  PropsWithChildren<{
+  ComponentPropsWithRef<'div'> & {
     content?: string;
     components?: ReactMarkdownOptions['components'];
-  }>
->;
+    /**
+     * Render every block — headings, quotes, lists, code, tables — at the container's font size and
+     * line height with no vertical padding or margin, so each line is the same height. For a
+     * clamped preview (`line-clamp-*`), which otherwise cuts partway into a line.
+     */
+    uniformLineHeight?: boolean;
+  }
+> & {
+  /** Merged by a parent rendering this `asChild`; consumers use `classNames`. */
+  className?: string;
+};
 
 /**
  * Transforms markdown text into react elements.
@@ -23,16 +32,42 @@ export type MarkdownViewProps = ThemedClassName<
  * markdown -> remark -> [mdast -> remark plugins] -> [hast -> rehype plugins] -> components -> react elements.
  * Consider using @dxos/react-ui-editor.
  */
-export const MarkdownView = ({ classNames, children, components, content = '' }: MarkdownViewProps) => {
+// Spreads the rest so a parent rendering it `asChild` (a fieldset's helper text) lands its attributes here.
+export const MarkdownView = ({
+  classNames,
+  className,
+  children,
+  components,
+  content = '',
+  uniformLineHeight = false,
+  ...props
+}: MarkdownViewProps) => {
   return (
-    <div className={mx(classNames)}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{ ...defaultComponents, ...components }}>
+    <div {...props} className={mx(classNames, className)}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        skipHtml
+        components={{ ...defaultComponents, ...(uniformLineHeight && uniformComponents), ...components }}
+      >
         {content}
       </ReactMarkdown>
       {children}
     </div>
   );
 };
+
+/** The default link renderer, for a host that overrides `a` for some links and wants the rest as they were. */
+export const MarkdownLink = ({ children, href, ...props }: ComponentProps<'a'>) => (
+  <a
+    href={href}
+    className='text-primary-500 hover:text-primary-500' // TODO(burdon): Use link token.
+    target='_blank'
+    rel='noopener noreferrer'
+    {...props}
+  >
+    {children}
+  </a>
+);
 
 const defaultComponents: ReactMarkdownOptions['components'] = {
   h1: ({ children }) => {
@@ -55,17 +90,7 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
   p: ({ children }) => {
     return <div className='pt-1 pb-1'>{children}</div>;
   },
-  a: ({ children, href, ...props }) => (
-    <a
-      href={href}
-      className='text-primary-500 hover:text-primary-500' // TODO(burdon): Use link token.
-      target='_blank'
-      rel='noopener noreferrer'
-      {...props}
-    >
-      {children}
-    </a>
-  ),
+  a: (props) => <MarkdownLink {...props} />,
   // Hide broken images: many markdown sources reference remote URLs that
   // 404 or are blocked. Drop the element on load failure rather than
   // leaving the browser's broken-image placeholder.
@@ -80,12 +105,12 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
     return <MediaPlayer src={src} alt={alt} classNames='w-full' />;
   },
   ol: ({ children, ...props }) => (
-    <ol className='pt-1 pb-1 ps-6 leading-tight list-decimal' {...props}>
+    <ol className='ps-6 leading-tight list-decimal' {...props}>
       {children}
     </ol>
   ),
   ul: ({ children, ...props }) => (
-    <ul className='pt-1 pb-1 ps-6 leading-tight list-disc' {...props}>
+    <ul className='ps-6 leading-tight list-disc' {...props}>
       {children}
     </ul>
   ),
@@ -113,4 +138,29 @@ const defaultComponents: ReactMarkdownOptions['components'] = {
       </SyntaxHighlighter>
     );
   },
+};
+
+// Preflight already resets heading sizes and block margins, so each block only has to avoid adding
+// its own padding, font size or leading; horizontal insets and borders do not change a line's height.
+const uniformHeading = ({ children }: PropsWithChildren) => <div className='font-medium'>{children}</div>;
+
+const uniformComponents: ReactMarkdownOptions['components'] = {
+  h1: uniformHeading,
+  h2: uniformHeading,
+  h3: uniformHeading,
+  h4: uniformHeading,
+  h5: uniformHeading,
+  h6: uniformHeading,
+  p: ({ children }) => <div>{children}</div>,
+  blockquote: ({ children }) => <blockquote className='ps-2 border-l-2 border-accent-text'>{children}</blockquote>,
+  ul: ({ children }) => <ul className='ps-5 list-disc'>{children}</ul>,
+  ol: ({ children }) => <ol className='ps-5 list-decimal'>{children}</ol>,
+  pre: ({ children }) => <pre className='font-mono whitespace-pre-wrap'>{children}</pre>,
+  code: ({ children }) => <code className='font-mono text-info-text'>{children}</code>,
+  table: ({ children }) => <table className='border-collapse'>{children}</table>,
+  th: ({ children }) => <th className='p-0 pe-4 text-start font-medium'>{children}</th>,
+  td: ({ children }) => <td className='p-0 pe-4'>{children}</td>,
+  // A rule or an image has no line of text to align, so it gives way to its alt text or to nothing.
+  hr: () => null,
+  img: ({ alt }) => (alt ? <span>{alt}</span> : null),
 };

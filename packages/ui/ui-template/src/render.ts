@@ -19,7 +19,7 @@ import {
   resolve,
   useAliases,
   varNames,
-} from './model';
+} from './model.ts';
 
 const asText = (value: unknown): string => (value == null ? '' : String(value));
 

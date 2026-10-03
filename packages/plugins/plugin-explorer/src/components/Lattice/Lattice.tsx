@@ -9,7 +9,7 @@ import { Obj } from '@dxos/echo';
 import { type TreeNode, useContainerSize } from '@dxos/react-ui-graph';
 import { type SpaceGraphNode } from '@dxos/schema';
 
-import { getNodeFillForObject } from '../../util/node-color';
+import { getNodeFillForObject } from '../../util/node-color.ts';
 
 const TRANSITION_MS = 350;
 

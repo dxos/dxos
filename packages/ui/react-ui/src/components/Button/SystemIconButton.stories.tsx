@@ -8,10 +8,10 @@ import { expect, within } from 'storybook/test';
 
 import { translations } from '#translations';
 
-import { withTheme } from '../../testing';
-import { Toolbar } from '../Toolbar';
-import { Tooltip } from '../Tooltip';
-import { SystemIconButton } from './SystemIconButton';
+import { withTheme } from '../../testing/index.ts';
+import { Toolbar } from '../Toolbar/index.ts';
+import { Tooltip } from '../Tooltip/index.ts';
+import { SystemIconButton } from './SystemIconButton.tsx';
 
 const iconOnly = { iconOnly: true, variant: 'ghost' as const };
 

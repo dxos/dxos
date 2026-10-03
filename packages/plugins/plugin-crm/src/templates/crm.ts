@@ -13,6 +13,8 @@ import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilit
 
 import { CrmOperation } from '#types';
 
+import { CrmOperationError } from '../operations/errors.ts';
+
 const Input = Schema.Struct({
   mailbox: Ref.Ref(Mailbox.Mailbox).annotate({ title: 'Mailbox' }),
 });
@@ -28,7 +30,7 @@ export const crm: RoutineCapabilities.Template = {
   scaffold: ({ name, input }) =>
     Effect.gen(function* () {
       if (!Ref.isRef(input?.mailbox)) {
-        return yield* Effect.fail(new Error('CRM template requires a mailbox.'));
+        return yield* Effect.fail(new CrmOperationError({ message: 'CRM template requires a mailbox.' }));
       }
       const mailbox = yield* Database.resolve(input.mailbox, Mailbox.Mailbox);
 

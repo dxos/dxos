@@ -3,17 +3,17 @@
 //
 
 import * as Option from 'effect/Option';
+import * as Atom from 'effect/reactivity/Atom';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
 import { Trigger } from '@dxos/async';
 import { Annotation, Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { EchoTestBuilder } from '../testing';
-import { createSubscription } from './subscription';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { createSubscription } from './subscription.ts';
 
 describe('create subscription', () => {
   let builder: EchoTestBuilder;

@@ -16,7 +16,7 @@ import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
 import { withAttention } from '@dxos/react-ui-attention/testing';
-import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
 
@@ -25,7 +25,7 @@ import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 import type { DeckCapabilities } from '#types';
 
-import { Plank } from './Plank';
+import { Plank } from './Plank.tsx';
 
 random.seed(99);
 
@@ -40,18 +40,7 @@ const TestExtension = Capability.contribute(
   Surface.create({
     id: 'storyArticle',
     filter: Surface.makeFilter(AppSurface.Article),
-    component: ({ data: { subject } }) =>
-      subject ? (
-        <Syntax.Root data={subject}>
-          <Syntax.Content>
-            <Syntax.Viewport>
-              <Syntax.Code />
-            </Syntax.Viewport>
-          </Syntax.Content>
-        </Syntax.Root>
-      ) : (
-        <Loading />
-      ),
+    component: ({ data: { subject } }) => (subject ? <JsonHighlighter data={subject} /> : <Loading />),
   }),
 );
 

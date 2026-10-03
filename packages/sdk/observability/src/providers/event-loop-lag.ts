@@ -8,7 +8,7 @@ import { scheduleTaskInterval } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { log } from '@dxos/log';
 
-import type * as Observability from '../Observability';
+import type * as Observability from '../Observability.ts';
 
 const SECONDS = { unit: 's' } as const;
 

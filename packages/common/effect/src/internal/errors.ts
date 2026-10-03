@@ -3,108 +3,59 @@
 //
 
 import * as Cause from 'effect/Cause';
+import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as Option from 'effect/Option';
-import type * as Tracer from 'effect/Tracer';
+import type * as References from 'effect/References';
 
-import * as GlobalValue from './GlobalValue';
-
-const spanSymbol = Symbol.for('effect/SpanAnnotation');
-const spanToTrace = GlobalValue.globalValue('effect/Tracer/spanToTrace', () => new WeakMap());
 const locationRegex = /\((.*)\)/g;
+
+/** Frames up to the first effect runtime frame; runtime functions carry `~effect/*` names, except the caller's `~effect/Effect/args` thunk. */
+const userFrames = (lines: readonly string[]): string[] => {
+  const out = [];
+  for (const line of lines) {
+    if (/Generator\.next|~effect\/(?!Effect\/args\b)/.test(line)) {
+      break;
+    }
+    // The receiver the thunk is invoked on is a runtime detail (`Object`, `PrimitiveImpl`, ...), so
+    // the frame is matched on the thunk's own name.
+    out.push(
+      line.replace(/at (?:\S+\.)?~effect\/Effect\/args \((.*)\)$/, 'at $1').replace(' [as ~effect/Effect/args]', ''),
+    );
+  }
+  return out;
+};
 
 /**
  * Adds effect spans.
  * Removes effect internal functions.
- * Unwraps error proxy.
  */
-const prettyErrorStack = (error: any, appendStacks: string[] = []): any => {
+const prettyErrorStack = (error: any, frame?: References.StackFrame, appendStacks: string[] = []): any => {
   if (typeof error !== 'object' || error === null) {
     return error;
   }
 
-  const span = error[spanSymbol];
+  const lines: string[] = typeof error.stack === 'string' ? error.stack.split('\n') : [];
+  const stackStart = lines.findIndex((line) => line.startsWith('    at '));
+  const out = stackStart === -1 ? lines : [...lines.slice(0, stackStart), ...userFrames(lines.slice(stackStart))];
 
-  const lines = typeof error.stack === 'string' ? error.stack.split('\n') : [];
-  const out = [];
-
-  // Very hacky way to remove effect runtime internal stack frames.
-  let atStack = false,
-    inCore = false,
-    passedScheduler = false;
-  for (let i = 0; i < lines.length; i++) {
-    if (!atStack && !lines[i].startsWith('    at ')) {
-      out.push(lines[i]);
-      continue;
-    }
-    atStack = true;
-
-    if (lines[i].includes(' at new BaseEffectError') || lines[i].includes(' at new YieldableError')) {
-      i++;
-      continue;
-    }
-    if (lines[i].includes('Generator.next')) {
-      break;
-    }
-    if (lines[i].includes('effect_internal_function')) {
-      break;
-    }
-
-    const filename = lines[i].match(/\/([a-zA-Z0-9_\-.]+):\d+:\d+\)$/)?.[1];
-
-    if (!inCore && ['core-effect.ts'].includes(filename)) {
-      inCore = true;
-    }
-
-    if (inCore && !passedScheduler && ['Scheduler.ts'].includes(filename)) {
-      passedScheduler = true;
-      continue;
-    }
-
-    if (passedScheduler && !['Scheduler.ts'].includes(filename)) {
-      inCore = false;
-    }
-
-    if (inCore) {
-      continue;
-    }
-
-    out.push(
-      lines[i]
-        .replace(/at .*effect_instruction_i.*\((.*)\)/, 'at $1')
-        .replace(/EffectPrimitive\.\w+/, '<anonymous>')
-        .replace(/at Arguments\./, 'at '),
-    );
-  }
-
-  if (span) {
-    let current: Tracer.Span | Tracer.AnySpan | undefined = span;
-    let i = 0;
-    while (current && current._tag === 'Span' && i < 10) {
-      const stackFn = spanToTrace.get(current);
-      if (typeof stackFn === 'function') {
-        const stack = stackFn();
-        if (typeof stack === 'string') {
-          const locationMatchAll = stack.matchAll(locationRegex);
-          let match = false;
-          for (const [, location] of locationMatchAll) {
-            match = true;
-            out.push(`    at ${current.name} (${location})`);
-          }
-          if (!match) {
-            out.push(`    at ${current.name} (${stack.replace(/^at /, '')})`);
-          }
-        } else {
-          out.push(`    at ${current.name}`);
-        }
-      } else {
-        out.push(`    at ${current.name}`);
+  let current = frame;
+  for (let i = 0; current && i < 10; i++) {
+    const stack = current.stack();
+    if (stack) {
+      let match = false;
+      for (const [, location] of stack.matchAll(locationRegex)) {
+        match = true;
+        out.push(`    at ${current.name} (${location})`);
       }
-      current = Option.getOrUndefined(current.parent);
-      i++;
+      if (!match) {
+        out.push(`    at ${current.name} (${stack.replace(/^at /, '')})`);
+      }
+    } else {
+      out.push(`    at ${current.name}`);
     }
+    current = current.parent;
   }
 
   out.push(...appendStacks);
@@ -139,20 +90,20 @@ export const causeToError = (cause: Cause.Cause<any>): Error => {
   } else if (Cause.hasInterruptsOnly(cause)) {
     return new Error('Fiber was interrupted');
   } else {
-    const errors = [
-      ...cause.reasons.filter(Cause.isFailReason).map((reason) => reason.error),
-      ...cause.reasons.filter(Cause.isDieReason).map((reason) => reason.defect),
-    ];
-
     const getStackFrames = (): string[] => {
       // Bun requies the target object for `captureStackTrace` to be an Error.
       const err = new Error();
       Error.captureStackTrace(err, causeToError);
-      return err.stack!.split('\n').slice(1);
+      return userFrames(err.stack!.split('\n').slice(1));
     };
 
     const stackFrames = getStackFrames();
-    const newErrors = errors.map((error) => prettyErrorStack(error, stackFrames));
+    const pretty = (error: unknown, reason: Cause.Reason<unknown>) =>
+      prettyErrorStack(error, Context.getOrUndefined(Cause.reasonAnnotations(reason), Cause.StackTrace), stackFrames);
+    const newErrors = [
+      ...cause.reasons.filter(Cause.isFailReason).map((reason) => pretty(reason.error, reason)),
+      ...cause.reasons.filter(Cause.isDieReason).map((reason) => pretty(reason.defect, reason)),
+    ];
 
     if (newErrors.length === 1) {
       return newErrors[0];

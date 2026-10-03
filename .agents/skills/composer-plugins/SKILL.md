@@ -143,7 +143,7 @@ both required before the plugin's first PR merges:
    be falsifiable against a dirty fixture) and Rule 7 (`before` / `test` /
    `after`).
 2. **A recorded demo of that flow** against the running app, per the
-   `recording-demos` skill: drive the flow's `do:` steps one gesture at a time,
+   `autocue` skill: drive the flow's `do:` steps one gesture at a time,
    caption each step with its `do:` text verbatim, and judge `expect:` from the
    screen. Attach the `.webm` to the conversation and commit a contact sheet or
    stills for the PR body — never the video.
@@ -158,7 +158,7 @@ disagree, that is a finding — report it, and fix whichever is wrong.
 - Use `/superpowers:writing-plans` (Subagent-Driven) for non-trivial plugin work.
 - **Show the change running, in the PR.** A plugin PR is a change to what the app renders, so a
   reviewer should not have to build it to see it. Record the flow or take the stills with
-  **recording-demos**, then publish them per **hosting-artifacts**
+  **autocue**, then publish them per **hosting-artifacts**
   (`.agents/skills/hosting-artifacts/SKILL.md`) and link them from the PR body — never commit a video
   or a screenshot to make it visible. For a fix to rendered output, a before/after pair from one build
   (see **composer-ui**) beats a clip.
@@ -645,6 +645,24 @@ pnpm exec dx-trace-imports --export ./plugin --to "{react,react-dom}" \
 
 See: `plugin-map/src/capabilities/node.ts`, `plugin-sheet/src/operations/node.ts`,
 `plugin-client/package.json` (conditioned `#capabilities`), `plugin-map/moon.yml`
+
+### Runtime conditions
+
+`environments` on a module lists every runtime condition it loads in: `browser`, `tauri`, `node`,
+`workerd`. `dx-plugin gen` slices one barrel per condition by a single rule (a module is carried when
+its list names the condition or it has no list) and writes `#capabilities` with no `default`. Tools
+take the first key they match, so `browser` goes last: workerd and tauri builds also match it.
+
+- Maker families set the usual list: UI families `['browser', 'tauri']`, headless families all four.
+  A call site that restates a list names every runtime it wants, `tauri` included.
+- A module that only works inside the Tauri shell is `['tauri']` (`LocalLauncher`).
+- A plugin loaded under a runtime needs that condition in its map, or `#capabilities` fails to resolve.
+  A UI-only plugin has no `node` key, so its plugin tests run in browser mode (`plugin-mermaid`).
+
+Only composer-app's native bundles resolve `tauri` (`bundle` with `DX_TAURI=true`, or `tauri dev`
+via `TAURI_ENV_PLATFORM`).
+
+See: `plugin-sandbox/src/capabilities/index.ts` (`LocalLauncher`), `app-framework/src/plugin-cli/generate.ts`
 
 ## React Surface
 

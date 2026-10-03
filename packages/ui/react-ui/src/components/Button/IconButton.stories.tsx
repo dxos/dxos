@@ -3,17 +3,17 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { type ReactNode, useState } from 'react';
+import React, { Fragment, type ReactNode, useState } from 'react';
 
 import { type Density } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
-import { withTheme } from '../../testing';
-import { Tooltip } from '../Tooltip';
-import { Button } from './Button';
-import { IconButton, type IconButtonProps } from './IconButton';
-import { SystemIconButton } from './SystemIconButton';
+import { withTheme } from '../../testing/index.ts';
+import { Tooltip } from '../Tooltip/index.ts';
+import { Button } from './Button.tsx';
+import { IconButton, type IconButtonProps } from './IconButton.tsx';
+import { SystemIconButton } from './SystemIconButton.tsx';
 
 const DefaultStory = (props: IconButtonProps) => {
   return (
@@ -43,7 +43,7 @@ const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
         <div className='text-xs text-subdued uppercase'>label + icon</div>
         <div className='text-xs text-subdued uppercase'>Button (reference)</div>
         {densities.map((density) => (
-          <React.Fragment key={density}>
+          <Fragment key={density}>
             <div className='text-xs font-mono'>density={density}</div>
             <IconButton
               square
@@ -55,7 +55,7 @@ const DensitiesStory = (props: Omit<IconButtonProps, 'density' | 'size'>) => {
             />
             <IconButton classNames='w-fit' density={density} size={densityIconSize[density]} {...props} />
             <Button density={density}>{props.label}</Button>
-          </React.Fragment>
+          </Fragment>
         ))}
       </div>
     </Tooltip.Provider>
@@ -168,5 +168,26 @@ export const System: Story = {
   render: SystemStory,
   args: {
     label: 'System',
+  },
+};
+
+const hues = ['neutral', 'red', 'amber', 'green', 'blue', 'purple', 'info', 'success', 'warning', 'error'] as const;
+
+const TagStory = () => (
+  <Tooltip.Provider>
+    <div className='flex flex-wrap gap-2 items-center'>
+      {hues.map((hue) => (
+        <IconButton key={hue} variant='tag' hue={hue} density='sm' icon='ph--copy--regular' iconEnd label={hue} />
+      ))}
+      <IconButton variant='tag' density='sm' iconOnly icon='ph--x--regular' label='Remove' />
+    </div>
+  </Tooltip.Provider>
+);
+
+/** The `tag` variant: a clickable `dx-tag`, coloured by `hue`. */
+export const Tag: Story = {
+  render: TagStory,
+  args: {
+    label: 'Tag',
   },
 };

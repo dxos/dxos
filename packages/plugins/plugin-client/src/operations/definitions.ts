@@ -104,6 +104,8 @@ export const ResetStorage = Operation.make({
   services: [Capability.Service],
   input: Schema.Struct({
     mode: Schema.optional(Schema.String),
+    /** Device invitation to accept once the identity is deleted (`join-new-identity` only). */
+    invitationCode: Schema.optional(Schema.String),
   }),
   output: Schema.Void,
 });
@@ -170,7 +172,7 @@ export const RevokeRecoveryCredential = Operation.make({
      * `PublicKey.from` silently drops non-hex characters rather than rejecting them, so an
      * unvalidated string would decode to some other key instead of failing.
      */
-    lookupKey: Schema.String.check(Schema.isPattern(/^[0-9a-fA-F]{64}$/)),
+    lookupKey: Schema.String.check(Schema.isPattern(/^[0-9a-fA-F]{64}$/u)),
   }),
   output: Schema.Void,
 });

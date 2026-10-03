@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { AssistantSettings } from './AssistantSettings';
+import { AssistantSettings } from './AssistantSettings.tsx';
 
 const meta = {
   title: 'plugins/plugin-assistant/containers/AssistantSettings',

@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './common';
-export * from './load';
-export * from './upload';
-export * from './wnfs-url';
+export * from './common.ts';
+export * from './load.ts';
+export * from './upload.ts';
+export * from './wnfs-url.ts';

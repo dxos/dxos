@@ -1,6 +1,6 @@
 {
   "name": "@dxos/react-ui-attention",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Signifier components and providers for attention system.",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -35,15 +35,13 @@
     "src"
   ],
   "dependencies": {
+    "@ark-ui/react": "catalog:",
     "@dxos/invariant": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/react-focus": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/ui-types": "workspace:*",
     "@effect/atom-react": "catalog:",
-    "@radix-ui/react-context": "catalog:",
-    "@radix-ui/react-primitive": "catalog:",
-    "@radix-ui/react-slot": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {

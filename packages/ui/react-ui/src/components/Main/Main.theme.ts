@@ -5,7 +5,7 @@
 import { mx } from '@dxos/ui-theme';
 import { type ComponentFunction } from '@dxos/ui-types';
 
-import { mainPaddingTransitions } from './constants';
+import { mainPaddingTransitions } from './constants.ts';
 
 const padding = 'dx-main-content-padding';
 
@@ -18,6 +18,7 @@ export type MainStyleProps = Partial<{
 // aspect inside it (bars, wells, hover/current rows) derives from.
 const content: ComponentFunction<MainStyleProps> = ({ bounce }, ...etc) =>
   mx(
+    'dx-main-content',
     padding,
     mainPaddingTransitions,
     bounce && 'dx-main-bounce-layout',
@@ -31,8 +32,19 @@ const sidebar: ComponentFunction<MainStyleProps> = (_, ...etc) =>
 
 const overlay: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-overlay', ...etc);
 
+const swipeArea: ComponentFunction<MainStyleProps> = (_, ...etc) =>
+  mx('dx-drawer__swipe-area', 'dx-main-swipe-area', ...etc);
+
+const drawer: ComponentFunction<MainStyleProps> = (_, ...etc) =>
+  mx('dx-main-drawer', 'dx-focus-ring-inset-over-all', ...etc);
+
+const drawerHandle: ComponentFunction<MainStyleProps> = (_, ...etc) => mx('dx-main-drawer-handle', ...etc);
+
 export const mainTheme = {
   content,
   sidebar,
   overlay,
+  swipeArea,
+  drawer,
+  drawerHandle,
 };

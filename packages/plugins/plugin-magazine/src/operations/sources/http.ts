@@ -3,14 +3,14 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
+import * as HttpClientResponse from 'effect/http/HttpClientResponse';
 import * as Schedule from 'effect/Schedule';
 import type * as Schema from 'effect/Schema';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
-import * as HttpClientResponse from 'effect/unstable/http/HttpClientResponse';
 
-import { applyCorsProxy } from './cors';
-import { FeedFetchError } from './feed-fetcher';
+import { applyCorsProxy } from './cors.ts';
+import { FeedFetchError } from './feed-fetcher.ts';
 
 // Short, bounded retry so a transient hiccup doesn't fail a fetch, without stalling the form.
 const retryPolicy = Schedule.exponential('500 millis').pipe(Schedule.upTo({ times: 2 }));

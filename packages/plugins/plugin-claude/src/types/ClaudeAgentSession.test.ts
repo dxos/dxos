@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import * as ClaudeAgentSession from './ClaudeAgentSession';
+import * as ClaudeAgentSession from './ClaudeAgentSession.ts';
 
 describe('the variable a session credential binds', () => {
   test('an ordinary token name is accepted', ({ expect }) => {

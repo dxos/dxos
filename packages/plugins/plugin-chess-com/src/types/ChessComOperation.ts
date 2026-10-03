@@ -9,7 +9,7 @@ import * as Schema from 'effect/Schema';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Ref } from '@dxos/echo';
 
-import * as ChessComAccount from './ChessComAccount';
+import * as ChessComAccount from './ChessComAccount.ts';
 
 /** Removes all synced games and chess state from the account feed. */
 export const ClearSyncedGames = Operation.make({

@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import * as Operation from './Operation';
+import * as Operation from './Operation.ts';
 
 // TODO(wittjosiah): Currently just Operation. Widen to a union (Operation | ComputeGraph | …) once the
 // dispatcher/EDGE can run non-Operation runnables as a Process.

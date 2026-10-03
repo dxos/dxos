@@ -11,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 
 import { SheetUtil } from '#types';
 
-import { useSheetContext } from '../SheetRoot';
+import { useSheetContext } from '../SheetRoot/index.ts';
 
 export type SheetStatusbarProps = {};
 

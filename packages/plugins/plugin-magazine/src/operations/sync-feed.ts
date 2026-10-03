@@ -12,7 +12,7 @@ import { invariant } from '@dxos/invariant';
 
 import { FeedOperation, Subscription } from '#types';
 
-import { type FeedFetcher, browserCorsProxy, fetchRss, fetchStandardSite } from './sources';
+import { type FeedFetcher, browserCorsProxy, fetchRss, fetchStandardSite } from './sources/index.ts';
 
 /** Stable dedup key for a {@link Subscription.Post}. Both fields are optional, but every current fetcher populates `guid` (RSS falls back to `link`, Standard.site uses the record AT-URI). */
 const postKey = (post: { guid?: string; link?: string }): string | undefined => post.guid ?? post.link;
@@ -139,7 +139,7 @@ const handler: Operation.WithHandler<typeof FeedOperation.SyncFeed> = FeedOperat
             guid: post.guid,
           }),
         );
-        yield* Feed.append(echoFeed, postObjects);
+        yield* Feed.append(echoFeed, postObjects).pipe(Effect.provideService(Database.Origin, 'system'));
 
         // Advance cursor to the newest post.
         const newestGuid = posts[0]?.guid;

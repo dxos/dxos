@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './SegmentStack';
+export * from './SegmentStack.tsx';

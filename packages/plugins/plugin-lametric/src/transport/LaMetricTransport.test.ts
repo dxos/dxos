@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type FetchLike, discoverWidgetId, selectTransport } from './LaMetricTransport';
+import { type FetchLike, discoverWidgetId, selectTransport } from './LaMetricTransport.ts';
 
 const ok: FetchLike = async () => ({ ok: true, status: 200 });
 

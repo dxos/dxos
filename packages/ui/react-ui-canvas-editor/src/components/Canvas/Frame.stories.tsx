@@ -6,12 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
 import { Canvas } from '@dxos/react-ui-canvas';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
-import { createRectangle } from '../../shapes';
-import { Editor } from '../Editor';
-import { Shapes, type ShapesProps } from './Shapes';
+import { createRectangle } from '../../shapes/index.ts';
+import { Editor } from '../Editor/index.ts';
+import { Shapes, type ShapesProps } from './Shapes.tsx';
 
 const DefaultStory = ({ layout }: ShapesProps) => {
   return (

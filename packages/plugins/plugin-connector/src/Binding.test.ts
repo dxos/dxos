@@ -6,9 +6,9 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -34,9 +34,9 @@ import { Expando } from '@dxos/schema';
 
 import { ConnectorSpec } from '#types';
 
-import * as Binding from './Binding';
-import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync';
-import { ConnectionAuthExpiredError, TargetAccountMismatchError } from './errors';
+import * as Binding from './Binding.ts';
+import { autoSyncConnection } from './capabilities/connector-coordinator/auto-sync.ts';
+import { ConnectionAuthExpiredError, TargetAccountMismatchError } from './errors.ts';
 /**
  * The binding namespace: pairing an object with the feed a connection syncs into it, the account that
  * gates a resume, the schedule that drives it, and what a disconnect leaves behind.
@@ -1003,7 +1003,7 @@ const initSpace = async (harness: Awaited<ReturnType<typeof createComposerTestAp
   const { defaultSpace } = await EffectEx.runAndForwardErrors(
     initializeIdentity(harness.get(ClientCapabilities.Client)),
   );
-  await harness.waitForEvent(ClientEvents.SpacesReady);
+  await harness.waitForEvent(ClientEvents.SpacesAvailable);
   return defaultSpace.db;
 };
 

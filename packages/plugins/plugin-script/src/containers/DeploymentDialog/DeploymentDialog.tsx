@@ -13,7 +13,7 @@ import { Button, Dialog, useTranslation } from '@dxos/react-ui';
 import { useCreateAndDeployScriptTemplates } from '#hooks';
 import { meta } from '#meta';
 
-import { type Template } from '../../templates';
+import { type Template } from '../../templates/index.ts';
 
 // TODO(ZaymonFC):
 //  - Show activity and feedback to the user.

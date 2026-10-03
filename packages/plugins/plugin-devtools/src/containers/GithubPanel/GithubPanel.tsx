@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { GithubComponent } from './GithubComponent';
+import { GithubComponent } from './GithubComponent.tsx';
 
 export const GithubPanel = () => (
   <GithubComponent.Root>

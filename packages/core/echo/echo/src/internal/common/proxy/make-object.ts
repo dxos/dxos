@@ -6,20 +6,20 @@ import type * as Schema from 'effect/Schema';
 
 import { EntityId } from '@dxos/keys';
 
-import { getTypeAnnotation } from '../../Annotation/annotations';
-import { type AnyProperties, KindId, ParentId, SchemaId, SchemaKindId, StaticTypeSchemaSlot } from '../types';
-import { type EntityMeta, EntityMetaSchema } from '../types/meta';
-import { MetaId } from '../types/model-symbols';
-import { defineHiddenProperty } from './define-hidden-property';
-import { attachTypedJsonSerializer } from './json-serializer';
-import { createProxy, getProxyTarget, isProxy, isValidProxyTarget } from './proxy-utils';
+import { getTypeAnnotation } from '../../Annotation/annotations.ts';
+import { type AnyProperties, KindId, ParentId, SchemaId, SchemaKindId, StaticTypeSchemaSlot } from '../types/index.ts';
+import { type EntityMeta, EntityMetaSchema } from '../types/meta.ts';
+import { MetaId } from '../types/model-symbols.ts';
+import { defineHiddenProperty } from './define-hidden-property.ts';
+import { attachTypedJsonSerializer } from './json-serializer.ts';
+import { createProxy, getProxyTarget, isProxy, isValidProxyTarget } from './proxy-utils.ts';
 import {
   TypedReactiveHandler,
   TypeSource,
   prepareDecodedTypedTarget,
   prepareTypedTarget,
   setMetaOwner,
-} from './typed-handler';
+} from './typed-handler.ts';
 
 /**
  *

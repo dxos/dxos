@@ -1,0 +1,121 @@
+//
+// Copyright 2023 DXOS.org
+//
+
+import React, { useMemo, useRef } from 'react';
+
+import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
+import { type PeerState } from '@dxos/protocols/buf/dxos/mesh/presence_pb';
+import { type Space, type SpaceMember, useMembers } from '@dxos/react-client/echo';
+import { useIdentity } from '@dxos/react-client/halo';
+import { Panel, Toolbar } from '@dxos/react-ui';
+import { GraphForceProjector, type GraphLayoutNode, SVG, type SVGContext } from '@dxos/react-ui-graph';
+
+import { DataSpaceSelector } from '../../../../containers/index.ts';
+import { useDevtoolsState } from '../../../../hooks/index.ts';
+import { type ArticleProps } from '../../types.ts';
+
+export type NetworkGraphNode = {
+  id: string;
+  peer?: PeerState;
+  member?: SpaceMember;
+};
+
+// TODO(burdon): Update to use new GraphModel.
+
+const _classes = {
+  default: '[&>circle]:fill-zinc-300 [&>circle]:stroke-zinc-400 [&>circle]:stroke-2',
+  nodes: [
+    '[&>circle]:fill-red-300',
+    '[&>circle]:fill-green-300',
+    '[&>circle]:fill-blue-300',
+    '[&>circle]:fill-indigo-300',
+    '[&>circle]:fill-teal-300',
+    '[&>circle]:fill-cyan-300',
+    '[&>circle]:fill-orange-300',
+  ],
+};
+
+export const NetworkArticle = ({ role, ...props }: ArticleProps & { space?: Space }) => {
+  const state = useDevtoolsState();
+  const space = props.space ?? state.space;
+  const identity = useIdentity();
+
+  const isMe = (node: NetworkGraphNode | undefined) =>
+    identity ? toPublicKey(node?.member?.identity?.identityKey)?.equals(requirePublicKey(identity.identityKey)) : false;
+
+  const members = useMembers(space?.key);
+
+  const context = useRef<SVGContext>(null);
+  const projector = useMemo<GraphForceProjector | undefined>(
+    () =>
+      context.current
+        ? new GraphForceProjector(context.current, {
+            forces: {
+              manyBody: {
+                strength: -160,
+              },
+              link: {
+                distance: 120,
+                iterations: 5,
+              },
+              radial: {
+                radius: 60,
+                strength: 0.2,
+              },
+            },
+            attributes: {
+              radius: (node: GraphLayoutNode<NetworkGraphNode>) => (isMe(node.data!) ? 24 : 16),
+            },
+          })
+        : undefined,
+    [context],
+  );
+
+  // TODO(dmaretskyi): Highlight our direct connections.
+  // TODO(dmaretskyi): Visualize data flowing: line thickness, running ticks, text stats.
+  // TODO(dmaretskyi): Show connections that are forming.
+  return (
+    <Panel.Root role={role}>
+      {!props.space && (
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <DataSpaceSelector />
+          </Toolbar.Root>
+        </Panel.Toolbar>
+      )}
+      <Panel.Content>
+        <SVG.Root ref={context}>
+          <SVG.Markers />
+          <SVG.Graph
+            drag
+            arrows
+            projector={projector}
+            labels={{
+              text: (node: GraphLayoutNode<NetworkGraphNode>, highlight) => {
+                const member = node.data?.member;
+                const identity =
+                  member?.identity?.profile?.displayName ?? toPublicKey(member?.identity?.identityKey)?.truncate();
+
+                const peer = toPublicKey(node.data!.peer?.peerId)?.truncate();
+                return `${peer} [${identity}]`;
+              },
+            }}
+            // TODO(burdon): Fix classes.
+            // attributes={{
+            //   node: (node: GraphLayoutNode<NetworkGraphNode>) => {
+            //     const key = node.data?.member?.identity.identityKey ?? node.data?.peer?.peerId;
+            //     return {
+            //       class: mx(
+            //         'font-mono',
+            //         isMe(node.data) ? classes.default : classes.nodes[key?.getInsecureHash(classes.nodes.length) ?? 0],
+            //       ),
+            //     };
+            //   },
+            // }}
+          />
+        </SVG.Root>
+      </Panel.Content>
+    </Panel.Root>
+  );
+};

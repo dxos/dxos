@@ -4,16 +4,16 @@
 
 import { describe, it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Predicate from 'effect/Predicate';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as InboxResolver from '@dxos/extractor-lib';
 
 import { Jmap, JmapMail } from '#apis';
 import { JmapCredentials } from '#services';
 
-import { mapEmail } from '../mapper';
+import { mapEmail } from '../mapper.ts';
 
 /**
  * Live JMAP test against a real server (Fastmail by default). Gated on `JMAP_TOKEN`, mirroring the

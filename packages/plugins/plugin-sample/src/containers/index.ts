@@ -9,7 +9,7 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const SampleArticle: ComponentType<any> = lazy(() => import('./SampleArticle'));
-export const SampleProperties: ComponentType<any> = lazy(() => import('./SampleProperties'));
-export const SampleCompanionPanel: ComponentType<any> = lazy(() => import('./SampleCompanionPanel'));
-export const SampleDeckCompanion: ComponentType<any> = lazy(() => import('./SampleDeckCompanion'));
+export const SampleArticle: ComponentType<any> = lazy(() => import('./SampleArticle.tsx'));
+export const SampleProperties: ComponentType<any> = lazy(() => import('./SampleProperties.tsx'));
+export const SampleCompanionPanel: ComponentType<any> = lazy(() => import('./SampleCompanionPanel.tsx'));
+export const SampleDeckCompanion: ComponentType<any> = lazy(() => import('./SampleDeckCompanion.tsx'));

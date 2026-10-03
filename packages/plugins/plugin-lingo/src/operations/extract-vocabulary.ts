@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 
 import { Language, LingoOperation } from '#types';
 
-import { addWord, lastText, normalizeTerm, parseJsonArray } from '../util';
+import { addWord, lastText, normalizeTerm, parseJsonArray } from '../util/index.ts';
 
 const DEFAULT_LIMIT = 25;
 
@@ -84,7 +84,7 @@ const handler: Operation.WithHandler<typeof LingoOperation.ExtractVocabulary> = 
       },
       Effect.provide(
         Layer.mergeAll(
-          AiService.model('com.anthropic.model.claude-sonnet-5.default'),
+          AiService.languageModel('com.anthropic.model.claude-sonnet-5.default'),
           ToolResolverService.layerEmpty,
           ToolExecutionService.layerEmpty,
           Trace.writerLayerNoop,

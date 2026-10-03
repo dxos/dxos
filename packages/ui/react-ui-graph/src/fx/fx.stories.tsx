@@ -10,10 +10,10 @@ import React, { type FC, useEffect, useMemo, useRef } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { SVG } from '../components';
-import { useGrid, useZoom } from '../hooks';
-import { type D3Callable } from '../util';
-import { Pulsar } from './pulsar';
+import { SVG } from '../components/index.ts';
+import { useGrid, useZoom } from '../hooks/index.ts';
+import { type D3Callable } from '../util/index.ts';
+import { Pulsar } from './pulsar.ts';
 
 type Datum = {
   x: number;

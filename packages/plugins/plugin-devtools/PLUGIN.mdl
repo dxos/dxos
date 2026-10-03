@@ -4,7 +4,7 @@ name: DevtoolsPlugin
 version: 0.1.0
 ---
 
-Developer inspector plugin for `DXOS` Composer — structured devtools panels for Client/HALO/ECHO/Mesh/EDGE subsystems, an app-graph inspector, and a tools explorer. Debugging utilities (object generation, wireframe overlays, per-object inspection, stats) live in the sibling `@dxos/plugin-debug`.
+Developer inspector plugin for `DXOS` Composer — structured devtools panels for Client/HALO/ECHO/Mesh/EDGE subsystems, an app-graph inspector, and a tools explorer. The tree attaches to the hidden `root/debug` app-graph category (`AppNodeMatcher.whenDebugGroup`) and is reached only through the floating debug panel that `@dxos/plugin-debug` renders from the status bar — never the main navtree, the deck, or a URL. Debugging utilities (object generation, wireframe overlays, per-object inspection, stats) live in the sibling `@dxos/plugin-debug`.
 
 ## Extensions
 
@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 
 ## Types
 
@@ -65,17 +65,30 @@ component DebugStatus
 
 ```mdl
 component DevtoolsOverviewContainer
-  desc: Deck-companion panel that provides quick access to all devtools sections via a categorised link list.
+  desc: |
+    The "Stats" deck companion: polls the client's stats once (`useStats`) and renders `StatsPanel`
+    (`@dxos/devtools`) — a toolbar with refresh and live toggle over a scrolling stack of cards —
+    with one `AppSurface.DevtoolsOverview` surface as its children, passing
+    `DevtoolsCardData { stats, surfaceProfilerStats, onClearSurfaceProfiler }`. Every card is a
+    surface on that role ordered by `position`: memory, network, EDGE, performance, swarm
+    announcements, surfaces (profiler), database, replicator, messages, queries, sync, frame rate
+    (0–12), then plugin-debug's compartment cards (20) and other contributors (e.g.
+    plugin-calls). A card is a `StatCard` (`@dxos/devtools`): a `Card.Header` with an icon,
+    title, figure and one control, over compact `Card.Row`s whose leading gutter carries a status
+    icon and whose trailing gutter carries a control.
   layout: |
-    ┌─────────────────────────────┐
-    │  Client  ▸ Config / Storage │
-    │            Logs / Diag      │
-    │  HALO    ▸ Identity / Keys  │
-    │  ECHO    ▸ Spaces / Feeds   │
-    │            Objects / Schema │
-    │  Mesh    ▸ Signal / Swarm   │
-    │  EDGE    ▸ Dashboard / …    │
-    └─────────────────────────────┘
+    ┌───────────────────────────────┐
+    │ Stats            ↻  ▶         │
+    ├───────────────────────────────┤
+    │ ┌ ▣ Memory ──────────────────┐│
+    │ │   Used heap        42.1 MB ││
+    │ │ ⚠ Used of available    46% ││
+    │ └────────────────────────────┘│
+    │ ┌ ☁ EDGE   healthy        ⋮ ┐│
+    │ │ ✓ Websocket      connected ││
+    │ └────────────────────────────┘│
+    │ …                             │
+    └───────────────────────────────┘
 ```
 
 ```mdl
@@ -138,30 +151,30 @@ The following components are thin wrappers around `@dxos/devtools` panel compone
 
 | Component              | Devtools node              | Displays                                |
 |------------------------|----------------------------|-----------------------------------------|
-| ConfigPanel            | Client.Config              | Vault config JSON viewer                |
-| StoragePanel           | Client.Storage             | Local storage browser                   |
-| LoggingPanel           | Client.Logs                | Live log stream; download via logStore  |
-| DiagnosticsPanel       | Client.Diagnostics         | Client health / metric charts           |
-| IdentityPanel          | Halo.Identity              | Local identity key + device list        |
-| DeviceListPanel        | Halo.Devices               | All devices paired with this identity   |
-| KeyringPanel           | Halo.Keyring               | Raw keyring entries                     |
-| CredentialsPanel       | Halo.Credentials           | Credentials held in the active space    |
-| SpaceListPanel         | Echo.Spaces                | All spaces with state + select action   |
-| SpaceInfoPanel         | Echo.Space                 | Selected space feeds / pipelines        |
-| FeedsPanel             | Echo.Feeds                 | Feed entries for the active space       |
-| ObjectsPanel           | Echo.Objects               | All objects in the active space         |
-| SchemaPanel            | Echo.Schema                | Schemas registered in the active space  |
-| AutomergePanel         | Echo.Automerge             | Automerge document internals            |
-| QueuesPanel            | Echo.Queues                | Pending queue items                     |
-| MembersPanel           | Echo.Members               | Space members with last-seen            |
-| MetadataPanel          | Echo.Metadata              | Space/feed metadata blobs               |
-| SignalPanel            | Mesh.Signal                | Signal-server connection state          |
-| SwarmPanel             | Mesh.Swarm                 | Active swarm peers                      |
-| NetworkPanel           | Mesh.Network               | Full network topology for active space  |
-| EdgeDashboardPanel     | Edge.Dashboard             | EDGE node health / worker stats         |
-| WorkflowPanel          | Edge.Workflows             | Workflow definitions in active space    |
+| ConfigArticle            | Client.Config              | Vault config JSON viewer                |
+| StorageArticle           | Client.Storage             | Local storage browser                   |
+| LoggingArticle           | Client.Logs                | Live log stream; download via logStore  |
+| DiagnosticsArticle       | Client.Diagnostics         | Client health / metric charts           |
+| IdentityArticle          | Halo.Identity              | Local identity key + device list        |
+| DeviceListArticle        | Halo.Devices               | All devices paired with this identity   |
+| KeyringArticle           | Halo.Keyring               | Raw keyring entries                     |
+| CredentialsArticle       | Halo.Credentials           | Credentials held in the active space    |
+| SpaceListArticle         | Echo.Spaces                | All spaces with state + select action   |
+| SpaceInfoArticle         | Echo.Space                 | Selected space feeds / pipelines        |
+| FeedsArticle             | Echo.Feeds                 | Feed entries for the active space       |
+| ObjectsArticle           | Echo.Objects               | All objects in the active space         |
+| SchemaArticle            | Echo.Schema                | Schemas registered in the active space  |
+| AutomergeArticle         | Echo.Automerge             | Automerge document internals            |
+| QueuesArticle            | Echo.Queues                | Pending queue items                     |
+| MembersArticle           | Echo.Members               | Space members with last-seen            |
+| MetadataArticle          | Echo.Metadata              | Space/feed metadata blobs               |
+| SignalArticle            | Mesh.Signal                | Signal-server connection state          |
+| SwarmArticle             | Mesh.Swarm                 | Active swarm peers                      |
+| NetworkArticle           | Mesh.Network               | Full network topology for active space  |
+| EdgeDashboardArticle     | Edge.Dashboard             | EDGE node health / worker stats         |
+| WorkflowArticle          | Edge.Workflows             | Workflow definitions in active space    |
 | InvocationTraceContainer | Edge.Traces              | Invocation trace timeline from feed     |
-| TestingPanel           | Edge.Testing               | Integration test harness for EDGE       |
+| TestingArticle           | Edge.Testing               | Integration test harness for EDGE       |
 | ToolsExplorer          | ToolsExplorer              | MCP-backed tools explorer               |
 
 ## Operations
@@ -174,12 +187,14 @@ No first-party operations are defined by DebugPlugin. The plugin invokes `SpaceO
 feat F-1: Devtools Graph Node
 
   req F-1.1:
-    when: DebugPlugin is loaded
-    then: a "Devtools" node appears pinned at the end of each root and space in the nav graph
+    when: DevtoolsPlugin is loaded
+    then: a "DevTools" branch (`root/debug/devtools`) appears under the hidden `root/debug` category, listed in the floating debug panel's sidebar after Console and Logs
 
-  req F-1.2: The Devtools node contains sub-trees for Client, HALO, ECHO, Mesh, and EDGE categories.
-  req F-1.3: An app-graph sub-node renders DebugGraph rooted at the current space or root.
+  req F-1.2: The DevTools branch contains sub-trees for Client, HALO, ECHO, MESH, and EDGE categories, plus App Graph, SDK Explorer, and CLI pages.
+  req F-1.3: An app-graph sub-node renders DebugGraph rooted at the graph root.
   req F-1.4: A tools-explorer sub-node renders ToolsExplorer connected to the MCP introspect service.
+  req F-1.5: No devtools node declares a URL binding; selecting one renders its article in the panel and leaves `window.location` unchanged.
+  req F-1.6: A space-scoped inspector resolves the active workspace's space at render time; no space travels in node data.
 ```
 
 ```mdl
@@ -206,18 +221,18 @@ feat F-3: Space Object Explorer
 feat F-4: Devtools Overview Companion
 
   req F-4.1:
-    when: user opens the "Devtools" deck companion
-    then: DevtoolsOverviewContainer renders a categorised link list to all devtools panels
+    when: user opens the "Stats" deck companion
+    then: DevtoolsOverviewContainer renders the card stack, one card per `AppSurface.DevtoolsOverview` contribution
 
-  req F-4.2: Clicking a category link navigates the deck to the corresponding devtools article.
+  req F-4.2: Every devtools page is an article — `Panel.Root role` with an optional toolbar over its content — registered on its `Devtools.*` id from `react-surface.ts`; `@dxos/devtools` exports them as `*Article` from `containers/panels`.
 ```
 
 ```mdl
 feat F-5: Space Data Generator
 
   req F-5.1:
-    when: user navigates to the debug node under a space
-    then: SpaceGenerator is rendered as the article
+    when: user selects Debug → Generate objects in the debug panel
+    then: SpaceGenerator is rendered as the panel's article, bound to the active workspace's space
 
   req F-5.2:
     when: user triggers object generation
@@ -243,7 +258,7 @@ feat F-7: Log Capture and Download
 
   req F-7.1:
     when: logStore is provided in DebugPluginOptions
-    then: LoggingPanel can stream and display captured log entries
+    then: LoggingArticle can stream and display captured log entries
 
   req F-7.2:
     when: user clicks download in DebugSettings
@@ -263,16 +278,17 @@ feat F-8: Global Dev Utilities
 ## Acceptance
 
 ```mdl
-test T-1: Devtools node appears in nav graph
-  given: Composer loaded with DebugPlugin enabled
-  when: user opens the navigation tree
+scenario T-1: Devtools tree appears in the debug panel
+  given: Composer loaded with DevtoolsPlugin and DebugPlugin enabled
+  when: user opens the debug panel from the status bar
   then:
-    - "Devtools" node is visible pinned at the end of the root
-    - sub-nodes Client, HALO, ECHO, Mesh, EDGE are present
+    - the sidebar lists Console, Logs, DevTools, Debug
+    - expanding DevTools shows App Graph, SDK Explorer, CLI, Client, HALO, ECHO, MESH, EDGE
+    - the main navtree's SYSTEM group shows only Database
 ```
 
 ```mdl
-test T-2: Debug companion on ECHO object
+scenario T-2: Debug companion on ECHO object
   given: a Document is open in the deck
   when: user clicks the "Debug" companion tab
   then:
@@ -280,7 +296,7 @@ test T-2: Debug companion on ECHO object
 ```
 
 ```mdl
-test T-3: Wireframe overlay toggle
+scenario T-3: Wireframe overlay toggle
   given: DebugPlugin settings panel is open
   when: user enables the wireframe toggle
   then:
@@ -291,16 +307,16 @@ test T-3: Wireframe overlay toggle
 ```
 
 ```mdl
-test T-4: Space object generation
+scenario T-4: Space object generation
   given: a space with an empty collection is active
-  when: user opens the debug space node and generates 10 objects
+  when: user opens Debug → Generate objects in the debug panel and generates 10 objects
   then:
     - 10 new objects appear in the active collection
     - DebugStatus shows "running" while generation is in progress
 ```
 
 ```mdl
-test T-5: Log download
+scenario T-5: Log download
   given: logStore is configured and some log entries have been captured
   when: user clicks "Download Logs" in DebugSettings
   then:
@@ -311,15 +327,15 @@ test T-5: Log download
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 plugin-devtools defines no first-party operations (see "Operations" above), so most of its
 journeys are navigation and settings toggles with no `invoke`. It is a dev-only default: on in
 `isDev` builds, off otherwise (see `packages/apps/composer-app/src/plugin-defs.tsx`).
 
 ```mdl
-flow QA-1: Open the Devtools node and inspect an object
+test QA-1: Open the Devtools node and inspect an object
   desc: The core devtools round-trip — navigate to the Devtools tree and open the Debug companion on an object.
   actors: both
   covers: [F-1.1, F-1.2, F-2.1, F-2.2, T-1, T-2]
@@ -329,12 +345,13 @@ flow QA-1: Open the Devtools node and inspect an object
     - space: a space is open
     - plugin-devtools is enabled (dev-only default; see above)
     - doc1: a Document already exists in the space
-  test:
-    - name: Open the Devtools node
-      do: In the navtree, click the "Devtools" node pinned at the end of the root.
-      invoke: org.dxos.operation.appToolkit.open { subject: ["root/devtools"] }
-      expect: the Devtools overview opens, listing Client, HALO, ECHO, Mesh, and EDGE sub-trees
-      note: NO deterministic assert on sub-tree contents — this is a static tree, verify visually.
+  steps:
+    - name: Open the DevTools tree in the debug panel
+      do: Click the status-bar debug button (terminal icon), then expand "DevTools" in the panel's sidebar and open Client → Config.
+      expect: the sidebar shows Client, HALO, ECHO, MESH, and EDGE sub-trees and the Config JSON renders in the panel; `window.location` is unchanged
+      note: |
+        NO `invoke` — devtools nodes have no URL binding and never open in the deck, so
+        `appToolkit.open` does not reach them. Human-only step; an agent run reports it unverified.
     - name: Open the Debug companion on an object
       do: Click "$given.doc1" in the navtree, then select the "Debug" companion tab.
       invoke: org.dxos.operation.appToolkit.updateCompanion { open: true, variant: "debug" }
@@ -347,7 +364,7 @@ flow QA-1: Open the Devtools node and inspect an object
 ```
 
 ```mdl
-flow QA-2: Generate synthetic objects into a collection
+test QA-2: Generate synthetic objects into a collection
   desc: |
     The write path behind the Space Data Generator — the agent binding invokes the shared
     space.addObject operation directly rather than driving the SpaceGenerator surface, so this
@@ -360,9 +377,9 @@ flow QA-2: Generate synthetic objects into a collection
     - space: a space is open
     - collection: a collection in that space, empty of synthetic objects
     - plugin-devtools is enabled (dev-only default; see above)
-    - no Person named "QA Devtools Object" exists — ABORT rather than reusing one this flow did
+    - no Person named "QA Devtools Object" exists — ABORT rather than reusing one this test did
       not create
-  test:
+  steps:
     - name: Generate one object
       do: (agent-only — invokes space.addObject directly, bypassing the SpaceGenerator surface)
       invoke: org.dxos.operation.space.addObject { object: { "@type": "org.dxos.type.person", fullName: "QA Devtools Object" }, target: $given.collection }
@@ -402,8 +419,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

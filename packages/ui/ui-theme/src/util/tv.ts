@@ -6,7 +6,7 @@ import { createTV } from 'tailwind-variants';
 
 import { type ClassNameArray, type ClassNameValue, type Theme } from '@dxos/ui-types';
 
-import { twMergeConfig } from './tw-merge-config';
+import { twMergeConfig } from './tw-merge-config.ts';
 
 export type { VariantProps } from 'tailwind-variants';
 

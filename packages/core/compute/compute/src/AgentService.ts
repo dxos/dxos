@@ -6,15 +6,16 @@
 
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import type * as Atom from 'effect/reactivity/Atom';
 import type * as Stream from 'effect/Stream';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
+import type { SessionConfig } from '@dxos/ai';
 import type { Database, Feed, Obj, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 import type { ContentBlock } from '@dxos/types';
 
-import type * as Trace from './Trace';
-import { Instructions } from './types';
+import type * as Trace from './Trace.ts';
+import { Instructions } from './types/index.ts';
 
 /**
  * Structural view of the `Chat` object (`@dxos/assistant/Chat`): the durable conversation an agent
@@ -24,6 +25,8 @@ import { Instructions } from './types';
 export interface Conversation extends Obj.Unknown {
   readonly feed: Ref.Ref<Feed.Feed>;
   readonly instructions?: Ref.Ref<Instructions.Instructions>;
+  /** How the conversation runs (its model); an unset model runs the agent's default. */
+  readonly session?: SessionConfig.SessionConfig;
 }
 
 /**
@@ -33,7 +36,7 @@ export interface Conversation extends Obj.Unknown {
 export interface Service {
   /**
    * Gets or creates a session for a chat. The agent process is bound to the chat (its spawn
-   * target), reading the feed and the steering instructions from it.
+   * target), reading the feed, the steering instructions and the model from it.
    */
   getSession: (chat: Conversation, options?: GetSessionOptions) => Effect.Effect<Session, never, Database.Service>;
 
@@ -112,9 +115,9 @@ export const hydrate = (...args: Parameters<Context.Service.Shape<typeof AgentSe
   AgentService.use((service) => service.hydrate(...args));
 
 export interface GetSessionOptions {
-  readonly model?: DXN.DXN;
-  // The catalog's shared model ids are served by several providers, so the provider must accompany
-  // the model into the agent process — the id alone does not identify a resolver.
+  // The model is read off the chat (see `Conversation.session`), but the catalog's shared model ids are
+  // served by several providers, so the provider must still accompany it into the agent process —
+  // the id alone does not identify a resolver.
   readonly provider?: DXN.DXN;
   readonly systemPrompt?: string;
   /**

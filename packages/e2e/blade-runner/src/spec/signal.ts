@@ -6,12 +6,12 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { range } from '@dxos/util';
 
-import { analyzeMessages, analyzeSwarmEvents } from '../analysys';
-import { type SchedulerEnvImpl } from '../env';
-import { type ReplicantsSummary, type TestPlan, type TestProps } from '../plan';
-import { type ReplicantRunProps, SignalReplicant } from '../replicants/signal-replicant';
-import { TestBuilder } from '../test-builder';
-import { randomArraySlice } from '../util';
+import { analyzeMessages, analyzeSwarmEvents } from '../analysys/index.ts';
+import { type SchedulerEnvImpl } from '../env/index.ts';
+import { type ReplicantsSummary, type TestPlan, type TestProps } from '../plan/index.ts';
+import { type ReplicantRunProps, SignalReplicant } from '../replicants/signal-replicant.ts';
+import { TestBuilder } from '../test-builder.ts';
+import { randomArraySlice } from '../util.ts';
 
 export type SignalTestSpec = {
   servers: number;

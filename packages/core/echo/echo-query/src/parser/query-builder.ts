@@ -8,10 +8,31 @@ import { Filter, type Tag } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type URI } from '@dxos/keys';
 
-import { QueryDSL } from './gen';
+import { QueryDSL } from './gen/index.ts';
 
 // TODO(burdon): Return Query AST.
 export type BuildResult = { filter?: Filter.Any; name?: string };
+
+/**
+ * The `#tag` token for a tag label. The grammar's `Tag` token admits only `[a-zA-Z0-9_-]`, so every
+ * other run of characters becomes one `-` — otherwise `#Needs reply` parses as tag `needs` plus text.
+ */
+export const formatTag = (label: string): string =>
+  '#' +
+  label
+    .trim()
+    .replace(/[^a-zA-Z0-9_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+/** The key and tag a `#tag` token names, matched against each label's {@link formatTag} form. */
+export const findTagByToken = (
+  tags: Tag.Map | undefined,
+  token: string,
+): { key: string; tag: Tag.Map[string] } | undefined => {
+  const normalized = token.toLowerCase();
+  const entry = Object.entries(tags ?? {}).find(([, tag]) => formatTag(tag.label).toLowerCase() === normalized);
+  return entry && { key: entry[0], tag: entry[1] };
+};
 
 /**
  * Stateless query builder that parses DSL trees into filters.
@@ -348,10 +369,9 @@ export class QueryBuilder {
 
     const typename = this._getNodeText(cursor, input);
     cursor.parent(); // Go back to TypeFilter.
-    // Inline the URI construction to keep runtime `@dxos/keys` values out of the query-lite bundle
-    // (which runs in a QuickJS sandbox without that dep). Callers may pass a bare typename
-    // (e.g. `com.example.task`) or a canonical URI (`dxn:…` / `echo:…`); prepend `dxn:` only for
-    // bare names detected by the absence of a URI scheme.
+    // Callers may pass a bare typename (e.g. `com.example.task`) or a canonical URI
+    // (`dxn:…` / `echo:…`); prepend `dxn:` only for bare names, detected by the absence of a
+    // URI scheme.
     const uri = (/^[a-z][a-z0-9+.-]*:/i.test(typename) ? typename : `dxn:${typename}`) as URI.URI;
     return Filter.type(uri);
   }
@@ -474,9 +494,8 @@ export class QueryBuilder {
    */
   private _parseTagFilter(cursor: TreeCursor, input: string): Filter.Any | undefined {
     invariant(this._tags);
-    const str = this._getNodeText(cursor, input).slice(1).toLowerCase();
-    const [key] = Object.entries(this._tags!).find(([, value]) => value.label.toLowerCase() === str) ?? [];
-    return key ? Filter.tag(key) : undefined;
+    const match = findTagByToken(this._tags, this._getNodeText(cursor, input));
+    return match ? Filter.tag(match.key) : undefined;
   }
 
   /**

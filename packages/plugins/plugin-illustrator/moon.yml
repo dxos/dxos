@@ -7,15 +7,27 @@ tags:
   - pack
 
 tasks:
+  test:
+    # The mermaid/UML layout suites run ~180s locally but exceed the 600s preset default under CI
+    # contention, so the task was killed with every test passing. Raised until the CI-side slowdown
+    # is understood; see https://github.com/dxos/dxos/pull/12985 for the measurements.
+    options:
+      timeout: 1800
   # Renders docs/diagrams/*.mmd to .svg through the SVG variant and prints the layout report;
   # `-- --scoreboard` prints the strategy × metric table instead. See docs/diagrams/README.md.
   render-diagrams:
-    # vite-node: elkjs mistakes bun's global `self` for a web worker; `render.ts` carries the bun shim.
-    command: vite-node scripts/render-diagrams.ts
+    # vite-node, not bun: bun's CJS interop cannot construct elkjs's bundled fake worker.
+    command: vite-node scripts/render-diagrams.tsx
+    # vite-node loads vite.config.ts (tool packages, generated `#capabilities` barrels) and resolves
+    # `@dxos/*` imports to dist, so a fresh clone needs all of these built first.
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
     inputs:
-      - scripts/render-diagrams.ts
+      - scripts/render-diagrams.tsx
       - docs/diagrams/*.mmd
-      - scripts/standalone-svg.ts
       - src/**/*
     outputs:
       - docs/diagrams/*.svg
@@ -23,10 +35,26 @@ tasks:
       cache: false
       runInCI: false
 
-  # Renders one mermaid source to a standalone SVG: `-- --input a.mmd --output a.svg`, or stdin to
-  # stdout. The layout report goes to stderr.
-  render:
-    command: bun scripts/render.ts
+  judge-diagrams:
+    # Same runner and prerequisites as render-diagrams; the architecture rows need TYPESAFE_API_KEY.
+    command: vite-node scripts/judge-diagrams.ts
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
+    options:
+      cache: false
+      runInCI: false
+
+  eval-layout-views:
+    # Compares System One reading each `View` rendering with a reference that saw the image; needs TYPESAFE_API_KEY.
+    command: vite-node scripts/eval-layout-views.ts
+    deps:
+      - esbuild-plugins:build
+      - vite-plugin-import-source:build
+      - ~:gen-modules
+      - ^:build
     options:
       cache: false
       runInCI: false

@@ -4,8 +4,8 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { TimeoutError } from './errors';
-import { asyncTimeout } from './timeout';
+import { TimeoutError } from './errors.ts';
+import { asyncTimeout } from './timeout.ts';
 
 /**
  * Returns a tuple containing a Promise that will be resolved when the resolver function is called.

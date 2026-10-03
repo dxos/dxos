@@ -1,0 +1,118 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+//
+// Renders the diagram corpus (`docs/diagrams/*.mmd`) headlessly through the SVG variant, writing a
+// standalone `.svg` beside each source, and prints the Tier-1 report per diagram. With
+// `--scoreboard` it prints the Tier-2 table instead (every flowchart strategy × soft metrics).
+// Passing `.mmd` paths renders just those files instead of the corpus; `--layering down` (or a comma list of
+// `down`, `up`, `free`) restricts the candidate layerings the engine chooses among.
+// Run: `moon run plugin-illustrator:render-diagrams [-- --scoreboard] [-- /abs/path/x.mmd …]` (vite-node; bun cannot load elkjs).
+//
+
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+
+import { Diagnostics, Mermaid, MermaidEngine, type Scene, UmlGrid } from '@dxos/diagram';
+
+import { SceneSvg } from '../src/components/SceneSvg.tsx';
+
+const DIAGRAMS = join(dirname(fileURLToPath(import.meta.url)), '../docs/diagrams');
+
+/**
+ * The renderer styles with Tailwind utilities; a file on disk has no stylesheet, so the export
+ * inlines the handful it uses (light theme, Tailwind's neutral palette).
+ */
+const STYLE = `
+  svg { font-family: ui-sans-serif, system-ui, sans-serif; color: #262626; background: #ffffff; }
+  .stroke-current { stroke: currentColor; }
+  .fill-current { fill: currentColor; }
+  .fill-transparent { fill: transparent; }
+  .fill-none { fill: none; }
+  .stroke-none { stroke: none; }
+  .fill-neutral-100 { fill: #f5f5f5; }
+  .fill-neutral-800 { fill: #262626; }
+  .stroke-neutral-800 { stroke: #262626; }
+  svg { --surface-bg: #ffffff; }
+  .text-neutral-400 { color: #a3a3a3; }
+  .text-sky-500 { color: #0ea5e9; }
+  .text-emerald-500 { color: #10b981; }
+  .text-amber-500 { color: #f59e0b; }
+  .text-violet-500 { color: #8b5cf6; }
+  .text-orange-500 { color: #f97316; }
+  .text-rose-500 { color: #f43f5e; }
+  .stroke-neutral-500\\/20 { stroke: rgba(115, 115, 115, 0.2); }
+`;
+
+const layeringArg = process.argv[process.argv.indexOf('--layering') + 1];
+const LAYERING = process.argv.includes('--layering')
+  ? layeringArg.split(',').filter((value): value is MermaidEngine.Layering => ['down', 'up', 'free'].includes(value))
+  : undefined;
+
+const objectsOf = (commands: readonly Scene.Command[]) =>
+  commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
+
+type Strategy = { id: string; compile: (source: string) => Promise<readonly Scene.Command[]> };
+
+const strategies: Strategy[] = [
+  { id: 'layered', compile: async (source) => Mermaid.compile(source) },
+  { id: 'elk', compile: (source) => MermaidEngine.compile(source) },
+];
+
+/** Standalone SVG: the component's markup plus width/height from its viewBox and the inline styles. */
+const toSvg = (objects: readonly Scene.WorldObject[]): string => {
+  const markup = renderToStaticMarkup(<SceneSvg objects={objects} grid={UmlGrid.GRID} />);
+  const viewBox = /viewBox="([^"]+)"/.exec(markup)?.[1].split(' ').map(Number) ?? [0, 0, 0, 0];
+  return markup
+    .replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" width="${viewBox[2]}" height="${viewBox[3]}" `)
+    .replace('<defs>', `<style>${STYLE}</style><defs>`);
+};
+
+const files = process.argv.slice(2).filter((arg) => arg.endsWith('.mmd'));
+const paths =
+  files.length > 0
+    ? files.map((file) => resolve(file))
+    : readdirSync(DIAGRAMS)
+        .filter((file) => file.endsWith('.mmd'))
+        .sort()
+        .map((file) => join(DIAGRAMS, file));
+const sources = paths.map((path) => ({
+  name: basename(path, '.mmd'),
+  source: readFileSync(path, 'utf8'),
+  svgPath: path.replace(/\.mmd$/, '.svg'),
+}));
+
+if (process.argv.includes('--scoreboard')) {
+  const rows: Record<string, Record<string, string>> = {};
+  for (const { name, source } of sources) {
+    for (const strategy of strategies) {
+      const { metrics } = Diagnostics.analyze(objectsOf(await strategy.compile(source)));
+      const errors = metrics.overlaps + metrics.routesThroughNodes + metrics.labelOverflows;
+      rows[`${name} / ${strategy.id}`] = {
+        errors: String(errors),
+        crossings: String(metrics.crossings),
+        bends: String(metrics.bends),
+        area: `${metrics.width}×${metrics.height}`,
+      };
+    }
+  }
+  console.table(rows);
+} else {
+  let failed = false;
+  for (const { name, source, svgPath } of sources) {
+    const objects = objectsOf(await MermaidEngine.compile(source, LAYERING ? { layering: LAYERING } : {}));
+    const report = Diagnostics.analyze(objects);
+    writeFileSync(svgPath, toSvg(objects));
+    const { crossings, bends, nodes, connectors } = report.metrics;
+    console.log(`${name}: ${nodes} nodes, ${connectors} connectors, ${crossings} crossings, ${bends} bends`);
+    for (const diagnostic of report.diagnostics) {
+      console.log(`  ${diagnostic.severity}: ${diagnostic.message}`);
+    }
+    failed ||= Diagnostics.errors(report).length > 0;
+  }
+  process.exitCode = failed ? 1 : 0;
+}

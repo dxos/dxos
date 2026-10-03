@@ -2,13 +2,13 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Tool from 'effect/ai/Tool';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Pipeable from 'effect/Pipeable';
 import type * as Schema from 'effect/Schema';
-import type * as Tool from 'effect/unstable/ai/Tool';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 /**
  * Unique identifier for opaque toolkit instances.
@@ -19,6 +19,14 @@ export const TypeId = '~@dxos/ai/OpaqueToolkit';
  * Type-level representation of the opaque toolkit identifier.
  */
 export type TypeId = typeof TypeId;
+
+/**
+ * What an opaque toolkit's layer provides, with the individual tool names erased.
+ *
+ * `Tool.Handler<any>` rather than `unknown`: as the top type, `unknown` discharges every
+ * requirement a consumer has, not just the handler ones.
+ */
+export type Handlers = Tool.Handler<any>;
 
 /**
  * Type-safe way to define toolkits where we don't know specific types of tools,
@@ -41,7 +49,7 @@ export interface OpaqueToolkit<TR = never, E = never, R = never> extends Pipeabl
   /**
    * Handlers layer.
    */
-  readonly layer: Layer.Layer<unknown, E, R>;
+  readonly layer: Layer.Layer<Handlers, E, R>;
 
   /**
    * Handlers effect.
@@ -54,11 +62,11 @@ export interface OpaqueToolkit<TR = never, E = never, R = never> extends Pipeabl
  *
  * NOTE: Only use in place of `T extends OpaqueToolkit.Any`. Not suitable for standalone use.
  */
-export interface Any {
+export interface Any<E = any, R = any> {
   readonly [TypeId]: TypeId;
   readonly toolkit: Toolkit.Toolkit<any>;
-  readonly layer: Layer.Layer<unknown, any, any>;
-  readonly handlers: Effect.Effect<Toolkit.WithHandler<any>, any, any>;
+  readonly layer: Layer.Layer<Handlers, E, R>;
+  readonly handlers: Effect.Effect<Toolkit.WithHandler<any>, E, R>;
 }
 
 export type InvocationRequirements<T extends Any> = T extends OpaqueToolkit<infer TR, infer _E, infer _R> ? TR : never;

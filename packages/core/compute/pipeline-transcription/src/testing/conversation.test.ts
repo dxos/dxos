@@ -7,8 +7,8 @@ import * as path from 'node:path';
 import * as url from 'node:url';
 import { describe, test } from 'vitest';
 
-import { parseConversation } from './conversation-parser';
-import { simulateStream } from './stream-simulator';
+import { parseConversation } from './conversation-parser.ts';
+import { simulateStream } from './stream-simulator.ts';
 
 const fixture = () =>
   fs.readFileSync(path.join(path.dirname(url.fileURLToPath(import.meta.url)), 'conversation.txt'), 'utf8');

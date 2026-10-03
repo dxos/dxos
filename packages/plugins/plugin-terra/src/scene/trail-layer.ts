@@ -11,8 +11,8 @@ import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { type Mesh } from '@babylonjs/core/Meshes/mesh';
 import { type Scene } from '@babylonjs/core/scene';
 
-import { type TerraConfigValues, type Vec3 } from '../engine';
-import { type SimObject, TRAIL_SPECS, type TrailSpec, trailPuffs } from '../sim';
+import { type TerraConfigValues, type Vec3 } from '../engine/index.ts';
+import { type SimObject, TRAIL_SPECS, type TrailSpec, trailPuffs } from '../sim/index.ts';
 
 /** Puffs are small, numerous, and never seen up close, so a low-poly sphere is indistinguishable from a smooth one. */
 const PUFF_SEGMENTS = 6;

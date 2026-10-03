@@ -11,8 +11,8 @@ import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { ATPROTO_OAUTH_SCOPES, type InitiateOAuthFlowRequest, OAuthProvider } from '@dxos/protocols';
 
-import { RegisterOAuthRecovery } from './definitions';
-import { beginOAuthFlow, createEdgeHttpClient, oauthRecoveryPendingKey } from './shared';
+import { RegisterOAuthRecovery } from './definitions.ts';
+import { beginOAuthFlow, createEdgeHttpClient, oauthRecoveryPendingKey } from './shared.ts';
 
 /**
  * Begins OAuth recovery registration (redirect flow).
@@ -28,10 +28,10 @@ import { beginOAuthFlow, createEdgeHttpClient, oauthRecoveryPendingKey } from '.
 const handler: Operation.WithHandler<typeof RegisterOAuthRecovery> = RegisterOAuthRecovery.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* (data) {
-      const client = yield* Capability.get(ClientCapabilities.Client);
+      const config = yield* Capability.get(ClientCapabilities.Config);
 
       const provider = data.provider as OAuthProvider;
-      const edgeClient = createEdgeHttpClient(client);
+      const edgeClient = createEdgeHttpClient(config);
       // The recovery finalizer creates an AccessToken ECHO object in the default space under this
       // id, so it must be a valid object id.
       const accessTokenId = EntityId.random();
