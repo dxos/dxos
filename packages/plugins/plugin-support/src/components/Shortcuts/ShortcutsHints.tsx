@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { type HotkeyCommand, useActiveHotkeys } from '@dxos/react-focus';
-import { IconButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { Key } from './Key.tsx';
@@ -32,12 +32,12 @@ export const ShortcutsHints = ({ onClose }: { onClose?: () => void }) => {
         <Shortcut key={binding.id} binding={binding} />
       ))}
       {onClose && (
-        <IconButton
+        <Button
           icon='ph--x--regular'
-          size={4}
+          iconSize='md'
           label='Close'
           iconOnly
-          noTooltip
+          showTooltip={false}
           variant='ghost'
           classNames='p-0 cursor-pointer'
           onClick={onClose}

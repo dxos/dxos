@@ -35,10 +35,10 @@ export const Error = ({ noJoke }: ErrorProps) => {
   }, []);
 
   return (
-    <div className='flex flex-col m-8 overflow-hidden border border-separator divide-y divide-subdued-separator shadow-md'>
+    <div className='flex flex-col m-8 overflow-hidden border border-separator divide-y divide-separator-subtle shadow-md'>
       {!noJoke && (
         <div className='flex items-center p-4'>
-          <Icon icon={faceIcon} size={12} classNames='text-neutral-500' />
+          <Icon icon={faceIcon} size='xl' classNames='text-neutral-500' />
           {joke && (
             <div className='flex flex-col opacity-50'>
               <span>

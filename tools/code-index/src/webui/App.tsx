@@ -22,14 +22,14 @@ import { type Session, openSession } from './session.ts';
 const ToolTrace = (props: { session: Session }) => (
   <Show when={props.session.state().calls.length > 0}>
     <details class='border-separator border-t px-3 py-2 text-xs'>
-      <summary class='text-description cursor-pointer'>{props.session.state().calls.length} code runs</summary>
+      <summary class='text-fg-muted cursor-pointer'>{props.session.state().calls.length} code runs</summary>
       <For each={props.session.state().calls}>
         {(call) => (
           <div class='mt-2'>
             <pre class='bg-baseSurface overflow-x-auto rounded p-2'>{call.code.trim()}</pre>
             <Show when={call.output}>
               {(output) => (
-                <pre class={`mt-1 overflow-x-auto rounded p-2 ${call.ok ? 'text-description' : 'text-errorText'}`}>
+                <pre class={`mt-1 overflow-x-auto rounded p-2 ${call.ok ? 'text-fg-muted' : 'text-errorText'}`}>
                   {output().trim()}
                 </pre>
               )}
@@ -79,7 +79,7 @@ const Sidebar = (props: { current: string | undefined }) => {
     <aside class='border-separator flex w-56 shrink-0 flex-col border-r'>
       <header class='border-separator flex items-center justify-between border-b px-3 py-2'>
         <h1 class='text-sm font-medium'>code-index</h1>
-        <button class='text-description hover:text-baseText text-xs' onClick={() => void create()}>
+        <button class='text-fg-muted hover:text-baseText text-xs' onClick={() => void create()}>
           + new
         </button>
       </header>
@@ -99,7 +99,7 @@ const Sidebar = (props: { current: string | undefined }) => {
       </nav>
       <Show when={info()}>
         {(server) => (
-          <footer class='border-separator text-description border-t px-3 py-2 text-xs'>
+          <footer class='border-separator text-fg-muted border-t px-3 py-2 text-xs'>
             <p class='truncate'>{server().model}</p>
             <p class='truncate'>
               {server().files.toLocaleString()} files · {server().quads.toLocaleString()} quads
@@ -138,7 +138,7 @@ export const App = () => {
       <Sidebar current={resolved()} />
       {/* `keyed` is load-bearing: a different project is a different session, and re-keying is
           what disposes the old subscription and opens the new one. */}
-      <Show when={resolved()} keyed fallback={<main class='text-description p-4 text-sm'>Opening…</main>}>
+      <Show when={resolved()} keyed fallback={<main class='text-fg-muted p-4 text-sm'>Opening…</main>}>
         {(projectId) => {
           const session = openSession(projectId);
           return (

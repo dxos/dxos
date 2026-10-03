@@ -10,7 +10,7 @@ import { expect, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { corePlugins } from '@dxos/plugin-testing';
-import { type ActionGraphProps } from '@dxos/react-ui-menu';
+import type { ActionGraphProps } from '@dxos/react-ui-menu';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

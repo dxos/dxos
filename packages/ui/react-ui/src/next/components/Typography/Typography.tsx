@@ -3,16 +3,26 @@
 //
 
 import { ark } from '@ark-ui/react/factory';
-import React from 'react';
+import React, { type CSSProperties } from 'react';
 
 import { composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
+import { type CSSVariables } from '../Container/index.ts';
+
+export type TypographyTone = 'default' | 'muted' | 'subtle';
 
 export type TypographyProps = {
   /** One line, ending in an ellipsis when it overflows. */
   truncate?: boolean;
-  /** `description` reads as secondary text (ui-theme's `--color-description`). */
-  tone?: 'default' | 'description';
+  /** At most this many lines, the last ending in an ellipsis. */
+  lines?: number;
+  /**
+   * Emphasis below the default (DESIGN.md "Text emphasis"): `description` for secondary content, `subdued` for
+   * interface text.
+   */
+  tone?: TypographyTone;
+  /** Monospace, for keys, ids and code. */
+  mono?: boolean;
 };
 
 /**
@@ -20,8 +30,9 @@ export type TypographyProps = {
  * it wraps to. Renders a `<p>`; `asChild` puts the metrics on a heading or other text element instead.
  */
 export const Typography = slottable<HTMLParagraphElement, TypographyProps>(
-  ({ children, asChild, truncate, tone, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props, { classNames: recipes.typography() });
+  ({ children, asChild, truncate, lines, tone, mono, ...props }, forwardedRef) => {
+    const { className, style, ...rest } = composableProps(props, { classNames: recipes.typography() });
+    const linesStyle: CSSProperties & CSSVariables = lines ? { '--dx-lines': String(lines) } : {};
     return (
       <ark.p
         asChild={asChild}
@@ -29,7 +40,10 @@ export const Typography = slottable<HTMLParagraphElement, TypographyProps>(
         data-scope='typography'
         data-part='root'
         data-truncate={truncate ? '' : undefined}
-        data-tone={tone === 'description' ? tone : undefined}
+        data-lines={lines ? '' : undefined}
+        data-tone={tone === 'default' ? undefined : tone}
+        data-mono={mono ? '' : undefined}
+        style={{ ...linesStyle, ...style }}
         className={className}
         ref={forwardedRef}
       >
@@ -39,4 +53,4 @@ export const Typography = slottable<HTMLParagraphElement, TypographyProps>(
   },
 );
 
-Typography.displayName = 'Next.Typography';
+Typography.displayName = 'Typography';

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { List, ListItem } from '@dxos/react-list';
-import { Field, useTranslation } from '@dxos/react-ui';
+import { Checkbox, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -28,16 +28,22 @@ export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
   return (
     <Section title={t('action-items.title')}>
       {items.length === 0 ? (
-        <p className='text-sm text-description italic'>{t('no-action-items.label')}</p>
+        <p className='text-sm text-fg-muted italic'>{t('no-action-items.label')}</p>
       ) : (
         // Non-selectable: each row carries its own `completed` checkbox state, not a
         // list-selection highlight — so this renders the plain ARIA list structure.
         <List variant='unordered' className='space-y-1'>
           {items.map((item) => (
             <ListItem key={item.id} className='flex items-center gap-2 text-sm'>
-              <Field.Checkbox checked={item.completed} onCheckedChange={() => onToggle?.(item)}>
-                <span className={item.completed ? 'line-through text-description' : ''}>{item.text}</span>
-              </Field.Checkbox>
+              <Checkbox
+                checked={item.completed}
+                onCheckedChange={() => onToggle?.(item)}
+                label={
+                  <>
+                    <span className={item.completed ? 'line-through text-fg-muted' : ''}>{item.text}</span>
+                  </>
+                }
+              />
             </ListItem>
           ))}
         </List>

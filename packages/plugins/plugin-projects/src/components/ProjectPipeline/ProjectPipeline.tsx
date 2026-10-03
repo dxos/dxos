@@ -8,7 +8,7 @@ import type * as Chat from '@dxos/assistant/Chat';
 import type * as Project from '@dxos/compute/Project';
 import { useSessionTimeline } from '@dxos/plugin-assistant/hooks';
 import { type Space } from '@dxos/react-client/echo';
-import { Banner, useTranslation } from '@dxos/react-ui';
+import { Empty, useTranslation } from '@dxos/react-ui';
 import { Gantt, type GanttAxis, type GanttLane, sessionTimelineToGantt } from '@dxos/react-ui-trace';
 import { type Task } from '@dxos/types';
 
@@ -67,7 +67,7 @@ export const ProjectPipeline = ({
   );
 
   if (timeline.lanes.length === 0) {
-    return <Banner.Empty label={t('no-sessions.message')} />;
+    return <Empty>{t('no-sessions.message')}</Empty>;
   }
 
   // The timeline speaks of sessions and tasks; the chart speaks of groups and lanes. One mapping at

@@ -6,8 +6,7 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { Fragment } from 'react';
 
-import { DensityProvider, IconButton, Popover, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Button, Popover, Toolbar, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { type ActionExecutor, type ActionGraphProps, ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -57,56 +56,49 @@ export const MobileAppBar = composable<HTMLDivElement, MobileAppBarProps>(
     const AnchorRoot = popoverAnchorId ? Popover.Anchor : Fragment;
 
     return (
-      <DensityProvider density='md'>
-        <Toolbar.Root
-          {...composableProps(props, {
-            role: 'banner',
-            // `min-h` rather than `h`: the Panel toolbar slot pins the row to `--dx-toolbar-size`,
-            // and a min-height is the one way to grow past it without depending on class order.
-            // 52px = the 44px touch target plus the toolbar's own `p-1` on both edges.
-            classNames:
-              'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-md min-h-13',
-          })}
-          ref={forwardedRef}
-        >
-          {keyboardOpen ? (
-            <IconButton
-              variant='ghost'
-              icon='ph--x--regular'
-              iconOnly
-              label={t('done.label')}
-              classNames={TOUCH_TARGET}
-            />
-          ) : showBackButton ? (
-            <IconButton
-              variant='ghost'
-              icon='ph--caret-left--regular'
-              iconOnly
-              label={t('back.label')}
-              classNames={TOUCH_TARGET}
-              onClick={onBack}
-            />
-          ) : (
-            <div />
-          )}
-          <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
-          {hasActions ? (
-            <AnchorRoot>
-              <ActionMenu {...menuActions} caller={meta.profile.key} onAction={onAction}>
-                <IconButton
-                  variant='ghost'
-                  icon='ph--dots-three-vertical--regular'
-                  iconOnly
-                  label={t('actions-menu.label')}
-                  classNames={TOUCH_TARGET}
-                />
-              </ActionMenu>
-            </AnchorRoot>
-          ) : (
-            <span />
-          )}
-        </Toolbar.Root>
-      </DensityProvider>
+      <Toolbar.Root
+        {...composableProps(props, {
+          role: 'banner',
+          // `min-h` rather than `h`: the Panel toolbar slot pins the row to `--dx-toolbar-size`,
+          // and a min-height is the one way to grow past it without depending on class order.
+          // 52px = the 44px touch target plus the toolbar's own `p-1` on both edges.
+          classNames:
+            'grid grid-cols-[var(--dx-rail-size)_1fr_var(--dx-rail-size)] items-center dx-density-md min-h-13',
+        })}
+        size='md'
+        ref={forwardedRef}
+      >
+        {keyboardOpen ? (
+          <Button variant='ghost' icon='ph--x--regular' iconOnly label={t('done.label')} classNames={TOUCH_TARGET} />
+        ) : showBackButton ? (
+          <Button
+            variant='ghost'
+            icon='ph--caret-left--regular'
+            iconOnly
+            label={t('back.label')}
+            classNames={TOUCH_TARGET}
+            onClick={onBack}
+          />
+        ) : (
+          <div />
+        )}
+        <h1 className='text-center truncate font-thin uppercase'>{displayTitle}</h1>
+        {hasActions ? (
+          <AnchorRoot>
+            <ActionMenu {...menuActions} caller={meta.profile.key} onAction={onAction}>
+              <Button
+                variant='ghost'
+                icon='ph--dots-three-vertical--regular'
+                iconOnly
+                label={t('actions-menu.label')}
+                classNames={TOUCH_TARGET}
+              />
+            </ActionMenu>
+          </AnchorRoot>
+        ) : (
+          <span />
+        )}
+      </Toolbar.Root>
     );
   },
 );

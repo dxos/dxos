@@ -89,8 +89,8 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = await canvas.findByTestId('pull-request.body', {}, { timeout: 10_000 });
-    await expect(body.closest('.dx-document')).not.toBeNull();
-    await expect(body.closest('.dx-scroll-boundary')).not.toBeNull();
+    await expect(body.closest('[data-scope="panel"][data-width="document"]')).not.toBeNull();
+    await expect(body.closest('.dx-scroll-viewport')).not.toBeNull();
   },
 };
 

@@ -9,7 +9,7 @@ import { type PublicKey } from '@dxos/keys';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { type Contact } from '@dxos/react-client/halo';
-import { Avatar, Button, IconButton, type ThemedClassName, useId, useTranslation } from '@dxos/react-ui';
+import { Avatar, Button, type ThemedClassName, toAvatarHue, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { keyToFallback } from '@dxos/util';
 
@@ -61,12 +61,14 @@ export const SpaceInvitationList = ({
 }: SpaceInvitationListProps) => {
   const { t } = useTranslation(translationKey);
   if (invitations.length === 0) {
-    return <p className='text-description text-center my-2'>{t('empty-space-invitations.message')}</p>;
+    return <p className='text-fg-muted text-center my-2'>{t('empty-space-invitations.message')}</p>;
   }
 
   const sorted = [...invitations].sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime());
   return (
-    <Listbox.Root>
+    <Listbox.Root
+      items={sorted.map((invitation) => ({ value: invitation.id, label: contactDisplayName(invitation.sender) }))}
+    >
       <Listbox.Content
         classNames={[classNames, 'flex flex-col gap-2']}
         aria-label={t('space-invitations.label')}
@@ -99,54 +101,50 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
 
   return (
     <Listbox.Item classNames='p-2 rounded-sm' id={invitation.id} data-testid='space-invitation-list.item'>
-      <Listbox.ItemContent
-        icon={
-          <Avatar.Root labelId={labelId}>
-            <Avatar.Content
-              size={8}
-              hue={profileString(invitation.sender, 'hue') ?? fallback.hue}
-              fallback={profileString(invitation.sender, 'emoji') ?? fallback.emoji}
-            />
-          </Avatar.Root>
-        }
-        title={
-          <div className='flex items-center justify-between gap-1'>
-            <span id={labelId} className='truncate'>
-              {contactDisplayName(invitation.sender)}
-            </span>
-            <div className='flex items-center gap-1'>
-              <Button
-                density='sm'
-                variant='primary'
-                disabled={disabled}
-                onClick={() => onJoin?.(invitation)}
-                data-testid='space-invitation-list.join'
-              >
-                {t('join-space-invitation.label')}
-              </Button>
-              <IconButton
-                iconOnly
-                density='sm'
-                variant='ghost'
-                icon='ph--x--regular'
-                label={t('dismiss-space-invitation.label')}
-                disabled={disabled}
-                onClick={() => onDismiss?.(invitation)}
-                data-testid='space-invitation-list.dismiss'
-              />
-            </div>
-          </div>
-        }
-        description={
-          <span className='text-sm text-description'>
-            {t('space-invitation.description', {
-              space,
-              role: t(roleLabelKey(invitation.role)),
-              time: formatDistanceToNow(invitation.sentAt, { addSuffix: true }),
-            })}
+      <Listbox.ItemIcon>
+        <Avatar.Root
+          aria-labelledby={labelId}
+          size='md'
+          hue={toAvatarHue(profileString(invitation.sender, 'hue') ?? fallback.hue)}
+          fallback={profileString(invitation.sender, 'emoji') ?? fallback.emoji}
+        />
+      </Listbox.ItemIcon>
+      {/* The sender row with its actions, over the space and role. */}
+      <div className='flex flex-col gap-1 min-w-0 grow'>
+        <div className='flex items-center justify-between gap-1'>
+          <span id={labelId} className='truncate'>
+            {contactDisplayName(invitation.sender)}
           </span>
-        }
-      />
+          <div className='flex items-center gap-1'>
+            <Button
+              size='sm'
+              variant='primary'
+              disabled={disabled}
+              onClick={() => onJoin?.(invitation)}
+              data-testid='space-invitation-list.join'
+            >
+              {t('join-space-invitation.label')}
+            </Button>
+            <Button
+              iconOnly
+              size='sm'
+              variant='ghost'
+              icon='ph--x--regular'
+              label={t('dismiss-space-invitation.label')}
+              disabled={disabled}
+              onClick={() => onDismiss?.(invitation)}
+              data-testid='space-invitation-list.dismiss'
+            />
+          </div>
+        </div>
+        <span className='text-sm text-fg-muted'>
+          {t('space-invitation.description', {
+            space,
+            role: t(roleLabelKey(invitation.role)),
+            time: formatDistanceToNow(invitation.sentAt, { addSuffix: true }),
+          })}
+        </span>
+      </div>
     </Listbox.Item>
   );
 };

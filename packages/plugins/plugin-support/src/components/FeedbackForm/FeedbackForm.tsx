@@ -6,7 +6,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useState } from 'r
 
 import { log } from '@dxos/log';
 import { createContext } from '@dxos/react-hooks';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldRenderer, type FormFieldRendererProps, type FormUpdateMeta } from '@dxos/react-ui-form';
 
 import { type DiscordPresence } from '#hooks';
@@ -137,7 +137,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
   return (
     <div className='flex w-full pt-form-padding'>
-      <IconButton
+      <Button
         classNames='w-full'
         type='button'
         icon='ph--download-simple--regular'
@@ -151,7 +151,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
 FeedbackFormDownloadLogs.displayName = `${FEEDBACK_FORM}.DownloadLogs`;
 
-const noteClassNames = 'text-xs text-description text-center px-2 py-1';
+const noteClassNames = 'text-xs text-fg-muted text-center px-2 py-1';
 
 export type FeedbackFormSubmitProps = {
   disabled?: boolean;
@@ -165,8 +165,8 @@ const FeedbackFormSubmit = ({ disabled }: FeedbackFormSubmitProps) => {
     <>
       <p className={noteClassNames}>{t('public-report.description')}</p>
       <Form.Submit
-        classNames={pending ? '[&_svg]:animate-spin' : undefined}
         icon={pending ? 'ph--spinner-gap--regular' : 'ph--paper-plane-tilt--regular'}
+        busy={pending}
         label={pending ? t('sending-feedback.label') : t('send-feedback.label')}
         disabled={disabled || pending || undefined}
       />

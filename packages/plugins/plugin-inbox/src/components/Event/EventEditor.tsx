@@ -7,7 +7,7 @@ import React, { useCallback, useRef } from 'react';
 
 import { type Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Card, Field, Icon, IconBlock, Select, useTranslation } from '@dxos/react-ui';
+import { Block, Card, DateInput, Field, Icon, Input, Select, Switch, useTranslation } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
 import { type EditorController } from '@dxos/react-ui-editor';
 import { EMAIL_REGEX, REF_REGEX, RefEditor } from '@dxos/react-ui-form';
@@ -186,7 +186,7 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
     <>
       <Card.Row>
         <Field.Root>
-          <Field.Input
+          <Input
             placeholder={t('event-untitled.label')}
             value={data.title ?? ''}
             onChange={(ev) =>
@@ -200,22 +200,28 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       <Field.Root>
         <Card.Row>
-          <Card.Block>
-            <IconBlock>
-              <Field.TriggerIcon icon='ph--calendar--regular' />
-            </IconBlock>
-          </Card.Block>
+          <Block>
+            <Block>
+              <Icon icon='ph--calendar--regular' />
+            </Block>
+          </Block>
           <div className={fieldClasses}>
             <div className='grow'>
               {allDay ? (
-                <Field.Date value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
+                <DateInput type='date' value={toDateInput(data.startDate)} onValueChange={handleStartDateChange} />
               ) : (
-                <Field.DateTime value={toDateTimeInput(data.startDate)} onValueChange={handleStartDateTimeChange} />
+                <DateInput
+                  type='datetime-local'
+                  value={toDateTimeInput(data.startDate)}
+                  onValueChange={handleStartDateTimeChange}
+                />
               )}
             </div>
-            <Field.Switch checked={allDay} onCheckedChange={handleAllDayChange}>
-              {t('event-all-day.label')}
-            </Field.Switch>
+            <Switch
+              checked={allDay}
+              onCheckedChange={({ checked }) => handleAllDayChange(checked)}
+              label={t('event-all-day.label')}
+            />
           </div>
         </Card.Row>
       </Field.Root>
@@ -223,14 +229,18 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
       {!allDay && (
         <Field.Root>
           <Card.Row>
-            <Card.Block>
-              <IconBlock>
-                <Field.TriggerIcon icon='ph--calendar--regular' />
-              </IconBlock>
-            </Card.Block>
+            <Block>
+              <Block>
+                <Icon icon='ph--calendar--regular' />
+              </Block>
+            </Block>
             <div className={fieldClasses}>
               <div className='grow'>
-                <Field.DateTime value={toDateTimeInput(data.endDate)} onValueChange={handleEndDateTimeChange} />
+                <DateInput
+                  type='datetime-local'
+                  value={toDateTimeInput(data.endDate)}
+                  onValueChange={handleEndDateTimeChange}
+                />
               </div>
               <div className={trailingClasses}>
                 <SelectDuration value={presetValue} onValueChange={handleDurationChange} />
@@ -253,9 +263,9 @@ export const EventEditor = ({ event, db, onContactCreate }: EventEditorProps) =>
 
       {/* Always-blank row for adding the next attendee. */}
       <Card.Row classNames='items-center'>
-        <Card.Block>
+        <Block>
           <Icon icon='ph--user-plus--regular' />
-        </Card.Block>
+        </Block>
         <RefEditor
           db={db}
           type={Person.Person}
@@ -282,19 +292,17 @@ type SelectDurationProps = {
 const SelectDuration = ({ value, onValueChange }: SelectDurationProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Select.Root value={value ?? ''} onValueChange={onValueChange}>
-      <Select.TriggerButton placeholder={t('event-duration.placeholder')} />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {DURATION_PRESETS.map((preset) => (
-              <Select.Option key={preset.value} value={preset.value}>
-                {preset.label}
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+    <Select.Root
+      value={[value ?? '']}
+      onValueChange={({ value: [value] }) => onValueChange(value)}
+      items={DURATION_PRESETS.map((preset) => ({ value: preset.value, label: preset.label }))}
+    >
+      <Select.Trigger placeholder={t('event-duration.placeholder')} />
+      <Select.Content>
+        {DURATION_PRESETS.map((preset) => (
+          <Select.Item key={preset.value} item={{ value: preset.value, label: preset.label }} />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

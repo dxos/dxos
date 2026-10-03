@@ -4,13 +4,13 @@
 
 import React from 'react';
 
-import { type IconButtonProps, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, type ButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
 import { type DebugPanelMode } from './view-state.ts';
 
-export type DebugPanelHeaderProps = Pick<IconButtonProps, 'density'> & {
+export type DebugPanelHeaderProps = Pick<ButtonProps, 'size'> & {
   mode: DebugPanelMode;
   onModeChange: (mode: DebugPanelMode) => void;
   /** Omitted where the host brings its own close (the floating window's `CloseTrigger`). */
@@ -21,14 +21,14 @@ export type DebugPanelHeaderProps = Pick<IconButtonProps, 'density'> & {
  * The title-bar controls both hosts share: the dock/float switch, and a close for a host without one
  * of its own. The button says what it does next, so the icon flips with the mode.
  */
-export const DebugPanelHeader = ({ mode, onModeChange, onClose, density }: DebugPanelHeaderProps) => {
+export const DebugPanelHeader = ({ mode, onModeChange, onClose, size }: DebugPanelHeaderProps) => {
   const { t } = useTranslation(meta.profile.key);
   const floating = mode === 'floating';
   return (
     <>
-      <Toolbar.IconButton
+      <Button
         variant='ghost'
-        density={density}
+        size={size}
         iconOnly
         icon={floating ? 'ph--arrow-square-in--regular' : 'ph--arrow-square-out--regular'}
         label={floating ? t('dock-panel.label') : t('float-panel.label')}
@@ -36,9 +36,9 @@ export const DebugPanelHeader = ({ mode, onModeChange, onClose, density }: Debug
         onClick={() => onModeChange(floating ? 'docked' : 'floating')}
       />
       {onClose && (
-        <Toolbar.IconButton
+        <Button
           variant='ghost'
-          density={density}
+          size={size}
           iconOnly
           icon='ph--x--regular'
           label={t('close-panel.label')}

@@ -5,11 +5,11 @@
 import React, { useCallback } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot, useAppGraph } from '@dxos/app-toolkit/ui';
+import { AppSurface, ObjectCard as ObjectCardPrimitive, useAppGraph } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useActionRunner } from '@dxos/plugin-graph/hooks';
-import { Card, Field, Flex, Icon, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Card, Field, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
@@ -43,10 +43,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
           .filter(Type.isType)
           .find((t) => Type.getTypename(t) === typename)
       : undefined);
-  const icon =
-    schema && Type.getDatabase(schema) != null
-      ? 'ph--cube--regular'
-      : (Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular');
+  const icon = schema && Type.getDatabase(schema) != null ? 'ph--cube--regular' : undefined;
 
   // Keyed by the record, not this article, so the Related companion shares the same filter.
   const relatedObjects = useRelatedObjects(db, subject, { references: true, relations: true });
@@ -55,25 +52,18 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <Card.Root fullWidth>
-              <Card.Header>
-                <Card.Block>
-                  <CardIconSlot subject={subject}>
-                    <Icon icon={icon} />
-                  </CardIconSlot>
-                </Card.Block>
-                <Card.Title>{Obj.getLabel(subject, { fallback: 'typename' })}</Card.Title>
-              </Card.Header>
+            <ObjectCardPrimitive.Root>
+              <ObjectCardPrimitive.Header subject={subject} icon={icon} />
               <Card.Body>
                 <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
               </Card.Body>
-            </Card.Root>
+            </ObjectCardPrimitive.Root>
 
             {/* TODO(burdon): Only show label if surface exists? */}
             {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}
@@ -100,7 +90,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
                     `Content`'s prop of the same name below (ScrollArea's scrollbar padding). Centred
                     columns drift right of the record card above them, which shares this column. */}
                 <Masonry.Root Tile={ObjectCard} columns={singleColumn ? 1 : undefined} centered={false}>
-                  <Masonry.Content padding={false} centered={false}>
+                  <Masonry.Content padding={false}>
                     <Masonry.Viewport items={related} />
                   </Masonry.Content>
                 </Masonry.Root>
@@ -108,7 +98,7 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
             )}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

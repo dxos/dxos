@@ -9,7 +9,7 @@ import React, { type ChangeEvent, type ComponentProps, useCallback, useMemo } fr
 
 import { type ChannelInfo } from '@dxos/crawler';
 import { Format } from '@dxos/echo';
-import { IconButton, Panel, SystemIconButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, SystemButton, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Form, type FormFieldMap, createSelectField } from '@dxos/react-ui-form';
 
 export const CrawlOptions = Schema.Struct({
@@ -88,15 +88,15 @@ export const CrawlPanel = ({
 
   return (
     <Panel.Root classNames={classNames}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
-          <IconButton
+          <Button
             icon='ph--arrow-clockwise--regular'
             label='List channels'
             disabled={!options.token || !!busy}
             onClick={onListChannels}
           />
-          <IconButton
+          <Button
             icon='ph--bulldozer--regular'
             iconOnly
             label='Crawl'
@@ -104,16 +104,16 @@ export const CrawlPanel = ({
             disabled={!options.token || !options.channel || !!busy}
             onClick={onCrawl}
           />
-          <SystemIconButton.Upload
+          <SystemButton.Upload
             disabled={!!busy}
             accept='.txt,.md,text/plain,text/markdown'
             onFileChange={handleFileChange}
           />
           <Toolbar.Separator />
-          <IconButton icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
+          <Button icon='ph--trash--regular' iconOnly label='Reset' disabled={!!busy} onClick={onReset} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <Form.Root schema={CrawlOptions} values={options} fieldMap={fieldMap} onValuesChanged={onValuesChanged}>
           <Form.Viewport>
             <Form.Content>
@@ -121,13 +121,13 @@ export const CrawlPanel = ({
             </Form.Content>
           </Form.Viewport>
         </Form.Root>
-      </Panel.Content>
+      </Panel.Body>
       {(error || status) && (
-        <Panel.Statusbar asChild>
+        <Panel.Footer>
           <Toolbar.Root classNames='bg-transparent'>
-            <Toolbar.Text classNames={[error ? 'text-error-text' : 'text-subdued']}>{error ?? status}</Toolbar.Text>
+            <Toolbar.Text classNames={[error ? 'text-error-text' : 'text-fg-subtle']}>{error ?? status}</Toolbar.Text>
           </Toolbar.Root>
-        </Panel.Statusbar>
+        </Panel.Footer>
       )}
     </Panel.Root>
   );

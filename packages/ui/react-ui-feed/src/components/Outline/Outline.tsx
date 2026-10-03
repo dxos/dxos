@@ -265,7 +265,12 @@ export const Outline = ({
   const hoveredMarker = shown == null ? undefined : rows[shown]?.marker;
 
   return (
-    <Popover.Root open={hoveredMarker != null}>
+    <Popover.Root
+      open={hoveredMarker != null}
+      // Pinned to the anchor point rather than flipped into view, so it tracks the tick.
+      positioning={{ placement: 'right', flip: false, slide: false }}
+      autoFocus={false}
+    >
       <div
         role='navigation'
         className={mx('relative flex flex-col justify-center overflow-hidden', classNames)}
@@ -361,21 +366,15 @@ export const Outline = ({
           // pointer walked the rail, drifting further from the tick with every step. Remounting per
           // tick is what makes it re-measure.
           key={hoveredMarker.id}
-          side='right'
-          align='center'
-          // Pinned to the anchor point rather than flipped into view, so it tracks the tick.
-          avoidCollisions={false}
-          onOpenAutoFocus={(event) => event.preventDefault()}
         >
-          <Popover.Viewport>
+          <Popover.Body>
             <div className='px-2 py-1 max-w-[24rem] w-[24rem]'>
               <p className='truncate font-medium'>{hoveredMarker.title}</p>
               {hoveredMarker.description && (
-                <p className='mt-1 text-sm text-description line-clamp-3'>{hoveredMarker.description}</p>
+                <p className='mt-1 text-sm text-fg-muted line-clamp-3'>{hoveredMarker.description}</p>
               )}
             </div>
-          </Popover.Viewport>
-          <Popover.Arrow />
+          </Popover.Body>
         </Popover.Content>
       )}
     </Popover.Root>

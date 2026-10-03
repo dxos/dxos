@@ -312,7 +312,7 @@ export const Plain: Story = {
     await expect(canvas.queryByTestId('tasksPlugin.artifacts')).toBeNull();
     // The creation time the database records for the task.
     const created = await canvas.findByTestId('taskList.property.created', undefined, { timeout: 10_000 });
-    await expect(created.querySelector('time[data-testid="timestamp"]')?.getAttribute('dateTime')).toBeTruthy();
+    await expect(created.querySelector('time[data-scope="timestamp"]')?.getAttribute('dateTime')).toBeTruthy();
   },
 };
 

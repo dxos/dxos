@@ -34,7 +34,7 @@ const Sidebar = () => {
   const sections = useSections();
   return (
     <ScrollArea.Root orientation='vertical' classNames='w-[180px] border-e border-separator'>
-      <ScrollArea.Viewport classNames='gap-4 divide-y divide-subdued-separator'>
+      <ScrollArea.Viewport classNames='gap-4 divide-y divide-separator-subtle'>
         {sections.map((section) => (
           <div key={section.id}>
             <div className='flex text-sm ps-4 py-1'>{section.title}</div>

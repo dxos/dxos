@@ -5,7 +5,7 @@
 
 @layer dx-components {
   /* Header and footer rows size to their content, so a missing or empty one takes no space. */
-  .nx-panel {
+  .dx-panel {
     display: grid;
     grid-template-rows: auto minmax(0, 1fr) auto;
     grid-template-columns: minmax(0, 1fr);
@@ -14,26 +14,43 @@
     min-width: 0;
     min-height: 0;
     overflow: hidden;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     container-type: inline-size;
   }
 
   /* Rows are placed explicitly, so a panel without a header still puts its body in the growing track. */
-  .nx-panel-header {
+  .dx-panel-header {
     grid-row: 1;
     display: flex;
     flex-direction: column;
     min-width: 0;
   }
+  /*
+   * An article's toolbar is the app's toolbar height (ui-theme `--dx-toolbar-size`), its controls centred in it; a panel
+   * given its own size keeps that size's block-tall header.
+   */
+  .dx-panel:not([data-size]) > .dx-panel-header .dx-toolbar {
+    min-height: var(--dx-toolbar-size, 2.5rem);
+  }
 
-  /* The body frame is no query container of its own, so its Container collapses against the panel. */
-  .nx-panel > .nx-scroll-root.nx-panel-body {
+  /*
+   * A plain slot; it is no query container even when it is a ScrollArea frame (`asChild`), so the content collapses
+   * against the panel.
+   */
+  .dx-panel > .dx-panel-body {
     grid-row: 2;
+    min-width: 0;
+    min-height: 0;
     container-type: normal;
   }
 
-  .nx-panel-footer {
+  /* A scrolling Body pads its viewport rather than narrowing the frame, so the scrollbar stays at the panel's edge. */
+  .dx-panel[data-width='document'] > .dx-panel-body > .dx-scroll-viewport {
+    padding-inline: max(0px, calc((100% - var(--spacing-document-max-width, 50rem)) / 2));
+  }
+
+  .dx-panel-footer {
     grid-row: 3;
     display: flex;
     flex-direction: column;

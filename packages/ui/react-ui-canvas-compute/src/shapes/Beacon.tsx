@@ -21,7 +21,7 @@ export const BeaconComponent = ({ shape }: ShapeComponentProps<BeaconShape>) => 
       <Icon
         icon='ph--sun--regular'
         classNames={['transition opacity-20 duration-1000', isTruthy(value) && 'opacity-100 text-yellow-500']}
-        size={8}
+        size='xl'
       />
     </div>
   );
