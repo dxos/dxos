@@ -140,6 +140,7 @@
     "@dxos/link": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-code": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

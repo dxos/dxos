@@ -19,6 +19,12 @@ export const ClaudeCodeAgent = Capability.lazyModule(
   () => import('./claude-code-agent.ts'),
 );
 
+export const ClaudeCodeEdgeAgent = Capability.lazyModule(
+  'ClaudeCodeEdgeAgent',
+  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  () => import('./claude-code-edge-agent.ts'),
+);
+
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });

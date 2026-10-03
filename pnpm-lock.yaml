@@ -9104,6 +9104,9 @@ importers:
       '@dxos/plugin-code':
         specifier: workspace:*
         version: link:../plugin-code
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -9332,6 +9335,9 @@ importers:
       '@dxos/compute':
         specifier: workspace:*
         version: link:../../core/compute/compute
+      '@dxos/compute-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/compute-runtime
       '@dxos/deus':
         specifier: workspace:*
         version: link:../../reflect/deus
@@ -9344,6 +9350,9 @@ importers:
       '@dxos/echo-react':
         specifier: workspace:*
         version: link:../../core/echo/echo-react
+      '@dxos/edge-compute':
+        specifier: workspace:*
+        version: link:../../core/compute/edge-compute
       '@dxos/effect':
         specifier: workspace:*
         version: link:../../common/effect

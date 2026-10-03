@@ -33,7 +33,7 @@ export const RequestWidget = ({ children, message }: RequestWidgetProps) => {
   return (
     <div className='flex flex-col gap-2 p-2 border border-subdued-separator rounded-md' data-testid='assistant.request'>
       <div className='flex items-center gap-2 text-sm'>
-        <Icon icon='ph--shield-warning--regular' size={4} />
+        <Icon icon='ph--shield-warning--regular' size='md' />
         <span>{title}</span>
       </div>
       {resolution ? (

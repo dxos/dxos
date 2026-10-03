@@ -35,3 +35,6 @@ export const SESSION_VAULT_PREFIX = 'composer-session';
 
 /** Harness id of Claude Code run on this machine (`chat.session.harness`), and its helper agent directory. */
 export const CLAUDE_CODE_AGENT = 'claude-code';
+
+/** Harness id of Claude Code run by EDGE in a sandbox container (`chat.session.harness`). */
+export const CLAUDE_CODE_EDGE_AGENT = 'claude-code-edge';
