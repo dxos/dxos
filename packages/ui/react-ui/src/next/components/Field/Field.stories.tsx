@@ -314,10 +314,9 @@ export const Test: Story = {
     for (const size of SIZES) {
       const header = byTestId(canvasElement, `text-header-${size}`);
       const box = header.getBoundingClientRect();
-      await expect(header.firstElementChild!.getBoundingClientRect().left, `${size} text label`).toBeCloseTo(
-        box.left,
-        0,
-      );
+      const label = header.firstElementChild;
+      invariant(label);
+      await expect(label.getBoundingClientRect().left, `${size} text label`).toBeCloseTo(box.left, 0);
       await expectEndCell(
         within(header).getByRole('button', { name: 'Add tag' }).querySelector('svg'),
         box.right,
