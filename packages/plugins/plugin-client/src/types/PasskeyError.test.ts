@@ -26,6 +26,33 @@ describe('passkey errors', () => {
     expect(PasskeyError.Dismissed.is(PasskeyError.fromAssertion('Login failed'))).to.be.true;
   });
 
+  // The iOS bridge reports which `ASAuthorizationError` it was, so only a dismissed sheet is a dismissal.
+  test('an iOS bridge cancel is a dismissal for both ceremonies', () => {
+    const error = {
+      name: 'NativePasskeyError',
+      cancelled: true,
+      domain: 'com.apple.AuthenticationServices.AuthorizationError',
+      code: 1001,
+      message: "The operation couldn't be completed.",
+    };
+    expect(PasskeyError.Dismissed.is(PasskeyError.fromAssertion(error))).to.be.true;
+    expect(PasskeyError.Dismissed.is(PasskeyError.fromRegistration(error))).to.be.true;
+  });
+
+  // A missing domain association must reach the user even when its message mentions a cancel.
+  test('an iOS bridge failure is not silenced as a dismissal', () => {
+    const error = {
+      name: 'NativePasskeyError',
+      cancelled: false,
+      domain: 'com.apple.AuthenticationServices.AuthorizationError',
+      code: 1004,
+      message: 'Unable to verify webcredentials association; request cancelled.',
+    };
+    expect(PasskeyError.LoginFailed.is(PasskeyError.fromAssertion(error))).to.be.true;
+    expect(PasskeyError.RegistrationFailed.is(PasskeyError.fromRegistration(error))).to.be.true;
+    expect(PasskeyError.report(PasskeyError.fromAssertion(error))).to.eq('failed');
+  });
+
   test('a registration failure that is not a dismissal is classified apart from a login failure', () => {
     const error = PasskeyError.fromRegistration('Command plugin:macos-passkey|register_passkey not found');
     expect(PasskeyError.RegistrationFailed.is(error)).to.be.true;

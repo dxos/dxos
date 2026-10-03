@@ -1,13 +1,28 @@
-//! Whether this build can complete a native passkey request.
+//! Whether this build can complete a native passkey request, and which bridge the page invokes.
 //!
-//! AuthenticationServices resolves the caller by its signed `com.apple.application-identifier`. When that
-//! does not name this bundle, the system shows a sheet that never calls back and the plugin cannot cancel,
-//! so such a build neither registers the plugin nor offers native passkeys to the page.
+//! macOS: AuthenticationServices resolves the caller by its signed `com.apple.application-identifier`. When
+//! that does not name this bundle, the system shows a sheet that never calls back and the plugin cannot
+//! cancel, so such a build neither registers the plugin nor offers native passkeys to the page.
+//!
+//! iOS: the app's own bridge (`passkey/ios.rs`), which reports a missing association as an error.
+
+#[cfg(any(target_os = "ios", test))]
+pub mod ios;
 
 /// Page global holding availability; read by `NativePasskey.getPasskeySupport` in `@dxos/app-toolkit`.
 const PAGE_GLOBAL: &str = "__DX_NATIVE_PASSKEYS__";
 
+/// Page global naming the bridge the page invokes; read by `NativePasskey` in `@dxos/app-toolkit`.
+const BRIDGE_GLOBAL: &str = "__DX_NATIVE_PASSKEY_BRIDGE__";
+
+/// `tauri-plugin-macos-passkey` on macOS; the app's own commands on iOS.
+#[cfg(target_os = "macos")]
+const BRIDGE: &str = "macos";
+#[cfg(target_os = "ios")]
+const BRIDGE: &str = "ios";
+
 /// Whether a signed application identifier (`<team id>.<bundle id>`) names `bundle_identifier`.
+#[cfg(target_os = "macos")]
 pub fn signed_for(application_identifier: Option<&str>, bundle_identifier: &str) -> bool {
     application_identifier
         .and_then(|identifier| identifier.split_once('.'))
@@ -15,23 +30,25 @@ pub fn signed_for(application_identifier: Option<&str>, bundle_identifier: &str)
 }
 
 /// Whether native passkey requests made by the running process can complete.
+#[cfg(target_os = "macos")]
 pub fn available(bundle_identifier: &str) -> bool {
     signed_for(entitlement::application_identifier().as_deref(), bundle_identifier)
 }
 
-/// Initialization script that publishes availability before any page script runs.
-pub fn page_script(available: bool) -> String {
-    format!("globalThis.{PAGE_GLOBAL} = {available};")
+/// Initialization script that publishes availability and the bridge before any page script runs.
+pub fn page_script(available: bool, bridge: &str) -> String {
+    format!("globalThis.{PAGE_GLOBAL} = {available}; globalThis.{BRIDGE_GLOBAL} = '{bridge}';")
 }
 
 /// Publishes availability to every webview, so no window (the main one or the spotlight panel) can
 /// offer a passkey the shell cannot complete.
 pub fn init<R: tauri::Runtime>(available: bool) -> tauri::plugin::TauriPlugin<R> {
     tauri::plugin::Builder::new("dx-passkey-gate")
-        .js_init_script(page_script(available))
+        .js_init_script(page_script(available, BRIDGE))
         .build()
 }
 
+#[cfg(target_os = "macos")]
 mod entitlement {
     use core_foundation::base::{CFType, CFTypeRef, TCFType};
     use core_foundation::string::{CFString, CFStringRef};
@@ -72,7 +89,7 @@ mod entitlement {
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_os = "macos"))]
 mod tests {
     use super::*;
 
@@ -108,8 +125,14 @@ mod tests {
     }
 
     #[test]
-    fn page_script_sets_a_boolean() {
-        assert_eq!(page_script(true), "globalThis.__DX_NATIVE_PASSKEYS__ = true;");
-        assert_eq!(page_script(false), "globalThis.__DX_NATIVE_PASSKEYS__ = false;");
+    fn page_script_sets_availability_and_bridge() {
+        assert_eq!(
+            page_script(true, BRIDGE),
+            "globalThis.__DX_NATIVE_PASSKEYS__ = true; globalThis.__DX_NATIVE_PASSKEY_BRIDGE__ = 'macos';"
+        );
+        assert_eq!(
+            page_script(false, "ios"),
+            "globalThis.__DX_NATIVE_PASSKEYS__ = false; globalThis.__DX_NATIVE_PASSKEY_BRIDGE__ = 'ios';"
+        );
     }
 }

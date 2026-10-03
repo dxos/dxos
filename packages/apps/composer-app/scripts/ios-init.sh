@@ -38,11 +38,17 @@ cp "$SRC_TAURI/ios/KeyboardHandler.m" "$IOS_SOURCES/"
 # Native microphone capture bridged into the webview (simulator development aid).
 cp "$SRC_TAURI/ios/MicrophoneBridge.m" "$IOS_SOURCES/"
 
+# Native passkey ceremonies (src/passkey/ios.rs).
+cp "$SRC_TAURI/ios/PasskeyBridge.m" "$IOS_SOURCES/"
+
 #
 # Regenerate Xcode project to include new files.
 #
 
 echo "Regenerating Xcode project..."
 (cd "$SRC_TAURI/gen/apple" && xcodegen)
+
+# After xcodegen, which rewrites the entitlements file as an empty dict. Associated domains for passkeys.
+cp "$SRC_TAURI/ios/app_iOS.entitlements" "$SRC_TAURI/gen/apple/app_iOS/"
 
 echo "Done."

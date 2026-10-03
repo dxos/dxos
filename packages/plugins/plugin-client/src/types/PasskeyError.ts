@@ -7,6 +7,7 @@
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 
+import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { BaseError, type Cancellation, isCancellation } from '@dxos/errors';
 import { log } from '@dxos/log';
 
@@ -57,8 +58,8 @@ export const timeoutNativePrompt = <A, E, R>(
 export type Failure = 'dismissed' | 'rejected' | 'failed';
 
 /**
- * What the native (Tauri) bridge rejects with for every `ASAuthorizationError`, a cancel included: it
- * collapses each into one plain string per ceremony, so a cancel cannot be told apart from a failure.
+ * What the macOS bridge rejects with for every `ASAuthorizationError`, a cancel included: it collapses
+ * each into one plain string per ceremony, so a cancel cannot be told apart from a failure.
  */
 // TODO(wittjosiah): Patch tauri-plugin-macos-passkey to pass `ASAuthorizationError.code` through so only a
 //   cancel (1001) reads as a dismissal; today a domain-association failure is silenced along with it.
@@ -66,10 +67,14 @@ const NATIVE_BRIDGE_REJECTIONS = ['Registration failed', 'Login failed'];
 
 /**
  * Whether the authenticator rejected because the prompt was dismissed. WebAuthn reports a dismissed
- * prompt and "no credential for this site" as the same `NotAllowedError`; the native bridge's generic
- * rejections are just as ambiguous, so both read as dismissals.
+ * prompt and "no credential for this site" as the same `NotAllowedError`; the macOS bridge's generic
+ * rejections are just as ambiguous, so both read as dismissals. The iOS bridge says which it was.
  */
 const isDismissal = (error: unknown): boolean => {
+  if (NativePasskey.isNativePasskeyError(error)) {
+    return error.cancelled;
+  }
+
   const name = error instanceof DOMException ? error.name : undefined;
   return (
     name === 'NotAllowedError' ||

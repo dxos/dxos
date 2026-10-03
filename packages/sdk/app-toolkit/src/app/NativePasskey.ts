@@ -5,15 +5,10 @@
 // @import-as-namespace
 
 /**
- * Native passkey bridge for Tauri on macOS.
- * Calls tauri-plugin-macos-passkey via Tauri invoke, providing the same
+ * Native passkey bridge for the Tauri shells on macOS and iOS.
+ * Calls the shell's AuthenticationServices bridge via Tauri invoke, providing the same
  * create/get semantics as the WebAuthn browser API.
  */
-
-// TODO(wittjosiah): Add iOS support.
-//   The same ASAuthorization APIs exist on iOS 15+ but tauri-plugin-macos-passkey is macOS-only.
-//   iOS needs a separate Tauri mobile plugin using the standard Swift Plugin architecture (not swift-rs FFI).
-//   The iOS entitlements file also needs webcredentials:composer.space and a deployment target bump to 16.0+.
 
 import { log } from '@dxos/log';
 import { getHostPlatform, isTauri } from '@dxos/util';
@@ -62,29 +57,56 @@ export const decodeUrlSafeBase64 = (encoded: string): Uint8Array => {
 /** Custom URL scheme for the Composer native app. */
 export const APP_SCHEME = 'composer://';
 
-/** How this host obtains a passkey: the native macOS bridge, the WebAuthn API, or not at all. */
+/** How this host obtains a passkey: the shell's native bridge, the WebAuthn API, or not at all. */
 export type PasskeySupport = 'native' | 'web' | 'none';
 
 /**
- * Set by the macOS desktop shell in every webview before page script runs (`src-tauri/src/passkey.rs` in
- * composer-app): `true` only when its signed identity can complete a native request.
+ * Set by the macOS and iOS shells in every webview before page script runs (`src-tauri/src/passkey.rs` in
+ * composer-app): `true` only when the shell can complete a native request.
  */
 const NATIVE_PASSKEYS_GLOBAL = '__DX_NATIVE_PASSKEYS__';
 
+/** Set alongside {@link NATIVE_PASSKEYS_GLOBAL}: `'ios'` where the bridge is the app's own commands. */
+const NATIVE_PASSKEY_BRIDGE_GLOBAL = '__DX_NATIVE_PASSKEY_BRIDGE__';
+
 /**
- * The macOS shell never falls back to WebAuthn, whose `localhost` origin cannot reach a `composer.space`
- * passkey, so a shell that does not vouch for native passkeys has none.
+ * Apple shells never fall back to WebAuthn, whose `localhost` origin cannot reach a `composer.space`
+ * passkey, so a shell that does not vouch for native passkeys has none. iPadOS reports itself as macOS.
  */
 export const getPasskeySupport = (): PasskeySupport => {
-  if (isTauri() && getHostPlatform() === 'macos') {
+  const platform = getHostPlatform();
+  if (isTauri() && (platform === 'macos' || platform === 'ios')) {
     return Reflect.get(globalThis, NATIVE_PASSKEYS_GLOBAL) === true ? 'native' : 'none';
   }
 
   return globalThis.navigator?.credentials && 'create' in globalThis.navigator.credentials ? 'web' : 'none';
 };
 
+/** The invoke address of a bridge command: app commands on iOS, `tauri-plugin-macos-passkey` on macOS. */
+const nativeCommand = (command: 'login_passkey' | 'register_passkey'): string =>
+  Reflect.get(globalThis, NATIVE_PASSKEY_BRIDGE_GLOBAL) === 'ios' ? command : `plugin:macos-passkey|${command}`;
+
 /**
- * Create a passkey credential using the native macOS passkey API.
+ * What the iOS bridge rejects with. `cancelled` is set only when the user dismissed the sheet (or a newer
+ * request replaced this one); every other `ASAuthorizationError` is a failure.
+ */
+export type NativePasskeyError = {
+  name: 'NativePasskeyError';
+  cancelled: boolean;
+  domain: string;
+  code?: number;
+  message: string;
+};
+
+/** Whether an `invoke` rejection came from the iOS bridge. */
+export const isNativePasskeyError = (error: unknown): error is NativePasskeyError =>
+  typeof error === 'object' &&
+  error !== null &&
+  Reflect.get(error, 'name') === 'NativePasskeyError' &&
+  typeof Reflect.get(error, 'cancelled') === 'boolean';
+
+/**
+ * Create a passkey credential using the shell's native passkey API.
  */
 export const createNativePasskey = async (params: {
   username: string;
@@ -92,7 +114,7 @@ export const createNativePasskey = async (params: {
 }): Promise<NativePasskeyRegistrationResult> => {
   log('creating native passkey', { domain: APP_DOMAIN, username: params.username });
   const { invoke } = await import('@tauri-apps/api/core');
-  const result = await invoke<NativePasskeyRegistrationResult>('plugin:macos-passkey|register_passkey', {
+  const result = await invoke<NativePasskeyRegistrationResult>(nativeCommand('register_passkey'), {
     domain: APP_DOMAIN,
     challenge: Array.from(crypto.getRandomValues(new Uint8Array(32))),
     username: params.username,
@@ -109,12 +131,12 @@ export const createNativePasskey = async (params: {
 };
 
 /**
- * Authenticate with a passkey using the native macOS passkey API.
+ * Authenticate with a passkey using the shell's native passkey API.
  */
 export const loginNativePasskey = async (params: { challenge: Uint8Array }): Promise<NativePasskeyLoginResult> => {
   log('authenticating with native passkey', { domain: APP_DOMAIN });
   const { invoke } = await import('@tauri-apps/api/core');
-  const result = await invoke<NativePasskeyLoginResult>('plugin:macos-passkey|login_passkey', {
+  const result = await invoke<NativePasskeyLoginResult>(nativeCommand('login_passkey'), {
     domain: APP_DOMAIN,
     challenge: Array.from(params.challenge),
     salt: [],

@@ -184,6 +184,34 @@ as a `MACOS_PROVISION_PROFILE_<CHANNEL>` secret, select it in `deploy-tauri.yaml
 `CHANNEL_BUNDLE_IDS` in `_worker.ts`. For staging, also drop its exemption from the release check in
 `deploy-tauri.yaml`. The AASA change only takes effect once the production web app is deployed.
 
+### iOS passkeys
+
+The iOS app creates and redeems `composer.space` passkeys through AuthenticationServices
+(`ios/PasskeyBridge.m`, `src/passkey/ios.rs`), never WebAuthn: its page origin is `tauri://localhost`.
+That needs the `webcredentials:composer.space` associated domain, which `ios/app_iOS.entitlements`
+declares and `scripts/ios-init.sh` installs after `xcodegen`, since `xcodegen` empties the file. The
+domain side is done: the `composer.space` AASA already lists `9428WC5MR8.org.dxos.composer` under
+`webcredentials`.
+
+The signing side is manual, and has to land before the next iOS build: a profile without the
+capability fails code signing for an app that requests it.
+
+1. In the Apple Developer portal, under Certificates, Identifiers & Profiles > Identifiers, open the
+   `org.dxos.composer` App ID and enable **Associated Domains**. Save; Apple marks the profiles that
+   use the App ID invalid.
+2. Under Profiles, edit the App Store distribution profile for `org.dxos.composer` that CI signs with,
+   regenerate it, and download it.
+3. Store it base64-encoded (`base64 -i <profile>.mobileprovision | pbcopy`) as the `IOS_MOBILE_PROVISION`
+   repository secret.
+4. Regenerate any development profile used for device builds too, or let Xcode's automatic signing
+   pick the capability up.
+
+To check a build, run `codesign -d --entitlements - <Composer.app>` and look for
+`com.apple.developer.associated-domains`. On a device, a missing association surfaces as
+`ASAuthorizationError` 1004 ("Unable to verify webcredentials association"), reported as a failed
+login rather than a dismissed prompt. The simulator needs enrolled Face ID (Features > Face ID) before
+it offers to save a passkey.
+
 ### Publishing
 
 After all builds complete, the `publish_tauri` job publishes the release to CrabNebula Cloud, making it available for distribution and auto-updates.
