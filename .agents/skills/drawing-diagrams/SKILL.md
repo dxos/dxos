@@ -62,12 +62,12 @@ first and put proto on the path (`export PATH="$HOME/.proto/shims:$HOME/.proto/b
 `cloud-sandbox`.
 
 - **A one-off diagram** — write the `.mmd` in the scratchpad and pass its absolute path. Only that file is
-  rendered (≈ 30 s once built); the `.svg` lands beside it and nothing in the repo changes:
+  rendered (≈ 10 s once built — candidates route on a worker per core); the `.svg` lands beside it and nothing in the repo changes:
   ```bash
   moon run plugin-illustrator:render-diagrams -- /abs/path/to/compute-core.mmd
   ```
 - **A corpus diagram** (meant to be committed) — put it in `plugin-illustrator/docs/diagrams/` and run
-  the task with no arguments. It re-renders all ~10 diagrams (≈ 5 min) and rewrites every `.svg`;
+  the task with no arguments. It re-renders all ~10 diagrams (≈ 30 s) and rewrites every `.svg`;
   unchanged ones come out byte-identical. The corpus doubles as the layout eval set
   (`src/model/corpus.test.ts` snapshots its metrics), so run
   `moon run plugin-illustrator:test -- src/model/corpus.test.ts` and commit the updated snapshot with it.

@@ -12,8 +12,10 @@
 //
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { availableParallelism } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Worker } from 'node:worker_threads';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
@@ -53,14 +55,72 @@ const LAYERING = process.argv.includes('--layering')
   ? layeringArg.split(',').filter((value): value is MermaidEngine.Layering => ['down', 'up', 'free'].includes(value))
   : undefined;
 
+/**
+ * Routing the ~50 candidates per diagram is nearly all of the run and each is independent, so they
+ * fan out over a worker per core; the engine still selects among them in generation order, so the
+ * output is the same as routing them in turn.
+ */
+const makeWorkerPool = (size: number) => {
+  type Batch = {
+    jobs: readonly MermaidEngine.EmitJob[];
+    results: Scene.Command[][];
+    next: number;
+    done: number;
+    resolve: (results: Scene.Command[][]) => void;
+    reject: (error: Error) => void;
+  };
+  let batch: Batch | undefined;
+  const dispatch = (worker: Worker) => {
+    if (batch && batch.next < batch.jobs.length) {
+      const id = batch.next++;
+      worker.postMessage({ id, job: batch.jobs[id] });
+    }
+  };
+  const workers = Array.from({ length: size }, () => {
+    const worker = new Worker(new URL('./emit-worker.ts', import.meta.url));
+    worker.on('message', ({ id, commands }: { id: number; commands: Scene.Command[] }) => {
+      if (!batch) {
+        return;
+      }
+      batch.results[id] = commands;
+      if (++batch.done === batch.jobs.length) {
+        const { resolve, results } = batch;
+        batch = undefined;
+        resolve(results);
+      } else {
+        dispatch(worker);
+      }
+    });
+    worker.on('error', (error) => {
+      if (!batch) {
+        throw error;
+      }
+      batch.reject(error);
+      batch = undefined;
+    });
+    return worker;
+  });
+  const emitCandidates = (jobs: readonly MermaidEngine.EmitJob[]): Promise<Scene.Command[][]> =>
+    jobs.length === 0
+      ? Promise.resolve([])
+      : new Promise((resolve, reject) => {
+          batch = { jobs, results: new Array(jobs.length), next: 0, done: 0, resolve, reject };
+          workers.forEach(dispatch);
+        });
+  return { emitCandidates, close: () => Promise.all(workers.map((worker) => worker.terminate())) };
+};
+
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
 
 type Strategy = { id: string; compile: (source: string) => Promise<readonly Scene.Command[]> };
 
+const pool = makeWorkerPool(availableParallelism());
+const { emitCandidates } = pool;
+
 const strategies: Strategy[] = [
   { id: 'layered', compile: async (source) => Mermaid.compile(source) },
-  { id: 'elk', compile: (source) => MermaidEngine.compile(source) },
+  { id: 'elk', compile: (source) => MermaidEngine.compile(source, { emitCandidates }) },
 ];
 
 /** Standalone SVG: the component's markup plus width/height from its viewBox and the inline styles. */
@@ -104,7 +164,9 @@ if (process.argv.includes('--scoreboard')) {
 } else {
   let failed = false;
   for (const { name, source, svgPath } of sources) {
-    const objects = objectsOf(await MermaidEngine.compile(source, LAYERING ? { layering: LAYERING } : {}));
+    const objects = objectsOf(
+      await MermaidEngine.compile(source, { emitCandidates, ...(LAYERING ? { layering: LAYERING } : {}) }),
+    );
     const report = Diagnostics.analyze(objects);
     writeFileSync(svgPath, toSvg(objects));
     const { crossings, bends, nodes, connectors } = report.metrics;
@@ -116,3 +178,5 @@ if (process.argv.includes('--scoreboard')) {
   }
   process.exitCode = failed ? 1 : 0;
 }
+
+await pool.close();

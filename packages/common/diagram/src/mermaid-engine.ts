@@ -108,6 +108,12 @@ export type CompileOptions = {
   maxWidth?: number;
   /** Connector router (default: obstacle-avoiding A* with the Z-router as fallback). */
   route?: Router;
+  /**
+   * Runs the candidates' routing, nearly all of the layout's time (default: in turn, on this
+   * thread); a caller with worker threads can fan the jobs out with {@link emitJob}. Results come
+   * back in job order. Not called with a custom `route`, which cannot leave the thread.
+   */
+  emitCandidates?: (jobs: readonly EmitJob[]) => Promise<readonly Scene.Command[][]>;
 };
 
 /** One generated layout with the objective's verdict on it. */
@@ -129,7 +135,7 @@ export type Result = {
   ranked: readonly Objective.Ranked<Candidate>[];
 };
 
-type Cell = { w: number; h: number };
+export type Cell = { w: number; h: number };
 type Pitch = { x: number; y: number };
 
 /** One cell size for every node, sized to the longest label wrapped at `maxWidth`. */
@@ -155,7 +161,7 @@ const pitchFor = (graph: MermaidGraph, cell: Cell, lattice: number): Pitch => {
   };
 };
 
-type Placement = {
+export type Placement = {
   nodes: Map<string, Rect>;
   frames: Map<string, Rect>;
 };
@@ -603,6 +609,13 @@ type EmitOptions = {
   route?: Router;
 };
 
+/** One candidate's routing, as structured-cloneable data so it can cross to a worker thread. */
+export type EmitJob = Omit<EmitOptions, 'route'> & {
+  source: string;
+  cell: Cell;
+  placement: Placement;
+};
+
 const rectsOverlap = (a: Rect, b: Rect) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
 
 /** Whether an axis-aligned (or short diagonal) segment passes through a rect, by its bounding box. */
@@ -860,6 +873,10 @@ const emit = (
   return commands;
 };
 
+/** Routes one candidate with the default router; what a worker runs for `CompileOptions.emitCandidates`. */
+export const emitJob = ({ source, cell, placement, ...options }: EmitJob): Scene.Command[] =>
+  emit(parse(source), cell, placement, options);
+
 const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
 
@@ -890,7 +907,7 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
     'every candidate axis needs a value',
   );
 
-  const candidates: Candidate[] = [];
+  const pending: { candidate: Omit<Candidate, 'commands' | 'layout'>; job: EmitJob }[] = [];
   // Knobs often reach the same placement (a graph with no in-package references layers the same
   // either way; equal-height packages align the same every way); each is routed and graded once.
   const seen = new Set<string>();
@@ -912,17 +929,9 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
                 continue;
               }
               seen.add(`${arrangement}|${bus}|${key}`);
-              const commands = emit(graph, cell, placement, { origin, scale, bus, arrangement, route });
-              const objects = objectsOf(commands);
-              candidates.push({
-                lattice,
-                order,
-                arrangement,
-                layering,
-                alignment,
-                bus,
-                commands,
-                layout: { objects, report: Diagnostics.analyze(objects) },
+              pending.push({
+                candidate: { lattice, order, arrangement, layering, alignment, bus },
+                job: { source, cell, placement, origin, scale, bus, arrangement },
               });
             }
           }
@@ -930,6 +939,16 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
       }
     }
   }
+
+  const emitted =
+    route || !options.emitCandidates
+      ? pending.map(({ job: { placement, ...job } }) => emit(graph, cell, placement, { ...job, route }))
+      : await options.emitCandidates(pending.map(({ job }) => job));
+  const candidates = pending.map(({ candidate }, index): Candidate => {
+    const commands = emitted[index];
+    const objects = objectsOf(commands);
+    return { ...candidate, commands, layout: { objects, report: Diagnostics.analyze(objects) } };
+  });
 
   const { chosen, ranked } = Objective.select(objective, candidates);
   return { commands: chosen.candidate.commands, chosen, ranked };
