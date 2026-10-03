@@ -35,6 +35,15 @@ globalThis.__STORY_ERROR_FALLBACK__ = StorybookErrorFallback;
  * NOTE: Do not depend on @dxos/storybook-utils in the root storybook config due to circular dependencies.
  */
 export const preview: Preview = {
+  // Under `slimWasmPlugin` automerge does no wasm work at import, so the page realm initializes it
+  // before any story runs; imported dynamically to keep it out of the `storybook dev` graph.
+  beforeAll: async () => {
+    if (typeof __DX_SLIM_WASM__ !== 'undefined') {
+      const { initEchoHostWasm } = await import('./automerge-wasm.ts');
+      await initEchoHostWasm();
+    }
+  },
+
   // NOTE: Does not affect docs.
   decorators: [
     withThemeByClassName({

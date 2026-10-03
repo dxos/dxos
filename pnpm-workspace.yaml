@@ -593,7 +593,7 @@ catalog:
   resize-observer-polyfill: ^1.5.1
   reveal.js: ^5.1.0
   rmdir: ~1.2.0
-  rolldown: ~1.2.4
+  rolldown: ~1.2.12
   rollup: ^3.29.5
   rollup-plugin-sourcemaps: ^0.6.3
   rollup-plugin-visualizer: ^5.12.0
@@ -766,6 +766,9 @@ overrides:
   qs: '>=6.14.1'
   react: 'catalog:'
   react-dom: 'catalog:'
+  # vite 8.2's rolldown 1.2.4 miscompiles the built Storybook's lazy module inits (an init call dropped
+  # from its importer); the chat perf flow runs on that build (`storybook-react:bundle-perf`).
+  rolldown: 'catalog:'
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
   undici: '>=7.18.2'

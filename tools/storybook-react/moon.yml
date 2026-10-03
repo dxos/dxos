@@ -35,6 +35,8 @@ tasks:
       - --output-dir=out/storybook-perf
     env:
       DX_STORIES: stories/stories-assistant
+      # See `.storybook/slim-wasm.ts`: without it the chat story deadlocks in the built output.
+      DX_SLIM_WASM: '1'
     deps:
       # See `bundle`.
       - '#ts-vite-build:build'

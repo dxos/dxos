@@ -13,3 +13,6 @@ declare module '*.css';
 declare var __STORY_ERROR_FALLBACK__:
   | typeof import('@dxos/storybook-addon-logger/StorybookErrorFallback').StorybookErrorFallback
   | undefined;
+
+/** Defined by `slimWasmPlugin` (`DX_SLIM_WASM`) when the build resolves automerge to its `slim` entrypoints. */
+declare const __DX_SLIM_WASM__: boolean | undefined;
