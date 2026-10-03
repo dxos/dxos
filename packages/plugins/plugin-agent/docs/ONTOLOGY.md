@@ -47,7 +47,11 @@ input `{ agent, source?, url?, text? }`). It reads the source's text — a chat 
 `[time] speaker: text` lines, a markdown transcript keeps its `**Speaker:**` paragraphs — runs
 pipeline-rdf's extraction (chunked) as a direct model call with no chat or session, attributes each
 fact to the utterance its quote comes from (speaker, message DXN, time), and appends one entry to the
-source's feed. The feed is a `Feed` parented to the agent in its home space, keyed by the foreign key
+source's feed. A chat is read incrementally from the last entry's `through` cursor; the up to eight
+messages before it are shown to the extractor under an "Earlier messages, for context only" heading, so
+"ok i'll start working on it" resolves to what "it" was, and only facts quoting a new message are kept
+(so context is never extracted twice). `readSource` also returns that rendered window as `transcript`,
+which composed notifications use (§5). The feed is a `Feed` parented to the agent in its home space, keyed by the foreign key
 `{ source: 'org.dxos.agent.annotations', id: <source object id or URL> }` (also its `kind`), so EDGE
 finds it with `Filter.foreignKeys`/`Filter.childOf` and no hierarchy traversal. The conversation skill
 calls it when asked to read a document or link; the playground calls it on its seed transcript.
@@ -177,11 +181,18 @@ home before they can be relied on. Promote them to objects once the shape settle
 
 **As built (v1).**
 
-- `Trigger` (`src/types/Trigger.ts`): `{ id, agent, goal?, when: FactPattern, then: notify, ongoing?, createdAt }`.
+- `Trigger` (`src/types/Trigger.ts`): `{ id, agent, goal?, request?, when: FactPattern, then: notify, ongoing?, createdAt }`.
   A one-time trigger ("let me know when X") is removed when it fires and achieves its goal; an
   **ongoing** one ("keep me posted on Dima") keeps watching, leaves its goal open, and passes each
-  matching fact on — the notify message's `{fact}` placeholder (or, without one, an appended
-  `: <fact>`) carries the quote that fired it.
+  matching fact on. `request` is the requester's words ("what is Dima working on? keep me posted").
+- **Notifications are composed, not templated.** When a trigger fires, `composeUpdate`
+  (`src/operations/compose-update.ts`) asks the model (pipeline-rdf's default model) to write the
+  message under `RELAY_RULES` (`src/skills/relay-rules.ts`, shared with the Goals and Relay skills):
+  it is given the requester's request (falling back to the goal title), the source conversation
+  (`readSource`'s `transcript`: the context window plus the new messages) and the facts that fired,
+  so "ok i'll start working on it" reaches Josiah as "Update on Dima: he's starting work on the agent
+  with Rich." The notify message — with its `{fact}` placeholder, or an appended `: <fact>` for an
+  ongoing watch — is only the fallback when composing fails.
   `FactPattern` matches on `speaker` (the fact's attributed speaker, by name or first name), `force`
   (a fact without an illocution is assertive), `polarity`, `subject` and `about` (words, matched as
   word prefixes anywhere in the fact or its quote), `text` (in the quote) and an `after`/`before`
@@ -200,9 +211,8 @@ home before they can be relied on. Promote them to objects once the shape settle
   on each entry, so no fact is extracted twice), then fires the agent's triggers those facts match:
   the trigger is removed, the message is delivered with `sendMessage` (into the recipient's chat with
   the agent), and the goal is marked achieved. Triggers whose goal closed meanwhile are dropped.
-- A turn is read only while the agent has a trigger: extraction is a model call per turn, and with no
-  watch nothing would use it. Messages from turns before the first watch are read on the next turn
-  that has one; the time window keeps them from firing it.
+- Every turn is read, watch or not, since recall answers from those facts too; the time window keeps
+  facts said before a watch from firing it.
 
 ## 6. Per-transcript state — modes
 

@@ -72,6 +72,8 @@ export const Trigger = Schema.Struct({
   /** The id of the agent that watches. */
   agent: Schema.String,
   goal: Schema.optional(Ref.Ref(Goal.Goal)),
+  /** The requester's words, so an update answers what they asked rather than echoing what was said. */
+  request: Schema.optional(Schema.String),
   when: FactPattern,
   then: Action,
   /** Keeps watching after it fires ("keep me posted"), passing each matching fact on; its goal stays open. */

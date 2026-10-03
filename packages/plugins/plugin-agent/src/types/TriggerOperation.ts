@@ -31,6 +31,11 @@ export const WatchFacts = Operation.make({
     requester: Ref.Ref(Obj.Unknown).annotate({
       description: 'The person who wants the outcome (resolve first); they own the goal and are told when it happens.',
     }),
+    request: Schema.optional(
+      Schema.String.annotate({
+        description: "The requester's words, e.g. 'what is Dima working on? keep me posted'.",
+      }),
+    ),
     outcome: Schema.optional(
       Schema.String.annotate({
         description:

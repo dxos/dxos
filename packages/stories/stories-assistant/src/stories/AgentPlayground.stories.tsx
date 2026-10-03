@@ -297,9 +297,7 @@ export const GoalsScripted: Story = {
     await expectWatches(canvasElement, 1);
     // Rich's own request was read at the end of his turn, and did not fire the watch.
     await waitForSpace(readQuotes, (quotes) => quotes.includes(watchFact.quote));
-    // The panel shows the message once already, inside the watch's tool call.
-    const quoted = occurrences(rich, SCRIPTED_REPLIES.notified);
-    await waitForSpace(readRichReplies, (replies) => !replies.includes(SCRIPTED_REPLIES.notified));
+    await waitForSpace(readRichReplies, (replies) => !replies.includes(SCRIPTED_REPLIES.composed));
 
     // 2. Dima says she is still working on it; the turn's fact is recorded but denies it, so nothing fires.
     await submitPrompt(dima, SCRIPTED_PROMPTS.stillWorking);
@@ -307,15 +305,17 @@ export const GoalsScripted: Story = {
     await waitForSpace(readQuotes, (quotes) => quotes.includes(stillWorkingFact.quote));
     // The watch is evaluated right after the facts are written; give a wrongly-fired notification time to land.
     await new Promise((resolve) => setTimeout(resolve, 1_000));
-    await waitForSpace(readRichReplies, (replies) => !replies.includes(SCRIPTED_REPLIES.notified));
-    await expect(occurrences(rich, SCRIPTED_REPLIES.notified)).toBe(quoted);
+    await waitForSpace(readRichReplies, (replies) => !replies.includes(SCRIPTED_REPLIES.composed));
+    await expect(occurrences(rich, SCRIPTED_REPLIES.composed)).toBe(0);
     await expectWatches(canvasElement, 1);
     await waitForSpace(readGoals, (goals) => goals.length === 1 && goals[0].status === 'active');
 
-    // 3. Dima says the PR is up; Rich is told, the goal is achieved and the watch is gone.
+    // 3. Dima says the PR is up; Rich gets the composed update (not the template), the goal is achieved and the
+    // watch is gone.
     await submitPrompt(dima, SCRIPTED_PROMPTS.prUp);
-    await waitForSpace(readRichReplies, (replies) => replies.includes(SCRIPTED_REPLIES.notified));
-    await waitFor(() => expect(occurrences(rich, SCRIPTED_REPLIES.notified)).toBe(quoted + 1), { timeout: 30_000 });
+    await waitForSpace(readRichReplies, (replies) => replies.includes(SCRIPTED_REPLIES.composed));
+    await waitForSpace(readRichReplies, (replies) => !replies.includes(SCRIPTED_REPLIES.notified));
+    await waitFor(() => expect(occurrences(rich, SCRIPTED_REPLIES.composed)).toBe(1), { timeout: 30_000 });
     await waitForSpace(readGoals, (goals) => goals.length === 1 && goals[0].status === 'achieved');
     await expectWatches(canvasElement, 0);
     await waitFor(() =>

@@ -9,6 +9,8 @@ import { trim } from '@dxos/util';
 
 import { MemoryOperation, RelayOperation } from '#types';
 
+import { RELAY_RULES } from './relay-rules.ts';
+
 const operations = [
   MemoryOperation.ResolveEntity,
   RelayOperation.CreateRelay,
@@ -51,6 +53,9 @@ export const make = (): Skill.Skill =>
         - To check what is outstanding (for example "did you tell Josiah?"), call ${tool(RelayOperation.ListRelays)}; tell the requester about overdue relays and ask whether to keep trying or drop them (status "expired").
         - If the recipient tells you something durable about themselves while you talk, record it with ${tool(MemoryOperation.Remember)}.
         - Do not narrate tool calls.
+
+        When you pass something on (a relay, or a report back to the requester):
+        ${RELAY_RULES}
       `,
     }),
   });

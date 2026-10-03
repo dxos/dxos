@@ -4,26 +4,37 @@
 
 import * as Effect from 'effect/Effect';
 
+import { type AiService } from '@dxos/ai';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Harness from '@dxos/assistant/Harness';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { GoalsSkill } from '#skills';
-import { FactEntry, type Goal, RelayOperation, Trigger } from '#types';
+import { FactEntry, type Goal, Profile, RelayOperation, Trigger } from '#types';
 
 import { triggerRegistry } from '../triggers.ts';
-import { firstMatch } from './match-facts.ts';
+import { composeUpdate } from './compose-update.ts';
+import { firstMatch, matchesPattern } from './match-facts.ts';
 import { readSource } from './read-source.ts';
 
 /** Statuses after which a goal's triggers have nothing left to wait for. */
 const CLOSED: readonly Goal.Status[] = ['achieved', 'dropped'];
 
 /**
- * Fires the agent's triggers that `facts` match: runs each one's action; a one-time trigger also marks its goal
- * achieved and is removed, an ongoing one keeps watching. Triggers whose goal closed meanwhile are removed unfired.
+ * Fires the agent's triggers that `facts` match: sends each one's update, composed by the model from the
+ * conversation `transcript` under the relay rules; a one-time trigger also marks its goal achieved and is
+ * removed, an ongoing one keeps watching. Triggers whose goal closed meanwhile are removed unfired.
  */
-export const fireTriggers = Effect.fnUntraced(function* (agent: Agent.Agent, facts: readonly FactEntry.Fact[]) {
+export const fireTriggers: (
+  agent: Agent.Agent,
+  facts: readonly FactEntry.Fact[],
+  transcript?: string,
+) => Effect.Effect<
+  { fired: string[]; undelivered: string[] },
+  never,
+  AiService.AiService | Database.Service | Operation.Service
+> = Effect.fnUntraced(function* (agent, facts, transcript) {
   const fired: string[] = [];
   const undelivered: string[] = [];
   for (const trigger of triggerRegistry.list(agent.id)) {
@@ -40,10 +51,19 @@ export const fireTriggers = Effect.fnUntraced(function* (agent: Agent.Agent, fac
     if (!fact || (!trigger.ongoing && !triggerRegistry.remove(trigger.id))) {
       continue;
     }
+    const recipient = yield* Database.load(trigger.then.recipient).pipe(Effect.orElseSucceed(() => undefined));
+    const text = yield* composeUpdate({
+      agentName: agent.name ?? 'Agent',
+      recipientName: recipient ? Profile.displayName(recipient) : 'the requester',
+      request: trigger.request ?? goal?.title ?? trigger.then.message,
+      facts: facts.filter((candidate) => matchesPattern(trigger.when, candidate, { after: trigger.createdAt })),
+      transcript,
+      hint: Trigger.renderMessage(trigger, fact.assertion.quote ?? FactEntry.factText(fact)),
+    });
     const delivery = yield* Operation.invoke(RelayOperation.SendMessage, {
       agent: Ref.make(agent),
       recipient: trigger.then.recipient,
-      text: Trigger.renderMessage(trigger, fact.assertion.quote ?? FactEntry.factText(fact)),
+      text,
     }).pipe(Effect.orElseSucceed(() => ({ delivered: false, reason: 'The message could not be sent.' })));
     if (!delivery.delivered) {
       undelivered.push(delivery.reason ?? 'The message could not be delivered.');
@@ -69,8 +89,8 @@ const handler: Operation.WithHandler<typeof GoalsSkill.RunTriggers> = GoalsSkill
         return { facts: 0, fired: [], undelivered: [] };
       }
 
-      const { facts } = yield* readSource(agent, { source: chat });
-      return { facts: facts.length, ...(yield* fireTriggers(agent, facts)) };
+      const { facts, transcript } = yield* readSource(agent, { source: chat });
+      return { facts: facts.length, ...(yield* fireTriggers(agent, facts, transcript)) };
     }),
   ),
 );

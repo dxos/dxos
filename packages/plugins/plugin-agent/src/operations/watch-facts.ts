@@ -20,6 +20,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
     Effect.fnUntraced(function* ({
       agent: agentRef,
       requester: requesterRef,
+      request,
       outcome,
       goal: goalRef,
       when,
@@ -59,6 +60,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         id: EntityId.random(),
         agent: agent.id,
         goal: Ref.make(goal),
+        ...(request ? { request } : {}),
         when,
         then: { _tag: 'notify', recipient: recipient ?? requesterRef, message },
         ...(ongoing ? { ongoing } : {}),

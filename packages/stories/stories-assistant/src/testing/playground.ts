@@ -220,6 +220,8 @@ export const SCRIPTED_REPLIES = {
   acknowledged: 'Thanks, noted.',
   // Distinct from Rich's request, which quotes the outcome, so his panel shows it only once it fires.
   notified: 'Heads up: Dima says the indexer PR is up.',
+  // What the composer writes when the watch fires; distinct from the template, which is only the fallback.
+  composed: 'Rich, Dima just told me her indexer PR is up and ready for review.',
 } as const;
 
 /**
@@ -257,6 +259,9 @@ export const GOAL_FACTS = [
 
 /** The first line of pipeline-rdf's extraction prompt, which is how the script tells `readSource` calls apart. */
 const EXTRACTION_PROMPT = 'You extract atomic propositions';
+
+/** The first words of plugin-agent's update composer prompt, which is how the script tells a fired watch apart. */
+const COMPOSE_PROMPT = 'Compose an update for';
 
 /**
  * What the scripted extractor finds in {@link TRANSCRIPT}; each quote is verbatim from one speaker's
@@ -332,6 +337,9 @@ const lastToolName = (request: ScriptedLanguageModel.ScriptedRequest): string | 
 export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageModel.ScriptedTurnGenerator => {
   let relay: string | undefined;
   return (request) => {
+    if (request.text.startsWith(COMPOSE_PROMPT)) {
+      return { parts: [text(SCRIPTED_REPLIES.composed)] };
+    }
     if (request.text.includes(EXTRACTION_PROMPT)) {
       // Extraction runs per chunk, so each chunk reports only the facts it quotes.
       const facts = [

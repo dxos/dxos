@@ -64,31 +64,59 @@ const speakerOf = Effect.fnUntraced(function* (agent: Agent.Agent, message: Mess
 const inAppendOrder = <T extends Obj.Unknown>(items: readonly T[]): T[] =>
   [...items].sort(Order.mapInput(Order.Number, Feed.getPosition));
 
+/** How many messages before the cursor an incremental read shows the extractor, so references in new messages resolve. */
+const CONTEXT_MESSAGES = 8;
+
+const CONTEXT_HEADER = 'Earlier messages, for context only — do not extract facts from them:';
+const NEW_HEADER = 'New messages:';
+
+const renderSegment = ({ text, speaker, at }: Segment): string => `[${at}] ${speaker}: ${text}`;
+
 /**
  * The chat's messages after `after` (a message URI) in append order, each as a `[time] speaker: text`
- * line; `through` is the last message, read or not, so the next read starts after it.
+ * line, preceded by up to {@link CONTEXT_MESSAGES} earlier ones as context; `through` is the last
+ * message, read or not, so the next read starts after it.
  */
 const readChat = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat, after?: string) {
   const feed = yield* Database.load(chat.feed);
   const messages = inAppendOrder(yield* Feed.query(feed, Filter.type(Message.Message)).run);
-  const start = after === undefined ? 0 : messages.findIndex((message) => Obj.getURI(message) === after) + 1;
-  const segments: Segment[] = [];
-  for (const message of messages.slice(start)) {
+  const index = after === undefined ? -1 : messages.findIndex((message) => Obj.getURI(message) === after);
+  const start = index + 1;
+  const toSegment = Effect.fnUntraced(function* (message: Message.Message) {
     const text = Message.extractText(message).trim();
     if (message.sender.role === 'tool' || text.length === 0) {
-      continue;
+      return undefined;
     }
-    segments.push({
+    return {
       text,
       speaker: yield* speakerOf(agent, message),
       source: Obj.getURI(message),
       at: message.created,
-    });
+    } satisfies Segment;
+  });
+
+  const segments: Segment[] = [];
+  for (const message of messages.slice(start)) {
+    const segment = yield* toSegment(message);
+    if (segment) {
+      segments.push(segment);
+    }
   }
+  const context: Segment[] = [];
+  for (let position = start - 1; position >= 0 && context.length < CONTEXT_MESSAGES; position--) {
+    const segment = yield* toSegment(messages[position]);
+    if (segment) {
+      context.unshift(segment);
+    }
+  }
+
+  const lines = segments.map(renderSegment).join('\n');
+  const contextLines = context.map(renderSegment).join('\n');
   const last = messages.at(-1);
   return {
     name: chat.name ?? 'Conversation',
-    text: segments.map(({ text, speaker, at }) => `[${at}] ${speaker}: ${text}`).join('\n'),
+    text: context.length === 0 ? lines : `${CONTEXT_HEADER}\n${contextLines}\n\n${NEW_HEADER}\n${lines}`,
+    transcript: context.length === 0 ? lines : `${contextLines}\n${lines}`,
     segments,
     through: last && Obj.getURI(last),
   };
@@ -113,6 +141,12 @@ const readObject = Effect.fnUntraced(function* (agent: Agent.Agent, source: Obj.
 
 const normalize = (text: string): string => text.replace(/\s+/g, ' ').trim().toLowerCase();
 
+/** Whether the fact quotes one of the segments; on an incremental read only facts from new messages are kept. */
+const quotesAny = (fact: RDF.Fact, segments: readonly Segment[]): boolean => {
+  const quote = fact.assertion.quote ? normalize(fact.assertion.quote) : undefined;
+  return quote !== undefined && segments.some(({ text }) => normalize(text).includes(quote));
+};
+
 /**
  * Attributes a fact to the utterance its quote comes from; the extractor sees the whole transcript
  * so pronouns resolve, and only knows the speaker of a fact through its quote.
@@ -135,7 +169,12 @@ const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
   };
 };
 
-export type ReadSourceResult = { entry?: FactEntry.FactEntry; facts: readonly FactEntry.Fact[] };
+export type ReadSourceResult = {
+  entry?: FactEntry.FactEntry;
+  facts: readonly FactEntry.Fact[];
+  /** A chat's rendered window: the context lines before the new messages, then the new ones. */
+  transcript?: string;
+};
 
 export type ReadSourceProps = {
   source?: Obj.Unknown;
@@ -147,7 +186,8 @@ export type ReadSourceProps = {
 /**
  * Reads a source into its annotation feed and returns the entry appended with the facts it holds. A
  * chat is read from the message after the last entry's cursor, so re-reading it never repeats a fact;
- * nothing is appended when no message was added since.
+ * nothing is appended when no message was added since. The messages before the cursor are shown to the
+ * extractor as context, but only facts quoting a new message are kept.
  */
 export const readSource: (
   agent: Agent.Agent,
@@ -161,11 +201,13 @@ export const readSource: (
     const feed = yield* ensureAnnotationFeed(agent, { id: source.id, name: source.name ?? 'Conversation' });
     const entries = inAppendOrder(yield* Feed.query(feed, Filter.type(FactEntry.FactEntry)).run);
     const cursor = entries.findLast((entry) => entry.through !== undefined)?.through;
-    const { through, ...read } = yield* readChat(agent, source, cursor);
+    const { through, transcript, ...read } = yield* readChat(agent, source, cursor);
     if (through === cursor) {
       return { entry: undefined, facts: [] };
     }
-    return yield* record(feed, { source, name: read.name, through }, yield* extract(read, Obj.getURI(source)));
+    const facts = yield* extract(read, Obj.getURI(source));
+    const fresh = cursor === undefined ? facts : facts.filter((fact) => quotesAny(fact, read.segments));
+    return { ...(yield* record(feed, { source, name: read.name, through }, fresh)), transcript };
   }
 
   const read: SourceText = source
