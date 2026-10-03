@@ -69,8 +69,9 @@
   .dx-container > dx-surface > dx-surface > * {
     grid-column: content;
   }
-  /* The controls' Ark roots are `display: contents` too, so their parts are the grid's items. */
-  .dx-container:not([data-layout='row']) > :is(.dx-control-root, .dx-combobox, .dx-select, .dx-date-field) > * {
+  /* The controls' Ark roots are `display: contents` too, so their parts are the grid's items; a picker DateInput nests two. */
+  .dx-container:not([data-layout='row']) > :is(.dx-control-root, .dx-combobox, .dx-select, .dx-date-field) > *,
+  .dx-container:not([data-layout='row']) > .dx-date-field > .dx-date-field > * {
     grid-column: content;
   }
   .dx-container > [data-place='full'] {
