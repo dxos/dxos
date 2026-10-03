@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { TextEditor } from '@dxos/react-ui-editor';
 import { createBasicExtensions, createThemeExtensions, folding, json } from '@dxos/ui-editor';
 import { safeStringify } from '@dxos/util';
@@ -22,7 +22,7 @@ export type SpanTreeViewProps = ThemedClassName<{
  * compound component's context would only be wiring nothing reads.
  */
 export const SpanTreeView = ({ classNames, spanTree }: SpanTreeViewProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const value = useMemo(() => safeStringify(spanTree, undefined, 2), [spanTree]);
   const extensions = useMemo(
     () => [

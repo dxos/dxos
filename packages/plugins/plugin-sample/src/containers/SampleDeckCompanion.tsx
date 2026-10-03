@@ -19,12 +19,12 @@ export type SampleDeckCompanionProps = AppSurface.SpaceArticleProps;
 export const SampleDeckCompanion = ({ space }: SampleDeckCompanionProps) => {
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root />
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <ActiveSpacePanel spaceName={space.properties.name ?? space.id} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -1,6 +1,46 @@
 # react-ui-form and react-ui-list on Next: audit and plan
 
-Status and open questions: [§6 Decision points](#6-decision-points).
+## Roadmap
+
+_Updated 2026-09-30. The detail behind every line is below: milestones in [§5](#5-plan), decisions in
+[§6](#6-decision-points)._
+
+### Where we are
+
+| Area                        | Status          | Notes                                                                                    |
+| --------------------------- | --------------- | ---------------------------------------------------------------------------------------- |
+| Next components (react-ui)  | **Partial**     | 64 components (Phase A4 ports done but master-detail Tabs); Ark part naming; two pilots  |
+| Foundations (M1)            | **Mostly done** | Panel, popup sizing, required mark done; Container child span and depth-5 benchmark open |
+| Listbox, OrderedList (M2–4) | **Done**        | `@dxos/react-ui-list/next`; pilots: plugin-registry list, plugin-sheet RangeList         |
+| Combobox trigger mode (M5)  | **Done**        | Button trigger, input in popup, descriptions, create row, async, virtual anchor          |
+| Tree (M11)                  | **Prototype**   | Ark tree-view spike works (5,000 rows windowed); `animate` in progress; port ~8–12 days  |
+| MasterDetail (M11)          | Not started     | Needs toolbar actions (`useMenuActions`) on Next Menu                                    |
+| react-ui-form/next (M6–10)  | Not started     | Needs M5 and the settings-layout decision                                                |
+| Migration and cleanup       | Not started     | ~97 react-ui-list and ~155 react-ui-form importers; then delete the old code             |
+
+Blocking gaps (below): 1 (host), 2 (popup size) and 4 (list primitives) are closed; 3 (Combobox) is M5; 5 (settings
+layout) is deferred to M7.
+
+### What's next, in order
+
+1. **Land the follow-up PR:** Tree `animate` (on by default), Combobox trigger mode (M5); in parallel, the Form spike
+   validates Next on its most complex consumer.
+2. **Finish Foundations (M1):** Container child span (§6 point 7), depth-5 subgrid benchmark, `+1` level fallback.
+3. **react-ui-form/next core (M6):** form parts and scalar renderers on Next; pilot plugin-thread `ChannelCreatePanel`.
+4. **Settings layout (M7)**, then **arrays and layout templates (M8)**, **ref and lookup fields (M9)**,
+   **higher-level form components (M10)**.
+5. **Tree port (M11):** move the prototype to a real `Tree`; pilot plugin-navtree; then MasterDetail.
+6. **Migrate and delete:** move importers package by package, add the mixing lint rule (point 11), rename the text
+   colours to the emphasis scale (DESIGN.md "Text emphasis"), delete the old
+   components and make `next` each package's root entry.
+
+### Decisions still needed
+
+- **Lists:** none; group B (virtualization, selection, keyboard grammar, row states, `Empty`, row identity) is
+  decided and built (§6, Phase A2).
+- **Form:** settings layout (1, deferred to M7), Next sections inside current hosts (42).
+- **Labels and text:** list chrome translations (21), Typography `id` (40), per-row Remove names (44).
+- **Tooling:** mixing lint rule (11).
 
 Next can already render every scalar form row, a nested field set, a dialog and a card. It cannot yet host
 a form inside a real plank, open a correctly sized popup from a form without per-call-site props, pick a
@@ -14,7 +54,7 @@ replaces ToggleIconButton), the current primitives in `react-ui/src/components/`
 
 ## Blocking gaps
 
-1. **No sized, queryable host outside stories.** Every Next story wraps itself in `.nx-scope @container`. Plugin
+1. **No sized, queryable host outside stories.** Every Next story wraps itself in `.dx-scope @container`. Plugin
    surfaces render inside the current `Panel`, which sets neither, so a Next form in a plank reads the `:root`
    defaults (md) and its rails never collapse (decision 5, Responsive).
 2. **Popups do not inherit size.** Select, Combobox, Menu, Popover, Tooltip and Dialog take an explicit `size`
@@ -49,24 +89,24 @@ are listed under "Deliberate" and do not count toward the verdict.
 
 ### Controls and fields
 
-| Next            | Current counterpart(s)                                                    | Missing in Next                                                                                                                                   | Next adds                                                                                                                                                                                                                     | Verdict | Deliberate                                                                                                                                                                              |
-| --------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Button`        | `Button`, `IconButton`, `SystemIconButton.*`, `ButtonGroup`               |                                                                                                                                                   | block-cell `iconOnly`, valence adopted from the surface, `iconEnd`; `hue`, `caretDown`, `compact`, `tooltipSide` (40); `SystemButton.*` presets (51)                                                                          | minor   | `tag` variant moved to Tag (34), its colour kept as `hue` (40); `density`/`elevation` (2, 4); `iconClassNames` (no class escape hatch for icons, 6: colour comes from `hue` or valence) |
-| `Toggle`        | `Toggle`, `ToggleIconButton`, `ToggleGroup`                               |                                                                                                                                                   | text toggles, `aria-pressed` from zag; `activeIcon` (40); `Next.ToggleGroup` single (`radiogroup`) / multiple, `Toolbar.ToggleGroup` (40)                                                                                     | parity  | the 90° rotation without `activeIcon`: a disclosure is `Collapsible` (15)                                                                                                               |
-| `Label`         | `Field.Label`                                                             |                                                                                                                                                   | `srOnly` (39)                                                                                                                                                                                                                 | parity  |                                                                                                                                                                                         |
-| `Field`         | `Field.Root/Label/HelperText/ErrorText/Block/TriggerIcon/PinInput`        |                                                                                                                                                   | `Field.Header` label row with trailing Blocks; `invalid` inherited from FieldSet; `validationValence` (all four tones) and `Label srOnly` (41); `asChild`, `required`, `readOnly` roots; every field type in one story (54)   | parity  | `Field.Block` needs no part: Checkbox/Switch occupy a block cell (19, 54); `TriggerIcon` is the DateInput trigger or a Button in an `end` slot (54)                                     |
-| `FieldSet`      | `Fieldset.*`                                                              |                                                                                                                                                   | legend as an sm label row                                                                                                                                                                                                     | parity  |                                                                                                                                                                                         |
-| `Input`         | `Field.Input`                                                             |                                                                                                                                                   | Field wiring from Ark; `start`/`end` adornments in a control row, `noAutoFill`, `variant=subdued` (41)                                                                                                                        | parity  | `density`/`elevation` (2, 4)                                                                                                                                                            |
-| `Textarea`      | `Field.Textarea`                                                          |                                                                                                                                                   | `autoResize`, 3-row minimum; `variant=subdued` (54)                                                                                                                                                                           | parity  |                                                                                                                                                                                         |
-| `Checkbox`      | `Field.Checkbox`                                                          |                                                                                                                                                   | block cell aligned with icon buttons                                                                                                                                                                                          | parity  | `size` (2)                                                                                                                                                                              |
-| `Switch`        | `Field.Switch`                                                            |                                                                                                                                                   | `role=switch`                                                                                                                                                                                                                 | parity  |                                                                                                                                                                                         |
-| `DateInput`     | `Field.Date/Time/DateTime` (segmented), `Field.TriggerIcon`, `DatePicker` |                                                                                                                                                   | zag `date-input` segments (locale order, typing, arrow steps), Ark `DatePicker` calendar (day/month/year views) behind the trailing trigger, `min`/`max`, `granularity`, `hourCycle`, `locale`, the native value strings (54) | parity  | native input dropped (54, supersedes 25); range/multiple selection not exposed (no current caller)                                                                                      |
-| `PinInput`      | `Field.PinInput`                                                          |                                                                                                                                                   | Ark `pin-input`: `mask`, `otp`, `type`, `onValueComplete`; control-sized cells (54)                                                                                                                                           | parity  |                                                                                                                                                                                         |
-| `NumberInput`   | `Field.Input type=number`                                                 |                                                                                                                                                   | Ark `number-input`: locale parsing/formatting, `step`, clamping, stepper buttons (54)                                                                                                                                         | parity  |                                                                                                                                                                                         |
-| `PasswordInput` | `Field.Input type=password`                                               |                                                                                                                                                   | Ark `password-input`: visibility toggle, `ignorePasswordManagers` (54)                                                                                                                                                        | parity  |                                                                                                                                                                                         |
-| `Select`        | `Select.*` (15 parts)                                                     |                                                                                                                                                   | option icons in item and trigger, `items` collection; `ItemGroup`/`ItemGroupLabel`, `Separator`, `iconHue`, Item children, `multiple`, Trigger `loading` (42); portal `container` (45)                                        | parity  | explicit `size` on Content (follow-up 2); number values: options stay strings and SelectField maps them back (2.14, 42)                                                                 |
-| `Combobox`      | `react-ui-list` `Combobox.*` and `Picker.*`                               | button trigger with the input in the popup, `VirtualTrigger`, item `description`, a create row, async/loading, groups, `multiple`, `displayValue` | input-in-trigger, `filter`, `empty` row, autohighlight Enter; portal `container` (45)                                                                                                                                         | major   |                                                                                                                                                                                         |
-| `Tag`           | `Tag`                                                                     | `asChild`                                                                                                                                         | pill sized to fit a control                                                                                                                                                                                                   | parity  |                                                                                                                                                                                         |
+| Next            | Current counterpart(s)                                                    | Missing in Next                                                                            | Next adds                                                                                                                                                                                                                     | Verdict | Deliberate                                                                                                                                                                              |
+| --------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Button`        | `Button`, `IconButton`, `SystemIconButton.*`, `ButtonGroup`               |                                                                                            | block-cell `iconOnly`, valence adopted from the surface, `iconEnd`; `hue`, `caretDown`, `compact`, `tooltipSide` (40); `SystemButton.*` presets (51)                                                                          | minor   | `tag` variant moved to Tag (34), its colour kept as `hue` (40); `density`/`elevation` (2, 4); `iconClassNames` (no class escape hatch for icons, 6: colour comes from `hue` or valence) |
+| `Toggle`        | `Toggle`, `ToggleIconButton`, `ToggleGroup`                               |                                                                                            | text toggles, `aria-pressed` from zag; `activeIcon` (40); `Next.ToggleGroup` single (`radiogroup`) / multiple, `Toolbar.ToggleGroup` (40)                                                                                     | parity  | the 90° rotation without `activeIcon`: a disclosure is `Collapsible` (15)                                                                                                               |
+| `Label`         | `Field.Label`                                                             |                                                                                            | `srOnly` (39)                                                                                                                                                                                                                 | parity  |                                                                                                                                                                                         |
+| `Field`         | `Field.Root/Label/HelperText/ErrorText/Block/TriggerIcon/PinInput`        |                                                                                            | `Field.Header` label row with trailing Blocks; `invalid` inherited from FieldSet; `validationValence` (all four tones) and `Label srOnly` (41); `asChild`, `required`, `readOnly` roots; every field type in one story (54)   | parity  | `Field.Block` needs no part: Checkbox/Switch occupy a block cell (19, 54); `TriggerIcon` is the DateInput trigger or a Button in an `end` slot (54)                                     |
+| `FieldSet`      | `Fieldset.*`                                                              |                                                                                            | legend as an sm label row                                                                                                                                                                                                     | parity  |                                                                                                                                                                                         |
+| `Input`         | `Field.Input`                                                             |                                                                                            | Field wiring from Ark; `start`/`end` adornments in a control row, `noAutoFill`, `variant=subdued` (41)                                                                                                                        | parity  | `density`/`elevation` (2, 4)                                                                                                                                                            |
+| `Textarea`      | `Field.Textarea`                                                          |                                                                                            | `autoResize`, 3-row minimum; `variant=subdued` (54)                                                                                                                                                                           | parity  |                                                                                                                                                                                         |
+| `Checkbox`      | `Field.Checkbox`                                                          |                                                                                            | block cell aligned with icon buttons                                                                                                                                                                                          | parity  | `size` (2)                                                                                                                                                                              |
+| `Switch`        | `Field.Switch`                                                            |                                                                                            | `role=switch`                                                                                                                                                                                                                 | parity  |                                                                                                                                                                                         |
+| `DateInput`     | `Field.Date/Time/DateTime` (segmented), `Field.TriggerIcon`, `DatePicker` |                                                                                            | zag `date-input` segments (locale order, typing, arrow steps), Ark `DatePicker` calendar (day/month/year views) behind the trailing trigger, `min`/`max`, `granularity`, `hourCycle`, `locale`, the native value strings (54) | parity  | native input dropped (54, supersedes 25); range/multiple selection not exposed (no current caller)                                                                                      |
+| `PinInput`      | `Field.PinInput`                                                          |                                                                                            | Ark `pin-input`: `mask`, `otp`, `type`, `onValueComplete`; control-sized cells (54)                                                                                                                                           | parity  |                                                                                                                                                                                         |
+| `NumberInput`   | `Field.Input type=number`                                                 |                                                                                            | Ark `number-input`: locale parsing/formatting, `step`, clamping, stepper buttons (54)                                                                                                                                         | parity  |                                                                                                                                                                                         |
+| `PasswordInput` | `Field.Input type=password`                                               |                                                                                            | Ark `password-input`: visibility toggle, `ignorePasswordManagers` (54)                                                                                                                                                        | parity  |                                                                                                                                                                                         |
+| `Select`        | `Select.*` (15 parts)                                                     |                                                                                            | option icons in item and trigger, `items` collection; `ItemGroup`/`ItemGroupLabel`, `Separator`, `iconHue`, Item children, `multiple`, Trigger `loading` (42); portal `container` (45)                                        | parity  | explicit `size` on Content (follow-up 2); number values: options stay strings and SelectField maps them back (2.14, 42)                                                                 |
+| `Combobox`      | `react-ui-list` `Combobox.*` and `Picker.*`                               | `multiple` shows joined labels, no chips; `displayValue` is the option label (milestone 5) | input-in-trigger, `filter`, autohighlight Enter, portal `container` (45); trigger mode, `ItemDescription`, `CreateItem`, `Empty`/`List` parts, `loading`, `getAnchorRect`                                                     | minor   |                                                                                                                                                                                         |
+| `Tag`           | `Tag`                                                                     | `asChild`                                                                                  | pill sized to fit a control                                                                                                                                                                                                   | parity  |                                                                                                                                                                                         |
 
 ### Overlays and toolbars
 
@@ -86,12 +126,12 @@ are listed under "Deliberate" and do not count toward the verdict.
 | `Panel` (plank host: sized scope, query container, toolbar/content/footer) | every plugin container                           | Next.Panel as a template root                                               |
 | `Listbox`                                                                  | Listbox (112 roots), MasterDetail, Combobox list | Ark `listbox` (zag listbox machine)                                         |
 | List row layout (icon, title, description, trailing actions)               | `Listbox.ItemContent`, `useListGrid`, Tree rows  | `Container layout='row'` with `columns`                                     |
-| `DragHandle`, `DropIndicator`                                              | OrderedList, Tree, ArrayField                    | Button `iconOnly` ghost; CSS on `--nx-*`                                    |
+| `DragHandle`, `DropIndicator`                                              | OrderedList, Tree, ArrayField                    | Button `iconOnly` ghost; CSS on `--dx-*`                                    |
 | `Tree` / `TreeView`                                                        | plugin-navtree, react-ui-form ObjectTree         | Ark `tree-view`, or the current model on Next rows                          |
 | `Banner`                                                                   | ViewEditor                                       | valence surface (follow-up 34 already adopts it)                            |
 | `TagsInput`                                                                | string arrays                                    | Ark `tags-input` (`PasswordInput`, `NumberInput` done, 54)                  |
 | `HuePicker`, `IconPicker` on Next Popover                                  | HueField, SelectOptionField, ObjectForm          | `react-ui-pickers` restyle                                                  |
-| A control frame for third-party editors                                    | MarkdownField, RefEditor                         | `.nx-input-row` (Input, DateInput, NumberInput, PasswordInput share it, 54) |
+| A control frame for third-party editors                                    | MarkdownField, RefEditor                         | `.dx-input-row` (Input, DateInput, NumberInput, PasswordInput share it, 54) |
 
 ## 2. Shortcomings of the Next model
 
@@ -100,12 +140,12 @@ Each entry states what gets harder than in current react-ui, the impact on the t
 ### 2.1 The sized scope must be created by someone
 
 Sizes, levels and the responsive collapse are all CSS inherited from an ancestor. Current primitives fall back
-to a React context default, so a control anywhere is sized. A Next part outside any `.nx-scope` or Container
+to a React context default, so a control anywhere is sized. A Next part outside any `.dx-scope` or Container
 takes `:root` (md), and a Container that is not inside a query container never collapses its rails.
 
 - **Impact.** High. Every plugin container is a `Panel`; none is a Next scope.
 - **Mitigation.** Add a Next pane host (Next.Panel, or `Panel.Root` setting `container-type: inline-size` and
-  `data-size`) before the first pilot. A dev warning when a Next Container finds no `.nx-scope` ancestor.
+  `data-size`) before the first pilot. A dev warning when a Next Container finds no `.dx-scope` ancestor.
 
 ### 2.2 Portal size propagation
 
@@ -145,11 +185,11 @@ A template root cannot query its own width, and an inheriting Container must nev
 ### 2.5 Virtualization
 
 The Tree windows its rows by translating a window element and measuring each mounted row (`row-window.ts`,
-nominal 40px). Next knows the row height only as `--nx-block-size` in CSS.
+nominal 40px). Next knows the row height only as `--dx-block-size` in CSS.
 
 - **Impact.** High for Tree, low for forms. Subgrid alignment across windowed rows needs the sizer and the
   window to be subgrids too, and a row's nominal extent must match the block size of its scope.
-- **Mitigation.** Read `--nx-block-size` once per scope with `getComputedStyle` (a one-off read, like the
+- **Mitigation.** Read `--dx-block-size` once per scope with `getComputedStyle` (a one-off read, like the
   overlay thumbs' exception to decision 11) to seed the nominal extent. Virtualized rows use their own fixed
   template rather than subgrid (fixed tracks align across subtrees, decision 5).
 
@@ -162,7 +202,7 @@ OrderedList and Tree use pragmatic-drag-and-drop: absolute drop indicators and a
   join a Toolbar's roving focus by accident. Synthetic drags cannot be automated (repo memory), so play tests
   cannot cover a drop.
 - **Mitigation.** The preview copies `data-size` and `data-surface` from the source row's closest ancestors
-  (an attribute read, not layout). Drop indicators are CSS on `--nx-*` variables. Tests assert
+  (an attribute read, not layout). Drop indicators are CSS on `--dx-*` variables. Tests assert
   `[draggable]` and the reorder callback, and a manual story covers the drop.
 
 ### 2.7 Deep subgrids and `:has`
@@ -192,7 +232,7 @@ CodeMirror (MarkdownField, RefEditor), `HuePicker`, `DxAnchor` (Lit) and `QueryF
 
 - **Impact.** Medium. These controls stay at the current control height inside a Next row, so they misalign
   by the control inset.
-- **Mitigation.** Inside `.nx-scope`, define the `--dx-control*` variables from `--nx-control-size` and
+- **Mitigation.** Inside `.dx-scope`, define the `--dx-control*` variables from `--dx-control-size` and
   friends, and give editors a Next control frame (the DateInput row, generalised).
 
 ### 2.10 No i18n in Next
@@ -210,7 +250,7 @@ control inside a Next row renders, but at the wrong height and with the wrong fo
 
 - **Impact.** High during migration; the failure is visual and silent.
 - **Mitigation.** An oxlint `no-restricted-imports` rule for files that import `@dxos/react-ui-form/next`,
-  and a dev-only warning when a `.dx-*` control renders inside `.nx-field`. A plugin migrates one container
+  and a dev-only warning when a `.dx-*` control renders inside `.dx-field`. A plugin migrates one container
   at a time, with all of that container's renderers.
 
 ### 2.12 Ark and zag behaviour
@@ -381,12 +421,23 @@ In order of what they unblock:
 | `Listbox`                            | 112 roots                                   | `Root` (`value`, `onValueChange`, `onDeselect`, `multiselectable`), `Viewport`, `Content`, `Item` (`id`, `selected`, `disabled`), `ItemLabel`, `ItemContent`, `Indicator`; `role=list` when unselectable        | `react-focus` navigation, `ScrollArea`, `dx-hover`/`dx-selected` | Ark `listbox` for selectable lists; plain `Container` stack for `role=list`; `Viewport` = composed ScrollArea               | Next.Listbox, row part, selected/current styling               |
 | `ItemContent`                        | 13                                          | icon track, title, description                                                                                                                                                                                  | grid with `--dx-rail-item`                                       | `Container layout='row' columns='auto minmax(0,1fr) auto'` with a `Block` icon and `Typography`                             | description tone                                               |
 | `OrderedList`                        | 16 roots                                    | `Root` (`items`, `getId`, `onMove`, `dragPreview`, `readonly`, `navigationMode`, `expandedId`), `Viewport`, `Content`, `Item`, `DetailItem`, `DragHandle`, `Title`, `IconButton`, `DeleteButton`, `ExpandCaret` | pragmatic-dnd (`useReorder`), `useListDisclosure`, `useListGrid` | rows as `Container layout='row'` (the `useListGrid` template becomes `columns`); `ExpandCaret`/`DetailItem` = `Collapsible` | DragHandle, DropIndicator, drag preview sizing (2.6)           |
-| `Combobox`                           | 13 roots                                    | `Root` (`open`, `value`, `displayValue`), `Portal`, `Content` (`resetSelectionOnChange`), `Trigger`, `VirtualTrigger`, `Input`, `List`, `Item`, `Empty`                                                         | react-ui `Popover` + `Picker`                                    | `Next.Combobox` in trigger mode                                                                                             | as 3.4 item 6                                                  |
-| `Picker`                             | 3 roots                                     | `Root`, `Input`, `Item`                                                                                                                                                                                         | own keyboard model                                               | retired into Next.Combobox                                                                                                  |                                                                |
+| `Combobox`                           | 13 roots                                    | `Root` (`open`, `value`, `displayValue`), `Portal`, `Content` (`resetSelectionOnChange`), `Trigger`, `VirtualTrigger`, `Input`, `List`, `Item`, `Empty`                                                         | react-ui `Popover` + `Picker`                                    | `Next.Combobox` trigger mode (milestone 5); prop map below the table                                                        | none                                                           |
+| `Picker`                             | 3 roots                                     | `Root`, `Input`, `Item`                                                                                                                                                                                         | own keyboard model                                               | retired into `Next.Combobox` (milestone 5); map below the table                                                             |                                                                |
 | `MasterDetail`                       | 3                                           | `items`, `getLabel`/`getIcon`/`getAdornment`/`getMenu` atoms, `orientation`, `detail`                                                                                                                           | OrderedList + `IconBlock` + `Tooltip` + `ActionMenu`             | Listbox next + `Menu`                                                                                                       | react-ui-menu on Next Menu                                     |
 | `Tree`                               | 32 (plugin-navtree, sdk/shell)              | `model: TreeModel` (atoms), `renderColumns`/`renderIcon`/`renderHeading`, `gridTemplateColumns`, `density`, `toggle`, `draggable`, `canDrop`, `getDropKind`, `selectionMode`, `virtualize`, `indentGuides`      | pragmatic-dnd hitbox, `react-ui-virtual`, `TextTooltip`          | spike: Ark `tree-view` against the current model on Next rows                                                               | Next tree row, indent token, TextTooltip, virtual sizing (2.5) |
-| `DropIndicator`, `TreeDropIndicator` | 2                                           | line/box indicators                                                                                                                                                                                             | `--dx-*` variables                                               | CSS on `--nx-*`                                                                                                             |                                                                |
+| `DropIndicator`, `TreeDropIndicator` | 2                                           | line/box indicators                                                                                                                                                                                             | `--dx-*` variables                                               | CSS on `--dx-*`                                                                                                             |                                                                |
 | Hooks                                | `useListSelection` 4, `useListDisclosure` 2 | selection, navigation, disclosure, grid template, reorder                                                                                                                                                       | framework-neutral logic + `react-focus`                          | keep selection, disclosure and reorder; navigation moves to zag; `useListGrid` becomes `columns`                            |                                                                |
+
+**Combobox and Picker in `/next`.** Neither is ported: `/next` consumers use `Next.Combobox` in trigger mode (no
+re-export from `react-ui-list/next`). Combobox: `Root` `open`/`onOpenChange`/`value`/`onValueChange` map to Ark's
+(`value` is a `string[]`) and `items` replaces caller-rendered children; `displayValue` is the selected option's
+`label`, shown by `Trigger`; `Portal` is built into `Content` (`container` retargets it); `Content`
+`resetSelectionOnChange` is `inputBehavior='autohighlight'` (the default); `Trigger` outside a `Control` is the value
+button; `VirtualTrigger` is `positioning.getAnchorRect` with `Content` composing `Input` and `List`; `Input` in
+`Content` is the search field (caller filtering is `filter={null}` with `onInputValueChange`, plus `loading`); `List`
+and `Empty` keep their names; `Item` takes `item` data (`description` included, `suffix`/`checked` become composed
+parts and the built-in `ItemIndicator`). Picker: `Root` is `Combobox.Root`, `Input` is `Combobox.Input`, `Item` is
+`Combobox.Item`, its keyboard model replaced by zag's. A create row is the Root's `onCreate`.
 
 ### 4.2 Extension points plugins use
 
@@ -500,6 +551,10 @@ reach parity. Numbered once across the section so a reply can cite a number.
 9. **Combobox trigger mode (gap 3, milestone 5).** Extend `Next.Combobox` with a button trigger and the input
    inside the popup, or add a separate `Next.Picker`. Recommendation: extend Combobox (one machine, one set of
    item parts); retire the list package's `Combobox` and `Picker` in `/next`.
+   Done (milestone 5): a `Trigger` outside `Control` is the value button, an `Input` inside `Content` is the popup's
+   search field (Content becomes Ark's `composite={false}` dialog around a `List` listbox), plus `ItemDescription`,
+   `CreateItem` (Root `onCreate`), `Empty`, Root `loading` and `filter={null}`; the virtual anchor is
+   `positioning.getAnchorRect`, as for Menu and Popover.
 10. **Control frame (§3.4 item 7).** DateInput's frame (adornments inside a bordered control) generalised for
     PasswordInput, MarkdownField and RefEditor. Options: (1) `Next.ControlFrame` part, (2) Input `start`/`end`
     slots only. Recommendation: 1, since editors are not inputs.
@@ -524,13 +579,13 @@ reach parity. Numbered once across the section so a reply can cite a number.
     inherit.
 16. **DetailItem layout.** A row Container centres every cell, so the detail row is a Collapsible root holding its
     own row. Options: (1) keep that, (2) a top-aligned Container row option. Recommendation: 1.
-17. **Drop-target styling.** Rows showing a drop indicator are positioned by a generic `:has(> .nx-drop-indicator)`
+17. **Drop-target styling.** Rows showing a drop indicator are positioned by a generic `:has(> .dx-drop-indicator)`
     rule. Options: (1) keep it, (2) an explicit `data-drop-target` attribute. Recommendation: 1.
 18. **Title in a disclosure row.** `Collapsible.Trigger` draws its label in the description colour. Options: (1) a
     title variant on the trigger, (2) accept it. Recommendation: 1.
 19. **OrderedList keyboard grammar.** Options: (1) roving focus between rows, as the current `navigationMode`,
     (2) a tab stop per control, as now. Recommendation: 1, which needs a roving-focus part outside Toolbar.
-20. **Shared row states.** Hover and selected styles apply only to `.nx-listbox-item`. Recommendation: one row-state
+20. **Shared row states.** Hover and selected styles apply only to `.dx-listbox-item`. Recommendation: one row-state
     rule that OrderedList rows share.
 21. **List chrome labels.** "Drag to rearrange" and "Delete" come from app-level `osTranslations`. Recommendation:
     move them to react-ui translations (2.10).
@@ -634,30 +689,260 @@ children (rule 7); `Field.Label` shows the required indicator automatically (rul
 
 ### Open from the plugin-sheet pilot
 
-40. **Typography cannot carry an `id`**, so a heading cannot label a list (`aria-labelledby`). Options: (1) Typography
-    passes `id` through, (2) a heading/label part. Recommendation: 1.
-41. **No Next empty state.** Next has no Banner, so an empty list falls back to a description Typography.
-    Recommendation: an `Empty` part on Listbox and OrderedList, like Ark's Combobox.
-42. **Next sections inside current hosts.** A section rendered in the current `ObjectProperties`/Panel has no Next
-    scope, so it renders at md beside react-ui-form's current fields. Decide with milestone 10.
-43. **Row identity for plain-struct arrays.** `getId` needs a stable id and `Sheet.Range` has none, so the pilot
-    derives one from its fields. Options: (1) an index fallback in `OrderedList`, (2) ids on such schemas.
-    Recommendation: 2.
-44. **Per-row Remove names.** `SystemButton.Remove` says "Remove"; a per-row name ("Remove A1:B2") needs a
-    translation with the row's text. Decide with point 21.
+Points 40–44 are settled in the decision reviews below.
+
+### Decision review 2026-10-01 (group A: foundations)
+
+Reviewed one question at a time; decisions supersede the recommendations above.
+
+- **Point 7, Container child span:** a `span` prop (a number or `'full'`) on Container and on Container-based parts
+  (`Field.Root`, Fieldset rows), rendered as `grid-column` from a data attribute.
+- **Point 10, control frame:** both. Input keeps `start`/`end` slots, built on an exported `ControlFrame` that editors
+  and custom controls use directly.
+- **Point 11, mixing guard:** no lint rule; the final migration lands as one separate PR, so mixed files never ship.
+- **Point 12, theme cut-over:** no special strategy; the cut-over happens in the migration PR, before production. Until
+  then the CI startup-budget gate still requires Next to load lazily in any pilot.
+- **Point 22, test helpers:** one entry. The geometry assertions move under `src/next/testing/` and export from
+  `@dxos/react-ui/next/testing` with the decorators.
+- **Point 40, list naming:** a `Label` part on lists (as `Listbox.Label`); Typography gains no `id` pass-through.
+- **Point 41, empty states:** a standalone `Next.Empty` (an `icon` prop, its text as children, a translated default).
+  Each composite declares its own `Empty` part with identical props, built on `Next.Empty`, rendered only when the
+  composite has no items. `Banner` is ported separately, without an empty part.
+- **Spike 45, grid Fieldset element:** Fieldset always renders `div role='group'` named by its legend; `disabled`
+  reaches its controls through context.
+- **Spike 46, subgrid in a one-track cell:** deferred for a separate discussion.
+
+### Decision review 2026-10-01 (group B: lists)
+
+- **Virtualization:** `virtual` is `undefined | 'fixed' | 'variable'`, shared by Listbox, OrderedList and Tree.
+  `'fixed'` windows the rows with spacer rows and one row height (dev warning when rows differ); `'variable'` uses
+  `content-visibility`.
+- **Selection:** Ark owns selection; `useListSelection` becomes an optional adapter.
+- **List machine:** every list runs Ark's listbox machine, with `selectionMode='none'` when nothing selects.
+- **Row columns:** part-based layout by default (leading cell, text, trailing parts); a list needing custom tracks
+  declares `columns` once on its Root and rows inherit them as a subgrid.
+- **Point 19, keyboard grammar:** the ARIA grid pattern. → enters a row, Tab moves within it, Escape or ← returns;
+  row controls stay out of the tab order until the row is entered; DragHandle keeps Alt+↑/↓.
+- **Point 16, DetailItem layout:** no `DetailItem`. `Item` takes `collapsible`, `open`, `defaultOpen` and
+  `onOpenChange`; with any of them its root is a Collapsible holding the one-line row (caret added to the trailing
+  column) and an `OrderedList.Detail` part below at full width. Plain rows run no Collapsible machine.
+- **Point 17, drop target:** `useReorder` sets `data-drop-target='top' | 'bottom'` on the row; the `:has()` rule stays
+  as the fallback for custom hosts.
+- **Point 18, disclosure title:** the trigger draws only the caret, a square button in the trailing action column
+  labelled by the row's `ItemText`; the labelled trigger stays for standalone toggles.
+- **Point 20, row states:** one shared `dx-row` class carries hover, selected, disabled and drop states keyed on
+  Ark's attributes; each row type keeps its own class for layout.
+- **Point 24, drag preview:** a default `DragPreview` chip labelled by `getLabel`, falling back to `ItemText`;
+  `dragPreview` overrides it.
+- **Point 43, row identity:** `getId` is optional; `useStableIds` keeps generated ids beside a plain array through
+  move, remove and insert.
+- **Point 44, Remove names:** `SystemButton.Remove` is named from the row's `ItemText` via `aria-labelledby`
+  ("Delete Q3 budget"); `label` overrides it.
+- **Point 21, chrome labels:** the strings move to react-ui translations under its own `translationKey`.
+- **Point 23, plugin list:** list items forward `hue` to their icon (`ItemIcon` forwards Icon's props); no cards.
+
+**Built (Phase A2, 2026-10-01):** every group B decision above. `Next.Listbox` always runs Ark's machine
+(`selectionMode='none'` included) and renders its Content and Items from zag's props, so the grid keyboard
+(`components/Listbox/grid.ts`) runs before zag and row controls never select their row; `useVirtualRows` and
+`VirtualSpacer` (`components/Listbox/virtual.tsx`, exported as `Next.useVirtualRows`) are the shared windowing for
+Tree to adopt; `theme/row.css` holds `dx-row` and the `data-drop-target` line; Root `columns` makes rows subgrids;
+`Next.Empty` and the `Empty` parts; `Collapsible.Trigger` without children is the caret-only square named by the row's
+`ItemText`; `SystemButton.Remove` is named "Delete <text>" (its translated label, then the row's text); `DragHandle`'s label
+defaults to the react-ui `drag-handle.label`. In react-ui-list/next: OrderedList on Next.Listbox with `Label`, `Empty`,
+`ItemIcon`, `ItemText`, `ItemDescription`, collapsible `Item` + `Detail` (no `DetailItem`), optional `getId`,
+`getLabel` and the default preview chip; `useStableIds` (root entry) and `listboxSelection`, the `useListSelection`
+value adapter. The current (non-next) OrderedList keeps `DetailItem` until the cut-over.
+
+### Decision review 2026-10-01 (group C: forms)
+
+- **Point 1, settings layout:** option 1 as built in the spike, matching the current Form: equal tracks, each row its
+  own bordered card; the title spans the row in the base colour, 0.5rem above the description (`text-sm`, description
+  colour) and the control, which share the next line top-aligned; stacked below 24rem with a gap under the
+  description.
+- **Spike 48, `resolveFieldRenderer`:** unchanged until the migration PR, which makes it return Next renderers; the
+  spike keeps its translation table until then.
+- **Spike 50, blur:** on the row (`Field.Root onBlur`), firing only when focus leaves the row (`relatedTarget`
+  outside it); NumberInput, PasswordInput and DateInput gain no `onBlur`.
+- **Spike 52, mono input:** `Input variant='mono'`.
+- **Point 42, Next sections in current hosts:** moot; hosts and sections move together in the migration PR.
+- **Test address:** the Form test schema uses `Geo.PostalAddress`, which gains titles where its key reads poorly
+  (`locality` → City, `region` → State / Region, `extendedAddress`); the ZIP pattern demo moves to its own field.
+
+### Decision review 2026-10-01 (groups D, E)
+
+- **Point 2, Tree:** Ark tree-view driven by `TreeModel` atoms (controlled machine, no zag `loadChildren`), with the
+  spike's lazy walk, flat rows and `virtual='fixed'` windowing; the lazy walk lands in Next only.
+- **Point 13, image dominant colour:** an opt-in `Next.Image backdrop='dominant'`; the sampler moves to a shared
+  utility (also used by `dx-avatar`) and falls back to the surface colour without CORS. The migration PR sets it
+  wherever the current Image's letterbox fill shows.
+
+- **Spike 46, subgrid in a one-track cell:** every cell of a `row` Container provides its own rails across its
+  track, so `gutter='inherit'` works anywhere; a group in a side-by-side cell aligns within its own column.
+
+No open questions remain.
+
+### Decision review 2026-10-01 (follow-ups)
+
+- **Master-detail:** not a component. Selection stays in the list's or tabs' Root context (`Next.Listbox.useContext()`,
+  `Next.Tabs.useContext()`); the layout is `Next.Splitter` with `collapseBelow`, a controllable `mode`, and
+  `resizable={false}` by default with a static divider. `exemplars/MasterDetail.stories.tsx` is the approved pattern.
+  At the cut-over, react-ui-list `MasterDetail` and the current Tabs' `activePart`/`Viewport`/`BackButton` are
+  removed; their callers (ChatOptions, Welcome, VideoArticle) compose Tabs + Splitter.
+- **Disclosure timing:** one duration, `--dx-disclosure-duration` (ui-theme's `--duration-tree-disclosure`, 0 under
+  reduced motion), with `--dx-disclosure-ease-open` (ease-out) and `--dx-disclosure-ease-close` (ease-in). Tree,
+  Collapsible, Accordion, Main and Splitter use it; Main keeps its own ease-in-out curve.
+- **Ref arrays in forms:** an `ArrayPresentation({ ordered?: boolean; display?: 'tag' | 'title' })` annotation
+  (`'card'` may come later). Tag refs default to `'tag'`, other refs to `'title'`; `ordered` implies drag reorder.
+- **Button `size`:** `xs`–`xl` on Button (so Toggle and `ToggleGroup.Item`) sets `data-size` on the button alone. The
+  `density` codemod reads the enclosing scope first: it drops `density` where that scope already yields it
+  (`fine`→`sm`, `coarse`→`md`), hoists a size shared by sibling buttons to the nearest scope element, and otherwise
+  sets `size` on the button; scopes it cannot see (another file) are reported.
+- **Colour token naming:** not part of the cut-over. A follow-up PR renames the text emphasis tokens, utilities and
+  `tone` values together with the other `subdued`/`description` colour uses (borders included); `fg`/`fg-muted`/
+  `fg-subtle` is the proposal to review then.
+- **`Next.Panel.Body` is a plain slot.** The growing middle row between Header and Footer, with `asChild` and no
+  built-in ScrollArea or Container, so it adds no frame and carries no Container props. Scrolling is composed inside
+  it: `<Panel.Body asChild><ScrollArea.Root><ScrollArea.Viewport asChild><Container gutter='rail'>…`; a canvas or board
+  takes the slot directly with `asChild`. `Listbox.Content scroll={false}` is unchanged (it hands scrolling to such a
+  composed host). Every Next caller now composes the ScrollArea and the rail Container it relied on (react-ui Panel,
+  Listbox and MasterDetail stories, react-ui-form/next stories and `Form.Viewport scroll`, plugin-registry); no preset
+  prop was added (TASKS.md records the candidate).
+- **Panel gutter defaults to `sm`** (2026-10-02). `Panel.Root gutter` (default `sm`) is the gutter of the first
+  unnamed Container under `Panel.Body`, so `Form.Viewport` (whose default was `rail`, 32px) insets forms by 8px as
+  main's `Form.Viewport gutter='sm'` did; a non-scrolling Viewport outside a panel falls back to `sm`. The react-ui-form
+  stories dropped their `gutter='rail'`; `rail` stays only where rows put icons in the gutter (Card, Banner, the
+  Panel/Listbox/MasterDetail rail stories). Follow-up: audit the remaining react-ui stories that name `rail` around
+  plain content.
+- **Theme context split.** `useThemeContext`'s `tx` is not carried into Next (Next styles through `.dx-*` CSS). The
+  values Next components still read come from `Next.useThemeMode()` (`themeMode`), `Next.usePlatform()` (`platform`)
+  and `Next.useIosKeyboard()` (`hasIosKeyboard`), which read the existing ThemeProvider (no new provider).
 
 ### Milestone status
 
 | #   | Milestone                     | Status                                                                                                             |
 | --- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| 1   | Foundations                   | pane host, popup size, Group stretch done; child span (point 7), required marker (point 8), depth-5 benchmark open |
+| 1   | Foundations                   | pane host, popup size, Group stretch, child span (point 7) done; required marker (point 8), depth-5 benchmark open |
 | 2   | Next.Listbox                  | done                                                                                                               |
 | 3   | `react-ui-list/next` scaffold | done: `./next` entry, Listbox, plugin-registry pilot (open: points 14, 15, 23)                                     |
-| 4   | OrderedList next              | done: OrderedList; plugin-sheet `RangeList` migrated (open: points 16–20, 24, 40–44)                               |
-| 5   | Combobox trigger mode         | blocked on point 9                                                                                                 |
+| 4   | OrderedList next              | done: OrderedList; plugin-sheet `RangeList` migrated; group B decisions built (Phase A2)                           |
+| 5   | Combobox trigger mode         | done: trigger mode, description, create row, async, virtual anchor (open: ObjectPicker story)                      |
 | 6   | `react-ui-form/next` core     | not started; needs points 7, 8                                                                                     |
 | 7   | Settings layout               | blocked on point 1                                                                                                 |
 | 8   | Arrays and layout templates   | needs milestones 4, 6, 7                                                                                           |
 | 9   | Ref and lookup fields         | needs milestones 5, 6                                                                                              |
 | 10  | Higher-level form components  | needs milestones 7–9, point 10                                                                                     |
-| 11  | Tree next                     | blocked on points 2, 3                                                                                             |
+| 11  | Tree next                     | blocked on point 3                                                                                                 |
+
+## 7. Migration plan
+
+The cut-over is one PR, landed before production, after which the current components are deleted. Counts are from
+[MIGRATION-INVENTORY.md](../../docs/archive/MIGRATION-INVENTORY.md) (generated 2026-10-01; regenerate before Phase C).
+
+### Scale
+
+1,297 files in 153 packages import `@dxos/react-ui` (1,255), `@dxos/react-ui-list` (87) or `@dxos/react-ui-form`
+(128); 198 are stories. `@dxos/react-ui-menu` adds 125 files. 11 files use Next today.
+
+### Phase A: close the gaps (on `main`, in normal PRs)
+
+Nothing in the cut-over PR may be a new component; every Next counterpart lands first, with stories and tests.
+
+1. **Done.** Phase A1: Container `span` (and Field/Fieldset), row cells with their own lines, `ControlFrame`,
+   `Next.Empty`, `Banner`, the `div` group Fieldset, `Input variant='mono'`, `Image backdrop='dominant'`. Phase A2:
+   the list `Empty` parts, collapsible `OrderedList.Item`, the group B list decisions. Phase A3: Tree exported from
+   `react-ui-list/next`.
+2. `react-ui-form/next` from the spike (draft PR #13550) through milestones 6–10.
+3. A Next action binding for `react-ui-menu` (`useMenuActions` → Next Menu and Toolbar). **Done:**
+   `@dxos/react-ui-menu/next` exports `ActionToolbar` and `ActionMenu` with the current props over the shared model
+   (hooks, `MenuBuilder`, types, re-exported), so a call site migrates by its import path. Groups render as
+   `Menu.Sub`/`TriggerItem`, `checked` members of a single-select group as a `RadioItemGroup`, of a multi-select group
+   as `CheckboxItem`s; a `toggle` action is a `Next.Toggle`. The Phase A1 props replaced its workarounds: Button and
+   Menu.ItemIcon `spin`, Button `iconSize` (the binding's spacing steps map to Next sizes), `Toolbar.Separator
+variant='gap'`, Switch in the toolbar's roving focus, `Menu.TriggerItem disabled`, and `useVirtualAnchor` for
+   `virtualRef`. Still open: Button has no icon slot, so `iconClassNames` is dropped on toolbar buttons.
+4. Ports with no counterpart: Avatar (17 files), Tabs (14), Main (9), Progress, Splitter, Toast, ErrorFallback,
+   Focus, MediaPlayer, ScrollContainer, Carousel, Accordion, QrCode and 13 single-file components. **Done** (2026-10-01)
+   except master-detail Tabs (`Viewport`, `BackButton`, `activePart`; 3 callers), which needs a decision. All 27 have
+   a Next component, `.dx-*` rules and a `Test` story. The renames and drops below are the Phase B codemod input:
+   - **Avatar:** `Root` (ids only) + `Content` → one `Avatar.Root` element (`imgSrc` → `src`); numeric `size` → `size`
+     xs–xl (a block across) or `fill` (host width); `Label`/`Description` → `label` or `aria-labelledby`; `Image` and
+     `Fallback` parts; no lit-ui.
+   - **Tabs:** `Tablist` → `List`; `Button`/`IconButton` → `Trigger` (a Button); `Panel` → `Content`; new `Indicator`;
+     default orientation horizontal (was vertical); `TabGroupHeading`, `TabPrimitive` not ported.
+   - **Main:** parts unchanged; `useSidebars` → `useMainSidebars`, `DRAWER_*` → `MAIN_DRAWER_*`; `data-side` is
+     `start`/`end`; surfaces via `data-surface`.
+   - **Progress:** `progress` → `value` (`max` defaults to 1); `label` names the bar.
+   - **Splitter:** `Handle` → `ResizeTrigger`.
+   - **Toast:** `Viewport` → `Toaster`; `Title icon onClose` → `Header icon` (its CloseTrigger dismisses through the
+     machine, reported by `onOpenChange`); `Actions` → `Footer`; `Action` → `ActionTrigger` (a Button that dismisses
+     after its click; `altText` dropped); `Close` → `CloseTrigger`; `type` dropped.
+   - **Accordion:** `ItemHeader` → `ItemTrigger`, `ItemBody` → `ItemContent`; `items`/`getId` render prop, `leading`,
+     `trailing`, `hover` dropped; `rounded` folded into `border`; `multiple` is a prop (default true).
+   - **Carousel:** `Viewport` → `ItemGroup`, `Slide` → `Item`, `Previous`/`Next` → `PrevTrigger`/`NextTrigger`,
+     `Indicators` → `IndicatorGroup`; `Content` dropped (Root is the grid; PluginDetail's `Content classNames='contents'`
+     needs a subgrid).
+   - **Breadcrumb:** `ListItem` → `Item` (no `asChild`; Plank's `ListItem asChild > button` → `Item > Link asChild`);
+     `Current` is a span with `aria-current='page'`; Separator is an `<li aria-hidden>`.
+   - **HoverCard, Tour, FloatingPanel:** `Portal`, `Arrow`, `Backdrop`, `Spotlight`, `Positioner`, `Resizers` fold into
+     `Content` (`container`, `size`, `arrow`); placement moves to Root `positioning`; `Close` → `CloseTrigger`;
+     callbacks take Ark's detail objects (`{ open }`, `{ size }`, …); `elevation` dropped.
+   - **MenuButton:** built on `Next.Button`/`Next.Menu`; options form a `RadioItemGroup`; new `menuSize`.
+   - **ScrollContainer:** `Content thin` → `width`; `padding`, `centered` dropped. **Focus:** `Next.useFocus` reads a
+     Next-only context. **Editable:** `Next.useEditable` (MarkdownEditable moves to it); fixed test ids dropped.
+   - **Slider:** `thumbSize`/`thumbAlignment` dropped (thumbs are centred and icon-sized); new `label`.
+     **Steps:** `options` → CSS metrics plus `duration`. **TextCrawl:** `size`, `textClassNames` dropped (size from
+     `data-size`). **Timestamp, AttentionGlyph:** fixed test ids and the ancestor-attention glyph dropped.
+   - **Skeleton** sizes from the size metrics; **Link** `variant='neutral'` now applies; **QrCode** root is `role=img`
+     with `label`; **ErrorFallback** (`ThrowError` not ported), **MediaPlayer**, **Deferred** unchanged in API.
+   - Still imported from the current tree, to move before it is deleted: `components/MediaPlayer/media-kind.ts`,
+     `components/ErrorFallback/parse-stack.ts` (and ScrollArea's thumbs, as before).
+5. Translation keys: four `osTranslations` lookups use undefined keys (`drag-handle.label`, `toolbar-delete.label`,
+   `drawer.resize.label`); fixed by moving them to react-ui translations (group B). **Done:** the list DragHandle and
+   DeleteButton and Dialog's delete action read react-ui keys; `drawer.resize.label` already did.
+
+### Phase B: codemods (a tools package, tested on fixtures)
+
+| Codemod                                                                                                             | Kind       | Scope             |
+| ------------------------------------------------------------------------------------------------------------------- | ---------- | ----------------- |
+| `Panel.Toolbar`→`Header`, `Statusbar`→`Footer`, drop `asChild`                                                      | mechanical | 196 + 24 files    |
+| `IconButton`→`Button iconOnly`, `Toolbar.IconButton`/`Button`→`Button`, `SystemIconButton`→`SystemButton`           | mechanical | 183+ files        |
+| Radix→Ark part names (`Dialog.Close`, `Select.TriggerButton`, `RadioGroup`, `SubTrigger`, `ItemLabel`, `Indicator`) | mechanical | per inventory §2  |
+| Remove `Tooltip.Provider`; unwrap Portal, Overlay, Arrow, Viewport                                                  | mechanical | per inventory §2  |
+| `Panel.Content`→`Body` (with `asChild`→ScrollArea residue)                                                          | semi       | 245 files         |
+| `density=`→`size=` (scope-aware: drop, hoist, else Button `size`), `Icon size=`                                     | semi       | 66 + 161 elements |
+| Import rewrite `@dxos/react-ui` → Next exports (namespace flattening)                                               | mechanical | all               |
+| Text-emphasis class rename                                                                                          | regex      | 770 occurrences   |
+
+Each codemod reports what it could not convert; that list is the manual residue for Phase C.
+
+**Built** in `tools/codemorph` (transforms `renames`, `layout`, `classnames`, `emphasis`, `imports`; the emphasis rename table is
+empty until the names are decided). Dry-run counts and the residue summary: [MIGRATION-CODEMODS.md](../../docs/archive/MIGRATION-CODEMODS.md).
+
+### Phase C: the cut-over PR (one long-lived branch, landed as one PR)
+
+1. Branch from `main`; run the codemods; commit per codemod, so review reads one rename at a time.
+2. Manual residue in dependency order, one commit per batch: (1) UI leaf libraries, (2) editor, mosaic, form,
+   table, canvas, (3) shell, devtools, stories, (4) plugins in depth order with inbox, space, assistant and deck
+   isolated, (5) apps.
+3. Replace the theme: Next becomes the default export, the current components and their CSS are deleted, and
+   `density` contexts go.
+4. Verification: build, lint, full test sweep, every storybook play test, the boot-budget gate, and a visual pass
+   over Composer's main surfaces.
+
+### `classNames` policy (decided)
+
+The cut-over PR keeps `classNames` (Next accepts `className`, DESIGN decision 6), so it stays codemod-only. It
+applies only the fixed rules (Icon valence colours, `truncate`, `font-mono`, `col-span`, dropped no-ops) and the
+element swaps the part renames already require. Conversions that need a visual check follow in per-package batches
+with a story or screenshot each. Phase A adds the six props that make the commonest leftovers mechanical: Container
+`width='document'`, Typography `lines`, `tone` and `mono`, Icon `tone` and `spin`, Button `align='start'`. Research:
+[MIGRATION-CLASSNAMES.md](../../docs/archive/MIGRATION-CLASSNAMES.md) (about a third of the 1,139 props are removable by rule).
+
+### Risks
+
+- **`classNames`:** 1,139 props in 490 files. Next keeps `className` as an escape hatch (DESIGN decision 6), so
+  they compile; most are layout classes (flex, gap, padding) that should become Container props, which is the
+  bulk of the manual work.
+- **Branch drift:** a long-lived branch against an active `main`; rebase the codemods (rerun, do not merge their
+  output) and keep the manual batches small.
+- **Review size:** mechanical commits are reviewed by rerunning the codemod; only the residue needs reading.

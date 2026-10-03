@@ -5,8 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { Field, IconButton, Panel, ScrollArea, Select, Toolbar } from '@dxos/react-ui';
-import { composable } from '@dxos/react-ui';
+import { Button, Field, Input, Panel, ScrollArea, Select, Toolbar, composable } from '@dxos/react-ui';
 import { SyntaxHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -58,10 +57,10 @@ const DefaultStory = () => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Field.Root>
-            <Field.Input
+            <Input
               placeholder='Article URL'
               value={url}
               onChange={(event) => setUrl(event.target.value)}
@@ -74,35 +73,28 @@ const DefaultStory = () => {
             />
           </Field.Root>
           <Select.Root
-            value={url}
-            onValueChange={(sample) => {
+            value={[url]}
+            onValueChange={({ value: [sample] }) => {
               setUrl(sample);
               setState({ status: 'idle' });
             }}
+            items={SAMPLE_URLS.map((sample) => ({ value: sample, label: new URL(sample).hostname }))}
           >
-            <Toolbar.Button asChild>
-              <Select.TriggerButton placeholder='Sample URL' />
-            </Toolbar.Button>
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {SAMPLE_URLS.map((sample) => (
-                    <Select.Option key={sample} value={sample}>
-                      {new URL(sample).hostname}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
+            <Select.Trigger placeholder='Sample URL' />
+            <Select.Content>
+              {SAMPLE_URLS.map((sample) => (
+                <Select.Item key={sample} item={{ value: sample, label: new URL(sample).hostname }} />
+              ))}
+            </Select.Content>
           </Select.Root>
-          <Toolbar.IconButton
+          <Button
             icon='ph--arrow-clockwise--regular'
             iconOnly
             label='Fetch'
             onClick={() => void handleFetch()}
             disabled={state.status === 'loading'}
           />
-          <IconButton
+          <Button
             label={showMarkdown ? 'Show preview' : 'Show Markdown'}
             icon={showMarkdown ? 'ph--article--regular' : 'ph--code--regular'}
             iconOnly
@@ -110,22 +102,22 @@ const DefaultStory = () => {
             onClick={() => setShowMarkdown((showMarkdown) => !showMarkdown)}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         {state.status === 'ok' ? (
           <ResultView article={state.article} sourceLength={state.sourceLength} showMarkdown={showMarkdown} />
         ) : (
           <div>
             {state.status === 'idle' && (
-              <p className='p-2 text-sm text-subdued'>Paste an article URL and press Fetch to see the extraction.</p>
+              <p className='p-2 text-sm text-fg-subtle'>Paste an article URL and press Fetch to see the extraction.</p>
             )}
-            {state.status === 'loading' && <p className='p-2 text-sm text-subdued'>Fetching and extracting…</p>}
+            {state.status === 'loading' && <p className='p-2 text-sm text-fg-subtle'>Fetching and extracting…</p>}
             {state.status === 'error' && (
               <pre className='p-2 text-sm text-error-text whitespace-pre-wrap break-all'>{state.message}</pre>
             )}
           </div>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -163,7 +155,7 @@ const ResultView = composable<HTMLDivElement, ResultViewProps>(
 
     if (showMarkdown) {
       return (
-        <ScrollArea.Root {...props} orientation='vertical' thin ref={forwardedRef}>
+        <ScrollArea.Root {...props} orientation='vertical' ref={forwardedRef}>
           <ScrollArea.Viewport>
             <SyntaxHighlighter language='markdown' classNames='m-4'>
               {article.markdown}

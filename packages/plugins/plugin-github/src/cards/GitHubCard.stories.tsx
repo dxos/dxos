@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, Icon } from '@dxos/react-ui';
+import { Block, Card, Icon } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { createIssue, createPullRequest, createRepo } from '../testing/index.ts';
@@ -31,9 +31,9 @@ const DefaultStory = ({ kind }: StoryArgs) => {
   return (
     <Card.Root classNames='dx-card-popover'>
       <Card.Header>
-        <Card.Block>
+        <Block>
           <Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--circle-dashed--regular'} />
-        </Card.Block>
+        </Block>
         <Card.Title>{Obj.getLabel(subject)}</Card.Title>
       </Card.Header>
       <GitHubCard role='card--content' subject={subject} />

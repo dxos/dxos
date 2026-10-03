@@ -49,7 +49,7 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
   ({ classNames, children, asChild, ...props }, forwardedRef) => {
     const classes = mx(
       'flex items-center justify-center gap-2 p-1 px-2 rounded-xs',
-      'select-none cursor-pointer dx-focus-ring text-description text-xs',
+      'select-none cursor-pointer dx-focus-ring text-fg-muted text-xs',
       'hover:bg-neutral-100 active:bg-neutral-200 dark:hover:bg-neutral-700 dark:active:bg-neutral-600',
       classNames,
     );

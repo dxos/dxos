@@ -38,7 +38,7 @@ export const RepositoryFileView = ({ file }: RepositoryFileViewProps) => {
       <img src={`data:${imageType};base64,${file.content}`} alt={file.path} className='max-w-full' />
     </div>
   ) : (
-    <div className='dx-expand grid place-items-center p-4 text-description'>
+    <div className='dx-expand grid place-items-center p-4 text-fg-muted'>
       {t('binary-file.message', { size: file.size })}
     </div>
   );

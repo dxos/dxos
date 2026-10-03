@@ -1,44 +1,51 @@
 /*
- * Popover: a portalled panel on the popup level (`.nx-popup` supplies size, level and radius), padded by the gap.
+ * Popover: a portalled panel on the popup level (`.dx-popup` supplies size, level and radius), padded by the gap.
  */
 
 @layer dx-components {
-  .nx-popover {
+  .dx-popover {
     display: flex;
     flex-direction: column;
-    gap: var(--nx-gap-size);
+    gap: var(--dx-gap-size);
     min-width: 12rem;
     max-width: min(24rem, 100vw - 1rem);
     max-height: var(--available-height, none);
-    padding: var(--nx-gap-size);
+    padding: var(--dx-gap-size);
   }
 
   /* Fills what Header and Footer leave; its inset gutter replaces the panel's padding, so the thumb sits in it. */
-  .nx-popover-body {
+  .dx-popover-body {
     flex: 1 1 auto;
     min-height: 0;
-    margin-inline: calc(-1 * var(--nx-gap-size));
+    margin-inline: calc(-1 * var(--dx-gap-size));
+    /* Clipped to the panel's corners: in an unpadded panel the body's content meets the rounded border. */
+    border-radius: inherit;
+    overflow: hidden;
+  }
+  /* A body whose content has not mounted yet (a lazily loaded surface) would show the panel collapsed to its border. */
+  .dx-popover:has(> .dx-popover-body .dx-scroll-viewport:empty) {
+    visibility: hidden;
   }
 
   /* A trailing CloseTrigger's inset cell ends at the panel's padding edge, like `Field.Header`'s trailing icon-only Button. */
-  .nx-popover-header {
+  .dx-popover-header {
     display: flex;
     align-items: center;
-    gap: var(--nx-gap-size);
-    min-height: var(--nx-block-size);
+    gap: var(--dx-gap-size);
+    min-height: var(--dx-block-size);
   }
 
-  .nx-popover-title {
+  .dx-popover-title {
     flex: 1;
     min-width: 0;
     margin: 0;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     font-weight: 500;
   }
 
-  .nx-popover-description {
+  .dx-popover-description {
     margin: 0;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
 }

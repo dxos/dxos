@@ -29,9 +29,7 @@ export const BuildOutput = ({ state }: BuildOutputProps) => {
 
   if (!build && !run) {
     return (
-      <div className='dx-expand grid p-2 overflow-auto text-xs text-description'>
-        {t('diagnostics.empty.placeholder')}
-      </div>
+      <div className='dx-expand grid p-2 overflow-auto text-xs text-fg-muted'>{t('diagnostics.empty.placeholder')}</div>
     );
   }
 
@@ -77,7 +75,7 @@ const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
     <div className='dx-expand flex flex-col overflow-auto'>
       <SectionHeader label={t('diagnostics.section.label')} count={diagnostics.length} />
       {diagnostics.length === 0 ? (
-        <div className='p-2 text-description'>—</div>
+        <div className='p-2 text-fg-muted'>—</div>
       ) : (
         <ol className='flex flex-col'>
           {diagnostics.map((diagnostic, index) => (
@@ -89,7 +87,7 @@ const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
               )}
             >
               {diagnostic.path && (
-                <span className='text-description'>
+                <span className='text-fg-muted'>
                   {diagnostic.path}
                   {diagnostic.line !== undefined && `:${diagnostic.line}`}
                   {diagnostic.column !== undefined && `:${diagnostic.column}`}
@@ -117,7 +115,7 @@ const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
     <div className='dx-expand flex flex-col overflow-auto'>
       <SectionHeader label={t('console.section.label')} count={total} />
       {total === 0 ? (
-        <div className='p-2 text-description'>{t('console.empty.placeholder')}</div>
+        <div className='p-2 text-fg-muted'>{t('console.empty.placeholder')}</div>
       ) : (
         <pre className='flex flex-col px-2 py-1 font-mono whitespace-pre-wrap break-all'>
           {stdout.map((line, index) => (
@@ -135,8 +133,8 @@ const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
 };
 
 const SectionHeader = ({ label, count }: { label: string; count: number }) => (
-  <div className='px-2 py-1 text-description border-b border-separator flex items-center gap-2 dx-toolbar-surface'>
+  <div className='px-2 py-1 text-fg-muted border-b border-separator flex items-center gap-2 dx-toolbar-surface'>
     <span>{label}</span>
-    <span className='text-description'>({count})</span>
+    <span className='text-fg-muted'>({count})</span>
   </div>
 );

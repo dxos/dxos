@@ -5,7 +5,7 @@
 import React, { useEffect, useState } from 'react';
 
 import { DEFAULT_OUTPUT } from '@dxos/conductor';
-import { Field } from '@dxos/react-ui';
+import { Field, Switch } from '@dxos/react-ui';
 import { type ShapeComponentProps } from '@dxos/react-ui-canvas-editor';
 
 import { useComputeNodeState } from '../hooks/index.ts';
@@ -28,7 +28,7 @@ export const SwitchComponent = ({ shape }: ShapeComponentProps<SwitchShape>) => 
       onClick={(ev) => ev.stopPropagation()}
     >
       <Field.Root>
-        <Field.Switch checked={value} onCheckedChange={(value) => setValue(value)} />
+        <Switch checked={value} onCheckedChange={({ checked: value }) => setValue(value)} />
       </Field.Root>
     </div>
   );

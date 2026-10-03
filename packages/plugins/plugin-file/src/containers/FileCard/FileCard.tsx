@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { Card, ImageProps, useTranslation } from '@dxos/react-ui';
+import { Card, type ImageProps, useTranslation } from '@dxos/react-ui';
 import { type File } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -36,7 +36,7 @@ export const FileCard = ({ subject: file }: FileCardProps) => {
       {type.startsWith('image/') ? (
         <Card.Poster
           alt={file.name ?? ''}
-          image={url}
+          src={url}
           fit={fit}
           onClick={() => setFit(fit === 'contain' ? 'cover' : 'contain')}
         />
@@ -44,7 +44,7 @@ export const FileCard = ({ subject: file }: FileCardProps) => {
         <video src={url} muted playsInline preload='metadata' className='block w-full aspect-video object-contain' />
       ) : (
         <Card.Row>
-          <Card.Text variant='description'>
+          <Card.Text variant='muted'>
             {type}
             {size !== undefined && ` · ${t('file-size.label', { size: formatSize(size) })}`}
           </Card.Text>

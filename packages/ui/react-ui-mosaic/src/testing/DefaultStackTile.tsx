@@ -5,11 +5,11 @@
 import React, { useMemo, useRef, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Card, IconButton } from '@dxos/react-ui';
+import { Block, Button, Card, DragHandle, Focus } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
-import { Focus, Mosaic, type MosaicStackTileComponent } from '../components/index.ts';
+import { Mosaic, type MosaicStackTileComponent } from '../components/index.ts';
 
 export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
   const dragHandleRef = useRef<HTMLButtonElement>(null);
@@ -34,15 +34,15 @@ export const DefaultStackTile: MosaicStackTileComponent<Obj.Any> = (props) => {
        */}
       <Mosaic.Tile {...props} asChild>
         <Focus.Item asChild>
-          <Card.Root fullWidth classNames='dx-current dx-hover'>
+          <Card.Root classNames='dx-current dx-hover'>
             <Card.Header>
-              <Card.DragHandle ref={dragHandleRef} />
+              <DragHandle ref={dragHandleRef} />
               <Card.Title>{Obj.getLabel(props.data) ?? props.data.id}</Card.Title>
-              <Card.Block end>
+              <Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
+                  <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Menu' />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             {open && (
               <Card.Row>

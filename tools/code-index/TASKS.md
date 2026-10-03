@@ -1,6 +1,6 @@
 # code-index — Tasks
 
-_Resume: nothing in flight — PR [#12968](https://github.com/dxos/dxos/pull/12968) is waiting on human review. Uncommitted: none. Last: `deus:canonicalName` in the ontology, derived by `rules/60-canonical.n3` and verified against a real index (259 names, one per symbol)._
+_Resume: Phase 5 (type propagation) in flight on PR [#13631](https://github.com/dxos/dxos/pull/13631), stacked on `dm/code-index`; PR [#12968](https://github.com/dxos/dxos/pull/12968) is waiting on human review. Last: `deus:hasType` emitted per symbol, 0 disagreements with `tsc` on fixtures and a 300-file repo sample, `rules/15-types.n3` deriving `providesService`/`layerRequires` from inferred `Layer<…>` types._
 
 The package is two halves that share one store: an **indexer** that turns this
 repository into a SQLite ledger plus a persistent RDF quad store, and a
@@ -84,8 +84,25 @@ that raised it.
   - Quads are written one file at a time through LevelDB, and the cost scales with what is already in the store.
   - Batching across files is the obvious lever; not measured yet.
 
+## Phase 5: type propagation
+
+The parser names the type of each symbol it can, per file, with no type checker — `design/TYPES.md`.
+Precision over recall: a type is what `tsc` says, or unknown.
+
+### Tasks
+
+- [x] **Type term + RDF** — `src/worker/types/Term.ts`; content-addressed `deus:Type` nodes with `typeHead`/`typeArg<i>`/`typeMember`/…, `deus:hasType` on `variable`/`function` symbols. Vocabulary in `design/ONTOLOGY.md` → Types.
+- [x] **Local inference** — literals and widening, `as const`, annotations, local aliases (named the way `tsc` names them), objects/arrays/tuples, functions and return inference, calls with generic instantiation, member access, destructuring, `await`, operators.
+- [x] **Effect models** — `Effect.succeed/fail/sync/void/gen`, `Layer.succeed/sync/effect/mergeAll/merge/provide` (incl. pipe forms), `Context.Service` keys, `Schema.String/Number/Boolean/Unknown/Struct/Literal`; each checked against `tsc` in `fixtures/effect.ts`.
+- [x] **Control-flow guard** — no flow analysis, so a reference that `tsc` might narrow is unknown (guards, assertion calls, assignments, union-typed initialized annotations, possibly-`never` arrows).
+- [x] **Agreement harness** — `code-index types [--sample N] [files…]` and `agreement.test.ts`: `tsc` (`@typescript/typescript6` API) converted into the same terms, named through the file's imports. Fixtures: 83 agree, 4 partial, 0 disagree. Repo sample (300 files, seed 7): 873 agree, 221 partial, 1251 unknown, **0 disagree**, 741 skipped (`tsc` itself has `any` or an inexpressible type).
+- [x] **Rule** — `rules/15-types.n3`: `EffectLayer`, `providesService`, `layerRequires` from the inferred `Layer<ROut, E, RIn>`, covering merged/provided/piped layers the `deus:argument` heuristic cannot see.
+- [x] **Cost** — 0.38 ms/file for the type step over the whole repo (11,931 files, 4.5s summed across workers); the walk rewrite it prompted (`for…in` instead of `Object.entries`) took the analyzer itself from 15.9s to 13.1s, so analyzer + types is +11% over the analyzer before this phase. 71% of variable/function symbols get a type; 59k type nodes.
+- [ ] **Recall** — the largest unknown buckets: references to narrowable bindings (the guard is file-wide), calls into imports (no cross-file signatures), JSX, method calls on library types. Cross-file evaluation of `typeof X` and imported refs belongs in a rule, not the parser.
+
 ## References
 
+- PR [#13631](https://github.com/dxos/dxos/pull/13631) — type propagation (Phase 5), stacked on #12968.
 - PR [#12968](https://github.com/dxos/dxos/pull/12968) — the whole package, in two parts, with the review history.
 - `SPEC.mdl` — modules, commit protocol, features, tests.
 - `design/ONTOLOGY.md` — the vocabulary the rules assert.

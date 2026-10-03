@@ -8,15 +8,31 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
+
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
-import { GEOMETRY, byTestId, controlSize, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
+import { GEOMETRY, byTestId, controlSize, expectEndCell, expectScoped, expectTooltip, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import {
+  Button,
+  Checkbox,
+  Container,
+  DateInput,
+  Field,
+  type FieldValence,
+  Input,
+  NumberInput,
+  PasswordInput,
+  PinInput,
+  Switch,
+  Textarea,
+  Typography,
+} from '../index.ts';
 
-const VALENCES: Next.FieldValence[] = ['success', 'info', 'warning', 'error'];
+const VALENCES: FieldValence[] = ['success', 'info', 'warning', 'error'];
 
 /**
  * Every current `Field` part as a Next field (DESIGN.md follow-up 54): text, textarea, the segmented date, time and
@@ -26,64 +42,64 @@ const VALENCES: Next.FieldValence[] = ['success', 'info', 'warning', 'error'];
  */
 const EveryField = ({ size }: SizeArgs) => (
   <>
-    <Next.Field.Root>
-      <Next.Field.Label>Name</Next.Field.Label>
-      <Next.Input data-testid={`every-input-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Bio</Next.Field.Label>
-      <Next.Textarea />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Birthday</Next.Field.Label>
-      <Next.DateInput defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Wake up</Next.Field.Label>
-      <Next.DateInput type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Meeting</Next.Field.Label>
-      <Next.DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Code</Next.Field.Label>
-      <Next.PinInput length={4} data-testid={`every-pin-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Age</Next.Field.Label>
-      <Next.NumberInput min={0} defaultValue='30' data-testid={`every-number-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Field.Label>Password</Next.Field.Label>
-      <Next.PasswordInput data-testid={`every-password-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Checkbox label='Subscribe' data-testid={`every-checkbox-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root>
-      <Next.Switch label='Notifications' data-testid={`every-switch-${size}`} />
-    </Next.Field.Root>
-    <Next.Field.Root required>
-      <Next.Field.Label data-testid={`required-label-${size}`}>Handle</Next.Field.Label>
-      <Next.Input />
-    </Next.Field.Root>
-    <Next.Field.Root required>
-      <Next.Field.Label data-testid={`placed-label-${size}`}>
-        <Next.Field.RequiredIndicator>required</Next.Field.RequiredIndicator> Alias
-      </Next.Field.Label>
-      <Next.Input />
-    </Next.Field.Root>
-    <Next.Field.Root readOnly>
-      <Next.Field.Label>Id</Next.Field.Label>
-      <Next.Input defaultValue='abc-123' />
-    </Next.Field.Root>
-    <Next.Field.Root asChild data-testid={`every-as-child-${size}`}>
+    <Field.Root>
+      <Field.Label>Name</Field.Label>
+      <Input data-testid={`every-input-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Bio</Field.Label>
+      <Textarea />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Birthday</Field.Label>
+      <DateInput defaultValue='1990-04-01' data-testid={`every-date-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Wake up</Field.Label>
+      <DateInput type='time' defaultValue='07:00' data-testid={`every-time-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Meeting</Field.Label>
+      <DateInput type='datetime-local' defaultValue='2026-09-29T14:00' />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Code</Field.Label>
+      <PinInput length={4} data-testid={`every-pin-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Age</Field.Label>
+      <NumberInput min={0} defaultValue='30' data-testid={`every-number-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Field.Label>Password</Field.Label>
+      <PasswordInput data-testid={`every-password-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Checkbox label='Subscribe' data-testid={`every-checkbox-${size}`} />
+    </Field.Root>
+    <Field.Root>
+      <Switch label='Notifications' data-testid={`every-switch-${size}`} />
+    </Field.Root>
+    <Field.Root required>
+      <Field.Label data-testid={`required-label-${size}`}>Handle</Field.Label>
+      <Input />
+    </Field.Root>
+    <Field.Root required>
+      <Field.Label data-testid={`placed-label-${size}`}>
+        <Field.RequiredIndicator>required</Field.RequiredIndicator> Alias
+      </Field.Label>
+      <Input />
+    </Field.Root>
+    <Field.Root readOnly>
+      <Field.Label>Id</Field.Label>
+      <Input defaultValue='abc-123' />
+    </Field.Root>
+    <Field.Root asChild data-testid={`every-as-child-${size}`}>
       <section>
-        <Next.Field.Label>Nickname</Next.Field.Label>
-        <Next.Input />
+        <Field.Label>Nickname</Field.Label>
+        <Input />
       </section>
-    </Next.Field.Root>
+    </Field.Root>
   </>
 );
 
@@ -93,41 +109,63 @@ const EveryField = ({ size }: SizeArgs) => (
  */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Next.Field.Root data-testid={`field-${size}`}>
-      <Next.Field.Label>Email</Next.Field.Label>
-      <Next.Input data-testid={`field-input-${size}`} />
-      <Next.Field.HelperText>We never share it.</Next.Field.HelperText>
-    </Next.Field.Root>
+    <Field.Root data-testid={`field-${size}`}>
+      <Field.Label>Email</Field.Label>
+      <Input data-testid={`field-input-${size}`} />
+      <Field.HelperText>We never share it.</Field.HelperText>
+    </Field.Root>
     {(['Website', 'Homepage'] as const).map((name) => (
-      <Next.Field.Root key={name} invalid={name === 'Homepage'} data-testid={`${name.toLowerCase()}-${size}`}>
-        <Next.Field.Header>
-          <Next.Field.Label>{name}</Next.Field.Label>
-          <Next.Button icon='ph--x--regular' label={`Clear ${name.toLowerCase()}`} iconOnly />
-        </Next.Field.Header>
-        <Next.Input defaultValue='not a url' />
-        <Next.Field.ErrorText>Enter a valid URL.</Next.Field.ErrorText>
-      </Next.Field.Root>
+      <Field.Root key={name} invalid={name === 'Homepage'} data-testid={`${name.toLowerCase()}-${size}`}>
+        <Field.Header>
+          <Field.Label>{name}</Field.Label>
+          <Button icon='ph--x--regular' label={`Clear ${name.toLowerCase()}`} iconOnly />
+        </Field.Header>
+        <Input defaultValue='not a url' />
+        <Field.ErrorText>Enter a valid URL.</Field.ErrorText>
+      </Field.Root>
     ))}
     {VALENCES.map((valence) => (
-      <Next.Field.Root key={valence} validationValence={valence} data-testid={`${valence}-${size}`}>
-        <Next.Field.Label>Handle ({valence})</Next.Field.Label>
-        <Next.Input defaultValue='dxos' data-testid={`${valence}-input-${size}`} />
-        <Next.Field.HelperText data-testid={`${valence}-helper-${size}`}>A {valence} message.</Next.Field.HelperText>
-        <Next.Field.ErrorText>The handle is taken.</Next.Field.ErrorText>
-      </Next.Field.Root>
+      <Field.Root key={valence} validationValence={valence} data-testid={`${valence}-${size}`}>
+        <Field.Label>Handle ({valence})</Field.Label>
+        <Input defaultValue='dxos' data-testid={`${valence}-input-${size}`} />
+        <Field.HelperText data-testid={`${valence}-helper-${size}`}>A {valence} message.</Field.HelperText>
+        <Field.ErrorText>The handle is taken.</Field.ErrorText>
+      </Field.Root>
     ))}
-    <Next.Field.Root>
-      <Next.Field.Label srOnly data-testid={`hidden-label-${size}`}>
+    <Field.Root>
+      <Field.Label srOnly data-testid={`hidden-label-${size}`}>
         Filter
-      </Next.Field.Label>
-      <Next.Input placeholder='Filter' />
-    </Next.Field.Root>
+      </Field.Label>
+      <Input placeholder='Filter' />
+    </Field.Root>
     <EveryField size={size} />
+    {/* Row fields (Phase 4 decision 3): bordered subgrid rows of the Container's two tracks. */}
+    <Container gutter='inherit' columns='minmax(0, 1fr) [control] minmax(0, 1fr)'>
+      {['Theme', 'Language'].map((name) => (
+        <Field.Root key={name} layout='row' level='+1' data-testid={`row-${name.toLowerCase()}-${size}`}>
+          <Field.Header>
+            <Field.Label>{name}</Field.Label>
+          </Field.Header>
+          <Field.HelperText>The app's {name.toLowerCase()}.</Field.HelperText>
+          <Input />
+        </Field.Root>
+      ))}
+    </Container>
+    {/* A header whose label is text (no single control to name): its action still ends the row. */}
+    <Field.Header data-testid={`text-header-${size}`}>
+      <Typography truncate>Tags</Typography>
+      <Button iconOnly variant='ghost' icon='ph--plus--regular' label='Add tag' />
+    </Field.Header>
+    {/* A row with its own columns spaces them by its gap. */}
+    <Container layout='row' gutter='inherit' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+      <Input aria-label='Latitude' data-testid={`pair-first-${size}`} />
+      <Input aria-label='Longitude' data-testid={`pair-second-${size}`} />
+    </Container>
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Field',
+  title: 'ui/react-ui-core/components/Field',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
@@ -229,7 +267,7 @@ export const Test: Story = {
     await expect(
       canvas
         .getByRole('textbox', { name: 'Id' })
-        .closest('.nx-field')
+        .closest('.dx-field')
         ?.querySelector('[data-part="required-indicator"]'),
     ).toBeNull();
     const placed = byTestId(canvasElement, 'placed-label-md').querySelectorAll('[data-part="required-indicator"]');
@@ -239,8 +277,83 @@ export const Test: Story = {
     await expect(canvas.getByRole('textbox', { name: 'Id' })).toHaveAttribute('readonly');
     const asChild = byTestId(canvasElement, 'every-as-child-md');
     await expect(asChild.tagName).toBe('SECTION');
-    await expect(asChild).toHaveClass('nx-field');
+    await expect(asChild).toHaveClass('dx-field');
     await expect(within(asChild).getByRole('textbox', { name: 'Nickname' })).toBeInTheDocument();
+
+    // Row fields share the Container's tracks: the header spans the row; the helper (before the `control` line) and the
+    // control (after it) share the next line, top-aligned to the control's cell.
+    const rows = ['theme', 'language'].map((name) => {
+      const row = byTestId(canvasElement, `row-${name}-md`);
+      const inputElement = row.querySelector<HTMLElement>('.dx-input');
+      const headerElement = row.querySelector('[data-part="header"]');
+      const helperElement = row.querySelector('[data-part="helper-text"]');
+      invariant(inputElement && headerElement && helperElement);
+      return {
+        row,
+        header: headerElement.getBoundingClientRect(),
+        helper: helperElement.getBoundingClientRect(),
+        input: inputElement.getBoundingClientRect(),
+        inputTop: inputElement.getBoundingClientRect().top - parseFloat(getComputedStyle(inputElement).marginTop),
+      };
+    });
+    for (const { row, header, helper, input, inputTop } of rows) {
+      await expect(input.left).toBeCloseTo(rows[0].input.left, 0);
+      await expect(header.right).toBeGreaterThanOrEqual(input.right - 0.5);
+      await expect(helper.top).toBeGreaterThanOrEqual(header.bottom - 0.5);
+      await expect(helper.right).toBeLessThanOrEqual(input.left + 0.5);
+      await expect(helper.top).toBeCloseTo(inputTop, 0);
+      await expect(row).toHaveAttribute('data-surface', '+1');
+      await expect(getComputedStyle(row).borderTopWidth).toBe('1px');
+    }
+    await expect(canvas.getByRole('textbox', { name: 'Theme' })).toBeInTheDocument();
+    const first = byTestId(canvasElement, 'pair-first-md').getBoundingClientRect();
+    const second = byTestId(canvasElement, 'pair-second-md').getBoundingClientRect();
+    await expect(second.left - first.right).toBeCloseTo(4, 0);
+
+    // Header actions end the row whatever the label is: the icon sits in the block-wide end cell.
+    for (const size of SIZES) {
+      const header = byTestId(canvasElement, `text-header-${size}`);
+      const box = header.getBoundingClientRect();
+      const label = header.firstElementChild;
+      invariant(label);
+      await expect(label.getBoundingClientRect().left, `${size} text label`).toBeCloseTo(box.left, 0);
+      await expectEndCell(
+        within(header).getByRole('button', { name: 'Add tag' }).querySelector('svg'),
+        box.right,
+        size,
+        size,
+      );
+    }
+
+    // Colours resolved from the tokens, through a probe element in the same scope.
+    const resolve = (token: string) => {
+      const probe = canvasElement.ownerDocument.createElement('span');
+      probe.style.color = `var(${token})`;
+      canvasElement.appendChild(probe);
+      const color = getComputedStyle(probe).color;
+      probe.remove();
+      return color;
+    };
+
+    // Label and help text are interface text in the subdued colour, distinct from the value; help text is a size smaller.
+    const field = within(byTestId(canvasElement, 'field-md'));
+    const emailLabel = getComputedStyle(field.getByText('Email'));
+    const helper = getComputedStyle(field.getByText('We never share it.'));
+    const value = getComputedStyle(field.getByRole('textbox'));
+    await expect(emailLabel.color).toBe(resolve('--color-fg-subtle'));
+    await expect(helper.color).toBe(resolve('--color-fg-subtle'));
+    await expect(parseFloat(helper.fontSize)).toBeLessThan(parseFloat(emailLabel.fontSize));
+    await expect(emailLabel.color).not.toBe(value.color);
+    await expect(helper.color).not.toBe(value.color);
+
+    // The required mark is warning-coloured, a small gap after the label's text.
+    const requiredLabel = byTestId(canvasElement, 'required-label-md');
+    const mark = requiredLabel.querySelector<HTMLElement>('[data-part="required-indicator"]');
+    invariant(mark && requiredLabel.firstChild);
+    await expect(getComputedStyle(mark).color).toBe(resolve('--color-warning-text'));
+    const range = canvasElement.ownerDocument.createRange();
+    range.selectNodeContents(requiredLabel.firstChild);
+    await expect(mark.getBoundingClientRect().left - range.getBoundingClientRect().right).toBeGreaterThan(0.5);
 
     const clear = website.getByRole('button', { name: 'Clear website' });
     await userEvent.hover(clear);

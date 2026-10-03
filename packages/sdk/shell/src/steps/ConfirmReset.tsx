@@ -79,10 +79,8 @@ export const ConfirmReset = ({
   return (
     <>
       <Banner.Root valence='error'>
-        <Banner.Content classNames='mb-trim-md'>
-          <Banner.Title>{resolvedTitle}</Banner.Title>
-          <Banner.Body>{resolvedMessage}</Banner.Body>
-        </Banner.Content>
+        <Banner.Title>{resolvedTitle}</Banner.Title>
+        <Banner.Body>{resolvedMessage}</Banner.Body>
       </Banner.Root>
       <TextInput
         {...{ validationMessage }}
@@ -91,7 +89,7 @@ export const ConfirmReset = ({
         placeholder={t('confirmation.placeholder', { confirmationValue })}
         onChange={({ target: { value } }) => setInputValue(value)}
       />
-      <Dialog.ActionBar classNames='grid grid-cols-2 gap-2'>
+      <Dialog.Footer classNames='grid grid-cols-2 gap-2'>
         {onCancel && (
           <Action disabled={disabled} onClick={onCancel} data-testid={`${testIdAffix}.reset-identity-cancel`}>
             {resolvedCancelLabel}
@@ -107,7 +105,7 @@ export const ConfirmReset = ({
             {pending ? resolvedPendingLabel : resolvedConfirmLabel}
           </Action>
         )}
-      </Dialog.ActionBar>
+      </Dialog.Footer>
     </>
   );
 };

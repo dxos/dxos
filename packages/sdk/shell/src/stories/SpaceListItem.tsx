@@ -22,10 +22,10 @@ export const SpaceListItem = forwardRef(
         ref={ref}
         data-testid='space-list-item'
       >
-        <Avatar.Root labelId={labelId}>
-          <Avatar.Content fallback={fallbackValue} />
-          <Avatar.Label classNames='text-sm truncate'>{displayName}</Avatar.Label>
-        </Avatar.Root>
+        <Avatar.Root aria-labelledby={labelId} fallback={fallbackValue} />
+        <span id={labelId} className='text-sm truncate'>
+          {displayName}
+        </span>
       </li>
     );
   },

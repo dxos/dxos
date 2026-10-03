@@ -4,32 +4,37 @@
 // @import-as-namespace
 //
 
-import type { Bindings, Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject, ResultStream } from '@rdfjs/types';
-import { ClassicLevel } from 'classic-level';
+import type { Quad, Quad_Graph, Quad_Object, Quad_Predicate, Quad_Subject } from '@rdfjs/types';
 import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
-import { n3reasoner } from 'eyereasoner';
-import { JsonLdParser } from 'jsonld-streaming-parser';
-import { type Options as LdkitOptions, type Lens, type Schema, createLens } from 'ldkit';
+import { type Schema as LdkitSchema, type Lens } from 'ldkit';
 import { DataFactory, Parser, Writer } from 'n3';
+import { existsSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-import { Quadstore } from 'quadstore';
-import { Engine } from 'quadstore-comunica';
 
+import type * as Graph from './internal/graph.ts';
+import * as Native from './internal/native.ts';
+import * as Quadstore from './internal/quadstore.ts';
 import { clientLayer } from './internal/sqlite.ts';
 import { MIGRATIONS, MIGRATIONS_TABLE } from './migrations/index.ts';
 import * as Ontology from './Ontology.ts';
 
 /**
  * The whole persistence surface of the index: a SQLite ledger of indexed files and a persistent RDF
- * quad store (Quadstore over LevelDB) holding one named graph per file, plus SPARQL, LDkit and N3
- * reasoning over those graphs. Nothing outside this module opens a database.
+ * quad store holding one named graph per file, plus SPARQL, LDkit and N3 reasoning over those
+ * graphs. Nothing outside this module opens a database.
+ *
+ * Two quad-store backends sit behind the same interface (see `design/NATIVE-BACKEND.md`): `js`
+ * (Quadstore over LevelDB, EYE for rules) and `native` (oxigraph plus an incremental rule engine,
+ * from `tools/code-index-native`).
  */
 
 export class StoreError extends Data.TaggedError('code-index/StoreError')<{
@@ -60,7 +65,22 @@ export type Stats = {
   readonly quads: number;
 };
 
-export type Binding = Record<string, string>;
+export type Binding = Graph.Binding;
+
+export type ReasonOutcome = Graph.ReasonOutcome;
+
+export type Backend = 'js' | 'native';
+
+/** `CODE_INDEX_BACKEND=native` selects the native backend wherever a store is opened without one. */
+export const defaultBackend = (): Backend => (process.env.CODE_INDEX_BACKEND === 'native' ? 'native' : 'js');
+
+export type LayerOptions = {
+  /**
+   * Open an existing store for reading only: no migration, version reset or reconcile, since each
+   * of those writes and a reader must not race the process indexing into the same store.
+   */
+  readonly readOnly?: boolean;
+};
 
 export type ReasonOptions = {
   /** Replace the reasoner's graph with this pass's conclusions (default false — derivations are returned only). */
@@ -83,6 +103,11 @@ export interface Api {
    * The ledger row is the commit marker, so a crash at any point leaves the previous revision live.
    */
   readonly putDocument: (document: Ontology.FileDocument) => Effect.Effect<void, StoreError>;
+  /**
+   * {@link Api.putDocument} for a batch: the ledger is announced and committed in one SQLite
+   * transaction each, around the per-file graph swaps, so a crash costs at most the batch in flight.
+   */
+  readonly putDocuments: (documents: readonly Ontology.FileDocument[]) => Effect.Effect<void, StoreError>;
   /** Drop a file's graph and ledger row (the file is gone from the working tree). */
   readonly removeFile: (path: string) => Effect.Effect<void, StoreError>;
   /** Discard graphs left behind by an interrupted commit. Runs automatically when the store opens. */
@@ -101,7 +126,7 @@ export interface Api {
   readonly ask: (sparql: string) => Effect.Effect<boolean, StoreError>;
   readonly construct: (sparql: string) => Effect.Effect<Quad[], StoreError>;
   /** Typed graph access — an LDkit lens bound to this store's quads. */
-  readonly lens: <T extends Schema>(schema: T) => Lens<T>;
+  readonly lens: <T extends LdkitSchema>(schema: T) => Lens<T>;
   readonly dump: () => Effect.Effect<string, StoreError>;
   readonly load: (turtle: string) => Effect.Effect<number, StoreError>;
   /**
@@ -109,64 +134,57 @@ export interface Api {
    * the derived graph with this pass's conclusions — derivations never outlive their premises.
    */
   readonly reason: (reasoner: string, rules: string, options?: ReasonOptions) => Effect.Effect<Quad[], StoreError>;
+  /**
+   * Run every reasoner in order, each replacing its own graph — what an indexing pass closes with.
+   * The native backend maintains the graphs from the changes since the last call when the rule set
+   * is the one they were computed with; see `design/NATIVE-BACKEND.md`.
+   */
+  readonly reasonAll: (reasoners: readonly Graph.ReasonerInput[]) => Effect.Effect<ReasonOutcome[], StoreError>;
+  /** Replace a JS pass's graph with these conclusions; see `Ontology.passGraphIri`. */
+  readonly writePass: (pass: string, quads: readonly Quad[]) => Effect.Effect<void, StoreError>;
   /** Every quad a reasoner concluded, as its graph currently stands. */
   readonly derived: (reasoner?: string) => Effect.Effect<Quad[], StoreError>;
+  /** How many quads the reasoners' graphs hold, counted where they live rather than materialised. */
+  readonly derivedCount: () => Effect.Effect<number, StoreError>;
+  /** Advanced by every write to the facts; what a reasoning pass records it ran over. */
+  readonly generation: () => Effect.Effect<number, StoreError>;
+  /** Records that the reasoners `signature` names ran over the facts as of `generation`, deriving `derived` quads. */
+  readonly recordReasoned: (signature: string, generation: number, derived: number) => Effect.Effect<void, StoreError>;
+  /**
+   * How many quads the reasoners `signature` names derived, if their conclusions are current: they
+   * last ran over the facts the store holds now. `undefined` after any write since.
+   */
+  readonly reasoned: (signature: string) => Effect.Effect<number | undefined, StoreError>;
 
   readonly stats: () => Effect.Effect<Stats, StoreError>;
   readonly clear: () => Effect.Effect<void, StoreError>;
+  readonly backend: Backend;
 }
 
 export class Store extends Context.Service<Store, Api>()('code-index/Store') {}
 
 const SQLITE_FILE = 'index.sqlite';
-const GRAPH_DIR = 'graph';
 
 const fail = (message: string) => (cause: unknown) => new StoreError({ message, cause });
-
-const tryStore = <A>(message: string, thunk: () => Promise<A>): Effect.Effect<A, StoreError> =>
-  Effect.tryPromise({ try: thunk, catch: fail(message) });
-
-// Comunica result streams are typed as bare EventEmitters, so they are drained by event rather than
-// through the `toArray` the concrete implementation happens to have.
-const collect = <T>(stream: ResultStream<T>): Promise<T[]> =>
-  new Promise((resolve, reject) => {
-    const items: T[] = [];
-    stream.on('data', (item: T) => items.push(item));
-    stream.on('error', reject);
-    stream.on('end', () => resolve(items));
-  });
-
-/**
- * The predicates a rule set matches on, or `undefined` if any rule leaves a predicate unbound (in
- * which case no narrowing is sound and the whole graph has to go in).
- */
-const predicatesOf = (rules: string): Set<string> | undefined => {
-  const parsed = new Parser({ format: 'text/n3' }).parse(rules);
-  const predicates = new Set<string>();
-  for (const quad of parsed) {
-    if (quad.predicate.termType !== 'NamedNode') {
-      return undefined;
-    }
-    predicates.add(quad.predicate.value);
-  }
-  return predicates;
-};
-
-const parseJsonLd = (document: Ontology.FileDocument, graph: Quad_Graph): Promise<Quad[]> =>
-  new Promise((resolve, reject) => {
-    const parser = new JsonLdParser();
-    const quads: Quad[] = [];
-    // The parser emits into the default graph; every quad is re-homed into the file's own graph.
-    parser.on('data', (quad: Quad) => quads.push(DataFactory.quad(quad.subject, quad.predicate, quad.object, graph)));
-    parser.on('error', reject);
-    parser.on('end', () => resolve(quads));
-    parser.write(JSON.stringify(document));
-    parser.end();
-  });
 
 const FILE_COLUMNS = 'path, language, size, hash, mtime';
 
 const VERSION_KEY = 'ontologyVersion';
+
+/** Advanced by every write, before it lands, so a reasoning pass can tell its premises moved since. */
+const GENERATION_KEY = 'generation';
+
+/** {@link Reasoned} of the last completed reasoning pass — see {@link Api.isReasoned}. */
+const REASONED_KEY = 'reasoned';
+
+const Reasoned = Schema.fromJsonString(
+  Schema.Struct({ signature: Schema.String, generation: Schema.Number, derived: Schema.Number }),
+);
+
+/** The derived graphs any reasoning has written, so they are counted without scanning the store. */
+const DERIVED_GRAPHS_KEY = 'derivedGraphs';
+
+const DerivedGraphs = Schema.fromJsonString(Schema.Array(Schema.String));
 
 /**
  * Empty a store written under another {@link Ontology.VERSION} before the graph opens, so the next
@@ -183,7 +201,13 @@ const resetIfStale = (dir: string): Effect.Effect<void, StoreError, SqlClient.Sq
     if (row?.value === version) {
       return;
     }
-    yield* tryStore('Failed to drop stale graph', () => rm(join(dir, GRAPH_DIR), { recursive: true, force: true }));
+    // Both backends' directories go, so switching backend after an upgrade cannot revive old graphs.
+    for (const graphDir of [Quadstore.DIR, Native.DIR]) {
+      yield* Effect.tryPromise({
+        try: () => rm(join(dir, graphDir), { recursive: true, force: true }),
+        catch: fail('Failed to drop stale graph'),
+      });
+    }
     yield* sql`DELETE FROM files`.pipe(Effect.mapError(fail('Failed to drop stale ledger')));
     yield* sql`DELETE FROM meta`.pipe(Effect.mapError(fail('Failed to drop stale meta')));
     yield* sql`INSERT INTO meta (key, value) VALUES (${VERSION_KEY}, ${version})`.pipe(
@@ -191,86 +215,111 @@ const resetIfStale = (dir: string): Effect.Effect<void, StoreError, SqlClient.Sq
     );
   });
 
-const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
+/** A reader cannot reset a stale store, so it refuses one rather than answering from old graphs. */
+const requireCurrent = (dir: string): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
-    yield* Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      // A schema the store cannot create is a construction failure, not something a caller recovers from.
-      Effect.orDie,
+    const [row] = yield* sql<{ value: string }>`SELECT value FROM meta WHERE key = ${VERSION_KEY}`.pipe(
+      Effect.mapError(fail('Failed to read store version')),
     );
-    yield* resetIfStale(dir);
+    if (row?.value !== String(Ontology.VERSION)) {
+      return yield* Effect.fail(
+        new StoreError({
+          message: `The store at ${dir} was written by ontology version ${row?.value ?? 'unknown'}, not ${Ontology.VERSION}; run \`code-index index\` to rebuild it.`,
+        }),
+      );
+    }
+  });
 
-    const backend = new ClassicLevel(join(dir, GRAPH_DIR));
-    const quadstore = new Quadstore({ backend, dataFactory: DataFactory });
-    yield* Effect.acquireRelease(
-      tryStore('Failed to open graph', () => quadstore.open()),
-      () =>
-        Effect.orDie(
-          tryStore('Failed to close graph', async () => {
-            while (inFlight > 0) {
-              await new Promise((resolve) => setImmediate(resolve));
-            }
-            // One more turn: the last query's own follow-up work is queued, not yet run.
-            await new Promise((resolve) => setImmediate(resolve));
-            await quadstore.close();
-          }),
-        ),
-    );
-    const engine = new Engine(quadstore);
-    // Comunica keeps working on a query after its stream ends (cardinality metadata, for one), and
-    // touching a closed store throws asynchronously. Queries are counted so the finalizer can wait
-    // for the stragglers instead of closing under them.
-    let inFlight = 0;
-    const tracked = async <A>(work: () => Promise<A>): Promise<A> => {
-      inFlight++;
-      try {
-        return await work();
-      } finally {
-        inFlight--;
-      }
-    };
-    // Every file lives in its own named graph, so queries treat the default graph as their union —
-    // otherwise a SPARQL pattern without an explicit GRAPH clause would match nothing.
-    const context = { unionDefaultGraph: true };
-    const ldkit: LdkitOptions = { sources: [quadstore], engine, ...context };
+const make = (
+  dir: string,
+  backend: Backend,
+  readOnly: boolean,
+): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    if (readOnly) {
+      yield* requireCurrent(dir);
+    } else {
+      // WAL with FULL fsyncs every commit; NORMAL fsyncs at checkpoints and still survives a process
+      // crash at any point. Only an OS crash can lose the last commits, and the quad stores (RocksDB,
+      // LevelDB) never fsync their own writes, so FULL bought no durability the graphs had.
+      yield* sql`PRAGMA synchronous = NORMAL`.pipe(Effect.mapError(fail('Failed to configure ledger')));
+      yield* Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+        // A schema the store cannot create is a construction failure, not something a caller recovers from.
+        Effect.orDie,
+      );
+      yield* resetIfStale(dir);
+    }
 
-    const putQuads: Api['putQuads'] = (quads) =>
-      quads.length === 0
-        ? Effect.void
-        : tryStore('Failed to write quads', () => quadstore.multiPut([...quads]).then(() => undefined));
+    const graphs: Graph.Graph<StoreError> = yield* backend === 'native'
+      ? Native.make(dir, fail)
+      : Quadstore.make(dir, fail);
+    const { match } = graphs;
 
-    const match: Api['match'] = (subject, predicate, object, graph) =>
-      tryStore('Failed to match quads', async () => {
-        const { items } = await quadstore.get({ subject, predicate, object, graph });
-        return items;
-      });
-
-    /** Swap a graph's contents in one backend batch: nothing observes a half-written graph. */
-    const patchGraph = (previous: Quad[], next: readonly Quad[]): Effect.Effect<void, StoreError> =>
-      tryStore('Failed to patch graph', () => quadstore.multiPatch(previous, [...next]).then(() => undefined));
-
-    const dropGraph = (graph: string): Effect.Effect<void, StoreError> =>
-      Effect.flatMap(match(undefined, undefined, undefined, DataFactory.namedNode(graph)), (quads) =>
-        quads.length === 0
-          ? Effect.void
-          : tryStore('Failed to drop graph', () => quadstore.multiDel(quads).then(() => undefined)),
+    const getMeta: Api['getMeta'] = (key) =>
+      sql<{ value: string }>`SELECT value FROM meta WHERE key = ${key}`.pipe(
+        Effect.map((rows) => rows[0]?.value),
+        Effect.mapError(fail('Failed to read meta')),
       );
 
-    /** Everything the indexer asserted — the file graphs, without anything rules derived. */
-    /**
-     * The premises a rule set can actually use: asserted facts, narrowed to the predicates the
-     * rules mention. Handing EYE the whole graph made the reasoning phase cost more than the rest
-     * of an indexing pass by two orders of magnitude, for facts no rule could match.
-     */
-    const facts = (rules: string, ownGraph: string): Effect.Effect<Quad[], StoreError> =>
-      Effect.gen(function* () {
-        const wanted = predicatesOf(rules);
-        const quads = yield* match();
-        // A reasoner sees the file graphs and every other reasoner's conclusions, but never its own:
-        // reading its own output back would let a derivation keep itself alive.
-        return quads.filter(
-          (quad) => quad.graph.value !== ownGraph && (wanted === undefined || wanted.has(quad.predicate.value)),
+    const setMeta: Api['setMeta'] = (key, value) =>
+      sql`INSERT INTO meta (key, value) VALUES (${key}, ${value})
+          ON CONFLICT (key) DO UPDATE SET value = excluded.value`.pipe(
+        Effect.asVoid,
+        Effect.mapError(fail('Failed to write meta')),
+      );
+
+    const readMeta = <T>(key: string, schema: Schema.Codec<T, string>): Effect.Effect<T | undefined, StoreError> =>
+      Effect.flatMap(getMeta(key), (value) =>
+        value === undefined
+          ? Effect.succeed(undefined)
+          : Schema.decodeUnknownEffect(schema)(value).pipe(Effect.mapError(fail(`Corrupt meta entry: ${key}`))),
+      );
+
+    // Commits from concurrent batches would otherwise interleave inside each other's transactions.
+    const writeLock = yield* Semaphore.make(1);
+    const exclusive = <A>(effect: Effect.Effect<A, StoreError>): Effect.Effect<A, StoreError> =>
+      writeLock.withPermits(1)(effect);
+    const transaction = <A>(effect: Effect.Effect<A, StoreError>): Effect.Effect<A, StoreError> =>
+      sql
+        .withTransaction(effect)
+        .pipe(
+          Effect.mapError((error) =>
+            error instanceof StoreError
+              ? error
+              : new StoreError({ message: 'Ledger transaction failed', cause: error }),
+          ),
         );
+
+    const generation = (): Effect.Effect<number, StoreError> =>
+      Effect.map(getMeta(GENERATION_KEY), (value) => Number(value ?? 0));
+
+    // Kept in the ledger rather than in memory, so it holds whoever wrote last. It moves before the
+    // write it covers: a crash between the two leaves the conclusions marked stale, never current.
+    const advance = (): Effect.Effect<void, StoreError> =>
+      sql`INSERT INTO meta (key, value) VALUES (${GENERATION_KEY}, '1')
+          ON CONFLICT (key) DO UPDATE SET value = CAST(value AS INTEGER) + 1`.pipe(
+        Effect.asVoid,
+        Effect.mapError(fail('Failed to advance the store generation')),
+      );
+
+    const derivedGraphs = (): Effect.Effect<readonly string[], StoreError> =>
+      Effect.map(readMeta(DERIVED_GRAPHS_KEY, DerivedGraphs), (names) => names ?? []);
+
+    // Recorded before the graphs are written, so a crash cannot leave a derived graph uncounted.
+    const recordDerived = (names: readonly string[]): Effect.Effect<void, StoreError> =>
+      Effect.gen(function* () {
+        const known = yield* derivedGraphs();
+        const merged = [...new Set([...known, ...names])];
+        if (merged.length !== known.length) {
+          yield* setMeta(
+            DERIVED_GRAPHS_KEY,
+            yield* Schema.encodeEffect(DerivedGraphs)(merged).pipe(
+              Effect.mapError(fail('Failed to record derived graphs')),
+            ),
+          );
+        }
       });
 
     const serialize = (quads: readonly Quad[]): Effect.Effect<string, StoreError> =>
@@ -298,7 +347,7 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
           Effect.mapError(fail('Failed to read pending commits')),
         );
         for (const row of pending) {
-          yield* dropGraph(row.pending_graph);
+          yield* graphs.drop(row.pending_graph);
           if (row.graph === row.pending_graph) {
             // A file's *first* commit, interrupted: the row announced the graph it was about to
             // write and is the same row that claims it live, at the mtime it was written for. Just
@@ -317,62 +366,95 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
         return pending.length;
       });
 
-    yield* reconcile();
+    if (!readOnly) {
+      yield* reconcile();
+    }
 
-    const putDocument: Api['putDocument'] = (document) =>
-      Effect.gen(function* () {
-        const graph = Ontology.graphIri(document.path, document.mtime);
-        const quads = yield* tryStore('Failed to parse document', () => parseJsonLd(document, graph));
+    const putDocuments: Api['putDocuments'] = (documents) =>
+      documents.length === 0
+        ? Effect.void
+        : exclusive(
+            Effect.gen(function* () {
+              // 1. Announce every write in the batch. A crash from here on leaves each previous graph
+              //    live and each new one reachable only through `pending_graph`, which `reconcile`
+              //    deletes on the next open.
+              const plans = yield* transaction(
+                Effect.andThen(
+                  advance(),
+                  Effect.forEach(documents, (document) =>
+                    Effect.gen(function* () {
+                      const graph = Ontology.graphIri(document.path, document.mtime);
+                      const [current] = yield* sql<{
+                        graph: string;
+                      }>`SELECT graph FROM files WHERE path = ${document.path}`.pipe(
+                        Effect.mapError(fail('Failed to read ledger')),
+                      );
+                      yield* sql`INSERT INTO files (path, language, size, hash, mtime, graph, pending_graph)
+                               VALUES (${document.path}, ${document.language}, ${document.size}, ${document.hash},
+                                       ${document.mtime}, ${current?.graph ?? graph.value}, ${graph.value})
+                               ON CONFLICT (path) DO UPDATE SET pending_graph = excluded.pending_graph`.pipe(
+                        Effect.mapError(fail('Failed to begin file commit')),
+                      );
+                      return { document, graph, current: current?.graph };
+                    }),
+                  ),
+                ),
+              );
 
-        const [current] = yield* sql<{ graph: string }>`SELECT graph FROM files WHERE path = ${document.path}`.pipe(
-          Effect.mapError(fail('Failed to read ledger')),
-        );
+              // 2. Swap each file's graphs in one backend batch. Both the live graph and the target are
+              //    cleared: a reindex at an unchanged mtime targets the graph it is replacing, and
+              //    merging into it would leave the previous revision's quads behind forever.
+              for (const { document, graph, current } of plans) {
+                const clear = [...new Set([current, graph.value].filter((value) => value !== undefined))];
+                yield* graphs.swap(clear, graph, document);
+              }
 
-        // 1. Announce the write. A crash from here on leaves the previous graph live and the new one
-        //    reachable only through `pending_graph`, which `reconcile` deletes on the next open.
-        yield* sql`INSERT INTO files (path, language, size, hash, mtime, graph, pending_graph)
-                   VALUES (${document.path}, ${document.language}, ${document.size}, ${document.hash},
-                           ${document.mtime}, ${current?.graph ?? graph.value}, ${graph.value})
-                   ON CONFLICT (path) DO UPDATE SET pending_graph = excluded.pending_graph`.pipe(
-          Effect.mapError(fail('Failed to begin file commit')),
-        );
-
-        // 2. Swap the graphs in one backend batch. Both the live graph and the target are cleared:
-        //    a reindex at an unchanged mtime targets the graph it is replacing, and merging into it
-        //    would leave the previous revision's quads behind forever.
-        const stale: Quad[] = [];
-        for (const name of new Set([current?.graph, graph.value].filter((value) => value !== undefined))) {
-          stale.push(...(yield* match(undefined, undefined, undefined, DataFactory.namedNode(name))));
-        }
-        yield* patchGraph(stale, quads);
-
-        // 3. Commit: the ledger row is what makes the new graph the live one.
-        yield* sql`UPDATE files SET language = ${document.language}, size = ${document.size},
-                     hash = ${document.hash}, mtime = ${document.mtime}, graph = ${graph.value},
-                     pending_graph = NULL
-                   WHERE path = ${document.path}`.pipe(Effect.mapError(fail('Failed to commit file')));
-      });
+              // 3. Commit: the ledger rows are what make the new graphs the live ones.
+              yield* transaction(
+                Effect.forEach(
+                  plans,
+                  ({ document, graph }) =>
+                    sql`UPDATE files SET language = ${document.language}, size = ${document.size},
+                          hash = ${document.hash}, mtime = ${document.mtime}, graph = ${graph.value},
+                          pending_graph = NULL
+                        WHERE path = ${document.path}`.pipe(Effect.mapError(fail('Failed to commit file'))),
+                  { discard: true },
+                ),
+              );
+            }),
+          );
 
     const removeFile: Api['removeFile'] = (path) =>
-      Effect.gen(function* () {
-        const [current] = yield* sql<{ graph: string }>`SELECT graph FROM files WHERE path = ${path}`.pipe(
-          Effect.mapError(fail('Failed to read ledger')),
-        );
-        if (!current) {
-          return;
-        }
-        // The graph is announced as pending *before* the row goes, so a crash between the two
-        // leaves it reachable through `pending_graph` and `reconcile` drops it on the next open.
-        // The row alone is not enough: `reconcile` scans pending rows, not the quad store, so a
-        // graph whose row is already gone would never be found — and its quads keep answering
-        // queries through the union default graph, making a deleted file's facts immortal.
-        yield* sql`UPDATE files SET pending_graph = ${current.graph} WHERE path = ${path}`.pipe(
-          Effect.mapError(fail('Failed to begin file removal')),
-        );
-        yield* dropGraph(current.graph);
-        // A row without a graph would be a phantom file, so it goes last.
-        yield* sql`DELETE FROM files WHERE path = ${path}`.pipe(Effect.mapError(fail('Failed to delete ledger row')));
-      });
+      exclusive(
+        Effect.gen(function* () {
+          const [current] = yield* sql<{ graph: string }>`SELECT graph FROM files WHERE path = ${path}`.pipe(
+            Effect.mapError(fail('Failed to read ledger')),
+          );
+          if (!current) {
+            return;
+          }
+          yield* advance();
+          // The graph is announced as pending *before* the row goes, so a crash between the two
+          // leaves it reachable through `pending_graph` and `reconcile` drops it on the next open.
+          // The row alone is not enough: `reconcile` scans pending rows, not the quad store, so a
+          // graph whose row is already gone would never be found — and its quads keep answering
+          // queries through the union default graph, making a deleted file's facts immortal.
+          yield* sql`UPDATE files SET pending_graph = ${current.graph} WHERE path = ${path}`.pipe(
+            Effect.mapError(fail('Failed to begin file removal')),
+          );
+          yield* graphs.drop(current.graph);
+          // A row without a graph would be a phantom file, so it goes last.
+          yield* sql`DELETE FROM files WHERE path = ${path}`.pipe(Effect.mapError(fail('Failed to delete ledger row')));
+        }),
+      );
+
+    const derivedCount: Api['derivedCount'] = () =>
+      Effect.flatMap(derivedGraphs(), (names) =>
+        Effect.map(
+          Effect.forEach(names, (name) => graphs.countGraph(name)),
+          (counts) => counts.reduce((total, count) => total + count, 0),
+        ),
+      );
 
     return {
       dir,
@@ -398,47 +480,20 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
           Effect.mapError(fail('Failed to read ledger')),
         ),
 
-      getMeta: (key) =>
-        sql<{ value: string }>`SELECT value FROM meta WHERE key = ${key}`.pipe(
-          Effect.map((rows) => rows[0]?.value),
-          Effect.mapError(fail('Failed to read meta')),
-        ),
+      getMeta,
+      setMeta,
 
-      setMeta: (key, value) =>
-        sql`INSERT INTO meta (key, value) VALUES (${key}, ${value})
-            ON CONFLICT (key) DO UPDATE SET value = excluded.value`.pipe(
-          Effect.asVoid,
-          Effect.mapError(fail('Failed to write meta')),
-        ),
-
-      putDocument,
+      putDocument: (document) => putDocuments([document]),
+      putDocuments,
       removeFile,
       reconcile,
-      putQuads,
-
-      delQuads: (quads) =>
-        quads.length === 0
-          ? Effect.void
-          : tryStore('Failed to delete quads', () => quadstore.multiDel([...quads]).then(() => undefined)),
-
+      putQuads: (quads) => exclusive(Effect.andThen(advance(), graphs.putQuads(quads))),
+      delQuads: (quads) => exclusive(Effect.andThen(advance(), graphs.delQuads(quads))),
       match,
-
-      select: (sparql) =>
-        tryStore('Failed to run SPARQL SELECT', () =>
-          tracked(async () => {
-            const rows = await collect<Bindings>(await engine.queryBindings(sparql, context));
-            return rows.map((row) => Object.fromEntries([...row].map(([key, term]) => [key.value, term.value])));
-          }),
-        ),
-
-      ask: (sparql) => tryStore('Failed to run SPARQL ASK', () => tracked(() => engine.queryBoolean(sparql, context))),
-
-      construct: (sparql) =>
-        tryStore('Failed to run SPARQL CONSTRUCT', () =>
-          tracked(() => engine.queryQuads(sparql, context).then(collect<Quad>)),
-        ),
-
-      lens: (schema) => createLens(schema, ldkit),
+      select: graphs.select,
+      ask: graphs.ask,
+      construct: graphs.construct,
+      lens: graphs.lens,
 
       dump,
 
@@ -448,66 +503,130 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
             try: () => new Parser({ format: 'text/n3' }).parse(turtle),
             catch: fail('Failed to parse graph'),
           });
-          yield* putQuads(quads);
+          yield* exclusive(Effect.andThen(advance(), graphs.putQuads(quads)));
           return quads.length;
         }),
 
       reason: (reasoner, rules, options) =>
-        Effect.gen(function* () {
-          const graph = Ontology.derivedGraphIri(reasoner);
-          const data = yield* serialize(yield* facts(rules, graph.value));
-          const derived = yield* tryStore('Reasoning failed', () =>
-            n3reasoner([data, rules].join('\n'), undefined, { output: 'derivations' }),
-          );
-          const parsed = yield* Effect.try({
-            try: () => new Parser({ format: 'text/n3' }).parse(typeof derived === 'string' ? derived : ''),
-            catch: fail('Failed to parse derivations'),
-          });
-          const quads = parsed.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, graph));
-          if (options?.materialize) {
-            // The reasoner's whole graph is replaced in one batch, so conclusions are either the
-            // ones this pass entailed or none at all — never a mix of two generations.
-            yield* patchGraph(yield* match(undefined, undefined, undefined, graph), quads);
-          }
-          return quads;
-        }),
+        options?.materialize
+          ? exclusive(
+              Effect.gen(function* () {
+                const graph = Ontology.derivedGraphIri(reasoner);
+                // One graph replaced on its own is not a pass of the whole rule set.
+                yield* advance();
+                yield* recordDerived([graph.value]);
+                return yield* graphs.reason(graph, rules, true);
+              }),
+            )
+          : graphs.reason(Ontology.derivedGraphIri(reasoner), rules, false),
+
+      reasonAll: (reasoners) =>
+        exclusive(
+          Effect.gen(function* () {
+            yield* recordDerived(reasoners.map((reasoner) => Ontology.derivedGraphIri(reasoner.name).value));
+            return yield* graphs.reasonAll(reasoners);
+          }),
+        ),
+
+      writePass: (pass, quads) =>
+        exclusive(
+          Effect.gen(function* () {
+            const graph = Ontology.passGraphIri(pass);
+            yield* recordDerived([graph.value]);
+            const stale = yield* match(undefined, undefined, undefined, graph);
+            const next = quads.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, graph));
+            // Only the difference is written, so the native journal sees what actually changed.
+            const key = (quad: Quad) =>
+              JSON.stringify([
+                quad.subject.value,
+                quad.predicate.value,
+                quad.object.termType,
+                quad.object.value,
+                quad.object.termType === 'Literal' ? [quad.object.datatype.value, quad.object.language] : [],
+              ]);
+            const kept = new Set(next.map(key));
+            const had = new Set(stale.map(key));
+            yield* graphs.delQuads(stale.filter((quad) => !kept.has(key(quad))));
+            yield* graphs.putQuads(next.filter((quad) => !had.has(key(quad))));
+          }),
+        ),
 
       derived: (reasoner) =>
         reasoner === undefined
-          ? Effect.map(match(), (quads) => quads.filter((quad) => Ontology.isDerivedGraph(quad.graph.value)))
+          ? Effect.flatMap(derivedGraphs(), (names) =>
+              Effect.map(
+                Effect.forEach(names, (name) => match(undefined, undefined, undefined, DataFactory.namedNode(name))),
+                (quads) => quads.flat(),
+              ),
+            )
           : match(undefined, undefined, undefined, Ontology.derivedGraphIri(reasoner)),
+
+      derivedCount,
+
+      generation,
+
+      recordReasoned: (signature, generation, derived) =>
+        Effect.flatMap(
+          Schema.encodeEffect(Reasoned)({ signature, generation, derived }).pipe(
+            Effect.mapError(fail('Failed to record the reasoning pass')),
+          ),
+          (reasoned) => setMeta(REASONED_KEY, reasoned),
+        ),
+
+      reasoned: (signature) =>
+        Effect.gen(function* () {
+          // A marker from before it recorded a count, or one that no longer decodes, is just stale.
+          const reasoned = yield* readMeta(REASONED_KEY, Reasoned).pipe(Effect.orElseSucceed(() => undefined));
+          return reasoned !== undefined &&
+            reasoned.generation === (yield* generation()) &&
+            reasoned.signature === signature
+            ? reasoned.derived
+            : undefined;
+        }),
 
       stats: () =>
         Effect.gen(function* () {
           const [{ count }] = yield* sql<{
             count: number;
           }>`SELECT COUNT(*) AS count FROM files`.pipe(Effect.mapError(fail('Failed to count files')));
-          const quads = yield* match();
-          return { dir, files: count, quads: quads.length };
+          return { dir, files: count, quads: yield* graphs.count() };
         }),
 
       clear: () =>
-        Effect.gen(function* () {
-          yield* sql`DELETE FROM files`.pipe(Effect.mapError(fail('Failed to clear ledger')));
-          const quads = yield* match();
-          if (quads.length > 0) {
-            yield* tryStore('Failed to clear graph', () => quadstore.multiDel(quads).then(() => undefined));
-          }
-        }),
+        exclusive(
+          Effect.gen(function* () {
+            yield* advance();
+            yield* sql`DELETE FROM files`.pipe(Effect.mapError(fail('Failed to clear ledger')));
+            yield* graphs.clear();
+          }),
+        ),
+      backend,
     } satisfies Api;
   });
 
 /**
- * Opens (creating if absent) the store rooted at `dir`; each database is a file or directory inside
- * it. Scoped — both databases close when the enclosing scope ends.
+ * Opens (creating if absent, unless `readOnly`) the store rooted at `dir`; each database is a file
+ * or directory inside it. Scoped — both databases close when the enclosing scope ends.
  */
-export const layer = (dir: string): Layer.Layer<Store, StoreError> =>
-  Layer.unwrap(
-    Effect.map(
-      Effect.tryPromise({
+export const layer = (
+  dir: string,
+  backend: Backend = defaultBackend(),
+  options: LayerOptions = {},
+): Layer.Layer<Store, StoreError> => {
+  const readOnly = options.readOnly ?? false;
+  const prepare = readOnly
+    ? existsSync(join(dir, SQLITE_FILE))
+      ? Effect.void
+      : Effect.fail(new StoreError({ message: `No index at ${dir}; run \`code-index index\` first.` }))
+    : Effect.tryPromise({
         try: () => mkdir(dir, { recursive: true }),
         catch: fail('Failed to create store directory'),
-      }),
-      () => Layer.effect(Store, make(dir)).pipe(Layer.provide(clientLayer(join(dir, SQLITE_FILE)))),
+      }).pipe(Effect.asVoid);
+  return Layer.unwrap(
+    Effect.map(prepare, () =>
+      Layer.effect(Store, make(dir, backend, readOnly)).pipe(
+        Layer.provide(clientLayer(join(dir, SQLITE_FILE), { readonly: readOnly })),
+      ),
     ),
   );
+};
