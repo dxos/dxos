@@ -2,9 +2,10 @@
 #
 # Copyright 2026 DXOS.org
 #
-# Stop hook for AUTONOMOUS MODE. While a run is active, ending the turn is
-# treated as an unfinished task: the hook blocks the stop and hands the task
-# back with the definition of done attached.
+# Stop hook for AUTONOMOUS MODE. While a run is active, ending the owning
+# session's turn is treated as an unfinished task: the hook blocks the stop and
+# hands the task back with the definition of done attached. Other sessions
+# sharing the checkout stop normally.
 #
 # This is the mechanism half of the feature. Every other part is text the agent
 # may drift away from as the session fills (see .claude/README.md §A); this one
@@ -29,6 +30,10 @@ cap=3
 
 input=$(cat)
 stop_hook_active=$(printf '%s' "$input" | jq -r '.stop_hook_active // false' 2>/dev/null || printf 'false')
+session_id=$(printf '%s' "$input" | jq -r '.session_id // empty' 2>/dev/null || printf '')
+if [ -n "$session_id" ]; then
+  export AUTONOMOUS_SESSION_ID="$session_id"
+fi
 
 bash "$script" active >/dev/null 2>&1 || exit 0
 
@@ -61,4 +66,5 @@ else
   reason=$(printf 'AUTONOMOUS MODE is still ON — you cannot end the turn by going quiet.\n\nTASK: %s\n%s\n\nDo NOT ask the user a question to get out of this. Resolve ambiguity from evidence:\n- `bash .claude/scripts/autonomous.sh user show` — every message the user has sent, verbatim. Scope and PR-size questions are answered there.\n- the repo: AGENTS.md, the relevant skill, existing code and tests.\n\nThen take the next step:\n1. Any DoD item unmet -> keep working on it. A blocker is work: try two independent routes around it and `autonomous.sh log add` each attempt.\n2. All items met -> run an adversarial review of your own diff first (`/code-review`, the `agentic-review` skill, or a subagent asked to attack the change), fix what it finds, log the verdict, then end the run:\n   `bash .claude/scripts/autonomous.sh stop "done: <what was verified>"`\n3. Genuinely no route -> log what you tried and end the run:\n   `bash .claude/scripts/autonomous.sh stop "blocked: <what, and the routes that failed>"`\n\nEnding the run via that command is the ONLY clean exit; it clears the state so this hook stops firing. Reminder %s of %s for this turn.\n' "$task" "$dod_line" "$count" "$cap")
 fi
 
+reason=$(printf '%s' "$reason" | bash "$script" point 2>/dev/null || printf '%s' "$reason")
 jq -nc --arg reason "$reason" '{decision: "block", reason: $reason}'

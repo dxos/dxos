@@ -4,17 +4,20 @@
 #
 # UserPromptSubmit hook for AUTONOMOUS MODE. Three jobs, in order:
 #
-# 1. Log the user's message verbatim. Doing this here, mechanically, is the
-#    whole point: the agent is told not to ask questions, so it needs evidence
-#    of what the user already said — especially about scope and PR size — and an
-#    agent asked to remember that would be persuasion, not a record.
-#    This happens on EVERY turn, autonomous or not, so a run started mid-session
-#    already has its upstream context on disk.
-# 2. Toggle: `/autonomous [task]` starts a run, `/autonomous off` ends one. This
+# 1. Toggle: `/autonomous [task]` starts a run owned by this session (taking
+#    over one owned by another), `/autonomous off` ends this session's run. This
 #    event carries the RAW typed text and runs before the model, so the write is
 #    deterministic — the command's own expansion would land too late to gate the
 #    turn it appears in.
-# 3. Enforce: inject the autonomous directives, but only while a run is active.
+# 2. Log the user's message verbatim, but only from the session that owns (or
+#    last owned) the run, so sessions sharing this checkout never mix their
+#    messages. Doing this here, mechanically, is the whole point: the agent is
+#    told not to ask questions, so it needs evidence of what the user already
+#    said — especially about scope and PR size — and an agent asked to remember
+#    that would be persuasion, not a record. A session that starts its first run
+#    backfills the log from its own transcript.
+# 3. Enforce: inject the autonomous directives, but only into the owning
+#    session while its run is active.
 #
 # Deliberately a sibling of ./mode.sh rather than part of it: verbosity and
 # autonomy are independent (a run can be terse or normal), and two hooks under
@@ -24,17 +27,14 @@ set -euo pipefail
 
 root="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 script="$root/.claude/scripts/autonomous.sh"
-user_log="$root/.claude/.autonomous-user.md"
-
-# Whether the user log predates this turn, captured BEFORE step 1 appends to it:
-# a log that already exists has been fed by this hook since the session began, so
-# a run starting now needs no backfill and would only duplicate its own tail.
-seeded='no'
-[ -e "$user_log" ] && seeded='yes'
 
 input=$(cat)
 prompt=$(printf '%s' "$input" | jq -r '.prompt // empty' 2>/dev/null || printf '')
 transcript=$(printf '%s' "$input" | jq -r '.transcript_path // empty' 2>/dev/null || printf '')
+session_id=$(printf '%s' "$input" | jq -r '.session_id // empty' 2>/dev/null || printf '')
+if [ -n "$session_id" ]; then
+  export AUTONOMOUS_SESSION_ID="$session_id"
+fi
 
 # Every user message the transcript holds, oldest first, excluding tool results,
 # harness meta turns, and this turn's own prompt. Used to seed the user log when
@@ -65,17 +65,6 @@ previous_instruction() {
   prior_user_messages "$file" "$current" | grep -v '^[[:space:]]*/' | tail -1 || printf ''
 }
 
-# 1. Record the message. A failure here must not swallow the turn, so the
-#    warning is surfaced and the hook carries on.
-if [ -n "$prompt" ]; then
-  bash "$script" user add "$prompt" >/dev/null 2>&1 \
-    || printf 'WARNING: could not append this message to the autonomous user log.\n'
-fi
-
-# A new user turn resets the stop-reminder budget: the hook's job is to stop an
-# agent walking away from a task, not to fight a user who has retaken the wheel.
-bash "$script" reminders reset >/dev/null 2>&1 || true
-
 # `/autonomous …`, leading, as a slash command must be. Anchoring to the first
 # line is what keeps prose about the command — or a path like `src/autonomous
 # off.ts` — from starting a run. The trailing boundary is required: without it
@@ -93,14 +82,20 @@ if [ -n "$sentinel" ]; then
     off | stop | end)
       reason=$(printf '%s' "$args" | sed -E 's@^[^[:space:]]+[[:space:]]*@@')
       [ -n "$reason" ] || reason='stopped by the user'
-      if bash "$script" stop "$reason" >/dev/null 2>&1; then
+      if [ -z "$(bash "$script" get 2>/dev/null)" ]; then
+        printf 'Autonomous mode was not active. Say so in one line.\n'
+      elif ! bash "$script" active >/dev/null 2>&1; then
+        printf 'The active autonomous run belongs to another session (%s), so it was NOT stopped and nothing is enforced here. Say so in one line. To end it from this session, `/autonomous <task>` takes it over and `/autonomous off` then ends it.\n' \
+          "$(bash "$script" owner 2>/dev/null || printf 'unknown')"
+      elif bash "$script" stop "$reason" >/dev/null 2>&1; then
         printf 'Autonomous mode is now OFF (recorded in the decision log). Do not run the script yourself. Confirm in one line, and report where the task stands.\n'
       else
-        printf 'Autonomous mode was not active, or its state could not be cleared. Say which in one line.\n'
+        printf 'Autonomous mode state could not be cleared, so the run is still ON. Say so in one line.\n'
       fi
       ;;
     status)
-      printf 'Autonomous status was requested. Report it from the AUTONOMOUS MODE block below (or say it is off if no block follows) plus `bash .claude/scripts/autonomous.sh log show`.\n'
+      printf 'Autonomous status was requested. Report it from the AUTONOMOUS MODE block below (or say it is off if no block follows) plus `bash .claude/scripts/autonomous.sh log show`.\n' \
+        | bash "$script" point
       ;;
     *)
       task=$args
@@ -110,14 +105,22 @@ if [ -n "$sentinel" ]; then
         derived='yes'
       fi
 
+      # Captured before `set` overwrites them. A session that already owned the
+      # previous run has been feeding the user log, so it needs no backfill.
+      previous_task=$(bash "$script" get 2>/dev/null || printf '')
+      previous_owner=$(bash "$script" owner 2>/dev/null || printf '')
+
       if [ -z "$task" ]; then
         printf 'AUTONOMOUS MODE was requested with no task on the line and no previous instruction to adopt, so NOTHING was started. Do not run the script yourself. Say so in one line and ask what the task is.\n'
       elif bash "$script" set "$task" >/dev/null 2>&1; then
-        # Seed the user log from the transcript, but only when this hook was not
-        # already logging this session — so the first scoping decision of a run
-        # started in a fresh session has the same evidence a long-running one
+        if [ -n "$previous_task" ] && [ -n "$previous_owner" ] && [ "$previous_owner" != "$session_id" ]; then
+          printf 'This replaced a run owned by another session (%s), whose task was: %s\nTell the user in one line.\n' \
+            "$previous_owner" "$(printf '%s' "$previous_task" | head -c 200)"
+        fi
+        # Seed the user log from this session's transcript on its first run, so
+        # the first scoping decision has the same evidence a long-running run
         # would, without re-appending turns already on disk.
-        if [ "$seeded" = 'no' ]; then
+        if [ -z "$session_id" ] || [ "$previous_owner" != "$session_id" ]; then
           while IFS= read -r message; do
             [ -n "$message" ] || continue
             bash "$script" user add "$message" >/dev/null 2>&1 || true
@@ -136,6 +139,21 @@ if [ -n "$sentinel" ]; then
   esac
 fi
 
-# 3. Inert when no run is active — a non-autonomous session must look exactly as
-#    it did before this hook existed.
+# 2. Record the message. `user add` drops it unless this session owns the run.
+#    A failure here must not swallow the turn, so the warning is surfaced and
+#    the hook carries on.
+if [ -n "$prompt" ]; then
+  bash "$script" user add "$prompt" >/dev/null 2>&1 \
+    || printf 'WARNING: could not append this message to the autonomous user log.\n'
+fi
+
+# A new user turn resets the owner's stop-reminder budget: the hook's job is to
+# stop an agent walking away from a task, not to fight a user who has retaken
+# the wheel. Another session's turn says nothing about the owner's user.
+if bash "$script" active >/dev/null 2>&1; then
+  bash "$script" reminders reset >/dev/null 2>&1 || true
+fi
+
+# 3. Inert unless this session owns an active run — any other session must look
+#    exactly as it did before this hook existed.
 exec bash "$script" context
