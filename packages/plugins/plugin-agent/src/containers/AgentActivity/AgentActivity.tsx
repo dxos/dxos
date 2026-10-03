@@ -102,7 +102,7 @@ export const AgentActivity = ({ role, attendableId, agent }: AgentActivityProps)
         bindingId={binding?.id}
         onSave={handleSave}
       />
-      <AgentActivityComponent.Skills>
+      <AgentActivityComponent.Skills ids={skills.skills.map((skill) => skill.key)}>
         {skills.skills.map(({ key, name, customized }) => (
           <AgentActivityComponent.Skill
             key={key}
@@ -116,7 +116,7 @@ export const AgentActivity = ({ role, attendableId, agent }: AgentActivityProps)
           />
         ))}
       </AgentActivityComponent.Skills>
-      <AgentActivityComponent.Conversations>
+      <AgentActivityComponent.Conversations ids={threads.map((chat) => chat.id)}>
         {threads.map((chat) => (
           <ConversationTile key={chat.id} chat={chat} onSelect={handleSelect} />
         ))}

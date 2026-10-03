@@ -4,7 +4,7 @@
 
 import React, { type PropsWithChildren, type ReactNode, createContext, useContext, useState } from 'react';
 
-import { Flex, Panel, ScrollArea, Tabs, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Container, Flex, Panel, ScrollArea, Tabs, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -38,25 +38,27 @@ const AgentStateRoot = ({ role, actions, defaultView = 'identity', children }: A
       onValueChange={(value) => setView(AGENT_STATE_VIEWS.find((candidate) => candidate === value) ?? 'identity')}
     >
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Tabs.Tablist>
+            <Tabs.List>
               {AGENT_STATE_VIEWS.map((value) => (
-                <Tabs.Button key={value} value={value} data-testid={`agent-state-tab-${value}`}>
+                <Tabs.Trigger key={value} value={value} data-testid={`agent-state-tab-${value}`}>
                   {t(`agent-state-${value}.heading`)}
-                </Tabs.Button>
+                </Tabs.Trigger>
               ))}
-            </Tabs.Tablist>
+            </Tabs.List>
             {actions}
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
-              <AgentStateContext.Provider value={view}>{children}</AgentStateContext.Provider>
+            <ScrollArea.Viewport asChild>
+              <Container>
+                <AgentStateContext.Provider value={view}>{children}</AgentStateContext.Provider>
+              </Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Tabs.Root>
   );
@@ -74,11 +76,11 @@ type AgentStateSectionProps = PropsWithChildren<{ view: AgentStateView; label: s
 const AgentStateSection = ({ view, label, children }: AgentStateSectionProps) => {
   const active = useContext(AgentStateContext) === view;
   return (
-    <Flex asChild column>
+    <Container asChild>
       <section aria-label={label} hidden={!active}>
         {children}
       </section>
-    </Flex>
+    </Container>
   );
 };
 
@@ -99,37 +101,38 @@ const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
     <AgentStateSection view='identity' label={t('agent-state-identity.heading')}>
-      <Listbox.Root>
-        <Listbox.Content>
+      <Listbox.Root
+        items={[
+          { value: 'did', label: t('agent-state-did.label'), icon: 'ph--fingerprint--regular' },
+          { value: 'skills', label: t('agent-state-skills.label'), icon: 'ph--sparkle--regular' },
+        ]}
+      >
+        <Listbox.Content scroll={false}>
           <Listbox.Item id='did'>
-            <Listbox.ItemContent
-              icon='ph--fingerprint--regular'
-              title={t('agent-state-did.label')}
-              description={
-                did ? <span className='font-mono break-all'>{did}</span> : t('agent-state-did-missing.label')
-              }
-            />
+            <Listbox.ItemIcon />
+            <Listbox.ItemText />
+            <Listbox.ItemDescription classNames={did ? 'font-mono break-all' : undefined}>
+              {did ?? t('agent-state-did-missing.label')}
+            </Listbox.ItemDescription>
           </Listbox.Item>
           <Listbox.Item id='skills'>
-            <Listbox.ItemContent
-              icon='ph--sparkle--regular'
-              title={t('agent-state-skills.label')}
-              description={
-                skills.length === 0 ? (
-                  t('agent-state-skills-empty.label')
-                ) : (
-                  <Flex asChild wrap gap='xs'>
-                    <span>
-                      {skills.map((skill) => (
-                        <Tag key={skill.key} hue='violet'>
-                          {skill.name}
-                        </Tag>
-                      ))}
-                    </span>
-                  </Flex>
-                )
-              }
-            />
+            <Listbox.ItemIcon />
+            <Listbox.ItemText />
+            <Listbox.ItemDescription>
+              {skills.length === 0 ? (
+                t('agent-state-skills-empty.label')
+              ) : (
+                <Flex asChild wrap gap='xs'>
+                  <span>
+                    {skills.map((skill) => (
+                      <Tag key={skill.key} hue='violet'>
+                        {skill.name}
+                      </Tag>
+                    ))}
+                  </span>
+                </Flex>
+              )}
+            </Listbox.ItemDescription>
           </Listbox.Item>
         </Listbox.Content>
       </Listbox.Root>
@@ -214,11 +217,15 @@ const AgentStateSummary = ({ counts }: AgentStateSummaryProps) => {
 
   return (
     <AgentStateSection view='state' label={t('agent-state-state.heading')}>
-      <Listbox.Root>
-        <Listbox.Content>
-          {rows.map(({ id, icon, title, value, description }) => (
-            <Listbox.Item key={id} id={id} classNames='gap-2'>
-              <Listbox.ItemContent classNames='grow' icon={icon} title={title} description={description} />
+      <Listbox.Root
+        items={rows.map(({ id, icon, title, description }) => ({ value: id, label: title, icon, description }))}
+      >
+        <Listbox.Content scroll={false}>
+          {rows.map(({ id, value, description }) => (
+            <Listbox.Item key={id} id={id}>
+              <Listbox.ItemIcon />
+              <Listbox.ItemText />
+              {description && <Listbox.ItemDescription />}
               <span className='text-lg tabular-nums' data-testid={`agent-state-${id}`}>
                 {value}
               </span>
@@ -254,32 +261,36 @@ const AgentStateConversations = ({ channels }: AgentStateConversationsProps) => 
   return (
     <AgentStateSection view='conversations' label={t('agent-state-conversations.heading')}>
       {channels.length === 0 && (
-        <Flex center classNames='p-2 text-description' role='status'>
+        <Flex center classNames='p-2 text-fg-muted' role='status'>
           {t('agent-state-conversations-empty.message')}
         </Flex>
       )}
-      <Listbox.Root>
-        <Listbox.Content>
+      <Listbox.Root
+        items={channels.map((channel) => ({
+          value: channel.id,
+          label: channel.name || t('agent-state-channel-unnamed.label'),
+          icon: 'ph--chat-circle--regular',
+        }))}
+      >
+        <Listbox.Content scroll={false}>
           {channels.map((channel) => (
             <Listbox.Item key={channel.id} id={channel.id} data-testid={`agent-state-channel-${channel.id}`}>
-              <Listbox.ItemContent
-                icon='ph--chat-circle--regular'
-                title={channel.name || t('agent-state-channel-unnamed.label')}
-                description={
-                  <Flex asChild wrap gap='xs'>
-                    <span>
-                      <Tag hue='sky' data-testid='agent-state-channel-mode'>
-                        {t('agent-state-channel-mode.label', { mode: channel.mode })}
+              <Listbox.ItemIcon />
+              <Listbox.ItemText />
+              <Listbox.ItemDescription>
+                <Flex asChild wrap gap='xs'>
+                  <span>
+                    <Tag hue='sky' data-testid='agent-state-channel-mode'>
+                      {t('agent-state-channel-mode.label', { mode: channel.mode })}
+                    </Tag>
+                    {channel.skills.map((skill) => (
+                      <Tag key={skill.key} hue='violet'>
+                        {skill.name}
                       </Tag>
-                      {channel.skills.map((skill) => (
-                        <Tag key={skill.key} hue='violet'>
-                          {skill.name}
-                        </Tag>
-                      ))}
-                    </span>
-                  </Flex>
-                }
-              />
+                    ))}
+                  </span>
+                </Flex>
+              </Listbox.ItemDescription>
             </Listbox.Item>
           ))}
         </Listbox.Content>

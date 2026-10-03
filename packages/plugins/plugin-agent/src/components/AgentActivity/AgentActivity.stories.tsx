@@ -49,7 +49,7 @@ const DefaultStory = ({ bound, values, status, error, bindingId, conversations, 
   <AgentActivity.Root bound={bound} running={status?.running}>
     <AgentActivity.Discord bound={bound} values={values} status={status} error={error} bindingId={bindingId} />
     <SkillList initial={skills} />
-    <AgentActivity.Conversations>
+    <AgentActivity.Conversations ids={conversations.map((conversation) => conversation.id)}>
       {conversations.map((conversation) => (
         <AgentActivity.Conversation key={conversation.id} {...conversation} now={NOW} />
       ))}
@@ -63,7 +63,7 @@ const SkillList = ({ initial }: { initial: SkillRow[] }) => {
   const setCustomized = (id: string, customized: boolean) =>
     setSkills((skills) => skills.map((skill) => (skill.id === id ? { ...skill, customized } : skill)));
   return (
-    <AgentActivity.Skills>
+    <AgentActivity.Skills ids={skills.map((skill) => skill.id)}>
       {skills.map((skill) => (
         <AgentActivity.Skill
           key={skill.id}

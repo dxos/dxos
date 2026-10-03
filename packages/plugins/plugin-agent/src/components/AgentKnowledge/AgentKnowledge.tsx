@@ -6,7 +6,17 @@ import React, { type PropsWithChildren, createContext, useContext, useEffect, us
 
 import { type Obj } from '@dxos/echo';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
-import { Flex, Panel, ScrollArea, Tabs, Timestamp, type TimestampProps, Toolbar, useTranslation } from '@dxos/react-ui';
+import {
+  Container,
+  Flex,
+  Panel,
+  ScrollArea,
+  Tabs,
+  Timestamp,
+  type TimestampProps,
+  Toolbar,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { type SpaceGraphEdge, SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 
@@ -39,29 +49,29 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'memories', children }: AgentK
   return (
     <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Tabs.Tablist>
-              <Tabs.Button value='memories' data-testid='agent-knowledge-tab-memories'>
+            <Tabs.List>
+              <Tabs.Trigger value='memories' data-testid='agent-knowledge-tab-memories'>
                 {t('agent-knowledge-memories.label')}
-              </Tabs.Button>
-              <Tabs.Button value='facts' data-testid='agent-knowledge-tab-facts'>
+              </Tabs.Trigger>
+              <Tabs.Trigger value='facts' data-testid='agent-knowledge-tab-facts'>
                 {t('agent-knowledge-facts.label')}
-              </Tabs.Button>
-              <Tabs.Button value='goals' data-testid='agent-knowledge-tab-goals'>
+              </Tabs.Trigger>
+              <Tabs.Trigger value='goals' data-testid='agent-knowledge-tab-goals'>
                 {t('agent-knowledge-goals.label')}
-              </Tabs.Button>
-              <Tabs.Button value='graph' data-testid='agent-knowledge-tab-graph'>
+              </Tabs.Trigger>
+              <Tabs.Trigger value='graph' data-testid='agent-knowledge-tab-graph'>
                 {t('agent-knowledge-graph.label')}
-              </Tabs.Button>
-            </Tabs.Tablist>
+              </Tabs.Trigger>
+            </Tabs.List>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        {/* Views render themselves by hand rather than through `Tabs.Panel`, whose content mounts hidden
+        </Panel.Header>
+        {/* Views render themselves by hand rather than through `Tabs.Content`, whose content mounts hidden
             for a frame, where the force graph would measure zero. */}
-        <Panel.Content>
+        <Panel.Body>
           <AgentKnowledgeContext.Provider value={view}>{children}</AgentKnowledgeContext.Provider>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Tabs.Root>
   );
@@ -90,29 +100,33 @@ const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) 
   }
 
   return memories.length === 0 ? (
-    <Flex center classNames='p-2 text-description' role='status'>
+    <Flex center classNames='p-2 text-fg-muted' role='status'>
       {t('agent-knowledge-memories-empty.message')}
     </Flex>
   ) : (
     <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport>
-        <Listbox.Root>
-          <Listbox.Content>
-            {memories.map((memory) => (
-              <Listbox.Item key={memory.id} id={memory.id}>
-                <Listbox.ItemContent
-                  icon={MEMORY_ICONS[memory.kind]}
-                  title={memory.content}
-                  description={
-                    <>
-                      {t(`memory-kind-${memory.kind}.label`)} · <Timestamp date={memory.observedAt} now={now} />
-                    </>
-                  }
-                />
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
-        </Listbox.Root>
+      <ScrollArea.Viewport asChild>
+        <Container>
+          <Listbox.Root
+            items={memories.map((memory) => ({
+              value: memory.id,
+              label: memory.content,
+              icon: MEMORY_ICONS[memory.kind],
+            }))}
+          >
+            <Listbox.Content scroll={false}>
+              {memories.map((memory) => (
+                <Listbox.Item key={memory.id} id={memory.id}>
+                  <Listbox.ItemIcon />
+                  <Listbox.ItemText />
+                  <Listbox.ItemDescription>
+                    {t(`memory-kind-${memory.kind}.label`)} · <Timestamp date={memory.observedAt} now={now} />
+                  </Listbox.ItemDescription>
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Root>
+        </Container>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -150,30 +164,28 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
   }
 
   return facts.length === 0 ? (
-    <Flex center classNames='p-2 text-description' role='status'>
+    <Flex center classNames='p-2 text-fg-muted' role='status'>
       {t('agent-knowledge-facts-empty.message')}
     </Flex>
   ) : (
     <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport>
-        <Listbox.Root>
-          <Listbox.Content>
-            {facts.map((fact) => (
-              <Listbox.Item key={fact.id} id={fact.id} data-testid='agent-knowledge-fact'>
-                <Listbox.ItemContent
-                  icon='ph--graph--regular'
-                  title={fact.text}
-                  description={
-                    <>
-                      {[fact.source, fact.speaker].flatMap((part) => (part ? [`${part} · `] : []))}
-                      <Timestamp date={fact.saidAt} now={now} />
-                    </>
-                  }
-                />
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
-        </Listbox.Root>
+      <ScrollArea.Viewport asChild>
+        <Container>
+          <Listbox.Root items={facts.map((fact) => ({ value: fact.id, label: fact.text, icon: 'ph--graph--regular' }))}>
+            <Listbox.Content scroll={false}>
+              {facts.map((fact) => (
+                <Listbox.Item key={fact.id} id={fact.id} data-testid='agent-knowledge-fact'>
+                  <Listbox.ItemIcon />
+                  <Listbox.ItemText />
+                  <Listbox.ItemDescription>
+                    {[fact.source, fact.speaker].flatMap((part) => (part ? [`${part} · `] : []))}
+                    <Timestamp date={fact.saidAt} now={now} />
+                  </Listbox.ItemDescription>
+                </Listbox.Item>
+              ))}
+            </Listbox.Content>
+          </Listbox.Root>
+        </Container>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -216,39 +228,49 @@ const AgentKnowledgeGoals = ({ goals }: AgentKnowledgeGoalsProps) => {
   }
 
   return goals.length === 0 ? (
-    <Flex center classNames='p-2 text-description' role='status'>
+    <Flex center classNames='p-2 text-fg-muted' role='status'>
       {t('agent-knowledge-goals-empty.message')}
     </Flex>
   ) : (
     <ScrollArea.Root orientation='vertical'>
-      <ScrollArea.Viewport>
-        <Listbox.Root>
-          <Listbox.Content>
-            {goals.flatMap((goal) => [
-              <Listbox.Item key={goal.id} id={goal.id} data-testid='agent-knowledge-goal' data-status={goal.status}>
-                <Listbox.ItemContent
-                  icon='ph--target--regular'
-                  title={goal.title}
-                  description={[t(`goal-status-${goal.status}.label`), goal.owners]
-                    .filter((part) => part !== undefined)
-                    .join(' · ')}
-                />
-              </Listbox.Item>,
-              ...goal.watches.map((watch) => (
-                <Listbox.Item key={watch.id} id={watch.id} data-testid='agent-knowledge-watch' classNames='ps-6'>
-                  <Listbox.ItemContent
-                    icon='ph--binoculars--regular'
-                    title={t('agent-knowledge-watch.label', {
-                      recipient: watch.recipient ?? t('agent-knowledge-watch-unnamed.label'),
-                      message: watch.message,
-                    })}
-                    description={watch.when}
-                  />
-                </Listbox.Item>
-              )),
+      <ScrollArea.Viewport asChild>
+        <Container>
+          <Listbox.Root
+            items={goals.flatMap((goal) => [
+              {
+                value: goal.id,
+                label: goal.title,
+                icon: 'ph--target--regular',
+                description: [t(`goal-status-${goal.status}.label`), goal.owners]
+                  .filter((part) => part !== undefined)
+                  .join(' · '),
+              },
+              ...goal.watches.map((watch) => ({
+                value: watch.id,
+                label: t('agent-knowledge-watch.label', {
+                  recipient: watch.recipient ?? t('agent-knowledge-watch-unnamed.label'),
+                  message: watch.message,
+                }),
+                icon: 'ph--binoculars--regular',
+                description: watch.when,
+              })),
             ])}
-          </Listbox.Content>
-        </Listbox.Root>
+          >
+            <Listbox.Content scroll={false}>
+              {goals.flatMap((goal) => [
+                <Listbox.Item
+                  key={goal.id}
+                  id={goal.id}
+                  data-testid='agent-knowledge-goal'
+                  data-status={goal.status}
+                />,
+                ...goal.watches.map((watch) => (
+                  <Listbox.Item key={watch.id} id={watch.id} data-testid='agent-knowledge-watch' classNames='ps-6' />
+                )),
+              ])}
+            </Listbox.Content>
+          </Listbox.Root>
+        </Container>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   );
@@ -305,7 +327,7 @@ const AgentKnowledgeGraph = ({ nodes, edges }: AgentKnowledgeGraphProps) => {
   }
 
   return nodes.length === 0 ? (
-    <Flex center classNames='p-2 text-description' role='status'>
+    <Flex center classNames='p-2 text-fg-muted' role='status'>
       {t('agent-knowledge-graph-empty.message')}
     </Flex>
   ) : (

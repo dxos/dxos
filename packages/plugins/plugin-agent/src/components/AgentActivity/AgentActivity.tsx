@@ -2,10 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { Children, type PropsWithChildren } from 'react';
+import React, { type MouseEvent, type PropsWithChildren } from 'react';
 
 import { type Database } from '@dxos/echo';
-import { Flex, IconButton, Panel, ScrollArea, Timestamp, type TimestampProps, useTranslation } from '@dxos/react-ui';
+import {
+  Button,
+  Container,
+  Flex,
+  Panel,
+  ScrollArea,
+  Timestamp,
+  type TimestampProps,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -82,14 +91,16 @@ const AgentActivityRoot = ({
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive={attendableId === undefined} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
+          <ScrollArea.Viewport asChild>
+            <Container>{children}</Container>
+          </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -149,30 +160,36 @@ AgentActivityDiscord.displayName = 'AgentActivity.Discord';
 // Skills
 //
 
-type AgentActivitySkillsProps = PropsWithChildren;
+type AgentActivitySkillsProps = PropsWithChildren<{
+  /** The registry keys of the rows, in order. */
+  ids: readonly string[];
+}>;
 
 /** The skills bound to the agent's conversation; children are {@link AgentActivitySkill} rows. */
-const AgentActivitySkills = ({ children }: AgentActivitySkillsProps) => {
+const AgentActivitySkills = ({ ids, children }: AgentActivitySkillsProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Flex asChild column>
+    <Container asChild>
       <section aria-label={t('skills.heading')}>
-        <h3 className='px-2 text-sm text-description'>{t('skills.heading')}</h3>
-        {Children.count(children) === 0 ? (
-          <Flex center classNames='p-2 text-description' role='status'>
+        <h3 className='px-2 text-sm text-fg-muted'>{t('skills.heading')}</h3>
+        {ids.length === 0 ? (
+          <Flex center classNames='p-2 text-fg-muted' role='status'>
             {t('skills-empty.message')}
           </Flex>
         ) : (
-          <Listbox.Root>
-            <Listbox.Content>{children}</Listbox.Content>
+          <Listbox.Root items={toOptions(ids)}>
+            <Listbox.Content scroll={false}>{children}</Listbox.Content>
           </Listbox.Root>
         )}
       </section>
-    </Flex>
+    </Container>
   );
 };
 
 AgentActivitySkills.displayName = 'AgentActivity.Skills';
+
+// Rows render their own text (a conversation's name is read by its row), so an option carries only the id Ark keys it by.
+const toOptions = (ids: readonly string[]) => ids.map((id) => ({ value: id, label: id }));
 
 //
 // Skill
@@ -203,20 +220,19 @@ const AgentActivitySkill = ({
 }: AgentActivitySkillProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Listbox.Item id={id} classNames='gap-2' onClick={customized ? () => onOpen?.(id) : undefined}>
-      <Listbox.ItemContent
-        classNames='grow'
-        icon='ph--blueprint--regular'
-        title={name}
-        description={t(customized ? 'skill-customized.label' : 'skill-compiled.label')}
-      />
-      <IconButton
+    <Listbox.Item id={id} onClick={customized ? () => onOpen?.(id) : undefined}>
+      <Listbox.ItemIcon icon='ph--blueprint--regular' />
+      <Listbox.ItemText>{name}</Listbox.ItemText>
+      <Listbox.ItemDescription>
+        {t(customized ? 'skill-customized.label' : 'skill-compiled.label')}
+      </Listbox.ItemDescription>
+      <Button
         iconOnly
         variant='ghost'
         disabled={busy}
         icon={customized ? 'ph--arrow-counter-clockwise--regular' : 'ph--pencil-simple--regular'}
         label={t(customized ? 'skill-reset.label' : 'skill-customize.label')}
-        onClick={(event) => {
+        onClick={(event: MouseEvent<HTMLButtonElement>) => {
           // The row itself opens the skill; the button must not also trigger that.
           event.stopPropagation();
           (customized ? onReset : onCustomize)?.(id);
@@ -232,26 +248,29 @@ AgentActivitySkill.displayName = 'AgentActivity.Skill';
 // Conversations
 //
 
-type AgentActivityConversationsProps = PropsWithChildren;
+type AgentActivityConversationsProps = PropsWithChildren<{
+  /** The ids of the rows, in order. */
+  ids: readonly string[];
+}>;
 
 /** The agent's conversations bridged from Discord threads; children are {@link AgentActivityConversation} rows. */
-const AgentActivityConversations = ({ children }: AgentActivityConversationsProps) => {
+const AgentActivityConversations = ({ ids, children }: AgentActivityConversationsProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <Flex asChild column>
+    <Container asChild>
       <section aria-label={t('conversations.heading')}>
-        <h3 className='px-2 text-sm text-description'>{t('conversations.heading')}</h3>
-        {Children.count(children) === 0 ? (
-          <Flex center classNames='p-2 text-description' role='status'>
+        <h3 className='px-2 text-sm text-fg-muted'>{t('conversations.heading')}</h3>
+        {ids.length === 0 ? (
+          <Flex center classNames='p-2 text-fg-muted' role='status'>
             {t('conversations-empty.message')}
           </Flex>
         ) : (
-          <Listbox.Root>
-            <Listbox.Content>{children}</Listbox.Content>
+          <Listbox.Root items={toOptions(ids)}>
+            <Listbox.Content scroll={false}>{children}</Listbox.Content>
           </Listbox.Root>
         )}
       </section>
-    </Flex>
+    </Container>
   );
 };
 
@@ -276,11 +295,13 @@ const AgentActivityConversation = ({ id, title, lastActivity, now, onSelect }: A
   const { t } = useTranslation(meta.profile.key);
   return (
     <Listbox.Item id={id} onClick={() => onSelect?.(id)}>
-      <Listbox.ItemContent
-        icon='ph--discord-logo--regular'
-        title={title || t('conversation-untitled.label')}
-        description={lastActivity !== undefined ? <Timestamp date={lastActivity} now={now} /> : undefined}
-      />
+      <Listbox.ItemIcon icon='ph--discord-logo--regular' />
+      <Listbox.ItemText>{title || t('conversation-untitled.label')}</Listbox.ItemText>
+      {lastActivity !== undefined && (
+        <Listbox.ItemDescription>
+          <Timestamp date={lastActivity} now={now} />
+        </Listbox.ItemDescription>
+      )}
     </Listbox.Item>
   );
 };

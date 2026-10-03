@@ -33,10 +33,8 @@ export const DiscordBotStatus = ({ status, error, bindingId }: DiscordBotStatusP
   // The last status read stays visible beside a failed refresh, so a transient EDGE outage does not hide it.
   const unreachable = error && (
     <Banner.Root valence='error'>
-      <Banner.Content>
-        <Banner.Title>{t('discord-bot-unreachable.label')}</Banner.Title>
-        <Banner.Body>{error}</Banner.Body>
-      </Banner.Content>
+      <Banner.Title>{t('discord-bot-unreachable.label')}</Banner.Title>
+      <Banner.Body>{error}</Banner.Body>
     </Banner.Root>
   );
 
@@ -44,9 +42,7 @@ export const DiscordBotStatus = ({ status, error, bindingId }: DiscordBotStatusP
     return (
       unreachable || (
         <Banner.Root valence='neutral' icon='ph--circle-notch--regular'>
-          <Banner.Content>
-            <Banner.Title>{t('discord-gateway-checking.label')}</Banner.Title>
-          </Banner.Content>
+          <Banner.Title>{t('discord-gateway-checking.label')}</Banner.Title>
         </Banner.Root>
       )
     );
@@ -59,10 +55,8 @@ export const DiscordBotStatus = ({ status, error, bindingId }: DiscordBotStatusP
       <>
         {unreachable}
         <Banner.Root valence='warning'>
-          <Banner.Content>
-            <Banner.Title>{t('discord-bot-other-binding.label')}</Banner.Title>
-            <Banner.Body>{t('discord-bot-other-binding.message')}</Banner.Body>
-          </Banner.Content>
+          <Banner.Title>{t('discord-bot-other-binding.label')}</Banner.Title>
+          <Banner.Body>{t('discord-bot-other-binding.message')}</Banner.Body>
         </Banner.Root>
       </>
     );
@@ -72,11 +66,9 @@ export const DiscordBotStatus = ({ status, error, bindingId }: DiscordBotStatusP
     <>
       {unreachable}
       <Banner.Root valence={status.lastError ? 'warning' : GATEWAY_VALENCE[status.gateway]}>
-        <Banner.Content>
-          <Banner.Title>{t(`discord-gateway-${status.gateway}.label`)}</Banner.Title>
-          <Banner.Body>{t('discord-bot-threads.label', { count: status.threads })}</Banner.Body>
-          {status.lastError && <Banner.Body>{status.lastError}</Banner.Body>}
-        </Banner.Content>
+        <Banner.Title>{t(`discord-gateway-${status.gateway}.label`)}</Banner.Title>
+        <Banner.Body>{t('discord-bot-threads.label', { count: status.threads })}</Banner.Body>
+        {status.lastError && <Banner.Body>{status.lastError}</Banner.Body>}
       </Banner.Root>
     </>
   );

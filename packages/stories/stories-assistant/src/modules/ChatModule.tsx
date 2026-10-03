@@ -14,7 +14,7 @@ import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
-import { Flex, Button, Panel, Popover, Toolbar } from '@dxos/react-ui';
+import { Button, Flex, Panel, Popover, Toolbar } from '@dxos/react-ui';
 import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
 import { Person } from '@dxos/types';
 

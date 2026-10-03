@@ -44,7 +44,7 @@ export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
   const { t } = useTranslation(meta.profile.key);
   if (goals.length === 0 && memories.length === 0) {
     return (
-      <Flex center classNames='p-2 text-description' role='status'>
+      <Flex center classNames='p-2 text-fg-muted' role='status'>
         {t('profile-graph-empty.message')}
       </Flex>
     );
@@ -55,20 +55,20 @@ export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
       {goals.length > 0 && (
         <Flex asChild column>
           <section aria-label={t('profile-graph-goals.heading')}>
-            <h3 className='px-2 text-sm text-description'>{t('profile-graph-goals.heading')}</h3>
-            <Listbox.Root>
+            <h3 className='px-2 text-sm text-fg-muted'>{t('profile-graph-goals.heading')}</h3>
+            <Listbox.Root
+              items={goals.map((goal) => ({
+                value: goal.id,
+                label: goal.title,
+                icon: GOAL_ICONS[goal.status],
+                description: [t(`goal-horizon-${goal.horizon}.label`), t(`goal-status-${goal.status}.label`)].join(
+                  ' · ',
+                ),
+              }))}
+            >
               <Listbox.Content>
                 {goals.map((goal) => (
-                  <Listbox.Item key={goal.id} id={goal.id}>
-                    <Listbox.ItemContent
-                      icon={GOAL_ICONS[goal.status]}
-                      title={goal.title}
-                      description={[
-                        t(`goal-horizon-${goal.horizon}.label`),
-                        t(`goal-status-${goal.status}.label`),
-                      ].join(' · ')}
-                    />
-                  </Listbox.Item>
+                  <Listbox.Item key={goal.id} id={goal.id} />
                 ))}
               </Listbox.Content>
             </Listbox.Root>
@@ -78,21 +78,22 @@ export const ProfileGraph = ({ goals, memories }: ProfileGraphProps) => {
       {memories.length > 0 && (
         <Flex asChild column>
           <section aria-label={t('profile-graph-memories.heading')}>
-            <h3 className='px-2 text-sm text-description'>{t('profile-graph-memories.heading')}</h3>
-            <Listbox.Root>
+            <h3 className='px-2 text-sm text-fg-muted'>{t('profile-graph-memories.heading')}</h3>
+            <Listbox.Root
+              items={memories.map((memory) => ({
+                value: memory.id,
+                label: memory.content,
+                icon: MEMORY_ICONS[memory.kind],
+                description: [
+                  t(`memory-kind-${memory.kind}.label`),
+                  t(`memory-origin-${memory.origin}.label`),
+                  new Date(memory.observedAt).toLocaleDateString(),
+                ].join(' · '),
+              }))}
+            >
               <Listbox.Content>
                 {memories.map((memory) => (
-                  <Listbox.Item key={memory.id} id={memory.id}>
-                    <Listbox.ItemContent
-                      icon={MEMORY_ICONS[memory.kind]}
-                      title={memory.content}
-                      description={[
-                        t(`memory-kind-${memory.kind}.label`),
-                        t(`memory-origin-${memory.origin}.label`),
-                        new Date(memory.observedAt).toLocaleDateString(),
-                      ].join(' · ')}
-                    />
-                  </Listbox.Item>
+                  <Listbox.Item key={memory.id} id={memory.id} />
                 ))}
               </Listbox.Content>
             </Listbox.Root>
