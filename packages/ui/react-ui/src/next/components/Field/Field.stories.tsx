@@ -8,6 +8,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { invariant } from '@dxos/invariant';
+
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
@@ -282,11 +284,14 @@ export const Test: Story = {
     // control (after it) share the next line, top-aligned to the control's cell.
     const rows = ['theme', 'language'].map((name) => {
       const row = byTestId(canvasElement, `row-${name}-md`);
-      const inputElement = row.querySelector<HTMLElement>('.nx-input')!;
+      const inputElement = row.querySelector<HTMLElement>('.nx-input');
+      const headerElement = row.querySelector('[data-part="header"]');
+      const helperElement = row.querySelector('[data-part="helper-text"]');
+      invariant(inputElement && headerElement && helperElement);
       return {
         row,
-        header: row.querySelector('[data-part="header"]')!.getBoundingClientRect(),
-        helper: row.querySelector('[data-part="helper-text"]')!.getBoundingClientRect(),
+        header: headerElement.getBoundingClientRect(),
+        helper: helperElement.getBoundingClientRect(),
         input: inputElement.getBoundingClientRect(),
         inputTop: inputElement.getBoundingClientRect().top - parseFloat(getComputedStyle(inputElement).marginTop),
       };
@@ -344,10 +349,11 @@ export const Test: Story = {
 
     // The required mark is warning-coloured, a small gap after the label's text.
     const requiredLabel = byTestId(canvasElement, 'required-label-md');
-    const mark = requiredLabel.querySelector<HTMLElement>('[data-part="required-indicator"]')!;
+    const mark = requiredLabel.querySelector<HTMLElement>('[data-part="required-indicator"]');
+    invariant(mark && requiredLabel.firstChild);
     await expect(getComputedStyle(mark).color).toBe(resolve('--color-warning-text'));
     const range = canvasElement.ownerDocument.createRange();
-    range.selectNodeContents(requiredLabel.firstChild!);
+    range.selectNodeContents(requiredLabel.firstChild);
     await expect(mark.getBoundingClientRect().left - range.getBoundingClientRect().right).toBeGreaterThan(0.5);
 
     const clear = website.getByRole('button', { name: 'Clear website' });
