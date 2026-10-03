@@ -172,9 +172,13 @@
   .dx-tree-item[data-hide-drag-source] {
     display: none;
   }
-  .dx-tree-item-count {
+  /* A compact chip, one label line tall; the doubled class outranks the Tag's control-derived height and padding. */
+  .dx-tag.dx-tree-item-count {
     justify-self: end;
-    min-inline-size: 1.5rem;
+    height: auto;
+    padding-block: 0;
+    padding-inline: 0.25rem;
+    min-inline-size: 1.25rem;
     justify-content: center;
     font-variant-numeric: tabular-nums;
   }

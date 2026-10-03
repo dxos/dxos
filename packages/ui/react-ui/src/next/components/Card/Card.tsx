@@ -121,7 +121,8 @@ const CardTile = forwardRef<HTMLDivElement, CardTileProps>(
       className={mx(recipes.cardTile(), onClick && recipes.cardTileClickable(), classNames)}
       ref={forwardedRef}
     >
-      <Icon icon={icon} hue={hue} />
+      {/* No `hue` on the Icon: its own hue rule would paint the hue's text tone over the tile's foreground. */}
+      <Icon icon={icon} />
     </div>
   ),
 );
