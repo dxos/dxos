@@ -1,5 +1,14 @@
 # @dxos/assistant-evals
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [8fc641a]
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/keys@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

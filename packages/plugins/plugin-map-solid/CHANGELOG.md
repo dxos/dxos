@@ -1,5 +1,26 @@
 # @dxos/plugin-map-solid
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [66727e3]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [0347f09]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/plugin-map@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/echo-solid@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/solid-ui-geo@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

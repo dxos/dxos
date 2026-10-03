@@ -1,5 +1,69 @@
 # @dxos/plugin-space
 
+## 0.13.0
+
+### Patch Changes
+
+- 66727e3: Fixes found driving a Composer basics demo. Creating an object from an `@` link keeps the typed name. Creating a type now opens its table, from the create dialog and from the debug object generator. Types and views navigate to their node in the Database section instead of a plank stuck on "Loading…". A table can be created without picking a type: it gets a new type named after it. The table's add-column button appears for a database type. The type and location pickers in the create forms list their options and show their labels. A map created on a table's type offers the type's location properties. Toggling a world-view map shows the whole globe.
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+- Updated dependencies [fcbb5c4]
+  - @dxos/echo@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/extractor@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/cli-util@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/migrations@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/react-ui-components@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/react-ui-list@0.13.0
+  - @dxos/react-ui-mosaic@0.13.0
+  - @dxos/react-ui-search@0.13.0
+  - @dxos/react-ui-table@0.13.0
+  - @dxos/plugin-attention@0.13.0
+  - @dxos/plugin-graph@0.13.0
+  - @dxos/plugin-settings@0.13.0
+  - @dxos/plugin-status-bar@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/shell@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-dashboard@0.13.0
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/halo@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/react-ui-dnd@0.13.0
+  - @dxos/react-ui-masonry@0.13.0
+  - @dxos/react-ui-pickers@0.13.0
+  - @dxos/halo-react@0.13.0
+  - @dxos/display-name@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/progress@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

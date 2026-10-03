@@ -1,5 +1,27 @@
 # @dxos/plugin-observability
 
+## 0.13.0
+
+### Patch Changes
+
+- 0347f09: Plugin state no longer shares a localStorage key with plugin settings, so changing a setting no longer wipes state on the next reload, and saving state no longer wipes settings. Assistant keeps each object's current chat, Maps keeps the globe/map choice and API keys, and the telemetry toggle stays off after an opt-out. State moves to `<plugin id>.state`; the old values are not migrated.
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/cli-util@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/observability@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/config@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

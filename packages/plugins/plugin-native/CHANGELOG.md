@@ -1,5 +1,23 @@
 # @dxos/plugin-native
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1b2e9f3]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [0347f09]
+  - @dxos/ai@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/plugin-assistant@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-ui@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

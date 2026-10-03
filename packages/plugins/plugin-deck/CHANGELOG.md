@@ -1,5 +1,43 @@
 # @dxos/plugin-deck
 
+## 0.13.0
+
+### Patch Changes
+
+- 8412f8b: In the native desktop app, the window can now be dragged from any non-button spot in the L0 and R0 rails, the sidebar header, plank and companion headings, and the empty deck.
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [0347f09]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/plugin-observability@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/react-ui-mosaic@0.13.0
+  - @dxos/plugin-attention@0.13.0
+  - @dxos/plugin-graph@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/react-ui-dnd@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

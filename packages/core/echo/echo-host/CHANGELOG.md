@@ -1,5 +1,39 @@
 # @dxos/echo-host
 
+## 0.13.0
+
+### Patch Changes
+
+- 8d0cdd5: Speed up local writes on OPFS: SQLite temp files now stay in memory, and Automerge chunk writes that arrive together commit in one transaction instead of one each, so a large flush no longer times out its RPC.
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+- Updated dependencies [e65ca2f]
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/index-core@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/tracing@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/feed@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/teleport@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/teleport-extension-automerge-replicator@0.13.0
+  - @dxos/sql-sqlite@0.13.0
+  - @dxos/crypto@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+  - @dxos/typings@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

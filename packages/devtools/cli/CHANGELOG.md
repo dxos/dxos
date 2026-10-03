@@ -1,5 +1,75 @@
 # @dxos/cli
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [1b2e9f3]
+- Updated dependencies [32f32a0]
+- Updated dependencies [66727e3]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [0347f09]
+- Updated dependencies [1737cad]
+- Updated dependencies [fcbb5c4]
+  - @dxos/echo@0.13.0
+  - @dxos/ai@0.13.0
+  - @dxos/plugin-space@0.13.0
+  - @dxos/plugin-table@0.13.0
+  - @dxos/plugin-markdown@0.13.0
+  - @dxos/plugin-map@0.13.0
+  - @dxos/plugin-kanban@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/plugin-assistant@0.13.0
+  - @dxos/plugin-observability@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/plugin-tasks@0.13.0
+  - @dxos/assistant@0.13.0
+  - @dxos/assistant-toolkit@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/compute-runtime@0.13.0
+  - @dxos/edge-compute@0.13.0
+  - @dxos/mcp-server@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/cli-util@0.13.0
+  - @dxos/plugin-chess@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/plugin-connector@0.13.0
+  - @dxos/plugin-file@0.13.0
+  - @dxos/plugin-game@0.13.0
+  - @dxos/plugin-google@0.13.0
+  - @dxos/plugin-inbox@0.13.0
+  - @dxos/plugin-jmap@0.13.0
+  - @dxos/plugin-projects@0.13.0
+  - @dxos/plugin-registry@0.13.0
+  - @dxos/plugin-review@0.13.0
+  - @dxos/plugin-routine@0.13.0
+  - @dxos/plugin-sample@0.13.0
+  - @dxos/plugin-script@0.13.0
+  - @dxos/plugin-transcription@0.13.0
+  - @dxos/introspect@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/observability@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/random@0.13.0
+  - @dxos/halo-adapter-client@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/halo@0.13.0
+  - @dxos/effect-atom-solid@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

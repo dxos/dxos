@@ -1,5 +1,28 @@
 # @dxos/types
 
+## 0.13.0
+
+### Minor Changes
+
+- fcbb5c4: A pull request now stays on the task it is attached to, so a sub-task fixed on its own can carry its own PR alongside its parent's; only a second, different open PR on the same task is refused. `Task.artifactTarget` is replaced by `Task.checkArtifact`, which validates without redirecting.
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/link@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/random@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

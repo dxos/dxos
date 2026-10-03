@@ -1,5 +1,37 @@
 # @dxos/plugin-map
 
+## 0.13.0
+
+### Patch Changes
+
+- 66727e3: Fixes found driving a Composer basics demo. Creating an object from an `@` link keeps the typed name. Creating a type now opens its table, from the create dialog and from the debug object generator. Types and views navigate to their node in the Database section instead of a plank stuck on "Loading…". A table can be created without picking a type: it gets a new type named after it. The table's add-column button appears for a database type. The type and location pickers in the create forms list their options and show their labels. A map created on a table's type offers the type's location properties. Toggling a world-view map shows the whole globe.
+- 0347f09: Plugin state no longer shares a localStorage key with plugin settings, so changing a setting no longer wipes state on the next reload, and saving state no longer wipes settings. Assistant keeps each object's current chat, Maps keeps the globe/map choice and API keys, and the telemetry toggle stays off after an opt-out. State moves to `<plugin id>.state`; the old values are not migrated.
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [66727e3]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/plugin-space@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/react-ui-geo@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

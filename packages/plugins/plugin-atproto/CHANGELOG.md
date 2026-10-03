@@ -1,5 +1,37 @@
 # @dxos/plugin-atproto
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/link@0.13.0
+  - @dxos/echo-panproto@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/plugin-connector@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/react-ui-list@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/config@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/react-ui-syntax-highlighter@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

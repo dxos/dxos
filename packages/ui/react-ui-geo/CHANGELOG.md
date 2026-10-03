@@ -1,5 +1,16 @@
 # @dxos/react-ui-geo
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/log@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/node-std@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

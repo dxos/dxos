@@ -1,5 +1,28 @@
 # @dxos/react-ui-mosaic
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/react-ui-search@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/react-ui-syntax-highlighter@0.13.0
+  - @dxos/react-ui-dnd@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

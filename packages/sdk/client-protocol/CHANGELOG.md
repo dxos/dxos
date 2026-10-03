@@ -1,5 +1,27 @@
 # @dxos/client-protocol
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/credentials@0.13.0
+  - @dxos/rpc@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/worker-framework@0.13.0
+  - @dxos/rpc-tunnel@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

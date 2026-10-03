@@ -1,5 +1,28 @@
 # @dxos/react-client
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/config@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

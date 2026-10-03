@@ -1,5 +1,29 @@
 # @dxos/ai
 
+## 0.13.0
+
+### Minor Changes
+
+- 1b2e9f3: Cloudflare's Clef decision models are in the catalog: `Model.cloudflareClef` and `Model.cloudflareClefFlash` answer through the same Workers AI route as `Model.cloudflareJev`, and `Model.decisionModels` lists every decision model. `Model.defaultDecisionModel` is an alias a resolver swaps for the configured default; `TypeSafeResolver.make` takes it as `defaultModel` (jev on TypeSafe when unset), and the TypeSafe plugin sets it from its new **Default decision model** setting.
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+- Updated dependencies [fcbb5c4]
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

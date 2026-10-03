@@ -1,5 +1,13 @@
 # @dxos/introspect
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+  - @dxos/introspect-tools@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

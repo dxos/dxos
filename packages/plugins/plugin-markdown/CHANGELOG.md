@@ -1,5 +1,84 @@
 # @dxos/plugin-markdown
 
+## 0.13.0
+
+### Minor Changes
+
+- 1737cad: `@dxos/react-ui` is rebuilt on Ark UI primitives styled by plain `dx-*` component CSS, and every UI package and plugin
+  renders on it; the former component APIs are removed.
+
+  - Components are exported flat by name (`Button`, `Toolbar`, `Card`, `Panel`, `Container`, `Field`, `Input`, `Combobox`,
+    `Menu`, `Tabs`, `Main`, `Splitter`, `Toast`, `Tour`, `Banner`, `Empty`, …) and sized by `data-size` scopes (`xs`–`xl`;
+    `Size` is that scale). `Container` lays out rails and subgrids, `ControlFrame` frames a control with adornments
+    (`Input copyable`, `variant='mono'`), and `useMainLandmark` declares the app's focus areas (Tab and Arrow Left/Right
+    move between them). `Combobox` adds a trigger mode, option descriptions, a create row and async results. `Label` is
+    no longer public (use `Field.Label`), and the flow helper is `Match` (`Match.Root`/`Match.Case`).
+  - `@dxos/react-ui-list` provides `Listbox`, `OrderedList` and `Tree` (virtual rows, drag and drop, disclosure
+    animation); `@dxos/react-ui-form` provides `Form` (`Root`, `Viewport`, `Content`, `Fields`, `Actions`, …),
+    `ObjectProperties`, `ObjectPicker`, `ViewEditor` and `RefEditor`; `@dxos/react-ui-menu` renders `ActionToolbar` and
+    `ActionMenu` on the new Toolbar and Menu; `@dxos/app-toolkit` adds the `ObjectCard` composite.
+  - `@dxos/ui-theme` renames the text tokens to `--color-fg`/`fg-muted`/`fg-subtle` (`text-fg`, `text-fg-muted`,
+    `text-fg-subtle`; Typography and Icon `tone='muted' | 'subtle'`) and `--color-subdued-separator` to
+    `--color-separator-subtle`, adds `--color-focus` for the keyboard focus ring, and derives the control fill from one
+    offset off its host surface in both themes.
+  - `@dxos/echo` adds `Annotation.ArrayPresentationAnnotation` (`ordered`, `display: 'tag' | 'title'`) for reference
+    arrays; `@dxos/effect` `SchemaEx.getProperties` keeps an annotated optional field's annotations; `@dxos/ui-editor`
+    markdown tables keep empty cells; `@dxos/plugin-markdown` marks `Document.description` as markdown, and the rename
+    popover shows an object's properties.
+
+  Breaking: the former `@dxos/react-ui` component APIs and the transitional `Next` namespace are gone; import components
+  from `@dxos/react-ui` by name and use the renamed theme tokens.
+
+### Patch Changes
+
+- 66727e3: Fixes found driving a Composer basics demo. Creating an object from an `@` link keeps the typed name. Creating a type now opens its table, from the create dialog and from the debug object generator. Types and views navigate to their node in the Database section instead of a plank stuck on "Loading…". A table can be created without picking a type: it gets a new type named after it. The table's add-column button appears for a database type. The type and location pickers in the create forms list their options and show their labels. A map created on a table's type offers the type's location properties. Toggling a world-view map shows the whole globe.
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [66727e3]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+- Updated dependencies [fcbb5c4]
+  - @dxos/echo@0.13.0
+  - @dxos/plugin-space@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/assistant@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/versioning@0.13.0
+  - @dxos/react-ui-components@0.13.0
+  - @dxos/react-ui-editor@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/plugin-attention@0.13.0
+  - @dxos/plugin-graph@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/halo@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/react-ui-dnd@0.13.0
+  - @dxos/halo-react@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

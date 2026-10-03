@@ -1,5 +1,61 @@
 # @dxos/echo
 
+## 0.13.0
+
+### Minor Changes
+
+- 32f32a0: `@dxos/ai` exposes the chat-completions language-model adapter at its own entry point,
+  `@dxos/ai/chat-completions`. The adapter depends on nothing but `effect` and is what speaks
+  Ollama's and LM Studio's dialects, but until now it was reachable only through the `resolvers`
+  barrel, which pulls in the DXN-keyed resolver machinery a consumer of the adapter alone has no use
+  for. No behaviour change for existing consumers of `@dxos/ai/resolvers`.
+
+  The subpath is kebab-case on purpose: `dxos-subpath-exports` engages as soon as a package declares
+  one PascalCase subpath, and it would then report every namespace in this package's unmigrated root
+  barrel — flagging the migration rather than a defect.
+
+- 1737cad: `@dxos/react-ui` is rebuilt on Ark UI primitives styled by plain `dx-*` component CSS, and every UI package and plugin
+  renders on it; the former component APIs are removed.
+
+  - Components are exported flat by name (`Button`, `Toolbar`, `Card`, `Panel`, `Container`, `Field`, `Input`, `Combobox`,
+    `Menu`, `Tabs`, `Main`, `Splitter`, `Toast`, `Tour`, `Banner`, `Empty`, …) and sized by `data-size` scopes (`xs`–`xl`;
+    `Size` is that scale). `Container` lays out rails and subgrids, `ControlFrame` frames a control with adornments
+    (`Input copyable`, `variant='mono'`), and `useMainLandmark` declares the app's focus areas (Tab and Arrow Left/Right
+    move between them). `Combobox` adds a trigger mode, option descriptions, a create row and async results. `Label` is
+    no longer public (use `Field.Label`), and the flow helper is `Match` (`Match.Root`/`Match.Case`).
+  - `@dxos/react-ui-list` provides `Listbox`, `OrderedList` and `Tree` (virtual rows, drag and drop, disclosure
+    animation); `@dxos/react-ui-form` provides `Form` (`Root`, `Viewport`, `Content`, `Fields`, `Actions`, …),
+    `ObjectProperties`, `ObjectPicker`, `ViewEditor` and `RefEditor`; `@dxos/react-ui-menu` renders `ActionToolbar` and
+    `ActionMenu` on the new Toolbar and Menu; `@dxos/app-toolkit` adds the `ObjectCard` composite.
+  - `@dxos/ui-theme` renames the text tokens to `--color-fg`/`fg-muted`/`fg-subtle` (`text-fg`, `text-fg-muted`,
+    `text-fg-subtle`; Typography and Icon `tone='muted' | 'subtle'`) and `--color-subdued-separator` to
+    `--color-separator-subtle`, adds `--color-focus` for the keyboard focus ring, and derives the control fill from one
+    offset off its host surface in both themes.
+  - `@dxos/echo` adds `Annotation.ArrayPresentationAnnotation` (`ordered`, `display: 'tag' | 'title'`) for reference
+    arrays; `@dxos/effect` `SchemaEx.getProperties` keeps an annotated optional field's annotations; `@dxos/ui-editor`
+    markdown tables keep empty cells; `@dxos/plugin-markdown` marks `Document.description` as markdown, and the rename
+    popover shows an object's properties.
+
+  Breaking: the former `@dxos/react-ui` component APIs and the transitional `Next` namespace are gone; import components
+  from `@dxos/react-ui` by name and use the renamed theme tokens.
+
+### Patch Changes
+
+- 1ef899b: Cut the SQLite writes an agent turn causes by about a third: an indexing pass writes each batch to its snapshot and reverse-reference indexes in one transaction instead of two, and trace messages reach their feed in batches rather than one transaction per message.
+- c7cc480: Indexing passes no longer read feeds that have nothing new: a caught-up feed is answered from memory instead of SQLite, and the two index legs of a pass share one read. Background passes started by trace-feed appends are coalesced to at most one per second, so an agent turn's trace writes no longer keep the database worker busy. `flush` and feed-scoped queries still see trace messages immediately.
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/blob@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

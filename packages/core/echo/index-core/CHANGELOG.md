@@ -1,5 +1,22 @@
 # @dxos/index-core
 
+## 0.13.0
+
+### Patch Changes
+
+- e65ca2f: Migration modules import `SqlMigrations` from the `@dxos/sql-sqlite/SqlMigrations` subpath instead of the package barrel, so bundling `@dxos/client` no longer pulls wa-sqlite and the OPFS worker into the app's static import graph (about 100 KB off Composer's eager boot graph).
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/sql-sqlite@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

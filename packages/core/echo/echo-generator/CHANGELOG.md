@@ -1,5 +1,23 @@
 # @dxos/echo-generator
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/random@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

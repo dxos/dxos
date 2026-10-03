@@ -1,5 +1,16 @@
 # @dxos/react-ui-feed
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [fcbb5c4]
+  - @dxos/types@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-virtual@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes
