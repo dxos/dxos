@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { SqlMigrations } from '@dxos/sql-sqlite';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import init from './0001_init.sql?raw';
 import reindexReverseRef from './0002_reindex_reverse_ref.sql?raw';

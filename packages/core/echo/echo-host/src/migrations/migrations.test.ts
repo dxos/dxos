@@ -8,8 +8,8 @@ import { readdirSync } from 'node:fs';
 import { describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
-import { SqlMigrations } from '@dxos/sql-sqlite';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import chunksInit from './chunks/0001_init.sql?raw';
 import { MIGRATIONS as CHUNKS, MIGRATIONS_TABLE as CHUNKS_TABLE } from './chunks/index.ts';

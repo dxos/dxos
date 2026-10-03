@@ -225,7 +225,13 @@ export const DeckContentEmpty = () => {
   const { state } = useDeckState();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
-    <Flex column center classNames='p-8 relative dx-deck-surface' data-testid='layoutPlugin.firstRunMessage'>
+    <Flex
+      column
+      center
+      classNames='p-8 relative dx-deck-surface'
+      data-tauri-drag-region='deep'
+      data-testid='layoutPlugin.firstRunMessage'
+    >
       <Surface.Surface type={DeckRole.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
     </Flex>

@@ -13,7 +13,7 @@ import { MapCapabilities } from '#types';
 export default Capability.makeModule(() =>
   Effect.sync(() => {
     const stateAtom = createKvsStore({
-      key: meta.profile.key,
+      key: `${meta.profile.key}.state`,
       schema: MapCapabilities.StateSchema,
       defaultValue: () => ({
         type: 'map' as const,
