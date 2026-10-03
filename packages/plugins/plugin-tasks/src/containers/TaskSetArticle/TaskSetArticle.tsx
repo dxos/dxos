@@ -17,7 +17,7 @@ import { QueryBuilder, parseEnumTerms } from '@dxos/echo-query';
 import { useQuery } from '@dxos/echo-react';
 import { messageOf } from '@dxos/errors';
 import { log } from '@dxos/log';
-import { Match, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Match, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import {
   useArticleKeyboardNavigation,
   useAttention,
@@ -337,11 +337,11 @@ export const TaskSetArticle = ({
           collapse width, but the filter has to come along or the host's copy of the list has none. */}
       <Match.Case when={AppSurface.Section.role}>
         {withRoot(
-          <div className='flex flex-col dx-grow'>
+          <Flex column classNames='dx-grow'>
             <Toolbar.Root>{filterRow}</Toolbar.Root>
             {viewport}
             {editor}
-          </div>,
+          </Flex>,
         )}
       </Match.Case>
     </Match.Root>

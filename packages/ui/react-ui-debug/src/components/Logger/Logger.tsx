@@ -16,11 +16,15 @@ import { logFileRegistry } from '@dxos/log';
 import {
   Button,
   Checkbox,
+  composable,
+  composableProps,
   ErrorStack,
   Field,
+  Flex,
   Icon,
   Input,
   Panel,
+  parseCaptureOwnerStack,
   Popover,
   ScrollArea,
   Select,
@@ -28,9 +32,6 @@ import {
   type ThemedClassName,
   Toggle,
   Toolbar,
-  composable,
-  composableProps,
-  parseCaptureOwnerStack,
   useTranslation,
 } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
@@ -493,11 +494,11 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
                 )}
               >
                 {checkable && (
-                  <div className='flex items-center pl-2'>
+                  <Flex align='center' classNames='pl-2'>
                     <Field.Root>
                       <Checkbox tabIndex={-1} checked={checked.has(id)} onCheckedChange={() => toggleChecked(id)} />
                     </Field.Root>
-                  </div>
+                  </Flex>
                 )}
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
                 <div
