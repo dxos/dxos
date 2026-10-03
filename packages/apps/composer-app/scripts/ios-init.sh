@@ -48,7 +48,21 @@ cp "$SRC_TAURI/ios/PasskeyBridge.m" "$IOS_SOURCES/"
 echo "Regenerating Xcode project..."
 (cd "$SRC_TAURI/gen/apple" && xcodegen)
 
-# After xcodegen, which rewrites the entitlements file as an empty dict. Associated domains for passkeys.
-cp "$SRC_TAURI/ios/app_iOS.entitlements" "$SRC_TAURI/gen/apple/app_iOS/"
+#
+# Entitlements
+#
+
+# Native passkeys need the composer.space association. The tracked project.yml declares it; a freshly
+# generated one (after `ios-build.sh` cleans gen/apple) does not, so it is ensured after xcodegen.
+ENTITLEMENTS="$SRC_TAURI/gen/apple/app_iOS/app_iOS.entitlements"
+ASSOCIATED_DOMAINS="com.apple.developer.associated-domains"
+WEBCREDENTIALS="webcredentials:composer.space"
+
+if ! /usr/libexec/PlistBuddy -c "Print :$ASSOCIATED_DOMAINS" "$ENTITLEMENTS" > /dev/null 2>&1; then
+  /usr/libexec/PlistBuddy -c "Add :$ASSOCIATED_DOMAINS array" "$ENTITLEMENTS"
+fi
+if ! /usr/libexec/PlistBuddy -c "Print :$ASSOCIATED_DOMAINS" "$ENTITLEMENTS" | grep -qx "    $WEBCREDENTIALS"; then
+  /usr/libexec/PlistBuddy -c "Add :$ASSOCIATED_DOMAINS: string $WEBCREDENTIALS" "$ENTITLEMENTS"
+fi
 
 echo "Done."

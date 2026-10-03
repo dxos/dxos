@@ -25,6 +25,7 @@ typedef NS_ENUM(NSInteger, DXOSPasskeyErrorCode) {
   DXOSPasskeyErrorNoWindow = 2,
   DXOSPasskeyErrorEncoding = 3,
   DXOSPasskeyErrorUnexpectedCredential = 4,
+  DXOSPasskeyErrorNoAttestation = 5,
 };
 
 static NSString *DXOSBase64URL(NSData *data) {
@@ -53,8 +54,12 @@ static UIWindow *DXOSPresentationWindow(void) {
 
 @class DXOSPasskeyRequest;
 
-/// The request whose sheet may be on screen; touched only on the main thread.
+/// The request whose sheet may be on screen; touched only on the main thread. The controller holds its
+/// delegate weakly, so this is also what keeps the request alive.
 static DXOSPasskeyRequest *gInFlight = nil;
+
+/// Superseded requests kept alive until their cancelled controller reports back.
+static NSMutableSet<DXOSPasskeyRequest *> *gRetired = nil;
 
 @interface DXOSPasskeyRequest
     : NSObject <ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding>
@@ -76,20 +81,22 @@ static DXOSPasskeyRequest *gInFlight = nil;
 }
 
 - (void)performRequest:(ASAuthorizationRequest *)request {
-  if (gInFlight) {
-    DXOSPasskeyRequest *previous = gInFlight;
-    [previous failWithError:[NSError errorWithDomain:DXOSPasskeyErrorDomain
-                                                code:DXOSPasskeyErrorSuperseded
-                                            userInfo:@{NSLocalizedDescriptionKey : @"A newer passkey request replaced this one."}]];
-    [previous.controller cancel];
-  }
-
   self.anchor = DXOSPresentationWindow();
   if (!self.anchor) {
     [self failWithError:[NSError errorWithDomain:DXOSPasskeyErrorDomain
                                             code:DXOSPasskeyErrorNoWindow
                                         userInfo:@{NSLocalizedDescriptionKey : @"No window to present the passkey sheet from."}]];
     return;
+  }
+
+  if (gInFlight) {
+    DXOSPasskeyRequest *previous = gInFlight;
+    gRetired = gRetired ?: [NSMutableSet set];
+    [gRetired addObject:previous];
+    [previous failWithError:[NSError errorWithDomain:DXOSPasskeyErrorDomain
+                                                code:DXOSPasskeyErrorSuperseded
+                                            userInfo:@{NSLocalizedDescriptionKey : @"A newer passkey request replaced this one."}]];
+    [previous.controller cancel];
   }
 
   gInFlight = self;
@@ -122,8 +129,14 @@ static DXOSPasskeyRequest *gInFlight = nil;
 }
 
 - (void)failWithError:(NSError *)error {
-  [self settle:NO
-       payload:@{@"domain" : error.domain, @"code" : @(error.code), @"message" : error.localizedDescription ?: @""}];
+  // The failure reason names what a refused association names (the App ID and the domain); some
+  // descriptions already include it.
+  NSString *message = error.localizedDescription ?: @"";
+  NSString *reason = error.userInfo[NSLocalizedFailureReasonErrorKey];
+  if ([reason isKindOfClass:[NSString class]] && reason.length > 0 && ![message containsString:reason]) {
+    message = [NSString stringWithFormat:@"%@ %@", message, reason];
+  }
+  [self settle:NO payload:@{@"domain" : error.domain, @"code" : @(error.code), @"message" : message}];
 }
 
 - (ASPresentationAnchor)presentationAnchorForAuthorizationController:(ASAuthorizationController *)controller {
@@ -132,16 +145,24 @@ static DXOSPasskeyRequest *gInFlight = nil;
 
 - (void)authorizationController:(ASAuthorizationController *)controller
     didCompleteWithAuthorization:(ASAuthorization *)authorization {
+  [gRetired removeObject:self];
   id credential = authorization.credential;
   if ([credential isKindOfClass:[ASAuthorizationPlatformPublicKeyCredentialRegistration class]]) {
     ASAuthorizationPlatformPublicKeyCredentialRegistration *registration = credential;
+    // The page recovers the public key from the attestation object, so a credential without one is unusable.
+    if (registration.rawAttestationObject.length == 0) {
+      [self failWithError:[NSError errorWithDomain:DXOSPasskeyErrorDomain
+                                              code:DXOSPasskeyErrorNoAttestation
+                                          userInfo:@{NSLocalizedDescriptionKey : @"The system returned a passkey without an attestation object."}]];
+      return;
+    }
     NSString *identifier = DXOSBase64URL(registration.credentialID);
     [self settle:YES
          payload:@{
            @"id" : identifier,
            @"raw_id" : identifier,
            @"client_data_json" : DXOSBase64URL(registration.rawClientDataJSON),
-           @"attestation_object" : DXOSBase64URL(registration.rawAttestationObject ?: [NSData data]),
+           @"attestation_object" : DXOSBase64URL(registration.rawAttestationObject),
            @"prf_output" : @[],
          }];
   } else if ([credential isKindOfClass:[ASAuthorizationPlatformPublicKeyCredentialAssertion class]]) {
@@ -165,6 +186,7 @@ static DXOSPasskeyRequest *gInFlight = nil;
 }
 
 - (void)authorizationController:(ASAuthorizationController *)controller didCompleteWithError:(NSError *)error {
+  [gRetired removeObject:self];
   [self failWithError:error];
 }
 

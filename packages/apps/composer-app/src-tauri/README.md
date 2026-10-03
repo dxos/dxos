@@ -188,13 +188,15 @@ as a `MACOS_PROVISION_PROFILE_<CHANNEL>` secret, select it in `deploy-tauri.yaml
 
 The iOS app creates and redeems `composer.space` passkeys through AuthenticationServices
 (`ios/PasskeyBridge.m`, `src/passkey/ios.rs`), never WebAuthn: its page origin is `tauri://localhost`.
-That needs the `webcredentials:composer.space` associated domain, which `ios/app_iOS.entitlements`
-declares and `scripts/ios-init.sh` installs after `xcodegen`, since `xcodegen` empties the file. The
-domain side is done: the `composer.space` AASA already lists `9428WC5MR8.org.dxos.composer` under
-`webcredentials`.
+That needs the `webcredentials:composer.space` associated domain. `gen/apple/project.yml` declares it,
+`xcodegen` writes it into `gen/apple/app_iOS/app_iOS.entitlements`, and `scripts/ios-init.sh` adds it
+again after a clean regenerates the project from Tauri's template. The domain side is done: the
+`composer.space` AASA already lists `9428WC5MR8.org.dxos.composer` under `webcredentials`. iOS has one
+App ID for every channel, so there is nothing to register per channel.
 
-The signing side is manual, and has to land before the next iOS build: a profile without the
-capability fails code signing for an app that requests it.
+The signing side is manual, and has to land before the next iOS build: until the profile carries the
+capability, signing fails with `Provisioning profile "..." doesn't support the Associated Domains
+capability`.
 
 1. In the Apple Developer portal, under Certificates, Identifiers & Profiles > Identifiers, open the
    `org.dxos.composer` App ID and enable **Associated Domains**. Save; Apple marks the profiles that
