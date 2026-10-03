@@ -611,7 +611,7 @@ class QueryClass implements Any {
           `Query.from() expects persisted Feed objects with a feed URI; got feed without a space (id=${Obj.getURI(feed)}).`,
         );
       }
-      return { _tag: 'feed' as const, feedUri: String(uri) };
+      return { _tag: 'feed' as const, feedUri: String(uri), ...(feed.namespace ? { namespace: feed.namespace } : {}) };
     });
     return new QueryClass({
       type: 'from',

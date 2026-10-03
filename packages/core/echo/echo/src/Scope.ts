@@ -56,9 +56,13 @@ export const registry = (location: 'local' | 'remote' = 'local'): QueryAST.Regis
  * db.query(Query.select(Filter.feedCursor(cursor)).from(Scope.feed(feedUri)));
  * ```
  *
+ * Pass the feed's `namespace` when it is not `data`: a namespace the index does not ingest (`trace`)
+ * is read from the feed directly, which the reader only knows to do from the scope.
+ *
  * @performance O(1); builds a scope node.
  */
-export const feed = (feedUri: string): QueryAST.FeedScope => ({
+export const feed = (feedUri: string, options: { namespace?: string } = {}): QueryAST.FeedScope => ({
   _tag: 'feed',
   feedUri,
+  ...(options.namespace ? { namespace: options.namespace } : {}),
 });

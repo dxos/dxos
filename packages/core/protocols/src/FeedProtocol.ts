@@ -441,6 +441,13 @@ export const isWellKnownNamespace = (namespace: string) =>
   Object.values(WellKnownNamespaces).includes(namespace as any);
 
 /**
+ * Whether the ECHO index ingests a namespace's blocks. Trace feeds are append-heavy diagnostics read
+ * per feed, so indexing them made every index pass and query scan pay per trace message; they are
+ * read straight from the feed store instead.
+ */
+export const isIndexedNamespace = (namespace: string): boolean => namespace === WellKnownNamespaces.data;
+
+/**
  * Encodes queue replicator service identifier as `<service>:<spaceId>:<namespace>`.
  *
  * The space id comes first, matching every other replicator (`<service>:<spaceId>`). It used to

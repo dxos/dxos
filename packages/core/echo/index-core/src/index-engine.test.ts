@@ -13,7 +13,7 @@ import { DXN, EntityId, SpaceId } from '@dxos/keys';
 
 import { type DataSourceCursor, type IndexDataSource } from './data-source.ts';
 import { IndexEngine, type IndexingResult } from './index-engine.ts';
-import { type IndexCursor } from './index-tracker.ts';
+import { type IndexCursor, IndexTracker } from './index-tracker.ts';
 import { type DocumentActivity, EntityMetaIndex, type IndexerObject } from './indexes/index.ts';
 import { TestSqliteLayer as TestLayer } from './testing/index.ts';
 
@@ -511,6 +511,57 @@ describe('IndexEngine', () => {
 
       yield* indexAll;
       expect(yield* engine.queryActivity({ spaceId })).toEqual([expect.objectContaining({ documentId, changes: 1 })]);
+    }, Effect.provide(TestLayer)),
+  );
+
+  it.effect(
+    "dropFeedNamespace removes one namespace's rows and cursors and leaves the rest",
+    Effect.fnUntraced(function* () {
+      const { engine, metaIndex } = yield* setup;
+      const tracker = new IndexTracker(yield* SqlClient.SqlClient);
+      const spaceId = SpaceId.random();
+      const feedObject = (queueNamespace: string, queueId: string): IndexerObject => ({
+        spaceId,
+        documentId: null,
+        queueId,
+        queueNamespace,
+        queuePosition: null,
+        recordId: null,
+        createdAt: null,
+        updatedAt: Date.now(),
+        data: { id: EntityId.random(), [ATTR_TYPE]: TYPE_DEFAULT, title: `${queueNamespace} entry` },
+      });
+      const objects = [
+        feedObject('data', 'data-feed'),
+        ...Array.from({ length: 5 }, () => feedObject('trace', 'trace-feed')),
+      ];
+      const source: IndexDataSource = {
+        sourceName: 'queue',
+        getChangedObjects: (_ctx, cursors) =>
+          Effect.succeed(
+            cursors.length > 0
+              ? { objects: [], cursors: [] }
+              : {
+                  objects,
+                  cursors: ['data', 'trace'].map((resourceId) => ({ spaceId, resourceId, cursor: 'end' })),
+                },
+          ),
+      };
+      yield* engine.update(Context.default(), source, { spaceId: null });
+      const indexed = () =>
+        metaIndex
+          .queryObjectIds({ spaceIds: [spaceId], objectIds: objects.map((object) => object.data.id as EntityId) })
+          .pipe(Effect.map((rows) => rows.map((row) => row.queueNamespace).sort()));
+      expect(yield* indexed()).toEqual(['data', 'trace', 'trace', 'trace', 'trace', 'trace']);
+
+      expect(yield* engine.dropFeedNamespace({ sourceName: 'queue', feedNamespace: 'trace', batchSize: 2 })).toBe(5);
+      expect(yield* indexed()).toEqual(['data']);
+      const cursors = [...(yield* tracker.queryCursorsBySource({ sourceName: 'queue' })).values()].flat();
+      expect(cursors.length).toBeGreaterThan(0);
+      expect(cursors.every((cursor) => cursor.resourceId === 'data')).toBe(true);
+
+      // With its cursors gone the namespace reads as already dropped.
+      expect(yield* engine.dropFeedNamespace({ sourceName: 'queue', feedNamespace: 'trace' })).toBe(0);
     }, Effect.provide(TestLayer)),
   );
 

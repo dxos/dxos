@@ -889,6 +889,74 @@ export class FeedStore {
     }).pipe(Effect.withSpan('FeedStore.deleteOldestBlocks'));
 
   /**
+   * Deletes a namespace's blocks written before `before` that `shouldPrune` accepts (every such block
+   * when it is absent), and announces the removal so subscribers drop them.
+   *
+   * The newest block of each feed is kept whatever its age: {@link appendLocal} numbers a feed's next
+   * block from its highest stored sequence, so deleting that block would re-issue a sequence the
+   * server already holds, and the server drops a block whose `(sequence, actorId)` it has as a duplicate.
+   *
+   * @returns Number of deleted blocks.
+   */
+  pruneBlocks = Effect.fn('Feed.pruneBlocks')(
+    (request: {
+      spaceId: string;
+      feedNamespace: string;
+      /** Unix ms; only blocks whose `timestamp` is older are candidates. */
+      before: number;
+      /** Decides per candidate, given its opened payload; keeps a block it rejects. */
+      shouldPrune?: (block: Block) => boolean;
+      /** Candidates read per statement, so a large backlog never holds the connection for long. */
+      batchSize?: number;
+    }): Effect.Effect<number, SqlError.SqlError | CypherError, SqlClient.SqlClient> =>
+      Effect.gen({ self: this }, function* () {
+        const sql = yield* SqlClient.SqlClient;
+        const batchSize = request.batchSize ?? 500;
+        let lastSeen = -1;
+        let deleted = 0;
+        for (;;) {
+          const rows = yield* sql<Block & { insertionId: number }>`
+            SELECT blocks.*, feeds.feedId, feeds.feedNamespace
+            FROM blocks
+            JOIN feeds ON blocks.feedPrivateId = feeds.feedPrivateId
+            WHERE feeds.spaceId = ${request.spaceId}
+              AND feeds.feedNamespace = ${request.feedNamespace}
+              AND blocks.insertionId > ${lastSeen}
+              AND blocks.timestamp < ${request.before}
+              AND blocks.sequence < (
+                SELECT MAX(newest.sequence) FROM blocks AS newest WHERE newest.feedPrivateId = blocks.feedPrivateId
+              )
+            ORDER BY blocks.insertionId ASC
+            LIMIT ${batchSize}
+          `;
+          if (rows.length === 0) {
+            break;
+          }
+          lastSeen = rows[rows.length - 1].insertionId;
+
+          let ids = rows.map((row) => row.insertionId);
+          if (request.shouldPrune) {
+            const shouldPrune = request.shouldPrune;
+            const opened = yield* this.#openRows(rows, request.spaceId, request.feedNamespace);
+            ids = ids.filter((_, index) => shouldPrune(opened[index]));
+          }
+          if (ids.length > 0) {
+            yield* sql`DELETE FROM blocks WHERE insertionId IN ${sql.in(ids)}`;
+            deleted += ids.length;
+          }
+          if (rows.length < batchSize) {
+            break;
+          }
+        }
+
+        if (deleted > 0) {
+          this.#emitBlocksChanged(request.spaceId, request.feedNamespace);
+        }
+        return deleted;
+      }).pipe(Effect.withSpan('FeedStore.pruneBlocks'), SpanAttributes.annotateSpace(request.spaceId)),
+  );
+
+  /**
    * Appends blocks for a space/namespace and optionally assigns global positions.
    *
    * On a replica the appended blocks' positions are the authority's word and win over whatever the

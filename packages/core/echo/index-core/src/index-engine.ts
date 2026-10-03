@@ -409,6 +409,57 @@ export class IndexEngine {
     }).pipe(Effect.withSpan('IndexEngine.deleteObjects'), SpanAttributes.annotateSpace(opts.spaceId));
   }
 
+  /**
+   * Drops everything indexed from a feed namespace the host no longer indexes: its `objectMeta` rows
+   * with their snapshot, full-text and reverse-ref rows, then the cursors that read it. The cursors
+   * go last and gate the work, so an interrupted run is finished by the next one, and once done the
+   * check costs one cursor lookup rather than a scan of `objectMeta`.
+   *
+   * @returns Number of `objectMeta` rows deleted.
+   */
+  dropFeedNamespace(opts: {
+    /** {@link IndexDataSource.sourceName} of the feed source. */
+    sourceName: string;
+    feedNamespace: string;
+    /** Rows deleted per transaction, so a large namespace never holds the connection for long. */
+    batchSize?: number;
+  }): Effect.Effect<number, SqlError.SqlError> {
+    return Effect.gen({ self: this }, function* () {
+      const cursor = { sourceName: opts.sourceName, resourceId: opts.feedNamespace };
+      if (!(yield* this.#tracker.hasResourceCursors(cursor))) {
+        return 0;
+      }
+
+      const sql = this.#sql;
+      const batchSize = opts.batchSize ?? 1_000;
+      let deleted = 0;
+      for (;;) {
+        const count = yield* sql.withTransaction(
+          Effect.gen({ self: this }, function* () {
+            const rows = yield* sql<{ recordId: number }>`
+              SELECT recordId FROM objectMeta WHERE queueNamespace = ${opts.feedNamespace} LIMIT ${batchSize}
+            `;
+            const recordIds = rows.map((row) => row.recordId);
+            if (recordIds.length > 0) {
+              yield* this.#ftsIndex.deleteByRecordIds(recordIds);
+              yield* this.#objectSnapshotIndex.deleteByRecordIds(recordIds);
+              yield* this.#reverseRefIndex.deleteByRecordIds(recordIds);
+              yield* this.#objectMetaIndex.deleteByRecordIds(recordIds);
+            }
+            return recordIds.length;
+          }),
+        );
+        deleted += count;
+        if (count < batchSize) {
+          break;
+        }
+      }
+
+      yield* this.#tracker.deleteResourceCursors(cursor);
+      return deleted;
+    }).pipe(Effect.withSpan('IndexEngine.dropFeedNamespace'));
+  }
+
   update(
     ctx: Context,
     dataSource: IndexDataSource,

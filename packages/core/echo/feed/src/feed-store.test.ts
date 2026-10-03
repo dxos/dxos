@@ -1203,3 +1203,126 @@ describe('FeedStore caught-up cursors', () => {
     }).pipe(Effect.provide(TestLayer)),
   );
 });
+
+describe('pruneBlocks', () => {
+  const DAY = 24 * 60 * 60 * 1000;
+  const NOW = Date.now();
+
+  /** A remote block authored at `timestamp`, so a test controls block age. */
+  const block = (feedId: string, sequence: number, timestamp: number, payload: number): Block => ({
+    feedId,
+    actorId: 'bob',
+    sequence,
+    prevActorId: sequence > 0 ? 'bob' : null,
+    prevSequence: sequence > 0 ? sequence - 1 : null,
+    position: null,
+    timestamp,
+    data: new Uint8Array([payload]),
+  });
+
+  const payloads = (feed: FeedStore, spaceId: SpaceId, feedNamespace: string, feedId: string) =>
+    feed
+      .query({ requestId: 'read', spaceId, feedNamespace, query: { feedIds: [feedId] } })
+      .pipe(Effect.map((result) => result.blocks.map((block) => block.data[0])));
+
+  it.effect('deletes old blocks the predicate accepts and keeps the rest', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      const trace = WellKnownNamespaces.trace;
+      yield* feed.append({
+        requestId: 'trace',
+        spaceId,
+        feedNamespace: trace,
+        blocks: [
+          block('trace-feed', 0, NOW - 10 * DAY, 1),
+          block('trace-feed', 1, NOW - 9 * DAY, 2),
+          block('trace-feed', 2, NOW - 8 * DAY, 3),
+          block('trace-feed', 3, NOW - DAY, 4),
+          block('trace-feed', 4, NOW, 5),
+        ],
+      });
+      yield* feed.append({
+        requestId: 'data',
+        spaceId,
+        feedNamespace: WellKnownNamespaces.data,
+        blocks: [block('data-feed', 0, NOW - 10 * DAY, 6), block('data-feed', 1, NOW, 7)],
+      });
+
+      const changes: (string | undefined)[] = [];
+      feed.onNewBlocks.on(({ feedNamespace }) => {
+        changes.push(feedNamespace);
+      });
+      const deleted = yield* feed.pruneBlocks({
+        spaceId,
+        feedNamespace: trace,
+        before: NOW - 7 * DAY,
+        // Payload 2 stands for a message worth keeping.
+        shouldPrune: (candidate) => candidate.data[0] !== 2,
+      });
+
+      expect(deleted).toBe(2);
+      expect(yield* payloads(feed, spaceId, trace, 'trace-feed')).toEqual([2, 4, 5]);
+      expect(yield* payloads(feed, spaceId, WellKnownNamespaces.data, 'data-feed')).toEqual([6, 7]);
+      expect(changes).toEqual([trace]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('keeps the newest block of a feed, so local appends continue its sequence', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      const trace = WellKnownNamespaces.trace;
+      yield* feed.append({
+        requestId: 'old',
+        spaceId,
+        feedNamespace: trace,
+        blocks: [block('idle', 0, NOW - 30 * DAY, 1), block('idle', 1, NOW - 29 * DAY, 2)],
+      });
+
+      const changes: (string | undefined)[] = [];
+      feed.onNewBlocks.on(({ feedNamespace }) => {
+        changes.push(feedNamespace);
+      });
+      expect(yield* feed.pruneBlocks({ spaceId, feedNamespace: trace, before: NOW })).toBe(1);
+      expect(yield* feed.pruneBlocks({ spaceId, feedNamespace: trace, before: NOW })).toBe(0);
+      // Only the pass that deleted something announces a change.
+      expect(changes).toEqual([trace]);
+
+      const [appended] = yield* feed.appendLocal([
+        { spaceId, feedId: 'idle', feedNamespace: trace, data: new Uint8Array([3]) },
+      ]);
+      expect(appended.sequence).toBe(2);
+      expect(yield* payloads(feed, spaceId, trace, 'idle')).toEqual([2, 3]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+
+  it.effect('walks a backlog larger than one batch', () =>
+    Effect.gen(function* () {
+      const spaceId = SpaceId.random();
+      const feed = new FeedStore({ localActorId: ALICE, assignPositions: false });
+      yield* feed.migrate();
+      const trace = WellKnownNamespaces.trace;
+      yield* feed.append({
+        requestId: 'backlog',
+        spaceId,
+        feedNamespace: trace,
+        blocks: Array.from({ length: 12 }, (_, index) => block('busy', index, NOW - (20 - index) * DAY, index)),
+      });
+
+      const deleted = yield* feed.pruneBlocks({
+        spaceId,
+        feedNamespace: trace,
+        before: NOW - 7 * DAY,
+        shouldPrune: (candidate) => candidate.data[0] % 2 === 0,
+        batchSize: 2,
+      });
+
+      // Blocks 0..11 are 20..9 days old: all are candidates but the newest, and the even ones go.
+      expect(deleted).toBe(6);
+      expect(yield* payloads(feed, spaceId, trace, 'busy')).toEqual([1, 3, 5, 7, 9, 11]);
+    }).pipe(Effect.provide(TestLayer)),
+  );
+});
