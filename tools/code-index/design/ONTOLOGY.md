@@ -25,6 +25,8 @@ opening implementations. Two principles follow, and everything below is derived 
 | `pkg:`    | `https://dxos.org/deus/package/`        |
 | `module:` | `https://dxos.org/deus/module/`         |
 | `graph:`  | `https://dxos.org/deus/graph/`          |
+| `type:`   | `https://dxos.org/deus/type/`           |
+| `lib:`    | `https://dxos.org/deus/lib#`            |
 | `rdfs:`   | `http://www.w3.org/2000/01/rdf-schema#` |
 | `xsd:`    | `http://www.w3.org/2001/XMLSchema#`     |
 
@@ -171,6 +173,7 @@ A specifier is recorded in exactly one of `imports` / `importsType` / `importsMo
 | `deus:snippet`       | `xsd:string`                | The definition with implementation abbreviated — valid TypeScript, see Snippets.                                                                                                     |
 | `deus:doc`           | `xsd:string`                | The JSDoc summary (first paragraph), when present.                                                                                                                                   |
 | `deus:deprecated`    | `xsd:boolean`               | A `@deprecated` tag is present.                                                                                                                                                      |
+| `deus:hasType`       | `deus:Type`                 | The type of the value a `variable` or `function` symbol declares, inferred per file — see Types. Absent when unknown.                                                                |
 
 ### SpecBlock
 
@@ -196,8 +199,9 @@ A specifier is recorded in exactly one of `imports` / `importsType` / `importsMo
 | `deus:implementsOperation`  | An `OperationHandler`'s `deus:derivedFrom` `Operation`.                                                                                                                                          | `rules/compute.n3`      |
 | `deus:bundlesHandler`       | An `OperationHandlerSet` referencing an `OperationHandler` in its implementation.                                                                                                                | `rules/compute.n3`      |
 | `deus:exposesOperation`     | A `Skill` referencing an `Operation` in its implementation (`Skill.toolDefinitions({ operations })`).                                                                                            | `rules/compute.n3`      |
-| `deus:providesService`      | An `EffectLayer` whose `deus:argument` is an `EffectService`.                                                                                                                                    | `rules/effect.n3`       |
+| `deus:providesService`      | An `EffectLayer` whose `deus:argument` is an `EffectService`; and, from `rules/15-types.n3`, each service in the `ROut` of its inferred type (merged, provided and piped layers included).       | `rules/effect.n3`       |
 | `deus:requiresService`      | An `EffectLayer` whose implementation references an `EffectService` it does not provide — an approximation, labeled as such.                                                                     | `rules/effect.n3`       |
+| `deus:layerRequires`        | A layer's `RIn`: each service its inferred `Layer<ROut, E, RIn>` type still needs. Exact where the type is known.                                                                                | `rules/15-types.n3`     |
 | `deus:describes`            | A `module`/`type` `SpecBlock` naming a symbol of the same package.                                                                                                                               | `specs`                 |
 | `deus:undocumented`         | A package-public symbol no spec block describes.                                                                                                                                                 | `specs`                 |
 | `deus:phantom`              | A spec block naming a symbol that does not exist.                                                                                                                                                | `specs`                 |
@@ -211,6 +215,37 @@ Reachability over `deus:imports` is deliberately **absent**. A SPARQL property p
 (`deus:imports+`, ~0.2s over a 15k-file index) where the equivalent closure rule cost 147s per
 pass and 123,692 stored quads for identical answers. Paths (`+`, `*`, `^`, `|`) cover reachability,
 inverses and alternatives; do not materialize what a query already expresses.
+
+## Types
+
+The typescript analyzer names the type of each `variable` and `function` symbol it can, from the one
+file it parses — no type checker, no cross-file reads. `design/TYPES.md` is the source of truth for the
+term language, the inference rules, and the bail-out policy; this section is the vocabulary.
+
+A type is a node of class `deus:Type` whose IRI is `type:` + a hash of its canonical text, so a type
+used twice is one node and the same type in two files is the same IRI. Every node carries:
+
+| Property           | Range         | Meaning                                                                                                   |
+| ------------------ | ------------- | --------------------------------------------------------------------------------------------------------- |
+| `deus:typeKind`    | `xsd:string`  | `primitive`, `literal`, `ref`, `typeof`, `union`, `intersection`, `object`, `tuple`, `function`, `param`. |
+| `deus:typeText`    | `xsd:string`  | The canonical text: equal types, equal text. Symbols appear as `<iri>`.                                   |
+| `deus:typePartial` | `xsd:boolean` | Some position is unknown; the structure facts below are then incomplete.                                  |
+
+and, by kind:
+
+| Property                               | On                      | Meaning                                                                                                                |
+| -------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `deus:typeHead`                        | `ref`, `typeof`         | The named type (`ref`) or value (`typeof`): a symbol, member, or `lib:` IRI — the same IRIs `deus:constructedBy` uses. |
+| `deus:typeArg0` … `typeArg7`           | `ref`                   | Type arguments, positional; defaults are filled in where `tsc` would report them.                                      |
+| `deus:typeMember`                      | `union`, `intersection` | Each member.                                                                                                           |
+| `deus:typeProperty`                    | `object`                | A `deus:TypeProperty` node: `deus:name`, `deus:hasType`, `deus:optional`, `deus:readonly`.                             |
+| `deus:typeElement0` …                  | `tuple`                 | Element types, positional.                                                                                             |
+| `deus:typeParam0` …, `deus:returnType` | `function`              | Parameter types, positional, and the return type.                                                                      |
+| `deus:literalValue`                    | `literal`               | The literal as written in the canonical text (`"a"`, `1`, `true`).                                                     |
+
+Unknown positions are simply absent. A term over 64 nodes is not emitted. Rules match a type by its
+head: `?layer deus:hasType ?t. ?t deus:typeHead <module:effect%2FLayer#Layer>; deus:typeArg0 ?out` is
+the layer's `ROut` (`rules/15-types.n3`).
 
 ## API vs implementation
 

@@ -43,6 +43,7 @@
     "@effect/sql-sqlite-bun": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
     "@phosphor-icons/core": "catalog:",
+    "@typescript/typescript6": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "classic-level": "catalog:",
     "effect": "catalog:",

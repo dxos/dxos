@@ -6,6 +6,10 @@ import { dirname, isAbsolute, relative, resolve as resolvePath } from 'node:path
 import { parseSync } from 'oxc-parser';
 
 import * as Ontology from '../../Ontology.ts';
+import { type ImportBinding, importBindings } from '../types/Boundary.ts';
+import { infer } from '../types/Infer.ts';
+import * as TypeRdf from '../types/Rdf.ts';
+import { type Comment, type Node, type Statement, isNode, nameOf, walk } from './ast.ts';
 import { type AnalyzeContext, fileNode } from './common.ts';
 
 /**
@@ -15,77 +19,13 @@ import { type AnalyzeContext, fileNode } from './common.ts';
  * meaning").
  */
 
-// The AST types come from the parser's own return type: `@oxc-project/types` is also published
-// standalone and the two copies are not structurally interchangeable.
-type ParseResult = ReturnType<typeof parseSync>;
-type Program = ParseResult['program'];
-type Statement = Program['body'][number];
-type Comment = ParseResult['comments'][number];
-
-/** Any AST node: every oxc node carries `type`, `start`, `end`; the rest is walked generically. */
-type Node = { type: string; start: number; end: number; [key: string]: unknown };
-
-const isNode = (value: unknown): value is Node =>
-  typeof value === 'object' &&
-  value !== null &&
-  typeof (value as { type?: unknown }).type === 'string' &&
-  typeof (value as { start?: unknown }).start === 'number';
-
-const children = (node: Node): Node[] => {
-  const found: Node[] = [];
-  for (const [key, value] of Object.entries(node)) {
-    if (key === 'parent') {
-      continue;
-    }
-    if (isNode(value)) {
-      found.push(value);
-    } else if (Array.isArray(value)) {
-      for (const item of value) {
-        if (isNode(item)) {
-          found.push(item);
-        }
-      }
-    }
-  }
-  return found;
-};
-
-/** Depth-first walk with the ancestor chain; the visitor returns `false` to skip a subtree. */
-const walk = (node: Node, ancestors: Node[], visit: (node: Node, ancestors: Node[]) => boolean | undefined): void => {
-  if (visit(node, ancestors) === false) {
-    return;
-  }
-  ancestors.push(node);
-  for (const child of children(node)) {
-    walk(child, ancestors, visit);
-  }
-  ancestors.pop();
-};
-
-const nameOf = (node: Node | undefined): string | undefined =>
-  node && (node.type === 'Identifier' || node.type === 'JSXIdentifier') && typeof node.name === 'string'
-    ? node.name
-    : undefined;
-
 // ---------------------------------------------------------------------------------------------------
 // Bindings
 // ---------------------------------------------------------------------------------------------------
 
-type ImportBinding = {
-  readonly local: string;
-  readonly specifier: string;
-  /** The imported name, `*` for a namespace import, `default` for the default export. */
-  readonly imported: string;
-  readonly typeOnly: boolean;
-  /** Repo-relative path the specifier resolved to inside the repository, if any. */
-  readonly file: string | undefined;
-  /** Bare specifiers keep a module-member addressing; relative ones do not. */
-  readonly bare: boolean;
-};
-
 type Resolution = { readonly file: string | undefined; readonly bare: boolean };
 
-const resolveSpecifier = (context: AnalyzeContext, specifier: string): Resolution => {
+export const resolveSpecifier = (context: AnalyzeContext, specifier: string): Resolution => {
   const bare = !specifier.startsWith('.') && !isAbsolute(specifier);
   const resolved = context.resolve(context.path, specifier);
   const relativePath = resolved ? relative(context.root, resolved) : undefined;
@@ -783,6 +723,37 @@ const lineOf = (source: string, offset: number): number => {
 
 const unique = (values: Iterable<string>): string[] => [...new Set(values)];
 
+/**
+ * Parse one file and set up type inference over it — the analyzer's own path, exposed so the
+ * agreement harness scores exactly what the index emits.
+ */
+export const inferFile = (context: AnalyzeContext) => {
+  const parsed = parseSync(context.path, context.source);
+  const bindings = new Map<string, ImportBinding>();
+  for (const statement of (parsed.program.body as readonly unknown[]).filter(isNode)) {
+    if (
+      statement.type === 'ImportDeclaration' &&
+      isNode(statement.source) &&
+      typeof statement.source.value === 'string'
+    ) {
+      for (const binding of importBindings(statement, resolveSpecifier(context, statement.source.value))) {
+        bindings.set(binding.local, binding);
+      }
+    }
+  }
+  const program = programNode(parsed);
+  return { parsed, program, bindings, inference: infer({ path: context.path, program, imports: bindings }) };
+};
+
+/** The program as a walkable node: oxc's `Program` is one, but its interface is not indexable. */
+const programNode = (parsed: ReturnType<typeof parseSync>): Node => {
+  const program: unknown = parsed.program;
+  if (!isNode(program)) {
+    throw new Error('oxc returned a program without a position');
+  }
+  return program;
+};
+
 export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocument => {
   const { source, path } = context;
   const base = fileNode(context);
@@ -828,30 +799,11 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
         entry.usedAsValue = true;
         entry.typeOnly = false;
       }
-      for (const node of specifierNodes) {
-        const local = nameOf(isNode(node.local) ? node.local : undefined);
-        if (!local) {
-          continue;
-        }
-        const imported =
-          node.type === 'ImportNamespaceSpecifier'
-            ? '*'
-            : node.type === 'ImportDefaultSpecifier'
-              ? 'default'
-              : (nameOf(isNode(node.imported) ? node.imported : undefined) ??
-                (isNode(node.imported) && typeof node.imported.value === 'string' ? node.imported.value : local));
-        const typeOnly = declarationTypeOnly || node.importKind === 'type';
-        if (!typeOnly) {
+      for (const binding of importBindings(statement, entry.resolution)) {
+        if (!binding.typeOnly) {
           entry.typeOnly = false;
         }
-        bindings.set(local, {
-          local,
-          specifier,
-          imported,
-          typeOnly,
-          file: entry.resolution.file,
-          bare: entry.resolution.bare,
-        });
+        bindings.set(binding.local, binding);
       }
     } else if (
       (statement.type === 'ExportAllDeclaration' || statement.type === 'ExportNamedDeclaration') &&
@@ -911,6 +863,8 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
   }
 
   const declared = declarations(body);
+  const inference = infer({ path, program: programNode(parsed), imports: bindings });
+  const types = TypeRdf.collector();
   const locals = new Map(
     declared.map((declaration) => [declaration.name, Ontology.symbolIri(path, declaration.name).value]),
   );
@@ -1028,6 +982,11 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'aliasOf': [],
       ...((value) => (value === undefined ? {} : { snippet: value }))(snippetOf(source, declaration, parsed.comments)),
       ...docOf(source, declaration.statement, parsed.comments),
+      ...((value) => (value === undefined ? {} : { hasType: value }))(
+        declaration.kind === 'variable' || declaration.kind === 'function'
+          ? types.add(inference.declaration(declaration.node))
+          : undefined,
+      ),
     };
   });
 
@@ -1101,6 +1060,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     reexports: [...reexports],
     unresolvedReferences: unresolved,
     declares: [...symbols, ...aliasSymbols, ...namespaceSymbols],
+    ...((nodes) => (nodes.length > 0 ? { '@included': nodes } : {}))(types.nodes()),
     ...(errors.length > 0 ? { parseError: errors } : {}),
   };
 };
