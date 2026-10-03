@@ -18,6 +18,7 @@ import {
   SystemButton,
   composable,
   useDefaultGutter,
+  useInGrid,
   useTranslation,
 } from '@dxos/react-ui';
 
@@ -54,11 +55,14 @@ export type FormViewportProps = PropsWithChildren<{
 /**
  * The gutter Container that owns the form's rails; with `scroll`, the Body of a pane of its own. Composable, so a
  * form component can be the `asChild` child of a host that merges its layout props and ref onto it. The gutter defaults
- * to the enclosing panel's (`sm`, the form inset), else `sm`.
+ * to the enclosing panel's (`sm`, the form inset); directly in a grid without one it inherits the host's rails, else `sm`.
  */
 export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
   ({ children, scroll, size, width = 'document', gutter, ...props }, forwardedRef) => {
     const defaultGutter = useDefaultGutter();
+    // Directly in a grid with no default (a dialog's or popover's body), the form joins its host's rails rather than
+    // nesting a second inset inside its content track.
+    const inGrid = useInGrid();
     const documentWidth = width === 'document' ? width : undefined;
     return scroll ? (
       <Panel.Root
@@ -78,7 +82,12 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
         </Panel.Body>
       </Panel.Root>
     ) : (
-      <Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} width={documentWidth} ref={forwardedRef}>
+      <Container
+        {...props}
+        gutter={gutter ?? defaultGutter ?? (inGrid ? 'inherit' : 'sm')}
+        width={documentWidth}
+        ref={forwardedRef}
+      >
         {children}
       </Container>
     );
