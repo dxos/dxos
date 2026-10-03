@@ -943,9 +943,12 @@ export class AutomergeHost extends Resource {
   async removeDocument(id: AnyDocumentId): Promise<void> {
     invariant(this.isOpen, 'AutomergeHost is not open');
     const documentId = interpretAsDocumentId(id);
-    // Evicted first, draining its pending save, so the handle cannot re-persist what is deleted
-    // below — collection loads the document to check ownership, so one is usually live here.
+    // Flushed, then evicted, so the handle cannot re-persist what is deleted below — collection loads
+    // the document to check ownership, so one is usually live here. Eviction only detaches the save
+    // listener; a throttled save already scheduled still runs, and the flush is what makes it a
+    // no-op, since its heads then match the last save.
     if (this._repo.handles[documentId]) {
+      await this._repo.flush([documentId]);
       await this._repo.removeFromCache(documentId);
     }
     // Dropped from the registry too: the document is about to stop existing, so a later eviction of
