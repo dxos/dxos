@@ -288,6 +288,94 @@ describe('typescript analyzer', () => {
     expect(document.declares.some((declared) => declared.name === 'Missing')).toBe(false);
   });
 
+  test('references passed into calls are recorded by slot, with the path resolution left over', () => {
+    const passing = analyzeTypeScript({
+      ...context,
+      path: 'src/m.ts',
+      source: [
+        "import * as Capability from '@dxos/compute/Operation';",
+        "import { Normalize } from './normalize.ts';",
+        'export const helper = (load: () => number) => {',
+        '  const spec = { provides: [Normalize.State] } as const;',
+        "  return Capability.lazyModule('m', spec, load);",
+        '};',
+        'export const M = Normalize.make(1);',
+      ].join('\n'),
+    });
+    const declared = (name: string) => passing.declares.find((candidate) => candidate.name === name);
+    // A spec held in a local `const` reads as if written inline; `load` resolves to nothing and is dropped.
+    expect(declared('helper')?.passes).toEqual([
+      {
+        '@id': expect.any(String),
+        '@type': 'Argument',
+        'callee': [
+          member2('@dxos/compute/Operation', 'lazyModule'),
+          sym('packages/compute/src/Operation.ts', 'lazyModule'),
+        ],
+        'slot': '1.provides',
+        'reference': [sym('src/normalize.ts', 'Normalize')],
+        // `Normalize` is a named import of a file, so the symbol IRI stops at it and `State` is left over.
+        'referencePath': 'State',
+      },
+    ]);
+    expect(declared('M')?.constructedBy).toEqual([sym('src/normalize.ts', 'Normalize')]);
+    expect(declared('M')?.constructedByPath).toEqual('make');
+  });
+
+  test('string literals passed positionally are recorded outside function bodies only', () => {
+    const literal = analyzeTypeScript({
+      ...context,
+      path: 'src/t.ts',
+      source: [
+        "import { DXN, Type } from '@dxos/echo';",
+        "export class Person extends Type.makeObject<Person>(DXN.make('com.example.person', '0.1.0'))(Schema) {}",
+        "export const make = () => DXN.make('ignored', '9.9.9');",
+      ].join('\n'),
+    });
+    const declared = (name: string) => literal.declares.find((candidate) => candidate.name === name);
+    const dxnMake = [member2('@dxos/echo', 'DXN.make'), sym('packages/echo/src/index.ts', 'DXN')];
+    expect(declared('Person')?.passesLiteral).toEqual([
+      {
+        '@id': expect.any(String),
+        '@type': 'Argument',
+        'callee': dxnMake,
+        'calleePath': 'make',
+        'slot': '0',
+        'literal': 'com.example.person',
+      },
+      {
+        '@id': expect.any(String),
+        '@type': 'Argument',
+        'callee': dxnMake,
+        'calleePath': 'make',
+        'slot': '1',
+        'literal': '0.1.0',
+      },
+    ]);
+    // Inside a function the literal is a value of the call, not part of what the declaration is.
+    expect(declared('make')?.passesLiteral).toBeUndefined();
+  });
+
+  test('a namespace member sees its siblings by bare name', () => {
+    const scoped = analyzeTypeScript({
+      ...context,
+      path: 'src/ns.ts',
+      source: [
+        "import { Ref } from '@dxos/echo';",
+        'export const Task = 0;',
+        'export namespace TestSchema {',
+        '  export class Task {}',
+        '  export const Person = Ref.Ref(Task);',
+        '}',
+      ].join('\n'),
+    });
+    const person = scoped.declares.find((candidate) => candidate.name === 'TestSchema.Person');
+    // The namespace's own `Task` shadows the top-level one.
+    expect(person?.passes?.map((argument) => argument.reference)).toEqual([[sym('src/ns.ts', 'TestSchema.Task')]]);
+    expect(person?.implDependsOn).toContain(sym('src/ns.ts', 'TestSchema.Task'));
+    expect(person?.implDependsOn).not.toContain(sym('src/ns.ts', 'Task'));
+  });
+
   test('a parse failure still yields a file node', () => {
     const broken = analyzeTypeScript({ ...context, path: 'src/e.ts', source: 'const = ;\n' });
     expect(broken.parseError?.length).toBeGreaterThan(0);

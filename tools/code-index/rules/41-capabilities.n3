@@ -1,0 +1,131 @@
+# Composer capabilities (`@dxos/app-framework` `Capability`).
+#
+# A capability is an interface slot (`Capability.make<T>()(nsid)` / `makeSingleton`); a module
+# contributes implementations to slots. Three places say which slot a module fills, and each is an
+# argument position, never a mere mention — a module body also *reads* capabilities (`requires`,
+# `yield* Capability.get(X)`), so "references a capability" is not "contributes it":
+#
+#   1. the body:   `Capability.contribute(X, impl)` / `contributeAll(X, impls)` — argument 0;
+#   2. the spec:   `Capability.lazyModule(name, { provides: [X] }, …)` / `inlineModule` — slot `1.provides`;
+#   3. the helper: a module built by a maker (`Capability.moduleMaker(name, X)`, slot `1`) or by a
+#                  function wrapping one, plus any `provides` its options add.
+#
+# The facts are `deus:passes` argument nodes (see `design/ONTOLOGY.md`). Helpers private to this file
+# are backward rules (`<=`): EYE proves them on demand and never writes them to the derived graph.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix capx: <https://dxos.org/vocab/deus/capabilities#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+
+# The framework's functions, by role. Each is addressed three ways: the resolved declaration, the
+# subpath member (`@dxos/app-framework/Capability`), and the root member (`{ Capability }`); the
+# fourth, a namespace bound through a relative import (`Capability$.make` inside the framework), lands
+# on the first through `capx:lands`.
+capx:define capx:named "make", "makeSingleton".
+capx:contribute capx:named "contribute", "contributeAll".
+capx:module capx:named "lazyModule", "inlineModule".
+capx:maker capx:named "moduleMaker".
+
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#make> capx:role capx:define.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#makeSingleton> capx:role capx:define.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#contribute> capx:role capx:contribute.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#contributeAll> capx:role capx:contribute.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#lazyModule> capx:role capx:module.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#inlineModule> capx:role capx:module.
+<https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#moduleMaker> capx:role capx:maker.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#make> capx:role capx:define.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#makeSingleton> capx:role capx:define.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#contribute> capx:role capx:contribute.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#contributeAll> capx:role capx:contribute.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#lazyModule> capx:role capx:module.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#inlineModule> capx:role capx:module.
+<https://dxos.org/deus/module/@dxos/app-framework/Capability#moduleMaker> capx:role capx:maker.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.make> capx:role capx:define.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.makeSingleton> capx:role capx:define.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.contribute> capx:role capx:contribute.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.contributeAll> capx:role capx:contribute.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.lazyModule> capx:role capx:module.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.inlineModule> capx:role capx:module.
+<https://dxos.org/deus/module/@dxos/app-framework#Capability.moduleMaker> capx:role capx:maker.
+
+# Where a reference written `R.path` lands when resolution stopped at `R`: a member of the module a
+# namespace publishes (`import { MapCapabilities } from '#types'`, `Capability$` inside the framework),
+# or a member of a TypeScript `namespace R { … }`, which the parser names `R.path`.
+{ ?namespace capx:publishes ?module } <= { ?namespace deus:namespaceOf ?module }.
+{ ?namespace capx:publishes ?module } <= { ?namespace deus:aliasOf ?origin. ?origin capx:publishes ?module }.
+{ (?r ?path) capx:lands ?s } <= { ?r capx:publishes ?module. ?module deus:declares ?s. ?s deus:name ?path }.
+{ (?r ?path) capx:lands ?s } <= {
+  ?module deus:declares ?r.
+  ?r deus:kind "namespace"; deus:name ?name.
+  (?name "." ?path) string:concatenation ?qualified.
+  ?module deus:declares ?s.
+  ?s deus:name ?qualified.
+}.
+
+# What built a declaration, and what an argument's call invokes.
+{ ?s capx:via ?f } <= { ?s deus:constructedBy ?f }.
+{ ?s capx:via ?f } <= { ?s deus:constructedBy ?r; deus:constructedByPath ?path. (?r ?path) capx:lands ?f }.
+{ ?argument capx:invokes ?f } <= { ?argument deus:callee ?f }.
+{ ?argument capx:invokes ?f } <= { ?argument deus:callee ?r; deus:calleePath ?path. (?r ?path) capx:lands ?f }.
+{ ?s capx:builtBy ?role } <= { ?s capx:via ?f. ?f capx:role ?role }.
+{ ?argument capx:calls ?role } <= { ?argument capx:invokes ?f. ?f capx:role ?role }.
+
+# The capability an argument names: the declaration itself, through re-exports, or through a
+# namespace. `capx:builtBy` rather than `rdf:type` keeps an alias from counting as a second
+# capability once `90-aliases.n3` has typed it.
+{ ?r capx:denotes ?r } <= { ?r capx:builtBy capx:define }.
+{ ?r capx:denotes ?c } <= { ?r deus:aliasOf ?origin. ?origin capx:denotes ?c }.
+{ ?argument capx:names ?c } <= {
+  ?argument deus:reference ?r.
+  ?scope log:notIncludes { ?argument deus:referencePath ?path }.
+  ?r capx:denotes ?c.
+}.
+{ ?argument capx:names ?c } <= {
+  ?argument deus:reference ?r; deus:referencePath ?path.
+  (?r ?path) capx:lands ?member.
+  ?member capx:denotes ?c.
+}.
+
+# Slots.
+{ ?s capx:builtBy capx:define } => { ?s rdf:type deus:Capability }.
+
+# 1. A body contributes what it passes to `contribute`.
+{
+  ?s deus:passes ?argument.
+  ?argument capx:calls capx:contribute; deus:slot "0"; capx:names ?c.
+} => { ?s deus:contributesCapability ?c }.
+
+# 2. A module declares what it provides.
+{
+  ?s capx:builtBy capx:module; deus:passes ?argument.
+  ?argument capx:calls capx:module; deus:slot "1.provides"; capx:names ?c.
+} => { ?s deus:contributesCapability ?c }.
+
+# 3. Helpers that build modules for a capability. A maker names it as its second argument. Any other
+# helper is a declaration that something is built by while it is itself built by nothing (a function,
+# not a value): it names the capability in the spec of the module it builds, or it calls a maker and so
+# builds what that maker builds.
+{ ?h capx:helper true } <= { ?m capx:via ?h. ?scope log:notIncludes { ?h deus:constructedBy ?any } }.
+{
+  ?h capx:builtBy capx:maker; deus:passes ?argument.
+  ?argument capx:calls capx:maker; deus:slot "1"; capx:names ?c.
+} => { ?h deus:buildsModuleFor ?c }.
+{
+  ?h deus:passes ?argument; capx:helper true.
+  ?argument capx:calls capx:module; deus:slot "1.provides"; capx:names ?c.
+} => { ?h deus:buildsModuleFor ?c }.
+{
+  ?maker capx:builtBy capx:maker; deus:passes ?argument.
+  ?argument capx:calls capx:maker; deus:slot "1"; capx:names ?c.
+  ?h deus:implDependsOn ?maker; capx:helper true.
+} => { ?h deus:buildsModuleFor ?c }.
+
+# A module built by a helper contributes what the helper builds for, plus the `provides` its options add.
+{ ?m capx:via ?h. ?h deus:buildsModuleFor ?c } => { ?m deus:contributesCapability ?c }.
+{
+  ?m capx:via ?h; deus:passes ?argument.
+  ?h deus:buildsModuleFor ?any.
+  ?argument capx:invokes ?h; deus:slot "1.provides"; capx:names ?c.
+} => { ?m deus:contributesCapability ?c }.

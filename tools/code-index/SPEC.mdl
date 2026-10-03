@@ -224,6 +224,19 @@ module worker/analyzers/typescript
 ```
 
 ```mdl
+module worker/types
+  desc: |
+    Per-file type propagation inside the parse step — `design/TYPES.md`. Every symbol it can type
+    gets `deus:hasType`; everything else is unknown, never guessed. No type checker, no cross-file reads.
+  api:
+    infer: (context) => Inference              # Infer.ts: memoized per node; scopes, models, flow guard.
+    Term: Type                                 # Term.ts: the normalized term and its canonical text.
+    MODELS: { values, types }                  # models.ts: Effect/Layer/Schema/Context signatures.
+    collector: () => { add, nodes }            # Rdf.ts: content-addressed `deus:Type` nodes.
+    compareFiles: (files, options) => Score    # agreement.ts: the tsc harness (TypeScript 6 API).
+```
+
+```mdl
 module worker/analyzers/package
   desc: The two files that assert a `Package` node, each from its own graph.
   api:
@@ -272,6 +285,7 @@ module Cli
 | `stats`                                | File and quad counts. |
 | `clear`                                | Empty both databases. |
 | `ontology`                             | Print the JSON-LD context. |
+| `types [files…] [--sample N] [--seed S] [--show V]` | Score the type propagator against `tsc`. |
 
 `--root` defaults to the git root of the working directory, `--store` to
 `<root>/node_modules/.code-index`, and `--json` applies to every command.
@@ -350,6 +364,16 @@ feat F-8: Structure now, meaning later
   req F-8.3: Every stored snippet is valid TypeScript, or absent.
   req F-8.4: IRIs are written as the path or specifier reads (`module:@dxos/compute/Operation#make`);
     only characters an IRI cannot carry, `#`, `?`, `%` and `.`/`..` segments are percent-encoded.
+```
+
+```mdl
+feat F-10: Types without a checker
+  desc: |
+    The parser names the type of each variable and function symbol from its own file, in terms of the
+    symbols imported at the boundary plus TypeScript's structural vocabulary; rules match the terms.
+  req F-10.1: Where it answers, it agrees with `tsc` — the agreement harness has no disagreements on its fixtures.
+  req F-10.2: A position it cannot type is absent, never approximated; a reference `tsc` might narrow is unknown.
+  req F-10.3: The type step costs well under a millisecond per file.
 ```
 
 ```mdl
@@ -457,4 +481,14 @@ test T-5: Spec documents
     - frontmatter is read as flat strings
     - every fenced block yields a header, fields and mentions
     - the spec analyzer turns blocks into SpecBlock nodes
+```
+
+```mdl
+test T-6: Types
+  file: src/worker/types/agreement.test.ts
+  covers: F-10
+  cases:
+    - every fixture declaration agrees with tsc, is partial, or is unknown — none disagrees
+    - Effect, Layer, Schema and Context.Service models agree with tsc on the installed effect
+    - a layer provides and requires what its inferred type says (src/Reasoner.test.ts)
 ```

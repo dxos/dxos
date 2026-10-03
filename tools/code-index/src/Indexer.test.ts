@@ -180,6 +180,8 @@ describe('Indexer', () => {
     const result = await index();
     // b no longer imports c, so the conclusion drawn from that edge is gone with it.
     expect(result).toMatchObject({ indexed: 1, derived: 1 });
+    // The native backend maintains the derived graphs from this pass's changes rather than recomputing.
+    expect(result.reasoners.every((outcome) => outcome.incremental)).toBe(Store.defaultBackend() === 'native');
 
     const reachable = await withStore((store) =>
       store.select(`
