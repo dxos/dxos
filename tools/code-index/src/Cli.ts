@@ -380,6 +380,10 @@ const serveFlags = {
   endpoint: endpointFlag,
   port: Flag.Int('port').pipe(Flag.withDescription('Listen port (default: 5599).'), Flag.optional),
   host: Flag.String('host').pipe(Flag.withDescription('Bind address (default: 127.0.0.1).'), Flag.optional),
+  noWatch: Flag.Boolean('no-watch').pipe(
+    Flag.withDefault(false),
+    Flag.withDescription('Serve the index as it is, without reindexing as files change.'),
+  ),
 };
 
 type ServeFlags = {
@@ -390,9 +394,10 @@ type ServeFlags = {
   readonly endpoint: Option.Option<string>;
   readonly port: Option.Option<number>;
   readonly host: Option.Option<string>;
+  readonly noWatch: boolean;
 };
 
-const serveHandler = ({ root, store, provider, model, endpoint, port, host }: ServeFlags) =>
+const serveHandler = ({ root, store, provider, model, endpoint, port, host, noWatch }: ServeFlags) =>
   Effect.gen(function* () {
     const repo = yield* resolveRoot(root);
     const selection = yield* Models.select({
@@ -408,6 +413,7 @@ const serveHandler = ({ root, store, provider, model, endpoint, port, host }: Se
       port: Option.getOrUndefined(port),
       host: Option.getOrUndefined(host),
       model: selection,
+      reasoners: noWatch ? undefined : yield* Reasoner.load(DEFAULT_RULES),
     }).pipe(Effect.provide(workspaceLayer(repo, store, selection)));
   });
 
