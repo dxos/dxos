@@ -1,175 +1,197 @@
 # Agent — memory ontology
 
-Status: draft 1 (2026-10-03), for review. Decides what kinds of things an agent remembers, how they
-relate, and what context each carries. [MEMORY.md](./MEMORY.md) covers how memories are made and
-recalled; this doc covers what they are.
+Status: draft 3 (2026-10-03), for review. Decides what an agent remembers, how it relates, and what
+context each item carries. [MEMORY.md](./MEMORY.md) covers how memories are made and recalled; this
+doc covers what they are.
 
 ## Principle
 
-Everything the agent knows is an ECHO object in its home space (goal 1 in
-[DESIGN.md](./DESIGN.md)), so people can see, correct and delete it. The ontology separates three
-layers:
+The agent's knowledge has five layers, from raw to curated:
 
-1. **Entities** — the things memories are about: people, groups, concepts, and any existing object.
-2. **Knowledge** — what the agent believes or has been told, attached to entities. Passive: recalled,
-   never acted on by itself.
-3. **Directives** — what governs the agent's behaviour: tasks it owes, rules it obeys, preferences it
-   honours, modes it works in. Active: recall always includes the ones in scope, and tools check them.
+| Layer                  | Holds                                                      | Form                                                      |
+| ---------------------- | ---------------------------------------------------------- | --------------------------------------------------------- |
+| 1. Transcripts         | Every thread and chat, verbatim — the full-fidelity record | The chat's feed; never edited                             |
+| 2. Annotations         | RDF facts read from each transcript                        | A fact feed per transcript (§2)                           |
+| 3. Curated entities    | Profiles of people, organizations and projects             | Objects in the home space, ref'ing canonical objects (§3) |
+| 4. Per-user directives | Each user's instructions and preferences                   | Objects in the home space, keyed by user (§4)             |
+| 5. Intent              | Goals shared with users, tasks the agent owes, triggers    | Goal/Task objects; triggers in process memory (§5)        |
 
-Context is not a kind of memory but a set of fields **every** knowledge and directive object carries
-(see Context), because the same sentence means different things depending on who said it, where, and
-for whom.
+Per-transcript state — the current mode — is an annotation on the chat (§6).
+
+Everything persistent lives in the agent's **home space** (DESIGN.md goal 1), so people can see,
+correct and delete it; it references objects in other spaces rather than copying them.
 
 ## 1. Entities
 
-| Type           | Status | Notes                                                                                                                                                              |
-| -------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Person`       | exists | One per human; `identities` carries every handle (Discord id, DID, email) so one person is recognised everywhere.                                                  |
-| `Organization` | exists | A team, community or company. Membership: `memberOf` relation (`Person → Organization`, with a role).                                                              |
-| `Concept`      | new    | A topic, product, place or idea the agent keeps meeting (`name`, `aliases`, `description`). Lightweight; promoted to a real type (e.g. `Project`) when one exists. |
-| Any object     | exists | Documents, sketches, projects, tasks: memories attach to them directly (`HasSubject`), wherever they live (space-qualified refs for workspaces).                   |
+| Type           | Status | Notes                                                                                                                         |
+| -------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| `Person`       | exists | One per human; `identities` carries every handle (Discord id, DID, email) so one person is recognised everywhere.             |
+| `Organization` | exists | A team, community or company. Membership: `memberOf` (`Person → Organization`, with a role).                                  |
+| `Project`      | exists | Canonical in its workspace; the agent references it.                                                                          |
+| `Concept`      | new    | A topic, product or idea the agent keeps meeting (`name`, `aliases`, `description`); promoted to a real type when one exists. |
+| Any object     | exists | Documents, sketches, tasks: facts and notes point at them by space-qualified ref, wherever they live.                         |
 
-## 2. Knowledge
+Fact subjects and objects are entity IRIs that resolve to these objects (pipeline-rdf `Entity.ref`), so
+the RDF graph and ECHO share identity.
 
-One type, `Memory`, discriminated by `kind`, because recall, provenance, supersession and expiry
-work the same for all of them:
+## 2. Annotations — facts per transcript
 
-| `kind`         | What it is                                    | Example                                | Default lifespan |
-| -------------- | --------------------------------------------- | -------------------------------------- | ---------------- |
-| `fact`         | An atomic claim about one or more entities    | "Josiah owns the EDGE compute service" | durable          |
-| `status`       | What someone is doing now                     | "Rich is on the Discord bot this week" | 7 days           |
-| `event`        | Something that happened or will happen, dated | "Rich is out until Thursday"           | until the date   |
-| `relationship` | How entities relate, beyond membership        | "Priya and Sam pair on the indexer"    | durable          |
-| `note`         | Free-form markdown about anything (goal 2)    | Meeting notes attached to a project    | durable          |
+**Decision:** facts are not ECHO objects. A fact is one low-level proposition and an agent records
+hundreds a day; an object per fact costs a document each and buries the objects people read. Each
+transcript instead gets an **annotation feed** beside it (the mailbox-enrichment pattern: derived data
+on a second feed, never on the immutable messages). The transcript remains the full-fidelity record.
 
-- `content: string` holds the one-line claim; `body?: Ref<Text>` holds a note's markdown (notes may
-  have both: a summary line and the body).
-- **As built (2026-10-03):** `Memory` (`org.dxos.type.agent.memory` 0.1.0) gained the `note` and
-  `directive` kinds and the optional `body`; both are additive, so the version did not change.
-  `recordMemory` takes `body` as markdown and stores it as a `Text` owned by the memory. Until `Rule`
-  and `Preference` exist, rules and preferences are recorded as `Memory(kind: 'directive')`, quoting
-  the rule and who set it (a TODO in `Memory.ts` points here). `status` is not a kind yet.
-- `Goal` (exists) stays a separate type: it has owners, a horizon and a status lifecycle, and other
-  objects (tasks) point at it.
-
-## 3. Directives
-
-Separate types, because each has its own lifecycle and is enforced, not just recalled.
-
-### Task (exists)
-
-What someone is committed to doing. The agent's **own** tasks live in its own `TaskSet` (goal 4):
-relays ("tell Josiah"), follow-ups, research it was asked to do. Relay tasks add `recipient`
-(`Ref<Person | Organization>`), `requester` and a delivery record. Tasks in workspaces are the
-projects the agent helps manage; it does not own them.
-
-### Rule (new)
-
-A constraint between parties that the agent must obey — goal 3 of the use case ("rules that exist
-between users and agents").
+An entry is one extraction pass — normally the agent's end-of-turn update — and carries a batch of
+facts in the `@dxos/pipeline-rdf` `Fact` shape, so its extraction stages and SPARQL engine are reused:
 
 ```ts
-Rule {
-  statement: string;          // "Don't share my status outside the core team"
-  appliesTo: Ref<Agent | Person | Organization>[];   // who is bound (usually the agent)
-  about?: Ref<Obj.Unknown>[];                        // whose data or which topic it concerns
-  effect: 'allow' | 'deny' | 'require';              // for checkable rules; free text otherwise
-  action?: string;            // the capability it governs, e.g. 'relay', 'share-status', 'dm'
-  setBy: Ref<Person>;         // who made the rule; only they (or an admin) can retract it
+FactEntry {                     // one feed item per extraction pass over the transcript
+  transcript: Ref<Chat>;        // the transcript this feed annotates
+  recordedAt: string;           // when the agent extracted it
+  extractor: { id: string; model: string; version: string };
+  facts: Fact[];
+}
+
+Fact {                          // pipeline-rdf
+  assertion: { subject, predicate, object, validFrom?, validTo?, quote? };
+  factuality: { value, polarity, confidence, nature? };     // FactBank: CT+/PR+/PS+/…
+  illocution?: { force, mood?, addressee? };                 // assertive | directive | commissive | expressive
+  attribution: {
+    source: string;             // DXN of the message (required)
+    generatedAtTime: string;    // when it was said (required)
+    agent?: string;             // the speaker's DXN
+    span?: { start, end };      // where in the message text
+  };
 }
 ```
 
-Examples: "Kai may DM me" (allow `dm`), "don't share my status in DMs" (deny `share-status`),
-"always cc Priya on hiring" (require, free text). Checkable rules (`action` set) are enforced by
-tools — relay and status sharing consult them; free-text rules are pinned into the prompt.
+- **Every fact records timestamp, speaker and source.** pipeline-rdf requires `source` and
+  `generatedAtTime`; the agent always sets `agent` (speaker). Sources are DXN strings in RDF; the UI
+  resolves them to ECHO refs to jump to the message.
+- **Append-only.** A correction is a new fact that supersedes (`wasDerivedFrom`); a retraction is a
+  fact with negative polarity. The feed is an audit trail of what the agent believed and when.
+- **Expiry is a query concern.** `validTo` bounds a status ("on the Discord bot this week"); expired
+  facts are filtered at recall, never deleted.
+- **Predicates are open.** "commits", "owns", "is blocked by" — the RDF vocabulary grows freely.
+  Anything that must behave reliably (triggers, rules) matches on `illocution.force` and
+  `factuality.polarity`, which the extractor always fills, not on the predicate string.
+- **Recall** loads the annotation feeds of the transcripts in scope into pipeline-rdf's in-memory
+  store and queries with SPARQL; EDGE's FTS5 index over feed items serves text search. Scope follows
+  the audience rule (same space / Discord server by default).
 
-### Preference (new)
+`Memory` (`org.dxos.type.agent.memory`) is retired once the feeds land: `recordMemory` writes facts,
+`retrieveMemories` queries them, notes become documents (§3), directives become §4 objects.
 
-How a person wants the agent to treat **them**: tone, length, channel, timing. A preference is a
-rule the person sets about themselves, so it is kept separate only because people edit their own
-preferences directly (a settings-like list), while rules are negotiated between parties.
+## 3. Curated entities
+
+Objects the agent keeps because people read them:
+
+- **Profile** — a markdown document per person, team or project (`ProfileOf` → the canonical object,
+  which may live in another space), regenerated from the facts about it.
+- **Note** — free-form markdown attached to any object (`HasSubject`); a note is a document, not facts.
+
+The agent never copies a canonical `Person`/`Organization`/`Project` into its home space; when none
+exists it creates one there, and links it to a canonical one found later.
+
+## 4. Per-user directives
+
+How the agent must behave, per user (later per group). Typed objects, because tools check them and
+users edit them.
 
 ```ts
-Preference {
-  person: Ref<Person>;
-  statement: string;          // "Keep replies short", "Prefer DMs over mentions"
-  key?: string;               // when a tool can act on it: 'channel' | 'verbosity' | 'quiet-hours'
+Instruction {                   // "Don't page me after 6pm", "Always cc Priya on hiring"
+  user: Ref<Person>;            // whose instruction (later Ref<Organization> for groups)
+  statement: string;
+  setBy: Ref<Person>;           // only they (or an admin) retract it
+  action?: string;              // checkable capability: 'relay' | 'share-status' | 'dm'
+  effect?: 'allow' | 'deny' | 'require';
+  source?: string;              // DXN of the message that set it
+}
+
+Preference {                    // "Keep it short with me", "Prefer DMs"
+  user: Ref<Person>;
+  statement: string;
+  key?: string;                 // when a tool can act on it: 'channel' | 'verbosity' | 'quiet-hours'
   value?: string;
 }
 ```
 
-Preferences set defaults for rules: "Prefer DMs" makes undeliverable relays go by DM.
+Checkable instructions (`action` set) are enforced by tools — relay and status sharing consult them;
+free-text ones are pinned into the prompt whenever that user is in the conversation. Users can set
+their own preferences directly.
 
-### Mode (new)
+## 5. Intent — goals, tasks and triggers
 
-How the agent is working right now — interviewer, transcriber, designer, fact-checker, researcher
-(goal 3). A mode is configuration, not knowledge, but it belongs here because it decides what the
-agent records and how.
+**Goals** are shared context between the agent and a user: the user can inspect, prioritize and
+change them. A goal is created **only when the requester wants an outcome**, not for plain delivery.
+**Tasks** are what the agent owes — relays, follow-ups, research — in its own `TaskSet`, each under
+the goal it serves when there is one.
 
-```ts
-Mode {
-  name: string;               // 'Interviewer'
-  skills: Ref<Skill>[];       // instructions + tools (a mode is extensible through skills)
-  records?: MemoryKind[];     // what this mode writes (a transcriber writes notes and events)
-  rules?: Ref<Rule>[];        // mode-specific constraints
-}
-```
+"Tell Dima to come and work on this" (Rich wants him to commit):
 
-The current mode is per conversation (the chat's bound skills already express it); a `Mode` object
-names a reusable bundle so a user can say "switch to transcriber".
+- `Goal` (owner Rich): Dima commits to working on X.
+- `Task` (Kai, under the goal): relay Rich's message to Dima.
+
+"Tell Josiah the fix landed" (delivery only): just the relay `Task`.
+
+**Triggers** connect facts to intent: `{ when, then, for }`.
+
+- `when` — a structured fact pattern (speaker, illocution force, polarity, subject, `about`, time
+  window), a deadline, or both; compiled to a SPARQL `ASK` over the annotation facts.
+- `then` — an operation and its input (send a message, mark a goal achieved, report back).
+- `for` — the goal or task it serves; a trigger is dropped when its goal or task closes.
+
+For Rich's request the agent registers:
+
+| `when`                                               | `then`                                   |
+| ---------------------------------------------------- | ---------------------------------------- |
+| Dima, commissive, positive, about X                  | Mark the goal achieved; report to Rich   |
+| Dima, commissive, negative (declines or defers) on X | Send "this is the priority"; report back |
+| 2 days elapsed, goal not achieved                    | Follow up with Dima                      |
+
+This is what makes conditional instructions ("if he doesn't agree, tell him it's the priority")
+wait for their condition instead of being sent at once.
+
+**v1: triggers are not ECHO objects.** The agent process keeps them in memory and evaluates them **at
+the end of each turn, after that turn's facts have been written**. Consequence: triggers do not
+survive a process restart (an EDGE agent eviction); deadline triggers in particular need a durable
+home before they can be relied on. Promote them to objects once the shape settles.
+
+## 6. Per-transcript state — modes
+
+How the agent is working in one conversation — conversation, note-taker, interviewer, relay; later
+transcriber, designer, fact-checker, researcher. A `Mode` names a reusable bundle of skills.
 
 **As built (2026-10-03):** `Mode` (`org.dxos.type.agent.mode` 0.1.0) is `{ name, description?, skills,
-records? }` — `rules` is deferred with `Rule`. Every agent owns four built-in modes (parented to it,
-created by `createAgent` or on first `listModes`/`switchMode`): **Conversation** (default, no extra
-skills), **Note-taker** (`org.dxos.skill.agentNotes`: `Memory(note)` with a markdown body attached
-to its subject; voice is the chat's existing mic transcription), **Interviewer** (the interview
-skill) and **Relay**. Every chat keeps the base skills bound — conversation, modes
-(`org.dxos.skill.agentModes`: `listModes`, `switchMode`) and relay — so "tell Dima" works in any mode.
-`switchMode {chat, mode}` unbinds the other modes' skills, binds the mode's (the agent's customized
-copy where one exists) and records the mode name on the chat as the `org.dxos.agent.chatMode`
-annotation; the agent state panel shows it per channel. A new agent therefore no longer binds the
-interview skill by default: it switches to Interviewer when asked.
-
-## Context
-
-Every `Memory`, `Rule` and `Preference` carries:
-
-| Field        | Answers              | Used for                                                               |
-| ------------ | -------------------- | ---------------------------------------------------------------------- |
-| `subjects`   | About whom/what?     | `HasSubject` relations — recall by entity                              |
-| `source`     | Learned from what?   | The message or chat; "why do you think that?"                          |
-| `speaker`    | Said by whom?        | Trust and authority (only the setter retracts a rule)                  |
-| `scope`      | Where does it apply? | `{ space?, guild?, channel? }` — audience filter (same-server default) |
-| `observedAt` | When?                | Ordering, recency                                                      |
-| `expiresAt`  | Until when?          | Absent means durable; expired items are kept but never recalled        |
-| `origin`     | Stated or inferred?  | Confidence; inferred items are candidates for confirmation             |
-| `status`     | Still true?          | `active` / `superseded` / `retracted`                                  |
-
-Relations: `HasSubject` (memory → entity), `ProfileOf` (profile document → person or organization),
-`memberOf` (person → organization), `Goal.owners`, `Task.assignee`, `Rule.appliesTo` / `about`.
+records? }`. Every agent owns four built-in modes (parented to it): **Conversation** (default),
+**Note-taker** (`org.dxos.skill.agentNotes`), **Interviewer** and **Relay**. Every chat keeps the
+base skills bound — conversation, modes (`listModes`, `switchMode`) and relay — so "tell Dima" works in
+any mode. `switchMode {chat, mode}` rebinds the mode's skills and records the mode on the chat as the
+`org.dxos.agent.chatMode` annotation; the knowledge panel shows it per conversation.
 
 ## Classification
 
-The agent maps what it hears to a kind by intent, using the speaker and setting:
+| Utterance                                | Becomes                                                |
+| ---------------------------------------- | ------------------------------------------------------ |
+| "This week I'm on the Discord bot"       | Fact (speaker, assertive, `validTo` +7 days)           |
+| "Josiah will redeploy once it lands"     | Fact (commissive by Josiah)                            |
+| "Our priority this quarter is the demo"  | `Goal` (quarter) owned by the team                     |
+| "Tell Josiah the fix landed"             | Relay `Task`                                           |
+| "Tell Dima to come and work on this"     | `Goal` (Dima commits) + relay `Task` + triggers        |
+| "If he doesn't agree, say it's priority" | A trigger on the open goal                             |
+| "Don't page me after 6pm"                | `Instruction` (deny, `dm` after 18:00) for the speaker |
+| "Keep it short with me"                  | `Preference` of the speaker                            |
+| "Take notes"                             | Switch this transcript to Note-taker                   |
 
-| Utterance                               | Becomes                                                |
-| --------------------------------------- | ------------------------------------------------------ |
-| "This week I'm on the Discord bot"      | `Memory(status)` about the speaker, expires in 7 days  |
-| "Our priority this quarter is the demo" | `Goal(quarter)` owned by the team                      |
-| "Remember to tell Josiah about this"    | `Task` (relay) in the agent's task list, due in 2 days |
-| "Don't do this again"                   | `Rule(deny, …)` set by the speaker, durable            |
-| "Keep it short with me"                 | `Preference` of the speaker                            |
-| "Take notes in this meeting"            | Switch to the Transcriber `Mode` for this conversation |
-
-The classification is itself measurable: the eval gets personas whose utterances have known kinds.
+The classification is measurable: the eval gets personas whose utterances have known outcomes.
 
 ## Open questions
 
-1. Is `Preference` worth its own type, or a `Rule` whose `setBy` equals its subject? Separate types
-   read better in a settings UI; one type is simpler to enforce.
-2. Which `Rule.action`s are checkable in v1 — `relay`, `share-status`, `dm` — and who may set rules
-   about the agent itself (any member, or only its owner)?
-3. Where `Concept` lives long term — plugin-agent, or `@dxos/types` beside `Person` and
-   `Organization`.
-4. Mode switching: explicit only ("switch to transcriber"), or may the agent propose a mode from
-   context? (v1: explicit; the modes skill maps phrases like "take a note" to a mode.)
+1. Profile regeneration: on every fact about the subject (rate-limited), or on a schedule?
+2. Is `Preference` worth its own type, or an `Instruction` whose `setBy` equals its `user`?
+3. Which `Instruction.action`s are checkable in v1 — `relay`, `share-status`, `dm` — and who may set
+   instructions about the agent itself (any member, or only its owner)?
+4. Where `Concept` lives long term — plugin-agent, or `@dxos/types` beside `Person`.
+5. The trigger pattern's exact fields, and the smallest vocabulary of `then` actions.
+6. Durable triggers: when deadlines must survive restarts, do triggers become objects, or are they
+   re-derived at startup from open goals and tasks?
