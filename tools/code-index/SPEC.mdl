@@ -80,7 +80,7 @@ are summed across concurrent batches, so they overlap and can exceed the wall-cl
 The two databases cannot share a transaction, so the ledger is made the single commit marker and
 the graph write is made idempotent:
 
-1. `files.pending_graph` is set to the new graph IRI (`graph:<path>#<mtime>`) — the announcement.
+1. `files.pending_graph` is set to the new graph IRI (`graph:file/<path>#<mtime>`) — the announcement.
 2. The old graph's quads and the new graph's quads are swapped in **one** Quadstore batch.
 3. The row is updated: `graph` becomes the new IRI and `pending_graph` is cleared — the commit.
 
@@ -136,8 +136,10 @@ module Ontology
     document schema, and the LDkit schemas that read it back.
   api:
     PREFIX: 'https://dxos.org/vocab/deus#'
-    FILE_BASE / GRAPH_BASE: string
-    iri / fileIri / symbolIri / graphIri: (…) => NamedNode
+    FILE_BASE / PACKAGE_BASE / MODULE_BASE / GRAPH_BASE: string
+    iri / fileIri / symbolIri / packageIri / memberIri / specBlockIri: (…) => NamedNode
+    graphIri / derivedGraphIri: (…) => NamedNode   # under `graph:file/` and `graph:derived/`.
+    VERSION: number                           # bumped when an IRI changes shape.
     File, Symbol: NamedNode                   # classes.
     path, language, size, mtime, hash, imports, importsModule, declares, parseError: NamedNode
     name, kind, exported, line: NamedNode     # symbol properties.
@@ -298,16 +300,18 @@ feat F-1: One directory, two databases
   req F-1.1: The SQLite schema is created by numbered migrations recorded in `code_index_migrations`.
   req F-1.2: Records and quads written in one process are visible after reopening the store.
   req F-1.3: No module outside `Store` opens a database.
+  req F-1.4: A store recorded under another `Ontology.VERSION` is emptied on open, and the next pass reindexes everything.
 ```
 
 ```mdl
 feat F-2: One graph per file revision
   desc: |
-    Every file's quads live in `graph:<path>#<mtime>`; reindexing swaps the graph rather than
+    Every file's quads live in `graph:file/<path>#<mtime>`; reindexing swaps the graph rather than
     accumulating revisions, and removing a file drops its graph and its row.
   req F-2.1: After a reindex the previous graph holds no quads and the ledger names the new one.
-  req F-2.2: Derived quads live in `graph:derived`, which reasoning replaces wholesale.
+  req F-2.2: Derived quads live in `graph:derived/<reasoner>`, which reasoning replaces wholesale.
   req F-2.3: An interrupted commit leaves a `pending_graph` that `reconcile` deletes on the next open.
+  req F-2.4: No file path names a derived graph — file graphs and derived graphs have disjoint prefixes.
 ```
 
 ```mdl
@@ -358,6 +362,8 @@ feat F-8: Structure now, meaning later
   req F-8.1: A bare specifier yields both a member IRI and, if it resolves inside the repo, a symbol IRI.
   req F-8.2: References from type positions are `apiDependsOn`, from value positions `implDependsOn`.
   req F-8.3: Every stored snippet is valid TypeScript, or absent.
+  req F-8.4: IRIs are written as the path or specifier reads (`module:@dxos/compute/Operation#make`);
+    only characters an IRI cannot carry, `#`, `?`, `%` and `.`/`..` segments are percent-encoded.
 ```
 
 ```mdl

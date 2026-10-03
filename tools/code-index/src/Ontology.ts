@@ -9,6 +9,8 @@ import type { Schema as LdkitSchema } from 'ldkit';
 import { rdf, xsd } from 'ldkit/namespaces';
 import { DataFactory, type NamedNode } from 'n3';
 
+import { escapeFragment, escapePath } from './internal/iri.ts';
+
 /**
  * The DEUS code vocabulary — the executable mirror of `design/ONTOLOGY.md`, which is the source of
  * truth. IRIs, the JSON-LD context the indexer emits, the document schema, and the LDkit schemas
@@ -30,41 +32,53 @@ export const TYPE_BASE = 'https://dxos.org/deus/type/';
 
 export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}${term}`);
 
+/**
+ * Bumped whenever the IRIs the indexer mints change shape. A store written under another version is
+ * dropped and rebuilt on open: the ledger keys commits by graph IRI, so mixing schemes would leave
+ * graphs no row points at and rules matching only half the facts.
+ */
+export const VERSION = 2;
+
 /** IRI of a file resource; stable across revisions of that file. */
-export const fileIri = (path: string): NamedNode => DataFactory.namedNode(`${FILE_BASE}${encodeURIComponent(path)}`);
+export const fileIri = (path: string): NamedNode => DataFactory.namedNode(`${FILE_BASE}${escapePath(path)}`);
 
 export const symbolIri = (path: string, name: string): NamedNode =>
-  DataFactory.namedNode(`${FILE_BASE}${encodeURIComponent(path)}#${encodeURIComponent(name)}`);
+  DataFactory.namedNode(`${FILE_BASE}${escapePath(path)}#${escapeFragment(name)}`);
 
 /** IRI of a workspace package, by its `package.json` name. */
-export const packageIri = (name: string): NamedNode =>
-  DataFactory.namedNode(`${PACKAGE_BASE}${encodeURIComponent(name)}`);
+export const packageIri = (name: string): NamedNode => DataFactory.namedNode(`${PACKAGE_BASE}${escapePath(name)}`);
 
 /**
- * IRI of a named export of a module *as imported* — `module:effect%2FLayer#effect`. Follows the
+ * IRI of a named export of a module *as imported* — `module:effect/Layer#effect`. Follows the
  * specifier written in source, so rules keyed on it survive the implementation file moving.
  */
 export const memberIri = (specifier: string, path: string): NamedNode =>
-  DataFactory.namedNode(`${MODULE_BASE}${encodeURIComponent(specifier)}#${path}`);
+  DataFactory.namedNode(`${MODULE_BASE}${escapePath(specifier)}#${escapeFragment(path)}`);
 
-/** Both components are encoded: a `.mdl` documenting the grammar has a block whose type is `<type>`. */
+/**
+ * `<blockType>:<key>`, split on the first `:` — so a `:` is escaped in the block type and nowhere
+ * else (a `.mdl` documenting the grammar has a block whose type is `<type>`).
+ */
 export const specBlockIri = (path: string, blockType: string, key: string): NamedNode =>
   DataFactory.namedNode(
-    `${FILE_BASE}${encodeURIComponent(path)}#${encodeURIComponent(blockType)}:${encodeURIComponent(key)}`,
+    `${FILE_BASE}${escapePath(path)}#${escapeFragment(blockType).replaceAll(':', '%3A')}:${escapeFragment(key)}`,
   );
+
+/** File graphs and derived graphs get disjoint prefixes, so no file path can name a derived graph. */
+export const FILE_GRAPH_PREFIX = `${GRAPH_BASE}file/`;
+
+export const DERIVED_GRAPH_PREFIX = `${GRAPH_BASE}derived/`;
 
 /** IRI of the named graph holding one revision of a file; the mtime makes the swap atomic. */
 export const graphIri = (path: string, mtime: number): NamedNode =>
-  DataFactory.namedNode(`${GRAPH_BASE}${encodeURIComponent(path)}#${mtime}`);
+  DataFactory.namedNode(`${FILE_GRAPH_PREFIX}${escapePath(path)}#${mtime}`);
 
 /**
  * The graph holding one reasoner's conclusions. Kept apart from the file graphs so a run can drop
  * the whole of it and recompute — a derived fact must never outlive its premises.
  */
 export const derivedGraphIri = (reasoner: string): NamedNode =>
-  DataFactory.namedNode(`${GRAPH_BASE}derived/${encodeURIComponent(reasoner)}`);
-
-export const DERIVED_GRAPH_PREFIX = `${GRAPH_BASE}derived/`;
+  DataFactory.namedNode(`${DERIVED_GRAPH_PREFIX}${escapePath(reasoner)}`);
 
 export const isDerivedGraph = (graph: string): boolean => graph.startsWith(DERIVED_GRAPH_PREFIX);
 
@@ -425,8 +439,8 @@ export const SymbolSchema = {
 
 /**
  * Prefixes used when serializing the graph to Turtle/N3. Vocabulary namespaces only: abbreviating
- * `file:` or `graph:` emits prefixed names whose local part is a percent-encoded path, and a path
- * beginning with `.` (`.agents/...`) is not a legal PNAME — the writer emits it anyway and no
+ * `file:` or `graph:` emits prefixed names whose local part is a path, and a path beginning with
+ * `.` (`.agents/...`) or holding an `@` is not a legal PNAME — the writer emits it anyway and no
  * parser reads it back.
  */
 export const prefixes: Record<string, string> = {

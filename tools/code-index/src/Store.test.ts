@@ -293,6 +293,25 @@ describe('Store', () => {
     expect(await withStore((store) => store.getFile('src/doomed.ts'))).toBeUndefined();
   });
 
+  test('a store written under another ontology version is rebuilt on open', async () => {
+    await withStore((store) => store.putDocument(document('src/legacy.ts', 1)));
+
+    // A store from before the version was recorded has no row at all; the reset must treat that
+    // the same as a mismatch, or old-scheme graphs would stay live beside new ones.
+    const database = new DatabaseSync(join(dir, 'index.sqlite'));
+    database.prepare('DELETE FROM meta').run();
+    database.close();
+
+    const [stats, version] = await withStore((store) => Effect.all([store.stats(), store.getMeta('ontologyVersion')]));
+    expect(stats).toMatchObject({ files: 0, quads: 0 });
+    expect(version).toEqual(String(Ontology.VERSION));
+
+    // An up-to-date store is left alone.
+    await withStore((store) => store.putDocument(document('src/kept.ts', 1)));
+    expect(await withStore((store) => store.getFile('src/kept.ts'))).toBeDefined();
+    await withStore((store) => store.removeFile('src/kept.ts'));
+  });
+
   test('clear empties both databases', async () => {
     const stats = await withStore((store) => Effect.flatMap(store.clear(), () => store.stats()));
     expect(stats).toMatchObject({ files: 0, quads: 0 });

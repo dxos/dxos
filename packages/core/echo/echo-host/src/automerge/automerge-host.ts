@@ -42,7 +42,7 @@ import { PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type DataService } from '@dxos/protocols/rpc';
 import { trace } from '@dxos/tracing';
-import { ComplexSet, bufferToArray, defaultMap } from '@dxos/util';
+import { ComplexSet, bufferToArray, countWork, defaultMap } from '@dxos/util';
 
 import {
   type CollectionState,
@@ -347,6 +347,7 @@ export class AutomergeHost extends Resource {
     super();
     this._leases = new DocumentLeaseRegistry({
       open: (documentId) => {
+        countWork('automerge.docLoads');
         const query = this._repo.findWithProgress(documentId);
         const handle = this._repo.getHandle(documentId);
         invariant(handle, 'Document query has no attached handle.');
@@ -804,6 +805,7 @@ export class AutomergeHost extends Resource {
     }
     if (this._repo.handles[documentId]) {
       await this._repo.removeFromCache(documentId);
+      countWork('automerge.evictions');
     }
     log('evicted document', { documentId });
     return true;
