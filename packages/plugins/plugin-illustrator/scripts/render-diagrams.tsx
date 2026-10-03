@@ -4,7 +4,9 @@
 
 //
 // Renders the diagram corpus (`docs/diagrams/*.mmd`) headlessly through the SVG variant, writing a
-// standalone `.svg` beside each source, and prints the Tier-1 report per diagram. With
+// `.dx.svg` beside each source (the picture, carrying the drawing's ECHO objects and its mermaid source, so it
+// opens as an image anywhere and imports back as an editable drawing; `--plain` writes a bare `.svg`), and
+// prints the Tier-1 report per diagram. With
 // `--scoreboard` it prints the Tier-2 table instead (every flowchart strategy × soft metrics).
 // Passing `.mmd` paths renders just those files instead of the corpus; `--layering down` (or a comma list of
 // `down`, `up`, `free`) restricts the candidate layerings the engine chooses among.
@@ -15,9 +17,11 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { Diagnostics, Mermaid, MermaidEngine, type Scene } from '@dxos/diagram';
+import { Diagnostics, Mermaid, MermaidEngine, SVG_SCHEMA, type Scene } from '@dxos/diagram';
 
-import { toSvg } from './render.tsx';
+import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
+import { DrawingFile, SvgBuilder } from '../src/model/index.ts';
+import { Drawing } from '../src/types/index.ts';
 
 const DIAGRAMS = join(dirname(fileURLToPath(import.meta.url)), '../docs/diagrams');
 
@@ -25,6 +29,24 @@ const layeringArg = process.argv[process.argv.indexOf('--layering') + 1];
 const LAYERING = process.argv.includes('--layering')
   ? layeringArg.split(',').filter((value): value is MermaidEngine.Layering => ['down', 'up', 'free'].includes(value))
   : undefined;
+
+const PLAIN = process.argv.includes('--plain');
+
+/** The `.dx.svg` for a compiled diagram: the drawing built in memory as the app would store it. */
+const toDxSvg = (
+  name: string,
+  source: string,
+  commands: readonly Scene.Command[],
+  objects: readonly Scene.WorldObject[],
+) => {
+  const canvas = Drawing.makeCanvas({ schema: SVG_SCHEMA });
+  SvgBuilder.apply(canvas, commands);
+  const drawing = Drawing.make({ name, canvas });
+  return DrawingFile.toDxSvg(
+    toSvgFile(objects),
+    DrawingFile.toPayload({ drawing, canvas, source: { language: 'mermaid', text: source } }),
+  );
+};
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
@@ -47,7 +69,7 @@ const paths =
 const sources = paths.map((path) => ({
   name: basename(path, '.mmd'),
   source: readFileSync(path, 'utf8'),
-  svgPath: path.replace(/\.mmd$/, '.svg'),
+  svgPath: path.replace(/\.mmd$/, PLAIN ? '.svg' : '.dx.svg'),
 }));
 
 if (process.argv.includes('--scoreboard')) {
@@ -68,9 +90,10 @@ if (process.argv.includes('--scoreboard')) {
 } else {
   let failed = false;
   for (const { name, source, svgPath } of sources) {
-    const objects = objectsOf(await MermaidEngine.compile(source, LAYERING ? { layering: LAYERING } : {}));
+    const commands = await MermaidEngine.compile(source, LAYERING ? { layering: LAYERING } : {});
+    const objects = objectsOf(commands);
     const report = Diagnostics.analyze(objects);
-    writeFileSync(svgPath, toSvg(objects));
+    writeFileSync(svgPath, PLAIN ? toSvgFile(objects) : toDxSvg(name, source, commands, objects));
     const { crossings, bends, nodes, connectors } = report.metrics;
     console.log(`${name}: ${nodes} nodes, ${connectors} connectors, ${crossings} crossings, ${bends} bends`);
     for (const diagnostic of report.diagnostics) {

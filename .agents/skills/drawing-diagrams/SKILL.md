@@ -12,9 +12,16 @@ description: >-
 # Drawing diagrams
 
 The pipeline is: a mermaid-subset `.mmd` source → `MermaidEngine.compile` (ELK layout, `@dxos/diagram`)
-→ `SceneSvg` (plugin-illustrator's SVG variant) → a standalone `.svg` plus a layout report. One moon
+→ `SceneSvg` (plugin-illustrator's SVG variant) → a `<name>.dx.svg` plus a layout report. One moon
 task runs it: `plugin-illustrator:render-diagrams`
 (`packages/plugins/plugin-illustrator/scripts/render-diagrams.tsx`).
+
+A `.dx.svg` is the default output. It is an ordinary SVG that any browser, GitHub or image viewer renders,
+and it also carries the drawing's ECHO objects (`Drawing` + `Canvas`) and its mermaid source in a
+`<metadata id="dx-payload">` element, so it imports back into Composer as an editable drawing
+(`DrawingFile.importDxSvg` in plugin-illustrator; the container is `DxSvg` in `@dxos/diagram`). Pass
+`--plain` for a bare `.svg`. Never run SVGO's default preset over one: `removeMetadata` strips the
+payload.
 
 ## 1. Derive the graph from the code, not from memory
 
@@ -62,12 +69,12 @@ first and put proto on the path (`export PATH="$HOME/.proto/shims:$HOME/.proto/b
 `cloud-sandbox`.
 
 - **A one-off diagram** — write the `.mmd` in the scratchpad and pass its absolute path. Only that file is
-  rendered (≈ 30 s once built); the `.svg` lands beside it and nothing in the repo changes:
+  rendered (≈ 30 s once built); the `.dx.svg` lands beside it and nothing in the repo changes:
   ```bash
   moon run plugin-illustrator:render-diagrams -- /abs/path/to/compute-core.mmd
   ```
 - **A corpus diagram** (meant to be committed) — put it in `plugin-illustrator/docs/diagrams/` and run
-  the task with no arguments. It re-renders all ~10 diagrams (≈ 5 min) and rewrites every `.svg`;
+  the task with no arguments. It re-renders all ~10 diagrams (≈ 5 min) and rewrites every `.dx.svg`;
   unchanged ones come out byte-identical. The corpus doubles as the layout eval set
   (`src/model/corpus.test.ts` snapshots its metrics), so run
   `moon run plugin-illustrator:test -- src/model/corpus.test.ts` and commit the updated snapshot with it.
@@ -92,14 +99,14 @@ The SVG styles itself inline, so any browser renders it as is. Chat and PR bodie
 convert it with the repo's Playwright, from the repo root:
 
 ```bash
-SVG=/abs/path/to/compute-core.svg CHROMIUM_PATH=/opt/pw-browsers/chromium node --input-type=module -e "
+SVG=/abs/path/to/compute-core.dx.svg CHROMIUM_PATH=/opt/pw-browsers/chromium node --input-type=module -e "
 import { chromium } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 const svg = process.env.SVG;
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH });
 const page = await browser.newPage({ deviceScaleFactor: 2 });
 await page.setContent(readFileSync(svg, 'utf8'));
-await page.locator('svg').first().screenshot({ path: svg.replace(/\.svg\$/, '.png') });
+await page.locator('svg').first().screenshot({ path: svg.replace(/(\.dx)?\.svg\$/, '.png') });
 await browser.close();
 "
 ```
@@ -107,5 +114,8 @@ await browser.close();
 `CHROMIUM_PATH` is the cloud sandbox's pre-installed browser; omit it locally. Look at the PNG
 yourself before sending it (`Read` shows the image) — the report cannot tell you a label sits on an
 arrow — then send the PNG and SVG to the user (`SendUserFile`), and state the report's crossings and
-bends and any visible defects alongside it. For a PR, publish the PNG via `hosting-artifacts`
+bends and any visible defects alongside it. To score the drawing against the rule library
+(`@dxos/diagram` `rules/DIAGRAM.mdl`: crossings, flow, alignment, groups, spacing, labels), run
+`moon run plugin-illustrator:appeal-diagrams -- /abs/path/to/x.mmd`; add `--judge clef` to have Clef
+grade the rendered image too (needs `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`). For a PR, publish the PNG via `hosting-artifacts`
 rather than committing it.

@@ -39,8 +39,9 @@ import {
 } from '@dxos/diagram';
 import { EffectEx } from '@dxos/effect';
 
+import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
 import { IMAGE_NOTE, type Judge, decisionModel, isJudge, seesImages } from './judges.ts';
-import { toPngs, toSvg } from './render.tsx';
+import { toPngs } from './render.tsx';
 
 const objectsOf = (commands: readonly Scene.Command[]) =>
   commands.flatMap((command) => (command.op === 'upsert-object' ? [command.object] : []));
@@ -241,7 +242,7 @@ const load = (path: string, layering: MermaidEngine.Layering) =>
       content: Architecture.contentOf(Mermaid.parse(source)),
       questions: questionsOf(objects),
       objective: Score.overall(objective) ?? 0,
-      svg: toSvg(objects),
+      svg: toSvgFile(objects),
     };
     return diagram;
   });
