@@ -49,6 +49,16 @@ type Placed = SimulationNodeDatum & {
 const WIDTH = 720;
 const HEIGHT = 520;
 
+/** Group chips shown before the rest fold behind a "more" toggle; past this they swamp the panel. */
+const CHIP_LIMIT = 10;
+
+/** The share of nodes at each edge of the layout that may lie outside the framed area. */
+const OUTLIER_QUANTILE = 0.03;
+
+/** The value below which `share` of the sorted `values` lie. */
+const quantile = (values: readonly number[], share: number): number =>
+  values[Math.min(values.length - 1, Math.max(0, Math.floor(share * (values.length - 1))))] ?? 0;
+
 /** Reads what the snippet published; a malformed payload renders as an empty graph, not a crash. */
 const parse = (content: string): { nodes: InputNode[]; edges: InputEdge[] } => {
   try {
@@ -118,6 +128,7 @@ export const ForceGraph = (props: { content: string }) => {
   const [showAll, setShowAll] = createSignal(false);
   const [collapsed, setCollapsed] = createSignal<ReadonlySet<string>>(new Set());
   const [selected, setSelected] = createSignal<Placed>();
+  const [allChips, setAllChips] = createSignal(false);
 
   const hidden = () => data().nodes.filter((node) => !node.kept).length;
   const groups = createMemo(() => {
@@ -209,6 +220,19 @@ export const ForceGraph = (props: { content: string }) => {
       .force('y', forceY<Placed>((node) => anchor(node.group).y).strength(0.08))
       .stop();
     simulation.tick(300);
+    // A disconnected node the charge flung far out would otherwise set the frame and shrink every
+    // other node to a dot, so the frame comes from the bulk and the stragglers are pulled to its edge.
+    if (list.length > 0) {
+      const xs = list.map((node) => node.x ?? 0).sort((left, right) => left - right);
+      const ys = list.map((node) => node.y ?? 0).sort((left, right) => left - right);
+      const margin = 30;
+      const [left, right] = [quantile(xs, OUTLIER_QUANTILE) - margin, quantile(xs, 1 - OUTLIER_QUANTILE) + margin];
+      const [top, bottom] = [quantile(ys, OUTLIER_QUANTILE) - margin, quantile(ys, 1 - OUTLIER_QUANTILE) + margin];
+      for (const node of list) {
+        node.x = Math.min(right, Math.max(left, node.x ?? 0));
+        node.y = Math.min(bottom, Math.max(top, node.y ?? 0));
+      }
+    }
     return { nodes: list, links };
   });
 
@@ -228,7 +252,7 @@ export const ForceGraph = (props: { content: string }) => {
   return (
     <div class='flex flex-col gap-2 p-2'>
       <div class='flex flex-wrap items-center gap-2 text-xs'>
-        <For each={groups()}>
+        <For each={allChips() ? groups() : groups().slice(0, CHIP_LIMIT)}>
           {([group, count]) => (
             <button
               class='border-separator rounded border px-1.5 py-0.5'
@@ -240,6 +264,11 @@ export const ForceGraph = (props: { content: string }) => {
             </button>
           )}
         </For>
+        <Show when={groups().length > CHIP_LIMIT}>
+          <button class='text-description hover:text-baseText' onClick={() => setAllChips(!allChips())}>
+            {allChips() ? 'fewer groups' : `+${groups().length - CHIP_LIMIT} groups`}
+          </button>
+        </Show>
         <Show when={hidden() > 0}>
           <button class='text-description hover:text-baseText ml-auto' onClick={() => setShowAll(!showAll())}>
             {showAll() ? 'hide low-relevance' : `show ${hidden()} low-relevance`}

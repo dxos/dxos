@@ -3,7 +3,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { For, Show, createResource } from 'solid-js';
+import { For, Show, createResource, createSignal } from 'solid-js';
 
 import { diffHighlightStyles, highlightLines } from '@dxos/ui-editor';
 
@@ -12,7 +12,11 @@ import { diffHighlightStyles, highlightLines } from '@dxos/ui-editor';
  * Lezer highlighter; an unknown language, or a parse that throws, leaves the plain text in place.
  */
 
-const style = () => diffHighlightStyles[document.documentElement.classList.contains('dark') ? 'dark' : 'light'];
+const isDark = () => document.documentElement.classList.contains('dark');
+
+/** The theme as a signal, so an open snippet re-highlights when `@dxos/ui-theme` toggles `html.dark`. */
+const [dark, setDark] = createSignal(isDark());
+new MutationObserver(() => setDark(isDark())).observe(document.documentElement, { attributeFilter: ['class'] });
 
 const mounted = new Set<string>();
 
@@ -31,9 +35,9 @@ const language = (path: string | undefined): string => path?.match(/\.([^./]+)$/
 
 export const Snippet = (props: { code: string; path?: string }) => {
   const [lines] = createResource(
-    () => ({ code: props.code, path: props.path }),
-    async ({ code, path }) => {
-      const highlighter = style();
+    () => ({ code: props.code, path: props.path, theme: dark() ? ('dark' as const) : ('light' as const) }),
+    async ({ code, path, theme }) => {
+      const highlighter = diffHighlightStyles[theme];
       mount(highlighter.module?.getRules() ?? '');
       return highlightLines(code, language(path), undefined, highlighter).catch(() => undefined);
     },
