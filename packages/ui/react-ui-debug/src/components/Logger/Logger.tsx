@@ -471,8 +471,9 @@ const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
           }
         }}
       >
-        {/* `Logger.Content` is the scroll area, so the list joins it rather than nesting a second one. */}
-        <Listbox.Content scroll={false} classNames={mx('dx-density-sm', classNames)}>
+        {/* `Logger.Content` is the scroll area, so the list joins it rather than nesting a second one; its viewport is not a
+            grid, so the list lays out its own column rather than inheriting one. */}
+        <Listbox.Content scroll={false} gutter='none' classNames={mx('dx-density-sm', classNames)}>
           {visible.map(({ id, entry, record }) => {
             const isExpanded = expanded.has(id);
             // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
