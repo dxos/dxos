@@ -5,7 +5,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 
-import { type Scene, UmlGrid } from '@dxos/diagram';
+import { type Scene } from '@dxos/diagram';
 
 import { SceneSvg } from './SceneSvg.tsx';
 
@@ -25,6 +25,7 @@ const STYLE = `
   .stroke-neutral-800 { stroke: #262626; }
   svg { --surface-bg: #ffffff; }
   .text-neutral-400 { color: #a3a3a3; }
+  .text-neutral-500 { color: #737373; }
   .text-sky-500 { color: #0ea5e9; }
   .text-emerald-500 { color: #10b981; }
   .text-amber-500 { color: #f59e0b; }
@@ -34,9 +35,12 @@ const STYLE = `
   .stroke-neutral-500\\/20 { stroke: rgba(115, 115, 115, 0.2); }
 `;
 
-/** A standalone SVG file of a scene: the component's markup plus width/height from its viewBox and the inline styles. */
+/**
+ * A standalone SVG file of a scene: the component's markup, width and height from its viewBox, and the
+ * inline styles. Without the editor's background grid, which on a page is ink that carries no information.
+ */
 export const toSvgFile = (objects: readonly Scene.WorldObject[]): string => {
-  const markup = renderToStaticMarkup(<SceneSvg objects={objects} grid={UmlGrid.GRID} />);
+  const markup = renderToStaticMarkup(<SceneSvg objects={objects} />);
   const viewBox = /viewBox="([^"]+)"/.exec(markup)?.[1].split(' ').map(Number) ?? [0, 0, 0, 0];
   return markup
     .replace('<svg ', `<svg xmlns="http://www.w3.org/2000/svg" width="${viewBox[2]}" height="${viewBox[3]}" `)

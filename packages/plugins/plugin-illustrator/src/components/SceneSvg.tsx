@@ -95,6 +95,8 @@ const COLOR_CLASS: Partial<Record<Scene.Color, string>> = {
 
 const colorClass = (color?: Scene.Color) => (color ? COLOR_CLASS[color] : undefined);
 
+const MUTED_TEXT = 'text-neutral-500 dark:text-neutral-400';
+
 /** A tinted solid fill: a light wash of the shape's color over the surface, so text on it stays legible. */
 const TINT = { fill: 'color-mix(in srgb, currentColor 10%, var(--surface-bg, transparent))' };
 
@@ -304,7 +306,9 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
           x={anchor.x}
           y={anchor.y + LINE_H[textWeight] / 2}
           fontSize={fontSize}
-          className={mx('fill-current', colorClass(element.color))}
+          // Muted text (group titles) is still text to read: grey strokes stay light, grey type meets 4.5:1.
+          fontWeight={element.color === 'grey' ? 500 : undefined}
+          className={mx('fill-current', element.color === 'grey' ? MUTED_TEXT : colorClass(element.color))}
         >
           {lines.map((line, index) => (
             <tspan key={index} x={anchor.x} dy={index === 0 ? 0 : LINE_H[textWeight]}>

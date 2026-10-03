@@ -348,6 +348,18 @@ diagram-rule consistent-notation: The same kind of thing always looks the same
 ```
 
 ```mdl
+diagram-rule minimal-non-data-ink: Nothing is drawn that carries no information
+  category: hierarchy
+  evaluator: vision
+  weight: 2
+  question: Is the drawing free of decoration that carries no information, such as background grids, shadows, heavy borders or gradients, with group frames lighter than the boxes they hold?
+  yes: Every mark carries meaning; frames recede behind the components.
+  no: Background grids, heavy frames or decoration compete with the structure.
+  Non-data ink competes with structure; frames are context, so they should recede.
+  Source: Tufte (data-ink ratio, layering and separation).
+```
+
+```mdl
 diagram-rule tidy-overall: The diagram looks deliberately drawn
   category: hierarchy
   evaluator: vision
