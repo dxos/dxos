@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useLayoutEffect, useState } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
@@ -13,11 +13,22 @@ import { useDeckState } from '#hooks';
 
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 
+/** The surface's suspense placeholder: reports while the dialog's lazily loaded content is still loading. */
+const Pending = ({ onPendingChange }: { onPendingChange: (pending: boolean) => void }) => {
+  useLayoutEffect(() => {
+    onPendingChange(true);
+    return () => onPendingChange(false);
+  }, [onPendingChange]);
+  return <div />;
+};
+
 export const Dialog = () => {
   const { invokePromise } = useOperationInvoker();
   const { state } = useDeckState();
   const { dialogOpen, dialogType, dialogBlockAlign, dialogContent } = state;
   const Root = dialogType === 'alert' ? AlertDialog.Root : UiDialog.Root;
+  // zag's dismiss layer looks for the content once on open, so the Root opens only after a lazily loaded content mounts.
+  const [pending, setPending] = useState(false);
 
   const handleOpenChange = useCallback(
     ({ open }: { open: boolean }) => {
@@ -34,16 +45,15 @@ export const Dialog = () => {
     <Root
       modal={dialogBlockAlign !== 'end'}
       placement={dialogBlockAlign}
-      open={dialogOpen}
+      open={dialogOpen && !pending}
       onOpenChange={handleOpenChange}
     >
-      {/* TODO(burdon): Placeholder creates a suspense boundary; replace with defaults. */}
       <Surface.Surface
         type={AppSurface.Dialog}
         data={dialogContent ?? undefined}
         limit={1}
         fallback={PlankErrorFallback}
-        placeholder={<div />}
+        placeholder={<Pending onPendingChange={setPending} />}
       />
     </Root>
   );
