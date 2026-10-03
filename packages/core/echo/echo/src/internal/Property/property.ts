@@ -7,6 +7,7 @@ import * as Schema from 'effect/Schema';
 
 import { SchemaAST, SchemaEx } from '@dxos/effect';
 import { DXN } from '@dxos/keys';
+import { renderTemplate } from '@dxos/util';
 
 import { createAnnotationHelper } from '../Annotation/util.ts';
 import { type AnyProperties } from '../common/types/index.ts';
@@ -57,8 +58,8 @@ export const PathImplementation = Schema.Struct({
 export interface PathImplementation extends Schema.Schema.Type<typeof PathImplementation> {}
 
 /**
- * One-way (read-only) implementation: a string template whose `{path}` placeholders are field
- * accessors, e.g. `'{first} {last}'`.
+ * One-way (read-only) implementation: a string template whose `{{path}}` placeholders (the trigger
+ * input syntax) are field accessors, e.g. `'{{first}} {{last}}'`; the result is trimmed.
  */
 export const TemplateImplementation = Schema.Struct({
   template: Schema.String,
@@ -174,25 +175,6 @@ const readPath = (object: AnyProperties, path: string): unknown => {
   return jsonPath === undefined ? undefined : SchemaEx.getField(object, jsonPath);
 };
 
-const TEMPLATE_PLACEHOLDER = /\{([^{}]+)\}/g;
-
-// Unset placeholders render empty so `'{first} {last}'` still reads `'Ada'` without a last name.
-const renderTemplate = (object: AnyProperties, template: string): string =>
-  template
-    .replace(TEMPLATE_PLACEHOLDER, (_match, path: string) => {
-      const value = readPath(object, path.trim());
-      switch (typeof value) {
-        case 'string':
-        case 'number':
-        case 'boolean':
-        case 'bigint':
-          return String(value);
-        default:
-          return '';
-      }
-    })
-    .trim();
-
 /**
  * Reads `property` from `object` through the schema's implementation.
  */
@@ -203,7 +185,7 @@ export const getWithSchema = <T>(schema: Schema.Top, property: Property<T>, obje
   }
 
   if (!isPathImplementation(implementation.value)) {
-    return property.normalize(renderTemplate(object, implementation.value.template));
+    return property.normalize(renderTemplate(implementation.value.template, (path) => readPath(object, path)).trim());
   }
 
   for (const path of toPaths(implementation.value.path)) {

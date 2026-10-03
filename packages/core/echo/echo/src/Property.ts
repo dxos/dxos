@@ -21,7 +21,7 @@ export type Property<T> = internal.Property<T>;
 /**
  * How a type implements a property; plain data, stored in (and serialized with) the schema:
  * - `{ path }` — two-way; a field accessor or a priority-ordered chain of them.
- * - `{ template }` — one-way (read-only); `{path}` placeholders, e.g. `'{first} {last}'`.
+ * - `{ template }` — one-way (read-only); `{{path}}` placeholders (the trigger input syntax), e.g. `'{{first}} {{last}}'`.
  */
 export const Implementation = internal.Implementation;
 export type Implementation = internal.Implementation;
@@ -49,7 +49,7 @@ export const isProperty = internal.isProperty;
  * @example
  * ```ts
  * const Person = Schema.Struct({ first: Schema.String, last: Schema.String }).pipe(
- *   Property.implement(Property.Title, { template: '{first} {last}' }),
+ *   Property.implement(Property.Title, { template: '{{first}} {{last}}' }),
  *   Type.makeObject(...),
  * );
  * ```
