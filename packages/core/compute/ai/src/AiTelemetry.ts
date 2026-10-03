@@ -171,7 +171,8 @@ const serializeResponse = (response: ReadonlyArray<Response.AllParts<any>>): unk
  * Work marks bracketing every model call, read by the perf harness (`@dxos/util` `markWork`).
  *
  * `request` is taken when the call starts, before the provider encodes the prompt, so it is the same
- * instant for an HTTP provider and the in-process scripted model; `response` when its output ends.
+ * instant for an HTTP provider and the in-process scripted model; `response` only when its output
+ * ends normally, since a failed or interrupted call has no response for the next turn to follow.
  */
 export const REQUEST_MARKS = { request: 'ai.request', response: 'ai.response' } as const;
 
@@ -204,14 +205,14 @@ export const markRequests = (model: LanguageModel.LanguageModel): LanguageModel.
           Stream.suspend(() => {
             markWork(REQUEST_MARKS.request, requestDetail(args));
             return method.apply(target, args);
-          }).pipe(Stream.ensuring(Effect.sync(() => markWork(REQUEST_MARKS.response, requestDetail(args)))));
+          }).pipe(Stream.onEnd(Effect.sync(() => markWork(REQUEST_MARKS.response, requestDetail(args)))));
       }
       if (EFFECT_METHODS.has(property)) {
         return (...args: unknown[]) =>
           Effect.suspend(() => {
             markWork(REQUEST_MARKS.request, requestDetail(args));
             return method.apply(target, args);
-          }).pipe(Effect.ensuring(Effect.sync(() => markWork(REQUEST_MARKS.response, requestDetail(args)))));
+          }).pipe(Effect.tap(() => Effect.sync(() => markWork(REQUEST_MARKS.response, requestDetail(args)))));
       }
       return method;
     },

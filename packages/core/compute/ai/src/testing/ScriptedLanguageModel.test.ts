@@ -151,6 +151,24 @@ describe('ScriptedLanguageModel', () => {
     ),
   );
 
+  it.effect(
+    'marks no response for a call that fails',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        resetWorkMarks();
+        const failed = yield* LanguageModel.generateText({ prompt: 'one' }).pipe(Effect.exit);
+        const streamed = yield* Stream.runDrain(LanguageModel.streamText({ prompt: 'two' })).pipe(Effect.exit);
+        expect([failed._tag, streamed._tag]).toEqual(['Failure', 'Failure']);
+        expect(getWorkMarks().map(({ name }) => name)).toEqual([
+          AiTelemetry.REQUEST_MARKS.request,
+          AiTelemetry.REQUEST_MARKS.request,
+        ]);
+      },
+      // An empty script fails every call as exhausted.
+      Effect.provide(layer([])),
+    ),
+  );
+
   describe('routed scripts', () => {
     const routedLayer = () =>
       layer([
