@@ -99,11 +99,13 @@ export const isTabbable = (element: HTMLElement): boolean =>
 export const isFocusGroup = (element: Element): boolean =>
   element.hasAttribute(FOCUS_GROUP_ATTR) || element.hasAttribute(FOCUS_MOVER_ATTR);
 
-const search = (parent: Element, backward: boolean): HTMLElement | null => {
-  const children = Array.from(parent.children) as HTMLElement[];
-  if (backward) {
-    children.reverse();
-  }
+/**
+ * Reverse-sibling walk, each subtree's root before its own contents. That is not reverse document
+ * order, so a container that is itself a tab stop wins over the controls inside it — which is what
+ * a limited groupper needs, and why this keeps walking rather than reading a query backwards.
+ */
+const searchBackward = (parent: Element): HTMLElement | null => {
+  const children = (Array.from(parent.children) as HTMLElement[]).reverse();
   for (const child of children) {
     if (isSentinel(child) || isExcluded(child)) {
       continue;
@@ -111,7 +113,7 @@ const search = (parent: Element, backward: boolean): HTMLElement | null => {
     if (isTabbable(child)) {
       return child;
     }
-    const nested = search(child, backward);
+    const nested = searchBackward(child);
     if (nested) {
       return nested;
     }
@@ -120,11 +122,47 @@ const search = (parent: Element, backward: boolean): HTMLElement | null => {
 };
 
 /**
+ * Whether anything from `element` up to (not including) `container` is a subtree the walk skips —
+ * the test a downward walk makes before descending, made on the way up instead.
+ */
+const isUnderSkipped = (element: HTMLElement, container: HTMLElement): boolean => {
+  for (let cursor: HTMLElement | null = element; cursor && cursor !== container; cursor = cursor.parentElement) {
+    if (isSentinel(cursor) || isExcluded(cursor)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
  * First tabbable descendant of `container`, in DOM order. Excludes the container itself.
  * Replaces tabster's `useFocusFinders().findFirstFocusable`.
  */
-export const findFirstFocusable = (container: HTMLElement | null | undefined): HTMLElement | null =>
-  container ? search(container, false) : null;
+export const findFirstFocusable = (container: HTMLElement | null | undefined): HTMLElement | null => {
+  if (!container) {
+    return null;
+  }
+
+  // Descending in JS costs a few DOM calls per element, and a list of a few hundred rows is tens of
+  // thousands of them. Only an element matching the selector can be tabbable, so let the engine find
+  // those: the singular query short-circuits on the first one, which is the answer in the ordinary
+  // case, and the full scan is paid only when it is not.
+  const first = container.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+  if (!first) {
+    return null;
+  }
+  if (isTabbable(first) && !isUnderSkipped(first, container)) {
+    return first;
+  }
+
+  for (const candidate of container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)) {
+    if (isTabbable(candidate) && !isUnderSkipped(candidate, container)) {
+      return candidate;
+    }
+  }
+
+  return null;
+};
 
 /**
  * Marks the element a container wants focus to land on when focus is handed to it as a whole — a
@@ -180,7 +218,7 @@ export const hasInitialFocusTarget = (container: HTMLElement | null | undefined)
 
 /** Last tabbable descendant of `container`, in DOM order. */
 export const findLastFocusable = (container: HTMLElement | null | undefined): HTMLElement | null =>
-  container ? search(container, true) : null;
+  container ? searchBackward(container) : null;
 
 /**
  * Top-level arrow-navigation targets within `container`: tabbable elements and nested group
