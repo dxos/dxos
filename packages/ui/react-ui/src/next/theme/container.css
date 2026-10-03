@@ -54,6 +54,30 @@
     grid-column: full;
     grid-template-columns: subgrid;
   }
+  /*
+   * An inheriting container whose parent is no grid (a plain wrapper between it and the host) has no tracks to
+   * subgrid, and its children would fall into implicit columns; it lays out one column of its own instead. Transparent
+   * parents keep the subgrid: `display: contents` wrappers (a surface, a control's Ark root) and the pass-through
+   * frames (a Listbox root, a ScrollArea root) that subgrid their own host — unless that host is no grid either.
+   */
+  :not(
+      .dx-container,
+      .dx-listbox,
+      .dx-scroll-root,
+      dx-surface,
+      .contents,
+      .dx-control-root,
+      .dx-combobox,
+      .dx-select,
+      .dx-date-field
+    )
+    > .dx-container[data-gutter='inherit']:not([data-columns]),
+  :not(.dx-container, dx-surface, .contents)
+    > :is(.dx-listbox, .dx-scroll-root)
+    > .dx-container[data-gutter='inherit']:not([data-columns]) {
+    grid-column: auto;
+    grid-template-columns: [full-start content-start] minmax(0, 1fr) [content-end full-end];
+  }
   /* Own columns start a fresh template inside the parent's content track (decision 5); no gutters of its own. */
   .dx-container[data-gutter='inherit'][data-columns] {
     grid-column: content;
@@ -67,6 +91,11 @@
   .dx-container > *,
   .dx-container > dx-surface > *,
   .dx-container > dx-surface > dx-surface > * {
+    grid-column: content;
+  }
+  /* The controls' Ark roots are `display: contents` too, so their parts are the grid's items; a picker DateInput nests two. */
+  .dx-container:not([data-layout='row']) > :is(.dx-control-root, .dx-combobox, .dx-select, .dx-date-field) > *,
+  .dx-container:not([data-layout='row']) > .dx-date-field > .dx-date-field > * {
     grid-column: content;
   }
   .dx-container > [data-place='full'] {
