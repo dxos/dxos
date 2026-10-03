@@ -22,7 +22,11 @@ edge checkout on a branch that includes the compute-service Discord bot.
 4. **OAuth2 → URL Generator**: scope `bot`; permissions View Channels, Send Messages, Send Messages
    in Threads, Create Public Threads, Read Message History. Open the generated URL and add the bot to
    your test server.
-5. In Discord, **Settings → Advanced → Developer Mode** on; right-click the test channel →
+5. Or skip the generator and open
+   `https://discord.com/oauth2/authorize?client_id=<APPLICATION_ID>&scope=bot&permissions=309237713920`
+   (the same five permissions). Confirm under **Server Settings → Integrations → Bots and Apps**; the
+   bot shows offline in the member list until EDGE connects it.
+6. In Discord, **Settings → Advanced → Developer Mode** on; right-click the test channel →
    **Copy Channel ID**.
 
 ## 2. Build dxos and link it into edge
@@ -55,28 +59,23 @@ operations, `agent-runtime`, `assistant`); Composer-only changes need no re-link
 
 ## 3. Start EDGE
 
-From `<edge>`:
+Secrets reach the workers the same way as every other edge secret: each worker's `secrets.jsonc`
+holds `op://` references, and `pnpm dev:env` resolves them with `op inject` and writes the `.env`
+files. It needs the 1Password desktop app with CLI integration on (Settings → Developer); it prompts
+for approval, so no `op signin` is needed.
 
-1. Sign in to 1Password, so the AI key and the other worker secrets can be written:
+1. Store the bot token in 1Password at the item compute-service's `secrets.jsonc` references for
+   `DISCORD_BOT_TOKEN_DEV` (field `credential`). In a dev environment it overrides the token stored in
+   the space, so you can test without managing tokens in Composer.
 
-   ```bash
-   op signin
-   ```
-
-2. Write the `.env` files:
+2. From the root of `<edge>` (the script is defined in the root `package.json`), write the `.env`
+   files:
 
    ```bash
    pnpm dev:env
    ```
 
-3. Add the bot token to `packages/services/compute-service/.env` (gitignored). In a dev environment it
-   overrides the token stored in the space, so you can test without managing tokens in Composer:
-
-   ```
-   DISCORD_BOT_TOKEN_DEV=<token>
-   ```
-
-4. Start (or restart) the stack. EDGE listens on `:8787`:
+3. Start (or restart) the stack, also from the root of `<edge>`. EDGE listens on `:8787`:
 
    ```bash
    node scripts/stack.mjs start
