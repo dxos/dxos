@@ -42,19 +42,19 @@ const INTERVIEW_SKILL_KEY = 'org.dxos.skill.interview';
 const PERSON_NAME = 'Rich Burdon';
 
 const GOALS = {
-  demo: 'Interlocutor demo working end to end',
+  demo: 'Autonomous agent demo working end to end',
   hiring: 'Hire two engineers',
 } as const;
 
 const MEMORIES = {
-  demo: 'Rich wants the interlocutor demo working end to end by the end of October.',
+  demo: 'Rich wants the autonomous agent demo working end to end by the end of October.',
   hiring: 'Rich wants to hire two engineers this quarter.',
-  blocker: 'The Discord bot on EDGE is blocking the interlocutor demo.',
+  blocker: 'The Discord bot on EDGE is blocking the autonomous agent demo.',
 } as const;
 
 const PROMPTS = [
   'Hi, I am Rich.',
-  'I want the interlocutor demo working end to end by the end of October, and to hire two engineers this quarter.',
+  'I want the autonomous agent demo working end to end by the end of October, and to hire two engineers this quarter.',
   'The blocker is the Discord bot on EDGE.',
   'Yes, both are right.',
 ] as const;
@@ -262,7 +262,7 @@ const waitForSpace = async (
 };
 
 /**
- * An interlocutor agent with the interview skill, driven by a scripted model, beside the
+ * An autonomous agent with the interview skill, driven by a scripted model, beside the
  * interviewee's profile panel and the agent's state (mode, counts, recent memories, knowledge graph).
  *
  * Test:

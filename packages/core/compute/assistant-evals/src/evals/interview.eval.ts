@@ -461,7 +461,7 @@ const personaOf = (input: Input): Persona => {
 const task = createEvalRunner({
   model: Model.deepseekV4Pro.id,
   instructions: trim`
-    You are an interlocutor agent talking with a person in a Discord thread.
+    You are an autonomous agent talking with a person in a Discord thread.
     Interview them using the Interview skill.
     Their Discord user id is {{discordId}} (handle label "discord") and their display name is {{displayName}}.
   `,

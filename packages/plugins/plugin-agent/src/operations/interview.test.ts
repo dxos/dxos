@@ -100,7 +100,7 @@ describe('Interview', () => {
 
         // Goals are proposed, then one is confirmed.
         const { goal: launch } = yield* Operation.invoke(MemoryOperation.ProposeGoal, {
-          title: 'Launch interlocutor agents',
+          title: 'Launch autonomous agents',
           description: 'Agents that interview people and remember what they learn.',
           horizon: 'quarter',
           owners: [first.entity],
@@ -131,7 +131,7 @@ describe('Interview', () => {
         ]);
         expect(recalled.goals.map(({ title, status }) => ({ title, status }))).toEqual(
           expect.arrayContaining([
-            { title: 'Launch interlocutor agents', status: 'confirmed' },
+            { title: 'Launch autonomous agents', status: 'confirmed' },
             { title: 'Hire two engineers', status: 'proposed' },
           ]),
         );
@@ -166,7 +166,7 @@ describe('Interview', () => {
 
         const text = yield* Database.load(document.content);
         expect(text.content).toContain('# Rich Burdon');
-        expect(text.content).toContain('Launch interlocutor agents');
+        expect(text.content).toContain('Launch autonomous agents');
         expect(text.content).toContain('Rich prefers daily standups over written updates.');
         expect(text.content).not.toContain('Rich prefers weekly written updates.');
       },

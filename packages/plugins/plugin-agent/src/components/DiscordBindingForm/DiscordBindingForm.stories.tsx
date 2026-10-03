@@ -45,7 +45,7 @@ const meta = {
       types: [AccessToken.AccessToken],
       onCreateSpace: async ({ space }) => {
         space.db.add(
-          Obj.make(AccessToken.AccessToken, { source: 'discord.com', account: 'interlocutor-bot', token: 'test' }),
+          Obj.make(AccessToken.AccessToken, { source: 'discord.com', account: 'autonomous-bot', token: 'test' }),
         );
       },
     }),

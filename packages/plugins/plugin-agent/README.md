@@ -1,6 +1,6 @@
 # @dxos/plugin-agent
 
-Manages autonomous "interlocutor" agents in a space: assistant `Agent` objects that talk to people
+Manages autonomous agents in a space: assistant `Agent` objects that talk to people
 from Discord threads and Composer chats.
 
 - `DiscordBinding` binds an agent to a Discord bot (access token, application id, guild, channels).

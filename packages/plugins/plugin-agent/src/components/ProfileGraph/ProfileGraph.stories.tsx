@@ -11,7 +11,7 @@ import { translations } from '#translations';
 import { type ProfileGoal, ProfileGraph, type ProfileMemory } from './ProfileGraph.tsx';
 
 const goals: ProfileGoal[] = [
-  { id: 'goal-1', title: 'Launch interlocutor agents', horizon: 'quarter', status: 'confirmed' },
+  { id: 'goal-1', title: 'Launch autonomous agents', horizon: 'quarter', status: 'confirmed' },
   { id: 'goal-2', title: 'Hire two engineers', horizon: 'year', status: 'proposed' },
   { id: 'goal-3', title: 'Ship the Composer beta', horizon: 'now', status: 'achieved' },
 ];

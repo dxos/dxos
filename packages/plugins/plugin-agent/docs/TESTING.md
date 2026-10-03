@@ -112,4 +112,4 @@ turns before confirming goals.
 Plugin skills are compiled in. Space-authored overrides — an editable copy of a skill's
 instructions owned by the agent, which its chats use instead of the compiled one — let you change
 the agent's behaviour in Composer and try it in Discord without a rebuild; copy what works back into
-the source and the eval. (In progress; see the Interlocutor project.)
+the source and the eval.

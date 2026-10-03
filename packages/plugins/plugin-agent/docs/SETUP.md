@@ -1,6 +1,6 @@
 # Interlocutor — end-to-end setup (Discord ↔ EDGE ↔ Composer)
 
-How to run an interlocutor agent locally and talk to it from a Discord server and from Composer.
+How to run an autonomous agent locally and talk to it from a Discord server and from Composer.
 Architecture: [DESIGN.md](./DESIGN.md). The EDGE half lives in the `dxos/edge` repo
 (`packages/services/compute-service/src/discord/`, whose README covers the bot routes in detail).
 

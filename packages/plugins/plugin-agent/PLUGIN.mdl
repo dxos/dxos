@@ -4,7 +4,7 @@ name: AgentPlugin
 version: 0.1.0
 ---
 
-Manages autonomous **interlocutor** agents in a space: assistant `Agent` objects that converse with
+Manages autonomous agents in a space: assistant `Agent` objects that converse with
 people from Discord threads and Composer chats, interview them, and keep what they learn as ECHO
 objects — `Memory` claims and `Goal`s linked to the `Person` or `Organization` they are about.
 
@@ -138,7 +138,7 @@ Agent operations (`AgentOperationHandlerSet`, every host including workerd).
 ```mdl
 op createAgent
   key: org.dxos.operation.agent.create
-  desc: Creates an interlocutor agent with its instructions, first chat and context bindings.
+  desc: Creates an autonomous agent with its instructions, first chat and context bindings.
   input:
     name: string
     instructions?: string           # markdown; default ''
@@ -333,7 +333,7 @@ op getDiscordBotStatus
 ```mdl
 skill ConversationSkill
   key: org.dxos.skill.agentConversation
-  desc: Bound to every interlocutor agent's first chat; the conversational role.
+  desc: Bound to every autonomous agent's first chat; the conversational role.
   contributes:
     - op:createAgent
     - op:ensureThreadChat
@@ -522,7 +522,7 @@ surface OrganizationProfileGraph
 ```mdl
 feat F-1: Agents
 
-  req F-1.1: The space's AI group lists every Agent in an Agents section; + creates an interlocutor agent.
+  req F-1.1: The space's AI group lists every Agent in an Agents section; + creates an autonomous agent.
   req F-1.2:
     when: op:createAgent runs
     then: an Agent exists with Instructions holding the Interview skill and a first chat bound to the Agent conversation skill
@@ -685,7 +685,7 @@ Executable tests. Each step carries a human instruction (`do`) and, where the st
 invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-test QA-1: Create an interlocutor agent, bind it to Discord, start the bot
+test QA-1: Create an autonomous agent, bind it to Discord, start the bot
   desc: |
     The primary journey: an agent from the Agents section, its Discord binding, and the bot control
     round-trip to EDGE. Run against a local EDGE with a deliberately invalid bot token, so the gateway

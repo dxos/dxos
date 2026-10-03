@@ -52,7 +52,7 @@ export const Properties = Schema.Struct({
 export type Properties = Schema.Schema.Type<typeof Properties>;
 
 /**
- * Binds an interlocutor agent to a Discord bot: the EDGE gateway connects with the token and routes
+ * Binds an autonomous agent to a Discord bot: the EDGE gateway connects with the token and routes
  * messages from the listed channels' threads to the agent.
  */
 export class DiscordBinding extends Type.makeObject<DiscordBinding>(

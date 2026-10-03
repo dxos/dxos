@@ -16,7 +16,7 @@ import { Goal, Memory, Profile } from '#types';
 
 export type ProfilePropertiesProps = AppSurface.ObjectPropertiesProps<Person.Person | Organization.Organization>;
 
-/** The goals and active memories interlocutor agents hold about a person or organization. */
+/** The goals and active memories autonomous agents hold about a person or organization. */
 export const ProfileProperties = ({ subject }: ProfilePropertiesProps) => {
   const db = Obj.getDatabase(subject);
   const subjectQuery = useMemo(() => Query.select(Filter.id(subject.id)).targetOf(HasSubject.HasSubject), [subject.id]);
