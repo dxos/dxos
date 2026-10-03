@@ -1342,7 +1342,11 @@ export const TestEdit: Story = {
     if (!descriptionLine) {
       throw new Error('Description editor line not found.');
     }
-    await expect(left(descriptionLine)).toEqual(left(title()));
+    // The title is a standard (padded) Input, so its text starts at its padding edge, not its box's.
+    const titleText = Math.round(
+      title().getBoundingClientRect().left + parseFloat(getComputedStyle(title()).paddingLeft),
+    );
+    await expect(left(descriptionLine)).toEqual(titleText);
 
     // Tab moves from the title into the description's TEXT. The editor otherwise puts its tab stop
     // on a wrapper that needs a further Enter to get into, so the caret was two keys away.

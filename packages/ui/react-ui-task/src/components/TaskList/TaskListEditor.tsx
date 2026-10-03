@@ -17,6 +17,7 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import {
   Button,
+  ControlFrame,
   Field,
   Icon,
   Input,
@@ -393,12 +394,11 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
 
         <Field.Root>
           <Input
-            variant='subdued'
             // An input clips its overflow rather than wrapping it, so a long title ends mid-word
             // against the trailing controls with nothing to say it continues; the ellipsis says so.
             // (Shown while the field is not focused, which is how a pane holds it open.)
             classNames={mx(
-              'px-0 text-ellipsis',
+              'text-ellipsis',
               grid ? 'col-start-[title] -col-end-2' : showControls ? 'col-start-2' : 'col-start-1',
             )}
             data-testid='taskList.edit.title'
@@ -413,14 +413,16 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
         </Field.Root>
 
         {hasDescription && (
-          <div
+          // A control frame, as the title's Input is: the well, and the focus ring while the editor has focus.
+          <ControlFrame
+            rows={2}
             data-testid='taskList.edit.description'
             // Placed explicitly, never by flow: the toolbar is absent until something is typed, so a
             // description left to auto-place would take the cell it vacates and fall into the icon
             // column — a field one word wide. It runs to the row's end: the toolbar sits on the
             // title line only.
-            className={mx(
-              'flex min-w-0 row-start-2 -col-end-1',
+            classNames={mx(
+              'min-w-0 row-start-2 -col-end-1',
               grid ? 'col-start-[title]' : showControls ? 'col-start-2' : 'col-start-1',
             )}
           >
@@ -452,7 +454,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                 }
               }}
             />
-          </div>
+          </ControlFrame>
         )}
 
         {takesFiles &&
