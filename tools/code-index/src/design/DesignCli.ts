@@ -68,7 +68,7 @@ export const command = Command.make(
     ),
     budget: Flag.Int('budget').pipe(Flag.withDefault(30), Flag.withDescription('Nodes the pruned graph keeps.')),
     threshold: Flag.Finite('threshold').pipe(
-      Flag.withDefault(0.5),
+      Flag.withDefault(0.3),
       Flag.withDescription('Relevance a node needs to survive.'),
     ),
     maxNodes: Flag.Int('max-nodes').pipe(

@@ -21,6 +21,9 @@ export const MAX_NODES = 14;
 
 export const MAX_GROUPS = 3;
 
+/** The fewest boxes a diagram is topped up to when zoom kept fewer. */
+export const MIN_NODES = 6;
+
 /** The SVG draws a label on one line in a fixed-width box; past this it spills over both edges. */
 export const MAX_LABEL = 17;
 
@@ -128,8 +131,22 @@ export const variants = (chosen: Graph.Grouping): Variant[] => {
 
 /** One diagram variant from a scored graph. */
 export const build = (scored: Graph.Scored, variant: Variant): Diagram => {
-  const kept = scored.nodes.filter((node) => node.kept).sort((left, right) => right.score - left.score);
-  const edges = Zoom.keptEdges(scored);
+  // The kept set, topped up from the best of the rest: a strict threshold can keep so few nodes that,
+  // once boxes without arrows are dropped, nothing is left to draw — and judges score an empty page well.
+  const ranked = [...scored.nodes].sort(
+    (left, right) => Number(right.kept) - Number(left.kept) || right.score - left.score,
+  );
+  const keptCount = ranked.filter((node) => node.kept).length;
+  const kept = ranked.slice(0, Math.max(keptCount, Math.min(MIN_NODES, variant.nodes, ranked.length)));
+  const pool = new Set(kept.map((node) => node.iri));
+  const edges = Graph.dedupe(
+    scored.edges.filter(
+      (edge) =>
+        pool.has(edge.from) &&
+        pool.has(edge.to) &&
+        (edge.kind === Graph.RELAY || (scored.relations[edge.kind] ?? 0) >= 0.5),
+    ),
+  );
 
   // A second cut, with the same relay rule: a kept node that does not make the diagram still
   // carries the arrows that ran through it.

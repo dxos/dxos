@@ -282,7 +282,7 @@ export const DesignTool = Tool.make('design', {
   parameters: Schema.Struct({
     prompt: Schema.String.annotate({ description: 'The design question, in prose.' }),
     budget: Schema.optional(Schema.Number.annotate({ description: 'Files to keep (default 30).' })),
-    threshold: Schema.optional(Schema.Number.annotate({ description: 'Relevance a file needs, 0–1 (default 0.5).' })),
+    threshold: Schema.optional(Schema.Number.annotate({ description: 'Relevance a file needs, 0–1 (default 0.3).' })),
   }),
   success: Schema.Struct({
     scorer: Schema.String,

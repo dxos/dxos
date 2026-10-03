@@ -207,7 +207,7 @@ const program = Effect.gen(function* () {
         scorer,
         model: SystemOne.MODEL.id.toString(),
         cache,
-        threshold: 0.5,
+        threshold: 0.3,
         budget: 30,
       });
       if (scorer === 'system-one') {

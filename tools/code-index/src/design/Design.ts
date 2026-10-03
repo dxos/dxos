@@ -152,7 +152,7 @@ const scoreFor = (
   store: Store.Api,
   cache: Cache.Api,
   scorer: Zoom.Scorer,
-  { prompt, budget = 30, threshold = 0.5 }: { prompt: string; budget?: number; threshold?: number },
+  { prompt, budget = 30, threshold = 0.3 }: { prompt: string; budget?: number; threshold?: number },
 ): Effect.Effect<Graph.Scored, Store.StoreError, DecisionModel.DecisionModel> =>
   Effect.gen(function* () {
     const candidates = yield* Explore.bfs({ prompt })(store);

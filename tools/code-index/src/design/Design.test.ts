@@ -204,12 +204,29 @@ describe('Compact', () => {
         budget: 10,
       }).pipe(Effect.provide(scripted)),
     );
-    const diagram = Compact.build(scored, { name: 'test', grouping: 'package', nodes: 14, edges: 'all' });
+    const diagram = Compact.build(scored, { name: 'test', grouping: 'package', nodes: 3, edges: 'all' });
     expect(diagram.groups).toEqual([{ id: 'g0', label: '@dxos/agent' }]);
     expect(diagram.mermaid).toContain('AgentLayer -->|provides| AgentService');
     expect(diagram.mermaid).toContain('AgentLayer --> Model');
     expect(diagram.mermaid).toContain('%% ref Model packages/model/src/Model.ts');
     expect(diagram.nodes).toHaveLength(3);
+  });
+
+  test('a threshold that keeps nothing still draws the best-scoring nodes', async () => {
+    const { scored } = await EffectEx.runPromise(
+      Zoom.zoom({
+        prompt: candidates.prompt,
+        candidates,
+        scorer: 'system-one',
+        model: 'test',
+        cache: Cache.memory(),
+        threshold: 0.99,
+        budget: 10,
+      }).pipe(Effect.provide(scripted)),
+    );
+    expect(scored.nodes.filter((node) => node.kept)).toHaveLength(0);
+    const diagram = Compact.build(scored, { name: 'test', grouping: 'package', nodes: 14, edges: 'all' });
+    expect(diagram.nodes.map((node) => node.label)).toContain('AgentService');
   });
 
   test('labels fit one line', () => {
