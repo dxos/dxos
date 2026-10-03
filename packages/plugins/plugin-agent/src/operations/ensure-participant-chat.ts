@@ -41,20 +41,21 @@ const handler: Operation.WithHandler<typeof AgentOperation.EnsureParticipantChat
         const bindings = yield* loadAgentBindings(agent);
         const skills = yield* Effect.forEach(BASE_SKILL_KEYS, (key) => skillRef(agent, key));
 
+        const primary = yield* Agent.loadChat(agent);
         const feed = yield* Database.add(Feed.make());
-        const chat = yield* Database.add(
-          Chat.make({
-            [Obj.Meta]: { keys: [key] },
-            [Obj.Parent]: agent,
-            name: person.preferredName ?? person.fullName,
-            feed: Ref.make(feed),
-            instructions: agent.instructions,
-          }),
-        );
+        const draft = Chat.make({
+          [Obj.Meta]: { keys: [key] },
+          [Obj.Parent]: agent,
+          name: person.preferredName ?? person.fullName,
+          feed: Ref.make(feed),
+          instructions: agent.instructions,
+        });
         // Runs on the same model as the agent's own conversation.
-        Chat.seedSession(chat, (yield* Agent.loadChat(agent))?.session);
-        ChatParticipant.set(chat, person);
-        Mode.setCurrent(chat, Mode.DEFAULT);
+        Chat.seedSession(draft, primary?.session);
+        // Annotated before it is added: queries re-emit on membership only, so a reader would never see later annotations.
+        ChatParticipant.set(draft, person);
+        Mode.setCurrent(draft, Mode.DEFAULT);
+        const chat = yield* Database.add(draft);
 
         const runtime = yield* Effect.context<Database.Service>();
         const AiContext = yield* Effect.promise(aiContextRuntime);
