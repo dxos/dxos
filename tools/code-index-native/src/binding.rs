@@ -6,8 +6,10 @@
 //! which keeps the binding free of per-term object allocation on either side.
 
 use std::str::FromStr;
+use std::sync::Arc;
 
-use napi::{Error, Result};
+use napi::bindgen_prelude::AsyncTask;
+use napi::{Env, Error, Result, Task};
 use napi_derive::napi;
 use oxigraph::model::{GraphName, NamedNode, NamedOrBlankNode, Term};
 
@@ -31,6 +33,14 @@ pub struct Stratum {
 }
 
 #[napi(object)]
+pub struct DocumentWrite {
+    pub graph: String,
+    pub drop: Vec<String>,
+    /// N-Triples; every triple lands in `graph`.
+    pub triples: String,
+}
+
+#[napi(object)]
 pub struct Outcome {
     pub graph: String,
     pub derived: u32,
@@ -50,7 +60,27 @@ pub struct QueryResult {
 #[napi]
 pub struct NativeStore {
     /// `None` once closed; RocksDB's directory lock is released when the store drops.
-    store: Option<store::NativeStore>,
+    store: Option<Arc<store::NativeStore>>,
+}
+
+/// A batch's graph swap on a libuv thread, so the event loop keeps handing parsed batches out while
+/// RocksDB writes.
+pub struct PutDocuments {
+    store: Arc<store::NativeStore>,
+    writes: Vec<store::DocumentWrite>,
+}
+
+impl Task for PutDocuments {
+    type Output = usize;
+    type JsValue = u32;
+
+    fn compute(&mut self) -> Result<usize> {
+        self.store.put_documents(&self.writes).map_err(error)
+    }
+
+    fn resolve(&mut self, _env: Env, output: usize) -> Result<u32> {
+        Ok(count(output))
+    }
 }
 
 fn count(value: usize) -> u32 {
@@ -63,11 +93,11 @@ impl NativeStore {
     #[napi(factory)]
     pub fn open(dir: String) -> Result<Self> {
         Ok(Self {
-            store: Some(store::NativeStore::open(dir).map_err(error)?),
+            store: Some(Arc::new(store::NativeStore::open(dir).map_err(error)?)),
         })
     }
 
-    fn inner(&self) -> Result<&store::NativeStore> {
+    fn inner(&self) -> Result<&Arc<store::NativeStore>> {
         self.store
             .as_ref()
             .ok_or_else(|| Error::from_reason("the native store is closed"))
@@ -79,12 +109,21 @@ impl NativeStore {
         self.store = None;
     }
 
-    #[napi]
-    pub fn put_document(&self, graph: String, drop: Vec<String>, json_ld: String) -> Result<u32> {
-        self.inner()?
-            .put_document(&graph, &drop, &json_ld)
-            .map(count)
-            .map_err(error)
+    /// Resolves once the batch is written; a write in flight keeps the store open until it finishes.
+    #[napi(ts_return_type = "Promise<number>")]
+    pub fn put_documents(&self, writes: Vec<DocumentWrite>) -> Result<AsyncTask<PutDocuments>> {
+        let writes: Vec<store::DocumentWrite> = writes
+            .into_iter()
+            .map(|write| store::DocumentWrite {
+                graph: write.graph,
+                drop: write.drop,
+                triples: write.triples,
+            })
+            .collect();
+        Ok(AsyncTask::new(PutDocuments {
+            store: Arc::clone(self.inner()?),
+            writes,
+        }))
     }
 
     #[napi]

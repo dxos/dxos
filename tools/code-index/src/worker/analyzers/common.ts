@@ -45,6 +45,8 @@ const LANGUAGES: Record<string, string> = {
 
 export const language = (path: string): string => LANGUAGES[extname(path)] ?? 'other';
 
+const TEST_FILE = /\.(test|spec)\.[cm]?[jt]sx?$/;
+
 /** The bare `File` node: what a file is before any analyzer has looked inside it. */
 export const fileNode = (context: AnalyzeContext): Ontology.FileDocument => {
   const packageName = context.packageOf(context.path);
@@ -58,6 +60,7 @@ export const fileNode = (context: AnalyzeContext): Ontology.FileDocument => {
     'mtime': context.mtime,
     'hash': createHash('sha256').update(context.source).digest('hex'),
     ...(packageName ? { inPackage: Ontology.packageIri(packageName).value } : {}),
+    ...(TEST_FILE.test(context.path) ? { testFile: true } : {}),
     'imports': [],
     'importsType': [],
     'importsModule': [],

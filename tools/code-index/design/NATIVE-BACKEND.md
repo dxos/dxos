@@ -175,7 +175,8 @@ per selected glob, each reading every `deus:path`) would otherwise repeat it.
   `internal/quadstore.ts` (the previous code, moved) and `internal/native.ts`. LDkit gets a custom
   `IQueryEngine` that forwards SPARQL to oxigraph, so lenses and the sandbox's
   `rdf.query` keep working.
-- `putDocument` passes the JSON-LD text through; oxigraph parses it natively.
+- `putDocuments` passes the workers' N-Triples through; oxigraph bulk-loads a commit's quads off
+  the event loop, then removes the stale ones in one transaction.
 
 ## Volume (the sibling TypeScript-type-facts workstream)
 

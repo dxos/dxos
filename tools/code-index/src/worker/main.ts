@@ -12,7 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
-import type * as Ontology from '../Ontology.ts';
+import { encodeDocument } from '../internal/ntriples.ts';
 import { type PackageOf, type Resolve, analyze, createResolver } from './analyze.ts';
 import * as Protocol from './Protocol.ts';
 
@@ -63,8 +63,10 @@ const handlers = Protocol.Rpcs.toLayer({
   AnalyzeBatch: ({ root, files }) =>
     Effect.promise(async () => {
       const { resolve, packageOf } = stateFor(root);
-      const analyzed: Array<{ path: string; mtime: number; document: Ontology.FileDocument }> = [];
-      const skipped: Array<{ path: string; reason: string }> = [];
+      const analyzed: Protocol.AnalyzedFile[] = [];
+      const skipped: Protocol.SkippedFile[] = [];
+      let analyzeMs = 0;
+      let encodeMs = 0;
       for (const file of files) {
         try {
           const absolute = join(root, file.path);
@@ -77,16 +79,17 @@ const handlers = Protocol.Rpcs.toLayer({
           // The mtime travels back with the document: the main thread commits what was actually
           // read, so a file written mid-crawl is reindexed rather than recorded as up to date.
           const mtime = Math.floor(stats.mtimeMs);
-          analyzed.push({
-            path: file.path,
-            mtime,
-            document: analyze({ root, path: file.path, source, mtime, resolve, packageOf }),
-          });
+          const analyzing = performance.now();
+          const document = analyze({ root, path: file.path, source, mtime, resolve, packageOf });
+          const encoding = performance.now();
+          analyzed.push(encodeDocument(document));
+          analyzeMs += encoding - analyzing;
+          encodeMs += performance.now() - encoding;
         } catch (error) {
           skipped.push({ path: file.path, reason: error instanceof Error ? error.message : String(error) });
         }
       }
-      return { analyzed, skipped };
+      return { analyzed, skipped, analyzeMs, encodeMs };
     }),
 });
 

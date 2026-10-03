@@ -9,7 +9,7 @@ use std::path::Path;
 use std::sync::Mutex;
 use std::time::Instant;
 
-use oxigraph::io::{JsonLdProfileSet, RdfFormat, RdfParser, RdfSerializer};
+use oxigraph::io::{RdfFormat, RdfParser, RdfSerializer};
 use oxigraph::model::{
     GraphName, GraphNameRef, Literal, NamedNode, NamedNodeRef, NamedOrBlankNode, Quad, QuadRef,
     Term, Triple,
@@ -109,6 +109,14 @@ struct JournalState {
 pub struct Stratum {
     pub graph: String,
     pub rules: String,
+}
+
+/// One file's graph swap: `drop` is cleared and `triples` (N-Triples) land in `graph`.
+#[derive(Debug, Clone)]
+pub struct DocumentWrite {
+    pub graph: String,
+    pub drop: Vec<String>,
+    pub triples: String,
 }
 
 #[derive(Debug, Clone)]
@@ -342,11 +350,16 @@ impl NativeStore {
         Ok(quads)
     }
 
-    /// Replaces the contents of `drop` (any number of base graphs) with `quads` in one transaction.
-    /// Before it commits, every triple whose presence in the base it changes is journalled with its
-    /// presence beforehand — unless the journal already has it, since the oldest entry is the one
-    /// that describes the state the derived graphs were computed from. A journal entry for a swap
-    /// that never commits is harmless: reasoning compares it with the triple's actual presence.
+    /// Replaces the contents of `drop` (any number of base graphs) with `quads`. Before anything is
+    /// written, every triple whose presence in the base it changes is journalled with its presence
+    /// beforehand — unless the journal already has it, since the oldest entry is the one that
+    /// describes the state the derived graphs were computed from. A journal entry for a swap that
+    /// never completes is harmless: reasoning compares it with the triple's actual presence.
+    ///
+    /// The new quads go in through the bulk loader, an order of magnitude faster than a transaction,
+    /// and only then are the stale ones removed, in one transaction: a reader may see both revisions
+    /// for a moment, never neither. Atomicity is the ledger's job (`pending_graph`): a swap cut
+    /// short leaves graphs that `reconcile` drops.
     fn swap(&self, drop: &[GraphName], quads: Vec<Quad>) -> Result<()> {
         let mut journal = self
             .journal
@@ -404,45 +417,24 @@ impl NativeStore {
             transaction.commit()?;
             journal.entries += written;
         }
-        let mut transaction = self.store.start_transaction()?;
-        for quad in &old {
-            transaction.remove(quad);
+        if !quads.is_empty() {
+            let mut loader = self.store.bulk_loader().with_num_threads(1);
+            loader.load_quads(quads.iter().cloned())?;
+            loader.commit()?;
         }
-        for quad in &quads {
-            transaction.insert(quad);
+        let kept: FxHashSet<&Quad> = quads.iter().collect();
+        let stale: Vec<&Quad> = old.iter().filter(|quad| !kept.contains(quad)).collect();
+        if !stale.is_empty() {
+            let mut transaction = self.store.start_transaction()?;
+            for quad in stale {
+                transaction.remove(quad);
+            }
+            transaction.commit()?;
         }
-        transaction.commit()?;
         Ok(())
     }
 
-    /// Replaces `drop` with the document's quads, homed in `graph`.
-    pub fn put_document(&self, graph: &str, drop: &[String], json_ld: &str) -> Result<usize> {
-        let graph = NamedNode::new(graph).map_err(|error| Error(error.to_string()))?;
-        let mut quads = Vec::new();
-        for quad in RdfParser::from_format(RdfFormat::JsonLd {
-            profile: JsonLdProfileSet::empty(),
-        })
-        .for_slice(json_ld)
-        {
-            let quad = quad?;
-            quads.push(Quad::new(
-                quad.subject,
-                quad.predicate,
-                quad.object,
-                graph.clone(),
-            ));
-        }
-        let count = quads.len();
-        let mut graphs: Vec<GraphName> = drop
-            .iter()
-            .map(|name| NamedNode::new_unchecked(name.as_str()).into())
-            .collect();
-        graphs.push(graph.into());
-        self.swap(&graphs, quads)?;
-        Ok(count)
-    }
-
-    /// `put_document` for quads already in N-Quads form (their graph is replaced by `graph`).
+    /// Replaces `drop` with quads in N-Quads form, homed in `graph` (their own graph is ignored).
     pub fn put_document_nquads(&self, graph: &str, drop: &[String], nquads: &str) -> Result<usize> {
         let graph = NamedNode::new(graph).map_err(|error| Error(error.to_string()))?;
         let quads: Vec<Quad> = Self::parse_nquads(nquads)?
@@ -455,6 +447,41 @@ impl NativeStore {
             .map(|name| NamedNode::new_unchecked(name.as_str()).into())
             .collect();
         graphs.push(graph.into());
+        self.swap(&graphs, quads)?;
+        Ok(count)
+    }
+
+    /// Several documents' swaps as one write: the bulk loader's cost per quad falls with the size
+    /// of the load, so the indexer hands over hundreds of files at a time.
+    pub fn put_documents(&self, writes: &[DocumentWrite]) -> Result<usize> {
+        let mut graphs: Vec<GraphName> = Vec::new();
+        let mut quads = Vec::new();
+        for write in writes {
+            let graph =
+                NamedNode::new(write.graph.as_str()).map_err(|error| Error(error.to_string()))?;
+            // Lenient: the indexer minted and escaped these terms (`internal/iri.ts`), and validating
+            // every IRI again would cost the commit time for nothing.
+            for quad in RdfParser::from_format(RdfFormat::NTriples)
+                .lenient()
+                .for_slice(&write.triples)
+            {
+                let quad = quad?;
+                quads.push(Quad::new(
+                    quad.subject,
+                    quad.predicate,
+                    quad.object,
+                    graph.clone(),
+                ));
+            }
+            graphs.extend(
+                write
+                    .drop
+                    .iter()
+                    .map(|name| GraphName::from(NamedNode::new_unchecked(name.as_str()))),
+            );
+            graphs.push(graph.into());
+        }
+        let count = quads.len();
         self.swap(&graphs, quads)?;
         Ok(count)
     }

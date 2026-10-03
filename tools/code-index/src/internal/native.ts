@@ -38,7 +38,7 @@ type Outcome = {
 
 /** The addon's surface, as `src/binding.rs` declares it. */
 interface NativeStore {
-  putDocument(graph: string, drop: string[], jsonLd: string): number;
+  putDocuments(writes: { graph: string; drop: string[]; triples: string }[]): Promise<number>;
   dropGraphs(graphs: string[]): void;
   insertQuads(nquads: string): void;
   removeQuads(nquads: string): void;
@@ -267,10 +267,13 @@ export const make = <E>(
     };
 
     const graph: Graph<E> = {
-      swap: (clear, target, document: Ontology.FileDocument) =>
-        attempt('Failed to write document', () => {
-          native.putDocument(target.value, [...clear], JSON.stringify(document));
-        }),
+      // Off the event loop: parsing of the next batches carries on while RocksDB writes this one.
+      swap: (writes) =>
+        Effect.tryPromise({
+          try: () =>
+            native.putDocuments(writes.map(({ clear, graph, triples }) => ({ graph, drop: [...clear], triples }))),
+          catch: fail('Failed to write documents'),
+        }).pipe(Effect.asVoid),
 
       drop: (name) => attempt('Failed to drop graph', () => native.dropGraphs([name])),
 
