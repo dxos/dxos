@@ -13,7 +13,9 @@
     height: 100%;
     min-width: 0;
     min-height: 0;
-    overflow: hidden;
+    /* `clip`, not `hidden`: a hidden box can still be scrolled by focus or scrollIntoView, which shifts the body under
+       the header and leaves a gap below it; only the body scrolls. */
+    overflow: clip;
     font-size: var(--dx-font-size);
     line-height: var(--dx-line-height);
     container-type: inline-size;
