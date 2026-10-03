@@ -1,8 +1,30 @@
 # Interlocutor — design
 
-Status: draft 3 (2026-10-03) — architecture as built for the first spike. Memory model:
+Status: draft 4 (2026-10-03) — goals, home space and workspaces; architecture as built for the first
+spike. Memory model:
 [MEMORY.md](./MEMORY.md). EDGE half: dxos/edge `compute-service/src/discord/` and that repo's
 `.agents/projects/interlocutor/DESIGN.md`.
+
+## Goals
+
+Set by Rich, 2026-10-03.
+
+1. **Memory lives in the home space.** An agent's memory is the space it was created in — its
+   **home**, where it has permission to store memories. It may later learn about other spaces, but
+   its memories stay home.
+2. **Notes on anything.** An agent can attach a note to any object — a document, a sketch, a
+   `Person`, a `Project`. A note is a memory object, initially little more than a markdown `Text`,
+   related to its subject (see [MEMORY.md](./MEMORY.md)).
+3. **Modes, extensible through skills.** An agent works in modes — transcriber (meetings, calls),
+   designer, interviewer, fact-checker, researcher. A mode is a skill (instructions plus tools), so
+   new modes are new skills.
+4. **Tasks at two scales.** An agent helps people track large task sets (thousands of tasks across
+   hundreds of projects), and it also keeps **its own** task list for what people have asked it to
+   do.
+5. **Many conversations at once.** An agent monitors several channels (threads, feeds) at the same
+   time, with many people and groups.
+6. **A model of everyone and everything.** An agent keeps a memory of everyone it interacts with in
+   the space, and a graph of the other concepts it encounters.
 
 ## What it is
 
@@ -91,14 +113,41 @@ they share instructions, skills and memory. `Agent.loadChat` skips chats carryin
 thread never becomes the primary chat. Person and Organization properties show the profile panel
 (goals and memories, live).
 
-## Spaces
+## Home space and workspaces
 
-- **Home space.** Each agent owns one space holding its `Agent` object, its chats, the profiles it
-  builds and its memory. That's where the agent's state lives, regardless of who it talks to.
-- **Joined spaces** (not built). An agent may be invited into other spaces. There it reads and writes
-  as a member and binds that space's skills into the sessions it runs for that space. Today skills
-  bind to a chat explicitly (`AiContext.Binder`); the agent needs "all skills of the spaces I'm in"
-  as a resolved list.
+An agent may be asked to work in spaces other than its home. Example: Kai lives in Rich's home space
+and is invited into "Eng Space" to organise its projects and tasks, while its memories about the
+people there stay home. The model:
+
+- **Home space** — holds the `Agent`, its chats, its own task list, and all its memory (people,
+  organisations, concepts, goals, notes). Memory is always written home, whichever space the work is
+  in.
+- **Workspaces** — other spaces the agent is invited into. Work products (tasks, projects, documents)
+  are written where the work is; the agent reads them there and uses that space's skills while it
+  works on them.
+- **Provenance** — every memory records the space (and channel) it was learned in, so recall can
+  filter by audience: what was learned in Eng Space is used when working for Eng Space, and DMs stay
+  private (see MEMORY.md, Conversations).
+
+**Can we do this? Yes — the runtime already scopes each operation call to a space.**
+`Operation.InvokeOptions.spaceId` sets the space whose `Database.Service` the handler (and anything
+it spawns) runs against, and the browser and EDGE invokers both honour it. What is missing:
+
+1. **Per-tool space routing.** Today a turn's tool calls inherit the space of the process running
+   the conversation. The agent needs its memory tools (`resolveEntity`, `recordMemory`,
+   `retrieveMemories`, `suggestGoal`, `updateProfile`, notes) routed to the **home** space, and its
+   work tools (tasks, projects, documents) routed to the **workspace** the conversation is about —
+   e.g. a skill-level `space: 'home' | 'workspace'` binding resolved by the session when it invokes
+   the tool, with the workspace taken from the conversation (a chat bound to Eng Space).
+2. **Access to the workspace.** For the spike the agent runs with its creator's credentials, so it
+   can already reach any space the creator is a member of. For spaces the creator does not own, the
+   agent needs its own HALO identity, invited as a member of Eng Space, with grants scoped by the
+   permission design (e.g. tasks and projects only).
+3. **Cross-space references.** Memories about Eng Space objects refer to them by space-qualified
+   `echo://<space>/<id>` URIs; a `Person` at home links to that person's member identity (DID) in
+   every workspace, so the same person is recognised across spaces.
+4. **Workspace skills.** "All skills of the spaces I'm in" as a resolved list — today skills bind to
+   a chat explicitly (`AiContext.Binder`).
 
 ## Identity
 

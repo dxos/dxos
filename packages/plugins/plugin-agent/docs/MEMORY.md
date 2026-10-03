@@ -125,6 +125,21 @@ conversation.
   `ConversationSummary` per chat is the fallback if topic ranking, cross-space or semantic recall
   are needed. The EDGE follow-ups are tracked in the Interlocutor project (M3).
 
+## Notes, concepts and the agent's own tasks
+
+Goals 2, 4 and 6 in [DESIGN.md](./DESIGN.md) extend the graph:
+
+- **Notes** — an agent can attach a note to **any** object (document, sketch, `Person`, `Project`).
+  A note is a `Memory` whose body is a markdown `Text` (initially little else), linked to its subject
+  by `HasSubject` like any memory. Today `Memory.content` is a plain string for atomic claims;
+  proposal: keep `content` for one-line claims and add an optional `body: Ref<Text>` for notes, with
+  `kind: 'note'`, so claims and notes share recall, provenance and supersession.
+- **Concepts** — besides people and organisations, the agent records the concepts it meets (topics,
+  products, places) as nodes it can attach memories to, reusing existing types where they exist and
+  a lightweight `Concept` type otherwise.
+- **The agent's own tasks** — what people ask the agent to do is a task list the agent owns (a
+  `TaskSet` in the home space), separate from the projects and tasks it helps manage in workspaces.
+
 ## Spike: interview Rich
 
 1. Types `Memory` and `Goal` plus the memory operations (`resolveEntity`, `recordMemory`,
