@@ -112,7 +112,42 @@ export const GroupingChoice = Decision.make({
   },
 });
 
-export type Scorer = 'system-one' | 'baseline';
+/**
+ * Which of the leading candidate packages the question is about. Cards are judged one at a time, so
+ * on their own they cannot tell the framework a prompt names from the dozen packages that use it —
+ * "the streaming pipeline" scores every `pipeline-*` consumer as high as `@dxos/pipeline` itself.
+ * The distribution this answers re-weights every card by its package.
+ */
+export const packageFocus = (packages: readonly { name: string; files: readonly string[] }[]) =>
+  Decision.make({
+    input: Schema.Struct({ prompt: Schema.String }),
+    decisions: {
+      focus: Decision.classify({
+        instructions:
+          'A developer asked `prompt` about a monorepo. Which one package is the question mainly about — the one ' +
+          'whose own design the answer must explain, rather than a package that merely uses it?',
+        criteria: Object.fromEntries(packages.map(({ name, files }) => [name, `contains ${files.join(', ')}`])),
+      }),
+    },
+  });
+
+/** Packages offered to the focus question; the rest share the smallest weight offered. */
+export const FOCUS_PACKAGES = 8;
+
+/** The weight a card keeps when its package is not the focus: low enough to rank below, never zero. */
+export const FOCUS_FLOOR = 0.4;
+
+/**
+ * `hybrid` blends System One's probability with the baseline normalised to the candidate set: the
+ * model separates relevant from irrelevant poorly on its own (most cards land at 0.6–0.8), while the
+ * baseline knows which files sit at the centre of the prompt's text and graph.
+ */
+export type Scorer = 'system-one' | 'baseline' | 'hybrid';
+
+const DESCRIPTIONS: Readonly<Record<string, string>> = Graph.EDGE_DESCRIPTIONS;
+
+/** System One's share of a hybrid score. */
+export const HYBRID_WEIGHT = 0.5;
 
 export type Usage = {
   /** Decision calls actually sent (cache misses). */
@@ -189,6 +224,13 @@ const decide = <I extends Schema.Constraint, D extends Record<string, Decision.A
 const asProbability = (value: unknown): number | undefined =>
   typeof value === 'number' && value >= 0 && value <= 1 ? value : undefined;
 
+const asDistribution = (value: unknown): Record<string, number> | undefined =>
+  typeof value === 'object' && value !== null && Object.values(value).every((entry) => typeof entry === 'number')
+    ? Object.fromEntries(
+        Object.entries(value).flatMap(([key, entry]) => (typeof entry === 'number' ? [[key, entry]] : [])),
+      )
+    : undefined;
+
 const asGrouping = (value: unknown): Graph.Grouping | undefined =>
   Graph.GROUPINGS.find((grouping) => grouping === value);
 
@@ -222,9 +264,10 @@ export const zoom = ({
     const maxDegree = Math.max(0, ...candidates.nodes.map((card) => card.inDegree + card.outDegree));
     const labels = new Map(candidates.nodes.map((card) => [card.iri, card.label]));
 
-    const nodeScores =
+    const baseline = candidates.nodes.map((card) => baselineScore(query, card, maxDegree));
+    const modelScores =
       scorer === 'baseline'
-        ? candidates.nodes.map((card) => baselineScore(query, card, maxDegree))
+        ? baseline
         : yield* Effect.forEach(
             candidates.nodes,
             (card) =>
@@ -237,6 +280,60 @@ export const zoom = ({
               ).pipe(Effect.map((probability) => probability ?? baselineScore(query, card, maxDegree))),
             { concurrency },
           );
+    const maxBaseline = Math.max(Number.EPSILON, ...baseline);
+    const blended =
+      scorer === 'hybrid'
+        ? modelScores.map(
+            (score, index) => HYBRID_WEIGHT * score + (1 - HYBRID_WEIGHT) * (baseline[index] / maxBaseline),
+          )
+        : modelScores;
+
+    // Rank packages by their three best cards, so one strong file does not outweigh a coherent package.
+    const byPackage = new Map<string, number[]>();
+    candidates.nodes.forEach((card, index) => {
+      if (card.package) {
+        byPackage.set(card.package, [...(byPackage.get(card.package) ?? []), blended[index]]);
+      }
+    });
+    const leading = [...byPackage.entries()]
+      .map(([name, scores]) => ({
+        name,
+        weight: [...scores]
+          .sort((left, right) => right - left)
+          .slice(0, 3)
+          .reduce((sum, value) => sum + value, 0),
+      }))
+      .sort((left, right) => right.weight - left.weight)
+      .slice(0, FOCUS_PACKAGES)
+      .map(({ name }) => ({
+        name,
+        files: candidates.nodes
+          .map((card, index) => ({ card, score: blended[index] }))
+          .filter(({ card }) => card.package === name)
+          .sort((left, right) => right.score - left.score)
+          .slice(0, 4)
+          .map(({ card }) => card.label),
+      }));
+    const focus =
+      scorer !== 'baseline' && leading.length >= 2
+        ? yield* decide(
+            packageFocus(leading),
+            { prompt },
+            (answers) => ({ ...answers.focus.probabilities }),
+            asDistribution,
+            context,
+          )
+        : undefined;
+    const focusMax = focus ? Math.max(Number.EPSILON, ...Object.values(focus)) : 1;
+    const focusMin = focus ? Math.min(...Object.values(focus)) : 1;
+    const nodeScores = blended.map((score, index) => {
+      if (!focus) {
+        return score;
+      }
+      const owner = candidates.nodes[index].package;
+      const weight = (owner !== undefined && owner in focus ? focus[owner] : focusMin) / focusMax;
+      return score * (FOCUS_FLOOR + (1 - FOCUS_FLOOR) * weight);
+    });
 
     const kinds = [...new Set(candidates.edges.map((edge) => edge.kind))];
     const relationScores = Object.fromEntries(
@@ -249,8 +346,7 @@ export const zoom = ({
                 .filter((edge) => edge.kind === kind)
                 .slice(0, 6)
                 .map((edge) => `${labels.get(edge.from) ?? edge.from} → ${labels.get(edge.to) ?? edge.to}`);
-              const description =
-                kind in Graph.EDGE_DESCRIPTIONS ? Graph.EDGE_DESCRIPTIONS[kind as Graph.EdgeKind] : kind;
+              const description = DESCRIPTIONS[kind] ?? kind;
               return decide(
                 RelationRelevance,
                 { prompt, relation: description, examples },
@@ -277,7 +373,7 @@ export const zoom = ({
 
     const survivors = scoredNodes.filter((node) => kept.has(node.iri));
     let grouping: Graph.Grouping = 'package';
-    if (scorer === 'system-one' && survivors.length > 0) {
+    if (scorer !== 'baseline' && survivors.length > 0) {
       const chosen = yield* decide(
         GroupingChoice,
         {

@@ -162,7 +162,7 @@ export const subgraph = (
     const zoomed = Zoom.zoom({
       prompt,
       candidates,
-      scorer: Option.isSome(model) ? 'system-one' : 'baseline',
+      scorer: Option.isSome(model) ? 'hybrid' : 'baseline',
       model: SystemOne.MODEL.id.toString(),
       cache,
       threshold,

@@ -5,7 +5,7 @@
 // targets are what a person judged important for an area, so they are the ground truth for recall
 // and precision, and the drawings themselves are the bar the generated diagram's judge scores meet.
 // Live: calls System One (TYPESAFE_API_KEY) and, with `--llm`, Anthropic for the LLM explorer.
-// Usage: node scripts/design-eval.ts [--out dir] [--llm] [--model claude-haiku-4-5-20251001]
+// Usage: node --experimental-transform-types scripts/design-eval.ts [--out dir] [--llm] [--model claude-haiku-4-5-20251001]
 //        [--runs 3] [--only name,name] [--store dir]
 //
 
@@ -199,7 +199,7 @@ const program = Effect.gen(function* () {
     const found = refs.filter((ref) => candidates.nodes.some((node) => covers(node.path, ref)));
     const zoomed: Record<string, Zoom.ZoomResult> = {};
     let zoomMs = 0;
-    for (const scorer of ['system-one', 'baseline'] as const) {
+    for (const scorer of ['system-one', 'hybrid', 'baseline'] as const) {
       const started = Date.now();
       zoomed[scorer] = yield* Zoom.zoom({
         prompt: area.prompt,
@@ -241,7 +241,7 @@ const program = Effect.gen(function* () {
       );
     }
 
-    const scored = zoomed['system-one'].scored;
+    const scored = zoomed.hybrid.scored;
     const result: AreaResult = {
       name: area.name,
       prompt: area.prompt,
@@ -322,7 +322,7 @@ const report = (results: readonly AreaResult[]): string => {
     '| scorer | threshold | budget | precision | recall | recall of found | kept |',
     '| --- | --- | --- | --- | --- | --- | --- |',
   );
-  for (const scorer of ['system-one', 'baseline']) {
+  for (const scorer of ['system-one', 'hybrid', 'baseline']) {
     for (const threshold of THRESHOLDS) {
       for (const budget of BUDGETS) {
         const rows = results.flatMap(

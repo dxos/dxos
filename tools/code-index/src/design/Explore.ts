@@ -114,8 +114,18 @@ export const seeds = (store: Store.Api, prompt: string, count = 12): Effect.Effe
       }
     }
 
-    return [...best.values()].sort((left, right) => right.score - left.score).slice(0, count);
+    // Seeds well below the best match are noise that a hub (`errors.ts`) turns into hundreds of
+    // candidates, so the cut is relative to the strongest match rather than a fixed count alone.
+    const ranked = [...best.values()].sort((left, right) => right.score - left.score);
+    const floor = 0.6 * (ranked[0]?.score ?? 0);
+    return ranked.filter((seed) => seed.score >= floor).slice(0, count);
   });
+
+/** The package directory a path lies in (`…/src/…` is inside it). */
+const packageDir = (path: string): string | undefined => {
+  const index = path.indexOf('/src/');
+  return index > 0 ? path.slice(0, index) : undefined;
+};
 
 /** The SPARQL that lists one relation's lifted edges touching a set of files, in both directions. */
 const relationQuery = (kind: Graph.EdgeKind, iris: readonly string[]): string => {
@@ -166,21 +176,61 @@ export const edgesTouching = (
     return Graph.dedupe(edges);
   });
 
+/** Most files one seed package contributes as siblings; a bigger package is reached by the walk instead. */
+const MAX_SIBLINGS = 60;
+
 /**
- * Walks out from the seeds. Hop one takes every neighbour of a seed; hop two takes only nodes linked
- * to at least two members already in the set, so a hub that everything imports (`invariant.ts`) is
- * reached once rather than dragging its thousand importers in.
+ * Walks out from the seeds. A package holding two or more seeds contributes its other source files
+ * first, since a question that lands twice in one package is usually about that package. Hop one
+ * then ranks every neighbour by how it links, whether it matches the prompt and whether it shares a
+ * seed's package, and may fill at most half the remaining room; hop two takes only nodes linked to
+ * at least two members already in the set. Both limits exist because a hub seed that everything
+ * imports would otherwise fill the whole budget with its importers.
  */
 export const expand = (
   store: Store.Api,
   seedList: readonly Seed[],
-  { maxNodes = 300, hops = 2, relations = DEFAULT_RELATIONS }: Omit<ExploreOptions, 'prompt' | 'seeds'> = {},
+  {
+    prompt = '',
+    maxNodes = 300,
+    hops = 2,
+    relations = DEFAULT_RELATIONS,
+  }: Omit<ExploreOptions, 'prompt' | 'seeds'> & { prompt?: string } = {},
 ): Effect.Effect<{ nodes: Map<string, { why: string; hops: number }>; edges: Graph.Edge[] }, Store.StoreError> =>
   Effect.gen(function* () {
+    const query = Text.query(prompt);
     const nodes = new Map<string, { why: string; hops: number }>();
     for (const seed of seedList) {
       nodes.set(seed.iri, { why: `seed: ${seed.why}`, hops: 0 });
     }
+    const seedPackages = new Map<string, number>();
+    for (const seed of seedList) {
+      const dir = packageDir(Graph.pathOf(seed.iri, Ontology.FILE_BASE));
+      if (dir !== undefined) {
+        seedPackages.set(dir, (seedPackages.get(dir) ?? 0) + 1);
+      }
+    }
+    const shared = [...seedPackages.entries()].filter(([, count]) => count >= 2).map(([dir]) => dir);
+    if (shared.length > 0) {
+      const files = yield* store.listFiles({ language: 'typescript' });
+      for (const dir of shared) {
+        const siblings = files
+          .map((file) => file.path)
+          .filter((path) => path.startsWith(`${dir}/src/`) && isComponentPath(path))
+          .sort((left, right) => Text.match(query, right) - Text.match(query, left))
+          .slice(0, MAX_SIBLINGS);
+        for (const path of siblings) {
+          const iri = Ontology.fileIri(path).value;
+          if (!nodes.has(iri) && nodes.size < maxNodes) {
+            nodes.set(iri, { why: `in seed package ${dir}`, hops: 1 });
+          }
+        }
+      }
+    }
+    const inSeedPackage = (iri: string) => {
+      const dir = packageDir(Graph.pathOf(iri, Ontology.FILE_BASE));
+      return dir !== undefined && seedPackages.has(dir);
+    };
     let frontier = [...nodes.keys()];
     const allEdges: Graph.Edge[] = [];
     for (let hop = 1; hop <= hops && frontier.length > 0 && nodes.size < maxNodes; hop++) {
@@ -203,12 +253,17 @@ export const expand = (
       const minimum = hop === 1 ? 1 : 2;
       // Framework relations outrank plain imports: a file that provides a seed's service is closer
       // to the answer than one that merely imports it.
-      const weight = (entry: { count: number; kinds: Set<string> }) =>
-        entry.count + ([...entry.kinds].some((kind) => kind !== 'imports' && kind !== 'implDependsOn') ? 2 : 0);
+      const weight = (iri: string, entry: { count: number; kinds: Set<string> }) =>
+        entry.count +
+        ([...entry.kinds].some((kind) => kind !== 'imports' && kind !== 'implDependsOn') ? 2 : 0) +
+        3 * Text.match(query, Graph.pathOf(iri, Ontology.FILE_BASE)) +
+        (inSeedPackage(iri) ? 2 : 0);
       const ranked = [...links.entries()]
         .filter(([, entry]) => entry.count >= minimum)
-        .sort((left, right) => weight(right[1]) - weight(left[1]));
-      const room = maxNodes - nodes.size;
+        .map(([iri, entry]) => ({ iri, entry, weight: weight(iri, entry) }))
+        .sort((left, right) => right.weight - left.weight)
+        .map(({ iri, entry }) => [iri, entry] as const);
+      const room = hop < hops ? Math.ceil((maxNodes - nodes.size) / 2) : maxNodes - nodes.size;
       const added = ranked.slice(0, room).map(([iri, entry]) => {
         nodes.set(iri, { why: `${[...entry.kinds].join('/')} of ${entry.count} candidate(s)`, hops: hop });
         return iri;

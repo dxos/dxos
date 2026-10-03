@@ -111,7 +111,7 @@ const candidates: Graph.Candidates = {
   ],
 };
 
-/** Relevant unless the card names a helper; every relation kind matters; grouping by package. */
+/** Relevant unless the card names a helper; the agent package is the focus; every relation kind matters; grouping by package. */
 const scripted = SystemOne.scripted(({ state, decisions }): Record<string, DecisionModel.ProviderAnswer> => {
   const text = JSON.stringify(state);
   if ('grouping' in decisions) {
@@ -120,6 +120,15 @@ const scripted = SystemOne.scripted(({ state, decisions }): Record<string, Decis
         _tag: 'Classify',
         label: 'package',
         probabilities: { package: 0.7, area: 0.1, directory: 0.1, kind: 0.1 },
+      },
+    };
+  }
+  if ('focus' in decisions) {
+    return {
+      focus: {
+        _tag: 'Classify',
+        label: '@dxos/agent',
+        probabilities: { '@dxos/agent': 0.5, '@dxos/model': 0.25, '@dxos/log': 0.25 },
       },
     };
   }
@@ -153,11 +162,14 @@ describe('Zoom', () => {
       kind: Graph.RELAY,
       via: [`${FILE}packages/agent/src/util.ts`],
     });
-    // Five cards, two relation kinds and one grouping question.
-    expect(first.usage.calls).toBe(8);
+    // Five cards, one package focus, two relation kinds and one grouping question.
+    expect(first.usage.calls).toBe(9);
+    // The focus halves the weight of a card outside the chosen package without hiding it.
+    const model = first.scored.nodes.find((node) => node.label === 'Model');
+    expect(model?.score).toBeCloseTo(0.9 * (Zoom.FOCUS_FLOOR + (1 - Zoom.FOCUS_FLOOR) * 0.5));
 
     const second = await EffectEx.runPromise(Zoom.zoom(options).pipe(Effect.provide(SystemOne.refusing)));
-    expect(second.usage).toMatchObject({ calls: 0, cached: 8 });
+    expect(second.usage).toMatchObject({ calls: 0, cached: 9 });
     expect(second.scored.nodes.map((node) => node.score)).toEqual(first.scored.nodes.map((node) => node.score));
   });
 

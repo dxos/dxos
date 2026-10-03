@@ -81,8 +81,8 @@ export const command = Command.make(
         'bfs: text-matched seeds and a fixed walk (no model). llm: a workspace-agent turn picks seeds and relations.',
       ),
     ),
-    scorer: Flag.Literals('scorer', ['system-one', 'baseline']).pipe(
-      Flag.withDescription('Relevance scorer (default: system-one when TYPESAFE_API_KEY is set, else baseline).'),
+    scorer: Flag.Literals('scorer', ['hybrid', 'system-one', 'baseline']).pipe(
+      Flag.withDescription('Relevance scorer (default: hybrid when TYPESAFE_API_KEY is set, else baseline).'),
       Flag.optional,
     ),
     provider: Flag.String('provider').pipe(
@@ -107,16 +107,14 @@ export const command = Command.make(
       });
       const storeDir = Option.match(store, { onNone: () => Crawler.storeDir(repo), onSome: resolve });
       const dir = Option.match(out, { onNone: () => join(storeDir, 'design', slug(prompt)), onSome: resolve });
-      const chosenScorer: Zoom.Scorer = Option.getOrElse(scorer, () =>
-        SystemOne.available() ? 'system-one' : 'baseline',
-      );
-      if (chosenScorer === 'system-one' && !SystemOne.available()) {
+      const chosenScorer: Zoom.Scorer = Option.getOrElse(scorer, () => (SystemOne.available() ? 'hybrid' : 'baseline'));
+      if (chosenScorer !== 'baseline' && !SystemOne.available()) {
         yield* Console.error('TYPESAFE_API_KEY is not set: unscored nodes fall back to the baseline score.');
       }
       const cache = yield* Cache.open(join(storeDir, 'design-cache.jsonl'));
       const options = { prompt, scorer: chosenScorer, model: SystemOne.MODEL.id.toString(), cache, budget, threshold };
       const decisionModel: Layer.Layer<DecisionModel.DecisionModel, unknown> =
-        chosenScorer === 'system-one' && SystemOne.available() ? SystemOne.layer : SystemOne.refusing;
+        chosenScorer !== 'baseline' && SystemOne.available() ? SystemOne.layer : SystemOne.refusing;
 
       const result =
         explorer === 'llm'

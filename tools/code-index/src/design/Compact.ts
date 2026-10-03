@@ -178,7 +178,11 @@ export const build = (scored: Graph.Scored, variant: Variant): Diagram => {
   const ids = new Map<string, string>();
   const used = new Set<string>();
   const nodes: Node[] = members.map((node) => {
-    const label = shortLabel(node.label);
+    // Two boxes reading the same name look like one component drawn twice, so a clash names its package.
+    const clash = members.filter((other) => other.label === node.label).length > 1;
+    const label = shortLabel(
+      clash && node.package ? `${node.package.replace(/^@[^/]+\//, '')}/${node.label}` : node.label,
+    );
     let id = identifier(label);
     for (let suffix = 2; used.has(id) || groups.some((group) => group.id === id); suffix++) {
       id = `${identifier(label)}${suffix}`;
