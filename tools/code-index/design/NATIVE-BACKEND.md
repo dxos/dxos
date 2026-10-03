@@ -41,23 +41,48 @@ stays small because the N3 subset in use is small.
 
 Every construct in `rules/*.n3` today, and what the engine does with it:
 
-| Construct                                                                                            | Where                           | Support                                                                                                                                                                                                                  |
-| ---------------------------------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `{ body } => { head }.` with triple patterns, `?vars`, IRIs, prefixed names, `true`, string literals | all files                       | Datalog rule.                                                                                                                                                                                                            |
-| Constant predicate in every head triple                                                              | all files                       | Required when the rule file uses negation (stratification check); otherwise a variable predicate is allowed.                                                                                                             |
-| Recursion (a head feeding its own body)                                                              | `90-aliases.n3`                 | Semi-naive fixpoint within the file.                                                                                                                                                                                     |
-| `?x string:matches "re"` / `string:notMatches`                                                       | `50-example.n3`                 | Filter; `?x` must be bound; Rust `regex` syntax (same as EYE for the patterns used).                                                                                                                                     |
-| `?x string:matches ?re` (pattern from the data)                                                      | `70-specs.n3`                   | Filter once both are bound; each distinct pattern is compiled once per process, and one that does not compile matches nothing.                                                                                           |
-| `(?x "re") string:scrape ?y`                                                                         | `70-specs.n3`                   | Function: binds `?y` to the first capture group; no match, no binding.                                                                                                                                                   |
-| `?x string:startsWith` / `endsWith` / `contains ?y`, `?a log:notEqualTo ?b`                          | `65-packages.n3`, `70-specs.n3` | Filters over two bound terms (the string tests compare lexical forms, `notEqualTo` compares terms).                                                                                                                      |
-| `(?a "." ?b) string:concatenation ?c`                                                                | `60-canonical.n3`               | Function: binds/compares `?c` once the list members are bound.                                                                                                                                                           |
-| `(?x { pattern } ?L) log:collectAllIn ?scope. ?L list:length 0.`                                     | `60-canonical.n3`               | **Scoped negation as failure**: "no binding of `pattern` exists". Recognised as an idiom; the pattern may be a conjunction. Its predicates must not be derived by the same file (checked; otherwise "not stratifiable"). |
+| Construct                                                                                     | Where                                                     | Support                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{ body } => { head }.` with triple patterns, `?vars`, IRIs, prefixed names, `true`, literals | all files                                                 | Datalog rule.                                                                                                                                                                                                                                                                                                       |
+| `{ head } <= { body }.`                                                                       | `10`–`41`                                                 | **Backward rule**: never materialised. A body atom whose predicate a backward rule concludes is a _call_, proved on demand against the facts and those rules, as EYE does; the head may name variables only its caller binds (`{ ?name rule:canonical ?name } <= { … }`). Recursion is allowed and cut at depth 64. |
+| Ground triples at the top level                                                               | `20-echo`, `30-compute`, `40-composer`, `41-capabilities` | Premises of their own file only, never part of its output (EYE's `derivations` mode drops them too).                                                                                                                                                                                                                |
+| Lists `(…)` as builtin arguments and in backward rules' terms (`(?r ?s) rule:resolves ?d`)    | `10`–`41`                                                 | A per-run list term; never stored.                                                                                                                                                                                                                                                                                  |
+| Recursion (a head feeding its own body)                                                       | `90-aliases.n3`, `30-compute.n3`                          | Semi-naive fixpoint (maintained strata) or rounds within a dependency group (below).                                                                                                                                                                                                                                |
+| `string:matches` / `string:notMatches`                                                        | `50-example`, `70-specs`                                  | Filter; inputs must be bound; Rust `regex` syntax (same as EYE for the patterns used). A pattern read from the data (`?path string:matches ?pattern`) is compiled once per process, and one that does not compile matches nothing.                                                                                  |
+| `string:startsWith` / `endsWith` / `contains`, `log:notEqualTo`                               | several                                                   | Filters over two bound terms (the string tests compare lexical forms, `notEqualTo` compares terms).                                                                                                                                                                                                                 |
+| `(…) string:concatenation ?c`, `(?text ?re) string:scrape ?c`, `?x log:uri ?text`             | several                                                   | Functions: bind or compare the output once the inputs are bound. A `scrape` pattern may itself be built by the body.                                                                                                                                                                                                |
+| `?x list:in (…)`, `?l list:length ?n`, `?l list:first ?x`                                     | several                                                   | Membership (enumerates when `?x` is unbound), length, first member.                                                                                                                                                                                                                                                 |
+| `(?t { … } ?l) log:collectAllIn ?scope`                                                       | several                                                   | **Aggregate**: `?l` is the list of `?t` over the formula's distinct solutions. With `?l list:length 0` and no other use of `?l`, it is compiled to negation as failure.                                                                                                                                             |
+| `?scope log:notIncludes { … }`                                                                | `41-capabilities`                                         | Negation as failure.                                                                                                                                                                                                                                                                                                |
 
-Anything else — other `log:`/`math:`/`list:` builtins, `log:collectAllIn` whose
-list is used for anything but `list:length 0`, quoted formulas in heads, existential
-blank nodes in heads, `<=` — is rejected at load with the offending rule named.
-Adding a builtin is one match arm in `rules.rs` and one in `eval.rs`; the spec rules added the four
-above, each covered by `tests/engine.rs` § string builtins.
+Anything else — other `log:`/`math:`/`string:`/`list:` builtins, quoted formulas in heads, blank
+nodes or lists in a forward head — is rejected at load with the offending rule named. Adding a
+builtin is one match arm in `rules.rs` and one in `eval.rs`.
+
+### Strata written in EYE's idiom
+
+A stratum with backward rules or aggregates cannot be maintained by DRed: a premise that changes
+inside a proof is invisible to the body that called it. Such a stratum is **recomputed** on every
+pass (`incremental: false` in its outcome), the others stay incremental. Three things keep the
+recomputation cheap:
+
+- **One snapshot of the premises.** Every base fact with a predicate some rule reads is loaded into
+  an in-memory, position-indexed set once per `reasonAll`; joins probe it instead of seeking RocksDB
+  and re-interning each result. (A rule that leaves a body predicate unbound falls back to the store.)
+- **Dependency order.** The file's forward rules are grouped into strongly connected components of
+  "reads what the other concludes" (through the backward rules each calls), run dependencies first;
+  only a cyclic group repeats until nothing is new. This is also what makes an aggregate see the
+  complete set it counts.
+- **Memoised proofs, the author's join order.** A call's solutions are memoised by its predicate
+  and the caller's bound arguments — for the whole evaluation when its proof reads nothing the file
+  concludes, else for one round. Bodies are evaluated in the order written (EYE's order, which the
+  author tuned against), except that a builtin runs as soon as its inputs are bound and another
+  atom goes first only when it has at least 8× fewer solutions under the current binding. A call
+  waits for the atoms written before it: a backward rule may aggregate over whatever its caller
+  leaves unbound.
+
+Without a stratification check EYE evaluates a negation against whatever has been concluded so far;
+these strata do the same within a cyclic group, and DRed-maintained strata keep the strict check.
 
 ## Semantics (one change, made deliberately)
 
@@ -132,12 +157,11 @@ Joins are index-nested-loop over oxigraph pattern lookups (terms interned to `u3
 per run), with a greedy order: the delta atom first, then the literal with the
 most bound positions; builtins and negations as soon as their inputs are bound.
 Full recomputation evaluates each rule once against the premises, then saturates
-from what that concluded. Two things keep a large rule file cheap: a delta triple
-is tried only against the atoms naming its predicate (an index built per step),
-and a scan with neither subject nor object bound is decoded from the store once per
-stratum computation (`facts::Cached`) — premises do not change while a stratum
-runs, and a rule seeded once per derived fact (one evaluation per selected glob,
-each reading every `deus:path`) would otherwise repeat the same scan.
+from what that concluded. A delta triple is tried only against the atoms naming its
+predicate (an index built per step). When the premises are read from the store rather
+than the snapshot (below), a scan with neither subject nor object bound is decoded once
+per computation (`facts::Cached`): a rule seeded once per derived fact (one evaluation
+per selected glob, each reading every `deus:path`) would otherwise repeat it.
 
 ## Binding: napi-rs, in process
 
