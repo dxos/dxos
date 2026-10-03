@@ -33,11 +33,7 @@ export type Reasoner = {
   readonly rules: string;
 };
 
-export type Outcome = {
-  readonly name: string;
-  readonly derived: number;
-  readonly durationMs: number;
-};
+export type Outcome = Store.ReasonOutcome;
 
 /** The rule files shipped with the tool. */
 export const BUNDLED_DIR = fileURLToPath(new URL('../rules', import.meta.url));
@@ -64,15 +60,6 @@ export const loadFile = (path: string): Effect.Effect<Reasoner[], ReasonerError>
     try: async () => [{ name: basename(path, extname(path)), rules: await readFile(path, 'utf8') }],
   });
 
-/** Run each reasoner in order, replacing its graph. Returns what each concluded. */
+/** Run each reasoner in order, replacing (or, natively, maintaining) its graph. Returns what each concluded. */
 export const run = (reasoners: readonly Reasoner[]): Effect.Effect<Outcome[], Store.StoreError, Store.Store> =>
-  Effect.gen(function* () {
-    const store = yield* Store.Store;
-    const outcomes: Outcome[] = [];
-    for (const reasoner of reasoners) {
-      const started = Date.now();
-      const derived = yield* store.reason(reasoner.name, reasoner.rules, { materialize: true });
-      outcomes.push({ name: reasoner.name, derived: derived.length, durationMs: Date.now() - started });
-    }
-    return outcomes;
-  });
+  Effect.flatMap(Store.Store, (store) => store.reasonAll(reasoners));
