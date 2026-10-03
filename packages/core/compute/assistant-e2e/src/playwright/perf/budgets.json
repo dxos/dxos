@@ -52,8 +52,8 @@
     "unit": "bytes"
   },
   "run > SQLite write bytes": {
-    "target": 37600000,
-    "limit": 56400000,
+    "target": 26000000,
+    "limit": 39000000,
     "unit": "bytes"
   },
   "run > worst tab lag p95": {
