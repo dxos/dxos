@@ -60,18 +60,26 @@ const TYPES = [
 const HUES = ['amber', 'emerald', 'sky'];
 
 /** One chat per person (each in its own hue), then the agent's state over its knowledge. */
-const LAYOUT = [
+const makeLayout = (initialPrompt?: string) => [
   ...PARTICIPANTS.map((participant, index) => [
-    { type: StoryRole.Chat, data: { participant, hue: HUES[index % HUES.length] }, id: `chat-${participant}` },
+    {
+      type: StoryRole.Chat,
+      data: { participant, hue: HUES[index % HUES.length], initialPrompt },
+      id: `chat-${participant}`,
+    },
   ]),
   [StoryRole.AgentState, StoryRole.AgentKnowledge],
 ];
+
+const LAYOUT = makeLayout();
 
 /**
  * Rich, Dima and Josiah each talk to the same agent (Kai) in their own chat; every prompt is
  * attributed to the panel's person, so the agent knows who is speaking. The agent reads a transcript
  * of an earlier CI-triage conversation on load (`readSource`), recording its facts in the transcript's
  * annotation feed. Live AI (DeepSeek V4 Pro through EDGE), so excluded from CI.
+ *
+ * Each person opens by saying "hello".
  *
  * Try:
  * 1. Wait for the facts to fill: who owns the fix, the P0 priority, the "don't page Dima after 6pm" rule.
@@ -86,7 +94,7 @@ export const Playground: Story = {
     types: TYPES,
     onReady: ({ db, invoker }) => setupPlayground({ db, invoker, model: PLAYGROUND_MODEL, read: true }),
   }),
-  args: { layout: LAYOUT },
+  args: { layout: makeLayout('hello') },
   tags: ['!test'],
 };
 
