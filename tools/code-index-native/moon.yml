@@ -20,6 +20,7 @@ tasks:
     inputs:
       - src/**/*.rs
       - tests/**/*.rs
+      - tests/fixtures/*.n3
       - Cargo.toml
       - Cargo.lock
       - /tools/code-index/rules/*.n3
