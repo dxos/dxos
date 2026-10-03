@@ -46,8 +46,8 @@ export type FormViewportProps = PropsWithChildren<{
   scroll?: boolean;
   /** The pane's size when `scroll`; otherwise the form inherits its host's. */
   size?: PanelRootProps['size'];
-  /** `document` keeps the form at the reading width when `scroll`, centred in the pane. */
-  width?: PanelRootProps['width'];
+  /** The form keeps the reading width (`document`, the default), centred in a wider host; `full` spans the host. */
+  width?: 'document' | 'full';
   gutter?: Gutter;
 }>;
 
@@ -57,13 +57,14 @@ export type FormViewportProps = PropsWithChildren<{
  * to the enclosing panel's (`sm`, the form inset), else `sm`.
  */
 export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
-  ({ children, scroll, size, width, gutter, ...props }, forwardedRef) => {
+  ({ children, scroll, size, width = 'document', gutter, ...props }, forwardedRef) => {
     const defaultGutter = useDefaultGutter();
+    const documentWidth = width === 'document' ? width : undefined;
     return scroll ? (
       <Panel.Root
         {...props}
         size={size}
-        width={width}
+        width={documentWidth}
         gutter={gutter === 'inherit' ? undefined : gutter}
         ref={forwardedRef}
       >
@@ -77,7 +78,7 @@ export const FormViewport = composable<HTMLDivElement, FormViewportProps>(
         </Panel.Body>
       </Panel.Root>
     ) : (
-      <Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} ref={forwardedRef}>
+      <Container {...props} gutter={gutter ?? defaultGutter ?? 'sm'} width={documentWidth} ref={forwardedRef}>
         {children}
       </Container>
     );
