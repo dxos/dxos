@@ -30,7 +30,7 @@ export const THREAD_CONTEXT_ID = 'story/thread';
 const openedAttachmentAtom = Atom.make<{ messageId: string; index: number } | undefined>(undefined);
 
 const Placeholder = ({ label }: { label: string }) => (
-  <div className='h-full grid place-items-center text-description'>{label}</div>
+  <div className='h-full grid place-items-center text-fg-muted'>{label}</div>
 );
 
 const feedQuery = (feed: Obj.Unknown | undefined) =>
@@ -89,7 +89,7 @@ export const SelectedMessageJsonModule = () => {
   return (
     <div className='h-full overflow-auto' data-testid='message-json'>
       {summary && (
-        <div className='p-2 text-sm text-description' data-testid='message-summary'>
+        <div className='p-2 text-sm text-fg-muted' data-testid='message-summary'>
           {summary}
         </div>
       )}

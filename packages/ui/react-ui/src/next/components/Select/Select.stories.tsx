@@ -9,7 +9,6 @@ import React, { Fragment } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import {
   GEOMETRY,
@@ -17,6 +16,7 @@ import {
   centreY,
   controlSize,
   expectAnchoredBelow,
+  expectEndCell,
   expectNonScrollingPopup,
   expectPopupSize,
   expectScoped,
@@ -26,39 +26,40 @@ import {
   watchResizeObserverLoop,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Select, type SelectOption, Tag, Toolbar } from '../index.ts';
 
-const OPTIONS: Next.SelectOption[] = [
+const OPTIONS: SelectOption[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
   { value: 'black', label: 'Black', disabled: true },
 ];
 
-const ICON_OPTIONS: Next.SelectOption[] = [
+const ICON_OPTIONS: SelectOption[] = [
   { value: 'list', label: 'List', icon: 'ph--list--regular' },
   { value: 'grid', label: 'Grid', icon: 'ph--squares-four--regular' },
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
 ];
 
 /** Labels of very different widths, for the `fit='options'` trigger. */
-const DENSITY: Next.SelectOption[] = [
+const DENSITY: SelectOption[] = [
   { value: 'xs', label: 'XS' },
   { value: 'comfortable', label: 'Comfortable spacing' },
   { value: 'md', label: 'Medium' },
 ];
 
 /** Enough options to overflow the popup's 20rem cap at every size. */
-const LONG: Next.SelectOption[] = Array.from({ length: 30 }, (_, index) => ({
+const LONG: SelectOption[] = Array.from({ length: 30 }, (_, index) => ({
   value: `option-${index + 1}`,
   label: `Option ${index + 1}`,
 }));
 
-const FRUIT: Next.SelectOption[] = [
+const FRUIT: SelectOption[] = [
   { value: 'apple', label: 'Apple', icon: 'ph--circle--fill', iconHue: 'red' },
   { value: 'pear', label: 'Pear', icon: 'ph--circle--fill', iconHue: 'lime' },
 ];
 
-const VEGETABLES: Next.SelectOption[] = [
+const VEGETABLES: SelectOption[] = [
   { value: 'kale', label: 'Kale', icon: 'ph--circle--fill', iconHue: 'emerald' },
   { value: 'leek', label: 'Leek' },
 ];
@@ -69,90 +70,90 @@ const VEGETABLES: Next.SelectOption[] = [
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
-    <Next.Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Next.Select.Root items={OPTIONS}>
-        <Next.Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
-        <Next.Select.Content data-testid={`listbox-${size}`}>
+    <Toolbar.Root data-testid={`toolbar-${size}`}>
+      <Select.Root items={OPTIONS}>
+        <Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
+        <Select.Content data-testid={`listbox-${size}`}>
           {OPTIONS.map((item) => (
             <Fragment key={item.value}>
-              {item.disabled && <Next.Select.Separator />}
-              <Next.Select.Item item={item} />
+              {item.disabled && <Select.Separator />}
+              <Select.Item item={item} />
             </Fragment>
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-      <Next.Select.Root items={ICON_OPTIONS}>
-        <Next.Select.Trigger placeholder='View' aria-label='View' />
-        <Next.Select.Content>
+        </Select.Content>
+      </Select.Root>
+      <Select.Root items={ICON_OPTIONS}>
+        <Select.Trigger placeholder='View' aria-label='View' />
+        <Select.Content>
           {ICON_OPTIONS.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root>
-      <Next.Select.Root items={[...FRUIT, ...VEGETABLES]}>
-        <Next.Select.Trigger placeholder='Produce' aria-label='Produce' />
-        <Next.Select.Content size='lg'>
+        </Select.Content>
+      </Select.Root>
+    </Toolbar.Root>
+    <Toolbar.Root>
+      <Select.Root items={[...FRUIT, ...VEGETABLES]}>
+        <Select.Trigger placeholder='Produce' aria-label='Produce' />
+        <Select.Content size='lg'>
           {[
             { label: 'Fruit', items: FRUIT },
             { label: 'Vegetables', items: VEGETABLES },
           ].map(({ label, items }) => (
-            <Next.Select.ItemGroup key={label}>
-              <Next.Select.ItemGroupLabel>{label}</Next.Select.ItemGroupLabel>
+            <Select.ItemGroup key={label}>
+              <Select.ItemGroupLabel>{label}</Select.ItemGroupLabel>
               {items.map((item) =>
                 item.value === 'leek' ? (
-                  <Next.Select.Item key={item.value} item={item}>
-                    <Next.Select.ItemIcon icon='ph--circle--fill' hue='amber' />
-                    <Next.Select.ItemText>
-                      <Next.Tag hue='amber'>Leek</Next.Tag>
-                    </Next.Select.ItemText>
-                    <Next.Select.ItemIndicator />
-                  </Next.Select.Item>
+                  <Select.Item key={item.value} item={item}>
+                    <Select.ItemIcon icon='ph--circle--fill' hue='amber' />
+                    <Select.ItemText>
+                      <Tag hue='amber'>Leek</Tag>
+                    </Select.ItemText>
+                    <Select.ItemIndicator />
+                  </Select.Item>
                 ) : (
-                  <Next.Select.Item key={item.value} item={item} />
+                  <Select.Item key={item.value} item={item} />
                 ),
               )}
-            </Next.Select.ItemGroup>
+            </Select.ItemGroup>
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-      <Next.Select.Root items={OPTIONS} multiple>
-        <Next.Select.Trigger placeholder='Colors' aria-label='Colors' />
-        <Next.Select.Content>
+        </Select.Content>
+      </Select.Root>
+      <Select.Root items={OPTIONS} multiple>
+        <Select.Trigger placeholder='Colors' aria-label='Colors' />
+        <Select.Content>
           {OPTIONS.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-      <Next.Select.Root items={LONG}>
-        <Next.Select.Trigger placeholder='Long' aria-label='Long' />
-        <Next.Select.Content>
+        </Select.Content>
+      </Select.Root>
+      <Select.Root items={LONG}>
+        <Select.Trigger placeholder='Long' aria-label='Long' />
+        <Select.Content>
           {LONG.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-      <Next.Select.Root items={[]}>
-        <Next.Select.Trigger placeholder='Loading' aria-label='Lookup' loading />
-        <Next.Select.Content />
-      </Next.Select.Root>
-    </Next.Toolbar.Root>
-    <Next.Toolbar.Root>
-      <Next.Select.Root items={DENSITY}>
-        <Next.Select.Trigger fit='options' placeholder='Density' aria-label='Density' data-testid={`fit-${size}`} />
-        <Next.Select.Content>
+        </Select.Content>
+      </Select.Root>
+      <Select.Root items={[]}>
+        <Select.Trigger placeholder='Loading' aria-label='Lookup' loading />
+        <Select.Content />
+      </Select.Root>
+    </Toolbar.Root>
+    <Toolbar.Root>
+      <Select.Root items={DENSITY}>
+        <Select.Trigger fit='options' placeholder='Density' aria-label='Density' data-testid={`fit-${size}`} />
+        <Select.Content>
           {DENSITY.map((item) => (
-            <Next.Select.Item key={item.value} item={item} />
+            <Select.Item key={item.value} item={item} />
           ))}
-        </Next.Select.Content>
-      </Next.Select.Root>
-    </Next.Toolbar.Root>
+        </Select.Content>
+      </Select.Root>
+    </Toolbar.Root>
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Select',
+  title: 'ui/react-ui-core/components/Select',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[24rem]' }), withTheme()],
   args: { size: 'md' },
@@ -185,6 +186,13 @@ export const Test: Story = {
       const rect = byTestId(canvasElement, `select-${size}`).getBoundingClientRect();
       await expect(rect.height, `select-${size} height`).toBeCloseTo(controlSize(size), 0);
       await expect(centreY(rect), `select-${size} centre`).toBeCloseTo(centreY(toolbar), 0);
+      const trigger = byTestId(canvasElement, `select-${size}`);
+      await expectEndCell(
+        trigger.querySelector('[data-part="indicator"] svg'),
+        rect.right,
+        size,
+        `select-${size} caret`,
+      );
     }
     await expectScoped(canvasElement);
 
@@ -200,7 +208,7 @@ export const Test: Story = {
     const frame = popupFrame(listbox);
     await expect(frame.dataset.surface).toBe('popup');
     await expect(frame.dataset.size).toBe('md');
-    await expect(getComputedStyle(frame).getPropertyValue('--nx-level').trim()).toBe('5');
+    await expect(getComputedStyle(frame).getPropertyValue('--dx-level').trim()).toBe('5');
     await expect(listbox.dataset.scope).toBe('select');
     await expect(within(listbox).getAllByRole('option')).toHaveLength(OPTIONS.length);
     await expect(within(listbox).getByRole('option', { name: 'Black' })).toHaveAttribute('data-disabled');
@@ -236,11 +244,11 @@ export const Test: Story = {
     await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
 
     const view = canvas.getByRole('combobox', { name: 'View' });
-    await expect(view.querySelectorAll('.nx-icon')).toHaveLength(1);
+    await expect(view.querySelectorAll('.dx-icon')).toHaveLength(1);
     await userEvent.click(view);
     await userEvent.click(await body.findByRole('option', { name: 'Grid' }));
     await waitFor(() => expect(view).toHaveTextContent('Grid'));
-    const icons = view.querySelectorAll<SVGElement>('.nx-icon');
+    const icons = view.querySelectorAll<SVGElement>('.dx-icon');
     await expect(icons).toHaveLength(2);
     await expect(icons[0].getAttribute('aria-hidden')).toBe('true');
     await expect(icons[0].getBoundingClientRect().left).toBeLessThan(
@@ -264,12 +272,12 @@ export const Test: Story = {
     const kale = within(vegetables).getByRole('option', { name: 'Kale' });
     await expect(kale.querySelector('[data-part="item-text"]')).toHaveTextContent('Kale');
     await expect(kale.querySelector('[data-part="item-indicator"]')).not.toBeNull();
-    await expect(kale.querySelectorAll('.nx-icon')).toHaveLength(2);
+    await expect(kale.querySelectorAll('.dx-icon')).toHaveLength(2);
     const leek = within(vegetables).getByRole('option', { name: 'Leek' });
     await expect(leek.querySelector('[data-part="item-text"] [data-scope="tag"]')).not.toBeNull();
     await expect(leek.querySelector('[data-part="item-indicator"]')).not.toBeNull();
-    await expect(leek.querySelector('.nx-icon')?.getBoundingClientRect().left).toBeCloseTo(
-      kale.querySelector('.nx-icon')?.getBoundingClientRect().left ?? 0,
+    await expect(leek.querySelector('.dx-icon')?.getBoundingClientRect().left).toBeCloseTo(
+      kale.querySelector('.dx-icon')?.getBoundingClientRect().left ?? 0,
       0,
     );
     await userEvent.click(leek);
@@ -311,7 +319,7 @@ export const Test: Story = {
     const lookup = canvas.getByRole('combobox', { name: 'Lookup' });
     await expect(lookup).toHaveAttribute('aria-busy', 'true');
     const spinner = lookup.querySelector<SVGElement>('[data-spin]');
-    await expect(spinner && getComputedStyle(spinner).animationName).toBe('nx-spin');
+    await expect(spinner && getComputedStyle(spinner).animationName).toBe('dx-spin');
 
     // `fit='options'`: as wide as the widest option, whichever is chosen.
     for (const size of SIZES) {
@@ -345,7 +353,7 @@ export const Test: Story = {
       await expect(text.scrollWidth, `${text.textContent} unclipped`).toBeLessThanOrEqual(text.clientWidth);
     }
     for (const option of within(views).getAllByRole('option')) {
-      const icon = option.querySelector<SVGElement>('.nx-icon');
+      const icon = option.querySelector<SVGElement>('.dx-icon');
       await expect(icon?.getBoundingClientRect().width).toBeCloseTo(16, 0);
       await expect(icon?.getBoundingClientRect().left).toBeLessThan(option.getBoundingClientRect().left + 16);
     }

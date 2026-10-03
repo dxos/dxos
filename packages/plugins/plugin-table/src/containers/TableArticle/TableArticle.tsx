@@ -80,13 +80,16 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
       [invokePromise, object.view],
     );
 
+    // Keyed on the flag, not memoised once: the type loads after the first render, and a table built
+    // before it arrives would stay without its column editing.
+    const schemaEditable = schema != null && Type.getDatabase(schema) != null;
     const features: Partial<TableFeatures> = useMemo(
       () => ({
         selection: { enabled: true, mode: 'multiple' },
         dataEditable: true,
-        schemaEditable: schema != null && Type.getDatabase(schema) != null,
+        schemaEditable,
       }),
-      [],
+      [schemaEditable],
     );
 
     const handleCellUpdate = useCallback<Required<TableModelProps>['onCellUpdate']>((cell) => {
@@ -195,7 +198,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     return (
       <TableComponent.Root ref={tableRef}>
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <TableComponent.Toolbar
               attendableId={attendableId}
               customActions={customActions}
@@ -204,10 +207,10 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onExport={handleExport}
               onSave={handleSave}
             />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <TableComponent.Content
-              classNames='border-t border-subdued-separator'
+              classNames='border-t border-separator-subtle'
               key={attendableId}
               attendableId={attendableId}
               model={model}
@@ -216,7 +219,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
               onCreate={handleCreate}
               onRowClick={handleRowClick}
             />
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </TableComponent.Root>
     );

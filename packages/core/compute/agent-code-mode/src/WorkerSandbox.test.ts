@@ -212,7 +212,7 @@ describe('worker sandbox', () => {
     expect(output).toEqual('tasks 1 tagged Failure');
   }, 60_000);
 
-  test('reports a throw in the worker as output rather than failing the turn', async () => {
+  test('reports a throw in the worker as a failed tool call rather than failing the turn', async () => {
     const { run } = await setup();
     expect(await run("throw new Error('boom');")).toEqual('Error: boom');
   }, 60_000);
@@ -336,7 +336,7 @@ describe('worker sandbox', () => {
       expect(output).toEqual(`stored ${TASK_TYPENAME} open owner Ada`);
     }, 60_000);
 
-    test('reports a failing effect as output', async () => {
+    test('reports a failing effect as a failed tool call', async () => {
       const { runWith } = await setup();
       const output = await runWith(EffectDialect, "yield* Effect.fail(new Error('nope'));");
       expect(output).toContain('Error:');
@@ -401,9 +401,8 @@ const setup = async () => {
           input: JSON.stringify({ code }),
           providerExecuted: false,
         });
-        expect(result.error).toBeUndefined();
-        return Schema.decodeUnknownSync(Schema.Struct({ output: Schema.String }))(JSON.parse(String(result.result)))
-          .output;
+        // A failed call's text is what the model is shown in place of a result.
+        return result.error ?? Schema.decodeUnknownSync(Schema.String)(JSON.parse(String(result.result)));
       }),
     );
 

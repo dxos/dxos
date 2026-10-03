@@ -92,7 +92,7 @@ export const KanbanBoardRoot = ({
 
   if (columns.length === 0) {
     return (
-      <div className='flex flex-1 items-center justify-center p-8 text-center text-description'>
+      <div className='flex flex-1 items-center justify-center p-8 text-center text-fg-muted'>
         {t('select-pivot.placeholder')}
       </div>
     );

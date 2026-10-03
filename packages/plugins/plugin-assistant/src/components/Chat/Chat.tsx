@@ -18,7 +18,7 @@ import { useObject, useQuery } from '@dxos/echo-react';
 import { useIdentity } from '@dxos/halo-react';
 import { PublicKey, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Button, type ThemedClassName, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, Toast, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
   type ChatThreadController,
   type ChatThreadEvent,
@@ -600,34 +600,29 @@ const ChatThread = ({ classNames, viewType, tailLines, userHue: userHueProp, onV
         onRangeChange={setVisibleRange}
         controllerRef={handleControllerRef}
       >
-        <NaturalChatThread.Viewport classNames={classNames} padding />
+        <NaturalChatThread.Viewport classNames={classNames} />
       </NaturalChatThread.Root>
 
       {/* TODO(burdon): Why is this required? */}
       <Toast.Root
         data-testid='assistant.error'
-        type='foreground'
         open={!!toastError}
         duration={20_000}
         onOpenChange={(open) => !open && setToastError(undefined)}
       >
-        <Toast.Title icon='ph--warning--regular' onClose={() => setToastError(undefined)}>
-          {t('ai-service-error.label')}
-        </Toast.Title>
+        <Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Toast.Header>
         <Toast.Description>{toastError?.message}</Toast.Description>
         {toastAction && onViewUsage && (
-          <Toast.Actions>
-            <Toast.Action altText={t(toastAction.labelKey)} asChild>
-              <Button
-                onClick={() => {
-                  setToastError(undefined);
-                  onViewUsage();
-                }}
-              >
-                {t(toastAction.labelKey)}
-              </Button>
-            </Toast.Action>
-          </Toast.Actions>
+          <Toast.Footer>
+            <Toast.ActionTrigger
+              onClick={() => {
+                setToastError(undefined);
+                onViewUsage();
+              }}
+            >
+              {t(toastAction.labelKey)}
+            </Toast.ActionTrigger>
+          </Toast.Footer>
         )}
       </Toast.Root>
     </>
@@ -733,7 +728,7 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
       {hasTasks && (
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
           {/* The same surface and border as the prompt below, so the two read as one shell. */}
-          <ChatTaskList classNames='shrink-0 dx-group-surface border border-subdued-separator border-b-0 rounded-t-sm text-description' />
+          <ChatTaskList classNames='shrink-0 dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm text-fg-muted' />
         </Collapsible.Content>
       )}
       <NaturalChatPrompt

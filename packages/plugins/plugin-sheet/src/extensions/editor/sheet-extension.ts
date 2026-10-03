@@ -103,7 +103,7 @@ export const sheetExtension = ({ debug, functions = [] }: SheetExtensionOptions)
         if (description) {
           const info = document.createElement('p');
           info.innerText = description;
-          info.className = 'text-subdued';
+          info.className = 'text-fg-subtle';
           root.appendChild(info);
         }
 

@@ -12,10 +12,11 @@ import { type AggregateValue, GroupBy } from '@dxos/echo-host/query';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
-import { getDeep, isNonNullable } from '@dxos/util';
+import { countWork, getDeep, isNonNullable } from '@dxos/util';
 
 import { getObjectCore, isEchoObject } from '../echo-handler/index.ts';
 import { type QueryContext, type SourceEntry } from './query-context.ts';
+import { queryMetrics } from './query-metrics.ts';
 
 /**
  * True when any part of the query asks for deleted entities.
@@ -33,25 +34,41 @@ const _queryIncludesDeleted = (query: QueryAST.Query): boolean => {
   return includesDeleted;
 };
 
+/** A query's results in their public shape. */
+type PresentedResults<T extends Entity.Unknown> = {
+  kind: 'entities' | 'groups' | 'records';
+  objects: T[];
+  entries: QueryResult.EntityEntry<T>[];
+};
+
 /**
  * Predicate based query.
  */
 export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implements QueryResult.QueryResult<T> {
   private readonly _event = new Event<QueryResult.QueryResult<T>>();
   private readonly _diagnostic: QueryDiagnostic;
+  /** Grouping key under which this query's metrics are recorded. */
+  private readonly _metricsKey: string;
 
   private _isActive = false;
   private _resultCache?: QueryResult.EntityEntry<T>[] = undefined;
   private _objectCache?: T[] = undefined;
   private _subscribers: number = 0;
   private _atom: Atom.Atom<T[]> | undefined = undefined;
+  /** When the reactive query started, until it first holds every source's answer. */
+  private _startedAt?: number = undefined;
 
   constructor(
     private readonly _queryContext: QueryContext<T>,
     private readonly _query: Query.Query<T>,
   ) {
+    // Assigned before the context subscription below, whose recompute records under it.
+    this._metricsKey = Query.pretty(this._query);
+    queryMetrics.created(this._metricsKey);
+
     this._queryContext.changed.on(() => {
       if (this._recomputeResult()) {
+        countWork('echo.querySubscriberCallbacks', this._event.listenerCount());
         this._event.emit(this);
       }
     });
@@ -89,10 +106,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Does not subscribe to updates.
    */
   async run(opts?: { timeout?: number }): Promise<T[]> {
-    const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
-      timeout: opts?.timeout ?? 30_000,
-    });
-    return this._presentResults(filteredResults).objects;
+    return (await this._runOnce(opts)).objects;
   }
 
   /**
@@ -100,10 +114,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * Does not subscribe to updates.
    */
   async runEntries(opts?: { timeout?: number }): Promise<QueryResult.EntityEntry<T>[]> {
-    const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
-      timeout: opts?.timeout ?? 30_000,
-    });
-    return this._presentResults(filteredResults).entries;
+    return (await this._runOnce(opts)).entries;
   }
 
   async first(opts?: { timeout?: number }): Promise<T> {
@@ -205,6 +216,18 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     return this._atom;
   }
 
+  private async _runOnce(opts?: { timeout?: number }): Promise<PresentedResults<T>> {
+    const begin = performance.now();
+    const filteredResults = await this._queryContext.run(Context.default(), this._query.ast, {
+      timeout: opts?.timeout ?? 30_000,
+    });
+    const presented = this._presentResults(filteredResults);
+    countWork('echo.queryRuns');
+    countWork('echo.queryResultObjects', presented.objects.length);
+    queryMetrics.executed(this._metricsKey, performance.now() - begin, presented.objects.length, 'run');
+    return presented;
+  }
+
   private _ensureCachePresent(): void {
     if (!this._resultCache) {
       this._recomputeResult();
@@ -216,8 +239,18 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    */
   private _recomputeResult(): boolean {
     // TODO(dmaretskyi): Make results unique too.
+    const begin = performance.now();
     const results = this._queryContext.getResults();
     const presented = this._presentResults(results);
+    const end = performance.now();
+    countWork('echo.queryRecomputes');
+    countWork('echo.queryResultObjects', presented.objects.length);
+    queryMetrics.updated(this._metricsKey, end - begin, presented.objects.length);
+    // Time to answer: the first recompute after start at which no source is still outstanding.
+    if (this._startedAt !== undefined && !this._queryContext.hasPendingSources()) {
+      queryMetrics.executed(this._metricsKey, end - this._startedAt, presented.objects.length, 'reactive');
+      this._startedAt = undefined;
+    }
 
     const changed =
       presented.kind === 'groups'
@@ -254,11 +287,7 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
    * query (detected by the internal `SourceEntry.group` annotation, which the query context sets
    * uniformly across all entries or none), assembles flat aggregate records instead of deduped rows.
    */
-  private _presentResults(entries: SourceEntry<T>[]): {
-    kind: 'entities' | 'groups' | 'records';
-    objects: T[];
-    entries: QueryResult.EntityEntry<T>[];
-  } {
+  private _presentResults(entries: SourceEntry<T>[]): PresentedResults<T> {
     const { kept, removed } = this._collapseDuplicates(entries);
     entries = kept;
 
@@ -342,6 +371,8 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
 
   private _start(): void {
     this._isActive = true;
+    this._startedAt = performance.now();
+    queryMetrics.started(this._metricsKey);
     this._queryContext.start();
     this._diagnostic.isActive = true;
   }
@@ -350,6 +381,8 @@ export class QueryResultImpl<T extends Entity.Unknown = Entity.Unknown> implemen
     this._queryContext.stop();
     this._isActive = false;
     this._diagnostic.isActive = false;
+    this._startedAt = undefined;
+    queryMetrics.stopped(this._metricsKey);
   }
 
   private _checkQueryIsRunning(): void {

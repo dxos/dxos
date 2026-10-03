@@ -32,7 +32,7 @@ const DefaultStory = () => {
 
   // The surface host supplies Card.Root and the header; RoutineCard emits only the body.
   return (
-    <Card.Root fullWidth>
+    <Card.Root>
       <Card.Header>
         <Card.Title>{routine.name ?? 'Untitled'}</Card.Title>
       </Card.Header>

@@ -14,7 +14,7 @@ import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
-import { Flex, IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
+import { Flex, Button, Panel, Popover, Toolbar } from '@dxos/react-ui';
 import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
 import { Person } from '@dxos/types';
 
@@ -104,25 +104,22 @@ const ChatModuleContainer = ({
   return (
     <Chat.Root chat={chat} processor={processor}>
       <Panel.Root data-testid={participant ? `chat-panel-${participant}` : undefined}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher}>
-            <Toolbar.Text classNames='text-subdued'>
+            <Toolbar.Text classNames='text-fg-subtle'>
               {sender ? `${sender.name} · ${chat?.name ?? ''}` : chat?.name}
             </Toolbar.Text>
             <Popover.Root>
               <Popover.Trigger asChild>
-                <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
+                <Button icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />
               </Popover.Trigger>
-              <Popover.Portal>
-                <Popover.Content>
-                  <ExecutionGraphModule />
-                  <Popover.Arrow />
-                </Popover.Content>
-              </Popover.Portal>
+              <Popover.Content>
+                <ExecutionGraphModule />
+              </Popover.Content>
             </Popover.Root>
           </Chat.Toolbar>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} userHue={hue} />
             <Flex column classNames='relative gap-1 p-1'>
@@ -131,7 +128,7 @@ const ChatModuleContainer = ({
             </Flex>
             <Chat.Prompt {...chatProps} outline preset={preset?.id} />
           </Chat.Content>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Chat.Root>
   );

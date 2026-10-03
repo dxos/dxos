@@ -7,7 +7,7 @@ import React, { Fragment, useCallback, useEffect } from 'react';
 
 import type * as Template from '@dxos/compute/Template';
 import { type Obj } from '@dxos/echo';
-import { Field, Grid, Select, useTranslation } from '@dxos/react-ui';
+import { Field, Grid, Input, Select, useTranslation } from '@dxos/react-ui';
 import { isNonNullable } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -70,28 +70,23 @@ export const TemplateForm = ({ id, template, onChange }: TemplateFormProps) => {
 
               <Field.Root>
                 <Select.Root
-                  value={input.kind}
-                  onValueChange={(kind) => handleInputKindChange(input.name, kind as Template.InputKind)}
+                  value={[input.kind]}
+                  onValueChange={({ value: [kind] }) => handleInputKindChange(input.name, kind as Template.InputKind)}
+                  items={inputs.map(({ kind, label }) => ({ value: kind, label: label }))}
                 >
-                  <Select.TriggerButton placeholder='Type' classNames='w-full' />
-                  <Select.Portal>
-                    <Select.Content>
-                      <Select.Viewport>
-                        {inputs.map(({ kind, label }) => (
-                          <Select.Option key={kind} value={kind}>
-                            {label}
-                          </Select.Option>
-                        ))}
-                      </Select.Viewport>
-                    </Select.Content>
-                  </Select.Portal>
+                  <Select.Trigger placeholder='Type' classNames='w-full' />
+                  <Select.Content>
+                    {inputs.map(({ kind, label }) => (
+                      <Select.Item key={kind} item={{ value: kind, label: label }} />
+                    ))}
+                  </Select.Content>
                 </Select.Root>
               </Field.Root>
 
               <div>
                 {input.kind === 'value' && (
                   <Field.Root>
-                    <Field.Input
+                    <Input
                       placeholder={t('command.placeholder')}
                       classNames='w-full bg-transparent'
                       value={input.default ?? ''}

@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 
 import * as AppAnnotation from '@dxos/app-toolkit/AppAnnotation';
 import * as Skill from '@dxos/compute/Skill';
-import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
+import { Annotation, Collection, DXN, Format, Obj, Ref, Type } from '@dxos/echo';
 import { DescriptionAnnotation, FormInputAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { CardAnnotation, Text } from '@dxos/schema';
 import { History } from '@dxos/versioning';
@@ -25,7 +25,7 @@ export type Settings = SettingsModule.Settings;
 export class Document extends Type.makeObject<Document>(DXN.make('org.dxos.type.document', '0.1.0'))(
   Schema.Struct({
     name: Schema.optional(Schema.String),
-    description: Schema.optional(Schema.String),
+    description: Schema.String.pipe(Format.FormatAnnotation.set(Format.TypeFormat.Markdown), Schema.optional),
     fallbackName: Schema.String.pipe(FormInputAnnotation.set(false), Schema.optional),
     /** Owned body: `SetParent` cascades it with the document. */
     content: Ref.Ref(Text.Text).pipe(Annotation.SetParent.set(), FormInputAnnotation.set(false)),

@@ -86,7 +86,7 @@ export const buildQueryDecorations = (state: EditorState, { tags }: QueryOptions
               node.from,
               node.to,
               Decoration.mark({
-                class: 'text-subdued',
+                class: 'text-fg-subtle',
               }),
             );
             break;
@@ -338,7 +338,7 @@ class TypeWidget extends WidgetType {
     return container(
       'border-sky-500',
       Domino.of('span').classNames(mx('flex items-center px-1 text-black text-xs bg-sky-500')).text('type'),
-      Domino.of('span').classNames(mx('flex items-center px-1 text-description')).text(label),
+      Domino.of('span').classNames(mx('flex items-center px-1 text-fg-muted')).text(label),
     );
   }
 }
@@ -394,9 +394,9 @@ class ObjectWidget extends WidgetType {
       'border-separator divide-x divide-separator',
       ...this._entries.map(([key, value]) => {
         const keyEl = Domino.of('span')
-          .classNames('flex items-center px-1 text-description text-xs bg-modal-surface first:rounded-l-xs')
+          .classNames('flex items-center px-1 text-fg-muted text-xs bg-modal-surface first:rounded-l-xs')
           .text(key);
-        const valueEl = Domino.of('span').classNames('flex items-center px-1 text-description').text(value);
+        const valueEl = Domino.of('span').classNames('flex items-center px-1 text-fg-muted').text(value);
         return Domino.of('span').classNames('inline-flex items-stretch').append(keyEl, valueEl);
       }),
     );
@@ -489,12 +489,12 @@ const queryHighlightStyle = HighlightStyle.define([
   { tag: t.attributeName, class: 'text-blue-text' },
   { tag: t.variableName, class: 'text-teal-text' },
   { tag: t.propertyName, class: 'text-teal-text' },
-  { tag: t.definitionOperator, class: 'text-subdued' },
-  { tag: t.separator, class: 'text-subdued' },
-  { tag: t.derefOperator, class: 'text-subdued' },
-  { tag: t.brace, class: 'text-subdued' },
-  { tag: t.squareBracket, class: 'text-subdued' },
-  { tag: t.operator, class: 'text-subdued' },
+  { tag: t.definitionOperator, class: 'text-fg-subtle' },
+  { tag: t.separator, class: 'text-fg-subtle' },
+  { tag: t.derefOperator, class: 'text-fg-subtle' },
+  { tag: t.brace, class: 'text-fg-subtle' },
+  { tag: t.squareBracket, class: 'text-fg-subtle' },
+  { tag: t.operator, class: 'text-fg-subtle' },
   { tag: t.paren, class: 'text-amber-text' },
 ]);
 

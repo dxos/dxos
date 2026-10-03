@@ -37,8 +37,18 @@ export class Collection extends Type.makeObject<Collection>(DXN.make('org.dxos.t
   ),
 ) {}
 
+/**
+ * Creates a new collection object.
+ *
+ * @performance O(n) in initial members; allocates an in-memory collection object.
+ */
 export const make = (props: Partial<Obj.MakeProps<typeof Collection>> = {}): Type.InstanceType<typeof Collection> =>
   Obj.make(Collection, { objects: [], ...props });
 
+/**
+ * Type guard for collections.
+ *
+ * @performance O(1) type-URI comparison with a typename fallback; no schema validation.
+ */
 export const isCollection: (value: unknown) => value is Type.InstanceType<typeof Collection> =
   Obj.instanceOf(Collection);

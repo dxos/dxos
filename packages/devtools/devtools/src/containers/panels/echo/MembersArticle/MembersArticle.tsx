@@ -66,20 +66,20 @@ export const MembersArticle = ({ role, ...props }: ArticleProps & { space?: Spac
   return (
     <Panel.Root role={role}>
       {!props.space && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <DataSpaceSelector />
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
-      <Panel.Content>
+      <Panel.Body>
         <MasterDetailTable
           properties={properties}
           data={data}
           detailsTransform={(item) => item._original}
           detailsPosition='bottom'
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

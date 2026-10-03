@@ -16,9 +16,10 @@ import React, {
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import {
+  Button,
   Field,
   Icon,
-  IconButton,
+  Input,
   Tag,
   Toolbar,
   composable,
@@ -349,6 +350,8 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
           // No leading control means no icon track: the title then starts where the host's own
           // content does, rather than 2rem inside it with nothing in the gap.
           !grid && (showControls ? 'grid-cols-[2rem_1fr_min-content]' : 'grid-cols-[1fr_min-content]'),
+          // The tree's rows sit inside its content's inset gutter, so the pane insets by the same gap.
+          grid && 'px-(--dx-gap-size)',
           className,
         )}
         // On the list's own template the pane's cells name their tracks, so the icon sits under the
@@ -384,12 +387,12 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             <span
               className={mx('flex items-center justify-center h-(--dx-control)', grid ? 'col-[status]' : 'col-start-1')}
             >
-              <Icon icon='ph--plus--regular' classNames='text-subdued' />
+              <Icon icon='ph--plus--regular' tone='subtle' />
             </span>
           ))}
 
         <Field.Root>
-          <Field.Input
+          <Input
             variant='subdued'
             // An input clips its overflow rather than wrapping it, so a long title ends mid-word
             // against the trailing controls with nothing to say it continues; the ellipsis says so.
@@ -468,14 +471,14 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                   classNames='inline-flex items-center gap-1'
                   data-testid='taskList.edit.file'
                 >
-                  <Icon icon='ph--paperclip--regular' size={3} />
+                  <Icon icon='ph--paperclip--regular' size='xs' />
                   <span data-testid='taskList.edit.file.name'>{file.name}</span>
-                  <IconButton
+                  <Button
                     variant='ghost'
-                    density='sm'
+                    size='sm'
                     iconOnly
                     icon='ph--x--regular'
-                    size={3}
+                    iconSize='xs'
                     label={t('remove-file.label', { name: file.name })}
                     classNames='p-0 min-h-0 h-auto'
                     onClick={() => setFiles((files) => files.filter((_, position) => position !== index))}
@@ -491,7 +494,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             chrome floating over the title. */}
         {(showControls ? current || draft.trim().length > 0 : !current && draft.trim().length > 0) && (
           <Toolbar.Root
-            density='sm'
+            size='sm'
             classNames={mx(
               'row-start-1 justify-end p-0 bg-transparent',
               // `-2` is the icon column once the pane has only two tracks, which would put the
@@ -503,7 +506,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
                 priority on until it is saved. */}
             {showControls && task && showEstimates && <TaskEstimateControl task={task} />}
             {showControls && task && <TaskPriorityIcon task={task} />}
-            <Toolbar.IconButton
+            <Button
               variant='ghost'
               iconOnly
               icon='ph--check--regular'
@@ -512,7 +515,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
               onClick={handleSave}
               onMouseDown={(event) => event.preventDefault()}
             />
-            <Toolbar.IconButton
+            <Button
               variant='ghost'
               iconOnly
               icon='ph--x--regular'

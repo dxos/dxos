@@ -12,7 +12,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Banner, Button, Flex, SystemIconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Flex, SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
 
@@ -98,9 +98,7 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
       {!githubToken && (
         <Flex column classNames='py-form-gap'>
           <Banner.Root valence='info'>
-            <Banner.Content>
-              <Banner.Title>{t('no-github-token.label')}</Banner.Title>
-            </Banner.Content>
+            <Banner.Title>{t('no-github-token.label')}</Banner.Title>
           </Banner.Root>
           <Flex classNames='pt-form-gap'>
             <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
@@ -110,7 +108,7 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
 
       {githubToken && (
         <Flex gap='sm' justify='end'>
-          {gistUrl && <SystemIconButton.Clipboard iconOnly value={gistUrl} />}
+          {gistUrl && <SystemButton.Clipboard iconOnly value={gistUrl} />}
           <Button disabled={publishing} onClick={handlePublish}>
             {t('publish.label')}
           </Button>

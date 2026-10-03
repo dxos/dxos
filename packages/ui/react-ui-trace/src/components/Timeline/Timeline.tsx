@@ -7,8 +7,15 @@ import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from '
 
 import { addEventListener } from '@dxos/async';
 import { LogLevel } from '@dxos/log';
-import { Icon, type ThemedClassName, useDynamicRef, useForwardedRef, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import {
+  Icon,
+  type ThemedClassName,
+  composable,
+  composableProps,
+  useDynamicRef,
+  useForwardedRef,
+  useTranslation,
+} from '@dxos/react-ui';
 import { Shimmer } from '@dxos/react-ui-components';
 import { type WindowController, useListModel, useWindow, windowRowProps } from '@dxos/react-ui-virtual';
 import { mx } from '@dxos/ui-theme';
@@ -242,7 +249,7 @@ export const Timeline = memo(
           ref={containerRef}
         >
           {layout.rows.length < 1 ? (
-            <p className='text-description p-trim-md'>{t('no-commits.message')}</p>
+            <p className='text-fg-muted p-trim-md'>{t('no-commits.message')}</p>
           ) : (
             scroller && (
               <TimelineWindow
@@ -422,14 +429,14 @@ const TimelineRowView = memo(
         {showIcon && <CommitIcon commit={commit} />}
         <div
           className={mx(
-            'text-sm truncate cursor-pointer text-description font-thin group-aria-current/row:text-current-fg hover:text-current-fg',
+            'text-sm truncate cursor-pointer text-fg-muted font-thin group-aria-current/row:text-current-fg hover:text-current-fg',
             hasLink && 'underline decoration-dotted underline-offset-2',
           )}
         >
           {hasShimmerEffect(commit) ? <Shimmer>{message}</Shimmer> : message}
         </div>
         {showTimestamp && (
-          <div className='text-xs tabular-nums items-center text-description font-thin'>
+          <div className='text-xs tabular-nums items-center text-fg-muted font-thin'>
             {commit.timestamp && format(commit.timestamp, TIMESTAMP_FORMAT)}
           </div>
         )}
@@ -448,12 +455,9 @@ const CommitIcon = memo(({ commit }: { commit: Commit }) => {
   return (
     <Icon
       icon={commit.icon}
-      size={4}
-      synchronized
-      classNames={mx(
-        commit.icon === 'ph--spinner-gap--regular' && 'animate-spin',
-        commit.level !== undefined && levelColors[commit.level],
-      )}
+      size='md'
+      spin={commit.icon === 'ph--spinner-gap--regular'}
+      classNames={commit.level !== undefined ? levelColors[commit.level] : undefined}
     />
   );
 });
