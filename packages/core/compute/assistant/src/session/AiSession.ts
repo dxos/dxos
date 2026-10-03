@@ -29,6 +29,7 @@ import { log } from '@dxos/log';
 import { McpToolkit } from '@dxos/mcp-client';
 import { FeedProtocol } from '@dxos/protocols';
 import { type ContentBlock, Message } from '@dxos/types';
+import { markWork } from '@dxos/util';
 
 import { AiRequest, type GenerationObserver, formatSystemPrompt } from '../request/index.ts';
 import { ToolExecutionServices } from '../tool-runtime/index.ts';
@@ -207,6 +208,7 @@ export class Session extends Resource {
 
       yield* Trace.emitRequestPhase('loading-history');
       const history = yield* Effect.promise(() => this.getHistory());
+      markWork('session.history-loaded');
       const skills = this.context.getSkills();
       const objects = this.context.getObjects();
 
@@ -232,6 +234,8 @@ export class Session extends Resource {
         system: params.system,
       });
 
+      markWork('session.request-begun');
+
       // Fire begin-request hooks declared by the bound skills. These run in the agent's turn
       // fiber (Tier A only), so they cannot reach the live host (Tier B) — that is the end hook's job.
       yield* SkillHooks.runHooks({
@@ -243,7 +247,9 @@ export class Session extends Resource {
       // Turn loop: recompute toolkit and system prompt between turns to pick up dynamically enabled skills.
       // Each iteration is scoped so the MCP connections it opens are closed before the next opens its own.
       const runIteration = Effect.gen({ self: this }, function* () {
+        markWork('session.iteration');
         yield* Effect.promise(() => this.context.sync());
+        markWork('session.context-synced');
         const currentSkills = this.context.getSkills();
         const mcps = yield* connectMcpServers(currentSkills, params.mcpServers);
         yield* Trace.emitRequestPhase('building-toolkit');
@@ -253,6 +259,7 @@ export class Session extends Resource {
           opaqueToolkits: mcps,
         });
 
+        markWork('session.toolkit-built');
         log('toolkit', { tools: Record.keys(toolkit.toolkit.tools) });
         const system = yield* formatSystemPrompt({
           system: params.system,
@@ -260,6 +267,7 @@ export class Session extends Resource {
           objects: this.context.getObjects(),
           instructions: this.#instructions,
         }).pipe(Effect.orDie);
+        markWork('session.system-prompt-built');
 
         const { done, finishReason } = yield* request.runAgentTurn({ system, toolkit });
         if (done) {
@@ -272,6 +280,7 @@ export class Session extends Resource {
         }
 
         yield* request.runTools({ toolkit });
+        markWork('session.tools-done');
         return 'continue' as const;
       }).pipe(Effect.scoped);
 

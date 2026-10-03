@@ -35,6 +35,7 @@ import { Annotation, Database } from '@dxos/echo';
 import { EffectEx, SpanAttributes } from '@dxos/effect';
 import type { SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { markWork } from '@dxos/util';
 
 import { type ProcessIdGenerator, UUIDProcessIdGenerator } from './process-id.ts';
 import { ProcessManagerService } from './process-manager-service.ts';
@@ -654,10 +655,12 @@ export class Impl implements Manager {
           Effect.orDie,
         );
       }
+      markWork('process.services-resolved');
 
       const fullCtx = Context.merge(builtinCtx, serviceCtx);
 
       const callbacks = yield* definition.create(ctx).pipe(Effect.provide(fullCtx as Context.Context<any>));
+      markWork('process.created');
 
       const onFinished = (state: Process.State, cause?: Cause.Cause<never>): Effect.Effect<void> =>
         Effect.gen({ self: this }, function* () {
@@ -750,7 +753,9 @@ export class Impl implements Manager {
 
       // Append spawn event; seq is passed to runOnSpawn so it's removed when the handler settles.
       const spawnSeq = yield* this.#store.appendEvent(id, { _tag: 'spawn' });
+      markWork('process.persisted');
       yield* handle.runOnSpawn(spawnSeq);
+      markWork('process.started');
       log('lifecycle: started', { pid: id, key: definition.key });
 
       // Runtime→public boundary: the live handle stores its RPC client untyped (`RpcClient<any>`),

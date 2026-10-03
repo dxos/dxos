@@ -35,6 +35,7 @@ import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Registry } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { ContentBlock, Message } from '@dxos/types';
+import { markWork } from '@dxos/util';
 
 import { getOperationFromTool } from '../tool-runtime/services.ts';
 import { type AiAssistantError } from '../util/index.ts';
@@ -335,6 +336,7 @@ export class Request {
       });
 
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
+      markWork('request.prompt-encoded');
 
       const observer = this._observer;
       let currentMessageId: Obj.ID | null = null;
@@ -454,6 +456,7 @@ export class Request {
   }): Effect.Effect<void, RunError, RunRequirements | R> =>
     Effect.gen({ self: this }, function* () {
       const toolkit = opaqueToolkit ? yield* opaqueToolkit.handlers : undefined;
+      markWork('request.tools-begin');
       const toolCalls = this.getToolCalls();
       // A turn can end with no calls to run — a turn recovered from an unresolvable tool call leaves
       // none. Submitting anyway would append a tool message with no blocks, which the provider
@@ -472,6 +475,7 @@ export class Request {
           return yield* callTool(toolkit, block);
         }),
       );
+      markWork('request.tools-called');
 
       yield* this._submitMessage(
         Obj.make(Message.Message, {
