@@ -22,6 +22,7 @@ import {
   Popover,
   Select,
   Switch,
+  SystemButton,
   Tabs,
   Toolbar,
   useTranslation,
@@ -302,14 +303,12 @@ const OnlineSwitch = () => {
   );
 
   return (
-    <div className='px-1 flex items-center gap-2'>
-      <Switch
-        checked={online}
-        onCheckedChange={({ checked }) => handleChange(checked)}
-        data-testid='assistant.online'
-        label={t('online-switch.label')}
-      />
-    </div>
+    <Switch
+      checked={online}
+      onCheckedChange={({ checked }) => handleChange(checked)}
+      data-testid='assistant.online'
+      label={t('online-switch.label')}
+    />
   );
 };
 
@@ -362,7 +361,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
   );
 
   return (
-    <Flex column gap='xs' classNames='p-form-chrome' data-testid='assistant.mcp-servers'>
+    <Flex column data-testid='assistant.mcp-servers'>
       <Listbox.Root items={servers.map((server) => ({ value: server.id, label: server.name ?? server.id }))}>
         <Listbox.Content aria-label={t('options.mcp.title')} classNames='gap-1'>
           {servers.map((server) => (
@@ -371,7 +370,7 @@ const McpServersPanel = ({ db }: McpServersPanelProps) => {
         </Listbox.Content>
       </Listbox.Root>
       {adding ? (
-        <McpServerForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
+        <McpForm onSubmit={handleAdd} onCancel={() => setAdding(false)} />
       ) : (
         <Button
           variant='ghost'
@@ -470,12 +469,12 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
   );
 };
 
-type McpServerFormProps = {
+type McpFormProps = {
   onSubmit: (draft: McpServerDraft) => void;
   onCancel: () => void;
 };
 
-const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
+const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
@@ -544,23 +543,13 @@ const McpServerForm = ({ onSubmit, onCancel }: McpServerFormProps) => {
         />
       </Field.Root>
       <div className='flex gap-2'>
-        <Button
+        <SystemButton.Save
           type='submit'
           variant='ghost'
-          icon='ph--check--regular'
-          iconOnly
-          label={t('save.button')}
           disabled={!canSubmit}
           data-testid='assistant.mcp-server.save'
         />
-        <Button
-          type='button'
-          variant='ghost'
-          icon='ph--x--regular'
-          iconOnly
-          label={t('cancel.button')}
-          onClick={onCancel}
-        />
+        <SystemButton.Cancel type='button' variant='ghost' onClick={onCancel} />
       </div>
     </form>
   );
