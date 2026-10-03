@@ -63,7 +63,10 @@ export const projectThread = ({
   // to whatever sorts before them, which after a rewind is the abandoned reply.
   const feedIds = new Set(feedMessages.map((message) => message.id));
   const unrecorded = Array.sort(
-    pendingMessages.filter((message) => !feedIds.has(message.id) && !isQueued(message)),
+    Array.dedupeWith(
+      pendingMessages.filter((message) => !feedIds.has(message.id) && !isQueued(message)),
+      ({ id: a }, { id: b }) => a === b,
+    ),
     byAppendOrder,
   );
   // A queue entry is not a turn: the turn the agent runs from one appends its own user message, so an
@@ -87,7 +90,7 @@ export const projectThread = ({
     }
     // Once a recorded message continues from the rewind head the fork is lineage, whether or not the
     // pointer has been cleared yet.
-    if (index > 0 && !sorted.some((message) => Feed.getParent(message) === sorted[index - 1].id)) {
+    if (index > 0 && !sorted.slice(index + 1).some((message) => Feed.getParent(message) === sorted[index - 1].id)) {
       return {
         messages: collapseToolRuns([...Feed.history(sorted, { head: sorted[index - 1].id }).items, ...unrecorded]),
         queued,

@@ -224,14 +224,26 @@ export class Session extends Resource {
         objects: objects.length,
       });
 
-      // Formatted once per binding set rather than per model call: formatting loads every skill's
-      // template, each a wait behind the page's other work, and an unchanged prompt is also what
-      // lets the provider's prompt cache hit across turns. The atoms keep their arrays' identity
-      // until a binding changes them.
-      let formatted: { skills: Skill.Skill[]; objects: Obj.Unknown[]; text: string } | undefined;
+      // Formatted once per binding set and source text rather than per model call: formatting loads
+      // every skill's template, each a wait behind the page's other work, and an unchanged prompt is
+      // also what lets the provider's prompt cache hit across turns. The atoms keep their arrays'
+      // identity until a binding changes them; a source not loaded here cannot be compared, so it
+      // formats again.
+      const sources = (currentSkills: Skill.Skill[]): (string | undefined)[] => [
+        ...this.#instructions.map((instructions) => instructions.text.target?.content),
+        ...currentSkills.map((skill) => skill.instructions.source.target?.content),
+      ];
+      let formatted:
+        | { skills: Skill.Skill[]; objects: Obj.Unknown[]; sources: (string | undefined)[]; text: string }
+        | undefined;
       const formatSystem = (currentSkills: Skill.Skill[], currentObjects: Obj.Unknown[]) =>
         Effect.gen({ self: this }, function* () {
-          if (formatted?.skills === currentSkills && formatted.objects === currentObjects) {
+          const currentSources = sources(currentSkills);
+          if (
+            formatted?.skills === currentSkills &&
+            formatted.objects === currentObjects &&
+            currentSources.every((source, index) => source !== undefined && source === formatted?.sources[index])
+          ) {
             return formatted.text;
           }
           const text = yield* formatSystemPrompt({
@@ -240,7 +252,7 @@ export class Session extends Resource {
             objects: currentObjects,
             instructions: this.#instructions,
           }).pipe(Effect.orDie);
-          formatted = { skills: currentSkills, objects: currentObjects, text };
+          formatted = { skills: currentSkills, objects: currentObjects, sources: currentSources, text };
           return text;
         });
 

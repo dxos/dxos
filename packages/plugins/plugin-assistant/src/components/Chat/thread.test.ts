@@ -124,6 +124,25 @@ describe('projectThread', () => {
     expect(text(messages)).toEqual(['first', 'answer', 'revised']);
   });
 
+  // The rewound prompt may itself continue an earlier fork from the same head; that is not the
+  // continuation of this rewind.
+  test('a rewound turn that continues an earlier fork does not end its own rewind', ({ expect }) => {
+    const first = message('first');
+    const answer = message('answer');
+    const asked = message('asked');
+    const replied = message('replied');
+    Feed.setParent(asked, answer);
+    // Delivered twice before the feed records it, which must still render once.
+    const revised = message('revised');
+
+    const { messages } = projectThread({
+      feedMessages: [first, answer, asked, replied],
+      pendingMessages: [revised, revised],
+      rewindFrom: asked.id,
+    });
+    expect(text(messages)).toEqual(['first', 'answer', 'revised']);
+  });
+
   test('an empty feed projects nothing', ({ expect }) => {
     expect(projectThread({ feedMessages: [] }).messages).toEqual([]);
   });
