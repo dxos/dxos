@@ -100,12 +100,13 @@ export const CreateObjectPanel = ({
       // A live create always has a form to show — the object's own — so only a draft can skip
       // straight to creating from an entry that declares no inputs.
       if (mode !== 'live' && metadata && !metadata.inputSchema && !metadata.customPanel && !schema) {
-        await onCreateObject?.({ metadata });
+        // No form to show, so the caller's defaults (a name typed into a link, say) are the data.
+        await onCreateObject?.({ metadata, data: initialFormValues });
       } else {
         onTypenameChange?.(id);
       }
     },
-    [mode, schema, resolve, onCreateObject, onTypenameChange],
+    [mode, schema, resolve, initialFormValues, onCreateObject, onTypenameChange],
   );
 
   const inputSchema = useMemo(() => {

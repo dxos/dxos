@@ -51,7 +51,8 @@ export type SpaceGeneratorProps = {
 
 export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
   ({ children, space, onCreateObjects, ...props }, forwardedRef) => {
-    const { invokePromise } = useOperationInvoker();
+    const invoker = useOperationInvoker();
+    const { invokePromise } = invoker;
     const { t } = useTranslation(meta.profile.key);
     const client = useClient();
     const [count, setCount] = useState(1);
@@ -72,7 +73,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     // Create type generators.
     const typeMap = useMemo(() => {
       const recordGenerators = new Map<string, ObjectGenerator<any>>(
-        recordTypes.map((type) => [Type.getTypename(type), createGenerator(client, invokePromise, type)]),
+        recordTypes.map((type) => [Type.getTypename(type), createGenerator(client, invoker, manager, type)]),
       );
 
       const allTemplateGenerators = new Map<string, ObjectGenerator<any>>(
@@ -86,7 +87,7 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
       );
 
       return new Map([...staticGenerators, ...presets.items, ...recordGenerators, ...allTemplateGenerators]);
-    }, [client, invokePromise, presets, allTemplates]);
+    }, [client, invoker, invokePromise, manager, presets, allTemplates]);
 
     // Query space to get info.
     const updateInfo = useCallback(async () => {

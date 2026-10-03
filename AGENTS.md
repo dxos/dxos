@@ -202,7 +202,7 @@ writes wedge the other, which is how a debugging session ends up chasing its own
   and the builds fail with TS7016. Use `serve` only on a fresh worktree.
 - **A stale module is not a hung server.** If `/@fs/<file>` still serves old code but
   `index.json` answers fast, the file watch was lost, not the server; the `dxos:rearm-watch`
-  plugin in `.storybook/main.ts` exists for exactly this, so suspect a regression there.
+  plugin in `tools/storybook-react/.storybook/main.ts` exists for exactly this, so suspect a regression there.
 - **Unresponsive is usually not dead.** Wait ~3 minutes before concluding anything. If it
   is still down, run `tools/storybook-react/diagnose.sh` to capture the cause BEFORE
   restarting; a restart destroys the only evidence.

@@ -73,7 +73,7 @@ export const ComplementarySidebar = ({ current }: ComplementarySidebarProps) => 
       {/* R0 Tabs */}
       <Tabs.Root classNames='contents' orientation='vertical' value={selectedVariant} keepMounted>
         <div
-          data-tauri-drag-region
+          data-tauri-drag-region='deep'
           style={iconSize(5)}
           className={mx(
             'absolute z-5 inset-y-0 end-0 w-(--dx-r0-size)!',
