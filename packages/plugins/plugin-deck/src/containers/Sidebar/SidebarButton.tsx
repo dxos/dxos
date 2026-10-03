@@ -6,7 +6,7 @@ import React, { useCallback } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { IconButton, type IconButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, type ButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 
 import { useDeckCompanions, useDeckState } from '#hooks';
@@ -15,7 +15,7 @@ import { meta } from '#meta';
 export const ToggleSidebarButton = ({
   classNames,
   variant = 'ghost',
-}: ThemedClassName<Pick<IconButtonProps, 'variant'>>) => {
+}: ThemedClassName<Pick<ButtonProps, 'variant'>>) => {
   const { updateState } = useDeckState();
   const { t } = useTranslation(meta.profile.key);
 
@@ -27,11 +27,11 @@ export const ToggleSidebarButton = ({
   }, [updateState]);
 
   return (
-    <IconButton
+    <Button
       variant={variant}
       icon='ph--sidebar--regular'
       iconOnly
-      size={4}
+      iconSize='md'
       label={t('open-navigation-sidebar.label')}
       onClick={handleClick}
       classNames={classNames}
@@ -48,11 +48,11 @@ export const CloseSidebarButton = () => {
   }, [updateState]);
 
   return (
-    <IconButton
+    <Button
       variant='ghost'
       icon='ph--caret-line-left--regular'
       iconOnly
-      size={4}
+      iconSize='md'
       label={t('close-navigation-sidebar.button')}
       onClick={handleClick}
       classNames='rounded-none px-1 dx-focus-ring-inset pe-[max(.5rem,env(safe-area-inset-left))]'
@@ -87,7 +87,7 @@ export const ToggleComplementarySidebarButton = ({
   );
 
   return (
-    <IconButton
+    <Button
       variant='ghost'
       classNames={['[&>svg]:-scale-x-100', classNames]}
       icon='ph--sidebar-simple--regular'

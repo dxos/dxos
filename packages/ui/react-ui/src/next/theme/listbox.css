@@ -1,136 +1,140 @@
 /*
- * Listbox: a scrolling stack of row Containers. Rows take ui-theme's state tokens as the current react-ui-list rows do
- * (`dx-hover`, `dx-selected`, `dx-current`): hover and the keyboard highlight step off the surface, selection and
- * "current" take the current surface; the focus ring is drawn on the highlighted row while the listbox has focus.
+ * Listbox: a scrolling stack of row Containers. Row states (hover, highlight, selection, drop) are `.dx-row`'s
+ * (row.css); this file lays the rows out.
  */
 
 @layer dx-components {
-  .nx-listbox {
+  .dx-listbox {
     display: flex;
     flex-direction: column;
     min-width: 0;
     min-height: 0;
     max-height: 100%;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
   }
 
-  .nx-scroll-root.nx-listbox-scroll {
+  .dx-scroll-root.dx-listbox-scroll {
     flex: 1 1 auto;
   }
 
   /* Content without its own ScrollArea: the Root passes its host's rails through to the rows, as ScrollArea.Root does. */
-  .nx-listbox:has(> .nx-grid[data-gutter='inherit']) {
+  .dx-listbox:has(> .dx-container[data-gutter='inherit']) {
     grid-column: full;
     display: grid;
     grid-template-columns: subgrid;
     max-height: none;
   }
-  .nx-listbox:has(> .nx-grid[data-gutter='inherit']) > :not(.nx-grid) {
+  .dx-listbox:has(> .dx-container[data-gutter='inherit']) > :not(.dx-container) {
     grid-column: content;
   }
 
-  .nx-listbox-content:focus {
+  .dx-listbox-content:focus {
     outline: none;
   }
 
-  .nx-listbox-item {
-    position: relative;
-    border-radius: var(--radius-sm, 0.25rem);
-    cursor: default;
-  }
-  .nx-listbox-item[data-scope='listbox'][role='option'] {
-    cursor: pointer;
-  }
-  .nx-listbox-item[role='option']:hover,
-  .nx-listbox-item[data-highlighted] {
-    background: var(--color-hover-surface);
-  }
-  .nx-listbox-item[aria-selected='true'] {
-    background: var(--color-selected-surface);
-  }
-  .nx-listbox-item[aria-selected='true']:hover {
-    background: var(--color-selected-surface-hover);
-  }
-  .nx-listbox-item[aria-current='true'] {
-    background: var(--color-current-surface);
-  }
-  .nx-listbox-content:focus-visible > .nx-listbox-item[data-highlighted] {
-    box-shadow: inset 0 0 0 var(--nx-focus-ring-width) var(--nx-focus-ring-color);
-  }
-  .nx-listbox-item[data-disabled] {
-    opacity: 0.5;
-    cursor: default;
-  }
-
   /*
-   * Rows place their parts by part, so a composed row lays out like the default one: an optional block-sized icon cell,
-   * the text over its description in the growing column, then every other part in its own trailing column.
+   * Rows place their parts by part, so a composed row lays out like the default one: block-sized leading cells (an
+   * icon, a drag handle, a checkbox: whatever precedes the text), the text over its description in the growing column,
+   * then every other part in its own trailing column.
    */
-  .nx-listbox-item {
-    --nx-item-columns: minmax(0, 1fr);
-    --nx-item-text-column: 1;
+  .dx-listbox-item {
+    --dx-item-columns: minmax(0, 1fr);
+    --dx-item-text-column: 1;
     grid-template-rows: auto;
     grid-auto-columns: auto;
     align-items: center;
-    min-height: var(--nx-block-size);
+    min-height: var(--dx-block-size);
   }
-  .nx-listbox-item:has(> .nx-listbox-item-icon) {
-    --nx-item-columns: var(--nx-block-size) minmax(0, 1fr);
-    --nx-item-text-column: 2;
+  .dx-listbox-item:has(> .dx-listbox-item-text:nth-child(2)) {
+    --dx-item-columns: var(--dx-block-size) minmax(0, 1fr);
+    --dx-item-text-column: 2;
   }
-  .nx-listbox-item:has(> .nx-listbox-item-description) {
+  .dx-listbox-item:has(> .dx-listbox-item-text:nth-child(3)) {
+    --dx-item-columns: repeat(2, var(--dx-block-size)) minmax(0, 1fr);
+    --dx-item-text-column: 3;
+  }
+  .dx-listbox-item:has(> .dx-listbox-item-text:nth-child(4)) {
+    --dx-item-columns: repeat(3, var(--dx-block-size)) minmax(0, 1fr);
+    --dx-item-text-column: 4;
+  }
+  .dx-listbox-item:has(> .dx-listbox-item-description) {
     grid-template-rows: auto auto;
   }
-  .nx-listbox-item.nx-grid > * {
+  .dx-listbox-item.dx-container > * {
     grid-column: auto;
     grid-row: 1 / -1;
   }
-  .nx-listbox-item.nx-grid > .nx-listbox-item-icon {
-    grid-column: 1;
-  }
-  .nx-listbox-item.nx-grid > .nx-listbox-item-text {
-    grid-column: var(--nx-item-text-column);
+  .dx-listbox-item.dx-container > .dx-listbox-item-text {
+    grid-column: var(--dx-item-text-column);
     grid-row: 1;
   }
-  .nx-listbox-item.nx-grid > .nx-listbox-item-description {
-    grid-column: var(--nx-item-text-column);
+  .dx-listbox-item.dx-container > .dx-listbox-item-description {
+    grid-column: var(--dx-item-text-column);
     grid-row: 2;
   }
 
   /* Text over description: together they take one block plus a line, not a block each. */
-  .nx-listbox-item:has(> .nx-listbox-item-description) > .nx-listbox-item-text {
+  .dx-listbox-item:has(> .dx-listbox-item-description) > .dx-listbox-item-text {
     padding-block-end: 0;
   }
-  .nx-listbox-item > .nx-listbox-item-description {
+  .dx-listbox-item > .dx-listbox-item-description {
     padding-block-start: 0;
   }
-  .nx-listbox-item > :is(.nx-listbox-item-text, .nx-listbox-item-description) {
-    padding-inline-end: var(--nx-gap-size);
+  .dx-listbox-item > :is(.dx-listbox-item-text, .dx-listbox-item-description) {
+    padding-inline-end: var(--dx-gap-size);
   }
-  .nx-listbox-item:not(:has(> .nx-listbox-item-icon)) > :is(.nx-listbox-item-text, .nx-listbox-item-description) {
-    padding-inline-start: var(--nx-gap-size);
+  .dx-listbox-item > .dx-listbox-item-text:first-child,
+  .dx-listbox-item > .dx-listbox-item-text:first-child + .dx-listbox-item-description {
+    padding-inline-start: var(--dx-gap-size);
   }
 
   /* Trailing parts are an inset apart, and an icon-only Button pads out to its block like it does in a toolbar. */
-  .nx-listbox-item.nx-grid
-    > :not(
-      .nx-listbox-item-icon,
-      .nx-listbox-item-text,
-      .nx-listbox-item-description,
-      .nx-listbox-item-indicator,
-      .nx-drop-indicator
-    ) {
-    margin-inline-end: var(--nx-control-inset);
+  .dx-listbox-item.dx-container
+    > .dx-listbox-item-text
+    ~ :not(.dx-listbox-item-description, .dx-listbox-item-indicator, .dx-drop-indicator) {
+    margin-inline-end: var(--dx-control-inset);
   }
-  .nx-listbox-item.nx-grid > .nx-button[data-square] {
-    margin: var(--nx-control-inset);
+  .dx-listbox-item.dx-container > .dx-button[data-square] {
+    margin: var(--dx-control-inset);
+  }
+  .dx-listbox-item.dx-container > .dx-collapsible-trigger[data-caret-only] {
+    margin-inline-end: 0;
   }
 
-  .nx-listbox-item-indicator {
+  .dx-listbox-item-indicator {
     display: grid;
     place-items: center;
-    width: var(--nx-block-size);
-    height: var(--nx-block-size);
+    width: var(--dx-block-size);
+    height: var(--dx-block-size);
+  }
+
+  /*
+   * Root `columns`: the Content's template holds the tracks and each row is a subgrid of them, placing its children in
+   * order; a description takes the next track like any part.
+   */
+  .dx-listbox-content[data-columns] > .dx-listbox-item.dx-container {
+    grid-column: content;
+    grid-template-columns: subgrid;
+  }
+  .dx-listbox-content[data-columns] > .dx-collapsible > .dx-listbox-item.dx-container {
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+  }
+  :is(.dx-listbox-content[data-columns], .dx-listbox-content[data-columns] > .dx-collapsible)
+    > .dx-listbox-item.dx-container
+    > * {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  /* A collapsible row: the Collapsible root spans the content track, the row above its detail, both full width. */
+  .dx-listbox-content > .dx-collapsible {
+    display: grid;
+    grid-column: content;
+    grid-template-columns: subgrid;
+  }
+  .dx-listbox-content > .dx-collapsible > * {
+    grid-column: 1 / -1;
   }
 }

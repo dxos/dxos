@@ -3,19 +3,31 @@
 //
 
 import * as Effect from 'effect/Effect';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, ObjectCard } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection } from '@dxos/link';
 import { useQuery } from '@dxos/react-client/echo';
-import { Button, Card, Field, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { MasterDetail, type MasterDetailAdornment, type MasterDetailIcon } from '@dxos/react-ui-list';
+import {
+  Button,
+  Container,
+  Empty,
+  Field,
+  Flex,
+  Icon,
+  Input,
+  Panel,
+  ScrollArea,
+  Toolbar,
+  Tooltip,
+  useTranslation,
+} from '@dxos/react-ui';
+import { OrderedList } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { AtprotoCapabilities } from '#types';
@@ -31,8 +43,74 @@ export type PdsBrowserProps = {
   db: Database.Database;
 };
 
-type CollectionItem = { id: string };
-type RecordItem = { id: string; record: AtprotoRepo.RepoRecord };
+type PaneRow = {
+  id: string;
+  label: string;
+  icon: string;
+  /** A status icon with a tooltip label (e.g. the 'mapped' badge). */
+  adornment?: { icon: string; label: string };
+};
+
+type PaneListProps = {
+  rows: readonly PaneRow[];
+  selectedId?: string;
+  onSelect: (id: string | undefined) => void;
+  emptyLabel: string;
+  detail?: ReactNode;
+};
+
+/**
+ * One level of the browser: a selectable list in its own pane beside a detail pane, composed from `OrderedList` and two
+ * Panels (master-detail is composed, not a component). The list sizes to its content up to `max-w-xs`; the detail takes
+ * the rest and holds the next level.
+ */
+const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListProps) => (
+  // `overflow-hidden` lets the panes shrink below their content so their own scroll areas engage.
+  <Flex gap='sm' classNames='dx-grow overflow-hidden'>
+    <Panel.Root classNames='shrink-0 w-max max-w-xs'>
+      <Panel.Body>
+        {rows.length === 0 ? (
+          <Empty>{emptyLabel}</Empty>
+        ) : (
+          <OrderedList.Root<PaneRow>
+            items={rows}
+            getId={(row) => row.id}
+            value={selectedId}
+            onValueChange={(id) => onSelect(id)}
+          >
+            {({ items }) => (
+              <OrderedList.Content scroll>
+                {items.map((row) => (
+                  <OrderedList.Item
+                    key={row.id}
+                    id={row.id}
+                    canDrag={false}
+                    highlightOnHover
+                    // A click on the selected row clears the selection; the list selects any other row itself.
+                    onClick={() => row.id === selectedId && onSelect(undefined)}
+                  >
+                    <OrderedList.ItemIcon>
+                      <Icon icon={row.icon} />
+                    </OrderedList.ItemIcon>
+                    <OrderedList.ItemText>{row.label}</OrderedList.ItemText>
+                    {row.adornment && (
+                      <Tooltip.Trigger asChild side='bottom' content={row.adornment.label}>
+                        <Icon icon={row.adornment.icon} />
+                      </Tooltip.Trigger>
+                    )}
+                  </OrderedList.Item>
+                ))}
+              </OrderedList.Content>
+            )}
+          </OrderedList.Root>
+        )}
+      </Panel.Body>
+    </Panel.Root>
+    <Panel.Root classNames='flex-1 min-w-0'>
+      <Panel.Body classNames='flex flex-col dx-grow'>{detail}</Panel.Body>
+    </Panel.Root>
+  </Flex>
+);
 
 /**
  * Browse the collections and records on an atproto repo (PDS) as a nested master-detail: collections →
@@ -171,49 +249,33 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
     ).catch((err) => setError(err instanceof Error ? err.message : String(err)));
   }, [record, mappedForCollection, collection, activeHandle, connectedHandles, connections, db]);
 
-  const collectionItems: CollectionItem[] = useMemo(() => collections.map((nsid) => ({ id: nsid })), [collections]);
-  const recordItems: RecordItem[] = useMemo(
-    () => records.map((entry) => ({ id: entry.uri, record: entry })),
+  const collectionRows: PaneRow[] = useMemo(
+    () =>
+      collections.map((nsid) => ({
+        id: nsid,
+        label: nsid,
+        icon: mapped.has(nsid) ? 'ph--puzzle-piece--regular' : 'ph--cube--regular',
+        adornment: mapped.has(nsid) ? { icon: 'ph--seal-check--regular', label: t('mapped.label') } : undefined,
+      })),
+    [collections, mapped, t],
+  );
+  const recordRows: PaneRow[] = useMemo(
+    () => records.map((entry) => ({ id: entry.uri, label: entry.rkey, icon: 'ph--file--regular' })),
     [records],
   );
-
-  const getCollectionIcon = useCallback(
-    (_get: unknown, item: CollectionItem): MasterDetailIcon => ({
-      icon: mapped.has(item.id) ? 'ph--puzzle-piece--regular' : 'ph--cube--regular',
-    }),
-    [mapped],
-  );
-  const getCollectionAdornment = useCallback(
-    (_get: unknown, item: CollectionItem): MasterDetailAdornment | undefined =>
-      mapped.has(item.id) ? { icon: 'ph--seal-check--regular', label: t('mapped.label') } : undefined,
-    [mapped, t],
-  );
-
-  // Icon/hue from the decoded object's type, matching how the object renders as a card elsewhere.
-  const previewIcon = preview
-    ? (Obj.getIcon(preview) ?? { icon: 'ph--circle-dashed--regular', hue: undefined })
-    : undefined;
 
   const recordDetail = record ? (
     <ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
-        <Flex column gap='sm'>
-          <span className='font-mono text-xs text-description truncate'>{record.uri}</span>
+        <Container gap='md' gutter='none'>
+          <span className='font-mono text-xs text-fg-muted truncate'>{record.uri}</span>
           {mappedForCollection ? (
             <Flex column gap='sm'>
-              {preview && previewIcon && (
-                <Card.Root>
-                  <Card.Header>
-                    <Card.Block>
-                      <Icon
-                        icon={previewIcon.icon}
-                        classNames={previewIcon.hue ? getStyles(previewIcon.hue).text : undefined}
-                      />
-                    </Card.Block>
-                    <Card.Title>{Obj.getLabel(preview)}</Card.Title>
-                  </Card.Header>
+              {preview && (
+                <ObjectCard.Root>
+                  <ObjectCard.Header subject={preview} />
                   <Surface.Surface type={AppSurface.CardContent} data={{ subject: preview }} limit={1} />
-                </Card.Root>
+                </ObjectCard.Root>
               )}
               {alreadyImported ? (
                 <span className='text-sm text-success-text'>{t('imported.label')}</span>
@@ -226,18 +288,18 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
           ) : (
             <JsonHighlighter data={record.value} />
           )}
-        </Flex>
+        </Container>
       </ScrollArea.Viewport>
     </ScrollArea.Root>
   ) : null;
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root classNames='px-2'>
-          <Icon icon='ph--at--regular' size={4} classNames='text-description' />
+          <Icon icon='ph--at--regular' size='md' tone='muted' />
           <Field.Root>
-            <Field.Input
+            <Input
               classNames='grow'
               placeholder={t('handle.placeholder')}
               value={handleInput}
@@ -251,36 +313,27 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
           </Field.Root>
           <Button onClick={() => setActiveHandle(handleInput.trim() || undefined)}>{t('browse.label')}</Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col dx-grow py-2'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col dx-grow py-2'>
         {error && <div className='px-2 pb-2 text-sm text-error-text'>{error}</div>}
-        <MasterDetail<CollectionItem>
-          orientation='horizontal'
-          classNames='dx-grow'
-          items={collectionItems}
+        <PaneList
+          rows={collectionRows}
           selectedId={collection}
           onSelect={setCollection}
-          getLabel={(_get, item) => item.id}
-          getIcon={getCollectionIcon}
-          getAdornment={getCollectionAdornment}
           emptyLabel={t('no-collections.label')}
           detail={
             collection ? (
-              <MasterDetail<RecordItem>
-                orientation='horizontal'
-                classNames='dx-grow'
-                items={recordItems}
+              <PaneList
+                rows={recordRows}
                 selectedId={recordUri}
                 onSelect={setRecordUri}
-                getLabel={(_get, item) => item.record.rkey}
-                getIcon={() => ({ icon: 'ph--file--regular' })}
                 emptyLabel={t('no-records.label')}
                 detail={recordDetail}
               />
             ) : null
           }
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

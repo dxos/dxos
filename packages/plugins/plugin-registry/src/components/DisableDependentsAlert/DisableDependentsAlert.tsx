@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { AlertDialog, Button, useTranslation } from '@dxos/react-ui';
+import { AlertDialog, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -45,7 +45,7 @@ export const DisableDependentsAlert = ({
         <AlertDialog.Description>
           {t('disable-dependents-dialog.description', { plugin: resolveName(pluginId) })}
         </AlertDialog.Description>
-        <ul className='mt-2 list-disc pl-6 text-sm text-description'>
+        <ul className='mt-2 list-disc pl-6 text-sm text-fg-muted'>
           {dependents.map((dependentId) => (
             <li key={dependentId} title={dependentId}>
               {resolveName(dependentId)}
@@ -53,17 +53,13 @@ export const DisableDependentsAlert = ({
           ))}
         </ul>
       </AlertDialog.Body>
-      <AlertDialog.ActionBar>
+      <AlertDialog.Footer>
         <div className='grow' />
-        <AlertDialog.Cancel asChild>
-          <Button>{t('cancel.label')}</Button>
-        </AlertDialog.Cancel>
-        <AlertDialog.Action asChild>
-          <Button variant='primary' onClick={onConfirm}>
-            {t('disable-dependents-dialog.confirm.label')}
-          </Button>
+        <AlertDialog.Cancel>{t('cancel.label')}</AlertDialog.Cancel>
+        <AlertDialog.Action variant='primary' onClick={onConfirm}>
+          {t('disable-dependents-dialog.confirm.label')}
         </AlertDialog.Action>
-      </AlertDialog.ActionBar>
+      </AlertDialog.Footer>
     </AlertDialog.Content>
   );
 };

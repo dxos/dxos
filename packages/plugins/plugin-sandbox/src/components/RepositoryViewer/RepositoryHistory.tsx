@@ -30,7 +30,7 @@ export const RepositoryHistory = ({
 }: RepositoryHistoryProps) => {
   const { t } = useTranslation(meta.profile.key);
   if (commits.length === 0) {
-    return <div className='p-4 text-description'>{t('history-empty.message')}</div>;
+    return <div className='p-4 text-fg-muted'>{t('history-empty.message')}</div>;
   }
 
   return (
@@ -51,8 +51,8 @@ export const RepositoryHistory = ({
                   data-testid='repository.history.commit'
                 >
                   <span className='truncate'>{subject}</span>
-                  <code className='text-xs text-description'>{commit.hash.slice(0, 7)}</code>
-                  <span className='text-xs text-description truncate'>
+                  <code className='text-xs text-fg-muted'>{commit.hash.slice(0, 7)}</code>
+                  <span className='text-xs text-fg-muted truncate'>
                     {commit.author.name} · {new Date(commit.author.timestamp).toLocaleString()}
                   </span>
                 </button>

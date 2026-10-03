@@ -13,7 +13,7 @@ import { EffectEx } from '@dxos/effect';
 import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import { corePlugins } from '@dxos/plugin-testing';
-import { Card, Icon, Popover, useThemeContext } from '@dxos/react-ui';
+import { Block, Card, Icon, Popover, useThemeMode } from '@dxos/react-ui';
 import {
   EditorPreviewProvider,
   type EditorPreviewProviderProps,
@@ -41,32 +41,28 @@ const PreviewCard = () => {
     return null;
   }
   return (
-    <Popover.Portal>
-      <Popover.Content
-        onOpenAutoFocus={(event) => event.preventDefault()}
-        classNames={[
-          'origin-(--transform-origin)',
-          'data-[state=open]:animate-popover-in',
-          'data-[state=closed]:animate-popover-out',
-        ]}
-      >
-        <Popover.Viewport>
-          <Card.Root border={false} classNames='dx-card-popover'>
-            <Card.Header>
-              <Card.Block>
-                <Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
-              </Card.Block>
-              <Card.Title>{Obj.getLabel(target.object) ?? target.label}</Card.Title>
-              <Popover.Close asChild>
-                <Card.ActionIconButton action='close' />
-              </Popover.Close>
-            </Card.Header>
-            <Surface.Surface type={AppSurface.CardContent} data={{ subject: target.object }} limit={1} />
-          </Card.Root>
-        </Popover.Viewport>
-        <Popover.Arrow />
-      </Popover.Content>
-    </Popover.Portal>
+    <Popover.Content
+      classNames={[
+        'origin-(--transform-origin)',
+        'data-[state=open]:animate-popover-in',
+        'data-[state=closed]:animate-popover-out',
+      ]}
+    >
+      <Popover.Body>
+        <Card.Root border={false} classNames='dx-card-popover'>
+          <Card.Header>
+            <Block>
+              <Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
+            </Block>
+            <Card.Title>{Obj.getLabel(target.object) ?? target.label}</Card.Title>
+            <Popover.CloseTrigger asChild>
+              <Card.Action system='close' />
+            </Popover.CloseTrigger>
+          </Card.Header>
+          <Surface.Surface type={AppSurface.CardContent} data={{ subject: target.object }} limit={1} />
+        </Card.Root>
+      </Popover.Body>
+    </Popover.Content>
   );
 };
 
@@ -80,7 +76,7 @@ type StoryArgs = {
  * surface renders the card.
  */
 const DefaultStory = ({ text }: StoryArgs) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
   const handleLookup = useCallback<NonNullable<EditorPreviewProviderProps['onLookup']>>(
     async (ref) => {

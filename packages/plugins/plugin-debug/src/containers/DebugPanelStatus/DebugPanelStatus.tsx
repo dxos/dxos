@@ -8,13 +8,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { type DebugPortController, getDebugPortController } from '@dxos/react-client/devtools';
-import {
-  FloatingPanel,
-  type FloatingPanelPoint,
-  type FloatingPanelSize,
-  IconButton,
-  useTranslation,
-} from '@dxos/react-ui';
+import { Button, FloatingPanel, type FloatingPanelPoint, type FloatingPanelSize, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 
 import { meta } from '#meta';
@@ -84,12 +78,12 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
     [update, invokePromise],
   );
   const handlePositionChangeEnd = useCallback(
-    (next: FloatingPanelPoint) => update((prev) => ({ ...prev, position: next })),
+    ({ position }: { position: FloatingPanelPoint }) => update((prev) => ({ ...prev, position })),
     [update],
   );
 
   const handleSizeChangeEnd = useCallback(
-    (next: FloatingPanelSize) => update((prev) => ({ ...prev, size: next })),
+    ({ size }: { size: FloatingPanelSize }) => update((prev) => ({ ...prev, size })),
     [update],
   );
   // First opening: centred above the status bar, where the popover it replaces used to sit. A
@@ -112,7 +106,7 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
   return (
     <FloatingPanel.Root
       open={mode === 'floating' && floatingOpen}
-      onOpenChange={setFloatingOpen}
+      onOpenChange={({ open }) => setFloatingOpen(open)}
       defaultSize={size}
       minSize={MIN_SIZE}
       getAnchorPosition={getAnchorPosition}
@@ -125,10 +119,10 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
       <StatusBar.Item classNames='relative'>
         {mode === 'floating' ? (
           <FloatingPanel.Trigger asChild>
-            <IconButton variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
+            <Button variant='ghost' icon='ph--terminal-window--regular' iconOnly label={label} />
           </FloatingPanel.Trigger>
         ) : (
-          <IconButton
+          <Button
             variant='ghost'
             icon='ph--terminal-window--regular'
             iconOnly
@@ -145,28 +139,25 @@ export const DebugPanelStatus = ({ controller = getDebugPortController() }: Debu
           />
         )}
       </StatusBar.Item>
-      <FloatingPanel.Portal>
-        <FloatingPanel.Content>
-          <DebugPanel.Root>
-            <FloatingPanel.Header classNames='pl-1'>
-              <FloatingPanel.DragTrigger>
-                <FloatingPanel.Title>{t('debug-panel.title')}</FloatingPanel.Title>
-              </FloatingPanel.DragTrigger>
-              {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
-              <FloatingPanel.Control>
-                <DebugPanelHeader mode={mode} onModeChange={handleModeChange} density='sm' />
-                <FloatingPanel.StageTrigger stage='minimized' />
-                <FloatingPanel.StageTrigger stage='default' />
-                <FloatingPanel.CloseTrigger />
-              </FloatingPanel.Control>
-            </FloatingPanel.Header>
-            <FloatingPanel.Body classNames='grid'>
-              <DebugPanel.Body />
-            </FloatingPanel.Body>
-          </DebugPanel.Root>
-          <FloatingPanel.Resizers />
-        </FloatingPanel.Content>
-      </FloatingPanel.Portal>
+      <FloatingPanel.Content>
+        <DebugPanel.Root>
+          <FloatingPanel.Header classNames='pl-1'>
+            <FloatingPanel.DragTrigger>
+              <FloatingPanel.Title>{t('debug-panel.title')}</FloatingPanel.Title>
+            </FloatingPanel.DragTrigger>
+            {/* Fold and restore only: a debug panel over the whole app is a window the reader would resize. */}
+            <FloatingPanel.Control>
+              <DebugPanelHeader mode={mode} onModeChange={handleModeChange} size='sm' />
+              <FloatingPanel.StageTrigger stage='minimized' />
+              <FloatingPanel.StageTrigger stage='default' />
+              <FloatingPanel.CloseTrigger />
+            </FloatingPanel.Control>
+          </FloatingPanel.Header>
+          <FloatingPanel.Body classNames='grid'>
+            <DebugPanel.Body />
+          </FloatingPanel.Body>
+        </DebugPanel.Root>
+      </FloatingPanel.Content>
     </FloatingPanel.Root>
   );
 };

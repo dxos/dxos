@@ -277,7 +277,7 @@ const NodeFrame = memo(({ handlers, hovered, editingPart, ghost, debug, ...props
       <Component {...props} editing={editing} />
       {debug && (
         <div
-          className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-description pointer-events-none'
+          className='absolute top-0 left-0 px-1 text-[10px] leading-4 font-mono whitespace-nowrap bg-modal-surface text-fg-muted pointer-events-none'
           data-testid='node-debug'
         >
           {node.id} · {node.type} · {bounds.x},{bounds.y} {bounds.width}×{bounds.height} · z {node.z}
@@ -343,7 +343,7 @@ export const ClassNodeView = ({ node, editing }: NodeViewProps) => {
 
 /** A node whose type the registry does not know: its frame and type name, so the scene still reads. */
 export const UnknownNodeView = ({ node }: NodeViewProps) => (
-  <div className='dx-fullscreen flex items-center justify-center text-xs text-description'>{node.type}</div>
+  <div className='dx-fullscreen flex items-center justify-center text-xs text-fg-muted'>{node.type}</div>
 );
 
 export const NoteNodeView = ({ node, editing }: NodeViewProps) => {
@@ -365,7 +365,7 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
       {tier === 'preview' && child && (
         <div className='dx-fullscreen flex flex-col items-center justify-center gap-1 pointer-events-none'>
           <span className='text-2xl'>{child.name ?? child.id}</span>
-          <span className='text-description'>
+          <span className='text-fg-muted'>
             {Object.keys(child.nodes).length} nodes · {Object.keys(child.links).length} links
           </span>
         </div>
@@ -392,7 +392,7 @@ export const PortalNodeView = ({ node, store, registry, zoom, depth, liveDepth, 
           </div>
         )}
       {!opening && (
-        <span className='absolute top-1 left-2 text-xs text-subdued pointer-events-none'>
+        <span className='absolute top-1 left-2 text-xs text-fg-subtle pointer-events-none'>
           {child?.name ?? child?.id}
         </span>
       )}

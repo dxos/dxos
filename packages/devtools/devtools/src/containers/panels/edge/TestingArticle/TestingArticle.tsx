@@ -6,7 +6,7 @@ import React from 'react';
 
 import { type Space } from '@dxos/client/echo';
 import { log } from '@dxos/log';
-import { IconButton, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 
 import { DataSpaceSelector } from '../../../../containers/index.ts';
 import { useDevtoolsState } from '../../../../hooks/index.ts';
@@ -30,15 +30,15 @@ export const TestingArticle = ({ role, onScriptPluginOpen }: TestingArticleProps
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <DataSpaceSelector />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col gap-4 p-4'>
-        <IconButton icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col gap-4 p-4'>
+        <Button icon='ph--code--regular' label='Open Script Plugin' onClick={handleScriptPluginOpen} />
         <div className='border-t border-separator'>{space && <SyncStateInfo space={space} />}</div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

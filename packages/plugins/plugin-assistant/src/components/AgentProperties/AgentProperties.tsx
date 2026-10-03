@@ -9,7 +9,7 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Field, useTranslation } from '@dxos/react-ui';
+import { Checkbox, Field, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { isFeedOwnerSchema } from '@dxos/schema';
 
@@ -89,15 +89,14 @@ export const AgentProperties = ({ agent, onSubscriptionsChanged }: AgentProperti
       </Field.Root>
 
       {subscribedObjects.map((object) => (
-        <Field.Checkbox
+        <Checkbox
           key={object.id}
           checked={subscribedUris.has(Obj.getURI(object))}
-          onCheckedChange={(checked) => {
+          onCheckedChange={({ checked }) => {
             handleSubscriptionChange(object, checked === true);
           }}
-        >
-          {Obj.getLabel(object) ?? object.id}
-        </Field.Checkbox>
+          label={Obj.getLabel(object) ?? object.id}
+        />
       ))}
     </Form.FieldSet>
   );

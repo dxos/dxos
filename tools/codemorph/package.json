@@ -11,7 +11,14 @@
   },
   "license": "FSL-1.1-Apache-2.0",
   "author": "info@dxos.org",
+  "type": "module",
   "scripts": {
-    "codemorph": "vite-node ./src/main.ts"
+    "test": "vitest run --passWithNoTests --project=node"
+  },
+  "dependencies": {
+    "@typescript/typescript6": "catalog:"
+  },
+  "devDependencies": {
+    "vitest": "catalog:"
   }
 }

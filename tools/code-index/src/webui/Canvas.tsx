@@ -111,7 +111,7 @@ const Table = (props: { content: string }) => {
 
 const Panel = (props: { presentation: Fold.Presentation }) => (
   <section class='border-separator bg-modalSurface overflow-hidden rounded border'>
-    <header class='border-separator text-description flex items-center gap-2 border-b px-2 py-1 text-xs'>
+    <header class='border-separator text-fg-muted flex items-center gap-2 border-b px-2 py-1 text-xs'>
       <span class='uppercase'>{props.presentation.kind}</span>
       <Show when={props.presentation.title}>{(title) => <span class='text-baseText'>{title()}</span>}</Show>
     </header>
@@ -146,7 +146,7 @@ export const Canvas = (props: { canvas: readonly Fold.Presentation[]; onClear: (
     <div class='flex h-full min-w-0 flex-col'>
       <header class='border-separator flex items-center justify-between border-b px-3 py-2'>
         <h2 class='text-sm font-medium'>Results</h2>
-        <button class='text-description hover:text-baseText text-xs' onClick={props.onClear}>
+        <button class='text-fg-muted hover:text-baseText text-xs' onClick={props.onClear}>
           clear
         </button>
       </header>

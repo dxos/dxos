@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { Banner, Icon, useTranslation } from '@dxos/react-ui';
+import { Empty, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -14,8 +14,8 @@ const outcomeIcon: Record<GitHubOperation.CheckOutcome, { icon: string; classNam
   failure: { icon: 'ph--x-circle--fill', classNames: 'text-error-text' },
   pending: { icon: 'ph--circle-notch--regular', classNames: 'text-warning-text animate-spin' },
   success: { icon: 'ph--check-circle--fill', classNames: 'text-success-text' },
-  neutral: { icon: 'ph--minus-circle--regular', classNames: 'text-description' },
-  skipped: { icon: 'ph--prohibit--regular', classNames: 'text-description' },
+  neutral: { icon: 'ph--minus-circle--regular', classNames: 'text-fg-muted' },
+  skipped: { icon: 'ph--prohibit--regular', classNames: 'text-fg-muted' },
 };
 
 // What needs attention first: a failure is the reason to open the list, a running check the next.
@@ -54,11 +54,11 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
   const summary = useCheckSummary(runs);
 
   if (!sorted || sorted.length === 0) {
-    return <Banner.Empty label={t(sorted ? 'no-checks.message' : 'checks-loading.message')} />;
+    return <Empty>{t(sorted ? 'no-checks.message' : 'checks-loading.message')}</Empty>;
   }
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={sorted.map((run) => ({ value: `${run.name}-${run.url ?? ''}`, label: run.name }))}>
       <Listbox.Content aria-label={summary} data-testid='pull-request.checks'>
         {sorted.map((run) => {
           const { icon, classNames } = outcomeIcon[run.outcome];
@@ -81,11 +81,9 @@ export const CheckRunList = ({ runs }: CheckRunListProps) => {
               data-testid='pull-request.check'
               onClick={url ? () => window.open(url, '_blank', 'noopener,noreferrer') : undefined}
             >
-              <Listbox.ItemContent
-                icon={<Icon icon={icon} size={5} classNames={classNames} />}
-                title={run.name}
-                description={[detail, outcome].filter(Boolean).join(' · ')}
-              />
+              <Listbox.ItemIcon icon={icon} classNames={classNames} />
+              <Listbox.ItemText>{run.name}</Listbox.ItemText>
+              <Listbox.ItemDescription>{[detail, outcome].filter(Boolean).join(' · ')}</Listbox.ItemDescription>
             </Listbox.Item>
           );
         })}

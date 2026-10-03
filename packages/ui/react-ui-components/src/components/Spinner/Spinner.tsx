@@ -5,8 +5,9 @@
 import { AnimatePresence, motion } from 'motion/react';
 import React, { forwardRef } from 'react';
 
-import { type Size, type ThemedClassName } from '@dxos/react-ui';
+import { type ThemedClassName } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/ui-theme';
+import { type Size } from '@dxos/ui-types';
 
 export type SpinnerState = 'pulse' | 'spin' | 'flash' | 'error';
 

@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button, Toast, useTranslation } from '@dxos/react-ui';
+import { Toast, useTranslation } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { meta as pluginMeta } from '#meta';
@@ -36,19 +36,15 @@ const FailureToast = ({ rawError }: FailureToastProps) => {
 
   return (
     <Toast.Provider>
-      <Toast.Viewport />
+      <Toast.Toaster />
       {/* Long, 32-bit-safe duration keeps the toast up for review; larger values overflow setTimeout and fire immediately. */}
-      <Toast.Root type='foreground' open={open} duration={24 * 60 * 60 * 1000} onOpenChange={setOpen}>
-        <Toast.Title icon='ph--warning--regular' onClose={() => setOpen(false)}>
-          {t('ai-service-error.label')}
-        </Toast.Title>
+      <Toast.Root open={open} duration={24 * 60 * 60 * 1000} onOpenChange={setOpen}>
+        <Toast.Header icon='ph--warning--regular'>{t('ai-service-error.label')}</Toast.Header>
         <Toast.Description>{error.message}</Toast.Description>
         {action && (
-          <Toast.Actions>
-            <Toast.Action altText={t(action.labelKey)} asChild>
-              <Button onClick={() => setOpen(false)}>{t(action.labelKey)}</Button>
-            </Toast.Action>
-          </Toast.Actions>
+          <Toast.Footer>
+            <Toast.ActionTrigger onClick={() => setOpen(false)}>{t(action.labelKey)}</Toast.ActionTrigger>
+          </Toast.Footer>
         )}
       </Toast.Root>
     </Toast.Provider>
