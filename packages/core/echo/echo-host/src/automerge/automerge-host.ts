@@ -26,6 +26,7 @@ import {
   type SubductionPolicy,
   initSubduction,
   interpretAsDocumentId,
+  isValidDocumentId,
 } from '@automerge/automerge-repo';
 import { type MemorySigner, type SedimentreeId, type Subduction } from '@automerge/automerge-subduction';
 import bs58check from 'bs58check';
@@ -1343,8 +1344,8 @@ export class AutomergeHost extends Resource {
     }
 
     // A local space's documents carry no space key, so their owner is read from `access.spaceId`.
-    const handle = this._repo.getHandle(documentId as DocumentId);
-    if (handle && getHandleState(this._repo, documentId as DocumentId) === 'ready') {
+    const handle = isValidDocumentId(documentId) ? this._repo.getHandle(documentId) : undefined;
+    if (handle && getHandleState(this._repo, handle.documentId) === 'ready') {
       const spaceId = handle.doc()?.access?.spaceId;
       if (SpaceId.isValid(spaceId) && SpaceId.isLocal(spaceId)) {
         return spaceId;
