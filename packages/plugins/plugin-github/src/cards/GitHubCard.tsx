@@ -77,7 +77,7 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
       )}
       {url && (
         <Card.Row>
-          <a className='dx-link text-sm' href={url} target='_blank' rel='noopener noreferrer'>
+          <a className='nx-link-accent text-sm' href={url} target='_blank' rel='noopener noreferrer'>
             Open on GitHub
           </a>
         </Card.Row>

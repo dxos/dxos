@@ -104,7 +104,7 @@ export const HelpMenu = () => {
         />
         {version && (
           <Flex column classNames='ps-8 pe-2 pb-2 text-xs text-description'>
-            <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
+            <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='nx-link-hover font-mono'>
               {version}
             </a>
             {released && (

@@ -96,7 +96,7 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
               </Card.Header>
               <Card.Body>
                 <Card.Section>
-                  <Card.Text onClick={handleOpenSource} classNames='dx-link font-mono text-sm'>
+                  <Card.Text onClick={handleOpenSource} classNames='nx-link-accent font-mono text-sm'>
                     {bookmark.url}
                   </Card.Text>
                   <Card.Text>{bookmark.excerpt}</Card.Text>

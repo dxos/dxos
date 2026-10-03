@@ -636,7 +636,7 @@ const ConversationMessageRow = ({
           <span className='ml-auto ps-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
         </button>
         {snippet && (
-          <button type='button' className='text-start text-sm text-description line-clamp-2 dx-link-hover'>
+          <button type='button' className='text-start text-sm text-description line-clamp-2 nx-link-hover'>
             {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
           </button>
         )}

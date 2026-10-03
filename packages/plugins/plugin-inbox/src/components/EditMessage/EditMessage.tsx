@@ -260,12 +260,12 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
               {(!showCc || !showBcc) && (
                 <span className='shrink-0 flex items-center gap-2 ps-2 text-sm text-description'>
                   {!showCc && (
-                    <button type='button' className='dx-link-hover' onClick={revealCc}>
+                    <button type='button' className='nx-link-hover' onClick={revealCc}>
                       {t('draft-cc.label')}
                     </button>
                   )}
                   {!showBcc && (
-                    <button type='button' className='dx-link-hover' onClick={revealBcc}>
+                    <button type='button' className='nx-link-hover' onClick={revealBcc}>
                       {t('draft-bcc.label')}
                     </button>
                   )}
@@ -322,7 +322,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
             <div className='flex flex-col dx-grow py-3'>
               <Editor
                 compact
-                classNames='dx-input dx-expand'
+                classNames='nx-input-box dx-expand'
                 placeholder={t('message-body.placeholder')}
                 extensions={extensions}
                 value={message.blocks?.find((block) => block._tag === 'text')?.text ?? ''}

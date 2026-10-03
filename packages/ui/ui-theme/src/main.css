@@ -31,12 +31,8 @@
 @import './css/base/typography.css';
 
 /* @layer dx-components (components) */
-@import './css/components/checkbox.css';
 @import './css/components/focus.css';
-@import './css/components/icon.css';
-@import './css/components/input.css';
 @import './css/components/callout.css';
-@import './css/components/link.css';
 @import './css/components/scrollbar.css';
 @import './css/components/state.css';
 @import './css/components/surface.css';

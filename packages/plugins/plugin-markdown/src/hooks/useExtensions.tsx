@@ -302,7 +302,7 @@ const createRenderLink =
     // TODO(burdon): Formalize/document internal link format.
     const isInternal = url.startsWith('/') || url.startsWith(window.location.origin);
     const icon = Domino.of('span')
-      .classNames('dx-link ms-1 inline-block align-[-0.125em]')
+      .classNames('nx-link-accent ms-1 inline-block align-[-0.125em]')
       .append(Domino.svg(isInternal ? 'ph--arrow-square-down--regular' : 'ph--arrow-square-out--regular'));
 
     if (isInternal) {
@@ -333,7 +333,7 @@ const renderLinkTooltip: RenderCallback<{ url: string }> = (el, { url }) => {
   el.appendChild(
     Domino.of('a')
       .attributes({ href: url, target: '_blank', rel: 'noreferrer' })
-      // Not `dx-link`: the tooltip sits on the inverse surface, where the accent link color has no
+      // Not `nx-link-accent`: the tooltip sits on the inverse surface, where the accent link color has no
       // contrast — inherit the tooltip's own `text-inverse-fg` instead.
       .classNames('flex items-center gap-2 cursor-pointer underline underline-offset-2')
       .text(safeUrl(url)?.toString() ?? url)

@@ -499,8 +499,12 @@ export const CommentsArticle = ({ attendableId, subject }: CommentsArticleProps)
                 t,
                 i18nKey: 'no-comments.message',
                 components: {
-                  commentIcon: <Icon icon='ph--chat-text--regular' size='md' classNames='dx-icon-inline' />,
-                  versionsIcon: <Icon icon='ph--git-branch--regular' size='md' classNames='dx-icon-inline' />,
+                  commentIcon: (
+                    <Icon icon='ph--chat-text--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                  ),
+                  versionsIcon: (
+                    <Icon icon='ph--git-branch--regular' size='md' classNames='inline-block align-[-0.125em]' />
+                  ),
                 },
               }}
             />

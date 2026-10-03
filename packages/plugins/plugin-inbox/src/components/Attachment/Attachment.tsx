@@ -91,7 +91,7 @@ export const AttachmentViewer = ({ url, kind, type, name, pending, classNames }:
         <div className={mx('grid place-items-center gap-2 p-8 text-description', classNames)}>
           <Icon icon='ph--file--regular' size='xl' />
           <span data-testid='attachment.unsupported'>{type ? `No preview for ${type}` : 'No preview available'}</span>
-          <a href={url} download={name} className='dx-link-hover underline' data-testid='attachment.download'>
+          <a href={url} download={name} className='nx-link-hover underline' data-testid='attachment.download'>
             Download{name ? ` ${name}` : ''}
           </a>
         </div>

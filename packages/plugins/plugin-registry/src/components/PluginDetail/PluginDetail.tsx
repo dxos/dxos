@@ -256,14 +256,22 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   {homePage && (
                     <Link href={homePage} classNames='text-sm text-description'>
                       {t('home-page.label')}
-                      <Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
+                      <Icon
+                        icon='ph--arrow-square-out--regular'
+                        size='xs'
+                        classNames='ml-1 inline-block align-[-0.125em]'
+                      />
                     </Link>
                   )}
 
                   {source && (
                     <Link href={source} classNames='text-sm text-description'>
                       {t('source.label')}
-                      <Icon icon='ph--arrow-square-out--regular' size='xs' classNames='ml-1 dx-icon-inline' />
+                      <Icon
+                        icon='ph--arrow-square-out--regular'
+                        size='xs'
+                        classNames='ml-1 inline-block align-[-0.125em]'
+                      />
                     </Link>
                   )}
 

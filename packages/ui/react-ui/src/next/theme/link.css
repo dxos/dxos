@@ -22,4 +22,18 @@
   .nx-link[data-variant='neutral']:hover {
     text-decoration: underline;
   }
+
+  /* Class forms for raw DOM and non-Link elements: `nx-link-accent` (the accent link), `nx-link-hover` (keeps its
+     colour, takes the accent on hover). */
+  .nx-link-accent {
+    color: var(--color-accent-text);
+    cursor: pointer;
+  }
+  .nx-link-accent:hover,
+  .nx-link-hover:hover {
+    color: var(--color-accent-text-hover, var(--color-accent-text));
+  }
+  .nx-link-hover {
+    cursor: pointer;
+  }
 }
