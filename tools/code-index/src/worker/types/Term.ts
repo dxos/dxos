@@ -43,14 +43,29 @@ export type Element = { readonly type: Type; readonly optional: boolean; readonl
 
 export type Param = { readonly type: Type; readonly optional: boolean; readonly rest: boolean };
 
+/**
+ * An operation a deferred term owes once it is bound: what inference would have applied to the
+ * named type had it been known here (`let x = imported` widens, `x!` drops nullish members).
+ */
+export type Pending = 'widen' | 'settle' | 'nonNullish' | 'noUndefined';
+
 export type Type =
-  | { readonly kind: 'unknown' }
+  /** Inference gave up here, and says why — distinct from TypeScript's own `unknown` primitive. */
+  | { readonly kind: 'unresolved'; readonly reason: string }
   | { readonly kind: 'primitive'; readonly name: PrimitiveName }
   /** `fresh` marks a literal TypeScript widens when it flows into a mutable location; not part of the identity. */
   | { readonly kind: 'literal'; readonly value: string | number | boolean | bigint; readonly fresh: boolean }
   /** `origin` is the source span of the type syntax a ref was read from — not part of the identity. */
   | { readonly kind: 'ref'; readonly iri: string; readonly args: readonly Type[]; readonly origin?: Span }
-  | { readonly kind: 'typeof'; readonly iri: string }
+  /** The type of a named value, bound later by the cross-file pass (`Bind.ts`). */
+  | { readonly kind: 'typeof'; readonly iri: string; readonly pending: readonly Pending[] }
+  /** What calling `callee` with arguments of these types returns — deferred like `typeof`. */
+  | {
+      readonly kind: 'returnOf';
+      readonly callee: Type;
+      readonly args: readonly Type[];
+      readonly pending: readonly Pending[];
+    }
   | { readonly kind: 'union'; readonly members: readonly Type[] }
   | { readonly kind: 'intersection'; readonly members: readonly Type[] }
   | { readonly kind: 'object'; readonly properties: readonly Property[]; readonly indexes: readonly IndexSignature[] }
@@ -69,7 +84,17 @@ export type Kind = Type['kind'];
 // Constructors.
 //
 
-export const unknown: Type = { kind: 'unknown' };
+const unresolvedByReason = new Map<string, Type>();
+
+/** A position inference could not type, with the reason — the bucket an improvement would move. */
+export const unresolved = (reason: string): Type => {
+  let found = unresolvedByReason.get(reason);
+  if (!found) {
+    found = { kind: 'unresolved', reason };
+    unresolvedByReason.set(reason, found);
+  }
+  return found;
+};
 
 const primitives = new Map<PrimitiveName, Type>();
 
@@ -103,7 +128,23 @@ export const ref = (iri: string, args: readonly Type[] = [], origin?: Span): Typ
 
 export const lib = (name: string, args: readonly Type[] = []): Type => ref(libIri(name), args);
 
-export const typeOf = (iri: string): Type => ({ kind: 'typeof', iri });
+export const typeOf = (iri: string, pending: readonly Pending[] = []): Type => ({ kind: 'typeof', iri, pending });
+
+export const returnOf = (callee: Type, args: readonly Type[], pending: readonly Pending[] = []): Type => ({
+  kind: 'returnOf',
+  callee,
+  args,
+  pending,
+});
+
+export const isDeferred = (type: Type): type is Extract<Type, { kind: 'typeof' | 'returnOf' }> =>
+  type.kind === 'typeof' || type.kind === 'returnOf';
+
+/** Record an operation on a deferred term, to be applied when the cross-file pass binds it. */
+const owe = (type: Extract<Type, { kind: 'typeof' | 'returnOf' }>, operation: Pending): Type =>
+  type.kind === 'typeof'
+    ? typeOf(type.iri, [...type.pending, operation])
+    : returnOf(type.callee, type.args, [...type.pending, operation]);
 
 export const param = (name: string): Type => ({ kind: 'param', name });
 
@@ -191,6 +232,10 @@ export const union = (members: readonly Type[]): Type => {
     byText.set('boolean', fresh ? freshBoolean : boolean);
   }
   const sorted = [...byText.entries()].sort(([left], [right]) => compare(left, right)).map(([, member]) => member);
+  // A union of nothing but gaps says nothing a single gap does not.
+  if (sorted.length > 1 && sorted.every((member) => member.kind === 'unresolved')) {
+    return sorted[0];
+  }
   if (sorted.length === 0) {
     return never;
   }
@@ -227,12 +272,19 @@ export const intersection = (members: readonly Type[]): Type => {
 };
 
 /** Remove `undefined` (and with `nullish`, `null`) from a union — optionality, `!`. */
-export const without = (type: Type, names: readonly PrimitiveName[]): Type =>
-  type.kind === 'union'
-    ? union(type.members.filter((member) => !(member.kind === 'primitive' && names.includes(member.name))))
-    : type.kind === 'primitive' && names.includes(type.name)
-      ? never
-      : type;
+export const without = (type: Type, names: readonly PrimitiveName[]): Type => {
+  if (isDeferred(type)) {
+    return owe(type, names.includes('null') ? 'nonNullish' : 'noUndefined');
+  }
+  if (type.kind === 'union') {
+    return union(
+      type.members
+        .map((member) => (isDeferred(member) ? without(member, names) : member))
+        .filter((member) => !(member.kind === 'primitive' && names.includes(member.name))),
+    );
+  }
+  return type.kind === 'primitive' && names.includes(type.name) ? never : type;
+};
 
 //
 // Widening.
@@ -249,7 +301,7 @@ export const widen = (type: Type): Type => {
   if (type.kind === 'union') {
     return union(type.members.map(widen));
   }
-  return type;
+  return isDeferred(type) ? owe(type, 'widen') : type;
 };
 
 /** Drop freshness without widening — the literal becomes a declared one (`as const`, annotations). */
@@ -263,20 +315,22 @@ export const settle = (type: Type): Type => {
   if (type.kind === 'union') {
     return union(type.members.map(settle));
   }
-  return type;
+  return isDeferred(type) ? owe(type, 'settle') : type;
 };
 
 //
 // Inspection.
 //
 
-export const isUnknown = (type: Type): boolean => type.kind === 'unknown';
+export const isUnresolved = (type: Type): boolean => type.kind === 'unresolved';
 
-/** Whether any position of the term is unknown. */
+/** Whether any position of the term is unresolved. */
 export const isPartial = (type: Type): boolean => {
   switch (type.kind) {
-    case 'unknown':
+    case 'unresolved':
       return true;
+    case 'returnOf':
+      return isPartial(type.callee) || type.args.some(isPartial);
     case 'ref':
       return type.args.some(isPartial);
     case 'union':
@@ -299,6 +353,8 @@ export const isPartial = (type: Type): boolean => {
 /** Number of term nodes — the emission budget. */
 export const size = (type: Type): number => {
   switch (type.kind) {
+    case 'returnOf':
+      return 1 + size(type.callee) + type.args.reduce((sum, arg) => sum + size(arg), 0);
     case 'ref':
       return 1 + type.args.reduce((sum, arg) => sum + size(arg), 0);
     case 'union':
@@ -327,6 +383,12 @@ export const instantiate = (type: Type, bindings: ReadonlyMap<string, Type>): Ty
   switch (type.kind) {
     case 'param':
       return bindings.get(type.name) ?? type;
+    case 'returnOf':
+      return returnOf(
+        instantiate(type.callee, bindings),
+        type.args.map((arg) => instantiate(arg, bindings)),
+        type.pending,
+      );
     case 'ref':
       return ref(
         type.iri,
@@ -367,6 +429,8 @@ export const hasParams = (type: Type): boolean => {
   switch (type.kind) {
     case 'param':
       return true;
+    case 'returnOf':
+      return hasParams(type.callee) || type.args.some(hasParams);
     case 'ref':
       return type.args.some(hasParams);
     case 'union':
@@ -388,6 +452,8 @@ export const mentions = (type: Type, name: string): boolean => {
   switch (type.kind) {
     case 'param':
       return type.name === name;
+    case 'returnOf':
+      return mentions(type.callee, name) || type.args.some((arg) => mentions(arg, name));
     case 'ref':
       return type.args.some((arg) => mentions(arg, name));
     case 'union':
@@ -431,10 +497,15 @@ export const text = (type: Type): string => {
 const wrap = (type: Type): string =>
   type.kind === 'union' || type.kind === 'intersection' || type.kind === 'function' ? `(${text(type)})` : text(type);
 
+const pendingText = (pending: readonly Pending[], inner: string): string =>
+  pending.reduce((wrapped, operation) => `${operation}(${wrapped})`, inner);
+
 const render = (type: Type): string => {
   switch (type.kind) {
-    case 'unknown':
-      return '?';
+    case 'unresolved':
+      return `?${type.reason}`;
+    case 'returnOf':
+      return pendingText(type.pending, `returnOf(${text(type.callee)})(${type.args.map(text).join(', ')})`);
     case 'primitive':
       return type.name;
     case 'literal':
@@ -446,7 +517,7 @@ const render = (type: Type): string => {
     case 'ref':
       return type.args.length === 0 ? `<${type.iri}>` : `<${type.iri}><${type.args.map(text).join(', ')}>`;
     case 'typeof':
-      return `typeof <${type.iri}>`;
+      return pendingText(type.pending, `typeof <${type.iri}>`);
     case 'union':
       return type.members.map(wrap).join(' | ');
     case 'intersection':
@@ -474,5 +545,150 @@ const render = (type: Type): string => {
     }
     case 'param':
       return type.name;
+  }
+};
+
+//
+// Serialization: the cross-file pass reads a symbol's term back from the graph, freshness included,
+// because widening after binding depends on it.
+//
+
+type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
+
+export const toJson = (type: Type): Json => {
+  switch (type.kind) {
+    case 'unresolved':
+      return { k: 'unresolved', r: type.reason };
+    case 'primitive':
+      return { k: 'primitive', n: type.name };
+    case 'literal':
+      return typeof type.value === 'bigint'
+        ? { k: 'literal', b: type.value.toString(), f: type.fresh }
+        : { k: 'literal', v: type.value, f: type.fresh };
+    case 'ref':
+      return { k: 'ref', i: type.iri, a: type.args.map(toJson) };
+    case 'typeof':
+      return { k: 'typeof', i: type.iri, p: [...type.pending] };
+    case 'returnOf':
+      return { k: 'returnOf', c: toJson(type.callee), a: type.args.map(toJson), p: [...type.pending] };
+    case 'union':
+    case 'intersection':
+      return { k: type.kind, m: type.members.map(toJson) };
+    case 'object':
+      return {
+        k: 'object',
+        p: type.properties.map((property) => ({
+          n: property.name,
+          t: toJson(property.type),
+          o: property.optional,
+          r: property.readonly,
+        })),
+        x: type.indexes.map((index) => ({ k: toJson(index.key), t: toJson(index.type), r: index.readonly })),
+      };
+    case 'tuple':
+      return {
+        k: 'tuple',
+        e: type.elements.map((element) => ({ t: toJson(element.type), o: element.optional, s: element.rest })),
+        r: type.readonly,
+      };
+    case 'function':
+      return {
+        k: 'function',
+        g: [...type.typeParams],
+        p: type.params.map((entry) => ({ t: toJson(entry.type), o: entry.optional, s: entry.rest })),
+        r: toJson(type.returns),
+      };
+    case 'param':
+      return { k: 'param', n: type.name };
+  }
+};
+
+const PRIMITIVES = new Set<string>([
+  'string',
+  'number',
+  'boolean',
+  'bigint',
+  'symbol',
+  'null',
+  'undefined',
+  'void',
+  'never',
+  'any',
+  'unknown',
+  'object',
+]);
+
+const PENDING = new Set<string>(['widen', 'settle', 'nonNullish', 'noUndefined']);
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const list = (value: unknown): unknown[] => (Array.isArray(value) ? value : []);
+
+const isPrimitiveName = (value: unknown): value is PrimitiveName => typeof value === 'string' && PRIMITIVES.has(value);
+
+const isPending = (value: unknown): value is Pending => typeof value === 'string' && PENDING.has(value);
+
+/** The inverse of {@link toJson}; anything malformed reads back as unresolved, never as a type. */
+export const fromJson = (json: unknown): Type => {
+  if (!isRecord(json)) {
+    return unresolved('malformed');
+  }
+  const flag = (value: unknown) => value === true;
+  switch (json.k) {
+    case 'unresolved':
+      return unresolved(typeof json.r === 'string' ? json.r : 'malformed');
+    case 'primitive':
+      return isPrimitiveName(json.n) ? primitive(json.n) : unresolved('malformed');
+    case 'literal':
+      if (typeof json.b === 'string') {
+        return literal(BigInt(json.b), flag(json.f));
+      }
+      return typeof json.v === 'string' || typeof json.v === 'number' || typeof json.v === 'boolean'
+        ? literal(json.v, flag(json.f))
+        : unresolved('malformed');
+    case 'ref':
+      return typeof json.i === 'string' ? ref(json.i, list(json.a).map(fromJson)) : unresolved('malformed');
+    case 'typeof':
+      return typeof json.i === 'string' ? typeOf(json.i, list(json.p).filter(isPending)) : unresolved('malformed');
+    case 'returnOf':
+      return returnOf(fromJson(json.c), list(json.a).map(fromJson), list(json.p).filter(isPending));
+    case 'union':
+      return union(list(json.m).map(fromJson));
+    case 'intersection':
+      return intersection(list(json.m).map(fromJson));
+    case 'object':
+      return object(
+        list(json.p)
+          .filter(isRecord)
+          .map((property) => ({
+            name: String(property.n),
+            type: fromJson(property.t),
+            optional: flag(property.o),
+            readonly: flag(property.r),
+          })),
+        list(json.x)
+          .filter(isRecord)
+          .map((index) => ({ key: fromJson(index.k), type: fromJson(index.t), readonly: flag(index.r) })),
+      );
+    case 'tuple':
+      return tuple(
+        list(json.e)
+          .filter(isRecord)
+          .map((element) => ({ type: fromJson(element.t), optional: flag(element.o), rest: flag(element.s) })),
+        flag(json.r),
+      );
+    case 'function':
+      return fn(
+        list(json.p)
+          .filter(isRecord)
+          .map((entry) => ({ type: fromJson(entry.t), optional: flag(entry.o), rest: flag(entry.s) })),
+        fromJson(json.r),
+        list(json.g).filter((name): name is string => typeof name === 'string'),
+      );
+    case 'param':
+      return typeof json.n === 'string' ? param(json.n) : unresolved('malformed');
+    default:
+      return unresolved('malformed');
   }
 };

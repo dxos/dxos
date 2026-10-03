@@ -4,7 +4,7 @@
 
 // Agreement fixture: every declaration here is scored against `tsc` by `agreement.test.ts`.
 
-import { type Remote, helper } from './remote.ts';
+import { type Remote, helper, makeBox, remoteObject, remoteValue } from './remote.ts';
 
 export const one = 1;
 export let widened = 1;
@@ -133,3 +133,11 @@ export const details: Details = {};
 export type Choices = Choice | undefined;
 export const choices: Choices = undefined;
 export const optionalChoice: Choice | undefined = undefined;
+
+// Cross-file: deferred here, bound by the cross-file pass.
+
+export const fromRemote = remoteValue;
+export let widenedRemote = remoteValue;
+export const calledRemote = helper();
+export const remoteCount = remoteObject.count;
+export const boxedRemote = makeBox('a');
