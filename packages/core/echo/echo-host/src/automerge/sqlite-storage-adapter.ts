@@ -109,7 +109,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const startMs = Date.now();
-    await this.#write(upsertChunks([[encodeKey(keyArray), binary]]));
+    await this.enqueue(upsertChunks([[encodeKey(keyArray), binary]]));
     this.#monitor?.recordBytesStored(binary.byteLength);
     this.#monitor?.recordStoreDuration(Date.now() - startMs);
     await this.#callbacks?.afterSave?.(keyArray);
@@ -120,7 +120,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const startMs = Date.now();
-    await this.#write(upsertChunks(entries.map(([key, data]) => [encodeKey(key), data] as const)));
+    await this.enqueue(upsertChunks(entries.map(([key, data]) => [encodeKey(key), data] as const)));
     let bytesStored = 0;
     for (const [keyArray, binary] of entries) {
       bytesStored += binary.byteLength;
@@ -136,9 +136,10 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
    * A repo flush saves every dirty document at once, and one transaction per chunk made each a
    * separate WAL commit: thousands of them, long enough to time out the flush RPC. Writes that
    * arrive together share one transaction and run in the order they were issued, so a removal
-   * never overtakes an earlier save.
+   * never overtakes an earlier save. Any other write to these chunks must go through here for the
+   * same reason.
    */
-  #write(write: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>): Promise<void> {
+  enqueue(write: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       this.#pendingWrites.push({ write, resolve, reject });
       this.#draining ??= this.#drain();
@@ -174,7 +175,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const encoded = encodeKey(keyArray);
-    await this.#write(
+    await this.enqueue(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DELETE FROM automerge_chunks WHERE key = ${encoded}`;
@@ -222,12 +223,12 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen) {
       return;
     }
-    await this.#write(this.removeRangeEffect(keyPrefix));
+    await this.enqueue(this.removeRangeEffect(keyPrefix));
   }
 
   /**
    * {@link removeRange} as an effect, so a caller deleting the several ranges a document spans can
-   * commit them as one transaction.
+   * pass them to {@link enqueue} as one write.
    */
   removeRangeEffect(keyPrefix: StorageKey): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     const prefix = encodeKey(keyPrefix);

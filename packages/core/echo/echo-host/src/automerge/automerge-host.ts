@@ -953,21 +953,16 @@ export class AutomergeHost extends Resource {
     this._leases.forget(documentId);
     this._confirmedChanges.delete(documentId);
 
-    // One transaction: the orphan scan enumerates the heads table, so chunks outliving their heads
-    // row could never be found again.
+    // One write: the orphan scan enumerates the heads table, so chunks outliving their heads row could
+    // never be found again. Through the chunk write queue, so a save queued before it cannot land after.
     const sedimentreeId = documentIdToSedimentreeIdHex(documentId);
-    await RuntimeProvider.runPromise(this._runtime)(
+    await this._storage.enqueue(
       Effect.gen({ self: this }, function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql.withTransaction(
-          Effect.gen({ self: this }, function* () {
-            yield* this._headsStore.remove(documentId);
-            yield* this._storage.removeRangeEffect([documentId]);
-            for (const family of SUBDUCTION_KEY_FAMILIES) {
-              yield* this._storage.removeRangeEffect([SUBDUCTION_PREFIX, family, sedimentreeId]);
-            }
-          }),
-        );
+        yield* this._headsStore.remove(documentId);
+        yield* this._storage.removeRangeEffect([documentId]);
+        for (const family of SUBDUCTION_KEY_FAMILIES) {
+          yield* this._storage.removeRangeEffect([SUBDUCTION_PREFIX, family, sedimentreeId]);
+        }
       }),
     );
 
