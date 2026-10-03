@@ -131,7 +131,13 @@ churn, DRed result compared against full recomputation, across all shipped rules
 Joins are index-nested-loop over oxigraph pattern lookups (terms interned to `u32`
 per run), with a greedy order: the delta atom first, then the literal with the
 most bound positions; builtins and negations as soon as their inputs are bound.
-Full recomputation uses the same evaluator with every fact as the first delta.
+Full recomputation evaluates each rule once against the premises, then saturates
+from what that concluded. Two things keep a large rule file cheap: a delta triple
+is tried only against the atoms naming its predicate (an index built per step),
+and a scan with neither subject nor object bound is decoded from the store once per
+stratum computation (`facts::Cached`) — premises do not change while a stratum
+runs, and a rule seeded once per derived fact (one evaluation per selected glob,
+each reading every `deus:path`) would otherwise repeat the same scan.
 
 ## Binding: napi-rs, in process
 

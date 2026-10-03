@@ -5,12 +5,11 @@
 //! Semi-naive evaluation of one stratum, and its DRed maintenance under a change of premises.
 
 use std::cell::RefCell;
-use std::rc::Rc;
 
 use regex::Regex;
 use rustc_hash::{FxHashMap, FxHashSet};
 
-use crate::facts::{Before, Dict, Facts, Id, Pattern, Triple, TripleSet, Union};
+use crate::facts::{Before, Cached, Dict, Facts, Id, Pattern, Triple, TripleSet, Union};
 use crate::rules::{Atom, Compare, Literal, RegexSlot, Rule, RuleSet, Slot, string_literal};
 
 type Binding = Vec<Option<Id>>;
@@ -123,10 +122,6 @@ struct Solver<'a> {
     dict: &'a Dict,
     view: &'a dyn Facts,
     stop: bool,
-    /// Scans with neither subject nor object bound, kept for the rest of the evaluation: a join
-    /// that reaches `?file deus:path ?path` once per glob would otherwise decode every path from
-    /// the store each time, and the view does not change while a rule is evaluated.
-    scans: FxHashMap<Pattern, Rc<Vec<Triple>>>,
 }
 
 impl Solver<'_> {
@@ -176,19 +171,9 @@ impl Solver<'_> {
         match literals[index] {
             Literal::Pos(atom) => {
                 let query = pattern(atom, binding);
-                let matches = if query[0].is_none() && query[2].is_none() {
-                    let view = self.view;
-                    Rc::clone(self.scans.entry(query).or_insert_with(|| {
-                        let mut found = Vec::new();
-                        view.scan(&query, &mut |triple| found.push(triple));
-                        Rc::new(found)
-                    }))
-                } else {
-                    let mut found = Vec::new();
-                    self.view.scan(&query, &mut |triple| found.push(triple));
-                    Rc::new(found)
-                };
-                for &triple in matches.iter() {
+                let mut matches = Vec::new();
+                self.view.scan(&query, &mut |triple| matches.push(triple));
+                for triple in matches {
                     if self.stop {
                         break;
                     }
@@ -274,7 +259,6 @@ impl Solver<'_> {
             dict: self.dict,
             view: self.view,
             stop: false,
-            scans: FxHashMap::default(),
         };
         let mut found = false;
         let mark = trail.len();
@@ -354,7 +338,6 @@ fn run(
         dict,
         view,
         stop: false,
-        scans: FxHashMap::default(),
     };
     solver.solve(&literals, &mut done, &mut binding, &mut trail, emit);
 }
@@ -534,6 +517,7 @@ fn saturate(
 
 /// The stratum's materialisation over `premises`, computed from nothing.
 pub fn full(rules: &RuleSet, premises: &dyn Facts, dict: &Dict) -> TripleSet {
+    let premises = &Cached::new(premises);
     let mut derived = TripleSet::default();
     let mut first = Vec::new();
     {
@@ -570,6 +554,7 @@ pub fn maintain(
     derived: &mut TripleSet,
     dict: &Dict,
 ) -> Change {
+    let premises = &Cached::new(premises);
     let negates = has_negation(rules);
     let plus_list: Vec<Triple> = plus.iter().copied().collect();
     let minus_list: Vec<Triple> = minus.iter().copied().collect();
