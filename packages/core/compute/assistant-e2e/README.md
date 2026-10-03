@@ -85,8 +85,9 @@ with `ciSuite = 'chat'`:
 node scripts/score-perf.ts score [--dir test-results/perf] [--publish]
 ```
 
-The budgets are provisional: each target is the median of three local runs in a cloud sandbox
-(4 cores, Storybook in dev mode) and each limit is 1.5× it. Recalibrate them from the nightly's own
-`ci.perf-stage` rows once a few nights have run on the CI runner. `seed`, `wall > idle` (a scripted
+Each target is the median of the first CI run on the perf-nightly runner (10 iterations, Storybook
+in dev mode) and each limit is 1.5× it. One run is a thin sample: recalibrate from the nightly's own
+`ci.perf-stage` rows once a few nights have run, and never raise a target: where the CI median was
+worse than the earlier target (`peak app footprint`), the earlier target stands. `seed`, `wall > idle` (a scripted
 wait), `edge traffic` (EDGE is off) and `app code transferred` (an unbundled dev server) are left
 unbudgeted on purpose.
