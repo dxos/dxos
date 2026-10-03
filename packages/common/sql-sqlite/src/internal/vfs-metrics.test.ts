@@ -128,11 +128,16 @@ describe('statement counters', () => {
   test('statementKind reads the leading keyword, a CTE counting as a select', ({ expect }) => {
     expect(statementKind('  SELECT 1')).toBe('select');
     expect(statementKind('WITH x AS (SELECT 1) SELECT * FROM x')).toBe('select');
+    // A CTE introduces a write as often as a read; the verb after its definitions decides.
+    expect(statementKind('WITH x AS (SELECT 1) INSERT INTO t SELECT * FROM x')).toBe('insert');
+    expect(statementKind('WITH RECURSIVE x(n) AS (SELECT 1 UNION SELECT n + 1 FROM x) DELETE FROM t')).toBe('delete');
+    expect(statementKind("with a as (select ')'), b as (update t set c = 1) update u set d = 2")).toBe('update');
     expect(statementKind('insert into t values (1)')).toBe('insert');
     expect(statementKind('REPLACE INTO t VALUES (1)')).toBe('insert');
     expect(statementKind('UPDATE t SET a = 1')).toBe('update');
     expect(statementKind('DELETE FROM t')).toBe('delete');
     expect(statementKind('PRAGMA user_version')).toBe('other');
+    expect(statementKind('WITH x AS (SELECT 1)')).toBe('other');
   });
 
   test('recordStatement accumulates kinds, rows read and rows changed', ({ expect }) => {

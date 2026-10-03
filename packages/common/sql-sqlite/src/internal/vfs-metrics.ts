@@ -118,12 +118,33 @@ export const resetSqliteIoStats = (): void => {
 
 export type StatementKind = 'select' | 'insert' | 'update' | 'delete' | 'other';
 
-/** A statement's kind from its leading keyword; a CTE counts as a select, as every CTE here is. */
+const VERBS: ReadonlySet<string> = new Set(['select', 'insert', 'replace', 'update', 'delete']);
+
+/**
+ * The verb of the statement a `WITH` clause introduces: the first verb outside every parenthesis,
+ * since each CTE body is parenthesized and may itself contain any verb.
+ */
+const verbAfterCte = (sql: string): string | undefined => {
+  let depth = 0;
+  for (const match of sql.matchAll(/'(?:[^']|'')*'|"(?:[^"]|"")*"|[()]|\w+/g)) {
+    const token = match[0];
+    if (token === '(') {
+      depth += 1;
+    } else if (token === ')') {
+      depth -= 1;
+    } else if (depth === 0 && VERBS.has(token.toLowerCase())) {
+      return token.toLowerCase();
+    }
+  }
+  return undefined;
+};
+
+/** A statement's kind from its verb, looking past a leading `WITH` clause to the statement it introduces. */
 export const statementKind = (sql: string): StatementKind => {
-  const keyword = /^\s*(\w+)/.exec(sql)?.[1]?.toLowerCase();
+  const leading = /^\s*(\w+)/.exec(sql)?.[1]?.toLowerCase();
+  const keyword = leading === 'with' ? verbAfterCte(sql) : leading;
   switch (keyword) {
     case 'select':
-    case 'with':
       return 'select';
     case 'insert':
     case 'replace':

@@ -31,7 +31,7 @@ import {
 import { recordSqliteQueryMetrics } from './internal/query-log.ts';
 import { readRow } from './internal/row-decode.ts';
 import { instantiateSqliteModule } from './internal/sqlite-module.ts';
-import { recordStatement, statementKind } from './internal/vfs-metrics.ts';
+import { instrumentVfs, recordStatement, statementKind } from './internal/vfs-metrics.ts';
 
 /** @internal */
 type OpfsWorkerMessage =
@@ -71,6 +71,9 @@ export const run = (options: Config): Effect.Effect<void, SqlError.SqlError> =>
     const factory = yield* Effect.promise(() => instantiateSqliteModule(SQLiteESMFactory));
     const sqlite3 = WaSqlite.Factory(factory);
     const vfs = yield* Effect.promise(() => AccessHandlePoolVFS.create('opfs', factory));
+    // Before registration, as `opfs-client.ts` does: it publishes `__dxosSqliteIo`, without which the
+    // statement counters recorded below have no reader in this realm.
+    instrumentVfs(vfs);
     sqlite3.vfs_register(vfs as any, false);
     let shutdownRequested = false;
     const db = yield* Effect.acquireRelease(
