@@ -53,6 +53,13 @@ export class Registry {
   static layerEmpty = Layer.succeed(Store, {} as Api);
   static #secret = 2;
   instanceField = 3;
+  static make(): Registry;
+  static make(size: number): Registry;
+  static make(size?: number): Registry { return new Registry(); }
+  static get current(): number { return 1; }
+  private static hidden(): void {}
+  static #create(): void {}
+  instanceMethod(): void {}
 }
 
 export default Layer.succeed(Store, {} as Api);
@@ -267,6 +274,21 @@ describe('typescript analyzer', () => {
     // Private statics and instance fields are not module-level declarations.
     expect(document.declares.map((declared) => declared.name)).not.toContain('Registry.#secret');
     expect(document.declares.map((declared) => declared.name)).not.toContain('Registry.instanceField');
+  });
+
+  test('a static method is a function declaration, typed by its signature', () => {
+    const method = symbol('Registry.make');
+    expect(method).toMatchObject({ kind: 'function', exported: true });
+    expect(method.hasType).toBeDefined();
+    // The body is implementation; the signature is the API.
+    expect(method.snippet).toEqual('class Registry {\n  static make(size?: number): Registry { /*...*/ }\n}');
+    // Overload signatures declare nothing of their own.
+    expect(document.declares.filter((declared) => declared.name === 'Registry.make')).toHaveLength(1);
+    // Accessors, private and instance methods are not module-level declarations.
+    const names = document.declares.map((declared) => declared.name);
+    for (const name of ['Registry.current', 'Registry.hidden', 'Registry.#create', 'Registry.instanceMethod']) {
+      expect(names).not.toContain(name);
+    }
   });
 
   test('a default-exported expression is a declaration with construction', () => {
