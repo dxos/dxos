@@ -34,7 +34,6 @@
     "@dxos/sql-sqlite": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
-    "@dxos/util": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",
     "@dxos/vite-plugin-import-source": "workspace:*",
     "@effect/ai-anthropic": "catalog:",

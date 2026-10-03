@@ -21,9 +21,6 @@
       "path": "../../packages/common/sql-sqlite"
     },
     {
-      "path": "../../packages/common/util"
-    },
-    {
       "path": "../../packages/core/compute/ai"
     },
     {
