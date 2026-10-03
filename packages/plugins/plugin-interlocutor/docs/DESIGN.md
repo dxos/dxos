@@ -137,6 +137,29 @@ thread never becomes the primary chat. Person and Organization properties show t
 6. **`plugin-interlocutor` manages agents**; shared Discord code (dfx client, message mapping) is
    extracted into a library when option B lands. Until then the DO calls Discord REST with `fetch`.
 
+## Open decision: a shared DXOS Discord app
+
+The spike is bring-your-own-bot: each team creates a Discord application and pastes its token.
+Recommendation (2026-10-03): **one DXOS-owned Discord app by default, bring-your-own as an option.**
+
+|                     | Shared DXOS app                                                                                             | Bring your own bot                                                |
+| ------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Onboarding          | "Add to Discord" OAuth install; no developer portal, no token handling                                      | Developer portal, token pasted into Composer                      |
+| Token custody       | DXOS secrets on EDGE                                                                                        | Per team (inline in the space until KMS holds pasted keys)        |
+| Identity in Discord | One bot user; per-agent name/avatar via webhooks, per-server nickname                                       | Fully the team's own                                              |
+| Discord constraints | App verification past 100 servers; Message Content intent approval; sharding past 2,500 servers             | Mostly none                                                       |
+| Isolation and cost  | One gateway carries every customer's messages: routing must be strictly by binding, single point of failure | Separate rate limits and failure domains; one gateway DO per team |
+
+What the shared app changes:
+
+1. The binding is keyed by `{ guildId, channels }` (the install flow supplies the guild); the
+   application id is implied.
+2. One (eventually sharded) gateway DO for the shared app routes each message by guild and channel;
+   bring-your-own bots keep today's DO per application.
+3. A webhook per bound channel so each agent posts under its own name and avatar.
+4. Discord-side work: verification, Message Content intent approval, and an install page in
+   Composer.
+
 ## Known gaps
 
 - **Bot tokens live inline in the space.** KMS manages OAuth tokens only; storing a pasted key in KMS
