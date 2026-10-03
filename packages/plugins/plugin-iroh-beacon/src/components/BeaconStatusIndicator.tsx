@@ -54,7 +54,7 @@ const BeaconPopover = () => {
   }
 
   return (
-    <div className='flex flex-col gap-2 w-[280px] p-2'>
+    <div className='flex flex-col gap-2 w-popover-min-width p-2'>
       {/* Header. */}
       <div className='flex items-center gap-2 mb-1'>
         <Icon icon='ph--broadcast--regular' classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-fg-muted')} />

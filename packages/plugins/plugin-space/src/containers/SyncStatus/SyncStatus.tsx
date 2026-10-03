@@ -76,7 +76,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
   const edgeUrl = client.config.get('runtime.services.edge.url');
 
   return (
-    <Flex column gap='sm' classNames='w-[240px] p-2' style={iconSize(4)}>
+    <Flex column gap='sm' classNames='w-popover-min-width p-2' style={iconSize(4)}>
       {/* Connection Status Header */}
       <Flex gap='sm' align='center' classNames='mb-2'>
         <Icon

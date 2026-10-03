@@ -9,9 +9,9 @@ import { AppSurface, ObjectCard, useCardPivot, useObjectMenuItems } from '@dxos/
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
-import { Block, Button, Card, Flex, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Flex, Panel, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
-import { ActionMenu } from '@dxos/react-ui-menu';
+import { ActionMenu, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { ChessComAccount, ChessComOperation } from '#types';
@@ -48,13 +48,28 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
     );
   }, [subject, db?.spaceId, invokePromise]);
 
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action(
+          'sync',
+          {
+            label: ['sync-games.button', { ns: meta.profile.key }],
+            icon: 'ph--arrows-clockwise--regular',
+            iconOnly: false,
+          },
+          handleSync,
+        )
+        .build(),
+    [handleSync],
+  );
+
   const empty = sortedGames.length === 0;
 
   return (
     <Panel.Root role={role}>
       <Panel.Header>
-        <Toolbar.Root>
-          <Button icon='ph--arrows-clockwise--regular' label={t('sync-games.button')} onClick={handleSync} />
+        <ActionToolbar {...menuActions} attendableId={attendableId}>
           {account?.username && (
             <span className='text-fg-subtle text-sm px-2'>
               {account.username}
@@ -62,7 +77,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
             </span>
           )}
           <div className='grow' />
-        </Toolbar.Root>
+        </ActionToolbar>
       </Panel.Header>
       <Panel.Body>
         {empty ? (

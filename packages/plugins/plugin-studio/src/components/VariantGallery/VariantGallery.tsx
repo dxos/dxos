@@ -50,7 +50,7 @@ const Tile = ({ data, selected }: { data?: TileData; selected?: boolean }) => {
     <div className='relative'>
       <GalleryImage src={src} contentType={data.variant.contentType} alt={data.variant.label} />
       {selected && (
-        <Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-primary-500' />
+        <Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-accent-text' />
       )}
     </div>
   );

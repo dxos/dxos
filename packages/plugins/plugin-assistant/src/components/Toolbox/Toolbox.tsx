@@ -92,7 +92,7 @@ const Section = ({ title, items, striped }: SectionProps) => {
           <Fragment key={i}>
             {name && (
               <div className={subGridClassNames}>
-                <div className='truncate text-primary-500'>{name}</div>
+                <div className='truncate text-accent-text'>{name}</div>
                 <div className='line-clamp-2'>{description}</div>
               </div>
             )}

@@ -38,10 +38,7 @@ export const Key = ({ binding }: { binding: string }) => {
   return (
     <kbd role='term' className='inline-flex gap-1' aria-label={binding} id={binding}>
       {keySymbols(binding).map((c, i) => (
-        <span
-          key={i}
-          className='flex w-[24px] h-[24px] justify-center items-center rounded-sm bg-input-surface text-fg'
-        >
+        <span key={i} className='flex size-6 justify-center items-center rounded-sm bg-input-surface text-fg'>
           {c}
         </span>
       ))}

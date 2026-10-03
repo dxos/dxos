@@ -10,9 +10,10 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { type Collection, Obj, Ref } from '@dxos/echo';
 import { useObject, useObjects } from '@dxos/echo-react';
-import { Button, Flex, Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Icon, Panel, useTranslation } from '@dxos/react-ui';
 import { useListSelection } from '@dxos/react-ui-list';
 import { Masonry } from '@dxos/react-ui-masonry';
+import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { GalleryImage } from '#components';
 import { meta } from '#meta';
@@ -36,7 +37,7 @@ const ArtifactTile = ({ data, selected }: { data?: TileData; selected?: boolean 
     <div className='relative'>
       <GalleryImage src={src} contentType={contentType} alt={data.artifact.name} />
       {selected && (
-        <Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-primary-500' />
+        <Icon icon='ph--check-circle--fill' size='xl' classNames='absolute top-1 right-1 text-accent-text' />
       )}
     </div>
   );
@@ -50,7 +51,7 @@ export type GalleryArticleProps = AppSurface.ObjectArticleProps<Collection.Colle
  * multi-selected ones. Selection state is owned here via `useListSelection` (multi); the masonry
  * renders the outline and emits tile clicks.
  */
-export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProps) => {
+export const GalleryArticle = ({ role, subject: collection, attendableId }: GalleryArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(collection);
@@ -108,23 +109,37 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
 
   const handleSelect = useCallback((id: string, _event: MouseEvent) => bind(id).toggle(), [bind]);
 
+  const menuActions = useMenuBuilder(
+    () =>
+      MenuBuilder.make()
+        .action(
+          'create',
+          {
+            label: ['create.label', { ns: meta.profile.key }],
+            icon: 'ph--plus--regular',
+            iconOnly: false,
+            disabled: !db,
+          },
+          () => void handleCreate(),
+        )
+        .action(
+          'delete',
+          {
+            label: ['delete.label', { ns: meta.profile.key }],
+            icon: 'ph--trash--regular',
+            iconOnly: false,
+            disabled: selectedIds.size === 0,
+          },
+          handleDelete,
+        )
+        .build(),
+    [db, selectedIds, handleCreate, handleDelete],
+  );
+
   return (
     <Panel.Root role={role}>
       <Panel.Header>
-        <Toolbar.Root>
-          <Button
-            icon='ph--plus--regular'
-            label={t('create.label')}
-            disabled={!db}
-            onClick={() => void handleCreate()}
-          />
-          <Button
-            icon='ph--trash--regular'
-            label={t('delete.label')}
-            disabled={selectedIds.size === 0}
-            onClick={handleDelete}
-          />
-        </Toolbar.Root>
+        <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
       <Panel.Body>
         {items.length === 0 ? (

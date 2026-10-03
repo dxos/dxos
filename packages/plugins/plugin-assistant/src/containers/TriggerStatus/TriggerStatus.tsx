@@ -108,7 +108,7 @@ const TriggerStatusPopover = ({
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Flex column gap='sm' classNames='p-2 w-[240px]'>
+    <Flex column gap='sm' classNames='p-2 w-popover-min-width'>
       <Container gap='sm' gutter='none'>
         <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (

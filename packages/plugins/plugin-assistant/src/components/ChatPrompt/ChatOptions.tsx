@@ -48,7 +48,7 @@ import { resolveProvider } from '../../processor/index.ts';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
-  toolbar: 'p-0! gap-0! border-t border-separator',
+  toolbar: 'p-0 gap-0 border-t border-separator',
 };
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {

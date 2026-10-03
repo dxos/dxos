@@ -137,13 +137,13 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
   return (
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
-        <Flex column gap='lg' classNames='mx-auto max-w-[48rem] p-4'>
+        <Flex column gap='lg' classNames='mx-auto max-w-document-max-width p-4'>
           {/* Header — cover + catalog identity. */}
           <section className='flex gap-4 rounded-lg border border-separator p-4'>
             {cover ? (
-              <img src={cover} alt='' className='w-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
+              <img src={cover} alt='' className='w-24 aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
-              <Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input-surface'>
+              <Flex center classNames='w-24 aspect-[2/3] shrink-0 rounded bg-input-surface'>
                 <Icon icon='ph--book--regular' size='xl' tone='muted' />
               </Flex>
             )}
