@@ -107,9 +107,6 @@
     },
     {
       "path": "../plugin-markdown"
-    },
-    {
-      "path": "../plugin-testing"
     }
   ]
 }

@@ -269,7 +269,6 @@
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
     "@dxos/echo-client": "workspace:*",
-    "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/ui-theme": "workspace:*",

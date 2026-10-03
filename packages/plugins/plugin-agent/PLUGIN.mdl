@@ -677,7 +677,6 @@ Design items from `docs/DESIGN.md` and `docs/MEMORY.md` that this package does n
   inferred memories); editing or retracting memories in the UI (`retracted` exists as a status only).
 - Required provenance: `Memory.source` is optional as built.
 - The interview checklist on `Chat.tasks`: the skill uses a checklist only if a tool for it is bound.
-- `paths.ts` exports `getAgentPath` / `getAgentsPath`, which nothing uses yet.
 
 ## QA
 

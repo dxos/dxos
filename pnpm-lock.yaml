@@ -7869,9 +7869,6 @@ importers:
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client
-      '@dxos/plugin-testing':
-        specifier: workspace:*
-        version: link:../plugin-testing
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
