@@ -113,4 +113,4 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
   ),
 );
 
-PasswordInput.displayName = 'Next.PasswordInput';
+PasswordInput.displayName = 'PasswordInput';

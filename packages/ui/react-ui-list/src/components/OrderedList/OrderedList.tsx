@@ -56,7 +56,7 @@ type OrderedListRootProps<T> = Pick<NextRootProps, 'columns' | 'virtual' | 'size
   /** Called with `(fromIndex, toIndex)` after a pointer drop or a keyboard move. */
   onMove?: (fromIndex: number, toIndex: number) => void;
   /**
-   * The native drag preview. By default a `Next.DragPreview` chip labelled by `getLabel` (or the row's `ItemText`); a
+   * The native drag preview. By default a `DragPreview` chip labelled by `getLabel` (or the row's `ItemText`); a
    * renderer's content is drawn in the chip instead; `'clone'` snapshots the row.
    */
   dragPreview?: 'clone' | ((item: T) => ReactNode);
@@ -73,7 +73,7 @@ type OrderedListRootProps<T> = Pick<NextRootProps, 'columns' | 'virtual' | 'size
 const noop = () => {};
 
 /**
- * A reorderable list on `Next.Listbox` (no selection unless `value`/`onValueChange` ask for one; zag owns focus,
+ * A reorderable list on `Listbox` (no selection unless `value`/`onValueChange` ask for one; zag owns focus,
  * navigation and typeahead): pragmatic-dnd reorder (`useReorderList`) and keyboard moves from each row's DragHandle.
  */
 const OrderedListRoot = <T,>({
@@ -160,7 +160,7 @@ const OrderedListRoot = <T,>({
 type OrderedListContentProps = NextContentProps;
 
 /**
- * The listbox element, as `Next.Listbox.Content`: its own thin ScrollArea by default (a drag near its edges
+ * The listbox element, as `Listbox.Content`: its own thin ScrollArea by default (a drag near its edges
  * auto-scrolls it), or `scroll={false}` inside a host that scrolls.
  */
 const OrderedListContent: ForwardRefExoticComponent<OrderedListContentProps & RefAttributes<HTMLDivElement>> =
@@ -287,7 +287,7 @@ type OrderedListDragHandleProps = {
 };
 
 /**
- * The row's grip (`Next.DragHandle`): the pointer drag source and, from the keyboard (inside the entered row),
+ * The row's grip (`DragHandle`): the pointer drag source and, from the keyboard (inside the entered row),
  * Alt+Arrow or grab-and-arrow moves. Disabled when the list is readonly or the row opts out.
  */
 const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHandleProps) => {
@@ -308,7 +308,7 @@ const OrderedListDragHandle = ({ asChild, children }: OrderedListDragHandleProps
 OrderedListDragHandle.displayName = 'OrderedList.DragHandle';
 
 /**
- * Reorderable list on `Next.Listbox`, sharing its row vocabulary: rows are `Item`s composed from a `DragHandle`,
+ * Reorderable list on `Listbox`, sharing its row vocabulary: rows are `Item`s composed from a `DragHandle`,
  * `ItemIcon`, `ItemText` and trailing controls; a collapsible `Item` adds a caret and a `Detail`. The ARIA grid keyboard
  * enters a row with ArrowRight, where the DragHandle moves it with Alt+ArrowUp/Down.
  *

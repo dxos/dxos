@@ -13,9 +13,9 @@ import { recipes } from '../../recipes.ts';
 import { Icon } from '../Icon/index.ts';
 import { type EditableActivationBinding, type UseEditableOptions, useEditable } from './useEditable.ts';
 
-const EDITABLE_NAME = 'Next.Editable.Root';
-const EDITABLE_PREVIEW_NAME = 'Next.Editable.Preview';
-const EDITABLE_INPUT_NAME = 'Next.Editable.Input';
+const EDITABLE_NAME = 'Editable.Root';
+const EDITABLE_PREVIEW_NAME = 'Editable.Preview';
+const EDITABLE_INPUT_NAME = 'Editable.Input';
 
 // The keyboard door onto the preview depends on the activation gesture, which the root is given and the machine the
 // parts read does not expose.

@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-/** The selection props of `Next.Listbox.Root`. */
+/** The selection props of `Listbox.Root`. */
 export type ListboxSelectionProps = {
   selectionMode: 'single' | 'multiple';
   value: string[];
@@ -16,11 +16,11 @@ export type ListboxSelectionOptions =
 
 /**
  * The optional adapter from `useListSelection`'s value shapes (one id, or a set of ids) to the props of
- * `Next.Listbox.Root`, where Ark owns selection (AUDIT §6 group B). A single selection is deselectable.
+ * `Listbox.Root`, where Ark owns selection (AUDIT §6 group B). A single selection is deselectable.
  *
  * @example
  *   const [ids, setIds] = useState<ReadonlySet<string>>(new Set());
- *   <Next.Listbox.Root items={items} {...listboxSelection({ mode: 'multi', value: ids, onValueChange: setIds })}>
+ *   <Listbox.Root items={items} {...listboxSelection({ mode: 'multi', value: ids, onValueChange: setIds })}>
  */
 export const listboxSelection = (options: ListboxSelectionOptions): ListboxSelectionProps => {
   if (options.mode === 'multi') {

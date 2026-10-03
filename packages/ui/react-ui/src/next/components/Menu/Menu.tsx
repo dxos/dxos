@@ -77,7 +77,7 @@ const MenuRootBase = ({
  */
 const MenuRoot = (props: MenuRootProps) => <MenuRootBase {...props} sub={false} />;
 
-MenuRoot.displayName = 'Next.Menu.Root';
+MenuRoot.displayName = 'Menu.Root';
 
 //
 // Trigger
@@ -85,7 +85,7 @@ MenuRoot.displayName = 'Next.Menu.Root';
 
 type MenuTriggerProps = MenuPrimitive.TriggerProps;
 
-/** Use `asChild` to open the menu from a `Next.Button`. */
+/** Use `asChild` to open the menu from a `Button`. */
 const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>(
   ({ onPointerDown, onKeyDown, ...props }, forwardedRef) => {
     const { setAtPointer } = useContext(MenuContext);
@@ -106,7 +106,7 @@ const MenuTrigger = forwardRef<HTMLButtonElement, MenuTriggerProps>(
   },
 );
 
-MenuTrigger.displayName = 'Next.Menu.Trigger';
+MenuTrigger.displayName = 'Menu.Trigger';
 
 //
 // ContextTrigger
@@ -131,7 +131,7 @@ const MenuContextTrigger = forwardRef<HTMLButtonElement, MenuContextTriggerProps
   },
 );
 
-MenuContextTrigger.displayName = 'Next.Menu.ContextTrigger';
+MenuContextTrigger.displayName = 'Menu.ContextTrigger';
 
 //
 // Content
@@ -203,7 +203,7 @@ const MenuContent = forwardRef<HTMLDivElement, MenuContentProps>(
   },
 );
 
-MenuContent.displayName = 'Next.Menu.Content';
+MenuContent.displayName = 'Menu.Content';
 
 //
 // Item
@@ -229,14 +229,14 @@ const ItemContext = createContext<{ data: MenuItemData; trigger: boolean } | und
 const useItem = (part: string) => {
   const context = useContext(ItemContext);
   if (!context) {
-    throw new Error(`Next.Menu.${part} must be inside a Next.Menu item`);
+    throw new Error(`Menu.${part} must be inside a Menu item`);
   }
   return context;
 };
 
 /** An item part's row data comes from its caller, so a missing `item` names the part rather than failing deep inside it. */
 const assertItem = (part: string, item: MenuItemData | undefined) =>
-  invariant(item, `Next.Menu.${part} requires an \`item\``);
+  invariant(item, `Menu.${part} requires an \`item\``);
 
 type MenuItemProps = ThemedClassName<Omit<MenuPrimitive.ItemProps, 'value' | 'children'>> & {
   item: MenuOption;
@@ -270,7 +270,7 @@ const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
   },
 );
 
-MenuItem.displayName = 'Next.Menu.Item';
+MenuItem.displayName = 'Menu.Item';
 
 //
 // ItemIcon
@@ -287,7 +287,7 @@ const MenuItemIcon = forwardRef<SVGSVGElement, MenuItemIconProps>(({ icon, ...pr
   return glyph ? <Icon {...props} icon={glyph} ref={forwardedRef} /> : null;
 });
 
-MenuItemIcon.displayName = 'Next.Menu.ItemIcon';
+MenuItemIcon.displayName = 'Menu.ItemIcon';
 
 //
 // ItemText
@@ -312,7 +312,7 @@ const MenuItemText = forwardRef<HTMLDivElement, MenuItemTextProps>(
   },
 );
 
-MenuItemText.displayName = 'Next.Menu.ItemText';
+MenuItemText.displayName = 'Menu.ItemText';
 
 //
 // ItemShortcut
@@ -339,7 +339,7 @@ const MenuItemShortcut = forwardRef<HTMLElement, MenuItemShortcutProps>(
   },
 );
 
-MenuItemShortcut.displayName = 'Next.Menu.ItemShortcut';
+MenuItemShortcut.displayName = 'Menu.ItemShortcut';
 
 //
 // ItemIndicator
@@ -366,7 +366,7 @@ const MenuItemIndicator = forwardRef<HTMLDivElement, MenuItemIndicatorProps>(
   ),
 );
 
-MenuItemIndicator.displayName = 'Next.Menu.ItemIndicator';
+MenuItemIndicator.displayName = 'Menu.ItemIndicator';
 
 //
 // CheckboxItem
@@ -404,7 +404,7 @@ const MenuCheckboxItem = forwardRef<HTMLDivElement, MenuCheckboxItemProps>(
   },
 );
 
-MenuCheckboxItem.displayName = 'Next.Menu.CheckboxItem';
+MenuCheckboxItem.displayName = 'Menu.CheckboxItem';
 
 //
 // RadioItemGroup
@@ -419,7 +419,7 @@ const MenuRadioItemGroup = forwardRef<HTMLDivElement, MenuRadioItemGroupProps>(
   ),
 );
 
-MenuRadioItemGroup.displayName = 'Next.Menu.RadioItemGroup';
+MenuRadioItemGroup.displayName = 'Menu.RadioItemGroup';
 
 //
 // RadioItem
@@ -458,7 +458,7 @@ const MenuRadioItem = forwardRef<HTMLDivElement, MenuRadioItemProps>(
   },
 );
 
-MenuRadioItem.displayName = 'Next.Menu.RadioItem';
+MenuRadioItem.displayName = 'Menu.RadioItem';
 
 //
 // Sub
@@ -496,7 +496,7 @@ const parentEdgeRect = (element: unknown) => {
   return { x: item.x, y: item.y, width: (frame?.right ?? item.right) - item.x, height: item.height };
 };
 
-MenuSub.displayName = 'Next.Menu.Sub';
+MenuSub.displayName = 'Menu.Sub';
 
 //
 // TriggerItem
@@ -555,7 +555,7 @@ const MenuTriggerItem = forwardRef<HTMLDivElement, MenuTriggerItemProps>(
   },
 );
 
-MenuTriggerItem.displayName = 'Next.Menu.TriggerItem';
+MenuTriggerItem.displayName = 'Menu.TriggerItem';
 
 //
 // Separator
@@ -563,7 +563,7 @@ MenuTriggerItem.displayName = 'Next.Menu.TriggerItem';
 
 type MenuSeparatorProps = ThemedClassName<MenuPrimitive.SeparatorProps>;
 
-/** Ark's separator (`role=separator`) with `Next.Separator`'s horizontal rule. */
+/** Ark's separator (`role=separator`) with `Separator`'s horizontal rule. */
 const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(({ classNames, ...props }, forwardedRef) => (
   <MenuPrimitive.Separator
     {...props}
@@ -573,7 +573,7 @@ const MenuSeparator = forwardRef<HTMLHRElement, MenuSeparatorProps>(({ className
   />
 ));
 
-MenuSeparator.displayName = 'Next.Menu.Separator';
+MenuSeparator.displayName = 'Menu.Separator';
 
 //
 // ItemGroup
@@ -585,7 +585,7 @@ const MenuItemGroup = forwardRef<HTMLDivElement, MenuItemGroupProps>(({ classNam
   <MenuPrimitive.ItemGroup {...props} className={mx(classNames)} ref={forwardedRef} />
 ));
 
-MenuItemGroup.displayName = 'Next.Menu.ItemGroup';
+MenuItemGroup.displayName = 'Menu.ItemGroup';
 
 //
 // ItemGroupLabel
@@ -600,7 +600,7 @@ const MenuItemGroupLabel = forwardRef<HTMLDivElement, MenuItemGroupLabelProps>(
   ),
 );
 
-MenuItemGroupLabel.displayName = 'Next.Menu.ItemGroupLabel';
+MenuItemGroupLabel.displayName = 'Menu.ItemGroupLabel';
 
 export const Menu = {
   Root: MenuRoot,

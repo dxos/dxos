@@ -84,4 +84,4 @@ export const Timestamp = forwardRef<HTMLTimeElement, TimestampProps>(
   },
 );
 
-Timestamp.displayName = 'Next.Timestamp';
+Timestamp.displayName = 'Timestamp';

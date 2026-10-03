@@ -32,4 +32,4 @@ export const Block = composable<HTMLDivElement, BlockProps>(({ children, rail, c
   );
 });
 
-Block.displayName = 'Next.Block';
+Block.displayName = 'Block';

@@ -60,7 +60,7 @@ const TooltipRoot = ({
   </OpenDelayContext.Provider>
 );
 
-TooltipRoot.displayName = 'Next.Tooltip.Root';
+TooltipRoot.displayName = 'Tooltip.Root';
 
 //
 // Trigger
@@ -74,7 +74,7 @@ type TooltipTriggerProps = Omit<TooltipPrimitive.TriggerProps, 'content'> & {
 };
 
 /**
- * Use `asChild` to describe a `Next.Button`. Opens on hover after the Root's delay and on keyboard
+ * Use `asChild` to describe a `Button`. Opens on hover after the Root's delay and on keyboard
  * focus only; the delay runs here because zag skips it while any tooltip is marked open, so a click would flash one
  * (DESIGN.md follow-up 33). With `content` it needs no Root or Content around it.
  */
@@ -90,7 +90,7 @@ const TooltipTrigger = forwardRef<HTMLButtonElement, TooltipTriggerProps>(
     ),
 );
 
-TooltipTrigger.displayName = 'Next.Tooltip.Trigger';
+TooltipTrigger.displayName = 'Tooltip.Trigger';
 
 const TooltipTriggerImpl = forwardRef<HTMLButtonElement, TooltipPrimitive.TriggerProps>(
   (
@@ -230,7 +230,7 @@ const TooltipContent = forwardRef<HTMLDivElement, TooltipContentProps>(
   },
 );
 
-TooltipContent.displayName = 'Next.Tooltip.Content';
+TooltipContent.displayName = 'Tooltip.Content';
 
 export const Tooltip = {
   Root: TooltipRoot,
@@ -281,6 +281,6 @@ export const TextTooltip = forwardRef<HTMLSpanElement, TextTooltipProps>(
   },
 );
 
-TextTooltip.displayName = 'Next.TextTooltip';
+TextTooltip.displayName = 'TextTooltip';
 
 export type { TextTooltipProps, TooltipContentProps, TooltipRootProps, TooltipTriggerProps };

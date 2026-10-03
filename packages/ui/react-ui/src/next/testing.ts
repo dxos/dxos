@@ -225,7 +225,7 @@ export const watchResizeObserverLoop = (root: HTMLElement) => {
 
 /** Every themed part carries Ark's scope/part attributes (decision 10). */
 export const expectScoped = async (root: HTMLElement) => {
-  for (const part of root.querySelectorAll('[class*="nx-"]:not(.dx-scope)')) {
+  for (const part of root.querySelectorAll('[class*="dx-"]:not(.dx-scope)')) {
     await expect(part.hasAttribute('data-scope'), part.className).toBe(true);
   }
 };

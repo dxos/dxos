@@ -39,7 +39,7 @@ export const SETTINGS_COLUMNS = 'minmax(0, 1fr) [control] minmax(0, 1fr)';
 
 export type FormViewportProps = PropsWithChildren<{
   /**
-   * Fill the parent and scroll: the form becomes its own pane (a `Next.Panel` whose Body is a ScrollArea around the
+   * Fill the parent and scroll: the form becomes its own pane (a `Panel` whose Body is a ScrollArea around the
    * gutter Container), so it is sized, collapses its rails against its own width and hosts the scrollbar in its end
    * rail. A form already inside a scrolling gutter Container needs no Viewport.
    */

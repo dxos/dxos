@@ -23,7 +23,7 @@ export type ComboboxFieldProps = FormFieldRendererProps<string | undefined> & {
 const keepAll = () => true;
 
 /**
- * An editable `Next.Combobox` (input mode) whose suggestions load (debounced) from an {@link OptionsLookup}; when the
+ * An editable `Combobox` (input mode) whose suggestions load (debounced) from an {@link OptionsLookup}; when the
  * field's own path is among the lookup's `deps`, the typed text drives the lookup. The typed text is offered last as a
  * free value unless a suggestion already is it; nothing is listed before typing unless the lookup is `eager`.
  */

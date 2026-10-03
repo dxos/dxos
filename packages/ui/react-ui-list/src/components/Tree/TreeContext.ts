@@ -24,7 +24,7 @@ export type TreeContextValue = {
   walk: TreeWalk;
   virtual?: TreeVirtual;
   draggable: boolean;
-  /** `false` keeps the browser's snapshot of the row; otherwise a `Next.DragPreview` chip is drawn. */
+  /** `false` keeps the browser's snapshot of the row; otherwise a `DragPreview` chip is drawn. */
   dragPreview: boolean;
   /** The chip's content; the default is the row's icon and label. */
   renderDragPreview?: (node: TreeNode) => ReactNode;

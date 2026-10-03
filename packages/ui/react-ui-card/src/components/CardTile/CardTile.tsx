@@ -26,7 +26,7 @@ type CardTileRootProps = ThemedClassName<
 >;
 
 /**
- * Shared mosaic tile shell: `Mosaic.Tile` → `Next.Focus.Item` → `Card.Root`.
+ * Shared mosaic tile shell: `Mosaic.Tile` → `Focus.Item` → `Card.Root`.
  * Callers supply the inner `Card.Header`/`Card.Body` (typically via {@link CardTileHeader} + rows).
  * Activation is committed by the caller's `onCurrentChange` (Mosaic `current`/selection), so click/Enter light the tile up.
  */

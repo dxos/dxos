@@ -375,7 +375,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
   const messageTags = useVisibleTags(tags);
 
   // Click / Enter commit both current and selection. Arrow keys only move
-  // focus (Next.Focus.Item's onCurrentChange fires on click/Enter, not on focus
+  // focus (Focus.Item's onCurrentChange fires on click/Enter, not on focus
   // change), so they don't select.
   const handleCurrentChange = useCallback(() => {
     setCurrentId(message.id);

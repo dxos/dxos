@@ -26,4 +26,4 @@ export type ScrollContainerContextValue = {
 };
 
 export const [ScrollContainerProvider, useScrollContainerContext] =
-  createContext<ScrollContainerContextValue>('Next.ScrollContainer');
+  createContext<ScrollContainerContextValue>('ScrollContainer');

@@ -23,7 +23,7 @@ export type CreateSelectFieldOptions = {
 // A value outside every option, since Ark reads an empty value as no selection.
 const SENTINEL = '__default__';
 
-/** The current `createSelectField`, same signature, on `Next.Select`; the renderer owns its row as before. */
+/** The current `createSelectField`, same signature, on `Select`; the renderer owns its row as before. */
 export const createSelectField = ({
   options,
   defaultLabel = 'Default',

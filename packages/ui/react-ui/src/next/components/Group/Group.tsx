@@ -41,4 +41,4 @@ export const Group = slottable<HTMLDivElement, GroupProps>(
   },
 );
 
-Group.displayName = 'Next.Group';
+Group.displayName = 'Group';

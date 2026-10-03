@@ -42,7 +42,7 @@ const AlertDialogRoot = ({ ids, initialFocusEl, ...props }: AlertDialogRootProps
   );
 };
 
-AlertDialogRoot.displayName = 'Next.AlertDialog.Root';
+AlertDialogRoot.displayName = 'AlertDialog.Root';
 
 //
 // Cancel
@@ -57,7 +57,7 @@ const AlertDialogCancel = forwardRef<HTMLButtonElement, AlertDialogCancelProps>(
   </DialogPrimitive.CloseTrigger>
 ));
 
-AlertDialogCancel.displayName = 'Next.AlertDialog.Cancel';
+AlertDialogCancel.displayName = 'AlertDialog.Cancel';
 
 //
 // Action
@@ -85,7 +85,7 @@ const AlertDialogAction = forwardRef<HTMLButtonElement, AlertDialogActionProps>(
   },
 );
 
-AlertDialogAction.displayName = 'Next.AlertDialog.Action';
+AlertDialogAction.displayName = 'AlertDialog.Action';
 
 export const AlertDialog = {
   Root: AlertDialogRoot,

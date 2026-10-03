@@ -60,7 +60,7 @@ const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
   },
 );
 
-FieldRoot.displayName = 'Next.Field.Root';
+FieldRoot.displayName = 'Field.Root';
 
 //
 // Header
@@ -83,7 +83,7 @@ const FieldHeader = forwardRef<HTMLDivElement, FieldHeaderProps>(({ classNames, 
   />
 ));
 
-FieldHeader.displayName = 'Next.Field.Header';
+FieldHeader.displayName = 'Field.Header';
 
 //
 // Label
@@ -133,7 +133,7 @@ const FieldLabel = forwardRef<HTMLLabelElement, FieldLabelProps>(
   },
 );
 
-FieldLabel.displayName = 'Next.Field.Label';
+FieldLabel.displayName = 'Field.Label';
 
 //
 // RequiredIndicator
@@ -153,7 +153,7 @@ const FieldRequiredIndicator = forwardRef<HTMLSpanElement, FieldRequiredIndicato
   ),
 );
 
-FieldRequiredIndicator.displayName = 'Next.Field.RequiredIndicator';
+FieldRequiredIndicator.displayName = 'Field.RequiredIndicator';
 
 //
 // HelperText
@@ -165,7 +165,7 @@ const FieldHelperText = forwardRef<HTMLSpanElement, FieldHelperTextProps>(({ cla
   <FieldPrimitive.HelperText {...props} className={mx(recipes.fieldHelper(), classNames)} ref={forwardedRef} />
 ));
 
-FieldHelperText.displayName = 'Next.Field.HelperText';
+FieldHelperText.displayName = 'Field.HelperText';
 
 //
 // ErrorText
@@ -178,7 +178,7 @@ const FieldErrorText = forwardRef<HTMLSpanElement, FieldErrorTextProps>(({ class
   <FieldPrimitive.ErrorText {...props} className={mx(recipes.fieldError(), classNames)} ref={forwardedRef} />
 ));
 
-FieldErrorText.displayName = 'Next.Field.ErrorText';
+FieldErrorText.displayName = 'Field.ErrorText';
 
 export const Field = {
   Root: FieldRoot,

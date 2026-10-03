@@ -36,7 +36,7 @@ const PaneRoot = forwardRef<HTMLDivElement, PaneRootProps>(({ children, ...props
       // No `dx-density-*` here: the class sets `--dx-control` for the whole subtree, so a pane-wide
       // `lg` reached the content body and rendered form labels and inputs at 40px. The toolbar gets
       // `lg` from its own size scope (see `Pane.Toolbar`); the body keeps the `md` default. Its focus ring is the
-      // shell's landmark ring (the plank and companion are `Next.useMainLandmark` areas).
+      // shell's landmark ring (the plank and companion are `useMainLandmark` areas).
       classNames: 'dx-expand flex flex-col dx-attention-surface relative',
     })}
     ref={forwardedRef}

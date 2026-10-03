@@ -63,4 +63,4 @@ export type ToastContextValue = {
   duration: number;
 };
 
-export const [ToastContextProvider, useToastContext] = createContext<ToastContextValue>('Next.Toast');
+export const [ToastContextProvider, useToastContext] = createContext<ToastContextValue>('Toast');

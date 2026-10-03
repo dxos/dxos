@@ -40,7 +40,7 @@ const AccordionRoot = forwardRef<HTMLDivElement, AccordionRootProps>(
   ),
 );
 
-AccordionRoot.displayName = 'Next.Accordion.Root';
+AccordionRoot.displayName = 'Accordion.Root';
 
 //
 // Item
@@ -53,7 +53,7 @@ const AccordionItem = forwardRef<HTMLDivElement, AccordionItemProps>(({ classNam
   <AccordionPrimitive.Item {...props} className={mx(recipes.accordionItem(), classNames)} ref={forwardedRef} />
 ));
 
-AccordionItem.displayName = 'Next.Accordion.Item';
+AccordionItem.displayName = 'Accordion.Item';
 
 //
 // ItemTrigger
@@ -95,7 +95,7 @@ const AccordionItemTrigger = forwardRef<HTMLButtonElement, AccordionItemTriggerP
   },
 );
 
-AccordionItemTrigger.displayName = 'Next.Accordion.ItemTrigger';
+AccordionItemTrigger.displayName = 'Accordion.ItemTrigger';
 
 //
 // ItemContent
@@ -114,7 +114,7 @@ const AccordionItemContent = forwardRef<HTMLDivElement, AccordionItemContentProp
   ),
 );
 
-AccordionItemContent.displayName = 'Next.Accordion.ItemContent';
+AccordionItemContent.displayName = 'Accordion.ItemContent';
 
 export const Accordion = {
   Root: AccordionRoot,

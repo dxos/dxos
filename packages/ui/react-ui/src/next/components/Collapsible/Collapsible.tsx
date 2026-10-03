@@ -23,7 +23,7 @@ const CollapsibleRoot = forwardRef<HTMLDivElement, CollapsibleRootProps>(({ clas
   <CollapsiblePrimitive.Root {...props} className={mx(recipes.collapsible(), classNames)} ref={forwardedRef} />
 ));
 
-CollapsibleRoot.displayName = 'Next.Collapsible.Root';
+CollapsibleRoot.displayName = 'Collapsible.Root';
 
 //
 // Trigger
@@ -62,7 +62,7 @@ const CollapsibleTrigger = forwardRef<HTMLButtonElement, CollapsibleTriggerProps
   },
 );
 
-CollapsibleTrigger.displayName = 'Next.Collapsible.Trigger';
+CollapsibleTrigger.displayName = 'Collapsible.Trigger';
 
 //
 // Content
@@ -89,7 +89,7 @@ const CollapsibleContent = forwardRef<HTMLDivElement, CollapsibleContentProps>(
   },
 );
 
-CollapsibleContent.displayName = 'Next.Collapsible.Content';
+CollapsibleContent.displayName = 'Collapsible.Content';
 
 export const Collapsible = {
   Root: CollapsibleRoot,

@@ -84,7 +84,7 @@ const ToolbarRoot = slottable<HTMLDivElement, ToolbarRootProps>(
   },
 );
 
-ToolbarRoot.displayName = 'Next.Toolbar.Root';
+ToolbarRoot.displayName = 'Toolbar.Root';
 
 //
 // Separator
@@ -115,7 +115,7 @@ const ToolbarSeparator = composable<HTMLDivElement, ToolbarSeparatorProps>(({ va
   );
 });
 
-ToolbarSeparator.displayName = 'Next.Toolbar.Separator';
+ToolbarSeparator.displayName = 'Toolbar.Separator';
 
 //
 // Text
@@ -133,7 +133,7 @@ const ToolbarText = slottable<HTMLDivElement, ToolbarTextProps>(({ children, asC
   );
 });
 
-ToolbarText.displayName = 'Next.Toolbar.Text';
+ToolbarText.displayName = 'Toolbar.Text';
 
 //
 // Link
@@ -175,7 +175,7 @@ const ToolbarLink = composable<HTMLAnchorElement, ToolbarLinkProps>(
   },
 );
 
-ToolbarLink.displayName = 'Next.Toolbar.Link';
+ToolbarLink.displayName = 'Toolbar.Link';
 
 //
 // ToggleGroup
@@ -188,7 +188,7 @@ const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((
   <ToggleGroup.Root {...props} rovingFocus={false} ref={forwardedRef} />
 ));
 
-ToolbarToggleGroup.displayName = 'Next.Toolbar.ToggleGroup';
+ToolbarToggleGroup.displayName = 'Toolbar.ToggleGroup';
 
 export const Toolbar = {
   Root: ToolbarRoot,

@@ -18,5 +18,5 @@ export type FocusContextValue = {
 
 export const FocusContext = createContext<FocusContextValue>({});
 
-/** The enclosing `Next.Focus.Group`'s state; empty outside one. */
+/** The enclosing `Focus.Group`'s state; empty outside one. */
 export const useFocus = () => useContext(FocusContext);

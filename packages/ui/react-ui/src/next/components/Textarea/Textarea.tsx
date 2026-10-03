@@ -41,4 +41,4 @@ export const Textarea = composable<HTMLTextAreaElement, TextareaProps>(
   },
 );
 
-Textarea.displayName = 'Next.Textarea';
+Textarea.displayName = 'Textarea';

@@ -45,7 +45,7 @@ const RESIZE_TRIGGER_ID = 'start:end';
 // Context
 //
 
-const SPLITTER_NAME = 'Next.Splitter';
+const SPLITTER_NAME = 'Splitter';
 
 type SplitterContextValue = {
   orientation: SplitterOrientation;
@@ -75,7 +75,7 @@ const getRem = (): number => parseFloat(getComputedStyle(document.documentElemen
 const toPx = (length: string): number => {
   const match = /^\s*(\d*\.?\d+)\s*(rem|em|px)?\s*$/.exec(length);
   if (!match) {
-    throw new Error(`Next.Splitter.Root: unsupported collapseBelow length '${length}' (use rem or px).`);
+    throw new Error(`Splitter.Root: unsupported collapseBelow length '${length}' (use rem or px).`);
   }
   const value = parseFloat(match[1]);
   return match[2] === 'px' ? value : value * getRem();
@@ -128,7 +128,7 @@ const toRem = (percent: number, root: RefObject<HTMLDivElement | null>, orientat
 // Root
 //
 
-const ROOT_NAME = 'Next.Splitter.Root';
+const ROOT_NAME = 'Splitter.Root';
 
 type SplitterRootElementProps = {
   orientation?: SplitterOrientation;
@@ -337,7 +337,7 @@ SplitterRoot.displayName = ROOT_NAME;
 // Panel
 //
 
-const PANEL_NAME = 'Next.Splitter.Panel';
+const PANEL_NAME = 'Splitter.Panel';
 
 type SplitterPanelProps = SlottableProps<{ position: Position }>;
 
@@ -389,7 +389,7 @@ SplitterPanel.displayName = PANEL_NAME;
 // ResizeTrigger
 //
 
-const RESIZE_TRIGGER_NAME = 'Next.Splitter.ResizeTrigger';
+const RESIZE_TRIGGER_NAME = 'Splitter.ResizeTrigger';
 
 type SplitterResizeTriggerProps = SlottableProps;
 
@@ -442,7 +442,7 @@ type SplitterContext = Pick<SplitterContextValue, 'mode' | 'visibleMode' | 'coll
 
 /** The nearest Splitter's mode state, for parts inside it: a master that opens its detail, a Back button when collapsed. */
 const useSplitterPublicContext = (): SplitterContext => {
-  const { mode, visibleMode, collapsed, setMode, orientation } = useSplitterContext('Next.Splitter.useContext');
+  const { mode, visibleMode, collapsed, setMode, orientation } = useSplitterContext('Splitter.useContext');
   return { mode, visibleMode, collapsed, setMode, orientation };
 };
 

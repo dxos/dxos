@@ -202,4 +202,4 @@ export const Container = slottable<HTMLDivElement, ContainerProps>(
   },
 );
 
-Container.displayName = 'Next.Container';
+Container.displayName = 'Container';

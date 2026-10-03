@@ -53,4 +53,4 @@ export const Typography = slottable<HTMLParagraphElement, TypographyProps>(
   },
 );
 
-Typography.displayName = 'Next.Typography';
+Typography.displayName = 'Typography';

@@ -29,7 +29,7 @@ const BANNER_ICONS: Record<MessageValence, string> = {
 
 type BannerContextValue = { titleId: string; descriptionId: string; valence: MessageValence; icon?: string };
 
-const [BannerProvider, useBannerContext] = createContext<BannerContextValue>('Next.Banner');
+const [BannerProvider, useBannerContext] = createContext<BannerContextValue>('Banner');
 
 //
 // Root
@@ -83,7 +83,7 @@ const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
   },
 );
 
-BannerRoot.displayName = 'Next.Banner.Root';
+BannerRoot.displayName = 'Banner.Root';
 
 //
 // Title
@@ -100,7 +100,7 @@ type BannerTitleProps = {
 const BannerTitle = composable<HTMLDivElement, BannerTitleProps>(
   ({ children, icon: iconProp, onClose, ...props }, forwardedRef) => {
     const { t } = useTranslation(translationKey);
-    const { titleId, valence, icon: rootIcon } = useBannerContext('Next.Banner.Title');
+    const { titleId, valence, icon: rootIcon } = useBannerContext('Banner.Title');
     const icon = iconProp ?? rootIcon ?? BANNER_ICONS[valence];
     const { style, ...attributes } = containerAttributes({ layout: 'row' });
     const {
@@ -136,14 +136,14 @@ const BannerTitle = composable<HTMLDivElement, BannerTitleProps>(
   },
 );
 
-BannerTitle.displayName = 'Next.Banner.Title';
+BannerTitle.displayName = 'Banner.Title';
 
 //
 // Body
 //
 
 const BannerBody = slottable<HTMLParagraphElement>(({ children, asChild, ...props }, forwardedRef) => {
-  const { descriptionId } = useBannerContext('Next.Banner.Body');
+  const { descriptionId } = useBannerContext('Banner.Body');
   const { className, ...rest } = composableProps(props, {
     classNames: [recipes.typography(), recipes.bannerBody()],
   });
@@ -162,7 +162,7 @@ const BannerBody = slottable<HTMLParagraphElement>(({ children, asChild, ...prop
   );
 });
 
-BannerBody.displayName = 'Next.Banner.Body';
+BannerBody.displayName = 'Banner.Body';
 
 export const Banner = {
   Root: BannerRoot,

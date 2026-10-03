@@ -78,7 +78,7 @@ const useProjectionModel = (type: Type.AnyEntity | undefined, view: View.View) =
 /**
  * Edits a view on `react-ui-form`: its query (a record type, or in `tag` mode a query and target feed) and the
  * ordered list of its field projections, each opening to a `FieldEditor`. A system (read-only) schema is announced in
- * a `Next.Banner`.
+ * a `Banner`.
  */
 export const ViewEditor = forwardRef<ProjectionModel | null, ViewEditorProps>(
   ({ type, view, mode = 'schema', registry, db, readonly, types, tags, onQueryChanged, onDelete }, forwardedRef) => {

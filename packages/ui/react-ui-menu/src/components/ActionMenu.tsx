@@ -33,7 +33,7 @@ import {
 import { executeMenuAction } from '../util.ts';
 
 //
-// Items (private): the graph's items as `Next.Menu` parts.
+// Items (private): the graph's items as `Menu` parts.
 //
 
 const isMultiSelect = (group?: MenuGroupContext): boolean => group?.properties?.selectCardinality === 'multiple';
@@ -257,7 +257,7 @@ export type ActionMenuProps = Partial<MenuActions> & {
 };
 
 /**
- * A whole `Next.Menu.Root` driven from a `MenuActions`: the child is the trigger (`asChild`), the items come from the
+ * A whole `Menu.Root` driven from a `MenuActions`: the child is the trigger (`asChild`), the items come from the
  * graph; groups become `Sub` menus, `checked` members radio or checkbox items. Without a `MenuActions` it is a menu of
  * the explicit `actions` alone.
  */

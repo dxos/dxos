@@ -64,4 +64,4 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
   },
 );
 
-Icon.displayName = 'Next.Icon';
+Icon.displayName = 'Icon';

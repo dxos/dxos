@@ -106,7 +106,7 @@ export type ObjectPickerProps = PickerBaseProps & {
 };
 
 /**
- * Picks one object with `Next.Combobox` in trigger mode: a button showing the selection opens a popup whose search
+ * Picks one object with `Combobox` in trigger mode: a button showing the selection opens a popup whose search
  * field narrows the options (each with its description). Choosing the create row swaps the list for a create form.
  */
 export const ObjectPicker = ({
@@ -188,8 +188,8 @@ export type ObjectMultiPickerProps = Omit<PickerBaseProps, 'onCreate'> & {
 };
 
 /**
- * Picks several objects with `Next.Combobox` in `multiple` mode: the selection is a wrapping row of removable
- * `Next.Tag` chips (in each option's hue) whose caret opens a search popup; picking toggles an option and keeps the
+ * Picks several objects with `Combobox` in `multiple` mode: the selection is a wrapping row of removable
+ * `Tag` chips (in each option's hue) whose caret opens a search popup; picking toggles an option and keeps the
  * popup open, and the create row swaps the list for a create form whose new object joins the selection.
  */
 export const ObjectMultiPicker = ({

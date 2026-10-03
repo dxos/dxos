@@ -207,4 +207,4 @@ export const TextCrawl = forwardRef<HTMLDivElement, TextCrawlProps>(
   },
 );
 
-TextCrawl.displayName = 'Next.TextCrawl';
+TextCrawl.displayName = 'TextCrawl';

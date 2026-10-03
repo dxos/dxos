@@ -51,7 +51,7 @@ const HoverCardRoot = ({
   />
 );
 
-HoverCardRoot.displayName = 'Next.HoverCard.Root';
+HoverCardRoot.displayName = 'HoverCard.Root';
 
 //
 // Trigger
@@ -64,7 +64,7 @@ const HoverCardTrigger = forwardRef<HTMLButtonElement, HoverCardTriggerProps>((p
   <HoverCardPrimitive.Trigger {...props} ref={forwardedRef} />
 ));
 
-HoverCardTrigger.displayName = 'Next.HoverCard.Trigger';
+HoverCardTrigger.displayName = 'HoverCard.Trigger';
 
 //
 // Content
@@ -107,7 +107,7 @@ const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
   },
 );
 
-HoverCardContent.displayName = 'Next.HoverCard.Content';
+HoverCardContent.displayName = 'HoverCard.Content';
 
 export const HoverCard = {
   Root: HoverCardRoot,

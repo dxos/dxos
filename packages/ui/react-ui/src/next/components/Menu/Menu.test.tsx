@@ -8,7 +8,7 @@ import { afterEach, describe, expect, test, vi } from 'vitest';
 
 import { Menu } from './Menu.tsx';
 
-describe('Next.Menu', () => {
+describe('Menu', () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
@@ -18,12 +18,12 @@ describe('Next.Menu', () => {
   test('item parts without an `item` fail naming the part', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     // @ts-expect-error The missing `item` is the case under test.
-    expect(() => render(<Menu.Item />)).toThrow('Next.Menu.Item requires an `item`');
+    expect(() => render(<Menu.Item />)).toThrow('Menu.Item requires an `item`');
     // @ts-expect-error The missing `item` is the case under test.
-    expect(() => render(<Menu.CheckboxItem />)).toThrow('Next.Menu.CheckboxItem requires an `item`');
+    expect(() => render(<Menu.CheckboxItem />)).toThrow('Menu.CheckboxItem requires an `item`');
     // @ts-expect-error The missing `item` is the case under test.
-    expect(() => render(<Menu.RadioItem />)).toThrow('Next.Menu.RadioItem requires an `item`');
+    expect(() => render(<Menu.RadioItem />)).toThrow('Menu.RadioItem requires an `item`');
     // @ts-expect-error The missing `item` is the case under test.
-    expect(() => render(<Menu.TriggerItem />)).toThrow('Next.Menu.TriggerItem requires an `item`');
+    expect(() => render(<Menu.TriggerItem />)).toThrow('Menu.TriggerItem requires an `item`');
   });
 });

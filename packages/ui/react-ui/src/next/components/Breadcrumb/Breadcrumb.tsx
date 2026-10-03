@@ -34,7 +34,7 @@ const BreadcrumbRoot = forwardRef<HTMLElement, BreadcrumbRootProps>(({ className
   />
 ));
 
-BreadcrumbRoot.displayName = 'Next.Breadcrumb.Root';
+BreadcrumbRoot.displayName = 'Breadcrumb.Root';
 
 //
 // List
@@ -53,7 +53,7 @@ const BreadcrumbList = forwardRef<HTMLOListElement, BreadcrumbListProps>(({ clas
   />
 ));
 
-BreadcrumbList.displayName = 'Next.Breadcrumb.List';
+BreadcrumbList.displayName = 'Breadcrumb.List';
 
 //
 // Item
@@ -72,7 +72,7 @@ const BreadcrumbItem = forwardRef<HTMLLIElement, BreadcrumbItemProps>(({ classNa
   />
 ));
 
-BreadcrumbItem.displayName = 'Next.Breadcrumb.Item';
+BreadcrumbItem.displayName = 'Breadcrumb.Item';
 
 //
 // Link
@@ -91,7 +91,7 @@ const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(({ cla
   />
 ));
 
-BreadcrumbLink.displayName = 'Next.Breadcrumb.Link';
+BreadcrumbLink.displayName = 'Breadcrumb.Link';
 
 //
 // Current
@@ -113,7 +113,7 @@ const BreadcrumbCurrent = forwardRef<HTMLSpanElement, BreadcrumbCurrentProps>(
   ),
 );
 
-BreadcrumbCurrent.displayName = 'Next.Breadcrumb.Current';
+BreadcrumbCurrent.displayName = 'Breadcrumb.Current';
 
 //
 // Separator
@@ -140,7 +140,7 @@ const BreadcrumbSeparator = forwardRef<HTMLLIElement, BreadcrumbSeparatorProps>(
   ),
 );
 
-BreadcrumbSeparator.displayName = 'Next.Breadcrumb.Separator';
+BreadcrumbSeparator.displayName = 'Breadcrumb.Separator';
 
 export const Breadcrumb = {
   Root: BreadcrumbRoot,

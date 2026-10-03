@@ -74,7 +74,7 @@ const ToastProvider = ({ duration = DEFAULT_DURATION, overlap = true, children }
   return <ToastContextProvider {...context}>{children}</ToastContextProvider>;
 };
 
-ToastProvider.displayName = 'Next.Toast.Provider';
+ToastProvider.displayName = 'Toast.Provider';
 
 //
 // Toaster
@@ -106,7 +106,7 @@ const ToastHost = ({ entry, size }: { entry: ToastEntry; size?: Size }) => {
 
 /** Ark's region host; place one per app, after the content that declares toasts. */
 const ToastToaster = forwardRef<HTMLDivElement, ToastToasterProps>(({ classNames, size, ...props }, forwardedRef) => {
-  const { toaster, registry } = useToastContext('Next.Toast.Toaster');
+  const { toaster, registry } = useToastContext('Toast.Toaster');
   useSyncExternalStore(registry.subscribe, registry.getSnapshot, registry.getSnapshot);
   return (
     <ToasterPrimitive {...props} toaster={toaster} className={mx(recipes.toaster(), classNames)} ref={forwardedRef}>
@@ -118,7 +118,7 @@ const ToastToaster = forwardRef<HTMLDivElement, ToastToasterProps>(({ classNames
   );
 });
 
-ToastToaster.displayName = 'Next.Toast.Toaster';
+ToastToaster.displayName = 'Toast.Toaster';
 
 //
 // Root
@@ -138,7 +138,7 @@ type ToastRootProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
  */
 const ToastRoot = forwardRef<HTMLDivElement, ToastRootProps>(
   ({ classNames, children, open: openProp, defaultOpen = true, onOpenChange, duration, ...props }, forwardedRef) => {
-    const { toaster, registry, duration: providerDuration } = useToastContext('Next.Toast.Root');
+    const { toaster, registry, duration: providerDuration } = useToastContext('Toast.Root');
     const id = useId();
     const [open = true, setOpen] = useControllableState({
       prop: openProp,
@@ -228,7 +228,7 @@ const ToastRoot = forwardRef<HTMLDivElement, ToastRootProps>(
   },
 );
 
-ToastRoot.displayName = 'Next.Toast.Root';
+ToastRoot.displayName = 'Toast.Root';
 
 //
 // Title
@@ -240,7 +240,7 @@ const ToastTitle = forwardRef<HTMLDivElement, ToastTitleProps>(({ classNames, ..
   <ToastPrimitive.Title {...props} className={mx(recipes.toastTitle(), classNames)} ref={forwardedRef} />
 ));
 
-ToastTitle.displayName = 'Next.Toast.Title';
+ToastTitle.displayName = 'Toast.Title';
 
 //
 // CloseTrigger
@@ -265,7 +265,7 @@ const ToastCloseTrigger = forwardRef<HTMLButtonElement, ToastCloseTriggerProps>(
   );
 });
 
-ToastCloseTrigger.displayName = 'Next.Toast.CloseTrigger';
+ToastCloseTrigger.displayName = 'Toast.CloseTrigger';
 
 //
 // Header
@@ -294,7 +294,7 @@ const ToastHeader = forwardRef<HTMLDivElement, ToastHeaderProps>(
   ),
 );
 
-ToastHeader.displayName = 'Next.Toast.Header';
+ToastHeader.displayName = 'Toast.Header';
 
 //
 // Description
@@ -306,7 +306,7 @@ const ToastDescription = forwardRef<HTMLDivElement, ToastDescriptionProps>(({ cl
   <ToastPrimitive.Description {...props} className={mx(recipes.toastDescription(), classNames)} ref={forwardedRef} />
 ));
 
-ToastDescription.displayName = 'Next.Toast.Description';
+ToastDescription.displayName = 'Toast.Description';
 
 //
 // Footer
@@ -325,7 +325,7 @@ const ToastFooter = forwardRef<HTMLDivElement, ToastFooterProps>(({ classNames, 
   />
 ));
 
-ToastFooter.displayName = 'Next.Toast.Footer';
+ToastFooter.displayName = 'Toast.Footer';
 
 //
 // ActionTrigger
@@ -340,7 +340,7 @@ const ToastActionTrigger = forwardRef<HTMLButtonElement, ToastActionTriggerProps
   </ToastPrimitive.ActionTrigger>
 ));
 
-ToastActionTrigger.displayName = 'Next.Toast.ActionTrigger';
+ToastActionTrigger.displayName = 'Toast.ActionTrigger';
 
 export const Toast = {
   Provider: ToastProvider,

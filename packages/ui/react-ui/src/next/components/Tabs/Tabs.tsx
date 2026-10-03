@@ -70,7 +70,7 @@ const TabsRoot = composable<HTMLDivElement, Omit<TabsRootProps, 'classNames'>>(
   ),
 );
 
-TabsRoot.displayName = 'Next.Tabs.Root';
+TabsRoot.displayName = 'Tabs.Root';
 
 //
 // List
@@ -83,7 +83,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(({ classNames, ...pro
   <TabsPrimitive.List {...props} className={mx(recipes.tabsList(), classNames)} ref={forwardedRef} />
 ));
 
-TabsList.displayName = 'Next.Tabs.List';
+TabsList.displayName = 'Tabs.List';
 
 //
 // Trigger
@@ -110,7 +110,7 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((props, forw
   );
 });
 
-TabsTrigger.displayName = 'Next.Tabs.Trigger';
+TabsTrigger.displayName = 'Tabs.Trigger';
 
 //
 // Content
@@ -122,7 +122,7 @@ const TabsContent = forwardRef<HTMLDivElement, TabsContentProps>(({ classNames, 
   <TabsPrimitive.Content {...props} className={mx(recipes.tabsContent(), classNames)} ref={forwardedRef} />
 ));
 
-TabsContent.displayName = 'Next.Tabs.Content';
+TabsContent.displayName = 'Tabs.Content';
 
 //
 // Indicator
@@ -135,7 +135,7 @@ const TabsIndicator = forwardRef<HTMLDivElement, TabsIndicatorProps>(({ classNam
   <TabsPrimitive.Indicator {...props} className={mx(recipes.tabsIndicator(), classNames)} ref={forwardedRef} />
 ));
 
-TabsIndicator.displayName = 'Next.Tabs.Indicator';
+TabsIndicator.displayName = 'Tabs.Indicator';
 
 export const Tabs = {
   Root: TabsRoot,

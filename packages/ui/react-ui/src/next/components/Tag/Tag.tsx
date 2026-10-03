@@ -126,4 +126,4 @@ export const Tag = composable<HTMLElement, TagProps>(
   },
 );
 
-Tag.displayName = 'Next.Tag';
+Tag.displayName = 'Tag';

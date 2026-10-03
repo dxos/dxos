@@ -74,7 +74,7 @@ const DialogRoot = ({
   );
 };
 
-DialogRoot.displayName = 'Next.Dialog.Root';
+DialogRoot.displayName = 'Dialog.Root';
 
 //
 // Trigger
@@ -82,12 +82,12 @@ DialogRoot.displayName = 'Next.Dialog.Root';
 
 type DialogTriggerProps = DialogPrimitive.TriggerProps;
 
-/** Use `asChild` to open the dialog from a `Next.Button`. */
+/** Use `asChild` to open the dialog from a `Button`. */
 const DialogTrigger = forwardRef<HTMLButtonElement, DialogTriggerProps>((props, forwardedRef) => (
   <DialogPrimitive.Trigger {...props} ref={forwardedRef} />
 ));
 
-DialogTrigger.displayName = 'Next.Dialog.Trigger';
+DialogTrigger.displayName = 'Dialog.Trigger';
 
 //
 // Content
@@ -153,7 +153,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   },
 );
 
-DialogContent.displayName = 'Next.Dialog.Content';
+DialogContent.displayName = 'Dialog.Content';
 
 //
 // Header
@@ -172,7 +172,7 @@ const DialogHeader = forwardRef<HTMLDivElement, DialogHeaderProps>(({ classNames
   />
 ));
 
-DialogHeader.displayName = 'Next.Dialog.Header';
+DialogHeader.displayName = 'Dialog.Header';
 
 //
 // Title
@@ -194,7 +194,7 @@ const DialogTitle = forwardRef<HTMLHeadingElement, DialogTitleProps>(
   ),
 );
 
-DialogTitle.displayName = 'Next.Dialog.Title';
+DialogTitle.displayName = 'Dialog.Title';
 
 //
 // Description
@@ -216,14 +216,14 @@ const DialogDescription = forwardRef<HTMLParagraphElement, DialogDescriptionProp
   ),
 );
 
-DialogDescription.displayName = 'Next.Dialog.Description';
+DialogDescription.displayName = 'Dialog.Description';
 
 //
 // CloseTrigger
 //
 
 type DialogCloseTriggerProps = Omit<DialogPrimitive.CloseTriggerProps, 'children'> & {
-  /** With `asChild`, the child (e.g. a Cancel `Next.Button`) closes the dialog instead of the default icon button. */
+  /** With `asChild`, the child (e.g. a Cancel `Button`) closes the dialog instead of the default icon button. */
   children?: ReactNode;
   icon?: string;
   label?: string;
@@ -242,7 +242,7 @@ const DialogCloseTrigger = forwardRef<HTMLButtonElement, DialogCloseTriggerProps
     ),
 );
 
-DialogCloseTrigger.displayName = 'Next.Dialog.CloseTrigger';
+DialogCloseTrigger.displayName = 'Dialog.CloseTrigger';
 
 //
 // Body
@@ -264,7 +264,7 @@ const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ classNames, ch
   </ScrollArea.Root>
 ));
 
-DialogBody.displayName = 'Next.Dialog.Body';
+DialogBody.displayName = 'Dialog.Body';
 
 //
 // Footer
@@ -273,7 +273,7 @@ DialogBody.displayName = 'Next.Dialog.Body';
 type DialogFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 /**
- * An end-justified `Next.Group` of actions; the child div wins the merge, so the part keeps the dialog scope. The
+ * An end-justified `Group` of actions; the child div wins the merge, so the part keeps the dialog scope. The
  * actions stay regular-sized in a small dialog, since they are the dialog's primary targets.
  */
 const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(({ classNames, ...props }, forwardedRef) => (
@@ -289,7 +289,7 @@ const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(({ classNames
   </Group>
 ));
 
-DialogFooter.displayName = 'Next.Dialog.Footer';
+DialogFooter.displayName = 'Dialog.Footer';
 
 export const Dialog = {
   Root: DialogRoot,

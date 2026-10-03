@@ -98,7 +98,7 @@ const FocusGroup = slottable<HTMLDivElement, FocusGroupProps>(
   },
 );
 
-FocusGroup.displayName = 'Next.Focus.Group';
+FocusGroup.displayName = 'Focus.Group';
 
 //
 // Item
@@ -188,7 +188,7 @@ const FocusItem = slottable<HTMLDivElement, FocusItemProps>(
   },
 );
 
-FocusItem.displayName = 'Next.Focus.Item';
+FocusItem.displayName = 'Focus.Item';
 
 export const Focus = {
   Group: FocusGroup,

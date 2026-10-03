@@ -16,7 +16,7 @@ import { log } from '@dxos/log';
 import { useFocusGroup } from '@dxos/react-focus';
 import { createContext, useComposedRefs } from '@dxos/react-hooks';
 
-export const MAIN_NAME = 'Next.Main';
+export const MAIN_NAME = 'Main';
 
 // Kept out of `Main.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a context and its hook exported beside them force a full page reload on every edit.

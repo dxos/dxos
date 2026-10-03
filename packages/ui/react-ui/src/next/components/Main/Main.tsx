@@ -42,12 +42,12 @@ import {
   useSidebars,
 } from './MainContext.ts';
 
-const MAIN_ROOT_NAME = 'Next.Main.Root';
-const MAIN_DRAWER_NAME = 'Next.Main.Drawer';
-const MAIN_OVERLAY_NAME = 'Next.Main.Overlay';
-const MAIN_CONTENT_NAME = 'Next.Main.Content';
-const NAVIGATION_SIDEBAR_NAME = 'Next.Main.NavigationSidebar';
-const COMPLEMENTARY_SIDEBAR_NAME = 'Next.Main.ComplementarySidebar';
+const MAIN_ROOT_NAME = 'Main.Root';
+const MAIN_DRAWER_NAME = 'Main.Drawer';
+const MAIN_OVERLAY_NAME = 'Main.Overlay';
+const MAIN_CONTENT_NAME = 'Main.Content';
+const NAVIGATION_SIDEBAR_NAME = 'Main.NavigationSidebar';
+const COMPLEMENTARY_SIDEBAR_NAME = 'Main.ComplementarySidebar';
 
 /** The answer a `preventDefault()`-style handler gives, asked ahead of the moment it would fire. */
 const prevents = (handler: ((event: Event) => void) | undefined) => {
@@ -320,7 +320,7 @@ const MainSidebar = forwardRef<HTMLDivElement, MainSidebarProps>(
   },
 );
 
-MainSidebar.displayName = 'Next.Main.Sidebar';
+MainSidebar.displayName = 'Main.Sidebar';
 
 //
 // Navigation Sidebar

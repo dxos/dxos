@@ -56,7 +56,7 @@ const PanelRoot = slottable<HTMLDivElement, PanelRootProps>(
   },
 );
 
-PanelRoot.displayName = 'Next.Panel.Root';
+PanelRoot.displayName = 'Panel.Root';
 
 //
 // Header
@@ -85,7 +85,7 @@ const PanelHeader = slottable<HTMLDivElement, PanelHeaderProps>(({ children, asC
   );
 });
 
-PanelHeader.displayName = 'Next.Panel.Header';
+PanelHeader.displayName = 'Panel.Header';
 
 //
 // Body
@@ -111,7 +111,7 @@ const PanelBody = slottable<HTMLDivElement, PanelBodyProps>(({ children, asChild
   );
 });
 
-PanelBody.displayName = 'Next.Panel.Body';
+PanelBody.displayName = 'Panel.Body';
 
 //
 // Footer
@@ -137,7 +137,7 @@ const PanelFooter = slottable<HTMLDivElement, PanelFooterProps>(({ children, asC
   );
 });
 
-PanelFooter.displayName = 'Next.Panel.Footer';
+PanelFooter.displayName = 'Panel.Footer';
 
 export const Panel = {
   Root: PanelRoot,

@@ -53,7 +53,7 @@ type SegmentTileProps = Pick<MosaicTileProps<SegmentTileData>, 'data' | 'locatio
  *     Card.Header  → kind icon + title + delete (Card.ActionIconButton action='delete')
  *     Card.Body  → optional Route and Date rows
  *
- * Selection / current state is wired through `Mosaic.Tile asChild` + `Next.Focus.Item`
+ * Selection / current state is wired through `Mosaic.Tile asChild` + `Focus.Item`
  * so the host `Mosaic.Container` drives the visual `dx-current` / `dx-selected`
  * states uniformly across the stack.
  */

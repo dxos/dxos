@@ -14,7 +14,7 @@ import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-p
 import { Form } from './Form.tsx';
 import { SCALAR_VALUES, ScalarSchema, type ScalarValues } from './testing.ts';
 
-/** A form hosted in a `Next.Panel` plank at `sm`: toolbar header, scrolling body, actions in the footer. */
+/** A form hosted in a `Panel` plank at `sm`: toolbar header, scrolling body, actions in the footer. */
 const DefaultStory = (_: PaneArgs) => {
   const [values, setValues] = useState<ScalarValues>(SCALAR_VALUES);
   return (

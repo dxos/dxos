@@ -28,7 +28,7 @@ const NoteSchema = Schema.Struct({
 
 type NoteValues = Schema.Schema.Type<typeof NoteSchema>;
 
-/** Editors framed by `Next.ControlFrame`: a markdown field (multi-line) and the reference editor (one line). */
+/** Editors framed by `ControlFrame`: a markdown field (multi-line) and the reference editor (one line). */
 const DefaultStory = (_: PaneArgs) => {
   const { space } = useClientStory();
   const people = useQuery(space?.db, Filter.type(Person.Person));

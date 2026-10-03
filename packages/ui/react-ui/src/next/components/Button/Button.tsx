@@ -19,7 +19,7 @@ export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'outline' | 'destr
 
 export type ButtonValence = MessageValence;
 
-/** Tag's palette (`Next.TagHue`), repeated here since Tag builds on nothing of Button's. */
+/** Tag's palette (`TagHue`), repeated here since Tag builds on nothing of Button's. */
 export type ButtonHue = NeutralPalette | ChromaticPalette | MessageValence;
 
 export type ButtonVariantProps = {
@@ -161,4 +161,4 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
   },
 );
 
-Button.displayName = 'Next.Button';
+Button.displayName = 'Button';

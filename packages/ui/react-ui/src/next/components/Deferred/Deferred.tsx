@@ -78,4 +78,4 @@ export const Deferred = ({
   return <>{showFallback ? fallback() : children}</>;
 };
 
-Deferred.displayName = 'Next.Deferred';
+Deferred.displayName = 'Deferred';

@@ -71,7 +71,7 @@ export type UseReorderListOptions<T> = {
    * The native drag preview: `'clone'` snapshots the row itself into a detached container, a
    * renderer draws something else for the item. Either replaces the browser's own image, which for
    * a row in a scrolling column can take the preceding siblings along. The renderer also receives the dragged row, so a
-   * portalled preview can copy its scope (e.g. `Next.DragPreview source`).
+   * portalled preview can copy its scope (e.g. `DragPreview source`).
    */
   dragPreview?: 'clone' | ((item: T, source: HTMLElement) => ReactNode);
 };

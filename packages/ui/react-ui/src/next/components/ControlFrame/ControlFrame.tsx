@@ -68,4 +68,4 @@ export const ControlFrame = composable<HTMLDivElement, ControlFrameProps>(
   },
 );
 
-ControlFrame.displayName = 'Next.ControlFrame';
+ControlFrame.displayName = 'ControlFrame';

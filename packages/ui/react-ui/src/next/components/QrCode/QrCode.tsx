@@ -53,4 +53,4 @@ export const QrCode = forwardRef<HTMLDivElement, QrCodeProps>(
   ),
 );
 
-QrCode.displayName = 'Next.QrCode';
+QrCode.displayName = 'QrCode';

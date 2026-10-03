@@ -43,7 +43,7 @@ import { ActionLabel } from './ActionLabel.tsx';
 import { ActionMenu } from './ActionMenu.tsx';
 
 //
-// Items (private): the graph's root items as `Next.Toolbar` parts.
+// Items (private): the graph's root items as `Toolbar` parts.
 //
 
 type ItemProps<T> = { menu: MenuActions } & T;
@@ -362,9 +362,9 @@ export type ActionToolbarProps = Partial<MenuActions> &
   };
 
 /**
- * A whole `Next.Toolbar.Root` driven from a `MenuActions`: the graph's root items render first, then the toolbar's own
+ * A whole `Toolbar.Root` driven from a `MenuActions`: the graph's root items render first, then the toolbar's own
  * children. Mix graph and hand-written controls the other way round by dropping an `ActionMenu` into a plain
- * `Next.Toolbar.Root`. Without a `MenuActions` it is an empty toolbar until one arrives.
+ * `Toolbar.Root`. Without a `MenuActions` it is an empty toolbar until one arrives.
  */
 export const ActionToolbar = composable<HTMLDivElement, ActionToolbarProps>(
   (

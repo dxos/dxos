@@ -56,7 +56,7 @@ const PHANTOM = 1;
 /**
  * A fixed plan drawn as icon-sized circles joined by lines that flex, so the gaps stay even however many stages there
  * are. Which stage is in flight says where the run is in its plan; the fill of the line leaving it says how far through
- * that stage, so a counted run needs no separate bar (`Next.Progress` is the planless form).
+ * that stage, so a counted run needs no separate bar (`Progress` is the planless form).
  */
 export const Steps = forwardRef<HTMLDivElement, StepsProps>(
   (
@@ -105,7 +105,7 @@ export const Steps = forwardRef<HTMLDivElement, StepsProps>(
   },
 );
 
-Steps.displayName = 'Next.Steps';
+Steps.displayName = 'Steps';
 
 type StepsItemsProps = Pick<StepsProps, 'steps' | 'indeterminate' | 'error' | 'selected' | 'onSelect'> & {
   count: number;

@@ -76,7 +76,7 @@ const ToggleGroupRoot = forwardRef<HTMLDivElement, ToggleGroupRootProps>((props,
   );
 });
 
-ToggleGroupRoot.displayName = 'Next.ToggleGroup.Root';
+ToggleGroupRoot.displayName = 'ToggleGroup.Root';
 
 //
 // Item
@@ -95,7 +95,7 @@ const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(
   ),
 );
 
-ToggleGroupItem.displayName = 'Next.ToggleGroup.Item';
+ToggleGroupItem.displayName = 'ToggleGroup.Item';
 
 export const ToggleGroup = {
   Root: ToggleGroupRoot,

@@ -67,7 +67,7 @@ const FieldsetRoot = forwardRef<HTMLDivElement, FieldsetRootProps>(
   },
 );
 
-FieldsetRoot.displayName = 'Next.Fieldset.Root';
+FieldsetRoot.displayName = 'Fieldset.Root';
 
 //
 // Legend
@@ -95,7 +95,7 @@ const FieldsetLegend = forwardRef<HTMLDivElement, FieldsetLegendProps>(
   ),
 );
 
-FieldsetLegend.displayName = 'Next.Fieldset.Legend';
+FieldsetLegend.displayName = 'Fieldset.Legend';
 
 //
 // HelperText
@@ -109,7 +109,7 @@ const FieldsetHelperText = forwardRef<HTMLSpanElement, FieldsetHelperTextProps>(
   ),
 );
 
-FieldsetHelperText.displayName = 'Next.Fieldset.HelperText';
+FieldsetHelperText.displayName = 'Fieldset.HelperText';
 
 //
 // ErrorText
@@ -124,7 +124,7 @@ const FieldsetErrorText = forwardRef<HTMLSpanElement, FieldsetErrorTextProps>(
   ),
 );
 
-FieldsetErrorText.displayName = 'Next.Fieldset.ErrorText';
+FieldsetErrorText.displayName = 'Fieldset.ErrorText';
 
 /**
  * A control's `disabled`, or else its enclosing Fieldset's: the set is a `div`, so the browser no longer disables its

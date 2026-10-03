@@ -19,7 +19,7 @@ type ScrollAreaContextValue = {
   setViewport: (viewport: HTMLElement | null) => void;
 };
 
-const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaContextValue>('Next.ScrollArea');
+const [ScrollAreaProvider, useScrollAreaContext] = createContext<ScrollAreaContextValue>('ScrollArea');
 
 //
 // Root
@@ -115,7 +115,7 @@ const ScrollAreaRoot = slottable<HTMLDivElement, ScrollAreaRootProps>(
   },
 );
 
-ScrollAreaRoot.displayName = 'Next.ScrollArea.Root';
+ScrollAreaRoot.displayName = 'ScrollArea.Root';
 
 //
 // Viewport
@@ -126,7 +126,7 @@ export type ScrollAreaViewportProps = {};
 /** The scrolling element; under `asChild` it is the child (e.g. a Container) itself. */
 const ScrollAreaViewport = slottable<HTMLDivElement, ScrollAreaViewportProps>(
   ({ children, asChild, ...props }, forwardedRef) => {
-    const { native, setViewport } = useScrollAreaContext('Next.ScrollArea.Viewport');
+    const { native, setViewport } = useScrollAreaContext('ScrollArea.Viewport');
     const ref = useComposedRefs(forwardedRef, setViewport);
     const { className, ...rest } = composableProps(props, { classNames: recipes.scrollViewport() });
     return (
@@ -145,7 +145,7 @@ const ScrollAreaViewport = slottable<HTMLDivElement, ScrollAreaViewportProps>(
   },
 );
 
-ScrollAreaViewport.displayName = 'Next.ScrollArea.Viewport';
+ScrollAreaViewport.displayName = 'ScrollArea.Viewport';
 
 export const ScrollArea = {
   Root: ScrollAreaRoot,

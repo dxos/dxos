@@ -46,7 +46,7 @@ const TourRoot = ({ lazyMount = true, unmountOnExit = true, ...props }: TourRoot
   <TourPrimitive.Root {...props} lazyMount={lazyMount} unmountOnExit={unmountOnExit} />
 );
 
-TourRoot.displayName = 'Next.Tour.Root';
+TourRoot.displayName = 'Tour.Root';
 
 //
 // Content
@@ -87,7 +87,7 @@ const TourContent = forwardRef<HTMLDivElement, TourContentProps>(
   ),
 );
 
-TourContent.displayName = 'Next.Tour.Content';
+TourContent.displayName = 'Tour.Content';
 
 //
 // Header
@@ -106,7 +106,7 @@ const TourHeader = forwardRef<HTMLDivElement, TourHeaderProps>(({ classNames, ..
   />
 ));
 
-TourHeader.displayName = 'Next.Tour.Header';
+TourHeader.displayName = 'Tour.Header';
 
 //
 // Title
@@ -119,7 +119,7 @@ const TourTitle = forwardRef<HTMLHeadingElement, TourTitleProps>(({ classNames, 
   <TourPrimitive.Title {...props} className={mx(recipes.tourTitle(), classNames)} ref={forwardedRef} />
 ));
 
-TourTitle.displayName = 'Next.Tour.Title';
+TourTitle.displayName = 'Tour.Title';
 
 //
 // Description
@@ -134,7 +134,7 @@ const TourDescription = forwardRef<HTMLParagraphElement, TourDescriptionProps>(
   ),
 );
 
-TourDescription.displayName = 'Next.Tour.Description';
+TourDescription.displayName = 'Tour.Description';
 
 //
 // ProgressText
@@ -147,7 +147,7 @@ const TourProgressText = forwardRef<HTMLDivElement, TourProgressTextProps>(({ cl
   <TourPrimitive.ProgressText {...props} className={mx(recipes.tourProgressText(), classNames)} ref={forwardedRef} />
 ));
 
-TourProgressText.displayName = 'Next.Tour.ProgressText';
+TourProgressText.displayName = 'Tour.ProgressText';
 
 //
 // Control
@@ -160,7 +160,7 @@ const TourControl = forwardRef<HTMLDivElement, TourControlProps>(({ classNames, 
   <TourPrimitive.Control {...props} className={mx(recipes.tourControl(), classNames)} ref={forwardedRef} />
 ));
 
-TourControl.displayName = 'Next.Tour.Control';
+TourControl.displayName = 'Tour.Control';
 
 //
 // Actions
@@ -194,14 +194,14 @@ const TourActionTrigger = forwardRef<HTMLButtonElement, TourActionTriggerProps>(
   ),
 );
 
-TourActionTrigger.displayName = 'Next.Tour.ActionTrigger';
+TourActionTrigger.displayName = 'Tour.ActionTrigger';
 
 //
 // CloseTrigger
 //
 
 type TourCloseTriggerProps = Omit<TourPrimitive.CloseTriggerProps, 'children'> & {
-  /** With `asChild`, the child (e.g. a "Done" `Next.Button`) ends the tour instead of the default icon button. */
+  /** With `asChild`, the child (e.g. a "Done" `Button`) ends the tour instead of the default icon button. */
   children?: ReactNode;
   icon?: string;
   label?: string;
@@ -223,7 +223,7 @@ const TourCloseTrigger = forwardRef<HTMLButtonElement, TourCloseTriggerProps>(
   },
 );
 
-TourCloseTrigger.displayName = 'Next.Tour.CloseTrigger';
+TourCloseTrigger.displayName = 'Tour.CloseTrigger';
 
 export const Tour = {
   Root: TourRoot,

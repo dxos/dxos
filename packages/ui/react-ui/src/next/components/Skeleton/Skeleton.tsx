@@ -31,4 +31,4 @@ export const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
   ),
 );
 
-Skeleton.displayName = 'Next.Skeleton';
+Skeleton.displayName = 'Skeleton';

@@ -61,7 +61,7 @@ const FloatingPanelRoot = ({
   );
 };
 
-FloatingPanelRoot.displayName = 'Next.FloatingPanel.Root';
+FloatingPanelRoot.displayName = 'FloatingPanel.Root';
 
 //
 // Trigger
@@ -69,12 +69,12 @@ FloatingPanelRoot.displayName = 'Next.FloatingPanel.Root';
 
 type FloatingPanelTriggerProps = FloatingPanelPrimitive.TriggerProps;
 
-/** Use `asChild` to open the panel from a `Next.Button`. */
+/** Use `asChild` to open the panel from a `Button`. */
 const FloatingPanelTrigger = forwardRef<HTMLButtonElement, FloatingPanelTriggerProps>((props, forwardedRef) => (
   <FloatingPanelPrimitive.Trigger {...props} ref={forwardedRef} />
 ));
 
-FloatingPanelTrigger.displayName = 'Next.FloatingPanel.Trigger';
+FloatingPanelTrigger.displayName = 'FloatingPanel.Trigger';
 
 //
 // Content
@@ -122,7 +122,7 @@ const FloatingPanelContent = forwardRef<HTMLDivElement, FloatingPanelContentProp
   ),
 );
 
-FloatingPanelContent.displayName = 'Next.FloatingPanel.Content';
+FloatingPanelContent.displayName = 'FloatingPanel.Content';
 
 //
 // Header
@@ -141,7 +141,7 @@ const FloatingPanelHeader = forwardRef<HTMLDivElement, FloatingPanelHeaderProps>
   ),
 );
 
-FloatingPanelHeader.displayName = 'Next.FloatingPanel.Header';
+FloatingPanelHeader.displayName = 'FloatingPanel.Header';
 
 //
 // DragTrigger
@@ -160,7 +160,7 @@ const FloatingPanelDragTrigger = forwardRef<HTMLDivElement, FloatingPanelDragTri
   ),
 );
 
-FloatingPanelDragTrigger.displayName = 'Next.FloatingPanel.DragTrigger';
+FloatingPanelDragTrigger.displayName = 'FloatingPanel.DragTrigger';
 
 //
 // Title
@@ -179,7 +179,7 @@ const FloatingPanelTitle = forwardRef<HTMLHeadingElement, FloatingPanelTitleProp
   ),
 );
 
-FloatingPanelTitle.displayName = 'Next.FloatingPanel.Title';
+FloatingPanelTitle.displayName = 'FloatingPanel.Title';
 
 //
 // Control
@@ -198,7 +198,7 @@ const FloatingPanelControl = forwardRef<HTMLDivElement, FloatingPanelControlProp
   ),
 );
 
-FloatingPanelControl.displayName = 'Next.FloatingPanel.Control';
+FloatingPanelControl.displayName = 'FloatingPanel.Control';
 
 //
 // StageTrigger
@@ -242,7 +242,7 @@ const FloatingPanelStageTrigger = forwardRef<HTMLButtonElement, FloatingPanelSta
   },
 );
 
-FloatingPanelStageTrigger.displayName = 'Next.FloatingPanel.StageTrigger';
+FloatingPanelStageTrigger.displayName = 'FloatingPanel.StageTrigger';
 
 //
 // CloseTrigger
@@ -272,7 +272,7 @@ const FloatingPanelCloseTrigger = forwardRef<HTMLButtonElement, FloatingPanelClo
   },
 );
 
-FloatingPanelCloseTrigger.displayName = 'Next.FloatingPanel.CloseTrigger';
+FloatingPanelCloseTrigger.displayName = 'FloatingPanel.CloseTrigger';
 
 //
 // Body
@@ -280,7 +280,7 @@ FloatingPanelCloseTrigger.displayName = 'Next.FloatingPanel.CloseTrigger';
 
 type FloatingPanelBodyProps = ThemedClassName<FloatingPanelPrimitive.BodyProps>;
 
-/** Takes the height the header leaves and clips; its content scrolls itself (e.g. in a `Next.ScrollArea`). */
+/** Takes the height the header leaves and clips; its content scrolls itself (e.g. in a `ScrollArea`). */
 const FloatingPanelBody = forwardRef<HTMLDivElement, FloatingPanelBodyProps>(
   ({ classNames, ...props }, forwardedRef) => (
     <FloatingPanelPrimitive.Body
@@ -291,7 +291,7 @@ const FloatingPanelBody = forwardRef<HTMLDivElement, FloatingPanelBodyProps>(
   ),
 );
 
-FloatingPanelBody.displayName = 'Next.FloatingPanel.Body';
+FloatingPanelBody.displayName = 'FloatingPanel.Body';
 
 export const FloatingPanel = {
   Root: FloatingPanelRoot,

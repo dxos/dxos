@@ -20,7 +20,7 @@ export type RefEditorProps = RefEditorOptions &
   };
 
 /**
- * The single-line reference editor (see the current `RefEditor`) in a `Next.ControlFrame`: the frame draws the control's
+ * The single-line reference editor (see the current `RefEditor`) in a `ControlFrame`: the frame draws the control's
  * well, size and focus ring around the editor, which fills it between the optional adornments.
  */
 export const RefEditor = forwardRef<EditorController, RefEditorProps>(
@@ -42,4 +42,4 @@ export const RefEditor = forwardRef<EditorController, RefEditorProps>(
   },
 );
 
-RefEditor.displayName = 'Next.RefEditor';
+RefEditor.displayName = 'RefEditor';

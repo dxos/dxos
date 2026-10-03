@@ -118,7 +118,7 @@ export const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
   },
 );
 
-DragHandle.displayName = 'Next.DragHandle';
+DragHandle.displayName = 'DragHandle';
 
 //
 // DropIndicator
@@ -144,7 +144,7 @@ export const DropIndicator = ({ classNames, edge }: DropIndicatorProps) => (
   />
 );
 
-DropIndicator.displayName = 'Next.DropIndicator';
+DropIndicator.displayName = 'DropIndicator';
 
 //
 // DragPreview
@@ -180,6 +180,6 @@ export const DragPreview = forwardRef<HTMLDivElement, DragPreviewProps>(
   },
 );
 
-DragPreview.displayName = 'Next.DragPreview';
+DragPreview.displayName = 'DragPreview';
 
 export type { DragHandleProps, DragPreviewProps, DropIndicatorProps };

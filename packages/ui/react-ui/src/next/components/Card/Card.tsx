@@ -81,7 +81,7 @@ const CardRoot = composable<HTMLDivElement, Omit<CardRootProps, keyof ThemedClas
   },
 );
 
-CardRoot.displayName = 'Next.Card.Root';
+CardRoot.displayName = 'Card.Root';
 
 //
 // Poster
@@ -94,7 +94,7 @@ const CardPoster = forwardRef<HTMLDivElement, CardPosterProps>(({ classNames, ..
   <Image {...props} data-place='full' classNames={mx(recipes.cardPoster(), classNames)} ref={forwardedRef} />
 ));
 
-CardPoster.displayName = 'Next.Card.Poster';
+CardPoster.displayName = 'Card.Poster';
 
 //
 // Tile
@@ -126,7 +126,7 @@ const CardTile = forwardRef<HTMLDivElement, CardTileProps>(
   ),
 );
 
-CardTile.displayName = 'Next.Card.Tile';
+CardTile.displayName = 'Card.Tile';
 
 //
 // Header
@@ -148,7 +148,7 @@ const CardHeader = forwardRef<HTMLDivElement, CardHeaderProps>(({ classNames, ..
   />
 ));
 
-CardHeader.displayName = 'Next.Card.Header';
+CardHeader.displayName = 'Card.Header';
 
 //
 // Title
@@ -166,7 +166,7 @@ const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
   ),
 );
 
-CardTitle.displayName = 'Next.Card.Title';
+CardTitle.displayName = 'Card.Title';
 
 //
 // Description
@@ -186,7 +186,7 @@ const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
   ),
 );
 
-CardDescription.displayName = 'Next.Card.Description';
+CardDescription.displayName = 'Card.Description';
 
 //
 // Body
@@ -205,7 +205,7 @@ const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(({ classNames, ...pro
   />
 ));
 
-CardBody.displayName = 'Next.Card.Body';
+CardBody.displayName = 'Card.Body';
 
 //
 // Footer
@@ -216,7 +216,7 @@ type CardFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> & {
   justify?: GroupProps['justify'];
 };
 
-/** A `Next.Group` of actions in the content track, end-justified unless `justify` says otherwise. */
+/** A `Group` of actions in the content track, end-justified unless `justify` says otherwise. */
 const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
   ({ classNames, justify = 'end', ...props }, forwardedRef) => (
     <Group asChild justify={justify}>
@@ -231,7 +231,7 @@ const CardFooter = forwardRef<HTMLDivElement, CardFooterProps>(
   ),
 );
 
-CardFooter.displayName = 'Next.Card.Footer';
+CardFooter.displayName = 'Card.Footer';
 
 //
 // Section
@@ -270,7 +270,7 @@ const CardSection = forwardRef<HTMLDivElement, CardSectionProps>(
   },
 );
 
-CardSection.displayName = 'Next.Card.Section';
+CardSection.displayName = 'Card.Section';
 
 //
 // Row
@@ -322,7 +322,7 @@ const CardRow = forwardRef<HTMLDivElement, CardRowProps>(
   ),
 );
 
-CardRow.displayName = 'Next.Card.Row';
+CardRow.displayName = 'Card.Row';
 
 //
 // Text
@@ -341,7 +341,7 @@ const CardText = forwardRef<HTMLParagraphElement, CardTextProps>(
   ),
 );
 
-CardText.displayName = 'Next.Card.Text';
+CardText.displayName = 'Card.Text';
 
 //
 // Action
@@ -387,7 +387,7 @@ const CardAction = forwardRef<HTMLButtonElement, CardActionProps>(
   },
 );
 
-CardAction.displayName = 'Next.Card.Action';
+CardAction.displayName = 'Card.Action';
 
 //
 // Link
@@ -430,7 +430,7 @@ const CardLink = forwardRef<HTMLAnchorElement, CardLinkProps>(
   ),
 );
 
-CardLink.displayName = 'Next.Card.Link';
+CardLink.displayName = 'Card.Link';
 
 //
 // Menu
@@ -463,7 +463,7 @@ const CardMenu = ({ label, size, children }: CardMenuProps) => (
   </Menu.Root>
 );
 
-CardMenu.displayName = 'Next.Card.Menu';
+CardMenu.displayName = 'Card.Menu';
 
 export const Card = {
   Root: CardRoot,

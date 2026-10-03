@@ -103,4 +103,4 @@ export const Input = composable<HTMLInputElement, InputProps>(
   },
 );
 
-Input.displayName = 'Next.Input';
+Input.displayName = 'Input';

@@ -81,4 +81,4 @@ export const AttentionGlyph = forwardRef<HTMLSpanElement, AttentionGlyphProps>(
   ),
 );
 
-AttentionGlyph.displayName = 'Next.AttentionGlyph';
+AttentionGlyph.displayName = 'AttentionGlyph';

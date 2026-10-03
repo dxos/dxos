@@ -70,7 +70,7 @@ type ComboboxRootContextValue = {
   registerSearch: (present: boolean) => void;
 };
 
-const [ComboboxRootProvider, useComboboxRootContext] = createRootContext<ComboboxRootContextValue>('Next.Combobox');
+const [ComboboxRootProvider, useComboboxRootContext] = createRootContext<ComboboxRootContextValue>('Combobox');
 
 type ComboboxRootProps = ThemedClassName<Omit<ComboboxPrimitive.RootProps<ComboboxOption>, 'collection'>> & {
   items: ComboboxOption[];
@@ -196,7 +196,7 @@ const ComboboxRoot = forwardRef<HTMLDivElement, ComboboxRootProps>(
   },
 );
 
-ComboboxRoot.displayName = 'Next.Combobox.Root';
+ComboboxRoot.displayName = 'Combobox.Root';
 
 /**
  * zag keeps a preselected value when items arrive later but not the input text, so fill it from the selected option;
@@ -227,7 +227,7 @@ const ComboboxLabel = forwardRef<HTMLLabelElement, ComboboxLabelProps>(({ classN
   <ComboboxPrimitive.Label {...props} className={mx(recipes.label(), classNames)} ref={forwardedRef} />
 ));
 
-ComboboxLabel.displayName = 'Next.Combobox.Label';
+ComboboxLabel.displayName = 'Combobox.Label';
 
 //
 // Control
@@ -265,7 +265,7 @@ const ComboboxControl = forwardRef<HTMLDivElement, ComboboxControlProps>(
   ),
 );
 
-ComboboxControl.displayName = 'Next.Combobox.Control';
+ComboboxControl.displayName = 'Combobox.Control';
 
 //
 // Input
@@ -283,7 +283,7 @@ type ComboboxInputProps = ThemedClassName<ComboboxPrimitive.InputProps>;
 const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
   ({ classNames, placeholder, ...props }, forwardedRef) => {
     const inContent = useContext(ContentContext);
-    const { registerSearch } = useComboboxRootContext('Next.Combobox.Input');
+    const { registerSearch } = useComboboxRootContext('Combobox.Input');
     const { t } = useTranslation(translationKey);
     const localRef = useRef<HTMLInputElement>(null);
     const ref = useComposedRefs(localRef, forwardedRef);
@@ -308,7 +308,7 @@ const ComboboxInput = forwardRef<HTMLInputElement, ComboboxInputProps>(
   },
 );
 
-ComboboxInput.displayName = 'Next.Combobox.Input';
+ComboboxInput.displayName = 'Combobox.Input';
 
 //
 // Trigger
@@ -333,7 +333,7 @@ const ComboboxTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>((pro
   ),
 );
 
-ComboboxTrigger.displayName = 'Next.Combobox.Trigger';
+ComboboxTrigger.displayName = 'Combobox.Trigger';
 
 const ComboboxCaretTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
   ({ classNames, children, placeholder: _placeholder, ...props }, forwardedRef) => (
@@ -346,7 +346,7 @@ const ComboboxCaretTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>
 const ComboboxButtonTrigger = forwardRef<HTMLButtonElement, ComboboxTriggerProps>(
   ({ classNames, children, placeholder, onClick, asChild, ...props }, forwardedRef) => {
     const combobox = useComboboxContext();
-    const { loading, registerTrigger } = useComboboxRootContext('Next.Combobox.Trigger');
+    const { loading, registerTrigger } = useComboboxRootContext('Combobox.Trigger');
     useLayoutEffect(() => {
       registerTrigger(true);
       return () => registerTrigger(false);
@@ -404,7 +404,7 @@ const ComboboxClearTrigger = forwardRef<HTMLButtonElement, ComboboxClearTriggerP
   ),
 );
 
-ComboboxClearTrigger.displayName = 'Next.Combobox.ClearTrigger';
+ComboboxClearTrigger.displayName = 'Combobox.ClearTrigger';
 
 //
 // Content
@@ -447,7 +447,7 @@ const focusComposedField = (event: PointerEvent<HTMLDivElement>) => {
 const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
   ({ classNames, size, container, children, ...props }, forwardedRef) => {
     const combobox = useComboboxContext();
-    const { loading, search } = useComboboxRootContext('Next.Combobox.Content');
+    const { loading, search } = useComboboxRootContext('Combobox.Content');
     const popupSize = usePopupSize(
       size,
       combobox.open,
@@ -486,7 +486,7 @@ const ComboboxContent = forwardRef<HTMLDivElement, ComboboxContentProps>(
   },
 );
 
-ComboboxContent.displayName = 'Next.Combobox.Content';
+ComboboxContent.displayName = 'Combobox.Content';
 
 /** The matching options, then the create row, the loading row and the empty state. */
 const ComboboxOptions = () => {
@@ -507,7 +507,7 @@ const ComboboxOptions = () => {
 
 /** A spinner row while results load; presentational, since the popup itself is `aria-busy`. */
 const ComboboxLoading = () => {
-  const { loading } = useComboboxRootContext('Next.Combobox.Content');
+  const { loading } = useComboboxRootContext('Combobox.Content');
   const { t } = useTranslation(translationKey);
   return loading ? (
     <div role='presentation' data-scope='combobox' data-part='loading' className={recipes.comboboxEmpty()}>
@@ -535,7 +535,7 @@ const ComboboxList = forwardRef<HTMLDivElement, ComboboxListProps>(
   ),
 );
 
-ComboboxList.displayName = 'Next.Combobox.List';
+ComboboxList.displayName = 'Combobox.List';
 
 //
 // Empty
@@ -546,7 +546,7 @@ type ComboboxEmptyProps = ThemedClassName<ComboboxPrimitive.EmptyProps>;
 /** Shown when no option matches and nothing is loading; "No results" by default. */
 const ComboboxEmpty = forwardRef<HTMLDivElement, ComboboxEmptyProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
-    const { loading } = useComboboxRootContext('Next.Combobox.Empty');
+    const { loading } = useComboboxRootContext('Combobox.Empty');
     const { t } = useTranslation(translationKey);
     return loading ? null : (
       <ComboboxPrimitive.Empty {...props} className={mx(recipes.comboboxEmpty(), classNames)} ref={forwardedRef}>
@@ -556,7 +556,7 @@ const ComboboxEmpty = forwardRef<HTMLDivElement, ComboboxEmptyProps>(
   },
 );
 
-ComboboxEmpty.displayName = 'Next.Combobox.Empty';
+ComboboxEmpty.displayName = 'Combobox.Empty';
 
 //
 // Item
@@ -568,7 +568,7 @@ const ItemContext = createContext<ComboboxOption | undefined>(undefined);
 const useItem = (part: string) => {
   const item = useContext(ItemContext);
   if (!item) {
-    throw new Error(`Next.Combobox.${part} must be inside Next.Combobox.Item`);
+    throw new Error(`Combobox.${part} must be inside Combobox.Item`);
   }
   return item;
 };
@@ -608,7 +608,7 @@ const ComboboxItem = forwardRef<HTMLDivElement, ComboboxItemProps>(
   ),
 );
 
-ComboboxItem.displayName = 'Next.Combobox.Item';
+ComboboxItem.displayName = 'Combobox.Item';
 
 //
 // CreateItem
@@ -622,7 +622,7 @@ type ComboboxCreateItemProps = Omit<ComboboxItemProps, 'item'>;
  */
 const ComboboxCreateItem = forwardRef<HTMLDivElement, ComboboxCreateItemProps>(
   ({ children, ...props }, forwardedRef) => {
-    const { create, createLabel, createIcon } = useComboboxRootContext('Next.Combobox.CreateItem');
+    const { create, createLabel, createIcon } = useComboboxRootContext('Combobox.CreateItem');
     const { t } = useTranslation(translationKey);
     if (!create) {
       return null;
@@ -644,7 +644,7 @@ const ComboboxCreateItem = forwardRef<HTMLDivElement, ComboboxCreateItemProps>(
   },
 );
 
-ComboboxCreateItem.displayName = 'Next.Combobox.CreateItem';
+ComboboxCreateItem.displayName = 'Combobox.CreateItem';
 
 //
 // ItemIcon
@@ -662,7 +662,7 @@ const ComboboxItemIcon = forwardRef<SVGSVGElement, ComboboxItemIconProps>(({ ico
   return glyph ? <Icon {...props} icon={glyph} hue={hue ?? item.iconHue} ref={forwardedRef} /> : null;
 });
 
-ComboboxItemIcon.displayName = 'Next.Combobox.ItemIcon';
+ComboboxItemIcon.displayName = 'Combobox.ItemIcon';
 
 //
 // ItemText
@@ -682,7 +682,7 @@ const ComboboxItemText = forwardRef<HTMLDivElement, ComboboxItemTextProps>(
   },
 );
 
-ComboboxItemText.displayName = 'Next.Combobox.ItemText';
+ComboboxItemText.displayName = 'Combobox.ItemText';
 
 //
 // ItemDescription
@@ -708,7 +708,7 @@ const ComboboxItemDescription = forwardRef<HTMLDivElement, ComboboxItemDescripti
   },
 );
 
-ComboboxItemDescription.displayName = 'Next.Combobox.ItemDescription';
+ComboboxItemDescription.displayName = 'Combobox.ItemDescription';
 
 //
 // ItemIndicator
@@ -725,7 +725,7 @@ const ComboboxItemIndicator = forwardRef<HTMLDivElement, ComboboxItemIndicatorPr
   ),
 );
 
-ComboboxItemIndicator.displayName = 'Next.Combobox.ItemIndicator';
+ComboboxItemIndicator.displayName = 'Combobox.ItemIndicator';
 
 //
 // ItemGroup
@@ -743,7 +743,7 @@ const ComboboxItemGroup = forwardRef<HTMLDivElement, ComboboxItemGroupProps>(
   ),
 );
 
-ComboboxItemGroup.displayName = 'Next.Combobox.ItemGroup';
+ComboboxItemGroup.displayName = 'Combobox.ItemGroup';
 
 //
 // ItemGroupLabel
@@ -762,7 +762,7 @@ const ComboboxItemGroupLabel = forwardRef<HTMLDivElement, ComboboxItemGroupLabel
   ),
 );
 
-ComboboxItemGroupLabel.displayName = 'Next.Combobox.ItemGroupLabel';
+ComboboxItemGroupLabel.displayName = 'Combobox.ItemGroupLabel';
 
 export const Combobox = {
   Root: ComboboxRoot,

@@ -28,7 +28,7 @@ type ListboxRootProps = Omit<NextRootProps, 'selectionMode' | 'value' | 'default
   /**
    * Selected option id (controlled). Supplying any of `value`/`defaultValue`/`onValueChange` makes the list
    * single-selection; omitting all three selects nothing (`selectionMode='none'`), keeping zag's navigation. Multiple
-   * selection, or a `useListSelection`-shaped value, goes through `listboxSelection` on `Next.Listbox.Root`.
+   * selection, or a `useListSelection`-shaped value, goes through `listboxSelection` on `Listbox.Root`.
    */
   value?: string;
   defaultValue?: string;
@@ -38,7 +38,7 @@ type ListboxRootProps = Omit<NextRootProps, 'selectionMode' | 'value' | 'default
 };
 
 /**
- * Next.Listbox with the current Listbox's selection model: selection is opt-in and single, keyed by option `value`
+ * Listbox with the current Listbox's selection model: selection is opt-in and single, keyed by option `value`
  * (the current API's item `id`). Ark owns the selection state; keyboard navigation, typeahead and `aria-selected` are
  * zag's.
  */
@@ -84,7 +84,7 @@ type ListboxItemProps = Omit<NextItemProps, 'item'> & {
   id: string;
 };
 
-/** A Next.Listbox row addressed by id: the option's default row, or the parts given as children. */
+/** A Listbox row addressed by id: the option's default row, or the parts given as children. */
 const ListboxItem: ForwardRefExoticComponent<ListboxItemProps & RefAttributes<HTMLDivElement>> = forwardRef<
   HTMLDivElement,
   ListboxItemProps
@@ -100,7 +100,7 @@ const ListboxItem: ForwardRefExoticComponent<ListboxItemProps & RefAttributes<HT
 ListboxItem.displayName = 'Listbox.Item';
 
 /**
- * Selectable or plain list on Next parts, with Next.Listbox's part names. `Content` is itself the scrolling viewport (a
+ * Selectable or plain list on Next parts, with Listbox's part names. `Content` is itself the scrolling viewport (a
  * thin ScrollArea; `scroll={false}` inside a host that scrolls, such as a ScrollArea composed in `Panel.Body`), so
  * there is no separate `Viewport`; the current `ItemContent` becomes a row composed from `ItemIcon`, `ItemText`,
  * `ItemDescription` and trailing controls. Annotated so the declaration names Next's parts through `Next` rather than

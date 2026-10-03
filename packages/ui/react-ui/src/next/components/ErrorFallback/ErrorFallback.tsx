@@ -75,7 +75,7 @@ export const ErrorFallback = ({ classNames, children, error, title, data }: Erro
   );
 };
 
-ErrorFallback.displayName = 'Next.ErrorFallback';
+ErrorFallback.displayName = 'ErrorFallback';
 
 const ErrorFallbackSection = ({
   children,
@@ -143,7 +143,7 @@ export const ErrorStack = ({ classNames, error, frames: framesProp }: ErrorStack
   );
 };
 
-ErrorStack.displayName = 'Next.ErrorStack';
+ErrorStack.displayName = 'ErrorStack';
 
 /** A stack frame resolved to a workspace source location. */
 type LocalFrame = { href: string; fileName: string };

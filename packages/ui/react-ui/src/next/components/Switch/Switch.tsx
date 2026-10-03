@@ -44,4 +44,4 @@ export const Switch = forwardRef<HTMLLabelElement, SwitchProps>(
   },
 );
 
-Switch.displayName = 'Next.Switch';
+Switch.displayName = 'Switch';

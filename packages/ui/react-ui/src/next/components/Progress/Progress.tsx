@@ -80,4 +80,4 @@ export const Progress = forwardRef<HTMLDivElement, ProgressProps>(
   },
 );
 
-Progress.displayName = 'Next.Progress';
+Progress.displayName = 'Progress';

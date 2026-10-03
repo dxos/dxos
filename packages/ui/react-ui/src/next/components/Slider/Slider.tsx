@@ -112,4 +112,4 @@ export const Slider = forwardRef<HTMLDivElement, SliderProps>(
   },
 );
 
-Slider.displayName = 'Next.Slider';
+Slider.displayName = 'Slider';

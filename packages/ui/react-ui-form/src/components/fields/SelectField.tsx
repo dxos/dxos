@@ -18,7 +18,7 @@ export type SelectFieldProps = FormFieldRendererProps & {
 };
 
 /**
- * `Next.Select` over literal options. Next options are strings (AUDIT 2.14), so the field keeps the map back to each
+ * `Select` over literal options. Next options are strings (AUDIT 2.14), so the field keeps the map back to each
  * literal; the popup inherits the row's size (Phase 4 decision 2).
  */
 export const SelectField = ({

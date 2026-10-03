@@ -59,7 +59,7 @@ const RootContext = createContext<RootContextValue | undefined>(undefined);
 const useRootContext = (part: string) => {
   const context = useContext(RootContext);
   if (!context) {
-    throw new Error(`Next.Listbox.${part} must be inside Next.Listbox.Root`);
+    throw new Error(`Listbox.${part} must be inside Listbox.Root`);
   }
   return context;
 };
@@ -154,7 +154,7 @@ const ListboxRoot = forwardRef<HTMLDivElement, ListboxRootProps>(
   },
 );
 
-ListboxRoot.displayName = 'Next.Listbox.Root';
+ListboxRoot.displayName = 'Listbox.Root';
 
 //
 // Label
@@ -167,7 +167,7 @@ const ListboxLabel = forwardRef<HTMLLabelElement, ListboxLabelProps>(({ classNam
   <ListboxPrimitive.Label {...props} className={mx(recipes.label(), classNames)} ref={forwardedRef} />
 ));
 
-ListboxLabel.displayName = 'Next.Listbox.Label';
+ListboxLabel.displayName = 'Listbox.Label';
 
 //
 // Content
@@ -288,7 +288,7 @@ const ListboxContent = forwardRef<HTMLDivElement, ListboxContentProps>(
     ),
 );
 
-ListboxContent.displayName = 'Next.Listbox.Content';
+ListboxContent.displayName = 'Listbox.Content';
 
 //
 // Empty
@@ -296,13 +296,13 @@ ListboxContent.displayName = 'Next.Listbox.Content';
 
 type ListboxEmptyProps = ComponentPropsWithoutRef<typeof Empty>;
 
-/** `Next.Empty`, rendered only while the Root has no items. */
+/** `Empty`, rendered only while the Root has no items. */
 const ListboxEmpty = forwardRef<HTMLDivElement, ListboxEmptyProps>((props, forwardedRef) => {
   const { items } = useRootContext('Empty');
   return items.length === 0 ? <Empty {...props} ref={forwardedRef} /> : null;
 });
 
-ListboxEmpty.displayName = 'Next.Listbox.Empty';
+ListboxEmpty.displayName = 'Listbox.Empty';
 
 //
 // Item
@@ -314,7 +314,7 @@ const ItemContext = createContext<ListboxOption | undefined>(undefined);
 const useItem = (part: string) => {
   const item = useContext(ItemContext);
   if (!item) {
-    throw new Error(`Next.Listbox.${part} must be inside Next.Listbox.Item`);
+    throw new Error(`Listbox.${part} must be inside Listbox.Item`);
   }
   return item;
 };
@@ -399,7 +399,7 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
   },
 );
 
-ListboxItem.displayName = 'Next.Listbox.Item';
+ListboxItem.displayName = 'Listbox.Item';
 
 //
 // ItemIcon
@@ -427,7 +427,7 @@ const ListboxItemIcon = forwardRef<HTMLDivElement, ListboxItemIconProps>(
   },
 );
 
-ListboxItemIcon.displayName = 'Next.Listbox.ItemIcon';
+ListboxItemIcon.displayName = 'Listbox.ItemIcon';
 
 //
 // ItemText
@@ -463,7 +463,7 @@ const ListboxItemText = forwardRef<HTMLParagraphElement, ListboxItemTextProps>(
   },
 );
 
-ListboxItemText.displayName = 'Next.Listbox.ItemText';
+ListboxItemText.displayName = 'Listbox.ItemText';
 
 //
 // ItemDescription
@@ -491,7 +491,7 @@ const ListboxItemDescription = forwardRef<HTMLParagraphElement, ListboxItemDescr
   },
 );
 
-ListboxItemDescription.displayName = 'Next.Listbox.ItemDescription';
+ListboxItemDescription.displayName = 'Listbox.ItemDescription';
 
 //
 // ItemIndicator
@@ -517,7 +517,7 @@ const ListboxItemIndicator = forwardRef<HTMLDivElement, ListboxItemIndicatorProp
   },
 );
 
-ListboxItemIndicator.displayName = 'Next.Listbox.ItemIndicator';
+ListboxItemIndicator.displayName = 'Listbox.ItemIndicator';
 
 //
 // ItemGroup
@@ -548,7 +548,7 @@ const ListboxItemGroup = forwardRef<HTMLDivElement, ListboxItemGroupProps>(
   },
 );
 
-ListboxItemGroup.displayName = 'Next.Listbox.ItemGroup';
+ListboxItemGroup.displayName = 'Listbox.ItemGroup';
 
 //
 // ItemGroupLabel
@@ -569,7 +569,7 @@ const ListboxItemGroupLabel = forwardRef<HTMLDivElement, ListboxItemGroupLabelPr
   ),
 );
 
-ListboxItemGroupLabel.displayName = 'Next.Listbox.ItemGroupLabel';
+ListboxItemGroupLabel.displayName = 'Listbox.ItemGroupLabel';
 
 //
 // useContext

@@ -333,7 +333,7 @@ const MAX_ORDINAL = 99;
  * pane (the create row sits outside the scrolling tree, in a grid of its own), so the pane's icon
  * sits under the rows' status controls and its field starts where their titles do.
  *
- * Every fixed track is one block — the square each cell's `Next.Block` holds — and a track exists
+ * Every fixed track is one block — the square each cell's `Block` holds — and a track exists
  * only when its option is on, so a cell is never rendered into a track that is not there and no
  * track is held empty. Row cells flow into the tracks in DOM order; the names are for the pane and
  * for the cells a row places on its later lines (the chips and the description).

@@ -103,7 +103,7 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
   ),
 );
 
-MenuButton.displayName = 'Next.MenuButton';
+MenuButton.displayName = 'MenuButton';
 
 const MenuButtonSection = ({ section }: { section: Section }) => {
   const [only] = section.entries;

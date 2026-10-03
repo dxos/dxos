@@ -89,7 +89,7 @@ const ScrollContainerRoot = forwardRef<ScrollController, ScrollContainerRootProp
   },
 );
 
-ScrollContainerRoot.displayName = 'Next.ScrollContainer.Root';
+ScrollContainerRoot.displayName = 'ScrollContainer.Root';
 
 //
 // Content
@@ -106,7 +106,7 @@ const ScrollContainerContent = slottable<HTMLDivElement, ScrollContainerContentP
   ),
 );
 
-ScrollContainerContent.displayName = 'Next.ScrollContainer.Content';
+ScrollContainerContent.displayName = 'ScrollContainer.Content';
 
 //
 // Viewport
@@ -119,7 +119,7 @@ const ScrollContainerViewport = slottable<HTMLDivElement, ScrollContainerViewpor
   ({ children, asChild, ...props }, forwardedRef) => {
     const viewportRef = useRef<HTMLDivElement>(null);
     const ref = useComposedRefs(forwardedRef, viewportRef);
-    const { setViewport, setPinned, setOverflow } = useScrollContainerContext('Next.ScrollContainer.Viewport');
+    const { setViewport, setPinned, setOverflow } = useScrollContainerContext('ScrollContainer.Viewport');
 
     useEffect(() => {
       const viewport = viewportRef.current;
@@ -147,11 +147,11 @@ const ScrollContainerViewport = slottable<HTMLDivElement, ScrollContainerViewpor
   },
 );
 
-ScrollContainerViewport.displayName = 'Next.ScrollContainer.Viewport';
+ScrollContainerViewport.displayName = 'ScrollContainer.Viewport';
 
 /** Kept apart from Viewport so that pinning does not re-render the viewport's children. */
 const ScrollContainerPinEffect = ({ viewportRef }: { viewportRef: RefObject<HTMLDivElement | null> }) => {
-  const { pinned, controller } = useScrollContainerContext('Next.ScrollContainer.PinEffect');
+  const { pinned, controller } = useScrollContainerContext('ScrollContainer.PinEffect');
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -189,7 +189,7 @@ type ScrollContainerFadeProps = ThemedClassName<{}>;
 
 /** A gradient from the surface over the top edge, shown once content has scrolled under it. */
 const ScrollContainerFade = ({ classNames }: ScrollContainerFadeProps) => {
-  const { overflow } = useScrollContainerContext('Next.ScrollContainer.Fade');
+  const { overflow } = useScrollContainerContext('ScrollContainer.Fade');
   return (
     <div
       aria-hidden
@@ -201,7 +201,7 @@ const ScrollContainerFade = ({ classNames }: ScrollContainerFadeProps) => {
   );
 };
 
-ScrollContainerFade.displayName = 'Next.ScrollContainer.Fade';
+ScrollContainerFade.displayName = 'ScrollContainer.Fade';
 
 //
 // ScrollDownButton
@@ -220,7 +220,7 @@ const ScrollContainerScrollDownButton = ({
   classNames,
   label = 'Scroll down',
 }: ScrollContainerScrollDownButtonProps) => {
-  const { pinned, controller } = useScrollContainerContext('Next.ScrollContainer.ScrollDownButton');
+  const { pinned, controller } = useScrollContainerContext('ScrollContainer.ScrollDownButton');
   return (
     <Button
       variant='primary'
@@ -237,7 +237,7 @@ const ScrollContainerScrollDownButton = ({
   );
 };
 
-ScrollContainerScrollDownButton.displayName = 'Next.ScrollContainer.ScrollDownButton';
+ScrollContainerScrollDownButton.displayName = 'ScrollContainer.ScrollDownButton';
 
 export const ScrollContainer = {
   Root: ScrollContainerRoot,

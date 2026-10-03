@@ -145,7 +145,7 @@ const AvatarRoot = forwardRef<HTMLDivElement, AvatarRootProps>(
   },
 );
 
-AvatarRoot.displayName = 'Next.Avatar.Root';
+AvatarRoot.displayName = 'Avatar.Root';
 
 //
 // Image
@@ -159,7 +159,7 @@ const AvatarImage = forwardRef<HTMLImageElement, AvatarImageProps>(
   ),
 );
 
-AvatarImage.displayName = 'Next.Avatar.Image';
+AvatarImage.displayName = 'Avatar.Image';
 
 //
 // Fallback
@@ -177,7 +177,7 @@ const AvatarFallback = forwardRef<HTMLSpanElement, AvatarFallbackProps>(({ class
   />
 ));
 
-AvatarFallback.displayName = 'Next.Avatar.Fallback';
+AvatarFallback.displayName = 'Avatar.Fallback';
 
 export const Avatar = {
   Root: AvatarRoot,

@@ -36,4 +36,4 @@ export const Empty = composable<HTMLDivElement, EmptyProps>(({ children, icon, .
   );
 });
 
-Empty.displayName = 'Next.Empty';
+Empty.displayName = 'Empty';

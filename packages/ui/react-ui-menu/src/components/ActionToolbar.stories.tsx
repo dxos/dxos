@@ -124,7 +124,7 @@ export const TrailingChildren: Story = {
   },
 };
 
-/** The other way round: a hand-written `Next.Toolbar.Root` with an `ActionMenu` among its own controls. */
+/** The other way round: a hand-written `Toolbar.Root` with an `ActionMenu` among its own controls. */
 export const EmbeddedMenu: Story = {
   render: () => {
     const registry = useContext(RegistryContext);

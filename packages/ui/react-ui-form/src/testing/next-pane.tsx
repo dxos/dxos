@@ -19,7 +19,7 @@ export type PaneArgs = {
 };
 
 /**
- * A fixed-size frame for a story's `Next.Panel.Root` (the query container), centred on the deck surface; kept outside
+ * A fixed-size frame for a story's `Panel.Root` (the query container), centred on the deck surface; kept outside
  * `src/next`, whose files may not carry class names (AUDIT §3.3).
  */
 export const withNextPane =

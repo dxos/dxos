@@ -29,7 +29,7 @@ const LONG: ListboxOption[] = Array.from({ length: 40 }, (_, index) => ({
 
 /**
  * A single-selection list with icons, a description, a disabled row and the indicator; a plain list; and a long list
- * scrolling in a `Next.Panel` under a filtering toolbar (the current Default, WithDisabled, Plain and WithToolbar).
+ * scrolling in a `Panel` under a filtering toolbar (the current Default, WithDisabled, Plain and WithToolbar).
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [selected, setSelected] = useState<string | undefined>('alpha');

@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { Deferred } from './Deferred.tsx';
 
-describe('Next.Deferred', () => {
+describe('Deferred', () => {
   beforeEach(() => vi.useFakeTimers({ shouldAdvanceTime: true }));
   afterEach(() => {
     cleanup();

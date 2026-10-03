@@ -137,7 +137,7 @@ export const Test: Story = {
     await userEvent.click(await body.findByRole('option', { name: 'archived' }));
     await waitFor(() => expect(readValues(canvasElement).status).toBe('archived'));
 
-    // 7. createSelectField from a fieldMap: the renderer owns its row, on Next.Select.
+    // 7. createSelectField from a fieldMap: the renderer owns its row, on Select.
     await userEvent.click(canvas.getByRole('combobox', { name: 'Model' }));
     await userEvent.click(await body.findByRole('option', { name: 'sonnet' }));
     await waitFor(() => expect(readValues(canvasElement).model).toBe('sonnet'));

@@ -83,7 +83,7 @@ const CarouselRoot = forwardRef<HTMLDivElement, CarouselRootProps>(
   },
 );
 
-CarouselRoot.displayName = 'Next.Carousel.Root';
+CarouselRoot.displayName = 'Carousel.Root';
 
 //
 // ItemGroup
@@ -103,7 +103,7 @@ const CarouselItemGroup = forwardRef<HTMLDivElement, CarouselItemGroupProps>(
   ),
 );
 
-CarouselItemGroup.displayName = 'Next.Carousel.ItemGroup';
+CarouselItemGroup.displayName = 'Carousel.ItemGroup';
 
 //
 // Item
@@ -150,7 +150,7 @@ const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
   },
 );
 
-CarouselItem.displayName = 'Next.Carousel.Item';
+CarouselItem.displayName = 'Carousel.Item';
 
 //
 // PrevTrigger / NextTrigger
@@ -180,7 +180,7 @@ const CarouselPrevTrigger = forwardRef<HTMLButtonElement, CarouselTriggerProps>(
   );
 });
 
-CarouselPrevTrigger.displayName = 'Next.Carousel.PrevTrigger';
+CarouselPrevTrigger.displayName = 'Carousel.PrevTrigger';
 
 /** A ghost icon-only Button stepping forward a page; absent when everything fits on one page. */
 const CarouselNextTrigger = forwardRef<HTMLButtonElement, CarouselTriggerProps>(({ label }, forwardedRef) => {
@@ -204,7 +204,7 @@ const CarouselNextTrigger = forwardRef<HTMLButtonElement, CarouselTriggerProps>(
   );
 });
 
-CarouselNextTrigger.displayName = 'Next.Carousel.NextTrigger';
+CarouselNextTrigger.displayName = 'Carousel.NextTrigger';
 
 //
 // IndicatorGroup
@@ -251,7 +251,7 @@ const CarouselIndicatorGroup = forwardRef<HTMLDivElement, CarouselIndicatorGroup
   },
 );
 
-CarouselIndicatorGroup.displayName = 'Next.Carousel.IndicatorGroup';
+CarouselIndicatorGroup.displayName = 'Carousel.IndicatorGroup';
 
 //
 // Caption
@@ -284,7 +284,7 @@ const CarouselCaption = forwardRef<HTMLParagraphElement, CarouselCaptionProps>(
   },
 );
 
-CarouselCaption.displayName = 'Next.Carousel.Caption';
+CarouselCaption.displayName = 'Carousel.Caption';
 
 export const Carousel = {
   Root: CarouselRoot,

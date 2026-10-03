@@ -120,4 +120,4 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
   },
 );
 
-Image.displayName = 'Next.Image';
+Image.displayName = 'Image';

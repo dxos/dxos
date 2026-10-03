@@ -127,4 +127,4 @@ export const MediaPlayer = ({
   }
 };
 
-MediaPlayer.displayName = 'Next.MediaPlayer';
+MediaPlayer.displayName = 'MediaPlayer';

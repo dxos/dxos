@@ -21,7 +21,7 @@ import { presentationFor } from '../presentation.tsx';
 const ROWS = 6;
 
 /**
- * A markdown value in a CodeMirror editor framed by a multi-line `Next.ControlFrame`. The value is either a string
+ * A markdown value in a CodeMirror editor framed by a multi-line `ControlFrame`. The value is either a string
  * (`Format.TypeFormat.Markdown`), edited as plain text, or a `Ref<Text>`, edited in place through its document; an empty
  * ref offers a button that creates the Text.
  */

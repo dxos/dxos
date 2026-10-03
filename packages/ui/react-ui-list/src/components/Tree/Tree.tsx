@@ -145,7 +145,7 @@ type TreeRootProps<T extends { id: string } = any> = {
   virtual?: TreeVirtual;
   draggable?: boolean;
   /**
-   * The native drag preview: by default a `Next.DragPreview` chip with the row's icon and label; a renderer fills the
+   * The native drag preview: by default a `DragPreview` chip with the row's icon and label; a renderer fills the
    * chip instead; `false` keeps the browser's snapshot of the row.
    */
   dragPreview?: boolean | ((item: T) => ReactNode);
@@ -1340,7 +1340,7 @@ type TreeEmptyProps = {
   children?: ReactNode;
 };
 
-/** `Next.Empty` (its text the children or the translated "No items"), rendered only while the root has no children. */
+/** `Empty` (its text the children or the translated "No items"), rendered only while the root has no children. */
 const TreeEmpty = forwardRef<HTMLDivElement, TreeEmptyProps>((props, forwardedRef) => {
   const { walk } = useTreeContext('Tree.Empty');
   return walk.rows.length === 0 ? <Empty {...props} ref={forwardedRef} /> : null;
