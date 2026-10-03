@@ -15,7 +15,6 @@ const ENV_LABELS: Record<string, string> = {
   'dev.dxos.network': 'Dev',
   'preview.dxos.network': 'Preview',
   'dxos.network': 'Production',
-
   'edge.dxos.workers.dev': 'Dev',
   'edge-preview.dxos.workers.dev': 'Preview',
   'edge-main.dxos.workers.dev': 'Main (retired)',
@@ -57,7 +56,7 @@ export const AboutDialog = () => {
 
   return (
     <Dialog.Content size='sm'>
-      <Dialog.Header>
+      <Dialog.Header classNames='pb-3'>
         <Dialog.Title asChild>
           <h1 className="font-['Poiret One'] text-5xl" style={{ fontFamily: 'Poiret One' }}>
             composer

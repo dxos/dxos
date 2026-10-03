@@ -128,6 +128,8 @@ export const PopoverContent = () => {
 
   return (
     <Popover.Content
+      // The default size, not the anchor's: a navtree row or plank heading sits in the shell's `lg` scope.
+      size='md'
       classNames={[
         roundedClassNames,
         (!isComponentPopover || isRename) && 'p-0',
