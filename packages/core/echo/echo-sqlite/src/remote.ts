@@ -5,6 +5,7 @@
 import { type CleanupFn } from '@dxos/async';
 import { type SpaceId } from '@dxos/keys';
 
+import { StoreDisconnectedError } from './errors.ts';
 import { type StoredEntity } from './object-store.ts';
 import { type EntityRecord } from './record.ts';
 import { type CompiledQuery } from './sql/compile.ts';
@@ -81,6 +82,14 @@ export const serveStore = (port: StorePort, run: Run): CleanupFn => {
 };
 
 /**
+ * Fails every call in flight on `port`, and every later one, once its host is gone. A `MessagePort` reports
+ * no close in every runtime, so whoever owns the port (or the worker behind it) calls this when it stops;
+ * without it an in-flight call, and a database close waiting on it, would never settle.
+ */
+export const disconnectStorePort = (port: StorePort, reason?: string): void =>
+  PendingCalls.for(port).disconnect(reason);
+
+/**
  * A {@link StoreDriver} for one space whose calls go to a {@link serveStore} host over `port`.
  */
 export class RemoteStoreDriver implements StoreDriver {
@@ -144,6 +153,7 @@ class PendingCalls {
 
   readonly #calls = new Map<number, { resolve: (result: WireValue) => void; reject: (error: Error) => void }>();
   #nextId = 0;
+  #disconnected: StoreDisconnectedError | undefined;
 
   private constructor(port: StorePort) {
     port.addEventListener('message', (event) => {
@@ -163,10 +173,21 @@ class PendingCalls {
   }
 
   send(port: StorePort, spaceId: SpaceId, call: StoreCall): Promise<WireValue> {
+    const disconnected = this.#disconnected;
+    if (disconnected) {
+      return Promise.reject(disconnected);
+    }
     const id = this.#nextId++;
     return new Promise((resolve, reject) => {
       this.#calls.set(id, { resolve, reject });
       port.postMessage({ id, spaceId, call } satisfies StoreRequest);
     });
+  }
+
+  disconnect(reason?: string): void {
+    const error = (this.#disconnected ??= new StoreDisconnectedError(reason));
+    const calls = [...this.#calls.values()];
+    this.#calls.clear();
+    calls.forEach((call) => call.reject(error));
   }
 }

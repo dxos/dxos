@@ -8,6 +8,6 @@ export { localDatabaseFactory, localSpaceId, makeLocalDatabaseFactory } from './
 export * from './object-store.ts';
 export * from './query-result.ts';
 export * from './registry.ts';
-export { RemoteStoreDriver, type StorePort, serveStore } from './remote.ts';
+export { RemoteStoreDriver, type StorePort, disconnectStorePort, serveStore } from './remote.ts';
 export * from './sql/compile.ts';
 export { type Run, type StoreDriver, makeLocalDriver, runWith } from './store-driver.ts';

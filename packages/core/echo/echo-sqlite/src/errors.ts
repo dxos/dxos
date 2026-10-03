@@ -22,3 +22,13 @@ export class UnsupportedQueryError extends Error {
     this.name = 'UnsupportedQueryError';
   }
 }
+
+/**
+ * Raised for a store call whose transport was disconnected before it answered, or after.
+ */
+export class StoreDisconnectedError extends Error {
+  constructor(reason?: string) {
+    super(`Store transport disconnected${reason ? `: ${reason}` : ''}`);
+    this.name = 'StoreDisconnectedError';
+  }
+}
