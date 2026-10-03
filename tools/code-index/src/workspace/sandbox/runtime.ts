@@ -86,7 +86,12 @@ const display = {
     present('table', safeStringify(rows), title) as Promise<void>,
   json: (value: unknown, title?: string) => present('json', safeStringify(value), title),
   text: (content: string, title?: string) => present('text', content, title),
+  graph: (graph: unknown, title?: string) => present('graph', safeStringify(graph), title),
   clear: () => call('display.clear', {}),
+};
+
+const design = {
+  subgraph: (prompt: string, options: Record<string, unknown> = {}) => call('design.subgraph', { ...options, prompt }),
 };
 
 const dispatch = (line: string): void => {
@@ -117,14 +122,14 @@ const evaluate = async (code: string): Promise<unknown> => {
   const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor as new (
     ...args: string[]
   ) => (...values: unknown[]) => Promise<unknown>;
-  const compile = (body: string) => new AsyncFunction('rdf', 'storage', 'display', 'print', body);
+  const compile = (body: string) => new AsyncFunction('rdf', 'storage', 'display', 'design', 'print', body);
   let body: (...values: unknown[]) => Promise<unknown>;
   try {
     body = compile(`return (\n${code}\n);`);
   } catch {
     body = compile(code);
   }
-  return body(rdf, storage, display, print);
+  return body(rdf, storage, display, design, print);
 };
 
 const main = async (): Promise<void> => {

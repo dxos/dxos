@@ -12,7 +12,10 @@ import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Schema from 'effect/Schema';
+import { join } from 'node:path';
 
+import * as Cache from '../design/Cache.ts';
+import * as Design from '../design/Design.ts';
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
 import * as Term from '../worker/types/Term.ts';
@@ -46,6 +49,8 @@ export const DESCRIBE_DEFAULT_LIMIT = 50;
 export const DESCRIBE_MAX_LIMIT = 500;
 export const FILES_DEFAULT_LIMIT = 500;
 export const FILES_MAX_LIMIT = 5_000;
+export const DESIGN_DEFAULT_BUDGET = 30;
+export const DESIGN_MAX_BUDGET = 200;
 
 /** Candidates listed when a name matches several resources, rather than describing one at random. */
 const MAX_CANDIDATES = 20;
@@ -269,7 +274,41 @@ export const Stats = Tool.make('stats', {
   .annotate(Tool.Destructive, false)
   .annotate(Tool.Idempotent, true);
 
-export const CodeIndexToolkit = Toolkit.make(Query, Ask, Vocabulary, Describe, Files, Stats);
+export const DesignTool = Tool.make('design', {
+  description:
+    'Answers a design question ("how does the agent runtime wire its services?") with the files that matter and ' +
+    "how they connect: explores the index from the prompt, scores every candidate file's relevance (System One " +
+    'blended with a text/degree baseline when the server has TYPESAFE_API_KEY, the baseline alone otherwise), ' +
+    'prunes to `budget` files (default 30) and returns them best first with their edges, plus a compact mermaid ' +
+    'draft of at most 14 boxes with a `%% ref <id> <path>` line per box. Takes a few seconds.',
+  parameters: Schema.Struct({
+    prompt: Schema.String.annotate({ description: 'The design question, in prose.' }),
+    budget: Schema.optional(Schema.Number.annotate({ description: 'Files to keep (default 30).' })),
+    threshold: Schema.optional(Schema.Number.annotate({ description: 'Relevance a file needs, 0–1 (default 0.3).' })),
+  }),
+  success: Schema.Struct({
+    scorer: Schema.String,
+    grouping: Schema.String,
+    nodes: Schema.Array(
+      Schema.Struct({
+        iri: Schema.String,
+        label: Schema.String,
+        kind: Schema.String,
+        path: Schema.String,
+        package: Schema.optional(Schema.String),
+        score: Schema.Number,
+      }),
+    ),
+    edges: Schema.Array(Schema.Struct({ from: Schema.String, to: Schema.String, kind: Schema.String })),
+    mermaid: Schema.String,
+  }),
+  failure: ToolFailure,
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Idempotent, true);
+
+export const CodeIndexToolkit = Toolkit.make(Query, Ask, Vocabulary, Describe, Files, Stats, DesignTool);
 
 //
 // Handlers.
@@ -290,6 +329,9 @@ export const handlers = (store: Store.Api) =>
         .select(DERIVED_COUNT_QUERY)
         .pipe(Effect.map((rows) => rows.map((row) => ({ graph: row.graph, quads: Number(row.quads) })))),
     );
+
+    // Opened on first use; the answers it holds are the design cache, not the (read-only) store.
+    const designCache = yield* Effect.cached(Cache.open(join(store.dir, 'design-cache.jsonl')));
 
     const resolve = (target: string) =>
       Effect.gen(function* () {
@@ -379,6 +421,21 @@ export const handlers = (store: Store.Api) =>
             truncated: matching.length > cap,
           };
         }).pipe(Effect.mapError(toFailure)),
+
+      design: ({ prompt, budget, threshold }) =>
+        designCache.pipe(
+          Effect.flatMap((cache) =>
+            Design.answer(store, cache, {
+              prompt,
+              budget: budget === undefined ? undefined : clamp(budget, DESIGN_DEFAULT_BUDGET, DESIGN_MAX_BUDGET),
+              threshold:
+                threshold === undefined || !Number.isFinite(threshold)
+                  ? undefined
+                  : Math.min(1, Math.max(0, threshold)),
+            }),
+          ),
+          Effect.mapError(toFailure),
+        ),
 
       stats: () =>
         Effect.gen(function* () {

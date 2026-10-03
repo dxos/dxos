@@ -231,6 +231,7 @@ catalog:
   '@types/color-hash': ^1.0.1
   '@types/columnify': ^1.5.1
   '@types/d3': ^7.4.3
+  '@types/d3-force': ^3.0.10
   '@types/d3-hierarchy': ^3.1.6
   '@types/debug': ^4.1.10
   '@types/deep-equal': ^1.0.4

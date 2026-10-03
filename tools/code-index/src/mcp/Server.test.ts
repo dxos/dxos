@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterAll, beforeAll, describe, expect, test } from 'vitest';
+import { afterAll, beforeAll, describe, expect, test, vi } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
@@ -175,6 +175,27 @@ describe('mcp Server', () => {
     expect(stats).toMatchObject({ backend: Store.defaultBackend(), dir, files: 5 });
     expect(stats.quads).toBeGreaterThan(0);
     expect(stats.derived).toContainEqual({ graph: Ontology.derivedGraphIri('test').value, quads: 2 });
+  });
+
+  test('design returns the pruned graph and a mermaid draft, scored by baseline without a key', async () => {
+    // Tests never call System One; without a key the tool scores by text and degree alone.
+    vi.stubEnv('TYPESAFE_API_KEY', '');
+    try {
+      const result = await call(
+        Server.DesignTool.successSchema,
+        toolkit.handle('design', { prompt: 'what lives in src?', threshold: 0 }),
+      );
+      expect(result.scorer).toBe('baseline');
+      expect(result.nodes.map((node) => node.path).sort()).toEqual(['src/a.ts', 'src/b.ts', 'src/c.ts', 'src/d.ts']);
+      expect(result.edges).toContainEqual({
+        from: Ontology.fileIri('src/a.ts').value,
+        to: Ontology.fileIri('src/b.ts').value,
+        kind: 'imports',
+      });
+      expect(result.mermaid).toContain('%% ref');
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 
   test('a missing store fails with a hint rather than creating one', async () => {

@@ -120,6 +120,7 @@ describe.skipIf(bun === undefined)('code-index mcp over stdio', () => {
       expect(listed.result.tools.map((tool) => tool.name).sort()).toEqual([
         'ask',
         'describe',
+        'design',
         'files',
         'query',
         'stats',
