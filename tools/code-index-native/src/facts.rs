@@ -5,6 +5,7 @@
 //! Interned terms and the fact views the rule engine evaluates against.
 
 use std::cell::RefCell;
+use std::rc::Rc;
 
 use oxigraph::model::Term;
 use rustc_hash::{FxHashMap, FxHashSet};
@@ -69,6 +70,47 @@ pub fn matches(pattern: &Pattern, triple: &Triple) -> bool {
 pub trait Facts {
     fn scan(&self, pattern: &Pattern, sink: &mut dyn FnMut(Triple));
     fn contains(&self, triple: &Triple) -> bool;
+}
+
+/// Scans with neither subject nor object bound, kept for as long as the wrapper lives. Premises do
+/// not change while a stratum is computed, yet a rule seeded once per derived fact (one evaluation
+/// per selected glob, each reaching `?file deus:path ?path`) would decode the same scan from the
+/// store every time.
+pub struct Cached<'a> {
+    inner: &'a dyn Facts,
+    scans: RefCell<FxHashMap<Pattern, Rc<Vec<Triple>>>>,
+}
+
+impl<'a> Cached<'a> {
+    pub fn new(inner: &'a dyn Facts) -> Self {
+        Cached {
+            inner,
+            scans: RefCell::default(),
+        }
+    }
+}
+
+impl Facts for Cached<'_> {
+    fn scan(&self, pattern: &Pattern, sink: &mut dyn FnMut(Triple)) {
+        if pattern[0].is_some() || pattern[2].is_some() {
+            return self.inner.scan(pattern, sink);
+        }
+        let cached = self.scans.borrow().get(pattern).cloned();
+        let found = cached.unwrap_or_else(|| {
+            let mut found = Vec::new();
+            self.inner.scan(pattern, &mut |triple| found.push(triple));
+            let found = Rc::new(found);
+            self.scans.borrow_mut().insert(*pattern, Rc::clone(&found));
+            found
+        });
+        for triple in found.iter() {
+            sink(*triple);
+        }
+    }
+
+    fn contains(&self, triple: &Triple) -> bool {
+        self.inner.contains(triple)
+    }
 }
 
 /// An in-memory triple set indexed on each position, for materialisations and deltas.

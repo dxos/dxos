@@ -130,9 +130,12 @@ export const analyzeMoonYml = (context: AnalyzeContext): Ontology.FileDocument =
     return { ...base, parseError: [error instanceof Error ? error.message : String(error)] };
   }
   const layer = isRecord(parsed) && typeof parsed.layer === 'string' ? parsed.layer : undefined;
-  // The sibling manifest names the package; `fileNode` already looked it up for `inPackage`.
+  // The sibling manifest names the package; `fileNode` already looked it up for `inPackage`. The
+  // lookup walks up, so a `moon.yml` with no manifest of its own (a Rust crate) would otherwise give
+  // its layer to an ancestor — the same answer one directory up means there is no sibling.
   const packageName = context.packageOf(context.path);
-  if (!layer || !packageName) {
+  const sibling = packageName !== context.packageOf(join(dirname(dirname(context.path)), 'moon.yml'));
+  if (!layer || !packageName || !sibling) {
     return base;
   }
   return {
