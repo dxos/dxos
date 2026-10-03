@@ -429,9 +429,12 @@ LoggerContent.displayName = 'Logger.Content';
 // List
 //
 
-type LoggerListProps = ThemedClassName<{}>;
+type LoggerListProps = ThemedClassName<{
+  /** Rows carry a checkbox that marks them for the toolbar's copy; omit where there is no toolbar to copy from. */
+  checkable?: boolean;
+}>;
 
-const LoggerList = ({ classNames }: LoggerListProps) => {
+const LoggerList = ({ classNames, checkable = true }: LoggerListProps) => {
   const { t } = useTranslation(translationKey);
   const { rows, expanded, toggleExpand, current, setCurrent, checked, toggleChecked, textFilter } =
     useLoggerContext('Logger.List');
@@ -462,13 +465,14 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
           if (event.key === ' ') {
             event.preventDefault();
             toggleExpand(current);
-          } else if (event.key === 'Enter') {
+          } else if (event.key === 'Enter' && checkable) {
             event.preventDefault();
             toggleChecked(current);
           }
         }}
       >
-        <Listbox.Content classNames={mx('dx-density-sm', classNames)}>
+        {/* `Logger.Content` is the scroll area, so the list joins it rather than nesting a second one. */}
+        <Listbox.Content scroll={false} classNames={mx('dx-density-sm', classNames)}>
           {visible.map(({ id, entry, record }) => {
             const isExpanded = expanded.has(id);
             // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
@@ -477,16 +481,23 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
               <Listbox.Item
                 key={id}
                 id={String(id)}
-                aria-current={current === id || undefined}
+                current={current === id}
                 onFocus={() => setCurrent(id)}
                 onClick={() => setCurrent(id)}
-                classNames='group grid grid-cols-[auto_1rem_8rem_1fr_max-content] gap-2 items-center p-0 dx-current'
+                classNames={mx(
+                  'group grid gap-2 items-center p-0 dx-current',
+                  checkable
+                    ? 'grid-cols-[auto_1rem_8rem_1fr_max-content]'
+                    : 'grid-cols-[1rem_8rem_1fr_max-content] pl-2',
+                )}
               >
-                <div className='flex items-center pl-2'>
-                  <Field.Root>
-                    <Checkbox tabIndex={-1} checked={checked.has(id)} onCheckedChange={() => toggleChecked(id)} />
-                  </Field.Root>
-                </div>
+                {checkable && (
+                  <div className='flex items-center pl-2'>
+                    <Field.Root>
+                      <Checkbox tabIndex={-1} checked={checked.has(id)} onCheckedChange={() => toggleChecked(id)} />
+                    </Field.Root>
+                  </div>
+                )}
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
                 <div
                   className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-fg-muted')}
@@ -507,7 +518,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                   onCopy={() => JSON.stringify(record, null, 2)}
                 />
                 {isExpanded && (
-                  <div className='col-span-full'>
+                  <div data-place='full' className='min-w-0'>
                     {/* The viewport owns the scrolling, so a long line gets the themed bar, not the native one. */}
                     <Syntax.Viewport>
                       <JsonHighlighter

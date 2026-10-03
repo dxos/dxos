@@ -73,6 +73,11 @@
     grid-column: var(--dx-item-text-column);
     grid-row: 2;
   }
+  /* A full-width part (an expanded detail) takes its own row under the others, across every column. */
+  .dx-listbox-item.dx-container > [data-place='full'] {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
   /*
    * With a description the other parts sit on the title's line rather than centring across both: each is a block tall
    * from the row's top, and the title's top padding is half a block less its line, so their centres meet.
