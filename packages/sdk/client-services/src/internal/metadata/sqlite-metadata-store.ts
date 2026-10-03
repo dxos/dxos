@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import { type Message, create, fromBinary, toBinary } from '@bufbuild/protobuf';
+import { type Message, clone, create, equals, fromBinary, toBinary } from '@bufbuild/protobuf';
 import { type GenMessage } from '@bufbuild/protobuf/codegenv2';
 import CRC32 from 'crc-32';
 import * as Effect from 'effect/Effect';
@@ -48,6 +48,13 @@ const emptyEchoMetadata = (): EchoMetadata =>
 
 const emptyLargeSpaceMetadata = (): LargeSpaceMetadata => create(LargeSpaceMetadataSchema, {});
 
+/** A deep copy, so later in-place edits to the live record cannot alter what it is compared against. */
+const withoutUpdated = (metadata: EchoMetadata): EchoMetadata => {
+  const copy = clone(EchoMetadataSchema, metadata);
+  copy.updated = undefined;
+  return copy;
+};
+
 const MAIN_KEY = 'main';
 const largeKey = (spaceKey: PublicKey) => `large:${spaceKey.toHex()}`;
 
@@ -66,6 +73,8 @@ export class SqliteMetadataStore implements IMetadataStore {
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   #metadata: EchoMetadata = emptyEchoMetadata();
+  /** The stored record, minus its `updated` stamp — a save that would only bump the stamp writes nothing. */
+  #persisted: EchoMetadata | undefined;
   #loaded = false;
   readonly #spaceLargeMetadata = new ComplexMap<PublicKey, LargeSpaceMetadata>(PublicKey.hash);
 
@@ -109,6 +118,7 @@ export class SqliteMetadataStore implements IMetadataStore {
     }
     this.#loaded = false;
     this.#metadata = emptyEchoMetadata();
+    this.#persisted = undefined;
     this.#spaceLargeMetadata.clear();
   }
 
@@ -133,6 +143,7 @@ export class SqliteMetadataStore implements IMetadataStore {
             space.state = SpaceState.SPACE_ACTIVE;
           }
         });
+        this.#persisted = withoutUpdated(this.#metadata);
       } catch (err: any) {
         log.error('failed to load metadata from SQLite', { err });
         this.#metadata = emptyEchoMetadata();
@@ -277,6 +288,7 @@ export class SqliteMetadataStore implements IMetadataStore {
       }),
     );
     this.#metadata = emptyEchoMetadata();
+    this.#persisted = undefined;
     this.#spaceLargeMetadata.clear();
   }
 
@@ -308,6 +320,10 @@ export class SqliteMetadataStore implements IMetadataStore {
       updated: fromDate(new Date()),
     });
     this.update.emit(data);
+    const content = withoutUpdated(data);
+    if (this.#persisted && equals(EchoMetadataSchema, content, this.#persisted)) {
+      return;
+    }
     const encoded = this.#encodeWithCrc(EchoMetadataSchema, data);
     await RuntimeProvider.runPromise(this.#runtime)(
       Effect.gen(function* () {
@@ -315,6 +331,7 @@ export class SqliteMetadataStore implements IMetadataStore {
         yield* sql`INSERT OR REPLACE INTO space_metadata (key, value) VALUES (${MAIN_KEY}, ${encoded})`;
       }),
     );
+    this.#persisted = content;
   }
 
   async #loadSpaceLargeMetadata(key: PublicKey): Promise<void> {

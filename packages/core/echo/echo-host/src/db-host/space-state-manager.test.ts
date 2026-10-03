@@ -3,6 +3,8 @@
 //
 
 import { type AutomergeUrl } from '@automerge/automerge-repo';
+import * as Effect from 'effect/Effect';
+import * as SqlClient from 'effect/sql/SqlClient';
 import { rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
@@ -16,6 +18,7 @@ import {
   createIdFromSpaceKey,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
+import { RuntimeProvider } from '@dxos/effect';
 import { PublicKey, SpaceId } from '@dxos/keys';
 import { openAndClose } from '@dxos/test-utils';
 
@@ -496,5 +499,41 @@ describe('SpaceStateManager and EchoHost persistent space store', () => {
     // Only the swap retires the first directory: repeating it makes every later list change look like one.
     const linked = updates.find((event) => event.documentIds.includes(object.documentId));
     expect(linked?.previousRootId).toBeUndefined();
+  });
+
+  test('restoring a space with its saved directory writes nothing', async ({ expect }) => {
+    const { runtime, dispose } = createTestSqliteRuntime();
+    onTestFinished(() => dispose());
+    const run = RuntimeProvider.runPromise(runtime);
+    const selectRows = Effect.flatMap(
+      SqlClient.SqlClient,
+      (sql) => sql<{ space_id: string }>`SELECT space_id FROM echo_spaces`,
+    );
+    const rows = () => run(selectRows);
+    const automergeHost = new AutomergeHost({ runtime });
+    await openAndClose(automergeHost);
+
+    const createDirectory = () =>
+      automergeHost.createDoc<DatabaseDirectory>({ version: SpaceDocVersion.CURRENT, objects: {}, links: {} });
+    using saved = await createDirectory();
+    using replacement = await createDirectory();
+    const spaceId = SpaceId.random();
+    {
+      const manager = new SpaceStateManager({ runtime });
+      await manager.open(Context.default());
+      await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(saved.documentId));
+      await manager.close();
+    }
+
+    const manager = new SpaceStateManager({ runtime });
+    await openAndClose(manager);
+    // Dropping the row behind the manager's back makes any later save visible as a reappearing row.
+    await run(Effect.flatMap(SqlClient.SqlClient, (sql) => sql`DELETE FROM echo_spaces`));
+
+    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(saved.documentId));
+    expect(await rows()).toHaveLength(0);
+
+    await manager.assignRootToSpace(spaceId, automergeHost.acquireDoc<DatabaseDirectory>(replacement.documentId));
+    expect(await rows()).toHaveLength(1);
   });
 });

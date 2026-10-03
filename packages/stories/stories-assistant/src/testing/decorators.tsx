@@ -167,8 +167,14 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
     }
 
     const registry = makeRegistry({ initial: skillDefinitions.map((def) => def.make()) });
+    // A returning profile already holds the clones, and cloning again would write a new skill per load.
+    const stored = await space.db.query(Filter.type(Skill.Skill)).run();
     const skillObjects = skills
       .map((key) => {
+        const existing = stored.find((candidate) => Obj.getMeta(candidate).key === key);
+        if (existing) {
+          return existing;
+        }
         const skill = registry
           .query(Filter.type(Skill.Skill))
           .runSync()
@@ -266,6 +272,9 @@ type StoryPluginOptions = {
 
   onChatCreated?: (props: { db: Database.Database; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
 };
+
+/** Marks the chat this harness creates, so a reload finds it among any chats a story seeded. */
+const HARNESS_CHAT_KEY = { source: 'com.example.plugin.testing', id: 'chat' };
 
 const StoryPlugin = Plugin.define<StoryPluginOptions>(
   Plugin.makeMeta({
@@ -365,11 +374,24 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           );
         }
       } else {
+        // A returning profile reopens the chat this harness seeded it with; creating one per load would
+        // make every reload write a chat, its feed and its bindings. Matched by key rather than by any
+        // chat, since a seeded space can hold earlier chats of its own.
+        const [existing] = yield* Effect.promise(() =>
+          space.db.query(Filter.foreignKeys(Chat.Chat, [HARNESS_CHAT_KEY])).run(),
+        );
+        if (existing) {
+          return;
+        }
+
         // Create the initial chat via the canonical CreateChat operation (which binds the default
         // skills and the chat), then apply any story-specific context bindings. The story-side
         // `onChatCreated` must run here: the operation handler that creates the chat is owned by
         // the assistant plugin and has no hook for it.
         const { object: chat } = yield* invoke(AssistantOperation.CreateChat, {}, { spaceId: space.db.spaceId });
+        Obj.update(chat, (chat) => {
+          Obj.getMeta(chat).keys.push(HARNESS_CHAT_KEY);
+        });
         // Added directly: this harness registers no plugin-space handlers, so `AddObject` has none.
         space.db.add(chat);
         if (onChatCreated) {
