@@ -61,11 +61,20 @@ const values = (iris: readonly string[]): string => iris.map((iri) => `<${iri}>`
 
 const isFileIri = (iri: string): boolean => iri.startsWith(Ontology.FILE_BASE);
 
+/** Share of the best seed's score a seed needs; the relaxed one applies when the strict seeds lead nowhere. */
+const SEED_FLOOR = 0.6;
+const RELAXED_SEED_FLOOR = 0.3;
+
 /**
  * The best-matching files for a prompt, by text over each file's path, its exported declarations'
  * names and docs, and the spec blocks that describe them. A file's score is its best single match.
  */
-export const seeds = (store: Store.Api, prompt: string, count = 12): Effect.Effect<Seed[], Store.StoreError> =>
+export const seeds = (
+  store: Store.Api,
+  prompt: string,
+  count = 12,
+  floorShare = SEED_FLOOR,
+): Effect.Effect<Seed[], Store.StoreError> =>
   Effect.gen(function* () {
     const query = Text.query(prompt);
     const best = new Map<string, Seed>();
@@ -117,7 +126,7 @@ export const seeds = (store: Store.Api, prompt: string, count = 12): Effect.Effe
     // Seeds well below the best match are noise that a hub (`errors.ts`) turns into hundreds of
     // candidates, so the cut is relative to the strongest match rather than a fixed count alone.
     const ranked = [...best.values()].sort((left, right) => right.score - left.score);
-    const floor = 0.6 * (ranked[0]?.score ?? 0);
+    const floor = floorShare * (ranked[0]?.score ?? 0);
     return ranked.filter((seed) => seed.score >= floor).slice(0, count);
   });
 
@@ -249,6 +258,58 @@ export const edgesTouching = (
     return Graph.dedupe(edges);
   });
 
+/** Most files one barrel seed opens into; a package entry can forward dozens. */
+const MAX_FORWARDED = 6;
+
+/**
+ * The seeds with each barrel replaced by the files it forwards, two levels deep and best text match
+ * first. A barrel's edges are never walked, so a barrel seed would otherwise lead nowhere — and a
+ * question about packages seeds mostly their entry points.
+ */
+const openBarrels = (
+  store: Store.Api,
+  seedList: readonly Seed[],
+  query: Text.Query,
+): Effect.Effect<Seed[], Store.StoreError> =>
+  Effect.gen(function* () {
+    let current = [...seedList];
+    for (let depth = 0; depth < 2; depth++) {
+      const barrels = yield* barrelFiles(
+        store,
+        current.map((seed) => seed.iri),
+      );
+      if (barrels.size === 0) {
+        break;
+      }
+      const forwarded = new Map<string, string[]>();
+      for (const batch of chunks([...barrels], 40)) {
+        const rows = yield* store.select(`PREFIX deus: <${D}>
+          SELECT ?barrel ?file WHERE { VALUES ?barrel { ${values(batch)} } ?barrel deus:reexports ?file }`);
+        for (const row of rows) {
+          forwarded.set(row.barrel, [...(forwarded.get(row.barrel) ?? []), row.file]);
+        }
+      }
+      current = current.flatMap((seed) =>
+        barrels.has(seed.iri)
+          ? (forwarded.get(seed.iri) ?? [])
+              .filter((iri) => isFileIri(iri) && isComponentPath(Graph.pathOf(iri, Ontology.FILE_BASE)))
+              .sort(
+                (left, right) =>
+                  Text.match(query, Graph.pathOf(right, Ontology.FILE_BASE)) -
+                  Text.match(query, Graph.pathOf(left, Ontology.FILE_BASE)),
+              )
+              .slice(0, MAX_FORWARDED)
+              .map((iri) => ({
+                iri,
+                score: seed.score,
+                why: `${seed.why} (forwarded by ${Graph.pathOf(seed.iri, Ontology.FILE_BASE)})`,
+              }))
+          : [seed],
+      );
+    }
+    return current;
+  });
+
 /** Most files one seed package contributes as siblings; a bigger package is reached by the walk instead. */
 const MAX_SIBLINGS = 60;
 
@@ -273,8 +334,10 @@ export const expand = (
   Effect.gen(function* () {
     const query = Text.query(prompt);
     const nodes = new Map<string, { why: string; hops: number }>();
-    for (const seed of seedList) {
-      nodes.set(seed.iri, { why: `seed: ${seed.why}`, hops: 0 });
+    for (const seed of yield* openBarrels(store, seedList, query)) {
+      if (!nodes.has(seed.iri)) {
+        nodes.set(seed.iri, { why: `seed: ${seed.why}`, hops: 0 });
+      }
     }
     const seedPackages = new Map<string, number>();
     for (const seed of seedList) {
@@ -494,7 +557,14 @@ export const bfs =
   (store: Store.Api): Effect.Effect<Graph.Candidates, Store.StoreError> =>
     Effect.gen(function* () {
       const found = yield* seeds(store, prompt, seedCount);
-      return yield* fromSeeds(store, { prompt, explorer: 'bfs', seeds: found, maxNodes, hops, relations });
+      const candidates = yield* fromSeeds(store, { prompt, explorer: 'bfs', seeds: found, maxNodes, hops, relations });
+      // One spuriously strong match (a helper whose name spells the prompt) can cut every real seed;
+      // a walk that stays this small is the sign, and a lower floor lets the real seeds back in.
+      if (candidates.nodes.length >= maxNodes / 4) {
+        return candidates;
+      }
+      const relaxed = yield* seeds(store, prompt, seedCount, RELAXED_SEED_FLOOR);
+      return yield* fromSeeds(store, { prompt, explorer: 'bfs', seeds: relaxed, maxNodes, hops, relations });
     });
 
 /** Candidates from a seed list and relation set — the walk both explorers share. */
