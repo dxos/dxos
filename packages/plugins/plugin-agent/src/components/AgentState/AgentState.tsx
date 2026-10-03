@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, type ReactNode } from 'react';
+import React, { type PropsWithChildren, type ReactNode, createContext, useContext, useState } from 'react';
 
-import { Flex, Panel, ScrollArea, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, ScrollArea, Tabs, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
@@ -13,30 +13,54 @@ import { meta } from '#meta';
 // Root
 //
 
+type AgentStateView = 'identity' | 'state' | 'conversations';
+
+const AGENT_STATE_VIEWS: readonly AgentStateView[] = ['identity', 'state', 'conversations'];
+
+const AgentStateContext = createContext<AgentStateView>('identity');
+
 type AgentStateRootProps = PropsWithChildren<{
   role?: string;
   name?: string;
-  /** Extra toolbar items after the name, e.g. a host's actions on the agent. */
+  /** Extra toolbar items after the tabs, e.g. a host's actions on the agent. */
   actions?: ReactNode;
+  defaultView?: AgentStateView;
 }>;
 
-/** The agent's state panel: its name above a scrolling body of identity, counts and conversations. */
-const AgentStateRoot = ({ role, name, actions, children }: AgentStateRootProps) => {
+/** The agent's state panel: its name and tabs over identity, counts and conversations. */
+const AgentStateRoot = ({ role, name, actions, defaultView = 'identity', children }: AgentStateRootProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const [view, setView] = useState<AgentStateView>(defaultView);
   return (
-    <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root>
-          <Toolbar.Text>{name || t('agent-state-unnamed.label')}</Toolbar.Text>
-          {actions}
-        </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>{children}</ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
-    </Panel.Root>
+    <Tabs.Root
+      asChild
+      orientation='horizontal'
+      value={view}
+      onValueChange={(value) => setView(AGENT_STATE_VIEWS.find((candidate) => candidate === value) ?? 'identity')}
+    >
+      <Panel.Root role={role}>
+        <Panel.Toolbar asChild>
+          <Toolbar.Root>
+            <Toolbar.Text>{name || t('agent-state-unnamed.label')}</Toolbar.Text>
+            <Tabs.Tablist>
+              {AGENT_STATE_VIEWS.map((value) => (
+                <Tabs.Button key={value} value={value} data-testid={`agent-state-tab-${value}`}>
+                  {t(`agent-state-${value}.heading`)}
+                </Tabs.Button>
+              ))}
+            </Tabs.Tablist>
+            {actions}
+          </Toolbar.Root>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollArea.Root orientation='vertical'>
+            <ScrollArea.Viewport>
+              <AgentStateContext.Provider value={view}>{children}</AgentStateContext.Provider>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
+    </Tabs.Root>
   );
 };
 
@@ -46,16 +70,19 @@ AgentStateRoot.displayName = 'AgentState.Root';
 // Section
 //
 
-type AgentStateSectionProps = PropsWithChildren<{ heading: string }>;
+type AgentStateSectionProps = PropsWithChildren<{ view: AgentStateView; label: string }>;
 
-const AgentStateSection = ({ heading, children }: AgentStateSectionProps) => (
-  <Flex asChild column>
-    <section aria-label={heading}>
-      <h3 className='px-2 text-sm text-description'>{heading}</h3>
-      {children}
-    </section>
-  </Flex>
-);
+/** One tab's content; inactive tabs stay mounted but hidden so their state and test ids persist. */
+const AgentStateSection = ({ view, label, children }: AgentStateSectionProps) => {
+  const active = useContext(AgentStateContext) === view;
+  return (
+    <Flex asChild column>
+      <section aria-label={label} hidden={!active}>
+        {children}
+      </section>
+    </Flex>
+  );
+};
 
 //
 // Identity
@@ -73,7 +100,7 @@ type AgentStateIdentityProps = {
 const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <AgentStateSection heading={t('agent-state-identity.heading')}>
+    <AgentStateSection view='identity' label={t('agent-state-identity.heading')}>
       <Listbox.Root>
         <Listbox.Content>
           <Listbox.Item id='did'>
@@ -175,7 +202,7 @@ const AgentStateSummary = ({ counts }: AgentStateSummaryProps) => {
   ];
 
   return (
-    <AgentStateSection heading={t('agent-state-summary.heading')}>
+    <AgentStateSection view='state' label={t('agent-state-state.heading')}>
       <Listbox.Root>
         <Listbox.Content>
           {rows.map(({ id, icon, title, value, description }) => (
@@ -213,12 +240,13 @@ type AgentStateConversationsProps = { channels: readonly AgentStateChannel[] };
 /** Each conversation the agent holds and the mode it is in there. */
 const AgentStateConversations = ({ channels }: AgentStateConversationsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  if (channels.length === 0) {
-    return null;
-  }
-
   return (
-    <AgentStateSection heading={t('agent-state-conversations.label')}>
+    <AgentStateSection view='conversations' label={t('agent-state-conversations.heading')}>
+      {channels.length === 0 && (
+        <Flex center classNames='p-2 text-description' role='status'>
+          {t('agent-state-conversations-empty.message')}
+        </Flex>
+      )}
       <Listbox.Root>
         <Listbox.Content>
           {channels.map((channel) => (
@@ -270,4 +298,5 @@ export type {
   AgentStateRootProps,
   AgentStateSkill,
   AgentStateSummaryProps,
+  AgentStateView,
 };
