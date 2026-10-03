@@ -947,7 +947,9 @@ const ToolExecutionService = ({
                 conversation: Ref.make(feed),
               },
             });
+            markWork('tool.spawned');
             yield* toolCallManager.beginCall(fiber.pid);
+            markWork('tool.call-recorded');
             log('invoked operation', { operationDef, input, fiber });
 
             const awaitWithReport = fiber.await.pipe(Effect.tap(() => toolCallManager.markAsReported(fiber.pid)));
@@ -959,6 +961,7 @@ const ToolExecutionService = ({
                   ),
                 )
               : yield* awaitWithReport;
+            markWork('tool.settled');
             log('result', { result });
             return yield* result;
           }),
