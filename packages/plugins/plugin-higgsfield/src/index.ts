@@ -3,5 +3,4 @@
 //
 
 export * as HiggsfieldPlugin from './HiggsfieldPlugin.ts';
-export * from './events.ts';
-export * from '#meta';
+export * as HiggsfieldEvents from './HiggsfieldEvents.ts';

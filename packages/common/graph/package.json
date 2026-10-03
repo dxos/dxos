@@ -48,7 +48,12 @@
       "types": "./dist/types/src/Retention.d.ts",
       "import": "./dist/lib/Retention.mjs"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./SelectionModel": {
+      "source": "./src/SelectionModel.ts",
+      "types": "./dist/types/src/SelectionModel.d.ts",
+      "import": "./dist/lib/ns/SelectionModel.mjs"
+    }
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

@@ -5,14 +5,12 @@
 import { describe, test } from 'vitest';
 
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import {
-  AgentHandlers,
-  AgentSkillHandlers,
-  ChatContextHandlers,
-  DelegationSkillHandlers,
-  SkillManagerHandlers,
-  WebSearchHandlers,
-} from '@dxos/assistant-toolkit';
+import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
+import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import { EffectEx } from '@dxos/effect';
@@ -21,12 +19,12 @@ import { AssistantOperationHandlerSet } from '#operations';
 
 const handlerSet = OperationHandlerSet.merge(
   AssistantOperationHandlerSet,
-  AgentHandlers,
-  AgentSkillHandlers,
-  SkillManagerHandlers,
-  ChatContextHandlers,
-  WebSearchHandlers,
-  DelegationSkillHandlers,
+  AgentOperationHandlerSet.handlers,
+  AgentSkill.Handlers,
+  SkillManagerSkill.Handlers,
+  ChatContextSkill.Handlers,
+  WebSearchSkill.Handlers,
+  DelegationSkill.Handlers,
 );
 
 describe('operation registry round-trip', () => {

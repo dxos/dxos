@@ -100,6 +100,11 @@
       "source": "./src/types/ProfileOf.ts",
       "types": "./dist/types/src/types/ProfileOf.d.ts",
       "import": "./dist/lib/ProfileOf.mjs"
+    },
+    "./CrmSkill": {
+      "source": "./src/CrmSkill.ts",
+      "types": "./dist/types/src/CrmSkill.d.ts",
+      "import": "./dist/lib/ns/CrmSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

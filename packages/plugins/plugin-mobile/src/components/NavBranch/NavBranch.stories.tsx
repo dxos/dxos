@@ -19,7 +19,7 @@ import * as AppCapability from '@dxos/app-toolkit/AppCapability';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Dnd } from '@dxos/react-ui-dnd';
 import { withLayout } from '@dxos/react-ui/testing';
 
@@ -138,7 +138,7 @@ const meta = {
   render: ({ id }) => <StoryRoot id={id} />,
   decorators: [
     withLayout({ layout: 'fullscreen' }),
-    withPluginManager({ plugins: [...corePlugins(), NavBranchStoryPlugin()] }),
+    withPluginManager({ plugins: [...CorePlugins.make(), NavBranchStoryPlugin()] }),
   ],
   parameters: {
     layout: 'fullscreen',

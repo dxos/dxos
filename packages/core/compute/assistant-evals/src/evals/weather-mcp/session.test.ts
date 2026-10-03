@@ -6,7 +6,7 @@ import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import { FeedTraceSink } from '@dxos/compute-runtime';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -110,7 +110,7 @@ describe('weather MCP hand-off', () => {
           yield* Database.flush();
 
           const output = yield* Operation.invoke(
-            RunInstructions,
+            AgentOperation.RunInstructions,
             { instructions: Ref.make(instructions), input: null, chat: seeded.chat },
             { spaceId: defaultSpace.id },
           );

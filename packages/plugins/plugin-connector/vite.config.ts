@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/ConnectorError': 'src/ConnectorError.ts',
     'index': 'src/index.ts',
     'Binding': 'src/Binding.ts',
     'ConnectorAuth': 'src/ConnectorAuth.ts',

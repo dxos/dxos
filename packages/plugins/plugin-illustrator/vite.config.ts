@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/IllustratorOperationHandlerSet': 'src/IllustratorOperationHandlerSet.ts',
     'ns/IllustratorModel': 'src/IllustratorModel.ts',
     'index': 'src/index.ts',
     'IllustratorPlugin': 'src/IllustratorPlugin.ts',

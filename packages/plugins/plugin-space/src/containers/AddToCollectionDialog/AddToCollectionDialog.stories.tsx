@@ -16,7 +16,7 @@ import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import { Annotation, Collection, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Dialog } from '@dxos/react-ui';
@@ -91,7 +91,7 @@ const meta = {
         Capability.contribute(Capabilities.OperationHandler, SpaceOperationHandlerSet.handlers),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [Note, Collection.Collection],

@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Account from '@dxos/plugin-client/Account';
-import { ClientOperation } from '@dxos/plugin-client/ClientOperation';
+import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as HelpOperation from '@dxos/plugin-support/HelpOperation';
 import { osTranslations } from '@dxos/ui-theme';

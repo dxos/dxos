@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/ScriptFunction': 'src/ScriptFunction.ts',
     'ns/Templates': 'src/Templates.ts',
     'ScriptSkill': 'src/skills/ScriptSkill.ts',
     'ScriptOperationHandlerSet': 'src/operations/ScriptOperationHandlerSet.ts',

@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 import * as Progress from '@dxos/app-toolkit/Progress';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Obj, Ref } from '@dxos/echo';
@@ -182,7 +182,11 @@ const selectPostIds = (
       })),
     };
 
-    return yield* Operation.invoke(RunInstructions, { instructions: magazine.instructions, input }, { spaceId }).pipe(
+    return yield* Operation.invoke(
+      AgentOperation.RunInstructions,
+      { instructions: magazine.instructions, input },
+      { spaceId },
+    ).pipe(
       Effect.flatMap(Schema.decodeUnknownEffect(Magazine.CurationOutput)),
       Effect.map((output) => output.posts),
       Effect.catch((error) =>

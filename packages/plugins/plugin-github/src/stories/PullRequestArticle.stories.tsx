@@ -14,7 +14,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { PullRequest } from '@dxos/types';
 
@@ -74,7 +74,7 @@ const meta = {
         Capability.contribute(AppCapabilities.Translations, translations),
         Capability.contribute(Capabilities.OperationHandler, handlers),
       ],
-      plugins: [...corePlugins()],
+      plugins: [...CorePlugins.make()],
     }),
   ],
   parameters: { layout: 'fullscreen', translations },

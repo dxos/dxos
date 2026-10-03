@@ -17,7 +17,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { Field, Focus, IconButton, Main, Panel, Toolbar } from '@dxos/react-ui';
@@ -143,7 +143,7 @@ const navTreeDecorators = (graphOptions?: StorybookGraphOptions) => [
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       StorybookPlugin.make({
         initialState: { sidebarState: 'expanded' },
       }),

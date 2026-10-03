@@ -68,6 +68,11 @@
       "source": "./src/types/TypeSafeSettings.ts",
       "types": "./dist/types/src/types/TypeSafeSettings.d.ts",
       "import": "./dist/lib/TypeSafeSettings.mjs"
+    },
+    "./TypeSafeEvents": {
+      "source": "./src/TypeSafeEvents.ts",
+      "types": "./dist/types/src/TypeSafeEvents.d.ts",
+      "import": "./dist/lib/ns/TypeSafeEvents.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

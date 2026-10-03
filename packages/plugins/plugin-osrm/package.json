@@ -45,6 +45,11 @@
       "source": "./src/OsrmPlugin.ts",
       "types": "./dist/types/src/OsrmPlugin.d.ts",
       "import": "./dist/lib/OsrmPlugin.mjs"
+    },
+    "./OsrmEvents": {
+      "source": "./src/OsrmEvents.ts",
+      "types": "./dist/types/src/OsrmEvents.d.ts",
+      "import": "./dist/lib/ns/OsrmEvents.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

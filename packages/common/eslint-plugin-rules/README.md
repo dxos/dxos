@@ -62,7 +62,7 @@ checked and passed:
 
 ### `dxos-subpath-exports` findings
 
-Eight checks, of which only `missingNamespaceExport` autofixes — the rest describe a decision the
+Nine checks, of which only `missingNamespaceExport` autofixes — the rest describe a decision the
 rule cannot make for you:
 
 | Message | Meaning |
@@ -75,6 +75,7 @@ rule cannot make for you:
 | `externalStarExport` | Bare `export *` of another package. Its names cannot be given subpaths, and its releases silently change this package's API. |
 | `pluginInstanceExported` | The barrel re-exports a plugin entrypoint; the root entry carries types and operations only. |
 | `nestedPathExport` | The barrel reaches a directory down. Declare it in that directory's own barrel and re-export the directory. |
+| `flatExport` | A name reaches the root of a package on the `dxos-subpath-imports` list (or a plugin) outside a namespace. The root exports namespaces only, each with its own subpath, so every named root import can be rewritten to a subpath. |
 
 Why it exists: `dxos-subpath-imports` rewrites a consumer's `import { Drawing } from '@dxos/plugin-illustrator'`
 into `import * as Drawing from '@dxos/plugin-illustrator/Drawing'` purely from the exports map, so

@@ -7,8 +7,8 @@ import React from 'react';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { PreviewEvents } from '@dxos/plugin-preview';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Panel } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -32,7 +32,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [...corePlugins(), GitHubPlugin(), FixtureLinkSourcePlugin()],
+      plugins: [...CorePlugins.make(), GitHubPlugin(), FixtureLinkSourcePlugin()],
       setupEvents: [PreviewEvents.Start],
     }),
   ],

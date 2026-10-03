@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, waitFor } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { type Expando } from '@dxos/schema';
@@ -40,7 +40,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: corePlugins() }),
+    withPluginManager({ plugins: CorePlugins.make() }),
   ],
   parameters: {
     layout: 'fullscreen',

@@ -190,7 +190,7 @@ export const WithScript: Story = {
     types: [Script.Script, Text.Text],
     onInit: async ({ client, space }) => {
       const [{ getAccessCredential }, { templates }] = await Promise.all([
-        import('@dxos/plugin-script'),
+        import('@dxos/plugin-script/ScriptFunction'),
         import('@dxos/plugin-script/Templates'),
       ]);
       const identityKey = client.halo.identity.get()?.identityKey;

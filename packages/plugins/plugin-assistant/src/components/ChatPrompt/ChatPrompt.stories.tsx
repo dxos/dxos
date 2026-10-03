@@ -17,7 +17,7 @@ import * as ChatType from '@dxos/assistant/Chat';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
@@ -97,7 +97,7 @@ const meta = {
     withLayout({ layout: 'column', classNames: 'flex flex-col justify-end w-[30rem]' }),
     withPluginManager<StoryArgs>(({ args: { tasks = [], queued = [], alarmInMinutes } }) => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [ChatType.Chat, Feed.Feed, Message.Message, Task.Task, Alarm.Alarm],
           config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),

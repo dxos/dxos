@@ -31,7 +31,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { useThemeContext } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
@@ -577,7 +577,7 @@ const meta = {
   decorators: [
     withMosaic(),
     withPluginManager({
-      plugins: [...corePlugins(), TestPlugin()],
+      plugins: [...CorePlugins.make(), TestPlugin()],
     }),
   ],
   parameters: {

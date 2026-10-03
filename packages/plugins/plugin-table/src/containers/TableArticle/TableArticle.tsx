@@ -15,7 +15,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Database, Filter, Obj, Order, Query, type QueryAST, Type } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
-import { useGlobalFilteredObjects } from '@dxos/plugin-search';
+import * as SearchHooks from '@dxos/plugin-search/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel } from '@dxos/react-ui';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
@@ -57,7 +57,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
     // TODO(wittjosiah): This should use the full query AST directly.
     //   That currently doesn't work for dynamic schema objects because their indexed typename is the schema object DXN.
     const queriedObjects = useQueryWorkaround(db, queryAst, schema);
-    const filteredObjects = useGlobalFilteredObjects(queriedObjects);
+    const filteredObjects = SearchHooks.useGlobalFilteredObjects(queriedObjects);
 
     const { graph } = ToolkitHooks.useAppGraph();
     const customActions = useMemo(() => {

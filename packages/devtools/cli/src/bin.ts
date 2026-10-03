@@ -24,7 +24,8 @@ import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/cl
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 import { LogLevel, LogProcessorType, levels, log } from '@dxos/log';
 import * as Observability from '@dxos/observability/Observability';
-import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
+import * as PluginLoader from '@dxos/plugin-registry/PluginLoader';
+import * as PluginStorage from '@dxos/plugin-registry/PluginStorage';
 
 import {
   admin,
@@ -167,11 +168,11 @@ const program = Effect.gen(function* () {
 
   // `undefined` means the profile has never been configured; an empty array means the user
   // turned everything optional off, which must not be re-seeded with the defaults.
-  const records = yield* loadPlugins({ profile });
-  const enabled = records?.filter(isRecordEnabled).map((record) => record.id) ?? getDefaults();
+  const records = yield* PluginStorage.loadPlugins({ profile });
+  const enabled = records?.filter(PluginStorage.isRecordEnabled).map((record) => record.id) ?? getDefaults();
   // Third-party installs register as lazy stubs built from the metadata cached at install time, so
   // a `dx` invocation imports a plugin's code only once something enables it.
-  const installed = makeInstalledPlugins(records ?? []);
+  const installed = PluginLoader.makeInstalledPlugins(records ?? []);
   const overridden = new Set(installed.map((plugin) => plugin.meta.profile.key));
   // Must precede any plugin import so a third-party plugin's bare specifiers resolve to the host's
   // module instances rather than its own copies.

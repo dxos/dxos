@@ -189,4 +189,40 @@ describe('dxos-subpath-exports', () => {
       ],
     });
   });
+
+  it('allows only namespaces at the root of a subpath-linted package', () => {
+    const flat = fixture('subpath-flat');
+    ruleTester.run('dxos-subpath-exports', rule, {
+      valid: [{ filename: flat, code: "export * as Alpha from './Alpha';" }],
+      invalid: [
+        {
+          // A flat module reached through a star.
+          code: "export * as Alpha from './Alpha';\nexport * from './meta';",
+          filename: flat,
+          errors: [{ messageId: 'flatExport', data: { name: 'meta', via: ' (exported by src/meta.ts)' } }],
+        },
+        {
+          // A named re-export out of a nested barrel is reported once per name.
+          code: "export * as Alpha from './Alpha';\nexport * from './util';",
+          filename: flat,
+          errors: [{ messageId: 'flatExport', data: { name: 'helper', via: ' (exported by src/util/index.ts)' } }],
+        },
+        {
+          // Declarations and named re-exports in the root itself.
+          code: "export * as Alpha from './Alpha';\nexport const local = 1;\nexport { meta } from './meta';",
+          filename: flat,
+          errors: [
+            { messageId: 'flatExport', data: { name: 'local', via: '' } },
+            { messageId: 'flatExport', data: { name: 'meta', via: '' } },
+          ],
+        },
+        {
+          // A bare star of a namespace module spreads its members flat.
+          code: "export * as Alpha from './Alpha';\nexport * from './Alpha';",
+          filename: flat,
+          errors: [{ messageId: 'flatExport', data: { name: "* from './Alpha'", via: ' (exported by src/index.ts)' } }],
+        },
+      ],
+    });
+  });
 });

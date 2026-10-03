@@ -9,8 +9,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { select } from 'd3';
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { type SelectionMode, SelectionModel } from '@dxos/graph';
 import type * as GraphModel from '@dxos/graph/GraphModel';
+import * as SelectionModel from '@dxos/graph/SelectionModel';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -61,7 +61,7 @@ type StoryArgs = GraphProps & {
   grid?: boolean | SVGGridProps;
   inspect?: boolean;
   graph: () => GraphModel.AnyData;
-  selectionMode?: SelectionMode;
+  selectionMode?: SelectionModel.SelectionMode;
   projectorType?: ProjectorType;
   projectorOptions?:
     | GraphForceProjectorOptions
@@ -85,7 +85,7 @@ const DefaultStory = ({
   const registry = useContext(RegistryContext);
 
   // Models.
-  const selection = useMemo(() => new SelectionModel({ mode: selectionMode }), [selectionMode]);
+  const selection = useMemo(() => new SelectionModel.SelectionModel({ mode: selectionMode }), [selectionMode]);
   const [model, setModel] = useState<GraphModel.GraphModel | undefined>(() => {
     const graph = _graph?.();
     return graph ? new TestGraphModel({ registry, graph }) : undefined;
@@ -190,7 +190,7 @@ const DefaultStory = ({
     });
   }, []);
 
-  const active = useMemo(() => new SelectionModel(), []);
+  const active = useMemo(() => new SelectionModel.SelectionModel(), []);
   const handlePing = useCallback(() => {
     for (const id of active.getSelectedIds()) {
       const node = graphRef.current?.findNode(id);
@@ -290,7 +290,7 @@ const Debug = ({
   onPing,
 }: {
   model?: GraphModel.GraphModel;
-  selection: SelectionModel;
+  selection: SelectionModel.SelectionModel;
   projector: ProjectorType;
   onToggleProjector: () => void;
   onRefresh: () => void;

@@ -99,6 +99,11 @@
       "source": "./src/NavTreePlugin.ts",
       "types": "./dist/types/src/NavTreePlugin.d.ts",
       "import": "./dist/lib/NavTreePlugin.mjs"
+    },
+    "./NavTreeSurface": {
+      "source": "./src/NavTreeSurface.ts",
+      "types": "./dist/types/src/NavTreeSurface.d.ts",
+      "import": "./dist/lib/ns/NavTreeSurface.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

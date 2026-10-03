@@ -13,7 +13,9 @@ import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { AiContext } from '@dxos/assistant';
-import { ChatContextSkill, RunInstructions, SkillManagerSkill } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as AgentService from '@dxos/compute/AgentService';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -195,7 +197,7 @@ describe('AssistantPlugin', () => {
         yield* Database.flush();
 
         const result = yield* Operation.invoke(
-          RunInstructions,
+          AgentOperation.RunInstructions,
           {
             instructions: Ref.make(instructions),
             input: {

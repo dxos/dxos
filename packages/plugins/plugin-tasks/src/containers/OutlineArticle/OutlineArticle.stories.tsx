@@ -12,7 +12,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { invariant } from '@dxos/invariant';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useQuery, useSpaces } from '@dxos/react-client/echo';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { Panel, useThemeContext } from '@dxos/react-ui';
@@ -174,7 +174,7 @@ const meta = {
     // The article reads `MarkdownCapabilities.ExtensionProvider` for its editor's contributed
     // extensions, which needs a plugin manager; nothing here contributes any, which is the point —
     // the outline builds the same editor with an empty list.
-    withPluginManager({ plugins: corePlugins() }),
+    withPluginManager({ plugins: CorePlugins.make() }),
     withClientProvider({
       createIdentity: true,
       createSpace: true,

@@ -134,6 +134,11 @@
       "source": "./src/skills/ScriptSkill.ts",
       "types": "./dist/types/src/skills/ScriptSkill.d.ts",
       "import": "./dist/lib/ScriptSkill.mjs"
+    },
+    "./ScriptFunction": {
+      "source": "./src/ScriptFunction.ts",
+      "types": "./dist/types/src/ScriptFunction.d.ts",
+      "import": "./dist/lib/ns/ScriptFunction.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

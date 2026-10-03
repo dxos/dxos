@@ -96,6 +96,16 @@
       "source": "./src/Operations.ts",
       "types": "./dist/types/src/Operations.d.ts",
       "import": "./dist/lib/ns/Operations.mjs"
+    },
+    "./PluginLoader": {
+      "source": "./src/PluginLoader.ts",
+      "types": "./dist/types/src/PluginLoader.d.ts",
+      "import": "./dist/lib/ns/PluginLoader.mjs"
+    },
+    "./PluginStorage": {
+      "source": "./src/PluginStorage.ts",
+      "types": "./dist/types/src/PluginStorage.d.ts",
+      "import": "./dist/lib/ns/PluginStorage.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -14,7 +14,7 @@ import { EffectEx } from '@dxos/effect';
 import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
 import { FactPipeline } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';
-import { discordSourceLayer } from '@dxos/plugin-discord';
+import * as DiscordSource from '@dxos/plugin-discord/DiscordSource';
 import { type Space } from '@dxos/react-client/echo';
 
 import { type CrawlAction, type CrawlOptions, CrawlPanel, initialOptions } from '../components/index.ts';
@@ -57,7 +57,7 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
     guard('channels', async () => {
       const result = await EffectEx.runPromise(
         Source.pipe(Effect.flatMap((source) => source.listChannels())).pipe(
-          Effect.provide(discordSourceLayer(options.token)),
+          Effect.provide(DiscordSource.layer(options.token)),
         ),
       );
       setChannels(result);
@@ -89,7 +89,7 @@ const CrawlModuleContainer = ({ space }: { space: Space }) => {
           Effect.provide(
             Layer.mergeAll(
               registry.layerFor(space.id),
-              discordSourceLayer(options.token),
+              DiscordSource.layer(options.token),
               Layer.fresh(AiServiceTestingPreset('edge-remote')),
             ),
           ),

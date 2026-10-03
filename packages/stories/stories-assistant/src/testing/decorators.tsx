@@ -24,15 +24,10 @@ import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { AiContext } from '@dxos/assistant';
-import {
-  AgentHandlers,
-  AgentSkill,
-  DelegationSkill,
-  DelegationSkillHandlers,
-  PlanningHandlers,
-  PlanningSkill,
-  makeDelegationStrategy,
-} from '@dxos/assistant-toolkit';
+import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
+import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
+import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -301,12 +296,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // Supervisor behaviour, so a delegating story spawns its sub-agent. The app's copy rides
         // plugin-assistant's `AssistantStart`-gated skill-definition module, which loses the race
         // against `AgentService`'s layer — that layer reads this capability once, at build time.
-        Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, makeDelegationStrategy()),
+        Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, DelegationSkill.makeDelegationStrategy()),
         Capability.contributeAll(Capabilities.OperationHandler, [
           MarkdownOperationHandlerSet.handlers,
-          PlanningHandlers,
-          DelegationSkillHandlers,
-          AgentHandlers,
+          PlanningSkill.Handlers,
+          DelegationSkill.Handlers,
+          AgentOperationHandlerSet.handlers,
           ExampleHandlers,
           CalculatorHandlers,
         ]),

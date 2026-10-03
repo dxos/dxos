@@ -152,6 +152,11 @@
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
+    },
+    "./ConnectorError": {
+      "source": "./src/ConnectorError.ts",
+      "types": "./dist/types/src/ConnectorError.d.ts",
+      "import": "./dist/lib/ns/ConnectorError.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

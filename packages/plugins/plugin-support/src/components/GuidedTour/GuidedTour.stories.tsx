@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import type * as Tour from '@dxos/app-toolkit/Tour';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Button, IconButton, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -68,7 +68,7 @@ const meta = {
     withTheme(),
     withLayout({ layout: 'fullscreen' }),
     // `useLayout` (the dialog pause) needs a PluginManager providing AppCapabilities.Layout.
-    withPluginManager({ plugins: [...corePlugins(), StorybookPlugin.make({})] }),
+    withPluginManager({ plugins: [...CorePlugins.make(), StorybookPlugin.make({})] }),
   ],
   parameters: {
     layout: 'fullscreen',

@@ -63,6 +63,11 @@
       "source": "./src/TypefullyPlugin.ts",
       "types": "./dist/types/src/TypefullyPlugin.d.ts",
       "import": "./dist/lib/TypefullyPlugin.mjs"
+    },
+    "./TypefullyEvents": {
+      "source": "./src/TypefullyEvents.ts",
+      "types": "./dist/types/src/TypefullyEvents.d.ts",
+      "import": "./dist/lib/ns/TypefullyEvents.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

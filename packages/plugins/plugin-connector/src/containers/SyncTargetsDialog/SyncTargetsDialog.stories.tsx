@@ -8,7 +8,7 @@ import React, { useMemo } from 'react';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Ref } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Dialog } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -53,7 +53,7 @@ const DefaultStory = ({ availableTargets }: StoryArgs) => {
 const meta = {
   title: 'plugins/plugin-connector/containers/SyncTargetsDialog',
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ plugins: corePlugins() })],
+  decorators: [withTheme(), withLayout({ layout: 'fullscreen' }), withPluginManager({ plugins: CorePlugins.make() })],
   parameters: {
     translations,
   },

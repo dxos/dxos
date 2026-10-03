@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './errors.ts';
 export * from './types/index.ts';
 
 export * as AgentIdentity from './AgentIdentity.ts';

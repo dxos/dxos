@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/GraphAction': 'src/GraphAction.ts',
     'ns/Hooks': 'src/Hooks.ts',
     'index': 'src/index.ts',
     'GraphPlugin': 'src/GraphPlugin.ts',

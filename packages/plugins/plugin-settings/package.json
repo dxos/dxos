@@ -82,6 +82,11 @@
       "source": "./src/SettingsPlugin.ts",
       "types": "./dist/types/src/SettingsPlugin.d.ts",
       "import": "./dist/lib/SettingsPlugin.mjs"
+    },
+    "./SettingsAction": {
+      "source": "./src/SettingsAction.ts",
+      "types": "./dist/types/src/SettingsAction.d.ts",
+      "import": "./dist/lib/ns/SettingsAction.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

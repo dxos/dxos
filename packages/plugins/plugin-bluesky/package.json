@@ -69,6 +69,11 @@
       "source": "./src/BlueskyPlugin.ts",
       "types": "./dist/types/src/BlueskyPlugin.d.ts",
       "import": "./dist/lib/BlueskyPlugin.mjs"
+    },
+    "./BlueskyEvents": {
+      "source": "./src/BlueskyEvents.ts",
+      "types": "./dist/types/src/BlueskyEvents.d.ts",
+      "import": "./dist/lib/ns/BlueskyEvents.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
