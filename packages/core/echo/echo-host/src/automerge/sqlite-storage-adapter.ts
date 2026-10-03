@@ -9,7 +9,7 @@ import * as SqlClient from 'effect/sql/SqlClient';
 import type * as SqlError from 'effect/sql/SqlError';
 
 import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
-import { type MaybePromise } from '@dxos/util';
+import { type MaybePromise, countWork } from '@dxos/util';
 
 import { MIGRATIONS, MIGRATIONS_TABLE } from '../migrations/chunks/index.ts';
 
@@ -30,6 +30,22 @@ export type SqliteStorageCallbacks = {
   afterSave?(path: StorageKey): MaybePromise<void>;
 };
 
+/** automerge-repo's chunk kinds (the second key segment), mapped to counter names. */
+const SAVE_COUNTERS: Record<string, string> = {
+  'snapshot': 'automerge.snapshotSaves',
+  'incremental': 'automerge.incrementalSaves',
+  'sync-state': 'automerge.syncStateSaves',
+};
+
+/**
+ * Counts one stored chunk by kind: a snapshot is a whole compacted document, an incremental one
+ * change batch, a sync state one peer's progress through a document.
+ */
+const countSave = (key: StorageKey, bytes: number): void => {
+  countWork(SAVE_COUNTERS[key[1] ?? ''] ?? 'automerge.otherSaves');
+  countWork('automerge.saveBytes', bytes);
+};
+
 /**
  * SQLite-backed automerge StorageAdapterInterface.
  * Stores automerge document chunks in the `automerge_chunks` table.
@@ -38,6 +54,11 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   readonly #runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   readonly #callbacks?: SqliteStorageCallbacks;
   readonly #monitor?: StorageAdapterDataMonitor;
+
+  /** Chunk writes waiting for the next group commit. */
+  #pendingWrites: PendingWrite[] = [];
+  /** The running group-commit loop, while there is one. */
+  #draining: Promise<void> | undefined;
 
   #open = false;
 
@@ -94,6 +115,8 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     }
     // SQLite returns BLOB columns as Buffer in Node.js; coerce to plain Uint8Array.
     const chunk = toUint8Array(rows[0].data);
+    countWork('automerge.chunkLoads');
+    countWork('automerge.loadBytes', chunk.byteLength);
     this.#monitor?.recordBytesLoaded(chunk.byteLength);
     this.#monitor?.recordLoadDuration(Date.now() - startMs);
     return chunk;
@@ -104,14 +127,8 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const startMs = Date.now();
-    const encoded = encodeKey(keyArray);
-    // TODO(dmaretskyi): If another transaction is running concurently, this write will be associated with the wrong transaction.
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`INSERT OR REPLACE INTO automerge_chunks (key, data) VALUES (${encoded}, ${binary})`;
-      }),
-    );
+    await this.enqueue(upsertChunks([[encodeKey(keyArray), binary]]));
+    countSave(keyArray, binary.byteLength);
     this.#monitor?.recordBytesStored(binary.byteLength);
     this.#monitor?.recordStoreDuration(Date.now() - startMs);
     await this.#callbacks?.afterSave?.(keyArray);
@@ -122,27 +139,55 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const startMs = Date.now();
-    const encoded = entries.map(([key, data]) => [encodeKey(key), data] as const);
-    // TODO(dmaretskyi): replace with one batched write.
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql.withTransaction(
-          Effect.gen(function* () {
-            for (const [key, data] of encoded) {
-              yield* sql`INSERT OR REPLACE INTO automerge_chunks (key, data) VALUES (${key}, ${data})`;
-            }
-          }),
-        );
-      }),
-    );
+    await this.enqueue(upsertChunks(entries.map(([key, data]) => [encodeKey(key), data] as const)));
     let bytesStored = 0;
     for (const [keyArray, binary] of entries) {
       bytesStored += binary.byteLength;
+      countSave(keyArray, binary.byteLength);
       await this.#callbacks?.afterSave?.(keyArray);
     }
     this.#monitor?.recordBytesStored(bytesStored);
     this.#monitor?.recordStoreDuration(Date.now() - startMs);
+  }
+
+  /**
+   * Queues a write for the next group commit and resolves once it is committed.
+   *
+   * A repo flush saves every dirty document at once, and one transaction per chunk made each a
+   * separate WAL commit: thousands of them, long enough to time out the flush RPC. Writes that
+   * arrive together share one transaction and run in the order they were issued, so a removal
+   * never overtakes an earlier save. Any other write to these chunks must go through here for the
+   * same reason.
+   */
+  enqueue(write: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.#pendingWrites.push({ write, resolve, reject });
+      this.#draining ??= this.#drain();
+    });
+  }
+
+  async #drain(): Promise<void> {
+    // Yields first so the writes a flush issues in the same tick join one group.
+    await Promise.resolve();
+    while (this.#pendingWrites.length > 0) {
+      const group = this.#pendingWrites.splice(0);
+      try {
+        await RuntimeProvider.runPromise(this.#runtime)(
+          Effect.gen(function* () {
+            const sql = yield* SqlClient.SqlClient;
+            yield* sql.withTransaction(Effect.forEach(group, ({ write }) => write, { discard: true }));
+          }),
+        );
+        for (const { resolve } of group) {
+          resolve();
+        }
+      } catch (error) {
+        for (const { reject } of group) {
+          reject(error);
+        }
+      }
+    }
+    this.#draining = undefined;
   }
 
   async remove(keyArray: StorageKey): Promise<void> {
@@ -150,7 +195,8 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const encoded = encodeKey(keyArray);
-    await RuntimeProvider.runPromise(this.#runtime)(
+    countWork('automerge.chunkRemoves');
+    await this.enqueue(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DELETE FROM automerge_chunks WHERE key = ${encoded}`;
@@ -189,6 +235,9 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       bytesLoaded += data.byteLength;
       return { key: decodeKey(row.key), data };
     });
+    countWork('automerge.rangeLoads');
+    countWork('automerge.chunkLoads', chunks.length);
+    countWork('automerge.loadBytes', bytesLoaded);
     this.#monitor?.recordBytesLoaded(bytesLoaded);
     this.#monitor?.recordLoadDuration(Date.now() - startMs);
     return chunks;
@@ -198,12 +247,12 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen) {
       return;
     }
-    await RuntimeProvider.runPromise(this.#runtime)(this.removeRangeEffect(keyPrefix));
+    await this.enqueue(this.removeRangeEffect(keyPrefix));
   }
 
   /**
    * {@link removeRange} as an effect, so a caller deleting the several ranges a document spans can
-   * commit them as one transaction.
+   * pass them to {@link enqueue} as one write.
    */
   removeRangeEffect(keyPrefix: StorageKey): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> {
     const prefix = encodeKey(keyPrefix);
@@ -214,6 +263,22 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     }).pipe(Effect.withSpan('SqliteStorageAdapter.removeRange'));
   }
 }
+
+type PendingWrite = {
+  write: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
+  resolve: () => void;
+  reject: (error: unknown) => void;
+};
+
+const upsertChunks = (
+  entries: ReadonlyArray<readonly [string, Uint8Array]>,
+): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    for (const [key, data] of entries) {
+      yield* sql`INSERT OR REPLACE INTO automerge_chunks (key, data) VALUES (${key}, ${data})`;
+    }
+  });
 
 /**
  * Key space `SubductionStorageBridge` writes into this same table, as

@@ -450,9 +450,13 @@ jobs:
           filter: blob:none
           ref: ${{ inputs.ref || github.sha }}
 
-      # The only tool ios-init.sh needs that the runner image does not ship.
-      - name: Install xcodegen
-        run: brew install xcodegen
+      # Pre-install what `tauri ios init` would `brew reinstall`: brew exits 1 on this runner when a dependency's
+      # post-install hook fails, even though the formula installed, so trust the binaries over the exit code.
+      - name: Install iOS build tools
+        run: |
+          brew install xcodegen libimobiledevice || true
+          command -v pod > /dev/null || brew install cocoapods || true
+          command -v xcodegen idevicesyslog pod
 
       - name: Update tauri.conf.json
         uses: ./.github/actions/cn-config

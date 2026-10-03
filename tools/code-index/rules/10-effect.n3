@@ -1,0 +1,47 @@
+# Effect constructs. See `rules/50-example.n3` for what belongs in a rule file and what belongs in a
+# query — in short: classification and joins here, reachability in SPARQL.
+
+@prefix context: <https://dxos.org/deus/module/effect/Context#>.
+@prefix data: <https://dxos.org/deus/module/effect/Data#>.
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix errors: <https://dxos.org/deus/module/@dxos/errors#>.
+@prefix layer: <https://dxos.org/deus/module/effect/Layer#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix rpcGroup: <https://dxos.org/deus/module/effect/rpc/RpcGroup#>.
+@prefix schema: <https://dxos.org/deus/module/effect/Schema#>.
+
+# A service tag: `class Store extends Context.Service<Store, Api>()('id')`.
+{ ?s deus:extends context:Service } => { ?s rdf:type deus:EffectService }.
+
+# A layer, by whichever constructor built it.
+{ ?s deus:constructedBy layer:effect } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy layer:succeed } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy layer:sync } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy layer:scoped } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy layer:mergeAll } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy layer:merge } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy layer:unwrap } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy layer:effectContext } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy layer:provide } => { ?s rdf:type deus:EffectLayer }.
+{ ?s deus:constructedBy layer:empty } => { ?s rdf:type deus:EffectLayer }.
+
+# What a layer provides: `Layer.effect(Store, …)` — the first argument, when it is a service tag.
+{ ?s rdf:type deus:EffectLayer. ?s deus:argument ?tag. ?tag rdf:type deus:EffectService }
+  => { ?s deus:providesService ?tag }.
+
+# Schemas.
+{ ?s deus:constructedBy schema:Struct } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy schema:TaggedStruct } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy schema:Union } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy schema:Literal } => { ?s rdf:type deus:Schema }.
+{ ?s deus:constructedBy schema:Array } => { ?s rdf:type deus:Schema }.
+{ ?s deus:extends schema:Schema.Type } => { ?s rdf:type deus:Schema }.
+{ ?s deus:extends schema:Class } => { ?s rdf:type deus:Schema }.
+
+# Domain errors: the repo's `BaseError.extend`, plus Effect's own tagged errors.
+{ ?s deus:extends errors:BaseError.extend } => { ?s rdf:type deus:DomainError }.
+{ ?s deus:extends data:TaggedError } => { ?s rdf:type deus:DomainError }.
+{ ?s deus:extends schema:TaggedError } => { ?s rdf:type deus:DomainError }.
+
+# RPC groups.
+{ ?s deus:constructedBy rpcGroup:make } => { ?s rdf:type deus:Rpc }.
