@@ -385,7 +385,6 @@ export const Welcome = ({
       className={mx(
         'relative grid grid-cols-1 md:w-[37rem] max-w-[37rem] h-full md:h-[675px] overflow-hidden',
         'border-2 border-sky-950 rounded-xl lg:translate-x-[-40%]',
-        // The gate keeps its controls at a full block with no inset, as before the dx- theme.
         '[--dx-control-inset:0px] [--dx-control-size:var(--dx-block-size)]',
       )}
       style={{
