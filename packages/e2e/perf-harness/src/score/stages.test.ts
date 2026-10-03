@@ -38,6 +38,17 @@ describe('perf score measurements', () => {
     expect(measurements).toContainEqual({ id: 'run > peak app footprint', group: RUN_GROUP, value: 50 });
   });
 
+  test('scores a flow reading as a run metric, the median of the worst row per iteration', ({ expect }) => {
+    const reading = 'reading > retained tab heap per turn';
+    const measurements = toMeasurements([
+      row(0, 'idle', { [reading]: 30 }),
+      row(1, 'boot'),
+      row(1, 'idle', { [reading]: 10 }),
+      row(2, 'idle', { [reading]: 20 }),
+    ]);
+    expect(measurements).toContainEqual({ id: 'run > retained tab heap per turn', group: RUN_GROUP, value: 20 });
+  });
+
   test('rejects a batch line that is not flat scalar properties', ({ expect }) => {
     expect(parseStageEvent({ properties: { stage: 'boot', wallMs: 1 } })).toEqual({
       properties: { stage: 'boot', wallMs: 1 },

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { READING_PREFIX } from '../report.ts';
 import { type Measurement } from './score.ts';
 
 type Properties = Record<string, string | number | boolean>;
@@ -133,5 +134,21 @@ export const toMeasurements = (events: ReadonlyArray<StageEvent>): Measurement[]
     return perIteration.length > 0 ? [{ id, group: RUN_GROUP, value: median(perIteration) }] : [];
   });
 
-  return [...stageMeasurements, ...runMeasurements];
+  // A flow's own readings: the worst row's value per iteration, then the median across iterations.
+  const readingNames = new Set(
+    [...byIteration.values()].flatMap((rows) =>
+      rows.flatMap((row) => Object.keys(row).filter((key) => key.startsWith(READING_PREFIX))),
+    ),
+  );
+  const readingMeasurements = [...readingNames].flatMap((key) => {
+    const perIteration = [...byIteration.values()].flatMap((rows) => {
+      const values = rows.map((row) => numberOf(row, key)).filter((value) => value !== undefined);
+      return values.length > 0 ? [Math.max(...values)] : [];
+    });
+    return perIteration.length > 0
+      ? [{ id: `run > ${key.slice(READING_PREFIX.length)}`, group: RUN_GROUP, value: median(perIteration) }]
+      : [];
+  });
+
+  return [...stageMeasurements, ...runMeasurements, ...readingMeasurements];
 };

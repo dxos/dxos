@@ -21,12 +21,16 @@ import { type Preview } from '@storybook/react-vite';
 
 // Next components style through `.dx-*` rules that ship separately from the theme.
 import '@dxos/react-ui/theme.css';
+import { trimReactPerformanceEntries } from '@dxos/react-ui';
 import { StorybookErrorFallback } from '@dxos/storybook-addon-logger/StorybookErrorFallback';
 
 import { docsTheme } from './theme.tsx';
 
 // Restores the "Download logs" action on a crashed story.
 globalThis.__STORY_ERROR_FALLBACK__ = StorybookErrorFallback;
+
+// A story session re-renders for as long as it is open, and the dev build's per-render measures never leave the buffer.
+trimReactPerformanceEntries();
 
 /**
  * Configure Storybook rendering.

@@ -40,7 +40,7 @@ import { translations as observabilityTranslations } from '@dxos/plugin-observab
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
-import { ThemeProvider } from '@dxos/react-ui';
+import { ThemeProvider, trimReactPerformanceEntries } from '@dxos/react-ui';
 import { defaultTx } from '@dxos/react-ui';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
@@ -158,8 +158,10 @@ const BOOT_ID = import.meta.env?.DEV ? Math.random().toString(36).slice(2, 10) :
 const MODULE_EVAL_TIME = Date.now();
 if (import.meta.env?.DEV) {
   log('composer main: module evaluated', { bootId: BOOT_ID, t: MODULE_EVAL_TIME });
+  const stopTrimming = trimReactPerformanceEntries();
   if (import.meta.hot) {
     import.meta.hot.dispose(() => {
+      stopTrimming();
       log('composer main: hmr dispose', { bootId: BOOT_ID, ageMs: Date.now() - MODULE_EVAL_TIME });
     });
   }

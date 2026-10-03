@@ -1248,6 +1248,34 @@ describe('ProcessOperationInvoker', () => {
   );
 });
 
+describe('ProcessOperationInvoker retention', { tags: ['memory'] }, () => {
+  it.effect(
+    'a settled invocation does not keep its process handle alive',
+    Effect.fn(function* ({ expect }) {
+      expect(typeof global.gc).toBe('function');
+      const manager = yield* ProcessManager.Service;
+      const invoker = yield* ProcessManager.ProcessOperationInvoker.Service;
+      // Only the pid outlives this block: the live fiber's own closures hold the handle.
+      const { pid, handleRef } = yield* Effect.gen(function* () {
+        const fiber = yield* invoker.invokeFiber(Double, { value: 5 });
+        const handleRef = new WeakRef(yield* manager.attach(fiber.pid));
+        yield* fiber.await;
+        return { pid: fiber.pid, handleRef };
+      });
+
+      // Real macrotask turns: the settled-entry swap and the manager's release land after the exit.
+      for (let turn = 0; turn < 3; turn++) {
+        yield* Effect.promise(() => new Promise((resolve) => setTimeout(resolve, 0)));
+        global.gc?.();
+      }
+      expect(handleRef.deref()).toBeUndefined();
+
+      const attached = yield* invoker.attachFiber(pid);
+      expect(yield* attached.await).toEqual(Exit.succeed(10));
+    }, Effect.provide(TestLayer)),
+  );
+});
+
 //
 // Edge dispatch: `InvokeOptions.on === 'edge'` routes through RemoteOperationInvoker instead of
 // spawning a local process. Keyed by the operation's `meta.deployedId`.

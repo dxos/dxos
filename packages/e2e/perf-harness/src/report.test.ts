@@ -96,6 +96,11 @@ describe('toPosthogEvent', () => {
     expect(event.properties.scale).toBe('tasks=2000,depth=3,projects=5');
     expect(event.properties.fixtureSize).toBe(1999);
   });
+
+  test('publishes a flow reading under its prefixed name', ({ expect }) => {
+    const event = toPosthogEvent(row({ readings: { 'retained tab heap per turn': 4096 } }));
+    expect(event.properties['reading > retained tab heap per turn']).toBe(4096);
+  });
 });
 
 describe('writePosthogBatch', () => {
