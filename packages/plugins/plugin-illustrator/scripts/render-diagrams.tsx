@@ -17,11 +17,12 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { Diagnostics, Mermaid, MermaidEngine, SVG_SCHEMA, type Scene } from '@dxos/diagram';
+import { Diagnostics, Mermaid, MermaidEngine, type Scene, SVG_SCHEMA } from '@dxos/diagram';
+
+import { DrawingFile, SvgBuilder } from '#model';
+import { Drawing } from '#types';
 
 import { toSvgFile } from '../src/components/SceneSvgFile.tsx';
-import { DrawingFile, SvgBuilder } from '../src/model/index.ts';
-import { Drawing } from '../src/types/index.ts';
 
 const DIAGRAMS = join(dirname(fileURLToPath(import.meta.url)), '../docs/diagrams');
 
