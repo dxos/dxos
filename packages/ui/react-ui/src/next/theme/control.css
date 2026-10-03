@@ -827,6 +827,10 @@
     flex: 1 1 auto;
     min-width: 0;
   }
+  /* A row's cross axis is vertical, so the start alignment a Field column needs would pin it to the toolbar's top. */
+  .nx-toolbar > .nx-checkbox {
+    align-self: center;
+  }
   .nx-toolbar {
     display: flex;
     flex-shrink: 0;

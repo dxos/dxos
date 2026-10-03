@@ -1,8 +1,10 @@
 # Next cut-over (Phase C)
 
+> **Archived.** Historical record: the cut-over log through step 3 (2026-10-02). Not maintained; the current state is in [AUDIT.md](../../src/next/AUDIT.md) and [TASKS.md](../../src/next/TASKS.md).
+
 The cut-over branch (draft PR against `claude/react-ui-next-design-4db6eb`): the Phase B codemods applied for real, then
 fixed by hand batch by batch, then the current components deleted and Next made the default export. Plan:
-[AUDIT.md](AUDIT.md) §7.
+[AUDIT.md](../../src/next/AUDIT.md) §7.
 
 ## Status (step 3: the current components are gone)
 

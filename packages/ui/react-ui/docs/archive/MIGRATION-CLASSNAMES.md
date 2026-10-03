@@ -1,5 +1,7 @@
 # `classNames` → Next props: how mechanical is the cut-over?
 
+> **Archived.** Historical record: the pre-cut-over `classNames` analysis (2026-10-01). Not maintained; the current state is in [AUDIT.md](../../src/next/AUDIT.md) and [TASKS.md](../../src/next/TASKS.md).
+
 Generated 2026-10-01 on `claude/react-ui-next-design-4db6eb`, read-only. Scope: every `classNames=` prop on an element
 whose tag is imported from `@dxos/react-ui`, `@dxos/react-ui-list` or `@dxos/react-ui-form` (same population as
 MIGRATION-INVENTORY.md §3). Commands in the appendix.

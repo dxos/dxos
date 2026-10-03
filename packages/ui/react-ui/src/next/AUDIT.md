@@ -836,7 +836,7 @@ No open questions remain.
 ## 7. Migration plan
 
 The cut-over is one PR, landed before production, after which the current components are deleted. Counts are from
-[MIGRATION-INVENTORY.md](MIGRATION-INVENTORY.md) (generated 2026-10-01; regenerate before Phase C).
+[MIGRATION-INVENTORY.md](../../docs/archive/MIGRATION-INVENTORY.md) (generated 2026-10-01; regenerate before Phase C).
 
 ### Scale
 
@@ -916,7 +916,7 @@ variant='gap'`, Switch in the toolbar's roving focus, `Menu.TriggerItem disabled
 Each codemod reports what it could not convert; that list is the manual residue for Phase C.
 
 **Built** in `tools/codemorph` (transforms `renames`, `layout`, `classnames`, `emphasis`, `imports`; the emphasis rename table is
-empty until the names are decided). Dry-run counts and the residue summary: [MIGRATION-CODEMODS.md](MIGRATION-CODEMODS.md).
+empty until the names are decided). Dry-run counts and the residue summary: [MIGRATION-CODEMODS.md](../../docs/archive/MIGRATION-CODEMODS.md).
 
 ### Phase C: the cut-over PR (one long-lived branch, landed as one PR)
 
@@ -936,7 +936,7 @@ applies only the fixed rules (Icon valence colours, `truncate`, `font-mono`, `co
 element swaps the part renames already require. Conversions that need a visual check follow in per-package batches
 with a story or screenshot each. Phase A adds the six props that make the commonest leftovers mechanical: Container
 `width='document'`, Typography `lines`, `tone` and `mono`, Icon `tone` and `spin`, Button `align='start'`. Research:
-[MIGRATION-CLASSNAMES.md](MIGRATION-CLASSNAMES.md) (about a third of the 1,139 props are removable by rule).
+[MIGRATION-CLASSNAMES.md](../../docs/archive/MIGRATION-CLASSNAMES.md) (about a third of the 1,139 props are removable by rule).
 
 ### Risks
 

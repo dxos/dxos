@@ -1,5 +1,7 @@
 # Next migration: codemod dry run
 
+> **Archived.** Historical record: the codemod dry run before the cut-over (2026-10-01). Not maintained; the current state is in [AUDIT.md](../../src/next/AUDIT.md) and [TASKS.md](../../src/next/TASKS.md).
+
 Generated 2026-10-01 on `claude/react-ui-next-design-4db6eb` at `22a6f1a00a` by the Phase B codemods
 (`tools/codemorph`; its README documents each transform). This was a dry run: no source changed. Scope: every
 `.ts`/`.tsx` under `packages/**` except `packages/ui/react-ui/src`, `node_modules`, `dist` and symlinks (12,315

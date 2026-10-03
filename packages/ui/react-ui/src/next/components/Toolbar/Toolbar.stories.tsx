@@ -105,25 +105,30 @@ export const InputAndButton: Story = {
   args: { allSizes: true },
   parameters: { sizes: { gutter: 'none' } },
   render: ({ size = 'md' }) => (
-    <div className='bg-base-surface py-2'>
-      <Next.Toolbar.Root data-testid={`input-toolbar-${size}`}>
-        <Next.Checkbox />
-        <Next.Select.Root items={OPTIONS}>
-          <Next.Select.Trigger placeholder='Color' aria-label='Color' />
-          <Next.Select.Content>
-            {OPTIONS.map((item) => (
-              <Next.Select.Item key={item.value} item={item} />
-            ))}
-          </Next.Select.Content>
-        </Next.Select.Root>
-        <Next.Input
-          placeholder={`Search (${size})`}
-          aria-label='Search'
-          end={<Next.Icon icon='ph--magnifying-glass--regular' />}
-        />
-        <Next.Button>Go</Next.Button>
-      </Next.Toolbar.Root>
-    </div>
+    <Next.Panel.Root>
+      <Next.Panel.Header>
+        <Next.Toolbar.Root data-testid={`input-toolbar-${size}`}>
+          <Next.Checkbox />
+          <Next.Select.Root items={OPTIONS}>
+            <Next.Select.Trigger placeholder='Color' aria-label='Color' />
+            <Next.Select.Content>
+              {OPTIONS.map((item) => (
+                <Next.Select.Item key={item.value} item={item} />
+              ))}
+            </Next.Select.Content>
+          </Next.Select.Root>
+          <Next.Input
+            placeholder={`Search (${size})`}
+            aria-label='Search'
+            end={<Next.Icon icon='ph--magnifying-glass--regular' />}
+          />
+          <Next.Button>Go</Next.Button>
+        </Next.Toolbar.Root>
+      </Next.Panel.Header>
+      <Next.Panel.Body>
+        <br />
+      </Next.Panel.Body>
+    </Next.Panel.Root>
   ),
 };
 

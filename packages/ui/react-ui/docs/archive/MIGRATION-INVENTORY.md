@@ -1,5 +1,7 @@
 # Next migration inventory
 
+> **Archived.** Historical record: a pre-cut-over survey of the old components' consumers (2026-10-01). Not maintained; the current state is in [AUDIT.md](../../src/next/AUDIT.md) and [TASKS.md](../../src/next/TASKS.md).
+
 Snapshot of worktree `react-ui-next-design-4db6eb`, branch `claude/react-ui-next-design-4db6eb`, HEAD `590be56754`
 (2026-10-01). Read-only survey for planning the single migration PR (current `@dxos/react-ui` / `react-ui-list` /
 `react-ui-form` → `Next.*`). All counts come from `git grep` plus small Python import parsers (Appendix); "files"

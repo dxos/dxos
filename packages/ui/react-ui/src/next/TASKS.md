@@ -1,6 +1,6 @@
 # react-ui next — Tasks
 
-_Resume: Phase A4 ports done; master-detail decided (composed); next is `react-ui-form/next`. Uncommitted: none._
+_Resume: the cut-over is on PR #13549 (old components deleted, every consumer on Next); next is removing the `Next` namespace, then the open items below. Pre-cut-over planning docs and the verification ledger are archived under `../../docs/archive/`._
 
 ## Phase 0: Design
 
@@ -78,10 +78,10 @@ Fix the open Phase 2 issues, then port `@dxos/react-ui-form` onto `Next.*` as a 
 - [x] **New components** — `Textarea`, `DateInput` (date/time/datetime), `Popover` + `Combobox`, `Tag`, `ToggleIconButton`; Select option icons. — DESIGN.md follow-ups 24–30; 111 storybook tests pass.
 - [x] **Merge IconButton into Button** — `icon`/`iconEnd`/`label`/`iconOnly` on `Next.Button`; `Next.Toggle` replaces ToggleIconButton (DESIGN.md follow-up 36). — 119 storybook tests pass.
 - [x] **Standardize component stories** — `withSizes()` decorator; `Default` + one `Test` per component (DESIGN.md follow-up 37). — 67 storybook tests pass (was 120).
-- [ ] **`react-ui-form/next`** — Viewport/Content/Fields/Fieldset/Actions on Next; reuse `resolveFieldRenderer`; port Form stories.
-- [ ] **Settings layout** — design the two-column `variant='settings'` (Container `columns`) — needs a decision.
-- [ ] **Ref and lookup fields** — on `Next.Combobox` + `Next.Popover`.
-- [ ] **Pilot plugin** — move one plugin (e.g. plugin-space settings) to `react-ui-form/next`.
+- [x] **`react-ui-form/next`** — Viewport/Content/Fields/Fieldset/Actions on Next; reuse `resolveFieldRenderer`; port Form stories. — shipped with the cut-over: react-ui-form is the Next form (no `/next` subpath).
+- [x] **Settings layout** — design the two-column `variant='settings'` (Container `columns`) — needs a decision. — the settings row layout shipped (Form.FieldSet rows, two tracks).
+- [x] **Ref and lookup fields** — on `Next.Combobox` + `Next.Popover`. — RefField/ComboboxField on `Next.Combobox` + `Next.Popover`.
+- [x] **Pilot plugin** — move one plugin (e.g. plugin-space settings) to `react-ui-form/next`. — superseded: every plugin moved at the cut-over.
 
 ## Parity
 
@@ -104,7 +104,7 @@ with Phase 4 milestone 5).
 - [x] **Tooltip after a press** — a click then Space left a Toggle's Tooltip suppressed; the press now ends at the next focus, key or hover (DESIGN.md follow-up 48); Toggle `Test` covers it.
 - [x] **SystemButton** — `Next.SystemButton.*` ports every `SystemIconButton` preset on Button/Toggle with translated default labels (DESIGN.md follow-up 51).
 - [x] **Field and date/time** — every current `Field.*` part: segmented `DateInput` (zag `date-input`) with an Ark `DatePicker` calendar replacing the native input, `PinInput`, `NumberInput`, `PasswordInput`, Textarea `variant`; `Field.Block`/`TriggerIcon` mapped; Field story shows every field type (DESIGN.md follow-up 54).
-- [ ] **Toolbar action binding** — `useMenuActions` (`ActionIconButton`, `Toolbar.Menu`) on Next Menu; Phase 4 with react-ui-menu.
+- [x] **Toolbar action binding** — `useMenuActions` (`ActionIconButton`, `Toolbar.Menu`) on Next Menu; Phase 4 with react-ui-menu. — react-ui-menu's `useMenuActions` drives Next `Menu`/`Toolbar`.
 
 ## Phase A4: ports with no counterpart
 
@@ -121,13 +121,13 @@ parts are listed there for the codemods.
 - [x] **Toast** — Ark toast; `Toaster` host, `Header`/`Title`/`Description`/`Footer`/`ActionTrigger`/`CloseTrigger`. — Test and Timeout.
 - [x] **ErrorFallback, Focus, ScrollContainer, Accordion, Carousel, MediaPlayer, QrCode** — Ark accordion, carousel and qr-code; `Next.useFocus`. — a `Test` story each.
 - [x] **Single-file components** — AttentionGlyph, Breadcrumb, Deferred, Editable (`Next.useEditable`), FloatingPanel, HoverCard, Link, MenuButton, Skeleton, Slider, Steps, TextCrawl, Timestamp, Tour; Ark where Ark has one. — a `Test` story each; Deferred keeps its node test.
-- [ ] **Move shared helpers** — `media-kind.ts` and `parse-stack.ts` are imported from the current tree; move them into `next/` before the cut-over deletes it.
-- [ ] **Translate hard-coded strings** — ErrorFallback ("Runtime Error", "Stack", "Data") and Steps ("Step N").
+- [x] **Move shared helpers** — `media-kind.ts` and `parse-stack.ts` are imported from the current tree; move them into `next/` before the cut-over deletes it. — `media-kind.ts` and `parse-stack.ts` live under `next/components/`.
+- [x] **Translate hard-coded strings** — ErrorFallback ("Runtime Error", "Stack", "Data") and Steps ("Step N"). — ErrorFallback and Steps (`steps.step.label`) are translated.
 - [x] **Master-detail** — not a component: Root context selection + `Next.Splitter` (`collapseBelow`, `mode`, static divider); `Splitter/MasterDetail.stories.tsx` approved (AUDIT.md §6 follow-ups).
 - [x] **Button `size`** — `data-size` on the button alone (Toggle, `ToggleGroup.Item` too); Button `Sizes` story.
-- [ ] **Cut-over removals** — delete react-ui-list `MasterDetail` and the current Tabs' `activePart`/`Viewport`/`BackButton`; ChatOptions, Welcome and VideoArticle compose Tabs + Splitter.
-- [ ] **Ref array presentation** — `ArrayPresentation({ ordered, display: 'tag' | 'title' })` annotation; Tag refs default to `'tag'`; `ordered` adds drag reorder (milestone 8/9).
-- [ ] **`density` codemod** — scope-aware: drop where the enclosing scope yields it, hoist shared sizes, else Button `size`; report cross-file scopes.
+- [ ] **Cut-over removals** — open: react-ui-list `MasterDetail` still exists (plugin-atproto `PdsBrowser` uses it); the current Tabs' parts are gone. Original: delete react-ui-list `MasterDetail` and the current Tabs' `activePart`/`Viewport`/`BackButton`; ChatOptions, Welcome and VideoArticle compose Tabs + Splitter.
+- [x] **Ref array presentation** — `ArrayPresentation({ ordered, display: 'tag' | 'title' })` annotation; Tag refs default to `'tag'`; `ordered` adds drag reorder (milestone 8/9). — `ArrayPresentation` annotation in echo; react-ui-form `FormFieldDispatch` reads it.
+- [x] **`density` codemod** — scope-aware: drop where the enclosing scope yields it, hoist shared sizes, else Button `size`; report cross-file scopes. — applied at the cut-over; one `density=` use remains.
 
 ## Phase 4: react-ui-list and react-ui-form rewrite
 
@@ -144,12 +144,12 @@ Parallel `react-ui-list/next` and `react-ui-form/next` entries on `Next.*`, in t
   - Done: DragHandle (keyboard moves), DropIndicator, DragPreview, OrderedList, plugin-sheet `RangeList` pilot; AUDIT.md §6 points 16–20, 24 (Phase A2 below).
 - [x] **5. Combobox trigger mode** — button trigger, input in popup, description, create row, async, VirtualTrigger; retire list Combobox/Picker.
   - Done on `Next.Combobox` (AUDIT §4.1 maps the list Combobox/Picker APIs). Open: the ObjectPicker story on it, with milestone 9.
-- [ ] **6. `react-ui-form/next` core** — parts, scalar renderers, `fieldMap`/`fieldProvider`/`createSelectField`; pilot plugin-thread `ChannelCreatePanel`.
-- [ ] **7. Settings layout** — needs a decision (AUDIT.md §3.2); pilot plugin-pwa, plugin-excalidraw, plugin-settings.
-- [ ] **8. Arrays and layout templates** — ArrayField, SelectOptionField, `Form.Layout`; pilot plugin-pipeline `PipelineProperties`.
-- [ ] **9. Ref and lookup fields** — RefField, InlineRefField, ComboboxField, ObjectPicker; pilot plugin-space.
-- [ ] **10. Higher-level form components** — ObjectProperties, ObjectForm, ViewEditor, FieldEditor, editor control frame; pilot plugin-map `MapViewEditor`.
-- [ ] **11. Tree next** — Ark tree-view spike, virtualization, DnD, MasterDetail; pilot plugin-navtree.
+- [x] **6. `react-ui-form/next` core** — parts, scalar renderers, `fieldMap`/`fieldProvider`/`createSelectField`; pilot plugin-thread `ChannelCreatePanel`. — shipped with the cut-over.
+- [x] **7. Settings layout** — needs a decision (AUDIT.md §3.2); pilot plugin-pwa, plugin-excalidraw, plugin-settings. — shipped with the cut-over.
+- [x] **8. Arrays and layout templates** — ArrayField, SelectOptionField, `Form.Layout`; pilot plugin-pipeline `PipelineProperties`. — shipped with the cut-over.
+- [x] **9. Ref and lookup fields** — RefField, InlineRefField, ComboboxField, ObjectPicker; pilot plugin-space. — shipped with the cut-over.
+- [x] **10. Higher-level form components** — ObjectProperties, ObjectForm, ViewEditor, FieldEditor, editor control frame; pilot plugin-map `MapViewEditor`. — shipped with the cut-over.
+- [x] **11. Tree next** — Ark tree-view spike, virtualization, DnD, MasterDetail; pilot plugin-navtree. — the Ark Tree replaced the current one at the cut-over (react-ui-list `Tree`).
 - [x] **`Panel.Body` plain slot** (AUDIT.md §6 follow-ups) — no built-in ScrollArea/Container; callers compose `Panel.Body asChild > ScrollArea.Root > ScrollArea.Viewport asChild > Container gutter='rail'`; Next callers in react-ui, react-ui-form/next (incl. `Form.Viewport scroll`) and plugin-registry updated.
   - [ ] Candidate preset (not built): the scrolling-body compose repeats in every form story and pane; decide at the cut-over whether a named composite (e.g. a `Panel.ScrollBody`-style helper) earns its place.
 - [x] **Next theme hooks** (AUDIT.md §6 follow-ups) — `Next.useThemeMode`, `Next.usePlatform`, `Next.useIosKeyboard` on the existing ThemeProvider (`src/next/hooks.ts`, unit-tested); no `tx` in Next.
@@ -183,3 +183,12 @@ the classNames research and the react-ui-menu/next binding asked for.
 - [x] **Menu item icon size** — `Menu.ItemIcon size` (Icon's); the binding maps `iconSize` onto it.
 - [x] **Codemod gaps** — `Card.Action system='close'|'delete'` renders that `SystemButton` preset (its icon and translated label, `label` optional), rather than a second label table; `Block compact` keeps the block width and drops the fixed height (`data-compact`, DESIGN.md follow-up 39).
 - [ ] **`dx-avatar` backdrop** — the shared sampler is ready; the avatar does not use it yet.
+
+## Verification follow-ups
+
+The cut-over verification ledger is archived ([VERIFICATION.md](../../docs/archive/VERIFICATION.md)). Many of its
+`open` entries were fixed later in the PR without the ledger being updated.
+
+### Tasks
+
+- [ ] **Re-check the ledger's open entries against the current build** — V013–V022, V024–V051 (except fixed/verified), V064; close each with its commit or move it here as its own task.

@@ -1,5 +1,7 @@
 # Next cut-over — verification ledger
 
+> **Archived.** Historical record: the cut-over verification ledger V001–V066 (2026-10-02); open entries were triaged into [TASKS.md](../../src/next/TASKS.md). Not maintained; the current state is in [AUDIT.md](../../src/next/AUDIT.md) and [TASKS.md](../../src/next/TASKS.md).
+
 Visual and behavioural bugs found while verifying the cut-over (branch `claude/react-ui-next-design-4db6eb`, which
 now contains the cut-over). The user reports bugs in batches; each gets an entry here, its screenshot under
 `temp/verification/` (gitignored, local), and a way to reproduce it ourselves before it is closed.
