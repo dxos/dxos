@@ -5,18 +5,16 @@
 # `Plugin.getMetaFromConfig(...)` is the metadata available without either. They are classified
 # apart because they answer different questions.
 
+@prefix capability: <https://dxos.org/deus/module/@dxos/app-framework/Capability#>.
+@prefix capabilitySource: <https://dxos.org/deus/file/packages/sdk/app-framework/src/core/capability.ts#>.
 @prefix deus: <https://dxos.org/vocab/deus#>.
-@prefix framework: <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2F>.
+@prefix plugin: <https://dxos.org/deus/module/@dxos/app-framework/Plugin#>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FPlugin#define> }
-  => { ?s rdf:type deus:Plugin }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FPlugin#lazy> }
-  => { ?s rdf:type deus:LazyPlugin }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FPlugin#getMetaFromConfig> }
-  => { ?s rdf:type deus:PluginMeta }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FPlugin#makeMeta> }
-  => { ?s rdf:type deus:PluginMeta }.
+{ ?s deus:constructedBy plugin:define } => { ?s rdf:type deus:Plugin }.
+{ ?s deus:constructedBy plugin:lazy } => { ?s rdf:type deus:LazyPlugin }.
+{ ?s deus:constructedBy plugin:getMetaFromConfig } => { ?s rdf:type deus:PluginMeta }.
+{ ?s deus:constructedBy plugin:makeMeta } => { ?s rdf:type deus:PluginMeta }.
 
 # The modules a plugin adds: `Plugin.define(meta).pipe(Plugin.addModule(X), …)` puts every module in
 # the plugin's implementation references, and a module is a capability declaration.
@@ -26,12 +24,9 @@
 # .createObject`, …). Rather than enumerate a list that drifts every time one is added, the rule
 # keys on what those helpers declare about themselves: their signature names `Capability.Module`,
 # which is the type system's own statement that they build one.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#makeModule> }
-  => { ?s rdf:type deus:PluginModule }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#lazyModule> }
-  => { ?s rdf:type deus:PluginModule }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#inlineModule> }
-  => { ?s rdf:type deus:PluginModule }.
+{ ?s deus:constructedBy capability:makeModule } => { ?s rdf:type deus:PluginModule }.
+{ ?s deus:constructedBy capability:lazyModule } => { ?s rdf:type deus:PluginModule }.
+{ ?s deus:constructedBy capability:inlineModule } => { ?s rdf:type deus:PluginModule }.
 
 # A module built by a helper. Three ways a helper says so, none of them a list of names:
 #   1. its signature returns `Capability.Module`;
@@ -42,25 +37,25 @@
 #      would classify its callers' values as modules. No such function exists here today.
 {
   ?s deus:constructedBy ?helper.
-  ?helper deus:apiDependsOn <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#Module>.
+  ?helper deus:apiDependsOn capability:Module.
 } => {
   ?s rdf:type deus:PluginModule.
 }.
 {
   ?s deus:constructedBy ?helper.
-  ?helper deus:apiDependsOn <https://dxos.org/deus/file/packages%2Fsdk%2Fapp-framework%2Fsrc%2Fcore%2Fcapability.ts#Module>.
+  ?helper deus:apiDependsOn capabilitySource:Module.
 } => {
   ?s rdf:type deus:PluginModule.
 }.
 {
   ?s deus:constructedBy ?helper.
-  ?helper deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#moduleMaker>.
+  ?helper deus:constructedBy capability:moduleMaker.
 } => {
   ?s rdf:type deus:PluginModule.
 }.
 {
   ?s deus:constructedBy ?helper.
-  ?helper deus:constructedBy <https://dxos.org/deus/file/packages%2Fsdk%2Fapp-framework%2Fsrc%2Fcore%2Fcapability.ts#moduleMaker>.
+  ?helper deus:constructedBy capabilitySource:moduleMaker.
 } => {
   ?s rdf:type deus:PluginModule.
 }.
@@ -83,10 +78,8 @@
 }.
 
 # Capability slots — what plugins contribute to and consume.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#make> }
-  => { ?s rdf:type deus:Capability }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#makeSingleton> }
-  => { ?s rdf:type deus:Capability }.
+{ ?s deus:constructedBy capability:make } => { ?s rdf:type deus:Capability }.
+{ ?s deus:constructedBy capability:makeSingleton } => { ?s rdf:type deus:Capability }.
 {
   ?s rdf:type deus:PluginModule.
   ?s deus:implDependsOn ?capability.
@@ -97,19 +90,19 @@
 
 {
   ?s deus:constructedBy ?helper.
-  ?helper deus:implDependsOn <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#makeModule>.
+  ?helper deus:implDependsOn capability:makeModule.
 } => {
   ?s rdf:type deus:PluginModule.
 }.
 {
   ?s deus:constructedBy ?helper.
-  ?helper deus:implDependsOn <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#lazyModule>.
+  ?helper deus:implDependsOn capability:lazyModule.
 } => {
   ?s rdf:type deus:PluginModule.
 }.
 {
   ?s deus:constructedBy ?helper.
-  ?helper deus:implDependsOn <https://dxos.org/deus/module/%40dxos%2Fapp-framework%2FCapability#inlineModule>.
+  ?helper deus:implDependsOn capability:inlineModule.
 } => {
   ?s rdf:type deus:PluginModule.
 }.

@@ -1,16 +1,18 @@
 # Operations, their handlers, and the skills that expose them (`@dxos/compute`).
 
 @prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix handlerSet: <https://dxos.org/deus/module/@dxos/compute/OperationHandlerSet#>.
+@prefix operation: <https://dxos.org/deus/module/@dxos/compute/Operation#>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix skill: <https://dxos.org/deus/module/@dxos/compute/Skill#>.
 
 # `Operation.make({ … })`.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperation#make> }
-  => { ?s rdf:type deus:Operation }.
+{ ?s deus:constructedBy operation:make } => { ?s rdf:type deus:Operation }.
 
 # A handler is an operation piped through `Operation.withHandler`, so it names the operation it
 # implements: `SentenceNormalization.pipe(Operation.withHandler(fn))`.
 {
-  ?s deus:pipedThrough <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperation#withHandler>.
+  ?s deus:pipedThrough operation:withHandler.
   ?s deus:derivedFrom ?operation.
 } => {
   ?s rdf:type deus:OperationHandler.
@@ -18,10 +20,8 @@
 }.
 
 # Handler sets bundle handlers; the members they reference are their implementation.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperationHandlerSet#make> }
-  => { ?s rdf:type deus:OperationHandlerSet }.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fcompute%2FOperationHandlerSet#merge> }
-  => { ?s rdf:type deus:OperationHandlerSet }.
+{ ?s deus:constructedBy handlerSet:make } => { ?s rdf:type deus:OperationHandlerSet }.
+{ ?s deus:constructedBy handlerSet:merge } => { ?s rdf:type deus:OperationHandlerSet }.
 {
   ?s rdf:type deus:OperationHandlerSet.
   ?s deus:implDependsOn ?handler.
@@ -32,8 +32,7 @@
 
 # `Skill.make({ tools: Skill.toolDefinitions({ operations: [...] }) })` — the operations a skill
 # names are ordinary implementation references, so the join is enough to find them.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/%40dxos%2Fcompute%2FSkill#make> }
-  => { ?s rdf:type deus:Skill }.
+{ ?s deus:constructedBy skill:make } => { ?s rdf:type deus:Skill }.
 {
   ?s rdf:type deus:Skill.
   ?s deus:implDependsOn ?operation.
