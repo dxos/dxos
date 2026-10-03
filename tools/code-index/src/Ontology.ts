@@ -43,7 +43,7 @@ export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}
  * dropped and rebuilt on open: the ledger keys commits by graph IRI, so mixing schemes would leave
  * graphs no row points at and rules matching only half the facts.
  */
-export const VERSION = 3;
+export const VERSION = 4;
 
 /** IRI of a file resource; stable across revisions of that file. */
 export const fileIri = (path: string): NamedNode => DataFactory.namedNode(`${FILE_BASE}${escapePath(path)}`);
@@ -138,6 +138,8 @@ export const size = iri('size');
 export const mtime = iri('mtime');
 export const hash = iri('hash');
 export const inPackage = iri('inPackage');
+/** `true` on a `*.test.*` or `*.spec.*` script; absent on every other file. */
+export const testFile = iri('testFile');
 export const imports = iri('imports');
 export const importsType = iri('importsType');
 export const importsModule = iri('importsModule');
@@ -361,8 +363,9 @@ export const undocumented = iri('undocumented');
 export const phantom = iri('phantom');
 export const unspecified = iri('unspecified');
 /**
- * The name an external importer writes: the identifier alone, or `<Namespace>.<identifier>` when
- * the declaring module is published whole under one name.
+ * The name an external importer writes, stated only when it is not the declared name:
+ * `<Namespace>.<identifier>` when the declaring module is published whole under one name. Otherwise
+ * it is `deus:name` — `COALESCE(?canonical, ?name)` in a query.
  */
 export const canonicalName = iri('canonicalName');
 
@@ -391,6 +394,7 @@ export const CONTEXT = {
   path: 'deus:path',
   language: 'deus:language',
   hash: 'deus:hash',
+  testFile: boolean('testFile'),
   importsModule: 'deus:importsModule',
   parseError: 'deus:parseError',
   size: integer('size'),
@@ -582,8 +586,8 @@ export const TypePropertyNode = Schema.Struct({
   '@type': Schema.Literal('TypeProperty'),
   'name': Schema.String,
   'hasType': Schema.optional(Schema.String),
-  'optional': Schema.Boolean,
-  'readonly': Schema.Boolean,
+  'optional': Schema.optional(Schema.Literal(true)),
+  'readonly': Schema.optional(Schema.Literal(true)),
 });
 
 export type TypePropertyNode = typeof TypePropertyNode.Type;
@@ -705,6 +709,7 @@ export const FileDocument = Schema.Struct({
   'mtime': Schema.Number,
   'hash': Schema.String,
   'inPackage': Schema.optional(Schema.String),
+  'testFile': Schema.optional(Schema.Boolean),
   'imports': Schema.Array(Schema.String),
   'importsType': Schema.Array(Schema.String),
   'importsModule': Schema.Array(Schema.String),
