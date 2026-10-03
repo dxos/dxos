@@ -230,7 +230,8 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
@@ -291,7 +292,8 @@ const SelectSpace = ({ spaces, onChange }: SelectSpaceProps) => {
 
   // TODO(burdon): Change to Masonry.
   return (
-    <SearchList.Root onSearch={handleSearch}>
+    // Types arrive as plugins contribute them, so the highlight follows the list's first item rather than the first seen.
+    <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>
       <SearchList.Input
         classNames='mb-form-gap'
         autoFocus
