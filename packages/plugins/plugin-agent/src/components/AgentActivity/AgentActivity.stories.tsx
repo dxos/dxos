@@ -1,0 +1,158 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import { type Meta, type StoryObj } from '@storybook/react-vite';
+import React, { useState } from 'react';
+
+import { withLayout, withTheme } from '@dxos/react-ui/testing';
+
+import { translations } from '#translations';
+import { type DiscordBinding, type DiscordOperation } from '#types';
+
+import { AgentActivity } from './AgentActivity.tsx';
+
+const NOW = new Date('2026-10-03T12:00:00Z');
+
+type Conversation = { id: string; title: string; lastActivity?: string };
+
+const THREADS: Conversation[] = [
+  { id: 'thread-3', title: 'Launch checklist', lastActivity: '2026-10-03T11:52:00Z' },
+  { id: 'thread-2', title: 'Hiring plan', lastActivity: '2026-10-03T08:15:00Z' },
+  { id: 'thread-1', title: 'Discord bot on EDGE', lastActivity: '2026-09-28T16:40:00Z' },
+];
+
+const BINDING: Partial<DiscordBinding.Properties> = {
+  applicationId: '1234567890',
+  guildId: '9988776655',
+  channels: ['1122334455'],
+};
+
+type SkillRow = { id: string; name: string; customized: boolean };
+
+const SKILLS: SkillRow[] = [
+  { id: 'org.dxos.skill.agentConversation', name: 'Agent conversation', customized: false },
+  { id: 'org.dxos.skill.interview', name: 'Interview', customized: true },
+];
+
+type StoryProps = {
+  bound: boolean;
+  values?: Partial<DiscordBinding.Properties>;
+  status?: DiscordOperation.BotStatus;
+  error?: string;
+  bindingId?: string;
+  conversations: Conversation[];
+  skills?: SkillRow[];
+};
+
+const DefaultStory = ({ bound, values, status, error, bindingId, conversations, skills = [] }: StoryProps) => (
+  <AgentActivity.Root bound={bound} running={status?.running}>
+    <AgentActivity.Discord bound={bound} values={values} status={status} error={error} bindingId={bindingId} />
+    <SkillList initial={skills} />
+    <AgentActivity.Conversations ids={conversations.map((conversation) => conversation.id)}>
+      {conversations.map((conversation) => (
+        <AgentActivity.Conversation key={conversation.id} {...conversation} now={NOW} />
+      ))}
+    </AgentActivity.Conversations>
+  </AgentActivity.Root>
+);
+
+/** Customize/Reset toggle the row locally, standing in for the operations the container invokes. */
+const SkillList = ({ initial }: { initial: SkillRow[] }) => {
+  const [skills, setSkills] = useState(initial);
+  const setCustomized = (id: string, customized: boolean) =>
+    setSkills((skills) => skills.map((skill) => (skill.id === id ? { ...skill, customized } : skill)));
+  return (
+    <AgentActivity.Skills ids={skills.map((skill) => skill.id)}>
+      {skills.map((skill) => (
+        <AgentActivity.Skill
+          key={skill.id}
+          {...skill}
+          onCustomize={(id) => setCustomized(id, true)}
+          onReset={(id) => setCustomized(id, false)}
+        />
+      ))}
+    </AgentActivity.Skills>
+  );
+};
+
+const meta = {
+  title: 'plugins/plugin-agent/components/AgentActivity',
+  render: DefaultStory,
+  decorators: [withTheme(), withLayout({ layout: 'column' })],
+  parameters: {
+    layout: 'fullscreen',
+    translations,
+  },
+} satisfies Meta<typeof DefaultStory>;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
+  args: {
+    bound: true,
+    values: BINDING,
+    status: { running: true, gateway: 'ready', botUserId: '42', threads: THREADS.length },
+    conversations: THREADS,
+    skills: SKILLS,
+  },
+};
+
+export const Skills: Story = {
+  args: {
+    bound: false,
+    conversations: [],
+    skills: SKILLS,
+  },
+};
+
+export const NotConfigured: Story = {
+  args: {
+    bound: false,
+    conversations: [],
+  },
+};
+
+export const Failed: Story = {
+  name: 'Error',
+  args: {
+    bound: true,
+    values: BINDING,
+    status: { running: true, gateway: 'failed', threads: 1, lastError: 'Authentication failed (4004).' },
+    error: 'Failed to fetch',
+    conversations: THREADS.slice(2),
+  },
+};
+
+export const Connecting: Story = {
+  args: {
+    bound: true,
+    values: BINDING,
+    status: { running: true, gateway: 'connecting', threads: 0 },
+    conversations: [],
+  },
+};
+
+export const OtherBinding: Story = {
+  args: {
+    bound: true,
+    values: BINDING,
+    bindingId: 'binding-new',
+    status: {
+      running: true,
+      gateway: 'ready',
+      threads: 2,
+      config: {
+        spaceId: 'space',
+        agent: 'echo:///agent-old',
+        applicationId: '1234567890',
+        accessTokenId: 'token',
+        channels: ['1122334455'],
+        binding: 'echo://space/binding-old',
+      },
+    },
+    conversations: [],
+  },
+};

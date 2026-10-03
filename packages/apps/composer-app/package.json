@@ -63,6 +63,7 @@
     "@dxos/log-store-idb": "workspace:*",
     "@dxos/migrations": "workspace:*",
     "@dxos/observability": "workspace:*",
+    "@dxos/plugin-agent": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-atproto": "workspace:*",
     "@dxos/plugin-attention": "workspace:*",

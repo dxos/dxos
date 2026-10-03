@@ -20,6 +20,7 @@ import {
   type GetSessionOptions,
   type Service,
   type Session,
+  type SubmitPromptOptions,
   getSession,
 } from '@dxos/compute/AgentService';
 import * as Process from '@dxos/compute/Process';
@@ -73,13 +74,8 @@ export const createSession: (
   opts?: CreateSessionOptions,
 ) => Effect.Effect<Session, never, Database.Service | Registry.Service | AgentService> = Effect.fn('createSession')(
   function* (opts) {
-    // A skill already in a database is bound as-is: it is either space-authored (no registry key at
-    // all) or a fork carrying the user's edits, and resolving it through the registry would substitute
-    // the pristine copy for the one the caller handed us. Anything else is referenced by its registry
-    // URI, so the registry stays the one copy rather than being cloned into the space.
-    const skills = (opts?.skills ?? []).map((skill) =>
-      Obj.getDatabase(skill) !== undefined ? Ref.make(skill) : Ref.fromURI(Skill.registryURI(Skill.getKey(skill))),
-    );
+    // By registry URI unless the skill is a space copy, so the registry stays the one pristine copy.
+    const skills = (opts?.skills ?? []).map(Skill.makeRef);
 
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.context<Database.Service>();
@@ -372,10 +368,13 @@ export const layer = (
                 // Releasing the cache first is what keeps this from recursing: `getSession` then
                 // takes its spawn path and returns a NEW session whose process is live, so that
                 // session's own `submitPrompt` submits directly.
-                const resubmit = (prompt: string | ContentBlock.Any[]): Effect.Effect<void> =>
+                const resubmit = (
+                  prompt: string | ContentBlock.Any[],
+                  submitOptions?: SubmitPromptOptions,
+                ): Effect.Effect<void> =>
                   Effect.sync(releaseSession).pipe(
                     Effect.andThen(service.getSession(chat, options)),
-                    Effect.flatMap((next) => next.submitPrompt(prompt)),
+                    Effect.flatMap((next) => next.submitPrompt(prompt, submitOptions)),
                     Effect.provide(databaseContext),
                   );
                 const session = makeSession(handle, chat, feed, releaseSession, isFinished, resubmit);
@@ -397,7 +396,7 @@ const makeSession = (
   feed: Feed.Feed,
   releaseSession: () => void,
   isFinished: Effect.Effect<boolean>,
-  resubmit: (prompt: string | ContentBlock.Any[]) => Effect.Effect<void>,
+  resubmit: (prompt: string | ContentBlock.Any[], options?: SubmitPromptOptions) => Effect.Effect<void>,
 ): Session => ({
   chat,
   feed,
@@ -420,8 +419,12 @@ const makeSession = (
     }).pipe(Effect.scoped),
   // Suspended so the state is read per call: a session outlives the process that served its last
   // turn, and submitting to a finished one drops the prompt.
-  submitPrompt: (prompt: string | ContentBlock.Any[]) =>
-    Effect.flatMap(isFinished, (finished) => (finished ? resubmit(prompt) : process.submitInput(prompt))),
+  submitPrompt: (prompt: string | ContentBlock.Any[], options?: SubmitPromptOptions) =>
+    Effect.flatMap(isFinished, (finished) =>
+      finished
+        ? resubmit(prompt, options)
+        : process.submitInput(options?.sender ? { prompt, sender: options.sender } : prompt),
+    ),
   // Derived from the process's status atom, written on the app-wide registry the UI reads.
   running: Atom.make(
     (get) =>

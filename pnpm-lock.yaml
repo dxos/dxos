@@ -2298,6 +2298,9 @@ importers:
       '@dxos/observability':
         specifier: workspace:*
         version: link:../../sdk/observability
+      '@dxos/plugin-agent':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-agent
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant
@@ -4541,6 +4544,9 @@ importers:
       '@dxos/mcp-server':
         specifier: workspace:*
         version: link:../mcp-server
+      '@dxos/plugin-agent':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-agent
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../../plugins/plugin-assistant
@@ -7775,6 +7781,124 @@ importers:
       '@dxos/types':
         specifier: workspace:*
         version: link:../../sdk/types
+
+  packages/plugins/plugin-agent:
+    dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
+      '@dxos/app-framework':
+        specifier: workspace:*
+        version: link:../../sdk/app-framework
+      '@dxos/app-toolkit':
+        specifier: workspace:*
+        version: link:../../sdk/app-toolkit
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
+      '@dxos/compute':
+        specifier: workspace:*
+        version: link:../../core/compute/compute
+      '@dxos/context':
+        specifier: workspace:*
+        version: link:../../common/context
+      '@dxos/echo':
+        specifier: workspace:*
+        version: link:../../core/echo/echo
+      '@dxos/echo-react':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-react
+      '@dxos/edge-client':
+        specifier: workspace:*
+        version: link:../../core/mesh/edge-client
+      '@dxos/effect':
+        specifier: workspace:*
+        version: link:../../common/effect
+      '@dxos/errors':
+        specifier: workspace:*
+        version: link:../../common/errors
+      '@dxos/keys':
+        specifier: workspace:*
+        version: link:../../common/keys
+      '@dxos/link':
+        specifier: workspace:*
+        version: link:../../core/compute/link
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-rdf
+      '@dxos/plugin-explorer':
+        specifier: workspace:*
+        version: link:../plugin-explorer
+      '@dxos/plugin-markdown':
+        specifier: workspace:*
+        version: link:../plugin-markdown
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
+      '@dxos/react-hooks':
+        specifier: workspace:*
+        version: link:../../ui/react-primitives/react-hooks
+      '@dxos/react-ui-form':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-form
+      '@dxos/react-ui-list':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-list
+      '@dxos/react-ui-menu':
+        specifier: workspace:*
+        version: link:../../ui/react-ui-menu
+      '@dxos/schema':
+        specifier: workspace:*
+        version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
+      '@dxos/ui-types':
+        specifier: workspace:*
+        version: link:../../ui/ui-types
+      '@dxos/util':
+        specifier: workspace:*
+        version: link:../../common/util
+      effect:
+        specifier: 4.0.0
+        version: 4.0.0
+    devDependencies:
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-runtime
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
+      '@dxos/react-client':
+        specifier: workspace:*
+        version: link:../../sdk/react-client
+      '@dxos/react-ui':
+        specifier: workspace:*
+        version: link:../../ui/react-ui
+      '@dxos/ui-theme':
+        specifier: workspace:*
+        version: link:../../ui/ui-theme
+      '@effect/atom-react':
+        specifier: 'catalog:'
+        version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
+      '@storybook/react-vite':
+        specifier: 'catalog:'
+        version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
+      '@types/react':
+        specifier: ~19.2.17
+        version: 19.2.17
+      '@types/react-dom':
+        specifier: ~19.2.3
+        version: 19.2.3(@types/react@19.2.17)
+      react:
+        specifier: ~19.2.7
+        version: 19.2.7
+      react-dom:
+        specifier: ~19.2.7
+        version: 19.2.7(react@19.2.7)
+      vite:
+        specifier: '>=8.2.1'
+        version: 8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0)
 
   packages/plugins/plugin-assistant:
     dependencies:
@@ -20065,6 +20189,9 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/plugin-agent':
+        specifier: workspace:*
+        version: link:../../plugins/plugin-agent
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../plugins/plugin-assistant

@@ -7,6 +7,7 @@ export {
   makeDiscordLayerFromToken,
   makeDiscordUserLayer,
   makeDiscordUserLayerFromToken,
+  resolveDiscordToken,
 } from './discord.ts';
 export { type CrawlStores, getCrawlRuntime } from './crawl-stores.ts';
 export {

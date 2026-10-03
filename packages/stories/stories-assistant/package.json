@@ -27,6 +27,7 @@
     "@dxos/echo-query": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/plugin-agent": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
