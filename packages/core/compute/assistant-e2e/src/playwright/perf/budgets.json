@@ -67,8 +67,8 @@
     "unit": "ms"
   },
   "run > peak app footprint": {
-    "target": 1270000000,
-    "limit": 1905000000,
+    "target": 1200000000,
+    "limit": 1800000000,
     "unit": "bytes"
   },
   "run > total blocking time": {
