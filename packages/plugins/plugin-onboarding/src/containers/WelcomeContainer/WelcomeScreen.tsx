@@ -122,6 +122,21 @@ export const WelcomeScreen = ({ hubUrl }: { hubUrl: string }) => {
     const { error: redeemError } = await invokePromise(ClientOperation.RedeemPasskey);
     if (redeemError) {
       // `report` logs a dismissal at info and a genuine failure at error, then classifies for the UI.
+      // TODO(diagnostics): temporary, reverted before merge — shows the underlying passkey failure on device.
+      const describe = (value: unknown, depth = 0): string => {
+        if (value == null || depth > 5) {
+          return '';
+        }
+        const own =
+          value instanceof Error
+            ? `${value.name}: ${value.message}`
+            : typeof value === 'object'
+              ? JSON.stringify(value)
+              : String(value);
+        const cause = typeof value === 'object' ? describe(Reflect.get(value, 'cause'), depth + 1) : '';
+        return cause ? `${own} ← ${cause}` : own;
+      };
+      Reflect.set(globalThis, '__DX_PASSKEY_ERROR_DETAIL__', describe(redeemError));
       setError(passkeyError(PasskeyError.report(redeemError)));
     }
   }, [invokePromise]);
