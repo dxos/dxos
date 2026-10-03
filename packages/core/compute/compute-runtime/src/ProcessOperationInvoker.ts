@@ -170,7 +170,7 @@ export const make = (opts: {
     },
   ): Effect.Effect<OperationFiber<O>> =>
     Effect.gen(function* () {
-      const executable = Process.fromOperation(op, opts.handlerSet);
+      const executable = OperationHandlerSet.toDurable(op, opts.handlerSet);
 
       log('spawing process', { opKey: op.meta.key, ...options });
       const handle = yield* opts.manager.spawn(executable, {

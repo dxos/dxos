@@ -197,7 +197,7 @@ class OperationInvokerImpl implements OperationInvokerInternal {
 
   private _resolveHandler(
     operation: Operation.Definition<any, any>,
-  ): Effect.Effect<Operation.Handler<any, any, NoHandlerError, Operation.Service> | undefined> {
+  ): Effect.Effect<Operation.HandlerFn<any, any, NoHandlerError, Operation.Service> | undefined> {
     return Effect.gen({ self: this }, function* () {
       const match = yield* this._getHandlers().pipe(
         // Last registration wins so plugins can override earlier handlers (e.g. story testing hooks).

@@ -1104,7 +1104,7 @@ describe('readTaskStatusChanges', () => {
   );
 });
 
-const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Info => ({
+const agentProcess = (pid: string, chat: TestChat, state: Process.State): Process.Process => ({
   pid: Process.ID.make(pid),
   parentPid: null,
   key: 'agent',

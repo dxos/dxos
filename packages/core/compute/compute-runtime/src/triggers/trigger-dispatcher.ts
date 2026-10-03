@@ -24,7 +24,7 @@ import * as Struct from 'effect/Struct';
 
 import { NoHandlerError, RunAgainError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
-import * as Process from '@dxos/compute/Process';
+import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Trigger from '@dxos/compute/Trigger';
 import * as TriggerEvent from '@dxos/compute/TriggerEvent';
 import {
@@ -675,7 +675,7 @@ class TriggerDispatcherImpl implements Context.Service.Shape<typeof TriggerDispa
         const inputData = this._prepareInputData(trigger, event);
 
         const manager = yield* ProcessManager.Service;
-        const executable = Process.fromOperation(functionDef, manager.operationHandlerSet);
+        const executable = OperationHandlerSet.toDurable(functionDef, manager.operationHandlerSet);
         // Thread the dispatcher's space through `ProcessManager.spawn` so the
         // spawned process resolves space-affinity services (e.g.
         // `Database.Service`) for the same space the dispatcher is bound to.

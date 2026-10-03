@@ -223,7 +223,7 @@ const HarnessControl = RpcGroup.make(
 ```
 
 - [ ] **Step 2: Declare `rpcs` on the process** — add `rpcs: HarnessControl` to the
-      `Process.make({ ... })` options object for the agent process.
+      `Operation.makeDurable({ ... })` options object for the agent process.
 
 - [ ] **Step 3: Provide handlers from `create()`** — return `rpcHandlers` alongside the existing
       `onInput`/`onAlarm`. Place this where `inputQueue` and `alarmManager` are in scope (after

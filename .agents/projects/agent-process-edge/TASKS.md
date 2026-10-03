@@ -15,7 +15,7 @@ Design: [DESIGN.md](./DESIGN.md). Branch (both repos): `claude/agent-process-edg
 - [x] `ProcessProtocol` in `@dxos/protocols` — wire types shared by client and edge.
 - [x] `EdgeHttpClient` methods for the routes (RPC is a URL helper: the route is
       effect-rpc-over-HTTP, D9).
-- [x] `Process.Process` exposes its `input`/`output` codecs; `Handle.alarmDueAt` added (a DO must
+- [x] `Operation.Durable` exposes its `input`/`output` codecs; `Handle.alarmDueAt` added (a DO must
       mirror the alarm onto the platform scheduler, and it is the wire signal that separates
       `runToCompletion` from `runUntilSettled`).
 
@@ -421,7 +421,7 @@ harness defects, and then the agent got far enough to expose a real runtime bug.
 - [x] `ProcessObject` ran on `OperationHandlerSet.empty`, so an agent's tool call had no handler.
       `makeOperationServiceHandlerSet` dispatches each handler body over the existing
       `OPERATION_SERVICE` binding, under the same invocation timeout as the function-invoker path.
-      Only `getHandlerFor` is served: `Process.fromOperation` already holds the caller's definition
+      Only `getHandlerFor` is served: `OperationHandlerSet.toDurable` already holds the caller's definition
       and uses the resolved entry solely to invoke its handler, and tools resolve from the space's
       `PersistentOperation` records (`makeToolResolverFromOperations`) rather than from the set — so
       the synchronous `definitions()`, which a remote registry an RPC away cannot answer, is unused.

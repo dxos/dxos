@@ -13,6 +13,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 
+import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -329,7 +330,7 @@ const SPACE = SpaceId.random();
 const BACKOFF = { initial: Duration.seconds(30), max: Duration.seconds(30) };
 
 /** Echoes each input back as an output; the only part of a definition the remote path uses. */
-const EchoProcess = Process.make(
+const EchoProcess = Operation.makeDurable(
   { key: 'test.queued-echo', input: Schema.String, output: Schema.String, services: [] },
   (ctx) =>
     Effect.succeed({
@@ -341,7 +342,7 @@ const EchoProcess = Process.make(
 );
 
 const tree = (registry: Registry.AtomRegistry) => {
-  const atom = Atom.make<readonly Process.Info[]>([]);
+  const atom = Atom.make<readonly Process.Process[]>([]);
   registry.mount(atom);
   return atom;
 };
