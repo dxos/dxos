@@ -59,7 +59,7 @@ export const serveStore = (port: StorePort, run: Run): CleanupFn => {
         return driver.counts();
       default:
         // Requests arrive untyped over the port, so an unknown op is possible at runtime.
-        throw new Error('Unsupported store operation');
+        throw new Error(`Unsupported store operation: ${String(Object.getOwnPropertyDescriptor(call, 'op')?.value)}`);
     }
   };
 

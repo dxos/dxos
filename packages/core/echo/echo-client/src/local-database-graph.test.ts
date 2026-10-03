@@ -282,8 +282,7 @@ describe('local databases on the graph', () => {
     test('children in a local database are found from a parent in the same database', async ({ expect }) => {
       await using env = await setup();
       const parent = env.local.add(Obj.make(TestSchema.Task, { title: 'Parent' }));
-      const child = env.local.add(Obj.make(TestSchema.Task, { title: 'Child' }));
-      Obj.setParent(child, parent);
+      const child = env.local.add(Obj.make(TestSchema.Task, { [Obj.Parent]: parent, title: 'Child' }));
       await flushAll(env.local);
 
       const children = await env.graph.query(Query.select(Filter.id(parent.id)).from(ALL).children()).run();

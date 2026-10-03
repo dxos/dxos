@@ -7,6 +7,7 @@ import { type Context } from '@dxos/context';
 import { Entity, Obj, Ref, Relation } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { filterMatchEntity } from '@dxos/echo/internal';
+import { BaseError } from '@dxos/errors';
 import { EID, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
@@ -34,13 +35,11 @@ export interface FederatedGraph {
   subscribe(callback: () => void): CleanupFn;
 }
 
-/** The query references a clause federated execution cannot evaluate across databases. */
-export class FederatedQueryError extends Error {
-  constructor(clause: string) {
-    super(`Not supported in a graph query that spans local databases: ${clause}`);
-    this.name = 'FederatedQueryError';
-  }
-}
+/** The query uses a clause federated execution cannot evaluate across databases. */
+export class FederatedQueryError extends BaseError.extend(
+  'FederatedQueryError',
+  'Clause not supported in a graph query that spans local databases.',
+) {}
 
 /**
  * Whether a query names a local database in any `from` scope, which is what routes it here: the
@@ -93,7 +92,7 @@ export class FederatedQueryExecutor {
     switch (node.type) {
       case 'from': {
         if (node.from._tag !== 'scope') {
-          throw new FederatedQueryError('from(query)');
+          throw new FederatedQueryError({ context: { clause: 'from(query)' } });
         }
         return this.#eval(node.query, node.from.scopes, options);
       }
@@ -181,7 +180,7 @@ export class FederatedQueryExecutor {
       case 'select':
         return this.#select(node, scopes, options);
       case 'aggregate':
-        throw new FederatedQueryError('aggregate');
+        throw new FederatedQueryError({ context: { clause: 'aggregate' } });
     }
   }
 
