@@ -17,7 +17,7 @@ import { n3reasoner } from 'eyereasoner';
 import { JsonLdParser } from 'jsonld-streaming-parser';
 import { type Options as LdkitOptions, type Lens, type Schema, createLens } from 'ldkit';
 import { DataFactory, Parser, Writer } from 'n3';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Quadstore } from 'quadstore';
 import { Engine } from 'quadstore-comunica';
@@ -166,6 +166,31 @@ const parseJsonLd = (document: Ontology.FileDocument, graph: Quad_Graph): Promis
 
 const FILE_COLUMNS = 'path, language, size, hash, mtime';
 
+const VERSION_KEY = 'ontologyVersion';
+
+/**
+ * Empty a store written under another {@link Ontology.VERSION} before the graph opens, so the next
+ * pass reindexes everything. The version is recorded last: a crash part-way leaves it unset and
+ * the next open simply resets again.
+ */
+const resetIfStale = (dir: string): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    const [row] = yield* sql<{ value: string }>`SELECT value FROM meta WHERE key = ${VERSION_KEY}`.pipe(
+      Effect.mapError(fail('Failed to read store version')),
+    );
+    const version = String(Ontology.VERSION);
+    if (row?.value === version) {
+      return;
+    }
+    yield* tryStore('Failed to drop stale graph', () => rm(join(dir, GRAPH_DIR), { recursive: true, force: true }));
+    yield* sql`DELETE FROM files`.pipe(Effect.mapError(fail('Failed to drop stale ledger')));
+    yield* sql`DELETE FROM meta`.pipe(Effect.mapError(fail('Failed to drop stale meta')));
+    yield* sql`INSERT INTO meta (key, value) VALUES (${VERSION_KEY}, ${version})`.pipe(
+      Effect.mapError(fail('Failed to record store version')),
+    );
+  });
+
 const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
@@ -173,6 +198,7 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
       // A schema the store cannot create is a construction failure, not something a caller recovers from.
       Effect.orDie,
     );
+    yield* resetIfStale(dir);
 
     const backend = new ClassicLevel(join(dir, GRAPH_DIR));
     const quadstore = new Quadstore({ backend, dataFactory: DataFactory });
