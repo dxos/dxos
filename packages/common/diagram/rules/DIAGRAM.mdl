@@ -1,0 +1,376 @@
+---
+id: org.dxos.diagram.rules
+name: Diagram rules
+version: 0.1.0
+---
+
+# Diagram rules
+
+What makes an architecture diagram read well to a person, as rules a layout can be scored against.
+`@dxos/diagram` loads this file (`Rules.RULES`); `Appeal` measures every `code` and `both` rule from the
+scene's geometry, and the image judge asks every `vision` and `both` rule of a decision model shown
+the rendered page. `weight` ranks the rules by the strength of the evidence behind them: crossings
+first in every study that measured them, then orthogonality and flow, path continuity, bends, and
+only then alignment, symmetry and compactness, which people prefer but trade against the rest.
+
+Rules about what a diagram says (a title, a legend, labels naming technology, one level of
+abstraction) are not here: they belong to `Architecture.RULES`, which judges content, and a layout
+engine cannot change them.
+
+Evidence keys used in `Source:` lines:
+
+- Purchase 1997: "Which aesthetic has the greatest effect on human understanding?", GD'97, LNCS 1353.
+- Purchase 2002: Purchase, Carrington & Allder, "Empirical evaluation of aesthetics-based graph layout",
+  Empirical Software Engineering 7(3), and "Graph layout aesthetics in UML diagrams", JGAA 6(3).
+- Ware 2002: Ware, Purchase, Colpoys & McGill, "Cognitive measurements of graph aesthetics",
+  Information Visualization 1.
+- HOLA: Kieffer, Dwyer, Marriott & Wybrow, "HOLA: Human-like orthogonal network layout", IEEE TVCG
+  22(1), 2016 (InfoVis 2015).
+- Ware 2020: Colin Ware, *Information Visualization: Perception for Design*, 4th ed., ch. 6 (Gestalt).
+- Imhof 1975: "Positioning names on maps", The American Cartographer 2(2).
+- C4: Simon Brown, the C4 model notation and diagram review checklist, https://c4model.com.
+- Tufte: *The Visual Display of Quantitative Information* (data-ink) and *Envisioning Information*.
+- Bertin: *Semiology of Graphics* (visual variables).
+
+## Extensions
+
+| Term           | URI                           |
+| -------------- | ----------------------------- |
+| `diagram-rule` | org.dxos.mdl.diagram-rule@1.0 |
+
+## Crossings and edges
+
+```mdl
+diagram-rule no-edge-crossings: Arrows do not cross each other
+  category: crossings
+  evaluator: both
+  weight: 10
+  question: Can every arrow be followed without it crossing another arrow?
+  yes: No two arrows cross, or one crossing is unavoidable and clearly at a right angle.
+  no: Several arrows cross each other.
+  The most damaging aesthetic in every study that measured it: it slows tracing and causes misreads.
+  Code: the number of properly crossing connector pairs, scored 1 / (1 + crossings / 2).
+  Source: Purchase 1997; Purchase 2002; Ware 2002; HOLA.
+```
+
+```mdl
+diagram-rule no-edge-through-node: Arrows never pass through a box they do not connect
+  category: edges
+  evaluator: code
+  weight: 8
+  An arrow running across a box reads as a connection to it ("edge tunnelling").
+  Code: 1 when no connector has an interior run through a box other than a frame, else 0.
+  Source: Dunne et al. 2015, IBM J. R&D 59; libavoid (Wybrow, Marriott & Stuckey 2010).
+```
+
+```mdl
+diagram-rule no-shared-trunks: Distinct arrows never run along the same line
+  category: edges
+  evaluator: both
+  weight: 6
+  question: Does every arrow have its own line, with no two arrows merged into one shared trunk?
+  yes: Each arrow runs on its own line; parallel arrows keep a visible gap.
+  no: Two or more arrows share a segment, so their ends cannot be paired up.
+  Overlapping segments make it impossible to tell which arrow goes where; routers nudge parallel runs
+  apart for this reason. A deliberate merge of same-meaning arrows into one target (an inheritance
+  bus) does not count.
+  Code: connector pairs that share a collinear run, scored 1 / (1 + pairs).
+  Source: Wybrow et al. 2010 (nudging); Purchase 2002 ("no adjacent arrows" preferred).
+```
+
+```mdl
+diagram-rule edges-head-toward-target: Each arrow takes a direct route to its target
+  category: edges
+  evaluator: both
+  weight: 5
+  question: Does each arrow run fairly directly from its source to its target, without long detours or doubling back?
+  yes: Arrows take short, direct routes.
+  no: Some arrows loop around the page, leave in the wrong direction, or double back.
+  Readers predict where an arrow ends from the way it leaves its source, and path length is the
+  strongest predictor of tracing time.
+  Code: per connector, route length over the gap between its two boxes (at least 64 units); the share
+  of connectors within twice that, softened by the mean excess. Measured against the boxes rather than
+  the route's own ends, so a loop round the page and a pair of related boxes placed far apart both count.
+  Source: Huang, Eades & Hong 2009 (geodesic-path tendency); Ware 2002.
+```
+
+```mdl
+diagram-rule few-bends: Each arrow bends no more than its ends require
+  category: edges
+  evaluator: code
+  weight: 4
+  Bends rank below crossings, orthogonality and flow, but each one costs tracing time. Zero bends
+  when the boxes line up, one for an L, two for a Z.
+  Code: mean bends per connector beyond the minimum its end points allow, scored 1 / (1 + excess).
+  Source: Purchase 1997; Purchase 2002; Tamassia 1987.
+```
+
+```mdl
+diagram-rule straight-when-aligned: Boxes that face each other are joined by a straight arrow
+  category: edges
+  evaluator: code
+  weight: 3
+  When two connected boxes overlap across the flow, the arrow between them should be one straight
+  segment: the cheapest bend saved, and collinearity aids recall.
+  Code: among connectors whose end boxes overlap horizontally or vertically, the share drawn with no bend.
+  Source: ELK Brandes-Köpf straightening; Marriott et al. 2012 (collinearity aids recall).
+```
+
+```mdl
+diagram-rule uniform-edge-length: Arrows have similar lengths
+  category: edges
+  evaluator: code
+  weight: 2
+  Human-drawn layouts have uniform edge lengths, and their spread correlates with dislike.
+  Code: 1 − min(1, coefficient of variation of connector lengths).
+  Source: HOLA (R8); Dwyer et al. 2009; Purchase, Pilcher & Plimmer 2012.
+```
+
+## Flow
+
+```mdl
+diagram-rule consistent-flow: Most arrows run the same way
+  category: flow
+  evaluator: both
+  weight: 5
+  question: Do nearly all arrows run in one main direction (down, or left to right), with only a few pointing back?
+  yes: The arrows share one direction; a reader follows dependencies one way.
+  no: Arrows run in mixed directions, or whole chains point back against the flow.
+  Information flow ranks third for software diagrams, after crossings and orthogonality. Arrows with
+  a hollow triangle head point to an abstraction above by convention and do not count against it.
+  Code: the share of connectors whose net displacement runs with the diagram's dominant direction.
+  Source: Purchase 2002; Sugiyama, Tagawa & Toda 1981.
+```
+
+```mdl
+diagram-rule continuous-paths: A chain through a box continues on its far side
+  category: flow
+  evaluator: code
+  weight: 2
+  A box with one arrow in and one out reads as a step on a path when the arrow leaves on the side
+  opposite the one it entered by; turning back on the same side breaks the line of reading.
+  Code: for boxes with one incoming and one outgoing connector, 1 for opposite sides, 0.5 adjacent, 0 same.
+  Source: Ware 2002 (continuity); HOLA (R2).
+```
+
+## Alignment
+
+```mdl
+diagram-rule grid-alignment: Boxes line up in rows and columns
+  category: alignment
+  evaluator: both
+  weight: 3
+  question: Do the boxes line up in clear rows and columns?
+  yes: Most boxes share a row or column with two or more others.
+  no: Boxes are staggered, with few clear rows or columns.
+  People prefer grid-like placement and choose it when they draw by hand.
+  Code: the share of boxes whose centre lines up with at least two others horizontally or vertically.
+  Source: HOLA (R4); Purchase, Pilcher & Plimmer 2012.
+```
+
+```mdl
+diagram-rule no-near-misses: Boxes are either aligned or clearly apart
+  category: alignment
+  evaluator: code
+  weight: 2
+  Two boxes almost in line look like a mistake; it is the most visible sign of an automatic layout.
+  Code: box pairs whose centres or edges differ by more than 1 and less than 12 units along an axis,
+  scored 1 / (1 + pairs / 2).
+  Source: HOLA (the gap between human and algorithmic layouts).
+```
+
+```mdl
+diagram-rule symmetry: Symmetric structure is drawn symmetrically
+  category: alignment
+  evaluator: vision
+  weight: 1
+  question: Where the structure is symmetric, such as a fan-out to similar parts, is it drawn mirror-symmetrically?
+  yes: Fan-outs and parallel paths are drawn evenly about an axis.
+  no: Parts that play the same role are drawn lopsided or scattered.
+  Symmetry aids understanding, recall and preference, though less than crossings.
+  Source: Purchase 1997; Marriott et al. 2012; HOLA (R5).
+```
+
+## Groups
+
+```mdl
+diagram-rule frames-nested: Group frames are either nested or apart, never partly overlapping
+  category: groups
+  evaluator: code
+  weight: 8
+  Enclosure is the strongest grouping cue; a frame that partly overlaps another states no hierarchy.
+  Code: 1 when every pair of frames is disjoint or one contains the other, else 0.
+  Source: Palmer 1992 (common region); Ware 2020.
+```
+
+```mdl
+diagram-rule frames-aligned: Groups line up with each other
+  category: groups
+  evaluator: both
+  weight: 3
+  question: Do the group frames line up with one another, sharing a top or left edge where they sit side by side or stacked?
+  yes: Groups share edges and read as one arrangement.
+  no: A group floats at an arbitrary height or offset beside another.
+  Aligned bands read as layers; ragged frames look accidental.
+  Code: the share of frames that share a top, bottom, left or right edge with another frame.
+  Source: HOLA (gridiness); Tufte, *Envisioning Information* (layering and separation).
+```
+
+```mdl
+diagram-rule frames-hug-members: Group frames fit their contents
+  category: groups
+  evaluator: code
+  weight: 2
+  A frame much larger than what it holds suggests missing members and wastes space.
+  Code: per frame, the area of its members' bounding box over the frame's area, averaged and scaled
+  so that 0.5 or more scores 1.
+  Source: HOLA (R3 compactness); ELK padding.
+```
+
+```mdl
+diagram-rule few-frame-crossings: Arrows cross group borders no more than they must
+  category: groups
+  evaluator: code
+  weight: 3
+  Every border crossing is noise, and an arrow that leaves and re-enters a group misstates membership.
+  An arrow should cross only the borders between its two ends' groups.
+  Code: border crossings beyond the minimum the group tree requires, scored 1 / (1 + extra / 2).
+  Source: Eades, Feng & Lin 1996 (clustered graphs); Ware 2020 (connectedness and enclosure).
+```
+
+```mdl
+diagram-rule gestalt-cues-agree: Each box's nearest neighbour is in the same group
+  category: groups
+  evaluator: code
+  weight: 3
+  When a box sits closer to a box in another group than to any in its own, proximity contradicts the
+  frame and readers misread the grouping.
+  Code: the share of boxes whose nearest other box shares their innermost frame.
+  Source: Ware 2020 ch. 6; Palmer & Rock 1994.
+```
+
+## Space
+
+```mdl
+diagram-rule compact-drawing: The drawing uses its area well
+  category: space
+  evaluator: both
+  weight: 3
+  question: Is the drawing compact, with no large empty regions between or inside groups?
+  yes: The page is evenly filled; connected boxes are near each other.
+  no: There are large empty regions, stretched groups, or connected boxes far apart.
+  Compactness correlates with preference, and spread lengthens arrows.
+  Code: box area over the drawing's area, scored against a target of 0.25 (1 at or above it).
+  Source: HOLA (R3); Ware 2002.
+```
+
+```mdl
+diagram-rule balanced-whitespace: Ink is spread evenly across the page
+  category: space
+  evaluator: code
+  weight: 2
+  A crowded half next to an empty one looks unbalanced and suggests a grouping that is not there.
+  Code: split the drawing into a 3 × 3 grid; 1 − the coefficient of variation of box area per cell.
+  Source: HOLA participant comments; Ngo, Teo & Byrne 2003 (balance).
+```
+
+```mdl
+diagram-rule uniform-spacing: Gaps between neighbouring boxes are even
+  category: space
+  evaluator: code
+  weight: 2
+  Uneven gaps falsely imply grouping by proximity.
+  Code: each box's gap to its nearest neighbour; 1 − min(1, coefficient of variation of those gaps).
+  Source: ELK and Graphviz node spacing; Davidson & Harel 1996.
+```
+
+```mdl
+diagram-rule landscape-aspect: The drawing is landscape and fits a screen
+  category: space
+  evaluator: code
+  weight: 2
+  A tall strip or a long ribbon has to be scaled down to fit a page, shrinking its text.
+  Code: aspect ratio width / height scored 1 / (1 + |ln(ratio / 1.6)|).
+  Source: ELK aspectRatio (1.6); Purchase 2002 (width of layout).
+```
+
+```mdl
+diagram-rule readable-at-page-width: Text stays legible when the drawing fits a page
+  category: labels
+  evaluator: code
+  weight: 3
+  Diagrams are read as images in documents and pull requests; a drawing that must shrink below 11
+  pixel text to fit 1200 pixels has failed however good its geometry.
+  Code: the smallest text size after scaling the drawing to 1200 units wide, over 11, capped at 1.
+  Source: C4 (diagrams should stand alone); Tufte (resolution).
+```
+
+## Labels
+
+```mdl
+diagram-rule labels-clear: Labels never overlap other labels, boxes or lines
+  category: labels
+  evaluator: both
+  weight: 6
+  question: Can every label be read on its own, without running into another label, a box or a line?
+  yes: Every label sits clear of other text and lines.
+  no: Some label overlaps another label, a box or a line, or is cut off.
+  Overlapping text is illegible; label placement treats non-overlap as a hard constraint.
+  Code: label overlaps counted by `Diagnostics` plus labels that overflow their boxes, scored 1 / (1 + count).
+  Source: Imhof 1975; Kakoulis & Tollis 1997.
+```
+
+```mdl
+diagram-rule labels-attached: Each arrow label sits nearest its own arrow
+  category: labels
+  evaluator: both
+  weight: 3
+  question: Is it clear which arrow each arrow label belongs to?
+  yes: Every label sits on or right beside its own arrow.
+  no: Some label sits between arrows, or nearer another arrow than its own.
+  A label equally near two arrows is a misreading waiting to happen.
+  Code: the share of arrow labels whose nearest connector is their own.
+  Source: Imhof 1975; ELK edge-label placement.
+```
+
+## Overall
+
+```mdl
+diagram-rule consistent-notation: The same kind of thing always looks the same
+  category: hierarchy
+  evaluator: vision
+  weight: 2
+  question: Does each kind of element (box, group, arrow style) look the same everywhere, with no unexplained differences in size, colour or line style?
+  yes: Every kind of element has one consistent look.
+  no: Similar elements differ in size, colour or line style for no evident reason.
+  Size, colour and line style are read as meaning; inconsistent use invites false distinctions.
+  Source: Bertin; C4 checklist; Ware 2020 ch. 5.
+```
+
+```mdl
+diagram-rule tidy-overall: The diagram looks deliberately drawn
+  category: hierarchy
+  evaluator: vision
+  weight: 4
+  question: Does this look like a tidy diagram a careful designer drew by hand, rather than an automatic layout?
+  yes: It looks deliberate: aligned, balanced, uncluttered, easy to scan.
+  no: It looks machine-made: ragged, cluttered, with odd gaps or detours.
+  The gap between human-drawn and algorithmic layouts is the gap this library exists to close.
+  Source: HOLA; Purchase, Pilcher & Plimmer 2012.
+```
+
+## Appendix
+
+```mdl
+ext diagram-rule
+  uri: org.dxos.mdl.diagram-rule@1.0
+  desc: A rule a diagram's drawing can be scored against.
+  inline-prose: true
+  fields:
+    category: crossings | flow | alignment | space | groups | labels | edges | hierarchy
+    evaluator: code | vision | both
+    weight: Number
+    question?: Prose
+    yes?: Prose
+    no?: Prose
+```
