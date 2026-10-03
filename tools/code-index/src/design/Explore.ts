@@ -61,11 +61,20 @@ const values = (iris: readonly string[]): string => iris.map((iri) => `<${iri}>`
 
 const isFileIri = (iri: string): boolean => iri.startsWith(Ontology.FILE_BASE);
 
+/** Share of the best seed's score a seed needs; the relaxed one applies when the strict seeds lead nowhere. */
+const SEED_FLOOR = 0.6;
+const RELAXED_SEED_FLOOR = 0.3;
+
 /**
  * The best-matching files for a prompt, by text over each file's path, its exported declarations'
  * names and docs, and the spec blocks that describe them. A file's score is its best single match.
  */
-export const seeds = (store: Store.Api, prompt: string, count = 12): Effect.Effect<Seed[], Store.StoreError> =>
+export const seeds = (
+  store: Store.Api,
+  prompt: string,
+  count = 12,
+  floorShare = SEED_FLOOR,
+): Effect.Effect<Seed[], Store.StoreError> =>
   Effect.gen(function* () {
     const query = Text.query(prompt);
     const best = new Map<string, Seed>();
@@ -117,7 +126,7 @@ export const seeds = (store: Store.Api, prompt: string, count = 12): Effect.Effe
     // Seeds well below the best match are noise that a hub (`errors.ts`) turns into hundreds of
     // candidates, so the cut is relative to the strongest match rather than a fixed count alone.
     const ranked = [...best.values()].sort((left, right) => right.score - left.score);
-    const floor = 0.6 * (ranked[0]?.score ?? 0);
+    const floor = floorShare * (ranked[0]?.score ?? 0);
     return ranked.filter((seed) => seed.score >= floor).slice(0, count);
   });
 
@@ -139,13 +148,76 @@ const relationQuery = (kind: Graph.EdgeKind, iris: readonly string[]): string =>
       }`;
   }
   // Symbol-level relations are lifted to their files: a symbol IRI is its file IRI plus a fragment.
+  // The third branch finds users who reached a declaration through a barrel's named re-export.
   return `PREFIX deus: <${D}>
     SELECT ?from ?to WHERE {
       { VALUES ?file { ${set} } ?file deus:declares ?from . ?from deus:${kind} ?to }
       UNION
       { VALUES ?file { ${set} } ?file deus:declares ?to . ?from deus:${kind} ?to }
+      UNION
+      { VALUES ?file { ${set} } ?file deus:declares ?to . ?alias deus:aliasOf ?to . ?from deus:${kind} ?alias }
     }`;
 };
+
+/**
+ * The files among `iris` that only forward: they re-export at least one file and declare nothing
+ * but re-exports. Such a file is how code is reached, not a component of it.
+ */
+export const barrelFiles = (store: Store.Api, iris: readonly string[]): Effect.Effect<Set<string>, Store.StoreError> =>
+  Effect.gen(function* () {
+    const barrels = new Set<string>();
+    for (const batch of chunks([...new Set(iris)], 40)) {
+      const rows = yield* store.select(`PREFIX deus: <${D}>
+        SELECT DISTINCT ?file WHERE {
+          VALUES ?file { ${values(batch)} }
+          ?file deus:reexports ?forwarded .
+          FILTER NOT EXISTS { ?file deus:declares ?symbol . FILTER NOT EXISTS { ?symbol deus:kind "reexport" } }
+        }`);
+      for (const row of rows) {
+        barrels.add(row.file);
+      }
+    }
+    return barrels;
+  });
+
+/**
+ * The declaration behind each symbol IRI that names a re-export: the barrel's `aliasOf` for a named
+ * re-export, else the symbol of that name in a file the barrel reaches through `export *`. Without
+ * this a dependency on `@dxos/x` lands on the package's `index.ts` rather than on what it uses.
+ */
+export const resolveReexports = (
+  store: Store.Api,
+  iris: readonly string[],
+): Effect.Effect<Map<string, string>, Store.StoreError> =>
+  Effect.gen(function* () {
+    const resolved = new Map<string, string>();
+    const symbols = [...new Set(iris)].filter((iri) => isFileIri(iri) && iri.includes('#'));
+    for (const batch of chunks(symbols, 40)) {
+      const rows = yield* store.select(`PREFIX deus: <${D}>
+        SELECT ?target ?decl WHERE { VALUES ?target { ${values(batch)} } ?target deus:aliasOf ?decl }`);
+      for (const row of rows) {
+        resolved.set(row.target, row.decl);
+      }
+    }
+    const starred = symbols.filter((iri) => !resolved.has(iri));
+    for (const batch of chunks(starred, 40)) {
+      const triples = batch
+        .map((iri) => `(<${iri}> <${Graph.fileOfSymbol(iri)}> ${JSON.stringify(iri.slice(iri.indexOf('#') + 1))})`)
+        .join(' ');
+      const rows = yield* store.select(`PREFIX deus: <${D}>
+        SELECT ?target ?decl WHERE {
+          VALUES (?target ?barrel ?name) { ${triples} }
+          ?barrel deus:reexports+ ?file . ?file deus:declares ?decl . ?decl deus:name ?name .
+          FILTER NOT EXISTS { ?decl deus:kind "reexport" }
+        }`);
+      for (const row of rows) {
+        if (!resolved.has(row.target)) {
+          resolved.set(row.target, row.decl);
+        }
+      }
+    }
+    return resolved;
+  });
 
 /** Every lifted edge of the given kinds touching any of `iris`, file → file, components only. */
 export const edgesTouching = (
@@ -154,26 +226,88 @@ export const edgesTouching = (
   kinds: readonly Graph.EdgeKind[],
 ): Effect.Effect<Graph.Edge[], Store.StoreError> =>
   Effect.gen(function* () {
-    const edges: Graph.Edge[] = [];
+    const raw: { from: string; to: string; kind: Graph.EdgeKind }[] = [];
     for (const kind of kinds) {
       for (const batch of chunks(iris, 40)) {
         const rows = yield* store.select(relationQuery(kind, batch));
-        for (const row of rows) {
-          const from = Graph.fileOfSymbol(row.from);
-          const to = Graph.fileOfSymbol(row.to);
-          if (
-            from !== to &&
-            isFileIri(from) &&
-            isFileIri(to) &&
-            isComponentPath(Graph.pathOf(from, Ontology.FILE_BASE)) &&
-            isComponentPath(Graph.pathOf(to, Ontology.FILE_BASE))
-          ) {
-            edges.push({ from, to, kind });
-          }
-        }
+        raw.push(...rows.map((row) => ({ from: row.from, to: row.to, kind })));
       }
     }
+    const declarations = yield* resolveReexports(
+      store,
+      raw.map((edge) => edge.to),
+    );
+    const lifted = raw.map((edge) => ({
+      from: Graph.fileOfSymbol(edge.from),
+      to: Graph.fileOfSymbol(declarations.get(edge.to) ?? edge.to),
+      kind: edge.kind,
+    }));
+    // An import of a barrel that `resolveReexports` could not see through names no component; the
+    // symbol relations from the same file carry the dependency to what it actually uses.
+    const barrels = yield* barrelFiles(store, lifted.flatMap((edge) => [edge.from, edge.to]).filter(isFileIri));
+    const edges = lifted.filter(
+      ({ from, to }) =>
+        from !== to &&
+        isFileIri(from) &&
+        isFileIri(to) &&
+        !barrels.has(from) &&
+        !barrels.has(to) &&
+        isComponentPath(Graph.pathOf(from, Ontology.FILE_BASE)) &&
+        isComponentPath(Graph.pathOf(to, Ontology.FILE_BASE)),
+    );
     return Graph.dedupe(edges);
+  });
+
+/** Most files one barrel seed opens into; a package entry can forward dozens. */
+const MAX_FORWARDED = 6;
+
+/**
+ * The seeds with each barrel replaced by the files it forwards, two levels deep and best text match
+ * first. A barrel's edges are never walked, so a barrel seed would otherwise lead nowhere — and a
+ * question about packages seeds mostly their entry points.
+ */
+const openBarrels = (
+  store: Store.Api,
+  seedList: readonly Seed[],
+  query: Text.Query,
+): Effect.Effect<Seed[], Store.StoreError> =>
+  Effect.gen(function* () {
+    let current = [...seedList];
+    for (let depth = 0; depth < 2; depth++) {
+      const barrels = yield* barrelFiles(
+        store,
+        current.map((seed) => seed.iri),
+      );
+      if (barrels.size === 0) {
+        break;
+      }
+      const forwarded = new Map<string, string[]>();
+      for (const batch of chunks([...barrels], 40)) {
+        const rows = yield* store.select(`PREFIX deus: <${D}>
+          SELECT ?barrel ?file WHERE { VALUES ?barrel { ${values(batch)} } ?barrel deus:reexports ?file }`);
+        for (const row of rows) {
+          forwarded.set(row.barrel, [...(forwarded.get(row.barrel) ?? []), row.file]);
+        }
+      }
+      current = current.flatMap((seed) =>
+        barrels.has(seed.iri)
+          ? (forwarded.get(seed.iri) ?? [])
+              .filter((iri) => isFileIri(iri) && isComponentPath(Graph.pathOf(iri, Ontology.FILE_BASE)))
+              .sort(
+                (left, right) =>
+                  Text.match(query, Graph.pathOf(right, Ontology.FILE_BASE)) -
+                  Text.match(query, Graph.pathOf(left, Ontology.FILE_BASE)),
+              )
+              .slice(0, MAX_FORWARDED)
+              .map((iri) => ({
+                iri,
+                score: seed.score,
+                why: `${seed.why} (forwarded by ${Graph.pathOf(seed.iri, Ontology.FILE_BASE)})`,
+              }))
+          : [seed],
+      );
+    }
+    return current;
   });
 
 /** Most files one seed package contributes as siblings; a bigger package is reached by the walk instead. */
@@ -200,8 +334,10 @@ export const expand = (
   Effect.gen(function* () {
     const query = Text.query(prompt);
     const nodes = new Map<string, { why: string; hops: number }>();
-    for (const seed of seedList) {
-      nodes.set(seed.iri, { why: `seed: ${seed.why}`, hops: 0 });
+    for (const seed of yield* openBarrels(store, seedList, query)) {
+      if (!nodes.has(seed.iri)) {
+        nodes.set(seed.iri, { why: `seed: ${seed.why}`, hops: 0 });
+      }
     }
     const seedPackages = new Map<string, number>();
     for (const seed of seedList) {
@@ -269,6 +405,14 @@ export const expand = (
         return iri;
       });
       frontier = added;
+    }
+    // Seeds and seed-package siblings arrive without an edge test, so a barrel can still be here.
+    const barrels = yield* barrelFiles(store, [...nodes.keys()]);
+    if (barrels.size < nodes.size) {
+      for (const iri of barrels) {
+        nodes.delete(iri);
+      }
+      frontier = frontier.filter((iri) => !barrels.has(iri));
     }
     // The edges among the final set, including those between nodes added on the last hop.
     const lastEdges = frontier.length > 0 ? yield* edgesTouching(store, frontier, relations) : [];
@@ -413,7 +557,14 @@ export const bfs =
   (store: Store.Api): Effect.Effect<Graph.Candidates, Store.StoreError> =>
     Effect.gen(function* () {
       const found = yield* seeds(store, prompt, seedCount);
-      return yield* fromSeeds(store, { prompt, explorer: 'bfs', seeds: found, maxNodes, hops, relations });
+      const candidates = yield* fromSeeds(store, { prompt, explorer: 'bfs', seeds: found, maxNodes, hops, relations });
+      // One spuriously strong match (a helper whose name spells the prompt) can cut every real seed;
+      // a walk that stays this small is the sign, and a lower floor lets the real seeds back in.
+      if (candidates.nodes.length >= maxNodes / 4) {
+        return candidates;
+      }
+      const relaxed = yield* seeds(store, prompt, seedCount, RELAXED_SEED_FLOOR);
+      return yield* fromSeeds(store, { prompt, explorer: 'bfs', seeds: relaxed, maxNodes, hops, relations });
     });
 
 /** Candidates from a seed list and relation set — the walk both explorers share. */

@@ -118,7 +118,11 @@ const ActionCheckboxItem = ({ menu, action, group }: ActionItemProps) => {
       onClick={handleClick}
       closeOnSelect={false}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-    />
+    >
+      <ItemIcon menu={menu} action={action} />
+      <Menu.ItemText />
+      <Menu.ItemIndicator />
+    </Menu.CheckboxItem>
   );
 };
 
@@ -130,7 +134,12 @@ const ActionRadioItem = ({ menu, action, group }: ActionItemProps) => {
       item={item}
       onClick={handleClick}
       {...(action.properties?.testId && { 'data-testid': action.properties.testId })}
-    />
+    >
+      {/* Composed rather than the default row, so the icon takes the action's classes (a priority's hue). */}
+      <ItemIcon menu={menu} action={action} />
+      <Menu.ItemText />
+      <Menu.ItemIndicator />
+    </Menu.RadioItem>
   );
 };
 
