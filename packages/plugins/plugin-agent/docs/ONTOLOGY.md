@@ -177,7 +177,11 @@ home before they can be relied on. Promote them to objects once the shape settle
 
 **As built (v1).**
 
-- `Trigger` (`src/types/Trigger.ts`): `{ id, agent, goal?, when: FactPattern, then: notify, createdAt }`.
+- `Trigger` (`src/types/Trigger.ts`): `{ id, agent, goal?, when: FactPattern, then: notify, ongoing?, createdAt }`.
+  A one-time trigger ("let me know when X") is removed when it fires and achieves its goal; an
+  **ongoing** one ("keep me posted on Dima") keeps watching, leaves its goal open, and passes each
+  matching fact on — the notify message's `{fact}` placeholder (or, without one, an appended
+  `: <fact>`) carries the quote that fired it.
   `FactPattern` matches on `speaker` (the fact's attributed speaker, by name or first name), `force`
   (a fact without an illocution is assertive), `polarity`, `subject` and `about` (words, matched as
   word prefixes anywhere in the fact or its quote), `text` (in the quote) and an `after`/`before`

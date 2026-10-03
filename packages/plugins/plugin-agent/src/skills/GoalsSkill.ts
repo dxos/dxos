@@ -71,6 +71,12 @@ export const make = (): Skill.Skill =>
            The watch records the outcome as a goal the requester owns.
         3. Reply in one short sentence that you will let them know.
 
+        "Keep me posted", "let me know what Dima is up to" and "tell me if anything changes on X" are ongoing, not
+        one outcome: call ${tool(TriggerOperation.WatchFacts)} with ongoing true, an outcome such as "Josiah is kept
+        posted on Dima's work", a broad pattern (speaker or subject = the person; about only when they named a topic,
+        and then the topic, not the one result you expect), and a message with the {fact} placeholder, e.g.
+        "Update on Dima: {fact}". Never narrow "keep me posted" to a single event such as a fix landing.
+
         Conditional instructions are watches too: "if he doesn't agree, tell him it's the priority" is a watch for the
         recipient declining (commissive, polarity "-") with the message to send then and the recipient to send it to.
         Never send a conditional message before its condition holds.

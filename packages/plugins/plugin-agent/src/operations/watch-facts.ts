@@ -25,6 +25,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
       when,
       message,
       recipient,
+      ongoing,
     }) {
       const agent = yield* Database.load(agentRef);
       const requester = yield* Database.load(requesterRef);
@@ -60,6 +61,7 @@ const handler: Operation.WithHandler<typeof TriggerOperation.WatchFacts> = Trigg
         goal: Ref.make(goal),
         when,
         then: { _tag: 'notify', recipient: recipient ?? requesterRef, message },
+        ...(ongoing ? { ongoing } : {}),
         createdAt: DateTime.formatIso(yield* DateTime.now),
       };
       triggerRegistry.add(trigger);

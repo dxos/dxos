@@ -74,6 +74,8 @@ export const Trigger = Schema.Struct({
   goal: Schema.optional(Ref.Ref(Goal.Goal)),
   when: FactPattern,
   then: Action,
+  /** Keeps watching after it fires ("keep me posted"), passing each matching fact on; its goal stays open. */
+  ongoing: Schema.optional(Schema.Boolean),
   createdAt: Format.DateTime,
 });
 
@@ -84,3 +86,17 @@ export const describePattern = ({ speaker, subject, about, force, polarity, text
   [speaker, force, polarity, subject && `subject "${subject}"`, about && `about "${about}"`, text && `says "${text}"`]
     .filter((part) => part !== undefined && part.length > 0)
     .join(' · ');
+
+/** Placeholder in a notify message for the fact that fired it. */
+export const FACT_PLACEHOLDER = '{fact}';
+
+/**
+ * The text a fired trigger sends: the fact replaces the placeholder, and an ongoing watch without one
+ * appends it, since each update is only useful with what changed.
+ */
+export const renderMessage = (trigger: Trigger, fact: string): string =>
+  trigger.then.message.includes(FACT_PLACEHOLDER)
+    ? trigger.then.message.replaceAll(FACT_PLACEHOLDER, fact)
+    : trigger.ongoing
+      ? `${trigger.then.message.replace(/[.:]\s*$/, '')}: ${fact}`
+      : trigger.then.message;

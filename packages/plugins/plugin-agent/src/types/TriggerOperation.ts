@@ -41,7 +41,16 @@ export const WatchFacts = Operation.make({
       Ref.Ref(Goal.Goal).annotate({ description: 'An existing goal this serves, instead of a new outcome.' }),
     ),
     when: Trigger.FactPattern.annotate({ description: 'What a fact must look like for the outcome to have happened.' }),
-    message: Schema.String.annotate({ description: 'What to tell them when it happens, written to them.' }),
+    message: Schema.String.annotate({
+      description:
+        'What to tell them when it happens, written to them; "{fact}" is replaced by the fact that fired it (e.g. "Update on Dima: {fact}").',
+    }),
+    ongoing: Schema.optional(
+      Schema.Boolean.annotate({
+        description:
+          'True for "keep me posted": keep watching after each update and pass every matching fact on. False/absent for a one-time outcome.',
+      }),
+    ),
     recipient: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'Who to tell, when not the requester.' })),
   }),
   output: Schema.Struct({

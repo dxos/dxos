@@ -10,7 +10,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref } from '@dxos/echo';
 
 import { GoalsSkill } from '#skills';
-import { type FactEntry, type Goal, RelayOperation } from '#types';
+import { FactEntry, type Goal, RelayOperation, Trigger } from '#types';
 
 import { triggerRegistry } from '../triggers.ts';
 import { firstMatch } from './match-facts.ts';
@@ -20,8 +20,8 @@ import { readSource } from './read-source.ts';
 const CLOSED: readonly Goal.Status[] = ['achieved', 'dropped'];
 
 /**
- * Fires the agent's triggers that `facts` match: runs each one's action, marks its goal achieved and
- * removes it. Triggers whose goal closed meanwhile are removed unfired.
+ * Fires the agent's triggers that `facts` match: runs each one's action; a one-time trigger also marks its goal
+ * achieved and is removed, an ongoing one keeps watching. Triggers whose goal closed meanwhile are removed unfired.
  */
 export const fireTriggers = Effect.fnUntraced(function* (agent: Agent.Agent, facts: readonly FactEntry.Fact[]) {
   const fired: string[] = [];
@@ -35,19 +35,20 @@ export const fireTriggers = Effect.fnUntraced(function* (agent: Agent.Agent, fac
       continue;
     }
 
-    // Removed before acting, so a turn ending in another chat meanwhile cannot fire it twice.
-    if (!firstMatch(trigger, facts) || !triggerRegistry.remove(trigger.id)) {
+    const fact = firstMatch(trigger, facts);
+    // A one-time trigger is removed before acting, so a turn ending in another chat meanwhile cannot fire it twice.
+    if (!fact || (!trigger.ongoing && !triggerRegistry.remove(trigger.id))) {
       continue;
     }
     const delivery = yield* Operation.invoke(RelayOperation.SendMessage, {
       agent: Ref.make(agent),
       recipient: trigger.then.recipient,
-      text: trigger.then.message,
+      text: Trigger.renderMessage(trigger, fact.assertion.quote ?? FactEntry.factText(fact)),
     }).pipe(Effect.orElseSucceed(() => ({ delivered: false, reason: 'The message could not be sent.' })));
     if (!delivery.delivered) {
       undelivered.push(delivery.reason ?? 'The message could not be delivered.');
     }
-    if (goal) {
+    if (goal && !trigger.ongoing) {
       Obj.update(goal, (goal) => {
         goal.status = 'achieved';
       });

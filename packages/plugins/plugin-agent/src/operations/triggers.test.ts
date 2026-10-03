@@ -29,12 +29,13 @@ import {
   Mode,
   Relay,
   RelayOperation,
-  type Trigger,
+  Trigger,
   TriggerOperation,
 } from '#types';
 
 import { TriggerRegistry, triggerRegistry } from '../triggers.ts';
 import { matchesPattern } from './match-facts.ts';
+import { fireTriggers } from './run-triggers.ts';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -94,6 +95,29 @@ describe('matchesPattern', () => {
     expect(matchesPattern(PR_IS_UP, fact(), { after: '2026-10-03T13:00:00.000Z' })).toBe(false);
     expect(matchesPattern({ ...PR_IS_UP, before: '2026-10-03T11:00:00.000Z' }, fact())).toBe(false);
     expect(matchesPattern({ ...PR_IS_UP, after: '2026-10-03T11:00:00.000Z' }, fact())).toBe(true);
+  });
+});
+
+describe('renderMessage', () => {
+  const trigger = (message: string, ongoing?: boolean): Trigger.Trigger => ({
+    id: 'one',
+    agent: 'kai',
+    when: { speaker: 'Dima' },
+    then: { _tag: 'notify', recipient: Ref.make<Obj.Unknown>(Person.make({ fullName: 'Josiah' })), message },
+    ...(ongoing ? { ongoing } : {}),
+    createdAt: SAID_AT,
+  });
+
+  it('fills the fact placeholder, appends the fact to an ongoing update, and leaves a one-time message alone', ({
+    expect,
+  }) => {
+    expect(Trigger.renderMessage(trigger('Update on Dima: {fact}'), 'on the agent plugin')).toBe(
+      'Update on Dima: on the agent plugin',
+    );
+    expect(Trigger.renderMessage(trigger('Update on Dima.', true), 'on the agent plugin')).toBe(
+      'Update on Dima: on the agent plugin',
+    );
+    expect(Trigger.renderMessage(trigger('It is up.'), 'on the agent plugin')).toBe('It is up.');
   });
 });
 
@@ -306,6 +330,62 @@ describe('end-of-turn triggers', () => {
           PROMPTS.distractor,
           PROMPTS.up,
         ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+
+  it.effect(
+    'keeps an ongoing watch after it fires and passes each matching fact on, leaving its goal open',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const josiah = yield* Database.add(Person.make({ fullName: 'Josiah', preferredName: 'Josiah' }));
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const { chat: josiahChatRef } = yield* Operation.invoke(AgentOperation.EnsureParticipantChat, {
+          agent: agentRef,
+          person: Ref.make<Obj.Unknown>(josiah),
+        });
+        const josiahChat = yield* Database.load(josiahChatRef);
+        const goal = yield* Database.add(
+          Goal.make({
+            title: "Josiah is kept posted on Dima's work",
+            horizon: 'now',
+            status: 'active',
+            owners: [Ref.make<Obj.Unknown>(josiah)],
+          }),
+        );
+        yield* Database.flush();
+        triggerRegistry.add({
+          id: 'posted',
+          agent: agent.id,
+          goal: Ref.make(goal),
+          when: { speaker: 'Dima', after: '2026-10-03T00:00:00.000Z' },
+          then: { _tag: 'notify', recipient: Ref.make<Obj.Unknown>(josiah), message: 'Update on Dima: {fact}' },
+          ongoing: true,
+          createdAt: '2026-10-03T00:00:00.000Z',
+        });
+
+        // 1. Each of Dima's facts is passed on; the watch stays and the goal stays open.
+        const plugin = "I'm working on the agent plugin.";
+        const landed = 'The indexer fix landed.';
+        yield* fireTriggers(agent, [
+          fact({ subject: 'Dima', predicate: 'works on', object: 'agent plugin', quote: plugin }),
+        ]);
+        yield* fireTriggers(agent, [
+          fact({ subject: 'indexer fix', predicate: 'is', object: 'landed', quote: landed }),
+        ]);
+        const sent = yield* texts(josiahChat);
+        expect(sent).toContain(`Update on Dima: ${plugin}`);
+        expect(sent).toContain(`Update on Dima: ${landed}`);
+        expect(triggerRegistry.list(agent.id)).toHaveLength(1);
+        expect(goal.status).toBe('active');
+
+        // 2. Someone else's fact does not match the speaker.
+        yield* fireTriggers(agent, [fact({ speaker: 'rich', quote: 'I am reviewing it.' })]);
+        expect(yield* texts(josiahChat)).not.toContain('Update on Dima: I am reviewing it.');
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
