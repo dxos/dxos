@@ -543,7 +543,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
           data-testid='assistant.mcp-server.api-key'
         />
       </Field.Root>
-      <div className='flex justify-end'>
+      <Flex justify='end'>
         <SystemButton.Save
           type='submit'
           variant='ghost'
@@ -551,7 +551,7 @@ const McpForm = ({ onSubmit, onCancel }: McpFormProps) => {
           data-testid='assistant.mcp-server.save'
         />
         <SystemButton.Cancel type='button' variant='ghost' onClick={onCancel} />
-      </div>
+      </Flex>
     </form>
   );
 };
