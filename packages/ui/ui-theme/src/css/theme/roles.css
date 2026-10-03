@@ -25,9 +25,10 @@
    */
   /*
    * Light is not a ramp stop: neutral-250 sat 0.14 below the near-white canvas, so a default button
-   * read as a dark slab next to an input fill 0.025 below it. Dark keeps neutral-700.
+   * read as a dark slab next to an input fill 0.025 below it. Dark takes neutral-750: neutral-700 read as a light slab
+   * on the chrome and attention surfaces.
    */
-  --color-input-bg: light-dark(oklch(0.87 0.001 190), var(--color-neutral-700));
+  --color-input-bg: light-dark(oklch(0.87 0.001 190), var(--color-neutral-750));
 
   /*
    * A filled control's hover has to move ITS OWN fill. `--color-hover-surface` is derived from the
