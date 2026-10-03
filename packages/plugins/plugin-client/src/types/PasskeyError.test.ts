@@ -26,7 +26,6 @@ describe('passkey errors', () => {
     expect(PasskeyError.Dismissed.is(PasskeyError.fromAssertion('Login failed'))).to.be.true;
   });
 
-  // The iOS bridge reports which `ASAuthorizationError` it was, so only a dismissed sheet is a dismissal.
   test('an iOS bridge cancel is a dismissal for both ceremonies', () => {
     const error = {
       name: 'NativePasskeyError',
@@ -39,7 +38,6 @@ describe('passkey errors', () => {
     expect(PasskeyError.Dismissed.is(PasskeyError.fromRegistration(error))).to.be.true;
   });
 
-  // A missing domain association must reach the user even when its message mentions a cancel.
   test('an iOS bridge failure is not silenced as a dismissal', () => {
     const error = {
       name: 'NativePasskeyError',

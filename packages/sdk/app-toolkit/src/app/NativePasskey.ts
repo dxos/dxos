@@ -60,18 +60,13 @@ export const APP_SCHEME = 'composer://';
 /** How this host obtains a passkey: the shell's native bridge, the WebAuthn API, or not at all. */
 export type PasskeySupport = 'native' | 'web' | 'none';
 
-/**
- * Set by the macOS and iOS shells in every webview before page script runs (`src-tauri/src/passkey.rs` in
- * composer-app): `true` only when the shell can complete a native request.
- */
 const NATIVE_PASSKEYS_GLOBAL = '__DX_NATIVE_PASSKEYS__';
 
-/** Set alongside {@link NATIVE_PASSKEYS_GLOBAL}: `'ios'` where the bridge is the app's own commands. */
 const NATIVE_PASSKEY_BRIDGE_GLOBAL = '__DX_NATIVE_PASSKEY_BRIDGE__';
 
 /**
  * Apple shells never fall back to WebAuthn, whose `localhost` origin cannot reach a `composer.space`
- * passkey, so a shell that does not vouch for native passkeys has none. iPadOS reports itself as macOS.
+ * passkey, so a shell that does not vouch for native passkeys has none.
  */
 export const getPasskeySupport = (): PasskeySupport => {
   const platform = getHostPlatform();
@@ -82,7 +77,6 @@ export const getPasskeySupport = (): PasskeySupport => {
   return globalThis.navigator?.credentials && 'create' in globalThis.navigator.credentials ? 'web' : 'none';
 };
 
-/** The invoke address of a bridge command: app commands on iOS, `tauri-plugin-macos-passkey` on macOS. */
 const nativeCommand = (command: 'login_passkey' | 'register_passkey'): string =>
   Reflect.get(globalThis, NATIVE_PASSKEY_BRIDGE_GLOBAL) === 'ios' ? command : `plugin:macos-passkey|${command}`;
 

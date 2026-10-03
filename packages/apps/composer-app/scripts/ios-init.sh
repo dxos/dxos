@@ -38,7 +38,6 @@ cp "$SRC_TAURI/ios/KeyboardHandler.m" "$IOS_SOURCES/"
 # Native microphone capture bridged into the webview (simulator development aid).
 cp "$SRC_TAURI/ios/MicrophoneBridge.m" "$IOS_SOURCES/"
 
-# Native passkey ceremonies (src/passkey/ios.rs).
 cp "$SRC_TAURI/ios/PasskeyBridge.m" "$IOS_SOURCES/"
 
 #
@@ -47,22 +46,5 @@ cp "$SRC_TAURI/ios/PasskeyBridge.m" "$IOS_SOURCES/"
 
 echo "Regenerating Xcode project..."
 (cd "$SRC_TAURI/gen/apple" && xcodegen)
-
-#
-# Entitlements
-#
-
-# Native passkeys need the composer.space association. The tracked project.yml declares it; a freshly
-# generated one (after `ios-build.sh` cleans gen/apple) does not, so it is ensured after xcodegen.
-ENTITLEMENTS="$SRC_TAURI/gen/apple/app_iOS/app_iOS.entitlements"
-ASSOCIATED_DOMAINS="com.apple.developer.associated-domains"
-WEBCREDENTIALS="webcredentials:composer.space"
-
-if ! /usr/libexec/PlistBuddy -c "Print :$ASSOCIATED_DOMAINS" "$ENTITLEMENTS" > /dev/null 2>&1; then
-  /usr/libexec/PlistBuddy -c "Add :$ASSOCIATED_DOMAINS array" "$ENTITLEMENTS"
-fi
-if ! /usr/libexec/PlistBuddy -c "Print :$ASSOCIATED_DOMAINS" "$ENTITLEMENTS" | grep -qx "    $WEBCREDENTIALS"; then
-  /usr/libexec/PlistBuddy -c "Add :$ASSOCIATED_DOMAINS: string $WEBCREDENTIALS" "$ENTITLEMENTS"
-fi
 
 echo "Done."

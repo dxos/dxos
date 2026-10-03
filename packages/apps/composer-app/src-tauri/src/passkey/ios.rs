@@ -1,28 +1,17 @@
-//! Native passkey ceremonies on iOS, through `ios/PasskeyBridge.m`.
-//!
 //! The commands take the same arguments and return the same shapes as `tauri-plugin-macos-passkey`, so
-//! `NativePasskey` in `@dxos/app-toolkit` decodes both alike. Rejections are structured instead of the
-//! plugin's bare strings, so only a dismissed sheet reads as a dismissal.
-
-// The parsing below is built on every target so its tests run on the host; only iOS calls it.
-#![cfg_attr(not(target_os = "ios"), allow(dead_code))]
+//! `NativePasskey` in `@dxos/app-toolkit` decodes both alike.
 
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
-/// `ASAuthorizationErrorDomain`.
 const AUTHORIZATION_ERROR_DOMAIN: &str = "com.apple.AuthenticationServices.AuthorizationError";
 
-/// `ASAuthorizationErrorCanceled`: the user dismissed the sheet.
 const AUTHORIZATION_CANCELED: i64 = 1001;
 
-/// Errors raised by `PasskeyBridge.m` itself.
 const BRIDGE_ERROR_DOMAIN: &str = "org.dxos.composer.passkey";
 
-/// `DXOSPasskeyErrorSuperseded`: a newer request replaced this one before it settled.
 const BRIDGE_SUPERSEDED: i64 = 1;
 
-/// `name` of every rejection; `NativePasskey.isNativePasskeyError` in `@dxos/app-toolkit` matches on it.
 const ERROR_NAME: &str = "NativePasskeyError";
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -45,7 +34,6 @@ pub struct LoginResult {
     pub prf_output: Vec<u8>,
 }
 
-/// An `NSError` as the bridge reports it.
 #[derive(Debug, Deserialize)]
 struct NativeError {
     domain: String,
@@ -53,12 +41,10 @@ struct NativeError {
     message: String,
 }
 
-/// What the page's `invoke` rejects with.
 #[derive(Debug, Serialize, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct PasskeyError {
     name: &'static str,
-    /// Only a dismissed sheet or a superseded request; every other failure must reach the user.
     cancelled: bool,
     domain: String,
     code: Option<i64>,
@@ -94,7 +80,6 @@ impl From<NativeError> for PasskeyError {
     }
 }
 
-/// Reads the bridge's outcome: the result as JSON when `ok`, otherwise the error as JSON.
 fn outcome<T: DeserializeOwned>(ok: bool, payload: &str) -> Result<T, PasskeyError> {
     if ok {
         serde_json::from_str(payload)
@@ -108,7 +93,6 @@ fn outcome<T: DeserializeOwned>(ok: bool, payload: &str) -> Result<T, PasskeyErr
     }
 }
 
-/// The bridge requests no PRF output; refusing a salt beats silently returning none.
 fn reject_prf(salt: &[u8]) -> Result<(), PasskeyError> {
     if salt.is_empty() {
         Ok(())
@@ -153,13 +137,11 @@ pub mod bridge {
 
     static ENTRY_POINTS: OnceLock<EntryPoints> = OnceLock::new();
 
-    /// Called once by `PasskeyBridge.m` as the app image loads, before `run`.
     #[no_mangle]
     pub extern "C" fn dxos_passkey_bridge_install(register: Register, login: Login) {
         let _ = ENTRY_POINTS.set(EntryPoints { register, login });
     }
 
-    /// Whether the bridge is built into this app.
     pub fn available() -> bool {
         ENTRY_POINTS.get().is_some()
     }
@@ -183,7 +165,6 @@ pub mod bridge {
         let _ = sender.send((ok, payload));
     }
 
-    /// Starts a request and waits for the bridge to settle it.
     async fn request(start: impl FnOnce(*mut c_void, Callback)) -> Result<Outcome, PasskeyError> {
         let (sender, receiver) = oneshot::channel::<Outcome>();
         start(Box::into_raw(Box::new(sender)).cast(), on_outcome);
@@ -285,7 +266,6 @@ mod tests {
         assert!(error.cancelled);
     }
 
-    /// A missing domain association (1004) and every other authorization failure must not read as a dismissal.
     #[test]
     fn other_authorization_errors_are_not_cancelled() {
         for code in [1000, 1002, 1003, 1004, 1005, 1006] {
@@ -315,7 +295,6 @@ mod tests {
         assert!(!reject_prf(&[1]).unwrap_err().cancelled);
     }
 
-    /// The shape `NativePasskey.isNativePasskeyError` in `@dxos/app-toolkit` recognises.
     #[test]
     fn serializes_for_the_page() {
         let error = outcome::<LoginResult>(false, &native_error(AUTHORIZATION_ERROR_DOMAIN, 1001))

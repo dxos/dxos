@@ -68,7 +68,7 @@ const NATIVE_BRIDGE_REJECTIONS = ['Registration failed', 'Login failed'];
 /**
  * Whether the authenticator rejected because the prompt was dismissed. WebAuthn reports a dismissed
  * prompt and "no credential for this site" as the same `NotAllowedError`; the macOS bridge's generic
- * rejections are just as ambiguous, so both read as dismissals. The iOS bridge says which it was.
+ * rejections are just as ambiguous, so both read as dismissals.
  */
 const isDismissal = (error: unknown): boolean => {
   if (NativePasskey.isNativePasskeyError(error)) {

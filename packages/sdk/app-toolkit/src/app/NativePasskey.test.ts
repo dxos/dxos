@@ -157,7 +157,6 @@ describe('getPasskeySupport', () => {
     // A webview the shell did not vouch for gets no passkeys rather than a bridge that may be absent.
     { shell: true, platform: 'MacIntel', native: undefined, webAuthn: true, expected: 'none' },
     { shell: true, platform: 'iPhone', native: true, webAuthn: true, expected: 'native' },
-    // The iOS shell's `tauri://localhost` origin cannot reach a `composer.space` passkey through WebAuthn.
     { shell: true, platform: 'iPhone', native: false, webAuthn: true, expected: 'none' },
     { shell: true, platform: 'iPhone', native: undefined, webAuthn: true, expected: 'none' },
     { shell: true, platform: 'iPad', native: true, webAuthn: true, expected: 'native' },

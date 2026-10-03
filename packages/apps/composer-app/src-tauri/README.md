@@ -188,9 +188,8 @@ as a `MACOS_PROVISION_PROFILE_<CHANNEL>` secret, select it in `deploy-tauri.yaml
 
 The iOS app creates and redeems `composer.space` passkeys through AuthenticationServices
 (`ios/PasskeyBridge.m`, `src/passkey/ios.rs`), never WebAuthn: its page origin is `tauri://localhost`.
-That needs the `webcredentials:composer.space` associated domain. `gen/apple/project.yml` declares it,
-`xcodegen` writes it into `gen/apple/app_iOS/app_iOS.entitlements`, and `scripts/ios-init.sh` adds it
-again after a clean regenerates the project from Tauri's template. The domain side is done: the
+That needs the `webcredentials:composer.space` associated domain. `gen/apple/project.yml` declares it, and
+`xcodegen` writes it into `gen/apple/app_iOS/app_iOS.entitlements`. The domain side is done: the
 `composer.space` AASA already lists `9428WC5MR8.org.dxos.composer` under `webcredentials`. iOS has one
 App ID for every channel, so there is nothing to register per channel.
 

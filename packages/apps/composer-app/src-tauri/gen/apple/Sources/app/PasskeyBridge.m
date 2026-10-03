@@ -2,13 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// Native passkey ceremonies for the iOS app (`src/passkey/ios.rs`).
-//
 // The webview's origin is `tauri://localhost`, so WebAuthn there can never reach a `composer.space`
 // passkey; AuthenticationServices can, once the app carries `webcredentials:composer.space`.
-//
-// Every request settles exactly once, on the main thread: a newer request supersedes the one in flight
-// rather than queueing behind it, so a system sheet that never answers cannot block later requests.
 
 #import <AuthenticationServices/AuthenticationServices.h>
 #import <Foundation/Foundation.h>
@@ -18,7 +13,6 @@
 /// Receives a request's outcome: `ok` with the result as JSON, or not `ok` with `{domain, code, message}`.
 typedef void (*DXOSPasskeyCallback)(void *context, bool ok, const char *payload);
 
-/// Errors raised by the bridge itself rather than by AuthenticationServices.
 static NSString *const DXOSPasskeyErrorDomain = @"org.dxos.composer.passkey";
 typedef NS_ENUM(NSInteger, DXOSPasskeyErrorCode) {
   DXOSPasskeyErrorSuperseded = 1,
@@ -35,7 +29,6 @@ static NSString *DXOSBase64URL(NSData *data) {
   return [encoded stringByReplacingOccurrencesOfString:@"=" withString:@""];
 }
 
-/// The window the system sheet attaches to: the key window of the foreground scene, else any window.
 static UIWindow *DXOSPresentationWindow(void) {
   UIWindow *fallback = nil;
   for (UIScene *scene in UIApplication.sharedApplication.connectedScenes) {
@@ -54,11 +47,9 @@ static UIWindow *DXOSPresentationWindow(void) {
 
 @class DXOSPasskeyRequest;
 
-/// The request whose sheet may be on screen; touched only on the main thread. The controller holds its
-/// delegate weakly, so this is also what keeps the request alive.
+/// The controller holds its delegate weakly, so this is what keeps the request alive.
 static DXOSPasskeyRequest *gInFlight = nil;
 
-/// Superseded requests kept alive until their cancelled controller reports back.
 static NSMutableSet<DXOSPasskeyRequest *> *gRetired = nil;
 
 @interface DXOSPasskeyRequest
@@ -129,8 +120,6 @@ static NSMutableSet<DXOSPasskeyRequest *> *gRetired = nil;
 }
 
 - (void)failWithError:(NSError *)error {
-  // The failure reason names what a refused association names (the App ID and the domain); some
-  // descriptions already include it.
   NSString *message = error.localizedDescription ?: @"";
   NSString *reason = error.userInfo[NSLocalizedFailureReasonErrorKey];
   if ([reason isKindOfClass:[NSString class]] && reason.length > 0 && ![message containsString:reason]) {
@@ -149,7 +138,6 @@ static NSMutableSet<DXOSPasskeyRequest *> *gRetired = nil;
   id credential = authorization.credential;
   if ([credential isKindOfClass:[ASAuthorizationPlatformPublicKeyCredentialRegistration class]]) {
     ASAuthorizationPlatformPublicKeyCredentialRegistration *registration = credential;
-    // The page recovers the public key from the attestation object, so a credential without one is unusable.
     if (registration.rawAttestationObject.length == 0) {
       [self failWithError:[NSError errorWithDomain:DXOSPasskeyErrorDomain
                                               code:DXOSPasskeyErrorNoAttestation
@@ -191,8 +179,6 @@ static NSMutableSet<DXOSPasskeyRequest *> *gRetired = nil;
 }
 
 @end
-
-#pragma mark - Entry points
 
 /// Inputs are copied before returning, so the caller may free them as soon as the call returns.
 static void DXOSPasskeyRegister(const char *rp_id,
@@ -237,10 +223,8 @@ typedef void (*DXOSPasskeyRegisterFn)(const char *, const uint8_t *, size_t, con
                                       void *, DXOSPasskeyCallback);
 typedef void (*DXOSPasskeyLoginFn)(const char *, const uint8_t *, size_t, void *, DXOSPasskeyCallback);
 
-/// Defined by the app's Rust library (`src/passkey/ios.rs`), which Xcode links into this target.
 extern void dxos_passkey_bridge_install(DXOSPasskeyRegisterFn register_fn, DXOSPasskeyLoginFn login_fn);
 
-/// Runs as the app image loads, before Rust's `run` reads whether the bridge is present.
 __attribute__((constructor)) static void DXOSPasskeyBridgeInstall(void) {
   dxos_passkey_bridge_install(DXOSPasskeyRegister, DXOSPasskeyLogin);
 }
