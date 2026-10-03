@@ -1,0 +1,63 @@
+# Packages: what each publishes, what it uses, and whether its manifest and layer agree.
+#
+# A package's dependencies are facts of its `package.json`; its uses are facts of its source files.
+# Neither parse sees the other, so the comparison is a rule. `deus:unusedDependency` negates
+# `deus:usesPackage`, which this file concludes, so it lives in `80-gaps.n3`.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+
+# What a package publishes: its entries, and what they re-export, transitively. Seeded by the entries,
+# so the recursion walks only public barrels — a few thousand files, not the import graph.
+{ ?package deus:entry ?file } => { ?file deus:publishedBy ?package }.
+{ ?file deus:publishedBy ?package. ?file deus:reexports ?next } => { ?next deus:publishedBy ?package }.
+{ ?file deus:publishedBy ?package. ?file deus:declares ?namespace. ?namespace deus:namespaceOf ?next }
+  => { ?next deus:publishedBy ?package }.
+
+# Package-public: exported by a published file. `export { x } from './y'` publishes only `x`, but
+# the reexport edge carries no names, so all of `y`'s exports count — an over-approximation.
+{ ?file deus:publishedBy ?package. ?file deus:declares ?symbol. ?symbol deus:exported true }
+  => { ?symbol deus:packagePublic true }.
+
+# Uses: any edge from a file of one package to a file of another.
+{ ?file deus:inPackage ?package. ?file deus:imports ?other. ?other deus:inPackage ?used. ?package log:notEqualTo ?used }
+  => { ?package deus:usesPackage ?used }.
+{ ?file deus:inPackage ?package. ?file deus:importsType ?other. ?other deus:inPackage ?used. ?package log:notEqualTo ?used }
+  => { ?package deus:usesPackage ?used }.
+{ ?file deus:inPackage ?package. ?file deus:reexports ?other. ?other deus:inPackage ?used. ?package log:notEqualTo ?used }
+  => { ?package deus:usesPackage ?used }.
+
+# Uses a consumer of the public surface is coupled to: the deps that must be public or peer.
+{
+  ?symbol deus:packagePublic true.
+  ?file deus:declares ?symbol.
+  ?file deus:inPackage ?package.
+  ?symbol deus:apiDependsOn ?target.
+  ?other deus:declares ?target.
+  ?other deus:inPackage ?used.
+  ?package log:notEqualTo ?used.
+} => { ?package deus:usesPackageInApi ?used }.
+
+# Used but listed in none of the manifest's dependency maps.
+{
+  ?package deus:usesPackage ?used.
+  (?used { ?package deus:declaresDep ?used } ?deps) log:collectAllIn ?scope1. ?deps list:length 0.
+  (?used { ?package deus:declaresDevDep ?used } ?devDeps) log:collectAllIn ?scope2. ?devDeps list:length 0.
+  (?used { ?package deus:declaresPeerDep ?used } ?peerDeps) log:collectAllIn ?scope3. ?peerDeps list:length 0.
+} => { ?package deus:undeclaredDependency ?used }.
+
+# moon's layer relationships: a library depends only on libraries (and scaffolding/configuration),
+# and nothing depends on an application.
+{ ?package deus:usesPackage ?used. ?package deus:layer "library". ?used deus:layer "application" }
+  => { ?package deus:violatesLayering ?used }.
+{ ?package deus:usesPackage ?used. ?package deus:layer "library". ?used deus:layer "automation" }
+  => { ?package deus:violatesLayering ?used }.
+{ ?package deus:usesPackage ?used. ?package deus:layer "library". ?used deus:layer "tool" }
+  => { ?package deus:violatesLayering ?used }.
+{ ?package deus:usesPackage ?used. ?package deus:layer "tool". ?used deus:layer "application" }
+  => { ?package deus:violatesLayering ?used }.
+{ ?package deus:usesPackage ?used. ?package deus:layer "automation". ?used deus:layer "application" }
+  => { ?package deus:violatesLayering ?used }.
+{ ?package deus:usesPackage ?used. ?package deus:layer "application". ?used deus:layer "application" }
+  => { ?package deus:violatesLayering ?used }.

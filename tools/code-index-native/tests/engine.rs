@@ -424,3 +424,78 @@ fn an_overflowing_journal_falls_back_to_recomputation() {
             .all(|outcome| outcome.incremental)
     );
 }
+
+#[test]
+fn string_builtins_read_patterns_from_the_data() {
+    let store = NativeStore::in_memory(1000).unwrap();
+    let glob = "urn:glob";
+    store
+        .insert_quads(&nquads(
+            "urn:graph:a",
+            &[
+                (
+                    file("packages/a/src/b.ts"),
+                    "path",
+                    "\"packages/a/src/b.ts\"".into(),
+                ),
+                (
+                    file("packages/a/README.md"),
+                    "path",
+                    "\"packages/a/README.md\"".into(),
+                ),
+                (
+                    glob.into(),
+                    "pathPattern",
+                    "\"^packages/(?:.*/)?src/(?:.*/)?[^/]*\\\\.ts$\"".into(),
+                ),
+                (glob.into(), "glob", "\"[unclosed\"".into()),
+                (
+                    symbol("src/op.ts", "Op"),
+                    "literal",
+                    "\"meta.key=org.dxos.operation.x\"".into(),
+                ),
+                (
+                    symbol("src/op.ts", "Op"),
+                    "literal",
+                    "\"meta.name=X\"".into(),
+                ),
+            ],
+        ))
+        .unwrap();
+    let strata = vec![Stratum {
+        graph: format!("{DERIVED}builtins"),
+        rules: r#"
+            @prefix deus: <https://dxos.org/vocab/deus#>.
+            @prefix log: <http://www.w3.org/2000/10/swap/log#>.
+            @prefix string: <http://www.w3.org/2000/10/swap/string#>.
+            { ?glob deus:pathPattern ?pattern. ?file deus:path ?path. ?path string:matches ?pattern }
+              => { ?file deus:matchesGlob ?glob }.
+            { ?glob deus:glob ?bad. ?file deus:path ?path. ?path string:matches ?bad }
+              => { ?file deus:matchesBroken ?glob }.
+            { ?op deus:literal ?literal. (?literal "^meta\\.key=(.*)$") string:scrape ?key }
+              => { ?op deus:operationKey ?key }.
+            { ?file deus:path ?path. ?path string:endsWith "/b.ts"; string:startsWith "packages/"; string:contains "/src/" }
+              => { ?file deus:isSource true }.
+            { ?a deus:path ?x. ?b deus:path ?y. ?a log:notEqualTo ?b } => { ?a deus:other ?b }.
+        "#
+        .into(),
+    }];
+    store.reason_all(&strata).unwrap();
+    let (source, readme) = (file("packages/a/src/b.ts"), file("packages/a/README.md"));
+    // An invalid pattern from the data matches nothing rather than failing the stratum.
+    assert_eq!(
+        derived(&store, &strata[0].graph),
+        vec![
+            format!("<{readme}> <{DEUS}other> <{source}>"),
+            format!(
+                "<{source}> <{DEUS}isSource> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"
+            ),
+            format!("<{source}> <{DEUS}matchesGlob> <{glob}>"),
+            format!("<{source}> <{DEUS}other> <{readme}>"),
+            format!(
+                "<{}> <{DEUS}operationKey> \"org.dxos.operation.x\"",
+                symbol("src/op.ts", "Op")
+            ),
+        ]
+    );
+}

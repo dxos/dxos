@@ -30,6 +30,12 @@ export const GRAPH_BASE = 'https://dxos.org/deus/graph/';
 /** Type terms are content-addressed: the same type is one node, whichever file asserts it. */
 export const TYPE_BASE = 'https://dxos.org/deus/type/';
 
+/** File globs are content-addressed too, so a glob many rule blocks name is matched once. */
+export const GLOB_BASE = 'https://dxos.org/deus/glob/';
+
+/** One node per extension URI, however many documents' Extensions tables name it. */
+export const EXTENSION_BASE = 'https://dxos.org/deus/extension/';
+
 export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}${term}`);
 
 /**
@@ -37,7 +43,7 @@ export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}
  * dropped and rebuilt on open: the ledger keys commits by graph IRI, so mixing schemes would leave
  * graphs no row points at and rules matching only half the facts.
  */
-export const VERSION = 2;
+export const VERSION = 3;
 
 /** IRI of a file resource; stable across revisions of that file. */
 export const fileIri = (path: string): NamedNode => DataFactory.namedNode(`${FILE_BASE}${escapePath(path)}`);
@@ -64,6 +70,20 @@ export const specBlockIri = (path: string, blockType: string, key: string): Name
     `${FILE_BASE}${escapePath(path)}#${escapeFragment(blockType).replaceAll(':', '%3A')}:${escapeFragment(key)}`,
   );
 
+/** One field or list item of a spec block, by its dot-joined path: `…#op:create/input.doc`. */
+export const specFieldIri = (block: string, path: string): NamedNode =>
+  DataFactory.namedNode(`${block}/${escapeFragment(path)}`);
+
+/** One row of a document's Extensions table; `@` cannot open a block type, so it never collides. */
+export const extensionUseIri = (path: string, term: string): NamedNode =>
+  DataFactory.namedNode(`${FILE_BASE}${escapePath(path)}#@extension/${escapeFragment(term)}`);
+
+/** The block-type definition an Extensions table names by URI (`org.dxos.mdl.op@1.1`). */
+export const extensionIri = (uri: string): NamedNode => DataFactory.namedNode(`${EXTENSION_BASE}${escapePath(uri)}`);
+
+/** A glob resolved against the repository root. */
+export const globIri = (glob: string): NamedNode => DataFactory.namedNode(`${GLOB_BASE}${escapePath(glob)}`);
+
 /** File graphs and derived graphs get disjoint prefixes, so no file path can name a derived graph. */
 export const FILE_GRAPH_PREFIX = `${GRAPH_BASE}file/`;
 
@@ -88,6 +108,10 @@ export const Package = iri('Package');
 export const Symbol = iri('Symbol');
 export const Member = iri('Member');
 export const SpecBlock = iri('SpecBlock');
+export const SpecField = iri('SpecField');
+export const ExtensionUse = iri('ExtensionUse');
+export const Extension = iri('Extension');
+export const FileGlob = iri('FileGlob');
 export const Type = iri('Type');
 export const TypeProperty = iri('TypeProperty');
 
@@ -107,6 +131,16 @@ export const declaresBlock = iri('declaresBlock');
 export const describesPackage = iri('describesPackage');
 export const unresolvedReferences = iri('unresolvedReferences');
 export const parseError = iri('parseError');
+// `.mdl` file properties: the frontmatter and the Extensions table.
+export const specId = iri('specId');
+export const specName = iri('specName');
+export const specVersion = iri('specVersion');
+export const specExtends = iri('specExtends');
+export const frontmatter = iri('frontmatter');
+export const usesExtension = iri('usesExtension');
+export const term = iri('term');
+export const extension = iri('extension');
+export const extensionUri = iri('extensionUri');
 
 // Package properties.
 export const name = iri('name');
@@ -143,6 +177,8 @@ export const doc = iri('doc');
 export const deprecated = iri('deprecated');
 /** The type of the value a symbol declares — `design/TYPES.md`. */
 export const hasType = iri('hasType');
+/** A string property of an object literal passed to the constructing call, as `path=value`. */
+export const literal = iri('literal');
 
 // Type term properties (`design/TYPES.md`).
 export const typeKind = iri('typeKind');
@@ -167,14 +203,33 @@ export const typeParam = (index: number) => iri(`typeParam${index}`);
 // SpecBlock properties.
 export const blockType = iri('blockType');
 export const blockId = iri('blockId');
-export const field = iri('field');
 export const mentions = iri('mentions');
+export const body = iri('body');
+export const prose = iri('prose');
+export const hasField = iri('hasField');
+export const partOf = iri('partOf');
+
+// SpecField properties.
+export const key = iri('key');
+export const index = iri('index');
+export const fieldPath = iri('fieldPath');
+export const value = iri('value');
+export const refScope = iri('refScope');
+export const refTarget = iri('refTarget');
+export const refFragment = iri('refFragment');
+export const repoGlob = iri('repoGlob');
+export const dirGlob = iri('dirGlob');
+
+// FileGlob properties.
+export const glob = iri('glob');
+export const pathPattern = iri('pathPattern');
 
 /**
  * Derived by reasoners, never written by the parser. Reachability over `deus:imports` is
  * deliberately NOT among these: a SPARQL property path (`deus:imports+`) walks it lazily, where a
  * closure rule would recompute and store hundreds of thousands of quads on every pass.
  */
+export const publishedBy = iri('publishedBy');
 export const usesPackage = iri('usesPackage');
 export const usesPackageInApi = iri('usesPackageInApi');
 export const undeclaredDependency = iri('undeclaredDependency');
@@ -188,12 +243,42 @@ export const layerRequires = iri('layerRequires');
 export const implementsOperation = iri('implementsOperation');
 export const bundlesHandler = iri('bundlesHandler');
 export const exposesOperation = iri('exposesOperation');
+export const importsTestFile = iri('importsTestFile');
+
+// Derived from specs (`rules/70-specs.n3`, `rules/80-gaps.n3`).
+export const OpSpec = iri('OpSpec');
+export const TypeSpec = iri('TypeSpec');
+export const ComponentSpec = iri('ComponentSpec');
+export const FeatureSpec = iri('FeatureSpec');
+export const Requirement = iri('Requirement');
+export const Scenario = iri('Scenario');
+export const QaTest = iri('QaTest');
+export const QaSuite = iri('QaSuite');
+export const ReviewRule = iri('ReviewRule');
+export const ModuleSpec = iri('ModuleSpec');
+export const ServiceSpec = iri('ServiceSpec');
+export const SurfaceSpec = iri('SurfaceSpec');
+export const ExtensionSpec = iri('ExtensionSpec');
+export const SelectedGlob = iri('SelectedGlob');
+export const operationKey = iri('operationKey');
+export const specifies = iri('specifies');
 export const describes = iri('describes');
+export const covers = iri('covers');
+export const includesTest = iri('includesTest');
+export const automatedBy = iri('automatedBy');
+export const selectsGlob = iri('selectsGlob');
+export const matchesGlob = iri('matchesGlob');
+export const hasSpec = iri('hasSpec');
+export const schema = iri('schema');
+export const declaresField = iri('declaresField');
+export const requiresField = iri('requiresField');
+export const hasKey = iri('hasKey');
+export const unknownField = iri('unknownField');
+export const missingField = iri('missingField');
+export const violatesSchema = iri('violatesSchema');
 export const undocumented = iri('undocumented');
 export const phantom = iri('phantom');
-export const tests = iri('tests');
-export const importsTestFile = iri('importsTestFile');
-export const usesDeprecated = iri('usesDeprecated');
+export const unspecified = iri('unspecified');
 /**
  * The name an external importer writes: the identifier alone, or `<Namespace>.<identifier>` when
  * the declaring module is published whole under one name.
@@ -217,6 +302,10 @@ export const CONTEXT = {
   Package: 'deus:Package',
   Symbol: 'deus:Symbol',
   SpecBlock: 'deus:SpecBlock',
+  SpecField: 'deus:SpecField',
+  ExtensionUse: 'deus:ExtensionUse',
+  Extension: 'deus:Extension',
+  FileGlob: 'deus:FileGlob',
   // File.
   path: 'deus:path',
   language: 'deus:language',
@@ -233,6 +322,15 @@ export const CONTEXT = {
   declares: id('declares'),
   declaresBlock: id('declaresBlock'),
   describesPackage: id('describesPackage'),
+  specId: 'deus:specId',
+  specName: 'deus:specName',
+  specVersion: 'deus:specVersion',
+  specExtends: 'deus:specExtends',
+  frontmatter: 'deus:frontmatter',
+  usesExtension: id('usesExtension'),
+  term: 'deus:term',
+  extension: id('extension'),
+  extensionUri: 'deus:extensionUri',
   // Package.
   name: 'deus:name',
   version: 'deus:version',
@@ -260,6 +358,7 @@ export const CONTEXT = {
   aliasOf: id('aliasOf'),
   namespaceOf: id('namespaceOf'),
   hasType: id('hasType'),
+  literal: 'deus:literal',
   // Type terms.
   Type: 'deus:Type',
   TypeProperty: 'deus:TypeProperty',
@@ -279,8 +378,24 @@ export const CONTEXT = {
   // SpecBlock.
   blockType: 'deus:blockType',
   blockId: 'deus:blockId',
-  field: 'deus:field',
   mentions: 'deus:mentions',
+  body: 'deus:body',
+  prose: 'deus:prose',
+  hasField: id('hasField'),
+  partOf: id('partOf'),
+  // SpecField.
+  key: 'deus:key',
+  index: integer('index'),
+  fieldPath: 'deus:fieldPath',
+  value: 'deus:value',
+  refScope: 'deus:refScope',
+  refTarget: 'deus:refTarget',
+  refFragment: 'deus:refFragment',
+  repoGlob: id('repoGlob'),
+  dirGlob: id('dirGlob'),
+  // FileGlob.
+  glob: 'deus:glob',
+  pathPattern: 'deus:pathPattern',
 } as const;
 
 /** The document shapes `design/ONTOLOGY.md` fixes, decoded by the RPC layer on the way in. */
@@ -304,6 +419,7 @@ export const SymbolNode = Schema.Struct({
   'doc': Schema.optional(Schema.String),
   'deprecated': Schema.optional(Schema.Boolean),
   'hasType': Schema.optional(Schema.String),
+  'literal': Schema.optional(Schema.Array(Schema.String)),
 });
 
 export type SymbolNode = typeof SymbolNode.Type;
@@ -360,18 +476,85 @@ export const PackageNode = Schema.Struct({
 
 export type PackageNode = typeof PackageNode.Type;
 
+/** A path glob compiled to an anchored regular expression over `deus:path`. */
+export const FileGlobNode = Schema.Struct({
+  '@id': Schema.String,
+  '@type': Schema.Literal('FileGlob'),
+  'glob': Schema.String,
+  'pathPattern': Schema.String,
+});
+
+export type FileGlobNode = typeof FileGlobNode.Type;
+
+/** A field or list item; its children nest, so the tree is the document's own. */
+export interface SpecFieldNode {
+  readonly '@id': string;
+  readonly '@type': 'SpecField';
+  readonly 'key'?: string;
+  readonly 'index'?: number;
+  readonly 'fieldPath': string;
+  readonly 'value'?: string;
+  readonly 'optional'?: boolean;
+  readonly 'line': number;
+  readonly 'refScope'?: string;
+  readonly 'refTarget'?: string;
+  readonly 'refFragment'?: string;
+  readonly 'repoGlob'?: FileGlobNode;
+  readonly 'dirGlob'?: FileGlobNode;
+  readonly 'hasField'?: readonly SpecFieldNode[];
+}
+
+export const SpecFieldNode: Schema.Codec<SpecFieldNode> = Schema.Struct({
+  '@id': Schema.String,
+  '@type': Schema.Literal('SpecField'),
+  'key': Schema.optional(Schema.String),
+  'index': Schema.optional(Schema.Number),
+  'fieldPath': Schema.String,
+  'value': Schema.optional(Schema.String),
+  'optional': Schema.optional(Schema.Boolean),
+  'line': Schema.Number,
+  'refScope': Schema.optional(Schema.String),
+  'refTarget': Schema.optional(Schema.String),
+  'refFragment': Schema.optional(Schema.String),
+  'repoGlob': Schema.optional(FileGlobNode),
+  'dirGlob': Schema.optional(FileGlobNode),
+  'hasField': Schema.optional(Schema.Array(Schema.suspend((): Schema.Codec<SpecFieldNode> => SpecFieldNode))),
+});
+
 export const SpecBlockNode = Schema.Struct({
   '@id': Schema.String,
   '@type': Schema.Literal('SpecBlock'),
   'blockType': Schema.String,
   'blockId': Schema.optional(Schema.String),
   'name': Schema.optional(Schema.String),
-  'field': Schema.Array(Schema.String),
+  'line': Schema.Number,
+  'body': Schema.String,
+  'prose': Schema.optional(Schema.String),
   'mentions': Schema.Array(Schema.String),
+  'hasField': Schema.Array(SpecFieldNode),
+  'partOf': Schema.optional(Schema.String),
   'inPackage': Schema.optional(Schema.String),
 });
 
 export type SpecBlockNode = typeof SpecBlockNode.Type;
+
+/** Content-addressed by URI, so the `ext` copies of one URI meet on one node. */
+export const ExtensionNode = Schema.Struct({
+  '@id': Schema.String,
+  '@type': Schema.Literal('Extension'),
+  'extensionUri': Schema.String,
+});
+
+export type ExtensionNode = typeof ExtensionNode.Type;
+
+export const ExtensionUseNode = Schema.Struct({
+  '@id': Schema.String,
+  '@type': Schema.Literal('ExtensionUse'),
+  'term': Schema.String,
+  'extension': ExtensionNode,
+});
+
+export type ExtensionUseNode = typeof ExtensionUseNode.Type;
 
 export const FileDocument = Schema.Struct({
   // The context is a constant of this module; it travels with the document so the JSON-LD is
@@ -393,6 +576,12 @@ export const FileDocument = Schema.Struct({
   'declares': Schema.Array(SymbolNode),
   'describesPackage': Schema.optional(PackageNode),
   'declaresBlock': Schema.optional(Schema.Array(SpecBlockNode)),
+  'specId': Schema.optional(Schema.String),
+  'specName': Schema.optional(Schema.String),
+  'specVersion': Schema.optional(Schema.String),
+  'specExtends': Schema.optional(Schema.Array(Schema.String)),
+  'frontmatter': Schema.optional(Schema.Array(Schema.String)),
+  'usesExtension': Schema.optional(Schema.Array(ExtensionUseNode)),
   'parseError': Schema.optional(Schema.Array(Schema.String)),
   // Type terms the symbols' `hasType` point at: graph content with no edge from the file itself.
   '@included': Schema.optional(Schema.Array(Schema.Union([TypeNode, TypePropertyNode]))),

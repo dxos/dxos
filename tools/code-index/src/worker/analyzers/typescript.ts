@@ -11,6 +11,7 @@ import { infer } from '../types/Infer.ts';
 import * as TypeRdf from '../types/Rdf.ts';
 import { type Comment, type Node, type Statement, isNode, nameOf, walk } from './ast.ts';
 import { type AnalyzeContext, fileNode } from './common.ts';
+import { literalsOf } from './literals.ts';
 
 /**
  * TypeScript/JavaScript files: declarations, what constructs them, what they reference and from
@@ -980,6 +981,9 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'apiDependsOn': [...api],
       'implDependsOn': [...impl],
       'aliasOf': [],
+      ...((literals) => (literals.length === 0 ? {} : { literal: literals }))(
+        initializer ? literalsOf(initializer) : [],
+      ),
       ...((value) => (value === undefined ? {} : { snippet: value }))(snippetOf(source, declaration, parsed.comments)),
       ...docOf(source, declaration.statement, parsed.comments),
       ...((value) => (value === undefined ? {} : { hasType: value }))(

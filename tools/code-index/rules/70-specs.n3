@@ -1,0 +1,248 @@
+# `.mdl` specs: what each block is, what code it is about, and which schema it answers to.
+#
+# The parser records a block's type and fields as strings (`design/ONTOLOGY.md` § SpecBlock); this
+# file is where `op` becomes an operation spec and `key:` an operation key. Joins name parser facts
+# (`deus:blockType "op"`) rather than the classes concluded here, so no rule waits on another.
+# Everything negated — undocumented symbols, phantom specs, schema violations — is in `80-gaps.n3`,
+# because a file cannot negate what it concludes.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+
+# ---------------------------------------------------------------------------------------------------
+# Classes.
+
+{ ?b deus:blockType "op" } => { ?b rdf:type deus:OpSpec }.
+{ ?b deus:blockType "type" } => { ?b rdf:type deus:TypeSpec }.
+{ ?b deus:blockType "component" } => { ?b rdf:type deus:ComponentSpec }.
+{ ?b deus:blockType "feat" } => { ?b rdf:type deus:FeatureSpec }.
+{ ?b deus:blockType "req" } => { ?b rdf:type deus:Requirement }.
+{ ?b deus:blockType "scenario" } => { ?b rdf:type deus:Scenario }.
+{ ?b deus:blockType "test" } => { ?b rdf:type deus:QaTest }.
+{ ?b deus:blockType "suite" } => { ?b rdf:type deus:QaSuite }.
+{ ?b deus:blockType "rule" } => { ?b rdf:type deus:ReviewRule }.
+{ ?b deus:blockType "module" } => { ?b rdf:type deus:ModuleSpec }.
+{ ?b deus:blockType "service" } => { ?b rdf:type deus:ServiceSpec }.
+{ ?b deus:blockType "surface" } => { ?b rdf:type deus:SurfaceSpec }.
+{ ?b deus:blockType "ext" } => { ?b rdf:type deus:ExtensionSpec }.
+
+# A package with at least one spec — the only packages where an undocumented symbol means anything.
+{ ?file deus:declaresBlock ?b. ?b deus:inPackage ?package } => { ?package deus:hasSpec ?file }.
+
+# ---------------------------------------------------------------------------------------------------
+# Operations: `Operation.make({ meta: { key: DXN.make('org.dxos.operation.x') } })`.
+
+{ ?op rdf:type deus:Operation. ?op deus:literal ?literal. (?literal "^meta\\.key=(.+)$") string:scrape ?key }
+  => { ?op deus:operationKey ?key }.
+
+# An `op` block names its operation by key, wherever the operation is declared.
+{ ?b deus:blockType "op". ?b deus:hasField ?f. ?f deus:key "key". ?f deus:value ?key. ?op deus:operationKey ?key }
+  => { ?b deus:specifies ?op }.
+
+# ---------------------------------------------------------------------------------------------------
+# Spec ↔ code by name, within the block's package.
+
+{
+  ?b deus:blockType "op". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s rdf:type deus:Operation. ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package.
+} => { ?b deus:specifies ?s }.
+
+{
+  ?b deus:blockType "type". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s rdf:type deus:EchoType. ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package.
+} => { ?b deus:specifies ?s }.
+{
+  ?b deus:blockType "type". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s rdf:type deus:EchoRelation. ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package.
+} => { ?b deus:specifies ?s }.
+{
+  ?b deus:blockType "type". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s rdf:type deus:Schema. ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package.
+} => { ?b deus:specifies ?s }.
+{
+  ?b deus:blockType "type". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s deus:name ?name. ?s deus:kind "type"; deus:exported true. ?file deus:declares ?s. ?file deus:inPackage ?package.
+} => { ?b deus:specifies ?s }.
+{
+  ?b deus:blockType "type". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s deus:name ?name. ?s deus:kind "interface"; deus:exported true. ?file deus:declares ?s. ?file deus:inPackage ?package.
+} => { ?b deus:specifies ?s }.
+{
+  ?b deus:blockType "type". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s deus:name ?name. ?s deus:kind "enum"; deus:exported true. ?file deus:declares ?s. ?file deus:inPackage ?package.
+} => { ?b deus:specifies ?s }.
+
+{
+  ?b deus:blockType "service". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s rdf:type deus:EffectService. ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package.
+} => { ?b deus:specifies ?s }.
+{
+  ?b deus:blockType "service". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s rdf:type deus:Capability. ?s deus:name ?name. ?file deus:declares ?s. ?file deus:inPackage ?package.
+} => { ?b deus:specifies ?s }.
+
+# Components, surfaces and modules have no class of their own: any exported declaration of the name.
+# A barrel's re-export (`kind "reexport"`) is the same thing under a second IRI, so it is skipped.
+{
+  ?b deus:blockType "component". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s deus:name ?name. ?s deus:exported true. ?file deus:declares ?s. ?file deus:inPackage ?package.
+  (?s { ?s deus:kind "reexport" } ?aliases) log:collectAllIn ?scope. ?aliases list:length 0.
+} => { ?b deus:specifies ?s }.
+{
+  ?b deus:blockType "surface". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s deus:name ?name. ?s deus:exported true. ?file deus:declares ?s. ?file deus:inPackage ?package.
+  (?s { ?s deus:kind "reexport" } ?aliases) log:collectAllIn ?scope. ?aliases list:length 0.
+} => { ?b deus:specifies ?s }.
+{
+  ?b deus:blockType "module". ?b deus:name ?name. ?b deus:inPackage ?package.
+  ?s deus:name ?name. ?s deus:exported true. ?file deus:declares ?s. ?file deus:inPackage ?package.
+  (?s { ?s deus:kind "reexport" } ?aliases) log:collectAllIn ?scope. ?aliases list:length 0.
+} => { ?b deus:specifies ?s }.
+
+# A block describes what it specifies, and every symbol of its package it mentions by the name an
+# importer writes (`Store.layer`).
+{ ?b deus:specifies ?s } => { ?b deus:describes ?s }.
+{
+  ?b deus:mentions ?mention. ?b deus:inPackage ?package.
+  ?s deus:canonicalName ?mention. ?file deus:declares ?s. ?file deus:inPackage ?package.
+  (?s { ?s deus:kind "reexport" } ?aliases) log:collectAllIn ?scope. ?aliases list:length 0.
+} => { ?b deus:describes ?s }.
+
+# ---------------------------------------------------------------------------------------------------
+# Spec ↔ spec.
+
+# `scenario … tags: [F-3]` and `test … covers: [F-1.1, T-1]`: ids of blocks in the same document.
+{
+  ?b deus:blockType "scenario". ?b deus:hasField ?tags. ?tags deus:key "tags". ?tags deus:hasField ?item.
+  ?item deus:value ?id. ?file deus:declaresBlock ?b. ?file deus:declaresBlock ?target. ?target deus:blockId ?id.
+} => { ?b deus:covers ?target }.
+{
+  ?b deus:blockType "scenario". ?b deus:hasField ?tags. ?tags deus:key "tags". ?tags deus:value ?id.
+  ?file deus:declaresBlock ?b. ?file deus:declaresBlock ?target. ?target deus:blockId ?id.
+} => { ?b deus:covers ?target }.
+{
+  ?b deus:blockType "test". ?b deus:hasField ?covers. ?covers deus:key "covers". ?covers deus:hasField ?item.
+  ?item deus:value ?id. ?file deus:declaresBlock ?b. ?file deus:declaresBlock ?target. ?target deus:blockId ?id.
+} => { ?b deus:covers ?target }.
+
+# `suite … tests: [QA-1, markdown:QA-1]`: a local id, or `<scope>:<id>` for the document whose id
+# ends `.<scope>` (`org.dxos.plugin.markdown`) or holds `.<scope>.` (`org.dxos.app.composer`).
+{
+  ?b deus:blockType "suite". ?b deus:hasField ?tests. ?tests deus:key "tests". ?tests deus:hasField ?item.
+  ?item deus:value ?id. ?file deus:declaresBlock ?b. ?file deus:declaresBlock ?test.
+  ?test deus:blockType "test". ?test deus:blockId ?id.
+} => { ?b deus:includesTest ?test }.
+{
+  ?b deus:blockType "suite". ?b deus:hasField ?tests. ?tests deus:key "tests". ?tests deus:hasField ?item.
+  ?item deus:refScope ?scope; deus:refTarget ?id. ("." ?scope) string:concatenation ?suffix.
+  ?doc deus:specId ?docId. ?docId string:endsWith ?suffix.
+  ?doc deus:declaresBlock ?test. ?test deus:blockType "test". ?test deus:blockId ?id.
+} => { ?b deus:includesTest ?test }.
+{
+  ?b deus:blockType "suite". ?b deus:hasField ?tests. ?tests deus:key "tests". ?tests deus:hasField ?item.
+  ?item deus:refScope ?scope; deus:refTarget ?id. ("." ?scope ".") string:concatenation ?infix.
+  ?doc deus:specId ?docId. ?docId string:contains ?infix.
+  ?doc deus:declaresBlock ?test. ?test deus:blockType "test". ?test deus:blockId ?id.
+} => { ?b deus:includesTest ?test }.
+
+# ---------------------------------------------------------------------------------------------------
+# Spec ↔ files.
+
+# `test … automated: [composer-e2e:basic.spec.ts#Basic tests › create]`: the package directory and
+# the spec file's name. The test name stays on the field — the index has no facts per test case.
+{
+  ?b deus:blockType "test". ?b deus:hasField ?automated. ?automated deus:key "automated".
+  ?automated deus:hasField ?item. ?item deus:refScope ?dir; deus:refTarget ?name.
+  ("/" ?dir) string:concatenation ?packageSuffix. ?package deus:packagePath ?packagePath.
+  ?packagePath string:endsWith ?packageSuffix.
+  ("/" ?name) string:concatenation ?fileSuffix. ?spec deus:inPackage ?package. ?spec deus:path ?path.
+  ?path string:endsWith ?fileSuffix.
+} => { ?b deus:automatedBy ?spec }.
+
+# `rule … files:` globs, resolved by the block's `scope`: `repo` is the repository root, anything
+# else (and the default) the document's directory. The parser emits both resolutions.
+{
+  ?b deus:blockType "rule". ?b deus:hasField ?files. ?files deus:key "files". ?files deus:hasField ?item.
+  ?item deus:repoGlob ?glob. ?b deus:hasField ?scope. ?scope deus:key "scope". ?scope deus:value "repo".
+} => { ?b deus:selectsGlob ?glob }.
+{
+  ?b deus:blockType "rule". ?b deus:hasField ?files. ?files deus:key "files". ?files deus:repoGlob ?glob.
+  ?b deus:hasField ?scope. ?scope deus:key "scope". ?scope deus:value "repo".
+} => { ?b deus:selectsGlob ?glob }.
+{
+  ?b deus:blockType "rule". ?b deus:hasField ?files. ?files deus:key "files". ?files deus:hasField ?item.
+  ?item deus:dirGlob ?glob.
+  (?scope { ?b deus:hasField ?scope. ?scope deus:key "scope". ?scope deus:value "repo" } ?repo)
+    log:collectAllIn ?in. ?repo list:length 0.
+} => { ?b deus:selectsGlob ?glob }.
+{
+  ?b deus:blockType "rule". ?b deus:hasField ?files. ?files deus:key "files". ?files deus:dirGlob ?glob.
+  (?scope { ?b deus:hasField ?scope. ?scope deus:key "scope". ?scope deus:value "repo" } ?repo)
+    log:collectAllIn ?in. ?repo list:length 0.
+} => { ?b deus:selectsGlob ?glob }.
+
+# Each selected glob is matched against every path once, however many rules share it; the pairs
+# rule × file are the path `deus:selectsGlob/^deus:matchesGlob`, not stored (ONTOLOGY.md).
+{ ?b deus:selectsGlob ?glob } => { ?glob rdf:type deus:SelectedGlob }.
+{ ?glob rdf:type deus:SelectedGlob. ?glob deus:pathPattern ?pattern. ?file deus:path ?path. ?path string:matches ?pattern }
+  => { ?file deus:matchesGlob ?glob }.
+
+# ---------------------------------------------------------------------------------------------------
+# Schemas: an `ext` block defines the fields of a block type.
+#
+# Most documents copy the `ext` blocks they use into an appendix, so one URI has dozens of `ext`
+# blocks. A block named through the Extensions table is therefore checked against the URI's one
+# `Extension` node, which declares the union of every copy's fields — linking each block to each copy
+# would cost blocks × copies facts (125k on this repository) for the same verdicts.
+
+# In the same document.
+{
+  ?ext deus:blockType "ext". ?ext deus:name ?type. ?file deus:declaresBlock ?ext.
+  ?file deus:declaresBlock ?b. ?b deus:blockType ?type.
+} => { ?b deus:schema ?ext }.
+# Named by URI in the document's Extensions table.
+{
+  ?file deus:usesExtension ?use. ?use deus:term ?type; deus:extension ?extension.
+  ?file deus:declaresBlock ?b. ?b deus:blockType ?type.
+} => { ?b deus:schema ?extension }.
+{
+  ?ext deus:blockType "ext". ?ext deus:hasField ?field. ?field deus:key "uri". ?field deus:value ?uri.
+  ?extension deus:extensionUri ?uri. ?ext deus:declaresField ?key.
+} => { ?extension deus:declaresField ?key }.
+{
+  ?ext deus:blockType "ext". ?ext deus:hasField ?field. ?field deus:key "uri". ?field deus:value ?uri.
+  ?extension deus:extensionUri ?uri. ?ext deus:requiresField ?key.
+} => { ?extension deus:requiresField ?key }.
+# In a document the frontmatter `extends`.
+{
+  ?file deus:specExtends ?id. ?parent deus:specId ?id. ?parent deus:declaresBlock ?ext.
+  ?ext deus:blockType "ext". ?ext deus:name ?type. ?file deus:declaresBlock ?b. ?b deus:blockType ?type.
+} => { ?b deus:schema ?ext }.
+
+{
+  ?ext deus:blockType "ext". ?ext deus:hasField ?fields. ?fields deus:key "fields".
+  ?fields deus:hasField ?declared. ?declared deus:key ?key.
+} => { ?ext deus:declaresField ?key }.
+{
+  ?ext deus:blockType "ext". ?ext deus:hasField ?fields. ?fields deus:key "adds-fields".
+  ?fields deus:hasField ?declared. ?declared deus:key ?key.
+} => { ?ext deus:declaresField ?key }.
+# `extends: op` inherits the fields of the `ext op` in the same document.
+{
+  ?ext deus:blockType "ext". ?ext deus:hasField ?extends. ?extends deus:key "extends". ?extends deus:value ?type.
+  ?file deus:declaresBlock ?ext. ?file deus:declaresBlock ?parent. ?parent deus:blockType "ext".
+  ?parent deus:name ?type. ?parent deus:declaresField ?key.
+} => { ?ext deus:declaresField ?key }.
+
+{
+  ?ext deus:blockType "ext". ?ext deus:hasField ?fields. ?fields deus:key "fields".
+  ?fields deus:hasField ?declared. ?declared deus:key ?key.
+  (?declared { ?declared deus:optional true } ?optional) log:collectAllIn ?scope. ?optional list:length 0.
+} => { ?ext deus:requiresField ?key }.
+
+# What a block has: its top-level keys, and the type of each block nested in it (`feat` has `req`).
+{ ?b deus:schema ?ext. ?b deus:hasField ?field. ?field deus:key ?key } => { ?b deus:hasKey ?key }.
+{ ?b deus:schema ?ext. ?child deus:partOf ?b. ?child deus:blockType ?key } => { ?b deus:hasKey ?key }.

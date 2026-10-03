@@ -246,7 +246,7 @@ module worker/analyzers/package
 
 ```mdl
 module worker/analyzers/spec
-  desc: `.mdl` documents — one `SpecBlock` per fenced block; linking them to symbols is a reasoner's job.
+  desc: `.mdl` documents — frontmatter, Extensions table, and one `SpecBlock` per block with its field tree; linking them to code is a reasoner's job.
   api:
     analyzeMdl: (context) => FileDocument
 ```
@@ -378,8 +378,10 @@ feat F-10: Types without a checker
 
 ```mdl
 feat F-9: Specs are facts
-  desc: A `.mdl` document yields one `SpecBlock` per fenced block, with its fields and the identifiers it mentions.
+  desc: A `.mdl` document yields one `SpecBlock` per block — several per fence, `req` nested in `feat` — with its fields as a tree, its body, its line and the identifiers it mentions.
   req F-9.1: Block ids and names come from the header; two blocks sharing a key are disambiguated in order.
+  req F-9.2: The parser never fails on a `.mdl` in the repository.
+  req F-9.3: Blocks are classified, linked to code and to each other, and checked against their `ext` schema by rules (`rules/70-specs.n3`, `rules/80-gaps.n3`), on both backends.
 ```
 
 ```mdl
@@ -478,9 +480,12 @@ test T-5: Spec documents
   file: src/Mdl.test.ts
   covers: F-9
   cases:
-    - frontmatter is read as flat strings
-    - every fenced block yields a header, fields and mentions
-    - the spec analyzer turns blocks into SpecBlock nodes
+    - frontmatter is read as YAML, lists kept
+    - a fence holds several blocks, and req blocks nest in their feat
+    - flow maps and lists become children, a map left open runs to its closer
+    - the spec analyzer emits the file facts, block nodes and the field tree
+    - every tracked .mdl parses without error and yields its blocks
+    - specs link to code and to each other, and the gaps are found (src/Reasoner.test.ts)
 ```
 
 ```mdl
