@@ -16,7 +16,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import * as Crawler from '../Crawler.ts';
+import type * as Reasoner from '../Reasoner.ts';
 import * as Store from '../Store.ts';
+import * as Watch from '../Watch.ts';
 import * as Agent from './Agent.ts';
 import * as Handlers from './Handlers.ts';
 import * as Log from './Log.ts';
@@ -59,6 +61,8 @@ export type Options = {
   readonly port?: number;
   readonly host?: string;
   readonly model: Models.Selection;
+  /** Keep the index current while serving (`Watch.ts`); none to serve the store as it is. */
+  readonly reasoners?: readonly Reasoner.Reasoner[];
 };
 
 export const run = ({
@@ -66,6 +70,7 @@ export const run = ({
   port = DEFAULT_PORT,
   host = DEFAULT_HOST,
   model,
+  reasoners,
 }: Options): Effect.Effect<void, ServerError | Vite.ViteError, Store.Store | Log.Log | Agent.Agent> =>
   Effect.gen(function* () {
     if (!isLoopback(host)) {
@@ -120,6 +125,10 @@ export const run = ({
         `  model       ${model.provider}/${model.model}`,
       ].join('\n'),
     );
+
+    if (reasoners) {
+      yield* Effect.forkScoped(Watch.run({ root, reasoners }));
+    }
 
     // The server runs until interrupted; the scope's finalizers close Vite and the listener.
     return yield* Effect.never;

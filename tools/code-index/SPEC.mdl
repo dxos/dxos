@@ -445,6 +445,16 @@ feat F-11: An MCP server over the index
   req F-11.3: A store another process holds fails at startup, naming that process, rather than hanging.
   req F-11.4: A SELECT is capped at the engine (default 200 rows, at most 2000) and reports truncation.
   req F-11.5: `stats` counts derived graphs with a grouped SPARQL count, never by materialising quads.
+
+feat F-12: `serve` keeps the index current
+  desc: |
+    The server holds the store, and the store admits one process, so no other command can refresh
+    it while the server runs. `serve` indexes on its own instead: an incremental pass at startup,
+    then one after every burst of changes (`src/Watch.ts`), unless `--no-watch`.
+  req F-12.1: Each directory holding an indexed file, and its ancestors, is watched on its own; a recursive watch would register every directory under `node_modules`.
+  req F-12.2: A directory created under a watched one is watched at once, so files written into it later are seen.
+  req F-12.3: A new watch is followed by one more pass, which sees a file written before the watch began.
+  req F-12.4: A failed pass is reported and the watch goes on.
 ```
 
 ## Tests
