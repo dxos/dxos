@@ -1,6 +1,6 @@
 # code-index — Tasks
 
-_Resume: Phase 5 (type propagation) in flight on a PR stacked on `dm/code-index`; PR [#12968](https://github.com/dxos/dxos/pull/12968) is waiting on human review. Last: `deus:hasType` emitted per symbol, 0 disagreements with `tsc` on fixtures and a 300-file repo sample, `rules/15-types.n3` deriving `providesService`/`layerRequires` from inferred `Layer<…>` types._
+_Resume: Phase 5 (type propagation) in flight on PR [#13631](https://github.com/dxos/dxos/pull/13631), stacked on `dm/code-index`; PR [#12968](https://github.com/dxos/dxos/pull/12968) is waiting on human review. Last: `deus:hasType` emitted per symbol, 0 disagreements with `tsc` on fixtures and a 300-file repo sample, `rules/15-types.n3` deriving `providesService`/`layerRequires` from inferred `Layer<…>` types._
 
 The package is two halves that share one store: an **indexer** that turns this
 repository into a SQLite ledger plus a persistent RDF quad store, and a
@@ -102,6 +102,7 @@ Precision over recall: a type is what `tsc` says, or unknown.
 
 ## References
 
+- PR [#13631](https://github.com/dxos/dxos/pull/13631) — type propagation (Phase 5), stacked on #12968.
 - PR [#12968](https://github.com/dxos/dxos/pull/12968) — the whole package, in two parts, with the review history.
 - `SPEC.mdl` — modules, commit protocol, features, tests.
 - `design/ONTOLOGY.md` — the vocabulary the rules assert.
