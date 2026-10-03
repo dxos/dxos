@@ -147,30 +147,73 @@ export const toGraphData = (scored: Graph.Scored): GraphData & { grouping: strin
   ).map(({ from, to, kind }) => ({ from, to, kind })),
 });
 
-/**
- * The deterministic explorer plus zoom, as the sandbox's `design.subgraph` runs it: System One when a
- * decision model is in context, the baseline otherwise — the chat must work with no key at all.
- */
-export const subgraph = (
+/** Explore (deterministic) and zoom with whichever decision model is in context. */
+const scoreFor = (
   store: Store.Api,
   cache: Cache.Api,
-  model: Option.Option<DecisionModel.DecisionModel>,
+  scorer: Zoom.Scorer,
   { prompt, budget = 30, threshold = 0.5 }: { prompt: string; budget?: number; threshold?: number },
-): Effect.Effect<GraphData & { grouping: string; scorer: string }, Store.StoreError> =>
+): Effect.Effect<Graph.Scored, Store.StoreError, DecisionModel.DecisionModel> =>
   Effect.gen(function* () {
     const candidates = yield* Explore.bfs({ prompt })(store);
-    const zoomed = Zoom.zoom({
+    const { scored } = yield* Zoom.zoom({
       prompt,
       candidates,
-      scorer: Option.isSome(model) ? 'hybrid' : 'baseline',
+      scorer,
       model: SystemOne.MODEL.id.toString(),
       cache,
       threshold,
       budget,
     });
-    const { scored } = yield* Option.match(model, {
-      onNone: () => zoomed.pipe(Effect.provide(SystemOne.refusing)),
-      onSome: (service) => zoomed.pipe(Effect.provideService(DecisionModel.DecisionModel, service)),
-    });
-    return toGraphData(scored);
+    return scored;
+  });
+
+/**
+ * The deterministic explorer plus zoom, as the sandbox's `design.subgraph` runs it: the hybrid scorer
+ * when a decision model is in context, the baseline otherwise — the chat must work with no key at all.
+ */
+export const subgraph = (
+  store: Store.Api,
+  cache: Cache.Api,
+  model: Option.Option<DecisionModel.DecisionModel>,
+  options: { prompt: string; budget?: number; threshold?: number },
+): Effect.Effect<GraphData & { grouping: string; scorer: string }, Store.StoreError> =>
+  Option.match(model, {
+    onNone: () => scoreFor(store, cache, 'baseline', options).pipe(Effect.provide(SystemOne.refusing)),
+    onSome: (service) =>
+      scoreFor(store, cache, 'hybrid', options).pipe(Effect.provideService(DecisionModel.DecisionModel, service)),
+  }).pipe(Effect.map(toGraphData));
+
+/**
+ * The answer an MCP client gets: the pruned graph and a compact mermaid draft. The draft is not laid
+ * out or judged — that needs ELK, which only the Node half (`code-index design`) runs.
+ */
+export const answer = (
+  store: Store.Api,
+  cache: Cache.Api,
+  options: { prompt: string; budget?: number; threshold?: number },
+) =>
+  Effect.gen(function* () {
+    const scorer: Zoom.Scorer = SystemOne.available() ? 'hybrid' : 'baseline';
+    const scored = yield* scoreFor(store, cache, scorer, options).pipe(
+      Effect.provide(SystemOne.available() ? SystemOne.layer : SystemOne.refusing),
+    );
+    const [variant] = Compact.variants(scored.grouping);
+    return {
+      scorer,
+      grouping: scored.grouping,
+      nodes: scored.nodes
+        .filter((node) => node.kept)
+        .sort((left, right) => right.score - left.score)
+        .map(({ iri, label, kind, path, package: owner, score }) => ({
+          iri,
+          label,
+          kind,
+          path,
+          ...(owner ? { package: owner } : {}),
+          score: Number(score.toFixed(3)),
+        })),
+      edges: Zoom.keptEdges(scored).map(({ from, to, kind }) => ({ from, to, kind })),
+      mermaid: Compact.build(scored, variant).mermaid,
+    };
   });

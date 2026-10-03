@@ -58,7 +58,7 @@ export const RandomComponent = ({ shape }: ShapeComponentProps<RandomShape>) => 
       <Icon
         icon={icon}
         classNames={spin && 'animate-[spin_1s]'}
-        size={10}
+        size='xl'
         onPointerDown={stopGesture}
         onClick={handleClick}
       />

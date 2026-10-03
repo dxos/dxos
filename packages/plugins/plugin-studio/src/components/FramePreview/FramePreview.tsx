@@ -47,15 +47,15 @@ export const FramePreview = ({ classNames, index, name, src, contentType }: Fram
         ) : src ? (
           <img src={src} alt={name ?? label} loading='lazy' draggable={false} className='block dx-fill object-cover' />
         ) : (
-          <div role='img' aria-label={label} className='dx-fill flex items-center justify-center text-description'>
+          <div role='img' aria-label={label} className='dx-fill flex items-center justify-center text-fg-muted'>
             {label}
           </div>
         )}
-        <span className='absolute top-1 start-1 px-1 rounded-sm bg-modal-surface text-xs text-description'>
+        <span className='absolute top-1 start-1 px-1 rounded-sm bg-modal-surface text-xs text-fg-muted'>
           {index + 1}
         </span>
       </div>
-      {name && <figcaption className='truncate text-sm text-description'>{name}</figcaption>}
+      {name && <figcaption className='truncate text-sm text-fg-muted'>{name}</figcaption>}
     </figure>
   );
 };

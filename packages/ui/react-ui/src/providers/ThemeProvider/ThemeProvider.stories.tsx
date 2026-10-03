@@ -17,7 +17,7 @@ const meta = {
     return (
       <div className='p-4 flex flex-col gap-4'>
         <h1>ThemeProvider</h1>
-        <pre className='text-sm text-description'>{JSON.stringify({ themeMode, platform }, null, 2)}</pre>
+        <pre className='text-sm text-fg-muted'>{JSON.stringify({ themeMode, platform }, null, 2)}</pre>
       </div>
     );
   },

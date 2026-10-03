@@ -16,9 +16,9 @@ import { ToolsExplorer } from '@dxos/react-ui-introspect';
 export const ToolsExplorerContainer = ({ role }: { role?: string }) => {
   return (
     <Panel.Root role={role}>
-      <Panel.Content>
+      <Panel.Body>
         <ToolsExplorer serverUrl={useEdgeServiceEndpoint(EdgeServiceName.Introspect)} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

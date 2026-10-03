@@ -12,6 +12,8 @@ export type GroupProps = {
   justify?: 'start' | 'end' | 'between';
   /** Children share the width equally, so a lone child (e.g. a form's Submit) stretches across the group. */
   fill?: boolean;
+  /** No gap between children: a run of icon-only buttons whose own insets already space them (e.g. plank controls). */
+  compact?: boolean;
 };
 
 /**
@@ -19,7 +21,7 @@ export type GroupProps = {
  * contract, and unlike a row Container it needs no track per child.
  */
 export const Group = slottable<HTMLDivElement, GroupProps>(
-  ({ children, asChild, justify = 'start', fill, ...props }, forwardedRef) => {
+  ({ children, asChild, justify = 'start', fill, compact, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props, { classNames: recipes.group() });
     return (
       <ark.div
@@ -29,6 +31,7 @@ export const Group = slottable<HTMLDivElement, GroupProps>(
         data-part='root'
         data-justify={justify}
         data-fill={fill ? '' : undefined}
+        data-compact={compact ? '' : undefined}
         className={className}
         ref={forwardedRef}
       >
@@ -38,4 +41,4 @@ export const Group = slottable<HTMLDivElement, GroupProps>(
   },
 );
 
-Group.displayName = 'Next.Group';
+Group.displayName = 'Group';

@@ -108,6 +108,20 @@ const VOCABULARY_QUERY = `PREFIX deus: <${Ontology.PREFIX}>
     FILTER(STRSTARTS(STR(?term), '${Ontology.PREFIX}'))
   } GROUP BY ?kind ?term ORDER BY ?kind DESC(?count)`;
 
+export type VocabularyTerm = { readonly term: string; readonly kind: string; readonly count: number };
+
+/** The `deus:` classes and predicates in the graph, by local name — what `rdf.vocabulary()` returns. */
+export const readVocabulary = (store: Store.Api): Effect.Effect<VocabularyTerm[], Store.StoreError> =>
+  store.select(VOCABULARY_QUERY).pipe(
+    Effect.map((rows) =>
+      rows.map((row) => ({
+        term: row.term.slice(Ontology.PREFIX.length),
+        kind: row.kind,
+        count: Number(row.count),
+      })),
+    ),
+  );
+
 type HostCall = { readonly id: number; readonly method: string; readonly params: Record<string, unknown> };
 
 const make = Effect.gen(function* () {
@@ -115,17 +129,7 @@ const make = Effect.gen(function* () {
   const log = yield* Log.Log;
 
   // A whole-graph scan, so it is computed once and shared by every snippet in the process.
-  const vocabulary = yield* Effect.cached(
-    store.select(VOCABULARY_QUERY).pipe(
-      Effect.map((rows) =>
-        rows.map((row) => ({
-          term: row.term.slice(Ontology.PREFIX.length),
-          kind: row.kind,
-          count: Number(row.count),
-        })),
-      ),
-    ),
-  );
+  const vocabulary = yield* Effect.cached(readVocabulary(store));
 
   // Optional, so the chat runs with no decision model at all; `design.subgraph` then scores by baseline.
   const decisions = yield* Effect.serviceOption(DecisionModel.DecisionModel);

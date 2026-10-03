@@ -78,13 +78,13 @@ export const NetworkArticle = ({ role, ...props }: ArticleProps & { space?: Spac
   return (
     <Panel.Root role={role}>
       {!props.space && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <DataSpaceSelector />
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
-      <Panel.Content>
+      <Panel.Body>
         <SVG.Root ref={context}>
           <SVG.Markers />
           <SVG.Graph
@@ -115,7 +115,7 @@ export const NetworkArticle = ({ role, ...props }: ArticleProps & { space?: Spac
             // }}
           />
         </SVG.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

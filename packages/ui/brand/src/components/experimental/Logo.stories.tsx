@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { arc } from 'd3';
 import React, { useRef, useState } from 'react';
 
-import { Button, Icon, IconButton } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -253,7 +253,7 @@ export const Oblique: Story = {
     return (
       <div className='dx-fullscreen grid place-items-center'>
         <div className='absolute top-4 left-4'>
-          <IconButton icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
+          <Button icon='ph--square--duotone' label='Visibility' onClick={() => setVisible()} />
         </div>
         <div className='absolute grid place-items-center'>
           <AltComposerLogo

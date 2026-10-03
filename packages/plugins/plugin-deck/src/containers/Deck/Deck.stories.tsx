@@ -30,7 +30,7 @@ import { invariant } from '@dxos/invariant';
 import { useConnections } from '@dxos/plugin-graph/hooks';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { useThemeContext } from '@dxos/react-ui';
+import { useThemeMode } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
 import { Listbox } from '@dxos/react-ui-list';
 import { withMosaic } from '@dxos/react-ui-mosaic/testing';
@@ -98,7 +98,7 @@ const STORY_WORKSPACE_ID = `${GraphNode.RootId}/${DeckSchema.DEFAULT_DECK_ID}`;
  * the container because `Editor.View` renders its own div and drops unknown props.
  */
 const TestArticle = ({ title, content }: { title: string; content: string }) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),
@@ -150,7 +150,11 @@ const TestLauncher = ({ launcherId }: { launcherId: string }) => {
   );
 
   return (
-    <Listbox.Root value={selected} onValueChange={handleOpen}>
+    <Listbox.Root
+      value={selected}
+      onValueChange={handleOpen}
+      items={LAUNCHER_MESSAGES.map((message) => ({ value: message.id, label: message.id }))}
+    >
       <Listbox.Content aria-label='Messages' classNames='grid content-start gap-1 p-2' data-testid='story.launcher'>
         {LAUNCHER_MESSAGES.map((message) => (
           <Listbox.Item
@@ -339,7 +343,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                   data-testid='story.companion'
                   data-companion-to={companionTo?.title}
                 >
-                  <p className='text-sm text-description'>Story companion surface</p>
+                  <p className='text-sm text-fg-muted'>Story companion surface</p>
                   <p>
                     Companion <span className='font-mono text-xs'>{String(data.variant)}</span> of{' '}
                     <span className='font-medium'>{companionTo?.title ?? data.attendableId}</span>.

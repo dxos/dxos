@@ -89,7 +89,8 @@ export const TestAgentAssignee: Story = {
     const property = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.property.assignee"]');
     await waitFor(() => expect(property()).toHaveTextContent(SESSION_TITLE), { timeout: 10_000 });
     await expect(property()).not.toHaveTextContent('Agent');
-    await expect(property()?.querySelector('svg use')?.getAttribute('href')).toContain('anthropic');
+    // Awaited: the icon's `href` is set once the registry has fetched the glyph.
+    await waitFor(() => expect(property()?.querySelector('svg use')?.getAttribute('href')).toContain('anthropic'));
 
     const chip = () => canvasElement.querySelector<HTMLElement>('[data-testid="taskList.item.assignee"]');
     await waitFor(() => expect(chip()).toHaveTextContent(SESSION_TITLE), { timeout: 10_000 });

@@ -134,7 +134,7 @@ export const GptRealtimeComponent = ({ shape }: ShapeComponentProps<GptRealtimeS
     <div className='flex w-full justify-center items-center'>
       <Icon
         icon={isReady ? 'ph--waveform--regular' : isLive ? 'ph--pulse--regular' : 'ph--play--regular'}
-        size={16}
+        size='xl'
         classNames={!isLive && 'cursor-pointer'}
         onPointerDown={(ev) => ev.stopPropagation()}
         onClick={start}

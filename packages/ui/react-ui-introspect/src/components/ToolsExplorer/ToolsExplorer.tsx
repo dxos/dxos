@@ -7,8 +7,7 @@ import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { MAX_LIST_LIMIT, type PickerKind, TOOL_METADATA } from '@dxos/introspect-tools';
-import { Banner, type ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { Banner, type ThemedClassName, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -151,10 +150,8 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
     return (
       <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
         <Banner.Root valence='info'>
-          <Banner.Content classNames='m-trim-md'>
-            <Banner.Title>{t('not-configured.title')}</Banner.Title>
-            <Banner.Body>{t('not-configured.message')}</Banner.Body>
-          </Banner.Content>
+          <Banner.Title>{t('not-configured.title')}</Banner.Title>
+          <Banner.Body>{t('not-configured.message')}</Banner.Body>
         </Banner.Root>
       </div>
     );
@@ -167,10 +164,8 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
     return (
       <div {...composableProps(props, { role: 'none' })} ref={forwardedRef}>
         <Banner.Root valence='error'>
-          <Banner.Content classNames='m-trim-md'>
-            <Banner.Title>{t('connection-failed.title')}</Banner.Title>
-            <Banner.Body>{error.message}</Banner.Body>
-          </Banner.Content>
+          <Banner.Title>{t('connection-failed.title')}</Banner.Title>
+          <Banner.Body>{error.message}</Banner.Body>
         </Banner.Root>
       </div>
     );
@@ -181,7 +176,7 @@ export const ToolsExplorer = composable<HTMLDivElement, ToolsExplorerProps>(({ s
       {...composableProps(props, { classNames: 'dx-expand grid grid-cols-[30rem_1fr] divide-x divide-separator' })}
       ref={forwardedRef}
     >
-      <div className={mx('dx-expand grid divide-y divide-subdued-separator', selectedTool && 'grid-rows-[2fr_3fr]')}>
+      <div className={mx('dx-expand grid divide-y divide-separator-subtle', selectedTool && 'grid-rows-[2fr_3fr]')}>
         <ToolList tools={TOOL_METADATA} selected={selected} onSelect={handleSelect} />
         {selectedTool && <ToolForm tool={selectedTool} onSubmit={handleSubmit} pickerOptions={pickerOptions} />}
       </div>

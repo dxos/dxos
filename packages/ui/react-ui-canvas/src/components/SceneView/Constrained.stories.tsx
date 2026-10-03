@@ -52,10 +52,10 @@ const ConstraintList = ({ model }: { model: Atom.Writable<ConstrainedModel> }) =
   const value = useAtomValue(model);
   return (
     <div className='flex flex-col gap-1 p-2 text-sm font-mono overflow-y-auto'>
-      <div className='text-description'>constraints</div>
+      <div className='text-fg-muted'>constraints</div>
       {value.constraints.map((constraint, index) => (
         <div key={index}>
-          {constraint.subject} <span className='text-subdued'>{constraint.relation}</span> {constraint.object}
+          {constraint.subject} <span className='text-fg-subtle'>{constraint.relation}</span> {constraint.object}
         </div>
       ))}
     </div>

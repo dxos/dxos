@@ -129,11 +129,11 @@ export const CommandsDialogContent = forwardRef<HTMLDivElement, CommandsDialogCo
             </SearchList.Viewport>
           </SearchList.Root>
         </Dialog.Body>
-        <Dialog.ActionBar>
-          <Dialog.Close asChild>
+        <Dialog.Footer>
+          <Dialog.CloseTrigger asChild>
             <Button classNames='w-full'>{t('close.label', { ns: osTranslations })}</Button>
-          </Dialog.Close>
-        </Dialog.ActionBar>
+          </Dialog.CloseTrigger>
+        </Dialog.Footer>
       </Dialog.Content>
     );
   },
