@@ -414,6 +414,20 @@ const serve = Command.make('serve', serveFlags, serveHandler).pipe(
   Command.withDescription('Start the web UI (also what a bare `code-index` does).'),
 );
 
+const VERSION = '0.11.1';
+
+const mcp = Command.make('mcp', { root: rootFlag, store: storeFlag }, ({ root, store }) =>
+  Effect.gen(function* () {
+    const repo = yield* resolveRoot(root);
+    // Imported here: only this command needs the MCP server and its protocol schemas.
+    const Server = yield* Effect.promise(() => import('./mcp/Server.ts'));
+    return yield* Server.run({
+      dir: Option.match(store, { onNone: () => Crawler.storeDir(repo), onSome: resolve }),
+      version: VERSION,
+    });
+  }),
+).pipe(Command.withDescription('Serve the index read-only over MCP on stdio (Claude Code, Claude Desktop).'));
+
 /**
  * The root command carries `serve`'s flags and handler, which is what makes the webserver the
  * default: `code-index` with no subcommand starts it, and `code-index serve` is the same thing
@@ -421,8 +435,8 @@ const serve = Command.make('serve', serveFlags, serveHandler).pipe(
  */
 export const command = Command.make('code-index', serveFlags, serveHandler).pipe(
   Command.withDescription('Index a codebase into SQLite + RDF (DEUS ontology), and reason about it in a browser.'),
-  Command.withSubcommands([serve, chat, index, files, query, ask, dump, stats, clear, ontology, types]),
+  Command.withSubcommands([serve, chat, index, files, query, ask, dump, stats, clear, ontology, types, mcp]),
 );
 
 /** Runs one command; `Layer.launch` is not involved — every command opens and closes its own store. */
-export const run = Command.runWith(command, { version: '0.11.1' });
+export const run = Command.runWith(command, { version: VERSION });
