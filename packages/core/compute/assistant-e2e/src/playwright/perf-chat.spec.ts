@@ -233,10 +233,14 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
           .first()
           .waitFor({ timeout: BUDGET_MS * 3 });
         assertScripted();
-        const repeated = await readHeap(targets);
+        const before = tabHeapBytes(idleRow.heap);
+        const after = tabHeapBytes(await readHeap(targets));
+        if (before === undefined || after === undefined) {
+          throw new Error('no tab heap reading to measure retention against');
+        }
         idleRow.readings = {
           ...idleRow.readings,
-          [RETAINED_PER_TURN]: Math.max(0, (tabHeapBytes(repeated) - tabHeapBytes(idleRow.heap)) / TOOL_TURNS),
+          [RETAINED_PER_TURN]: Math.max(0, (after - before) / TOOL_TURNS),
         };
       } catch (error) {
         retentionError = error;
@@ -283,8 +287,11 @@ test.describe('Assistant chat performance', () => {
 
 const MB = 1024 * 1024;
 
-const tabHeapBytes = (heap: HeapReading[]): number =>
-  heap.filter(({ kind }) => kind === 'page').reduce((total, { usedBytes }) => total + usedBytes, 0);
+/** The page realms' heap, or `undefined` when no page answered: a zero would read as no retention. */
+const tabHeapBytes = (heap: HeapReading[]): number | undefined => {
+  const pages = heap.filter(({ kind }) => kind === 'page');
+  return pages.length > 0 ? pages.reduce((total, { usedBytes }) => total + usedBytes, 0) : undefined;
+};
 
 const summarize = (row: StageRow) => ({
   stage: row.stage,
