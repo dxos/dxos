@@ -14,9 +14,11 @@ import ELK, { type ElkNode } from 'elkjs/lib/elk.bundled.js';
 
 import { invariant } from '@dxos/invariant';
 
+import * as Compact from './compact.ts';
 import * as Diagnostics from './diagnostics.ts';
 import * as Layout from './layout.ts';
 import { type Direction, type MermaidEdge, type MermaidGraph, markers, parse } from './mermaid.ts';
+import * as Nudge from './nudge.ts';
 import * as Objective from './objective.ts';
 import { makeAvoidingRouter } from './ortho-router.ts';
 import type * as Scene from './scene.ts';
@@ -102,6 +104,11 @@ export type CompileOptions = {
    * connect through one horizontal bus and a single triangle-headed trunk instead of parallel arrows.
    */
   bus?: readonly boolean[];
+  /**
+   * Compaction candidates (default both): with `true`, packages and boxes slide toward their partners
+   * after placement, closing empty lanes and long detours; see `compact.ts`.
+   */
+  compact?: readonly boolean[];
   /** Objective that picks among candidates (default `Objective.DEFAULT`). */
   objective?: Objective.Objective;
   /** Maximum cell width, in scene units (default GRID × 6); longer labels wrap. */
@@ -117,6 +124,7 @@ export type Candidate = {
   arrangement: Arrangement;
   layering: Layering;
   alignment: Alignment;
+  compact: boolean;
   bus: boolean;
   commands: Scene.Command[];
   layout: Objective.Layout;
@@ -450,6 +458,21 @@ const alignGroups = (
   }
   return result;
 };
+
+/** Slides packages and boxes toward their partners on the lattice; see `compact.ts`. */
+const compactPlacement = (
+  graph: MermaidGraph,
+  positions: Map<string, Scene.Point>,
+  cell: Cell,
+  pitch: Pitch,
+): Map<string, Scene.Point> =>
+  Compact.compact({ nodes: graph.nodes.map((node) => node.id), groups: graph.groups, edges: graph.edges }, positions, {
+    cell,
+    pitch,
+    framePad: FRAME_PAD,
+    frameLabel: FRAME_LABEL_H,
+    frameGap: FRAME_GAP,
+  });
 
 /** Node rects at the origin plus the frame around each group's members. */
 const frame = (graph: MermaidGraph, positions: Map<string, Scene.Point>, cell: Cell): Placement => {
@@ -822,15 +845,31 @@ const emit = (
     };
     const labelled: { id: string; text: string; points: Scene.Point[] }[] = [];
     const paths: Scene.Point[][] = [];
-    routed.forEach((edge, index) => {
+    const routes = routed.flatMap((edge, index) => {
       const from = nodes.get(edge.from);
       const to = nodes.get(edge.to);
       if (!from || !to) {
-        return;
+        return [];
       }
       const points = routeEdge(edge, from, to);
       terminals.set(edge.from, [...(terminals.get(edge.from) ?? []), { point: points[0], role: 'exit' }]);
       terminals.set(edge.to, [...(terminals.get(edge.to) ?? []), { point: points[points.length - 1], role: 'entry' }]);
+      return [{ edge, index, points, source: from, target: to }];
+    });
+    // Edges are routed one at a time, so parallel runs land on the same line; the bus is a deliberate merge and stays put.
+    const nudged = Nudge.nudge(routes, {
+      spacing: GRID / 4,
+      obstacles: [...nodes.values()],
+      fixed: buses.elements.flatMap((element) =>
+        element.kind === 'line'
+          ? [element.points]
+          : element.kind === 'arrow' && element.start && element.end
+            ? [[element.start, element.end]]
+            : [],
+      ),
+    });
+    routes.forEach(({ edge, index }, position) => {
+      const points = nudged[position];
       const id = `${edge.from}-${edge.to}-${index}`;
       const style = markers(edge.kind);
       if (points.length > 2) {
@@ -870,7 +909,14 @@ const objectsOf = (commands: readonly Scene.Command[]): Scene.WorldObject[] =>
  */
 export const layout = async (source: string, options: CompileOptions = {}): Promise<Result> => {
   const graph = parse(source);
-  const { origin = { x: 0, y: 0 }, scale = 1, maxWidth = MAX_W, objective = Objective.DEFAULT, route } = options;
+  const {
+    origin = { x: 0, y: 0 },
+    scale = 1,
+    maxWidth = MAX_W,
+    objective = Objective.DEFAULT,
+    route,
+    compact: compactions = [true, false],
+  } = options;
   const cell = measureCell(graph, maxWidth);
   const lattices = typeof options.lattice === 'number' ? [options.lattice] : (options.lattice ?? LATTICES);
   const orders = options.order ?? ORDERS;
@@ -886,7 +932,8 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
       buses.length > 0 &&
       arrangements.length > 0 &&
       layerings.length > 0 &&
-      alignments.length > 0,
+      alignments.length > 0 &&
+      compactions.length > 0,
     'every candidate axis needs a value',
   );
 
@@ -894,6 +941,11 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
   // Knobs often reach the same placement (a graph with no in-package references layers the same
   // either way; equal-height packages align the same every way); each is routed and graded once.
   const seen = new Set<string>();
+  const keyOf = (placement: Placement) =>
+    [...placement.nodes]
+      .map(([id, rect]) => `${id}:${rect.x}:${rect.y}`)
+      .sort()
+      .join(' ');
   for (const lattice of lattices) {
     for (const order of orders) {
       for (const arrangement of arrangements) {
@@ -902,28 +954,30 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
           const positions = await place(graph, cell, pitch, order, arrangement, layering);
           // Alignment moves packages relative to each other, which only columns set side by side.
           for (const alignment of arrangement === 'columns' ? alignments : (['none'] as const)) {
-            const placement = frame(graph, alignGroups(graph, positions, graph.direction, alignment), cell);
-            const key = [...placement.nodes]
-              .map(([id, rect]) => `${id}:${rect.x}:${rect.y}`)
-              .sort()
-              .join(' ');
-            for (const bus of buses) {
-              if (seen.has(`${arrangement}|${bus}|${key}`)) {
-                continue;
+            const aligned = alignGroups(graph, positions, graph.direction, alignment);
+            for (const compact of [false, true].filter((value) => compactions.includes(value))) {
+              const placement = frame(graph, compact ? compactPlacement(graph, aligned, cell, pitch) : aligned, cell);
+              const key = keyOf(placement);
+              for (const bus of buses) {
+                if (seen.has(`${arrangement}|${bus}|${key}`)) {
+                  continue;
+                }
+                seen.add(`${arrangement}|${bus}|${key}`);
+                const commands = emit(graph, cell, placement, { origin, scale, bus, arrangement, route });
+                const objects = objectsOf(commands);
+                const report = Diagnostics.analyze(objects);
+                candidates.push({
+                  lattice,
+                  order,
+                  arrangement,
+                  layering,
+                  alignment,
+                  compact,
+                  bus,
+                  commands,
+                  layout: { objects, report },
+                });
               }
-              seen.add(`${arrangement}|${bus}|${key}`);
-              const commands = emit(graph, cell, placement, { origin, scale, bus, arrangement, route });
-              const objects = objectsOf(commands);
-              candidates.push({
-                lattice,
-                order,
-                arrangement,
-                layering,
-                alignment,
-                bus,
-                commands,
-                layout: { objects, report: Diagnostics.analyze(objects) },
-              });
             }
           }
         }
@@ -931,7 +985,15 @@ export const layout = async (source: string, options: CompileOptions = {}): Prom
     }
   }
 
-  const { chosen, ranked } = Objective.select(objective, candidates);
+  // Compaction trades connector length for proximity, but never for a crossing the uncompacted pick avoids.
+  const plain = candidates.filter((candidate) => !candidate.compact);
+  const ceiling = plain.length
+    ? Objective.select(objective, plain).chosen.candidate.layout.report.metrics.crossings
+    : Infinity;
+  const { chosen, ranked } = Objective.select(
+    objective,
+    candidates.filter((candidate) => !candidate.compact || candidate.layout.report.metrics.crossings <= ceiling),
+  );
   return { commands: chosen.candidate.commands, chosen, ranked };
 };
 
