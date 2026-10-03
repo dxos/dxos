@@ -1,6 +1,6 @@
 # Interlocutor — memory and profiles
 
-Status: draft 1 (2026-10-02). Companion to "Interlocutor — design".
+Status: draft 2 (2026-10-03). Companion to "Interlocutor — design".
 
 ## Principle
 
@@ -92,27 +92,58 @@ given it, in any chat (Composer or a Discord thread).
 - **Plan**: the interview topics are the chat's checklist (`Chat.tasks`, e.g. role and context,
   current goals, team and collaborators, working preferences), checked off as they're covered, so
   progress is visible and an interview can be resumed.
-- **Tools**: `resolveEntity`, `remember`, `proposeGoal`, `confirmGoal`, `recall`, `updateProfile`.
+- **Tools** (`org.dxos.operation.agent.*`): `resolveEntity`, `recordMemory`, `suggestGoal`,
+  `setGoalStatus`, `retrieveMemories`, `updateProfile`.
+
+## Conversations: isolated threads, shared memory
+
+Decided 2026-10-03. An agent converses in many places at once — a Composer chat and one `Chat` per
+Discord thread — and each is separate, but the agent's memory is shared and it can reach every
+conversation.
+
+| Tier                | Scope            | Lives in                                                    | Read by                    |
+| ------------------- | ---------------- | ----------------------------------------------------------- | -------------------------- |
+| Working memory      | One conversation | That `Chat` and its feed (the model's context window)       | That conversation's turns  |
+| Long-term memory    | The whole agent  | The graph above: `Person`, `Organization`, `Goal`, `Memory` | Every conversation         |
+| Conversation access | The whole agent  | The chats' feeds, searched and read through tools           | Every conversation, on ask |
+
+- **Isolation.** A conversation's context holds only its own messages, so threads never bleed into
+  each other and run concurrently. Memories are append-only, so concurrent writes do not conflict;
+  duplicate `Person`s created by two threads at once are merged by handle during consolidation.
+- **Recall** before each turn assembles, for this conversation's participants, their profiles,
+  goals and recent memories, plus pointers to the other conversations they were in.
+- **Tools**: `listConversations` (by person, topic or channel), `searchConversations` (full-text
+  across the agent's chat feeds) and `readConversation` (a range of one chat's messages), so the
+  agent can answer "what did Josiah say about the demo?" and cite the thread.
+- **Visibility.** Every memory and conversation records where it was learned (Discord server and
+  channel, or space). Recall and the conversation tools use what was learned anywhere in the
+  **same Discord server or space**; DMs stay private unless the person marks something shareable.
+- **Search on EDGE.** db-service indexes feed items in its full-text index (SQLite FTS5, trigram,
+  BM25), so `searchConversations` is a text query scoped to the agent's chat feeds with a client-side
+  type filter. Limits today: no combined type+text query, no result-limit pushdown, no cross-space
+  search, no vector search, and feeds read forward only (no "last N"). A searchable
+  `ConversationSummary` per chat is the fallback if topic ranking, cross-space or semantic recall
+  are needed. The EDGE follow-ups are tracked in the Interlocutor project (M3).
 
 ## Spike: interview Rich
 
-1. Types `Memory` and `Goal` plus operations `resolveEntity`, `remember`, `proposeGoal`,
-   `confirmGoal`, `recall`, `updateProfile` in plugin-agent.
+1. Types `Memory` and `Goal` plus the memory operations (`resolveEntity`, `recordMemory`,
+   `suggestGoal`, `setGoalStatus`, `retrieveMemories`, `updateProfile`) in plugin-agent.
 2. The Interview skill.
 3. A scripted test (deterministic, no model) that drives the operations as an interview would and
    asserts the resulting graph: one `Person`, goals owned by them, memories linked by `HasSubject`,
    a profile document linked by `ProfileOf`.
 4. A storybook: a Chat with the agent and the Interview skill beside a panel showing the profile
-   graph filling in. Live-model run and a memoized fixture need an Anthropic API key in the session.
-5. In Composer: chat with an interlocutor agent that has the Interview skill; it interviews you and
+   graph filling in (scripted), plus a live variant on DeepSeek V4 Pro.
+5. An eval with simulated personas (see [TESTING.md](./TESTING.md)).
+6. In Composer: chat with an agent that has the Interview skill; it interviews you and
    the profile appears in the space.
 
 ## Open questions
 
 1. Where `Memory` and `Goal` live long-term: plugin-agent for the spike, `@dxos/types` once a
    second consumer (CRM, projects) needs them.
-2. Visibility: memories about a person live in the agent's home space. When the agent works in a
-   joined space, which memories may it use or relay there? Default: only what was learned in that
-   space, plus what the person marked shareable.
+2. Visibility across joined spaces: the same-server/space rule above covers threads within the
+   home space; what an agent may carry into a joined space is still open.
 3. Relation to plugin-brain: brain's RDF fact store becomes a derived index over `Memory` objects
    rather than a parallel store.
