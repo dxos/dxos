@@ -39,6 +39,11 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
   readonly #callbacks?: SqliteStorageCallbacks;
   readonly #monitor?: StorageAdapterDataMonitor;
 
+  /** Chunk writes waiting for the next group commit. */
+  #pendingWrites: PendingWrite[] = [];
+  /** The running group-commit loop, while there is one. */
+  #draining: Promise<void> | undefined;
+
   #open = false;
 
   constructor({ runtime, callbacks, monitor }: SqliteStorageAdapterProps) {
@@ -104,14 +109,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const startMs = Date.now();
-    const encoded = encodeKey(keyArray);
-    // TODO(dmaretskyi): If another transaction is running concurently, this write will be associated with the wrong transaction.
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql`INSERT OR REPLACE INTO automerge_chunks (key, data) VALUES (${encoded}, ${binary})`;
-      }),
-    );
+    await this.#write(upsertChunks([[encodeKey(keyArray), binary]]));
     this.#monitor?.recordBytesStored(binary.byteLength);
     this.#monitor?.recordStoreDuration(Date.now() - startMs);
     await this.#callbacks?.afterSave?.(keyArray);
@@ -122,20 +120,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
       return;
     }
     const startMs = Date.now();
-    const encoded = entries.map(([key, data]) => [encodeKey(key), data] as const);
-    // TODO(dmaretskyi): replace with one batched write.
-    await RuntimeProvider.runPromise(this.#runtime)(
-      Effect.gen(function* () {
-        const sql = yield* SqlClient.SqlClient;
-        yield* sql.withTransaction(
-          Effect.gen(function* () {
-            for (const [key, data] of encoded) {
-              yield* sql`INSERT OR REPLACE INTO automerge_chunks (key, data) VALUES (${key}, ${data})`;
-            }
-          }),
-        );
-      }),
-    );
+    await this.#write(upsertChunks(entries.map(([key, data]) => [encodeKey(key), data] as const)));
     let bytesStored = 0;
     for (const [keyArray, binary] of entries) {
       bytesStored += binary.byteLength;
@@ -145,12 +130,51 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     this.#monitor?.recordStoreDuration(Date.now() - startMs);
   }
 
+  /**
+   * Queues a write for the next group commit and resolves once it is committed.
+   *
+   * A repo flush saves every dirty document at once, and one transaction per chunk made each a
+   * separate WAL commit: thousands of them, long enough to time out the flush RPC. Writes that
+   * arrive together share one transaction and run in the order they were issued, so a removal
+   * never overtakes an earlier save.
+   */
+  #write(write: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      this.#pendingWrites.push({ write, resolve, reject });
+      this.#draining ??= this.#drain();
+    });
+  }
+
+  async #drain(): Promise<void> {
+    // Yields first so the writes a flush issues in the same tick join one group.
+    await Promise.resolve();
+    while (this.#pendingWrites.length > 0) {
+      const group = this.#pendingWrites.splice(0);
+      try {
+        await RuntimeProvider.runPromise(this.#runtime)(
+          Effect.gen(function* () {
+            const sql = yield* SqlClient.SqlClient;
+            yield* sql.withTransaction(Effect.forEach(group, ({ write }) => write, { discard: true }));
+          }),
+        );
+        for (const { resolve } of group) {
+          resolve();
+        }
+      } catch (error) {
+        for (const { reject } of group) {
+          reject(error);
+        }
+      }
+    }
+    this.#draining = undefined;
+  }
+
   async remove(keyArray: StorageKey): Promise<void> {
     if (!this.isOpen) {
       return;
     }
     const encoded = encodeKey(keyArray);
-    await RuntimeProvider.runPromise(this.#runtime)(
+    await this.#write(
       Effect.gen(function* () {
         const sql = yield* SqlClient.SqlClient;
         yield* sql`DELETE FROM automerge_chunks WHERE key = ${encoded}`;
@@ -198,7 +222,7 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     if (!this.isOpen) {
       return;
     }
-    await RuntimeProvider.runPromise(this.#runtime)(this.removeRangeEffect(keyPrefix));
+    await this.#write(this.removeRangeEffect(keyPrefix));
   }
 
   /**
@@ -214,6 +238,22 @@ export class SqliteStorageAdapter implements StorageAdapterInterface {
     }).pipe(Effect.withSpan('SqliteStorageAdapter.removeRange'));
   }
 }
+
+type PendingWrite = {
+  write: Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient>;
+  resolve: () => void;
+  reject: (error: unknown) => void;
+};
+
+const upsertChunks = (
+  entries: ReadonlyArray<readonly [string, Uint8Array]>,
+): Effect.Effect<void, SqlError.SqlError, SqlClient.SqlClient> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    for (const [key, data] of entries) {
+      yield* sql`INSERT OR REPLACE INTO automerge_chunks (key, data) VALUES (${key}, ${data})`;
+    }
+  });
 
 /**
  * Key space `SubductionStorageBridge` writes into this same table, as

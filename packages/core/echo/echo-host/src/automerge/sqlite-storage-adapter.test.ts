@@ -112,6 +112,24 @@ describe('SqliteStorageAdapter', () => {
     expect(await adapter.load(chunks[1].key)).toEqual(chunks[1].data);
   });
 
+  test('concurrent writes commit in the order they were issued', async () => {
+    const adapter = await setup();
+    await Promise.all([
+      adapter.save(chunks[0].key, chunks[0].data),
+      adapter.remove(chunks[0].key),
+      adapter.saveBatch([
+        [chunks[1].key, chunks[1].data],
+        [chunks[2].key, chunks[2].data],
+      ]),
+      adapter.removeRange(['a', 'b', 'd']),
+      adapter.save(chunks[3].key, chunks[3].data),
+    ]);
+    expect(await adapter.load(chunks[0].key)).toBeUndefined();
+    expect(await adapter.load(chunks[1].key)).toEqual(chunks[1].data);
+    expect(await adapter.load(chunks[2].key)).toBeUndefined();
+    expect(await adapter.load(chunks[3].key)).toEqual(chunks[3].data);
+  });
+
   test('loadRange returns keys in sorted order', async () => {
     const adapter = await setup();
     await adapter.save(['test', '2'], bufferToArray(Buffer.from('two')));

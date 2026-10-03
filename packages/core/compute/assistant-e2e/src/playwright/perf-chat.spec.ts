@@ -59,7 +59,7 @@ const IDLE_MS = 10_000;
 
 const BUDGET_MS = 120_000;
 
-/** Seeding the busy space measured 43–50 s on a 4-core sandbox; a seed past this has stalled, not slowed. */
+/** Seeding the busy space measured 23–25 s on a 4-core sandbox; a seed past this has stalled, not slowed. */
 const SEED_BUDGET_MS = 180_000;
 
 const chatPrompt = (page: Page): Locator =>
