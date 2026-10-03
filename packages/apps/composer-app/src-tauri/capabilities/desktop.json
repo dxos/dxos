@@ -8,7 +8,8 @@
       "http://localhost:26777/*",
       "http://localhost:26778/*",
       "http://localhost:26779/*",
-      "http://localhost:26780/*"
+      "http://localhost:26780/*",
+      "http://localhost:26781/*"
     ]
   },
   "permissions": [
