@@ -50,17 +50,30 @@ const VOCABULARY_QUERY = `PREFIX deus: <${Ontology.PREFIX}>
     UNION
     { ?s ?term ?o . BIND('property' AS ?kind) }
     FILTER(STRSTARTS(STR(?term), '${Ontology.PREFIX}'))
-  } GROUP BY ?kind ?term ORDER BY ?kind DESC(?count)`;
+  } GROUP BY ?kind ?term`;
+
+/** Locale-independent, so a summary recorded on one machine compares equal on another. */
+const compareCodeUnits = (left: string, right: string): number => (left < right ? -1 : left > right ? 1 : 0);
+
+/**
+ * Classes first, then by count descending, then by name: a total order, so a recorded summary equals a
+ * live count of the same graph. Sorted here rather than by `ORDER BY`, which neither backend applies to
+ * ties alike from one evaluation to the next.
+ */
+const byKindCountTerm = (left: VocabularyCount, right: VocabularyCount): number =>
+  compareCodeUnits(left.kind, right.kind) || right.count - left.count || compareCodeUnits(left.term, right.term);
 
 /** The `deus:` classes and predicates in the graph by local name, counted by a whole-graph scan. */
 export const readVocabulary = (store: Store.Api): Effect.Effect<VocabularyCount[], Store.StoreError> =>
   store.select(VOCABULARY_QUERY).pipe(
     Effect.map((rows) =>
-      rows.map((row) => ({
-        term: row.term.slice(Ontology.PREFIX.length),
-        kind: row.kind === 'class' ? ('class' as const) : ('property' as const),
-        count: Number(row.count),
-      })),
+      rows
+        .map((row) => ({
+          term: row.term.slice(Ontology.PREFIX.length),
+          kind: row.kind === 'class' ? ('class' as const) : ('property' as const),
+          count: Number(row.count),
+        }))
+        .sort(byKindCountTerm),
     ),
   );
 
