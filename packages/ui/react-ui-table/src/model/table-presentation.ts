@@ -195,7 +195,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           .map(getLabel)
           .filter(Predicate.isNotNullish)
           .map((title) => {
-            return `<span class="dx-tag" data-hue="neutral">${title}</span>`;
+            return `<span class="nx-tag nx-tag-inline" data-hue="neutral">${title}</span>`;
           })
           .join('');
 
@@ -240,7 +240,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       if (options) {
         const option = options.find((o) => o.id === value);
         if (option) {
-          cell.accessoryHtml = `<span class="dx-tag" data-hue="${option.color}">${option.title}</span>`;
+          cell.accessoryHtml = `<span class="nx-tag nx-tag-inline" data-hue="${option.color}">${option.title}</span>`;
         }
       }
     }
@@ -254,7 +254,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
           .map((value) => {
             const option = options.find((o) => o.id === value);
             if (option) {
-              return `<span class="dx-tag" data-hue="${option.color}">${option.title}</span>`;
+              return `<span class="nx-tag nx-tag-inline" data-hue="${option.color}">${option.title}</span>`;
             }
             return null;
           })

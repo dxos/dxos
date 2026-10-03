@@ -44,12 +44,12 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
         <div className='flex justify-between items-center gap-2 text-sm'>
           <span className='text-description'>{[`${owner}/${name}`, number].filter(Boolean).join('#')}</span>
           {state && (
-            <span className='dx-tag' data-hue={stateHue[state]}>
+            <span className='nx-tag nx-tag-inline' data-hue={stateHue[state]}>
               {state}
             </span>
           )}
           {defaultBranch && (
-            <span className='dx-tag' data-hue='neutral'>
+            <span className='nx-tag nx-tag-inline' data-hue='neutral'>
               {defaultBranch}
             </span>
           )}

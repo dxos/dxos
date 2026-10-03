@@ -44,7 +44,7 @@ export class DxTagPickerItem extends LitElement {
   }
 
   override render() {
-    const className = `dx-tag dx-tag-picker-item${this.rootClassName ? ` ${this.rootClassName}` : ''}`;
+    const className = `nx-tag nx-tag-inline dx-tag-picker-item${this.rootClassName ? ` ${this.rootClassName}` : ''}`;
     return html`<span class=${className} data-remove=${!!this.removeLabel} data-hue=${this.hue} id=${this.id}
       ><button class="dx-focus-ring" @click=${this.handleClickActivate}>${this.label}</button>${
         this.removeLabel &&

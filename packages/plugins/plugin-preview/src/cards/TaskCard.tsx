@@ -20,7 +20,7 @@ export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => 
       <Card.Row>
         {statusOption && (
           <div>
-            <span className='dx-tag' data-hue={statusOption.color}>
+            <span className='nx-tag nx-tag-inline' data-hue={statusOption.color}>
               {statusOption.title}
             </span>
           </div>

@@ -29,9 +29,9 @@ export type CommandsOptions = { getCommands: () => CommandData[] };
  */
 const commandMark = Decoration.mark({
   // Inline in text, so the pill keeps its own inset from the words either side.
-  class: 'dx-tag mx-0.5',
+  class: 'nx-tag nx-tag-inline mx-0.5',
   // Baseline alignment puts the pill's text on the line's baseline; the negative block margin
-  // cancels the padded pill's line-box growth (same recipe as `.dx-tag--anchor` in CodeMirror).
+  // cancels the padded pill's line-box growth (same recipe as `.nx-tag-anchor` in CodeMirror).
   attributes: {
     'data-hue': 'blue',
     'style': 'margin-block: -5px;',

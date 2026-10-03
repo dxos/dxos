@@ -163,7 +163,8 @@ class TimestampMarker extends GutterMarker {
 
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'dx-tag dx-tag--neutral mx-0.5 cursor-pointer tabular-nums';
+    button.className = 'nx-tag nx-tag-inline mx-0.5 cursor-pointer tabular-nums';
+    button.dataset.hue = 'neutral';
     button.textContent = this._label;
     button.setAttribute('data-seconds', String(this._seconds));
     // Activate on click; prevent the editor from stealing focus/selection.
@@ -186,7 +187,7 @@ class SpeakerWidget extends WidgetType {
 
   override toDOM(): HTMLElement {
     return Domino.of('span')
-      .classNames('dx-tag dx-tag--green inline-flex -ml-0.25 mr-1.5')
+      .classNames('nx-tag nx-tag-inline nx-tag-green -ml-0.25 mr-1.5')
       .append(Domino.svg('ph--caret-double-right--regular')).root;
   }
 }

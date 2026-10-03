@@ -69,7 +69,7 @@ export const KeyValue = ({ classNames, label, data }: ThemedClassName<{ label: s
 
 const Scalar = ({ classNames, value }: ThemedClassName<{ value: any }>) => {
   return (
-    <Box className={mx('dx-tag dx-tag--green text-xs items-center', classNames)}>
+    <Box className={mx('nx-tag nx-tag-inline items-center', classNames)} data-hue='green'>
       {(value === undefined && 'undefined') ||
         (value === null && 'null') ||
         (typeof value === 'string' && value) ||

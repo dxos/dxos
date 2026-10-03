@@ -125,7 +125,7 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
               from: start,
               to: end,
               decoration: Decoration.mark({
-                class: mx('dx-tag--blue', tagPadding),
+                class: mx('nx-tag nx-tag-inline nx-tag-blue', tagPadding),
               }),
             });
           }
@@ -227,7 +227,7 @@ class DXNWidget extends WidgetType {
         return part;
       })
       .join(':');
-    return Domino.of('span').classNames(mx('font-mono dx-tag--blue', tagPadding)).text(text).root;
+    return Domino.of('span').classNames(mx('font-mono nx-tag nx-tag-inline nx-tag-blue', tagPadding)).text(text).root;
   }
 }
 

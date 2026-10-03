@@ -209,7 +209,11 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               )}
               <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
                 {slug}
-                {author && <span className='dx-tag dx-tag--info'>{author}</span>}
+                {author && (
+                  <span className='nx-tag nx-tag-inline' data-hue='info'>
+                    {author}
+                  </span>
+                )}
               </div>
             </Grid>
 

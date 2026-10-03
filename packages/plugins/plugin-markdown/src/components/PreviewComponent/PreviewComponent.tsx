@@ -319,7 +319,7 @@ export const PreviewComponent = ({
   // report lands) it would flash at the top of the reserved box.
   if (unresolved) {
     return (
-      <span className='dx-tag dx-tag--red inline-flex items-center gap-1 align-baseline'>
+      <span className='nx-tag nx-tag-inline gap-1 align-baseline' data-hue='red'>
         <Icon icon='ph--warning--regular' size='md' />
         {t('object-not-found.label')}
       </span>
@@ -357,7 +357,7 @@ export const PreviewComponent = ({
           </div>
 
           <div className='absolute bottom-1 right-1 flex items-center justify-end gap-1'>
-            <span className='dx-tag dx-tag--neutral flex items-center gap-1'>
+            <span className='nx-tag nx-tag-inline flex gap-1' data-hue='neutral'>
               {objectIcon && <Icon icon={objectIcon.icon} size='md' />}
               {objectLabel}
             </span>

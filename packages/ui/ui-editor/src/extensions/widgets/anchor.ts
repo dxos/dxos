@@ -39,7 +39,7 @@ export class AnchorWidget extends WidgetType {
 
   override toDOM(_view: EditorView) {
     const root = document.createElement('dx-anchor');
-    root.classList.add('dx-tag--anchor');
+    root.classList.add('nx-tag-anchor');
     root.setAttribute('eid', this._dxn);
     if (this._trigger) {
       root.setAttribute('trigger', this._trigger);
