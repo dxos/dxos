@@ -369,23 +369,6 @@ type.
 | `deus:unusedDependency`      | `declaresDep` without `usesPackage`. Deps used only from config, CSS or scripts the index does not parse show up here too.                                                                                                                                                                                                                                                  | `rules/80-gaps.n3`         |
 | classes in the table above   | `deus:EffectService`, `deus:EchoType`, …                                                                                                                                                                                                                                                                                                                                    | per framework              |
 
-A `rule` block → each `FileGlob` of its `files`, resolved by its `scope`: `repo` → `deus:repoGlob`, otherwise `deus:dirGlob`. | `rules/70-specs.n3` |
-| `deus:SelectedGlob` | A `FileGlob` some `rule` block selects — the only globs worth matching against every path. | `rules/70-specs.n3` |
-| `deus:matchesGlob` | File → `SelectedGlob` whose `deus:pathPattern` its `deus:path` matches. | `rules/70-specs.n3` |
-| `deus:hasSpec` | Package → a `.mdl` file with a block in that package. | `rules/70-specs.n3` |
-| `deus:schema` | Spec block → what defines its type: an `ext` block in the same document or in one the frontmatter `extends`, or the `Extension` the document's Extensions table names for the type. | `rules/70-specs.n3` |
-| `deus:declaresField` | `ext` block → each field name of its `fields`/`adds-fields`, plus those of the `ext` it `extends` in the same document. `Extension` → the union over every `ext` block whose `uri` it is. | `rules/70-specs.n3` |
-| `deus:requiresField` | `ext` block → each field name it declares without `?`; `Extension` → each one any `ext` of its URI requires. | `rules/70-specs.n3` |
-| `deus:hasKey` | Spec block → each top-level field key, and the type of each nested block (`feat` → `req`). | `rules/70-specs.n3` |
-| `deus:unknownField` | A key the block has that no `ext` in its `deus:schema` declares. | `rules/80-gaps.n3` |
-| `deus:missingField` | A field an `ext` in its `deus:schema` requires that the block lacks. | `rules/80-gaps.n3` |
-| `deus:violatesSchema` | Spec block → the schema (`ext` block or `Extension`) it has an unknown or missing field against. | `rules/80-gaps.n3` |
-| `deus:undocumented` | `true` on a package-public symbol no spec block describes, in a package that has a spec. Aliases and namespace barrels are skipped: their origin is what is reported. | `rules/80-gaps.n3` |
-| `deus:phantom` | `true` on a `type`/`service`/`component`/`surface`/`module` block naming no symbol of its package, and on an `op` block whose `key` no `Operation` carries. | `rules/80-gaps.n3` |
-| `deus:unspecified` | `true` on an `Operation` no spec block specifies. | `rules/80-gaps.n3` |
-| `deus:unusedDependency` | `declaresDep` without `usesPackage`. Deps used only from config, CSS or scripts the index does not parse show up here too. | `rules/80-gaps.n3` |
-| classes in the table above | `deus:EffectService`, `deus:EchoType`, … | per framework |
-
 A `rule` block's reviewed files are deliberately **not** materialized as `deus:reviews`: on this
 repository that is 841,129 pairs, because 98 rules share a few repo-wide globs. They are the path
 `deus:selectsGlob/^deus:matchesGlob`, which stores each distinct glob's matches once (~40k).
