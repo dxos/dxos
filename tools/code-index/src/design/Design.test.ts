@@ -10,6 +10,7 @@ import { EffectEx } from '@dxos/effect';
 
 import * as Cache from './Cache.ts';
 import * as Compact from './Compact.ts';
+import * as Design from './Design.ts';
 import * as Graph from './Graph.ts';
 import * as SystemOne from './SystemOne.ts';
 import * as Text from './Text.ts';
@@ -207,6 +208,32 @@ describe('Zoom', () => {
     const agent = result.scored.nodes.find((node) => node.label === 'AgentService');
     expect(agent?.score).toBeGreaterThan(0);
     expect(result.usage.calls).toBe(0);
+  });
+});
+
+describe('Design.toGraphData', () => {
+  test('hidden nodes travel without doc or snippet, and edges only join nodes that travel', async () => {
+    const { scored } = await EffectEx.runPromise(
+      Zoom.zoom({
+        prompt: candidates.prompt,
+        candidates: {
+          ...candidates,
+          nodes: candidates.nodes.map((node) => ({ ...node, doc: 'doc', snippet: 'const x = 1;' })),
+        },
+        scorer: 'system-one',
+        model: 'test',
+        cache: Cache.memory(),
+        threshold: 0.5,
+        budget: 10,
+      }).pipe(Effect.provide(scripted)),
+    );
+    const data = Design.toGraphData(scored);
+    const util = data.nodes.find((node) => node.label === 'util');
+    expect(util?.kept).toBe(false);
+    expect(util?.card).not.toHaveProperty('snippet');
+    expect(data.nodes.find((node) => node.label === 'AgentService')?.card.snippet).toBe('const x = 1;');
+    const ids = new Set(data.nodes.map((node) => node.id));
+    expect(data.edges.every((edge) => ids.has(edge.from) && ids.has(edge.to))).toBe(true);
   });
 });
 
