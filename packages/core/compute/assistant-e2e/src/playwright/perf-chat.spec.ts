@@ -59,6 +59,12 @@ const IDLE_MS = 10_000;
 
 const BUDGET_MS = 120_000;
 
+/**
+ * Boot reopens a space the seed stage already wrote, a read-only path that measures zero; the
+ * headroom absorbs a stray page write without letting a re-persisting path (megabytes) through.
+ */
+const BOOT_WRITE_BYTES_CEILING = 64 * 1024;
+
 /** Writing the busy space is minutes of feed appends in the browser. */
 const SEED_BUDGET_MS = 900_000;
 
@@ -205,6 +211,13 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
     runner.dispose();
 
     expect(rows.filter((row) => !row.ok).map((row) => `${row.stage}: ${row.error}`)).toEqual([]);
+    // Checked after publishing, so a regression still lands in the trend it is caught by.
+    const boot = rows.find((row) => row.stage === 'boot');
+    if (boot && boot.disk.realms > 0) {
+      expect(boot.disk.writeBytes, 'reopening a seeded space should not write to SQLite').toBeLessThanOrEqual(
+        BOOT_WRITE_BYTES_CEILING,
+      );
+    }
   } finally {
     await context?.close().catch((error) => log.warn('context did not close', { error }));
     await instrumented.close();
