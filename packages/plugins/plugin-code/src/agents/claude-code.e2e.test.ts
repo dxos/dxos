@@ -115,8 +115,6 @@ describe.runIf(ENABLED && API_KEY && CLAUDE)('Claude Code on this computer, end 
       ANTHROPIC_MODEL: MODEL,
       CLAUDE_CONFIG_DIR: join(root, 'claude'),
       CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
-      // Root may only bypass permissions when it says it is sandboxed; a CI runner is root.
-      IS_SANDBOX: '1',
     });
 
     const token = 'e2e'.repeat(12);
@@ -155,10 +153,10 @@ describe.runIf(ENABLED && API_KEY && CLAUDE)('Claude Code on this computer, end 
   });
 
   it.live(
-    'bypassPermissions: writes a file without asking',
+    'acceptEdits: writes a file without asking',
     () =>
       Effect.gen(function* () {
-        const { work, feed, chat, options } = yield* setup('bypassPermissions');
+        const { work, feed, chat, options } = yield* setup('acceptEdits');
         const sessions = yield* AcpAgent.Sessions.make();
         yield* AcpAgent.runTurn(
           options(sessions),
