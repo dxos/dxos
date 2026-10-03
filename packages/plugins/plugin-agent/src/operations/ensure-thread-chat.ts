@@ -42,48 +42,67 @@ const loadAgentBindings = (agent: Agent.Agent) =>
     } satisfies ContextBindings;
   });
 
+export type EnsureThreadChatProps = {
+  agent: Agent.Agent;
+  threadId: string;
+  title?: string;
+  channelId?: string;
+  source?: DiscordBinding.ThreadSource;
+};
+
+/**
+ * Returns the agent's chat for a Discord thread or DM channel, creating it on first contact.
+ * Shared with `sendDiscordMessage`, which records what it posts in the same chat.
+ */
+export const ensureThreadChat = Effect.fnUntraced(function* ({
+  agent,
+  threadId,
+  title,
+  channelId,
+  source = DiscordBinding.DISCORD_SOURCE,
+}: EnsureThreadChatProps) {
+  // Thread ids are global, but the same thread may be bridged to more than one agent.
+  const existing = yield* Database.query(
+    Query.select(Filter.foreignKeys(Chat.Chat, [DiscordBinding.threadKey(threadId, source)])),
+  ).run;
+  const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
+  if (match) {
+    return match;
+  }
+
+  // Read before the new chat exists: `Agent.loadChat` resolves the agent's latest chat.
+  const bindings = yield* loadAgentBindings(agent);
+
+  const feed = yield* Database.add(Feed.make());
+  const chat = yield* Database.add(
+    Chat.make({
+      [Obj.Meta]: {
+        keys: [
+          DiscordBinding.threadKey(threadId, source),
+          ...(channelId ? [{ source: DiscordBinding.DISCORD_CHANNEL_SOURCE, id: channelId }] : []),
+        ],
+      },
+      [Obj.Parent]: agent,
+      name: title,
+      feed: Ref.make(feed),
+      instructions: agent.instructions,
+    }),
+  );
+
+  const runtime = yield* Effect.context<Database.Service>();
+  const AiContext = yield* Effect.promise(aiContextRuntime);
+  const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
+  yield* Effect.promise(() => binder.bind({ skills: bindings.skills, objects: [...bindings.objects, Ref.make(chat)] }));
+  return chat;
+}, Effect.scoped);
+
 const handler: Operation.WithHandler<typeof AgentOperation.EnsureThreadChat> = AgentOperation.EnsureThreadChat.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ agent: agentRef, threadId, title, channelId }) {
+    Effect.fnUntraced(function* ({ agent: agentRef, threadId, title, channelId, source }) {
       const agent = yield* Database.load(agentRef);
-
-      // Thread ids are global, but the same thread may be bridged to more than one agent.
-      const existing = yield* Database.query(
-        Query.select(Filter.foreignKeys(Chat.Chat, [DiscordBinding.threadKey(threadId)])),
-      ).run;
-      const match = existing.find((chat) => Obj.getParent(chat)?.id === agent.id);
-      if (match) {
-        return { chat: Ref.make(match), feed: match.feed };
-      }
-
-      // Read before the new chat exists: `Agent.loadChat` resolves the agent's latest chat.
-      const bindings = yield* loadAgentBindings(agent);
-
-      const feed = yield* Database.add(Feed.make());
-      const chat = yield* Database.add(
-        Chat.make({
-          [Obj.Meta]: {
-            keys: [
-              DiscordBinding.threadKey(threadId),
-              ...(channelId ? [{ source: DiscordBinding.DISCORD_CHANNEL_SOURCE, id: channelId }] : []),
-            ],
-          },
-          [Obj.Parent]: agent,
-          name: title,
-          feed: Ref.make(feed),
-          instructions: agent.instructions,
-        }),
-      );
-
-      const runtime = yield* Effect.context<Database.Service>();
-      const AiContext = yield* Effect.promise(aiContextRuntime);
-      const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
-      yield* Effect.promise(() =>
-        binder.bind({ skills: bindings.skills, objects: [...bindings.objects, Ref.make(chat)] }),
-      );
-
+      const chat = yield* ensureThreadChat({ agent, threadId, title, channelId, source });
       return { chat: Ref.make(chat), feed: chat.feed };
-    }, Effect.scoped),
+    }),
   ),
 );
 

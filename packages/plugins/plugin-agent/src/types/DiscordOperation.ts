@@ -81,3 +81,33 @@ export const GetBotStatus = Operation.make({
   input: BindingInput,
   output: Schema.Struct({ status: BotStatus }),
 });
+
+/**
+ * Posts a message as the binding's bot, to a user by DM or to a channel/thread, and records it as an
+ * assistant message in the agent's chat for that channel. Calls Discord's REST API directly, so it
+ * runs wherever the operation is hosted (EDGE or the app) without the gateway.
+ */
+export const SendMessage = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.sendDiscordMessage'),
+    name: 'Send Discord message',
+    description:
+      'Sends a Discord message as the agent: to a user by DM (userId) or to a channel or thread (channelId). Pass exactly one.',
+    icon: 'ph--paper-plane-tilt--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    binding: Ref.Ref(DiscordBinding.DiscordBinding).annotate({ description: 'The Discord binding of the agent.' }),
+    userId: Schema.optional(Schema.String.annotate({ description: 'Discord user id to DM.' })),
+    channelId: Schema.optional(Schema.String.annotate({ description: 'Discord channel or thread id to post in.' })),
+    text: Schema.String.annotate({ description: 'The message; split into several posts past 2000 characters.' }),
+  }),
+  output: Schema.Struct({
+    delivered: Schema.Boolean,
+    channelId: Schema.optional(
+      Schema.String.annotate({ description: 'The channel posted in (the DM channel for a user).' }),
+    ),
+    messageIds: Schema.optional(Schema.Array(Schema.String)),
+    reason: Schema.optional(Schema.String.annotate({ description: 'Why the message was not delivered.' })),
+  }),
+});

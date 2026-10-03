@@ -260,7 +260,7 @@ const waitForSpace = async (
 
 /**
  * An interlocutor agent with the interview skill, driven by a scripted model, beside the
- * interviewee's profile panel.
+ * interviewee's profile panel and the agent's state (mode, counts, recent memories, knowledge graph).
  *
  * Test:
  * 1. Enter "Hi, I am Rich." — the agent resolves Rich (the panel title changes) and asks what he is focused on.
@@ -271,7 +271,7 @@ const waitForSpace = async (
 export const Default: Story = {
   decorators,
   args: {
-    layout: [[StoryRole.Chat], [StoryRole.Profile]],
+    layout: [[StoryRole.Chat], [StoryRole.Profile], [StoryRole.AgentState]],
   },
 };
 
@@ -279,7 +279,7 @@ export const Default: Story = {
 export const TestInterviewScripted: Story = {
   decorators,
   args: {
-    layout: [[StoryRole.Chat], [StoryRole.Profile]],
+    layout: [[StoryRole.Chat], [StoryRole.Profile], [StoryRole.AgentState]],
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -315,7 +315,13 @@ export const TestInterviewScripted: Story = {
       await memoriesSection.findByText(content);
     }
 
-    // 6. The space holds one interviewee, two confirmed goals and three memories.
+    // 6. The agent state panel counts what the interview recorded and shows the interview mode.
+    await waitFor(() => expect(canvas.getByTestId('agent-state-memories').textContent).toBe('3'), { timeout: 30_000 });
+    await waitFor(() => expect(canvas.getByTestId('agent-state-goals').textContent).toBe('2'));
+    await waitFor(() => expect(canvas.getByTestId('agent-state-people').textContent).toBe('1'));
+    within(await canvas.findByRole('region', { name: 'Identity' })).getByText('Interview');
+
+    // 7. The space holds one interviewee, two confirmed goals and three memories.
     await waitForSpace(
       ({ people, goals, memories }) =>
         people.length === 1 &&
@@ -350,7 +356,7 @@ export const Live: Story = {
     },
   }),
   args: {
-    layout: [[StoryRole.Chat], [StoryRole.Profile]],
+    layout: [[StoryRole.Chat], [StoryRole.Profile], [StoryRole.AgentState]],
   },
   tags: ['!test'],
 };

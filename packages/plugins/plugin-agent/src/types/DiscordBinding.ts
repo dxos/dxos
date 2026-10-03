@@ -17,8 +17,15 @@ export const DISCORD_SOURCE = 'discord.com';
 /** `Obj.Meta` key source recording the parent channel of a thread chat. */
 export const DISCORD_CHANNEL_SOURCE = 'discord.com/channel';
 
-/** Foreign key identifying the chat that mirrors a Discord thread. */
-export const threadKey = (threadId: string) => ({ source: DISCORD_SOURCE, id: threadId });
+/** `Obj.Meta` key source for a chat that mirrors a Discord DM channel (always agent-initiated). */
+export const DISCORD_DM_SOURCE = 'discord.com/dm';
+
+/** Where a mirrored conversation lives: a guild thread, or a DM channel. */
+export const ThreadSource = Schema.Literals([DISCORD_SOURCE, DISCORD_DM_SOURCE]);
+export type ThreadSource = Schema.Schema.Type<typeof ThreadSource>;
+
+/** Foreign key identifying the chat that mirrors a Discord thread (or DM channel). */
+export const threadKey = (threadId: string, source: ThreadSource = DISCORD_SOURCE) => ({ source, id: threadId });
 
 /** The user-editable connection settings; the agent edge is fixed when the binding is made. */
 export const Properties = Schema.Struct({

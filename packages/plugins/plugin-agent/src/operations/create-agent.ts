@@ -9,15 +9,21 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 
-import { ConversationSkill, InterviewSkill } from '#skills';
+import { ConversationSkill, InterviewSkill, RelaySkill } from '#skills';
 import { AgentOperation } from '#types';
+
+import { baseInstructions } from '../instructions.ts';
 
 const handler: Operation.WithHandler<typeof AgentOperation.CreateAgent> = AgentOperation.CreateAgent.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ name, instructions }) {
       // Bound by registry URI so the agent follows the compiled skills until `customizeSkill` forks one.
       const agent = yield* Agent.makeInitialized(
-        { name, instructions: instructions ?? '', skills: [Ref.fromURI(Skill.registryURI(InterviewSkill.key))] },
+        {
+          name,
+          instructions: instructions ?? baseInstructions(name),
+          skills: [Ref.fromURI(Skill.registryURI(InterviewSkill.key)), Ref.fromURI(Skill.registryURI(RelaySkill.key))],
+        },
         Ref.fromURI(Skill.registryURI(ConversationSkill.key)),
       );
       return { agent: Ref.make(agent) };

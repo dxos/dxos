@@ -7784,9 +7784,15 @@ importers:
       '@dxos/plugin-crm':
         specifier: workspace:*
         version: link:../plugin-crm
+      '@dxos/plugin-explorer':
+        specifier: workspace:*
+        version: link:../plugin-explorer
       '@dxos/plugin-markdown':
         specifier: workspace:*
         version: link:../plugin-markdown
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-hooks':
         specifier: workspace:*
         version: link:../../ui/react-primitives/react-hooks

@@ -18,7 +18,8 @@ export type ProfileGraphProps = {
   memories: readonly ProfileMemory[];
 };
 
-const GOAL_ICONS: Record<Goal.Status, string> = {
+/** Icon per goal status, shared with the agent state panel. */
+export const GOAL_ICONS: Record<Goal.Status, string> = {
   proposed: 'ph--circle-dashed--regular',
   confirmed: 'ph--target--regular',
   active: 'ph--play-circle--regular',
@@ -26,7 +27,8 @@ const GOAL_ICONS: Record<Goal.Status, string> = {
   dropped: 'ph--x-circle--regular',
 };
 
-const MEMORY_ICONS: Record<Memory.Kind, string> = {
+/** Icon per memory kind, shared with the agent state panel. */
+export const MEMORY_ICONS: Record<Memory.Kind, string> = {
   fact: 'ph--info--regular',
   preference: 'ph--heart--regular',
   goal: 'ph--flag--regular',

@@ -12,6 +12,8 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, DXN, Feed, Ref } from '@dxos/echo';
 
+import * as DiscordBinding from './DiscordBinding.ts';
+
 /** Creates an agent (instructions, feed and companion chat) in the space. */
 export const CreateAgent = Operation.make({
   meta: {
@@ -34,7 +36,7 @@ export const CreateAgent = Operation.make({
 
 /**
  * Maps a Discord thread to the agent's chat for it, creating the chat on first contact.
- * Idempotent on `(agent, threadId)`: the chat carries the thread id as an `Obj.Meta` foreign key.
+ * Idempotent on `(agent, source, threadId)`: the chat carries the thread id as an `Obj.Meta` foreign key.
  */
 export const EnsureThreadChat = Operation.make({
   meta: {
@@ -49,6 +51,11 @@ export const EnsureThreadChat = Operation.make({
     threadId: Schema.String.annotate({ description: 'The Discord thread id.' }),
     title: Schema.optional(Schema.String.annotate({ description: 'The thread title; names a new chat.' })),
     channelId: Schema.optional(Schema.String.annotate({ description: 'The Discord channel the thread belongs to.' })),
+    source: Schema.optional(
+      DiscordBinding.ThreadSource.annotate({
+        description: "'discord.com' for a guild thread (default), 'discord.com/dm' for a DM channel id.",
+      }),
+    ),
   }),
   output: Schema.Struct({
     chat: Ref.Ref(Chat.Chat),

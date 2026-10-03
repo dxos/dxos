@@ -84,6 +84,16 @@
       "types": "./dist/types/src/AgentPlugin.d.ts",
       "import": "./dist/lib/AgentPlugin.mjs"
     },
+    "./AgentState": {
+      "source": "./src/containers/AgentState/AgentState.tsx",
+      "types": "./dist/types/src/containers/AgentState/AgentState.d.ts",
+      "import": "./dist/lib/AgentState.mjs"
+    },
+    "./ChatParticipant": {
+      "source": "./src/types/ChatParticipant.ts",
+      "types": "./dist/types/src/types/ChatParticipant.d.ts",
+      "import": "./dist/lib/ChatParticipant.mjs"
+    },
     "./DiscordBinding": {
       "source": "./src/types/DiscordBinding.ts",
       "types": "./dist/types/src/types/DiscordBinding.d.ts",
@@ -119,6 +129,16 @@
       "types": "./dist/types/src/types/Profile.d.ts",
       "import": "./dist/lib/Profile.mjs"
     },
+    "./Relay": {
+      "source": "./src/types/Relay.ts",
+      "types": "./dist/types/src/types/Relay.d.ts",
+      "import": "./dist/lib/Relay.mjs"
+    },
+    "./RelayOperation": {
+      "source": "./src/types/RelayOperation.ts",
+      "types": "./dist/types/src/types/RelayOperation.d.ts",
+      "import": "./dist/lib/RelayOperation.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
@@ -136,6 +156,12 @@
     "*": {
       "AgentOperation": [
         "dist/types/src/types/AgentOperation.d.ts"
+      ],
+      "AgentState": [
+        "dist/types/src/containers/AgentState/AgentState.d.ts"
+      ],
+      "ChatParticipant": [
+        "dist/types/src/types/ChatParticipant.d.ts"
       ],
       "DiscordBinding": [
         "dist/types/src/types/DiscordBinding.d.ts"
@@ -157,6 +183,12 @@
       ],
       "Profile": [
         "dist/types/src/types/Profile.d.ts"
+      ],
+      "Relay": [
+        "dist/types/src/types/Relay.d.ts"
+      ],
+      "RelayOperation": [
+        "dist/types/src/types/RelayOperation.d.ts"
       ]
     }
   },
@@ -179,7 +211,9 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/plugin-crm": "workspace:*",
+    "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",

@@ -82,6 +82,24 @@ describe('EnsureThreadChat', () => {
           { source: DiscordBinding.DISCORD_SOURCE, id: 'thread-1' },
           { source: DiscordBinding.DISCORD_CHANNEL_SOURCE, id: 'channel-1' },
         ]);
+
+        // A DM channel is keyed by its own source, so it never collides with a thread of the same id.
+        const dm = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
+          agent: agentRef,
+          threadId: 'thread-1',
+          source: 'discord.com/dm',
+        });
+        yield* Database.flush();
+        const dmAgain = yield* Operation.invoke(AgentOperation.EnsureThreadChat, {
+          agent: agentRef,
+          threadId: 'thread-1',
+          source: 'discord.com/dm',
+        });
+        expect(dm.chat.uri).not.toBe(first.chat.uri);
+        expect(dmAgain.chat.uri).toBe(dm.chat.uri);
+        expect(Obj.getMeta(yield* Database.load(dm.chat)).keys).toEqual([
+          { source: DiscordBinding.DISCORD_DM_SOURCE, id: 'thread-1' },
+        ]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { AgentOperation, DiscordOperation, MemoryOperation } from '#types';
+import { AgentOperation, DiscordOperation, MemoryOperation, RelayOperation } from '#types';
 
 export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent.ts'))),
@@ -20,6 +20,13 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   MemoryOperation.ProposeGoal.pipe(Operation.lazyHandler(() => import('./propose-goal.ts'))),
   MemoryOperation.ConfirmGoal.pipe(Operation.lazyHandler(() => import('./confirm-goal.ts'))),
   MemoryOperation.UpdateProfile.pipe(Operation.lazyHandler(() => import('./update-profile.ts'))),
+  RelayOperation.CreateRelay.pipe(Operation.lazyHandler(() => import('./create-relay.ts'))),
+  RelayOperation.UpdateRelay.pipe(Operation.lazyHandler(() => import('./update-relay.ts'))),
+  RelayOperation.ListRelays.pipe(Operation.lazyHandler(() => import('./list-relays.ts'))),
+  RelayOperation.SendMessage.pipe(Operation.lazyHandler(() => import('./send-message.ts'))),
+  RelayOperation.AssignChatParticipant.pipe(Operation.lazyHandler(() => import('./assign-chat-participant.ts'))),
+  // Plain REST with the binding's token, so it runs on EDGE too, unlike the gateway verbs below.
+  DiscordOperation.SendMessage.pipe(Operation.lazyHandler(() => import('./send-discord-message.ts'))),
 ]);
 
 /** Calls EDGE as the user, so only hosts that provide `EdgeHttpClientService` (the app) contribute it. */

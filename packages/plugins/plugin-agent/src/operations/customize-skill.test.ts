@@ -18,7 +18,7 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, InterviewSkill } from '#skills';
+import { ConversationSkill, InterviewSkill, RelaySkill } from '#skills';
 import { AgentOperation } from '#types';
 
 import { findBound, openBinder } from './agent-skills.ts';
@@ -28,7 +28,7 @@ EntityId.dangerouslyDisableRandomness();
 const TestLayer = AssistantTestLayer({
   operationHandlers: AgentOperationHandlerSet,
   types: [Agent.Agent, Chat.Chat, Skill.Skill, Feed.Feed, Text.Text, Instructions.Instructions],
-  skills: [ConversationSkill.make(), InterviewSkill.make()],
+  skills: [ConversationSkill.make(), InterviewSkill.make(), RelaySkill.make()],
   disableLlmMemoization: true,
 });
 
@@ -68,6 +68,7 @@ describe('CustomizeSkill', () => {
           expect.arrayContaining([
             { key: ConversationSkill.key, customized: false },
             { key: InterviewSkill.key, customized: false },
+            { key: RelaySkill.key, customized: false },
           ]),
         );
 
@@ -112,7 +113,10 @@ describe('CustomizeSkill', () => {
           expect(resolved?.text).toContain('You interview the person');
         }
         const instructions = yield* Database.load(agent.instructions);
-        expect(instructions.skills.map((ref) => ref.uri)).toEqual([Skill.registryURI(InterviewSkill.key)]);
+        expect(instructions.skills.map((ref) => ref.uri)).toEqual([
+          Skill.registryURI(InterviewSkill.key),
+          Skill.registryURI(RelaySkill.key),
+        ]);
         expect(yield* Database.load(Ref.make(copy)).pipe(Effect.option)).toMatchObject({ _tag: 'None' });
       },
       Effect.provide(TestLayer),

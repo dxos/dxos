@@ -58,6 +58,9 @@
       "path": "../../core/mesh/edge-client"
     },
     {
+      "path": "../../core/protocols"
+    },
+    {
       "path": "../../sdk/app-framework"
     },
     {
@@ -95,6 +98,9 @@
     },
     {
       "path": "../plugin-crm"
+    },
+    {
+      "path": "../plugin-explorer"
     },
     {
       "path": "../plugin-markdown"
