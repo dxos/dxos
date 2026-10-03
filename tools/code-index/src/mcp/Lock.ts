@@ -18,7 +18,7 @@ import * as Store from '../Store.ts';
 /**
  * Names the process holding a store open. Both graph backends lock their directory for as long as
  * a writer has it open (LevelDB and RocksDB alike), so a second opener fails, and "locked" alone
- * leaves the user hunting for which `serve` or `index` to stop.
+ * leaves the user hunting for which `index`, `serve` or `mcp` to stop.
  */
 
 export type Holder = {
@@ -94,23 +94,45 @@ export const holders = (dir: string): Effect.Effect<Holder[]> =>
     );
   });
 
+/** Which code-index command a holder's command line is, so the message says what to stop; no subcommand is `serve`. */
+const role = (command: string): string | undefined => {
+  const match = /(?:^|[\s/])code-index(?:\.ts)?(?=\s|$)(?:\s+([a-z]+))?/.exec(command);
+  if (match === null) {
+    return undefined;
+  }
+  const subcommand = match[1] ?? 'serve';
+  return subcommand === 'mcp' ? 'another `code-index mcp`' : `\`code-index ${subcommand}\``;
+};
+
+const describeHolder = (holder: Holder): string => {
+  const what = role(holder.command);
+  return `pid ${holder.pid} (${what === undefined ? holder.command || 'unknown command' : `${what}: ${holder.command}`})`;
+};
+
+/** RocksDB and LevelDB both say "lock" when another process holds the directory. */
+const isLockError = (error: Store.StoreError): boolean => /\block\b|LOCK/.test(error.message);
+
+const ADVICE =
+  'A store has one holder at a time — `code-index index`, `code-index serve` or another `code-index mcp` — ' +
+  'so stop that process, or pass --store a copy of the store directory.';
+
 /**
  * Rewrites a failure to open the store as one naming the processes that hold it, when there are
- * any; otherwise the original failure stands.
+ * any; a lock failure whose holder cannot be found still names what can hold it.
  */
 export const explain = (dir: string, error: Store.StoreError): Effect.Effect<never, Store.StoreError> =>
   Effect.flatMap(holders(dir), (found) =>
     Effect.fail(
-      found.length === 0
-        ? error
-        : new Store.StoreError({
-            message:
-              `The store at ${dir} is held open by ${found
-                .map((holder) => `pid ${holder.pid} (${holder.command || 'unknown command'})`)
-                .join(', ')}. ` +
-              'The store is single-writer and `code-index mcp` cannot open it beside a running `serve` or `index`; ' +
-              'stop that process, or pass --store a copy of the store directory.',
+      found.length > 0
+        ? new Store.StoreError({
+            message: `The store at ${dir} is held open by ${found.map(describeHolder).join(', ')}. ${ADVICE}`,
             cause: error,
-          }),
+          })
+        : isLockError(error)
+          ? new Store.StoreError({
+              message: `The store at ${dir} is locked by another process whose PID could not be found. ${ADVICE}`,
+              cause: error,
+            })
+          : error,
     ),
   );
