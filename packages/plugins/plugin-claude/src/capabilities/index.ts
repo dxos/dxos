@@ -26,6 +26,11 @@ export const Subprocess = AppCapability.layerSpec(() => import('./subprocess.ts'
   name: 'Subprocess',
   environments: ['node'],
 });
+export const ClaudeCodeEdgeAgent = Capability.lazyModule(
+  'ClaudeCodeEdgeAgent',
+  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  () => import('./claude-code-edge-agent.ts'),
+);
 
 export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,

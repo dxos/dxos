@@ -145,6 +145,7 @@
     "@dxos/log": "workspace:*",
     "@dxos/plugin-assistant": "workspace:*",
     "@dxos/plugin-code": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/types": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"

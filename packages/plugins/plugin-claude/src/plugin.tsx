@@ -6,6 +6,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 
 import {
   ClaudeCodeAgent,
+  ClaudeCodeEdgeAgent,
   OperationHandler,
   PluginAsset,
   Schema,
@@ -17,6 +18,7 @@ import { meta } from '#meta';
 
 export const ClaudePlugin = Plugin.define(meta).pipe(
   Plugin.addModule(ClaudeCodeAgent),
+  Plugin.addModule(ClaudeCodeEdgeAgent),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(Schema),
   Plugin.addModule(OperationHandler),
