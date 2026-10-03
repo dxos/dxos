@@ -5,11 +5,11 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { AppSurface, ObjectCard, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as Game from '@dxos/plugin-game/Game';
-import { Block, Button, Card, Flex, Icon, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, Flex, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionMenu } from '@dxos/react-ui-menu';
 
@@ -87,21 +87,23 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
   const [cardRef, pivotId] = useCardPivot();
   const objectMenuItems = useObjectMenuItems(game, pivotId);
-  const icon = Obj.getIcon(game)?.icon ?? 'ph--sword--regular';
-
   return (
-    <Card.Root grid ref={cardRef}>
-      <Card.Header>
-        <Block>
-          <Icon icon={icon} />
-        </Block>
-        <Card.Title>{Obj.getLabel(game, { fallback: 'typename' })}</Card.Title>
-        <Block rail='end'>
-          <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
-            <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('game-actions.label')} />
-          </ActionMenu>
-        </Block>
-      </Card.Header>
+    <ObjectCard.Root ref={cardRef}>
+      <ObjectCard.Header
+        subject={game}
+        menu={
+          <Block rail='end'>
+            <ActionMenu disabled={!objectMenuItems?.length} actions={objectMenuItems}>
+              <Button
+                iconOnly
+                variant='ghost'
+                icon='ph--dots-three-vertical--regular'
+                label={t('game-actions.label')}
+              />
+            </ActionMenu>
+          </Block>
+        }
+      />
       <Card.Body>
         <Surface.Surface
           type={AppSurface.CardContent}
@@ -109,7 +111,7 @@ const GameTile = ({ data: game }: { data: Game.Game }) => {
           data={{ subject: game } satisfies AppSurface.ObjectCardData}
         />
       </Card.Body>
-    </Card.Root>
+    </ObjectCard.Root>
   );
 };
 

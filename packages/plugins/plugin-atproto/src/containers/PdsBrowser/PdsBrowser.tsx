@@ -6,16 +6,14 @@ import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { AppSurface, ObjectCard } from '@dxos/app-toolkit/ui';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
 import { EffectEx } from '@dxos/effect';
 import { AccessToken, Connection } from '@dxos/link';
 import { useQuery } from '@dxos/react-client/echo';
 import {
-  Block,
   Button,
-  Card,
   Container,
   Empty,
   Field,
@@ -30,7 +28,6 @@ import {
 } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
-import { getStyles } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { AtprotoCapabilities } from '#types';
@@ -267,11 +264,6 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
     [records],
   );
 
-  // Icon/hue from the decoded object's type, matching how the object renders as a card elsewhere.
-  const previewIcon = preview
-    ? (Obj.getIcon(preview) ?? { icon: 'ph--circle-dashed--regular', hue: undefined })
-    : undefined;
-
   const recordDetail = record ? (
     <ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
@@ -279,19 +271,11 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
           <span className='font-mono text-xs text-fg-muted truncate'>{record.uri}</span>
           {mappedForCollection ? (
             <Flex column gap='sm'>
-              {preview && previewIcon && (
-                <Card.Root grid>
-                  <Card.Header>
-                    <Block>
-                      <Icon
-                        icon={previewIcon.icon}
-                        classNames={previewIcon.hue ? getStyles(previewIcon.hue).text : undefined}
-                      />
-                    </Block>
-                    <Card.Title>{Obj.getLabel(preview)}</Card.Title>
-                  </Card.Header>
+              {preview && (
+                <ObjectCard.Root>
+                  <ObjectCard.Header subject={preview} />
                   <Surface.Surface type={AppSurface.CardContent} data={{ subject: preview }} limit={1} />
-                </Card.Root>
+                </ObjectCard.Root>
               )}
               {alreadyImported ? (
                 <span className='text-sm text-success-text'>{t('imported.label')}</span>

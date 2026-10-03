@@ -5,13 +5,11 @@
 import React, { type PropsWithChildren, useCallback, useEffect, useRef, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot, CardMenuSlot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Obj } from '@dxos/echo';
+import { AppSurface, CardMenuSlot, ObjectCard, useObjectMenuItems } from '@dxos/app-toolkit/ui';
 import {
   Block,
   Button,
   Card,
-  Icon,
   Popover,
   toLocalizedString,
   useMediaQuery,
@@ -20,7 +18,6 @@ import {
 } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
-import { getStyles } from '@dxos/ui-theme';
 
 import { useDeckState } from '#hooks';
 import { meta } from '#meta';
@@ -114,7 +111,6 @@ export const PopoverContent = () => {
   const { state } = useDeckState();
   const popoverSubject =
     state.popoverContent && 'subject' in state.popoverContent ? state.popoverContent.subject : undefined;
-  const isObjectPopover = Obj.isObject(popoverSubject);
   // The popover is portaled; resolve the origin plank from the anchor element it was opened from.
   const pivotId =
     state.popoverAnchor instanceof Element ? Attention.getRootAttendableId(state.popoverAnchor) : undefined;
@@ -122,10 +118,6 @@ export const PopoverContent = () => {
   const menu = useMenuActions();
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
   const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
-  const iconAnnotation = isObjectPopover ? Obj.getIcon(popoverSubject) : undefined;
-  const icon = isObjectPopover ? (iconAnnotation?.icon ?? 'ph--circle-dashed--regular') : undefined;
-  // Same hue treatment as the masonry ObjectTile, so the card depicts the type consistently.
-  const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
   const content = state.popoverContent;
   // Base and rename popovers render a plugin-provided component; everything else falls through to the card.
   const isComponentPopover =
@@ -165,8 +157,7 @@ export const PopoverContent = () => {
          * content, regular-size and edge to edge as the current card popover; it scrolls itself (`dx-card-popover`) and
          * keeps a card's minimum width and height within the space available.
          */
-        <Card.Root
-          grid
+        <ObjectCard.Root
           border={false}
           classNames={[
             'dx-card-popover dx-card-min-width',
@@ -174,21 +165,20 @@ export const PopoverContent = () => {
             roundedClassNames,
           ]}
         >
-          <Card.Header>
-            <Block>
-              <CardIconSlot subject={popoverSubject}>
-                {icon && <Icon icon={icon} classNames={iconStyles?.text} />}
-              </CardIconSlot>
-            </Block>
-            <Card.Title>{title}</Card.Title>
-            {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-            <Block rail='end'>
-              {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
-              <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                <Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
-              </ActionMenu>
-            </Block>
-          </Card.Header>
+          <ObjectCard.Header
+            subject={popoverSubject}
+            menu={
+              // TODO(wittjosiah): Reconcile with Card.Menu.
+              <Block rail='end'>
+                {popoverSubject !== undefined && <CardMenuSlot subject={popoverSubject} menu={menu} />}
+                <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
+                  <Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
+                </ActionMenu>
+              </Block>
+            }
+          >
+            {title}
+          </ObjectCard.Header>
 
           {content && 'subject' in content ? (
             /** CardContent must render the Card.Body. */
@@ -200,7 +190,7 @@ export const PopoverContent = () => {
               </Card.Row>
             </Card.Body>
           )}
-        </Card.Root>
+        </ObjectCard.Root>
       )}
     </Popover.Content>
   );

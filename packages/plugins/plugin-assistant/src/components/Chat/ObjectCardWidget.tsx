@@ -5,11 +5,10 @@
 import React, { useMemo } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot } from '@dxos/app-toolkit/ui';
+import { AppSurface, ObjectCard as ObjectCardPrimitive } from '@dxos/app-toolkit/ui';
 import { type Database, Obj } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
 import { URI } from '@dxos/keys';
-import { Block, Card, Icon } from '@dxos/react-ui';
 import { type ObjectLinkProps, type WidgetDef } from '@dxos/ui-editor';
 
 export type ObjectCardProps = {
@@ -37,17 +36,12 @@ export const ObjectCard = ({ db, eid, label }: ObjectCardProps) => {
 
   const title = Obj.getLabel(subject)?.trim() || label || '';
   return (
-    <Card.Root grid>
-      <Card.Header>
-        <Block>
-          <CardIconSlot subject={subject}>
-            <Icon icon={Obj.getIcon(subject)?.icon ?? 'ph--file--regular'} />
-          </CardIconSlot>
-        </Block>
-        <Card.Title lines={1}>{title}</Card.Title>
-      </Card.Header>
+    <ObjectCardPrimitive.Root>
+      <ObjectCardPrimitive.Header subject={subject} lines={1}>
+        {title}
+      </ObjectCardPrimitive.Header>
       <Surface.Surface type={AppSurface.CardContent} data={{ subject }} limit={1} />
-    </Card.Root>
+    </ObjectCardPrimitive.Root>
   );
 };
 

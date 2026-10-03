@@ -5,13 +5,12 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, CardIconSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Entity, Obj } from '@dxos/echo';
-import { Block, Button, Card, Focus, Icon, ScrollArea, composable, composableProps } from '@dxos/react-ui';
+import { AppSurface, ObjectCard, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { Entity } from '@dxos/echo';
+import { Block, Button, Focus, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
-import { getStyles } from '@dxos/ui-theme';
 
 //
 // SearchResultStack
@@ -76,9 +75,6 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
   ({ data, location, current }, forwardedRef) => {
     const { result, query } = data;
     const label = result.label ?? (result.object && Entity.getLabel(result.object)) ?? '';
-    const iconAnnotation = result.object && Obj.getIcon(result.object);
-    const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
-    const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
     // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
     const [cardRef, pivotId] = useCardPivot();
     const menuItems = useObjectMenuItems(result.object, pivotId);
@@ -91,24 +87,22 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
     return (
       <Mosaic.Tile asChild classNames='dx-hover dx-current dx-selected' id={result.id} data={data} location={location}>
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
-          <Card.Root grid ref={forwardedRef} role='button' classNames='cursor-pointer'>
-            <Card.Header ref={cardRef}>
-              <Block>
-                <CardIconSlot subject={result.object}>
-                  <Icon icon={icon} classNames={iconStyles?.text} />
-                </CardIconSlot>
-              </Block>
-              <Card.Title>
-                <Highlighted text={label} query={query} />
-              </Card.Title>
-              <Block rail='end'>
-                <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
-                </ActionMenu>
-              </Block>
-            </Card.Header>
+          <ObjectCard.Root ref={forwardedRef} role='button' classNames='cursor-pointer'>
+            <ObjectCard.Header
+              ref={cardRef}
+              subject={result.object}
+              menu={
+                <Block rail='end'>
+                  <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
+                    <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                  </ActionMenu>
+                </Block>
+              }
+            >
+              <Highlighted text={label} query={query} />
+            </ObjectCard.Header>
             <Surface.Surface type={AppSurface.CardContent} data={{ subject: result.object }} limit={1} />
-          </Card.Root>
+          </ObjectCard.Root>
         </Focus.Item>
       </Mosaic.Tile>
     );
