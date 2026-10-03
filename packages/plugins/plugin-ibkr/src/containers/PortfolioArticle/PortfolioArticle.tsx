@@ -149,32 +149,34 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
-            <Listbox.Root value={currentId} onValueChange={handleNavigate}>
-              <Listbox.Viewport>
-                <Listbox.Content aria-label={t('reports.label')}>
-                  {rows.map((row) => (
-                    <Listbox.Item key={row.id} id={row.id}>
-                      {t('report-row.label', {
-                        date: row.date,
-                        positions: row.positions,
-                        trades: row.trades,
-                        cash: row.cash,
-                      })}
-                    </Listbox.Item>
-                  ))}
-                </Listbox.Content>
-              </Listbox.Viewport>
+            <Listbox.Root
+              value={currentId}
+              onValueChange={handleNavigate}
+              items={rows.map((row) => ({ value: row.id, label: row.id }))}
+            >
+              <Listbox.Content aria-label={t('reports.label')}>
+                {rows.map((row) => (
+                  <Listbox.Item key={row.id} id={row.id}>
+                    {t('report-row.label', {
+                      date: row.date,
+                      positions: row.positions,
+                      trades: row.trades,
+                      cash: row.cash,
+                    })}
+                  </Listbox.Item>
+                ))}
+              </Listbox.Content>
             </Listbox.Root>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

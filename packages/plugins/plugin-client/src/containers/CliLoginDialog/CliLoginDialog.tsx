@@ -112,7 +112,7 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
         </AlertDialog.Description>
         {identity && (
           <div className='py-2'>
-            <p className='text-sm text-subdued'>{t('cli-login-code.label')}</p>
+            <p className='text-sm text-fg-subtle'>{t('cli-login-code.label')}</p>
             <p className='py-2 font-mono text-2xl tracking-widest text-center' data-testid='cliLogin.state'>
               {state}
             </p>
@@ -125,13 +125,11 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
           {status === 'error' && t('cli-login-error.message', { error })}
         </p>
       </AlertDialog.Body>
-      <AlertDialog.ActionBar>
+      <AlertDialog.Footer>
         {status === 'confirm' || status === 'sending' ? (
           <>
-            <AlertDialog.Cancel asChild>
-              <Button data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
-                {t('cli-login-deny.label')}
-              </Button>
+            <AlertDialog.Cancel data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
+              {t('cli-login-deny.label')}
             </AlertDialog.Cancel>
             <Button
               data-testid='cliLogin.authorize'
@@ -143,14 +141,15 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
             </Button>
           </>
         ) : (
-          <AlertDialog.Action asChild>
-            {/* While the CLI is joining, closing cancels the invitation, so the action says so. */}
-            <Button data-testid='cliLogin.done' variant={status === 'success' ? 'primary' : 'default'} onClick={close}>
-              {t(status === 'waiting' ? 'cli-login-cancel.label' : 'cli-login-done.label')}
-            </Button>
+          <AlertDialog.Action
+            data-testid='cliLogin.done'
+            variant={status === 'success' ? 'primary' : 'default'}
+            onClick={close}
+          >
+            {t(status === 'waiting' ? 'cli-login-cancel.label' : 'cli-login-done.label')}
           </AlertDialog.Action>
         )}
-      </AlertDialog.ActionBar>
+      </AlertDialog.Footer>
     </AlertDialog.Content>
   );
 };

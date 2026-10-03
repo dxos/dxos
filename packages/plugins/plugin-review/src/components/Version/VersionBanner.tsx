@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 
 import * as NamePopover from '@dxos/app-framework/NamePopover';
-import { Icon, IconButton, Tag, TextTooltip, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, Tag, ToggleGroup, Toolbar, Tooltip, useTranslation } from '@dxos/react-ui';
 import { type Hue } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -92,16 +92,16 @@ export const VersionBanner = ({
         <Icon icon={mode === 'checkpoint' ? 'ph--bookmark-simple--regular' : 'ph--git-branch--regular'} />
         <Tag hue={hue}>{name}</Tag>
         {timestamp && (
-          <TextTooltip text={new Date(timestamp).toLocaleString()} side='bottom'>
+          <Tooltip.Trigger asChild content={new Date(timestamp).toLocaleString()} side='bottom'>
             <Tag hue='sky'>{relativeTime(timestamp)}</Tag>
-          </TextTooltip>
+          </Tooltip.Trigger>
         )}
       </div>
       <Toolbar.Separator />
       {mode === 'checkpoint' && onRestore && (
-        <Toolbar.Button variant='ghost' onClick={onRestore}>
+        <Button variant='ghost' onClick={onRestore}>
           {t('restore.label')}
-        </Toolbar.Button>
+        </Button>
       )}
       {mode === 'checkpoint' && onBranchFrom && (
         <NamePopover.Root
@@ -114,9 +114,9 @@ export const VersionBanner = ({
             onBranchFrom(name);
           }}
         >
-          <Toolbar.Button variant='ghost' onClick={() => setNamingBranch(true)}>
+          <Button variant='ghost' onClick={() => setNamingBranch(true)}>
             {t('branch-from.label')}
-          </Toolbar.Button>
+          </Button>
         </NamePopover.Root>
       )}
       {mode === 'branch' && view && onViewChange && (
@@ -127,13 +127,13 @@ export const VersionBanner = ({
           onValueChange={(next) => isBranchView(next) && onViewChange(next)}
         >
           {BRANCH_VIEWS.map((option) => (
-            <Toolbar.ToggleGroupItem key={option} value={option} data-testid={`version-banner-view-${option}`}>
+            <ToggleGroup.Item key={option} value={option} data-testid={`version-banner-view-${option}`}>
               {t(`branch-view-${option}.label`)}
-            </Toolbar.ToggleGroupItem>
+            </ToggleGroup.Item>
           ))}
         </Toolbar.ToggleGroup>
       )}
-      <IconButton variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
+      <Button variant='ghost' icon='ph--x--regular' iconOnly label={t('close.label')} onClick={onClose} />
     </Toolbar.Root>
   );
 };

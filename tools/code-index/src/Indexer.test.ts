@@ -180,6 +180,8 @@ describe('Indexer', () => {
     const result = await index();
     // b no longer imports c, so the conclusion drawn from that edge is gone with it.
     expect(result).toMatchObject({ indexed: 1, derived: 1 });
+    // The native backend maintains the derived graphs from this pass's changes rather than recomputing.
+    expect(result.reasoners.every((outcome) => outcome.incremental)).toBe(Store.defaultBackend() === 'native');
 
     const reachable = await withStore((store) =>
       store.select(`
@@ -208,6 +210,21 @@ describe('Indexer', () => {
     expect(result).toMatchObject({ indexed: 1, reasoned: false, derived: 1 });
     // a no longer imports b, but nothing recomputed the conclusion that said it did.
     expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(1);
+  }, 60_000);
+
+  test('the next pass with rules catches up, though no file changed', async () => {
+    // The same state as a pass interrupted between committing and reasoning.
+    const caughtUp = await index();
+    expect(caughtUp).toMatchObject({ indexed: 0, reasoned: true, derived: 0 });
+    expect(await withStore((store) => store.match(undefined, Ontology.importsTestFile))).toHaveLength(0);
+
+    expect(await index()).toMatchObject({ indexed: 0, reasoned: false, derived: 0 });
+  }, 60_000);
+
+  test('a changed rule set reruns over unchanged files', async () => {
+    const rules = `${REASONER.rules}\n# Revised.\n`;
+    expect(await index({ reasoners: [{ ...REASONER, rules }] })).toMatchObject({ indexed: 0, reasoned: true });
+    expect(await index({ reasoners: [{ ...REASONER, rules }] })).toMatchObject({ indexed: 0, reasoned: false });
   }, 60_000);
   test('every snippet the index holds is valid TypeScript', async () => {
     const snippets = await withStore((store) => store.match(undefined, Ontology.snippet));

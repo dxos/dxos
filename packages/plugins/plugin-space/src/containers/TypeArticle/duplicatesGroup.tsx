@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { Ref } from '@dxos/echo';
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { type ActionGroupBuilderFn } from '@dxos/react-ui-menu';
+import type { ActionGroupBuilderFn } from '@dxos/react-ui-menu';
 
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation } from '#types';
@@ -209,7 +209,7 @@ export const useDuplicatesGroup = ({
                     variant: 'custom',
                     label: ['duplicates-position.label', { ns: meta.profile.key }],
                     render: () => (
-                      <span className='text-description text-sm tabular-nums'>
+                      <span className='text-fg-muted text-sm tabular-nums'>
                         {position} / {total}
                       </span>
                     ),

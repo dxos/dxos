@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 
 import { Ibkr, IbkrOperation } from '#types';
 
@@ -59,7 +59,7 @@ export const PortfolioImportAction = ({ subject }: PortfolioImportActionProps) =
 
   return (
     <>
-      <IconButton
+      <Button
         disabled={importing}
         variant='ghost'
         iconClassNames={importing ? 'animate-spin' : undefined}

@@ -51,13 +51,13 @@ export const TranscriptionArticle = ({ role, subject: transcript, attendableId }
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <Transcription model={model} transcript={transcript} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

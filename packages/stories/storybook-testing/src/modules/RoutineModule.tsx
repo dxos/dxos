@@ -32,16 +32,16 @@ const RoutineModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>{instructions.name ?? 'Routine'}</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='p-2 min-h-0'>
+      </Panel.Header>
+      <Panel.Body classNames='p-2 min-h-0'>
         <Card.Root>
           <Surface.Surface type={AppSurface.CardContent} limit={1} data={{ subject: instructions }} />
         </Card.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

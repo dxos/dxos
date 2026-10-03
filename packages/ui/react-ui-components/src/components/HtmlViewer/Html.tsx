@@ -5,7 +5,7 @@
 import DOMPurify from 'dompurify';
 import React, { useEffect, useMemo, useRef } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 import { type ColorScheme, detectColorScheme } from './color-scheme.ts';
@@ -146,7 +146,7 @@ const isMarkup = (text: string): boolean =>
  * resolves non-http `src` references. This component owns only the sandbox.
  */
 export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: HtmlProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const hostRef = useRef<HTMLDivElement>(null);
   // Resolved src cache, persisted across content rebuilds; blob: urls are revoked on unmount.
   const srcCacheRef = useRef<Map<string, string>>(new Map());

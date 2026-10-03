@@ -70,7 +70,7 @@ export const _FormEditable: StoryObj<typeof DefaultStory<Person.Person>> = {
 
 /**
  * Empty-state variant: the subject has no resolvable schema so `FormCard` renders
- * `<Card.Body><Card.Row><Card.Text variant='description'>No preview</Card.Text></Card.Row></Card.Body>`.
+ * `<Card.Body><Card.Row><Card.Text variant='muted'>No preview</Card.Text></Card.Row></Card.Body>`.
  * Use this story to verify the empty message lands in the card's center column.
  */
 export const _FormEmpty: StoryObj<typeof DefaultStory> = {
@@ -151,7 +151,7 @@ export const _Task: StoryObj<typeof DefaultStory<Task.Task>> = {
     image: true,
   },
   play: async ({ canvasElement }) => {
-    await waitFor(() => expect(canvasElement.querySelector('.dx-tag')).not.toBeNull());
+    await waitFor(() => expect(canvasElement.querySelector('.dx-tag')).not.toBeNull(), { timeout: 10_000 });
     await expect(canvasElement.querySelector('[data-testid="error-boundary-fallback"]')).toBeNull();
   },
 };

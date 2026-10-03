@@ -22,17 +22,17 @@ export const BookCard = ({ subject }: AppSurface.ObjectCardProps<Book.Book>) => 
 
   return (
     <Card.Body>
-      {cover && <Card.Poster image={cover} alt={catalog?.title ?? ''} aspect='auto' fit='contain' />}
+      {cover && <Card.Poster src={cover} alt={catalog?.title ?? ''} aspectRatio='auto' fit='contain' />}
       {authors.length > 0 && (
         <Card.Row>
-          <Card.Text variant='description' truncate>
+          <Card.Text variant='muted' truncate>
             {authors.join(', ')}
           </Card.Text>
         </Card.Row>
       )}
       {meta && (
         <Card.Row>
-          <Card.Text variant='description'>{meta}</Card.Text>
+          <Card.Text variant='muted'>{meta}</Card.Text>
         </Card.Row>
       )}
     </Card.Body>

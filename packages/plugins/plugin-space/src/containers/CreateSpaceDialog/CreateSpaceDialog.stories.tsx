@@ -22,9 +22,7 @@ import { CreateSpaceDialog } from './CreateSpaceDialog.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>
-    <Dialog.Overlay>
-      <CreateSpaceDialog />
-    </Dialog.Overlay>
+    <CreateSpaceDialog />
   </Dialog.Root>
 );
 

@@ -7,7 +7,7 @@ import React, { useCallback, useRef, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { Button, Field, Flex, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Flex, Input, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Mailbox } from '#types';
@@ -30,7 +30,7 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
       <div className='flex-1'>
         <Field.Root>
           <Field.Label srOnly>{t('saved-filter-name.label')}</Field.Label>
-          <Field.Input
+          <Input
             defaultValue={name}
             placeholder={t('save-filter.placeholder')}
             onChange={({ target: { value } }) => setName(value)}
@@ -40,11 +40,11 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
           />
         </Field.Root>
       </div>
-      <Popover.Close asChild>
+      <Popover.CloseTrigger asChild>
         <Button ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
           {t('save-filter.button')}
         </Button>
-      </Popover.Close>
+      </Popover.CloseTrigger>
     </Flex>
   );
 };

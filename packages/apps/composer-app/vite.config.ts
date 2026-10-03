@@ -86,7 +86,7 @@ const boot = bootChunking({
     [
       /@zag-js\/(accordion|carousel|floating-panel|hover-card|qr-code|scroll-snap|slider|toc)\//,
       /@ark-ui\/react\/dist\/components\/(accordion|carousel|floating-panel|hover-card|qr-code|slider|toc)\//,
-      /react-ui\/src\/components\/(Accordion|Carousel|FloatingPanel|HoverCard|QrCode|Slider|Toc)\/(?!.*\.theme\.ts$)/,
+      /react-ui\/src\/next\/components\/(Accordion|Carousel|FloatingPanel|HoverCard|QrCode|Slider)\//,
       /node_modules\/(\.pnpm\/)?uqr[@/]/,
     ]
       .map((pattern) => pattern.source)

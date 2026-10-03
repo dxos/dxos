@@ -47,10 +47,10 @@ export const CallArticle = ({ roomId }: CallArticleProps) => {
   return (
     <Call.Root>
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Call.Viewport>
             {inThisRoom ? (
               <>
@@ -64,7 +64,7 @@ export const CallArticle = ({ roomId }: CallArticleProps) => {
               </>
             )}
           </Call.Viewport>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Call.Root>
   );

@@ -23,14 +23,14 @@ export const TraceModule = ({ data }: { data?: { attendableId?: string } }) => {
 const TraceModuleContainer = ({ space, attendableId }: { space: Space; attendableId?: string }) => {
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Trace</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <TracePanel.Root space={space} attendableId={attendableId ?? space.id} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

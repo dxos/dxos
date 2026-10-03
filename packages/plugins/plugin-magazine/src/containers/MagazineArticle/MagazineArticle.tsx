@@ -92,28 +92,28 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menu} attendableId={attendableId} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content>
+      <Panel.Body>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
-          <Flex center classNames='h-full text-subdued text-sm'>
+          <Flex center classNames='h-full text-fg-subtle text-sm'>
             {t('empty-magazine.message')}
           </Flex>
         ) : (
           <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-            <Masonry.Content thin centered padding>
+            <Masonry.Content padding>
               {/* TODO(burdon): Move items into Root. */}
               <Masonry.Viewport classNames='py-2' items={tileItems} />
             </Masonry.Content>
           </Masonry.Root>
         )}
-      </Panel.Content>
-      <Panel.Statusbar classNames='border-t border-subdued-separator' asChild>
+      </Panel.Body>
+      <Panel.Footer classNames='border-t border-separator-subtle'>
         <ProgressMeter state={curateProgress} />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

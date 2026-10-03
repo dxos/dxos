@@ -53,7 +53,7 @@ import * as Trip from '@dxos/plugin-trip/Trip';
 import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Panel, Select, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -465,9 +465,9 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar>
+      <Panel.Header>
         <Toolbar.Root>
-          <Toolbar.IconButton
+          <Button
             icon='ph--play--regular'
             iconOnly
             label='Execute'
@@ -475,24 +475,26 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             disabled={!invoker || !mailbox}
             onClick={() => void handleExecute()}
           />
-          <Select.Root value={actionId} onValueChange={setActionId}>
-            <Select.TriggerButton classNames='truncate' data-testid='action-select' placeholder='Action' />
-            <Select.Portal>
-              <Select.Content>
-                <Select.Viewport>
-                  {actions.map((action) => (
-                    // Testid selection (`action-<id>`): the play tests must survive label edits.
-                    <Select.Option key={action.id} value={action.id} data-testid={`action-${action.id}`}>
-                      {action.label}
-                    </Select.Option>
-                  ))}
-                </Select.Viewport>
-              </Select.Content>
-            </Select.Portal>
+          <Select.Root
+            value={[actionId]}
+            onValueChange={({ value: [value] }) => setActionId(value)}
+            items={actions.map((action) => ({ value: action.id, label: action.label }))}
+          >
+            <Select.Trigger classNames='truncate' data-testid='action-select' placeholder='Action' />
+            <Select.Content>
+              {actions.map((action) => (
+                // Testid selection (`action-<id>`): the play tests must survive label edits.
+                <Select.Item
+                  key={action.id}
+                  data-testid={`action-${action.id}`}
+                  item={{ value: action.id, label: action.label }}
+                />
+              ))}
+            </Select.Content>
           </Select.Root>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content data-testid='counts' classNames='grid grid-cols-2'>
+      </Panel.Header>
+      <Panel.Body data-testid='counts' classNames='grid grid-cols-2'>
         <JsonHighlighter
           classNames='text-xs'
           data={{
@@ -522,8 +524,8 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             tasks: tasks.length,
           }}
         />
-      </Panel.Content>
-      <Panel.Statusbar classNames='flex flex-col'>
+      </Panel.Body>
+      <Panel.Footer classNames='flex flex-col'>
         {monitors.map((monitor) => (
           <ProgressMeter
             key={monitor.name}
@@ -534,7 +536,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         ))}
         <Toolbar.Root>
           {resets.map((reset) => (
-            <Toolbar.IconButton
+            <Button
               key={reset.id}
               icon='ph--trash--regular'
               label={reset.label}
@@ -544,7 +546,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
             />
           ))}
         </Toolbar.Root>
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   );
 };

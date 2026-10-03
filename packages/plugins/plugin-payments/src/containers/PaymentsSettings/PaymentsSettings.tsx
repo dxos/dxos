@@ -113,10 +113,8 @@ export const PaymentsSettings = ({ subject }: PaymentsSettingsProps) => {
               )}
               {status.kind === 'error' && (
                 <Banner.Root valence='error'>
-                  <Banner.Content>
-                    <Banner.Title>{t('error.label')}</Banner.Title>
-                    <Banner.Body>{status.text}</Banner.Body>
-                  </Banner.Content>
+                  <Banner.Title>{t('error.label')}</Banner.Title>
+                  <Banner.Body>{status.text}</Banner.Body>
                 </Banner.Root>
               )}
             </Flex>

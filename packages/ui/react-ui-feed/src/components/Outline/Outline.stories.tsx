@@ -56,7 +56,7 @@ const DefaultStory = ({ markers, ...props }: OutlineProps) => {
       </div>
       <div className='flex flex-col gap-3'>
         <label className='flex flex-col gap-1 text-sm'>
-          <span className='text-description'>
+          <span className='text-fg-muted'>
             Visible range: {visibleRange.from}–{visibleRange.to} (drag to scroll)
           </span>
           <input
@@ -67,7 +67,7 @@ const DefaultStory = ({ markers, ...props }: OutlineProps) => {
             onChange={(event) => setStart(Number(event.target.value))}
           />
         </label>
-        <p className='text-sm text-description'>
+        <p className='text-sm text-fg-muted'>
           Hover the rail to see the wave + popover. Ticks intersecting the visible range are brighter.
         </p>
         <p className='text-sm'>Selected: {selected ? selected.title : '(none)'}</p>

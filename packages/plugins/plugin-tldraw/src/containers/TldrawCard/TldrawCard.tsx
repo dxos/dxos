@@ -19,7 +19,7 @@ export const TldrawCard = ({ canvas, editable = false }: TldrawCardProps) => {
   return (
     <Card.Body>
       <Card.Section classNames='aspect-square'>
-        <Card.Row fullWidth>
+        <Card.Row>
           <CanvasComponent canvas={canvas} autoCenter readonly={!editable} hideUi={!editable} />
         </Card.Row>
       </Card.Section>

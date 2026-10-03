@@ -5,7 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { Button, Dialog, Field, Flex, useTranslation } from '@dxos/react-ui';
+import { Button, Dialog, Field, Flex, Input, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { RegistryOperation, describeLoadError } from '#operations';
@@ -40,16 +40,16 @@ export const LoadPluginDialog = () => {
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('load-by-url-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' ref={closeRef} />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close ref={closeRef} />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         {/* TODO(burdon): Form section. */}
         <Flex column gap='lg'>
           <Field.Root validationValence={error ? 'error' : undefined}>
             <Field.Label>{t('plugin-url.label')}</Field.Label>
-            <Field.Input
+            <Input
               placeholder='https://example.com/manifest.json'
               value={url}
               onChange={(event) => {

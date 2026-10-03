@@ -16,14 +16,14 @@ export const InvocationsModule = () => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Invocations</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} detailAxis='block' />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

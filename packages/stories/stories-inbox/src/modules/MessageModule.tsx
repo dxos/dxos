@@ -47,6 +47,6 @@ const MessageModuleContainer = ({ space, attendableId }: { space: Space; attenda
       limit={1}
     />
   ) : (
-    <div className='h-full grid place-items-center text-description'>Select a message</div>
+    <div className='h-full grid place-items-center text-fg-muted'>Select a message</div>
   );
 };

@@ -6,7 +6,7 @@ import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
 import * as CardMasonry from '@dxos/plugin-space/CardMasonry';
-import { Column, useTranslation } from '@dxos/react-ui';
+import { Container, Typography, useTranslation } from '@dxos/react-ui';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -29,8 +29,13 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
   }
 
   return (
-    <Column.Section label={t('task-artifacts.label')} data-testid='tasksPlugin.artifacts'>
-      <CardMasonry.Root objects={artifacts} size='compact' inline />
-    </Column.Section>
+    <Container asChild gutter='inherit' gap='md'>
+      <section data-testid='tasksPlugin.artifacts'>
+        <Typography asChild tone='subtle'>
+          <h2>{t('task-artifacts.label')}</h2>
+        </Typography>
+        <CardMasonry.Root objects={artifacts} size='compact' inline />
+      </section>
+    </Container>
   );
 };

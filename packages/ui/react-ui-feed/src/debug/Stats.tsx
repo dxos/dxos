@@ -43,11 +43,11 @@ export const Stats = ({ stats, values, columns = 1, classNames, title, ...props 
   >
     {stats.map(({ id, label, unit, classNames }) => (
       <Fragment key={id}>
-        <span className='text-subdued'>{label}</span>
+        <span className='text-fg-subtle'>{label}</span>
         <span className={mx('text-right', classNames?.(values[id]))} data-testid={`feed.${id}`}>
           {values[id]}
         </span>
-        <span className='text-subdued'>{unit ?? ''}</span>
+        <span className='text-fg-subtle'>{unit ?? ''}</span>
       </Fragment>
     ))}
   </div>

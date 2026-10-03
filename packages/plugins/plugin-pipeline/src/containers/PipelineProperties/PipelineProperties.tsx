@@ -13,8 +13,8 @@ import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, ty
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
-import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Form, FormFieldHeader, ViewEditor } from '@dxos/react-ui-form';
+import { SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Pipeline } from '@dxos/types';
@@ -153,34 +153,34 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
   }, [db, updateColumns]);
 
   return (
-    <Form.FieldSet>
-      <FormFieldHeader label={t('columns.label')} add={{ label: t('add-column.label'), onClick: handleAdd }} />
+    <Form.FieldSet
+      label={t('columns.label')}
+      actions={<SystemButton.Add label={t('add-column.label')} onClick={handleAdd} />}
+    >
       <OrderedList.Root<Pipeline.Column>
         items={columns}
-        isItem={Schema.is(Pipeline.Column)}
         getId={(column) => column.view.uri}
+        getLabel={(column) => column.name || t('untitled-column.title')}
         onMove={handleMove}
-        expandedId={expandedId}
-        onExpandedChange={setExpandedId}
       >
         {({ items }) => (
           <OrderedList.Content>
             {items.map((column) => (
-              <OrderedList.DetailItem<Pipeline.Column>
+              <OrderedList.Item
                 key={column.view.uri}
                 id={column.view.uri}
-                item={column}
-                title={column.name || t('untitled-column.title')}
-                trailing={
-                  <OrderedList.DeleteButton
-                    label={t('delete-column.label')}
-                    onClick={() => handleDelete(column)}
-                    data-testid='column.delete'
-                  />
-                }
+                open={expandedId === column.view.uri}
+                onOpenChange={(open) => setExpandedId(open ? column.view.uri : undefined)}
               >
+                <OrderedList.DragHandle />
+                <OrderedList.ItemText />
+                <SystemButton.Remove
+                  label={t('delete-column.label')}
+                  onClick={() => handleDelete(column)}
+                  data-testid='column.delete'
+                />
                 {column.view.target && (
-                  <>
+                  <OrderedList.Detail>
                     <Form.Root
                       schema={ColumnFormSchema}
                       values={column}
@@ -202,9 +202,9 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
                       types={types}
                       onQueryChanged={handleQueryChanged}
                     />
-                  </>
+                  </OrderedList.Detail>
                 )}
-              </OrderedList.DetailItem>
+              </OrderedList.Item>
             ))}
           </OrderedList.Content>
         )}

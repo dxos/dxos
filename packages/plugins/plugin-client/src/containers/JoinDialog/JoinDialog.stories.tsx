@@ -16,9 +16,7 @@ import { JoinDialog } from './JoinDialog.tsx';
 
 const DefaultStory = () => (
   <Dialog.Root defaultOpen>
-    <Dialog.Overlay>
-      <JoinDialog />
-    </Dialog.Overlay>
+    <JoinDialog />
   </Dialog.Root>
 );
 

@@ -75,11 +75,11 @@ export const MapArticle = ({ role, subject, provider, ...props }: MapArticleProp
   return (
     <Root>
       <Panel.Root>
-        <Panel.Content>
+        <Panel.Body>
           {provider && (
             <MapArticleInner key={provider.id} provider={provider} role={role} subject={subject} {...props} />
           )}
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Root>
   );

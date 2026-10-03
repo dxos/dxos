@@ -56,9 +56,7 @@ const DefaultStory = () => {
     <>
       <Listing note={note} />
       <Dialog.Root defaultOpen>
-        <Dialog.Overlay>
-          <AddToCollectionDialog object={note} />
-        </Dialog.Overlay>
+        <AddToCollectionDialog object={note} />
       </Dialog.Root>
     </>
   ) : (

@@ -9,7 +9,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Query, Tag } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { Banner, Panel, useTranslation } from '@dxos/react-ui';
+import { Empty, Panel, useTranslation } from '@dxos/react-ui';
 import { useSelection } from '@dxos/react-ui-attention';
 import { Masonry } from '@dxos/react-ui-masonry';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
@@ -141,11 +141,11 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={id} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content>
+      <Panel.Body>
         {(selectedResult && (
           <ResultDetail
             result={selectedResult}
@@ -155,18 +155,17 @@ export const SearchArticle = ({ role, subject, attendableId }: SearchArticleProp
           />
         )) ||
           (visibleResults.length === 0 ? (
-            <Banner.Empty
-              classNames='h-full'
-              label={view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
-            />
+            <Empty classNames='h-full'>
+              {view === 'starred' ? t('no-starred-results.message') : t('no-results.message')}
+            </Empty>
           ) : (
             <Masonry.Root Tile={TileAdapter} minColumnWidth={20} maxColumnWidth={25}>
-              <Masonry.Content thin centered padding>
+              <Masonry.Content padding>
                 <Masonry.Viewport getId={(data) => Obj.getURI(data.result)} items={tileItems} />
               </Masonry.Content>
             </Masonry.Root>
           ))}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -9,7 +9,7 @@ import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { type Identity } from '@dxos/halo';
 import { useCredentials } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { Banner, Icon, IconButton, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -79,7 +79,7 @@ export const RecoveryCredentialsContainer = () => {
           <Form.FieldSet label={t('recovery-setup-dialog.title')} description={t('recovery-setup-dialog.description')}>
             {supportsPasskeys && (
               <Form.Field standalone label={t('create-passkey.label')} description={t('create-passkey.description')}>
-                <IconButton
+                <Button
                   label={t('create-passkey.label')}
                   icon='ph--key--duotone'
                   variant='primary'
@@ -89,9 +89,7 @@ export const RecoveryCredentialsContainer = () => {
             )}
             {createError && (
               <Banner.Root valence='error'>
-                <Banner.Content>
-                  <Banner.Body>{createError}</Banner.Body>
-                </Banner.Content>
+                <Banner.Body>{createError}</Banner.Body>
               </Banner.Root>
             )}
             <Form.Field
@@ -99,7 +97,7 @@ export const RecoveryCredentialsContainer = () => {
               label={t('create-recovery-code.label')}
               description={t('create-recovery-code.description')}
             >
-              <IconButton
+              <Button
                 label={t('create-recovery-code.label')}
                 icon='ph--receipt--duotone'
                 variant='default'
@@ -111,31 +109,34 @@ export const RecoveryCredentialsContainer = () => {
           <Form.FieldSet label={t('credentials-list.label')}>
             {recoveryCredentials.length < 1 ? (
               <Banner.Root valence='error'>
-                <Banner.Content>
-                  <Banner.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Banner.Title>
-                  <Banner.Body>{t('no-credentials.message')}</Banner.Body>
-                </Banner.Content>
+                <Banner.Title icon='ph--shield-warning--duotone'>{t('no-credentials.title')}</Banner.Title>
+                <Banner.Body>{t('no-credentials.message')}</Banner.Body>
               </Banner.Root>
             ) : (
-              <Listbox.Root>
+              <Listbox.Root
+                items={recoveryCredentials.map((credential, index) => ({
+                  value: credential.id ?? `${index}`,
+                  label: credential.recovery?.label ?? credential.id ?? `${index}`,
+                }))}
+              >
                 <Listbox.Content classNames='gap-1'>
                   {recoveryCredentials.map((credential, index) => {
                     const { lookupKey, label, kind = 'unknown', revoked } = credential.recovery ?? { revoked: false };
                     return (
                       <Listbox.Item key={credential.id ?? index} id={credential.id ?? `${index}`} classNames='gap-2'>
                         <Icon icon={KIND_ICONS[kind]} />
-                        <Listbox.ItemLabel classNames={revoked ? 'text-subdued line-through' : undefined}>
+                        <Listbox.ItemText classNames={revoked ? 'text-fg-subtle line-through' : undefined}>
                           {label ?? t(`recovery-kind-${kind}.label`)}
-                        </Listbox.ItemLabel>
-                        <span className='text-description text-sm'>{credential.issuanceDate?.toLocaleString()}</span>
+                        </Listbox.ItemText>
+                        <span className='text-fg-muted text-sm'>{credential.issuanceDate?.toLocaleString()}</span>
                         {revoked ? (
-                          <span className='text-subdued text-sm'>{t('credential-revoked.label')}</span>
+                          <span className='text-fg-subtle text-sm'>{t('credential-revoked.label')}</span>
                         ) : (
                           // Withheld on the last one: revoking it would leave no way to recover the
                           // identity, and there is no self-service way back.
                           lookupKey &&
                           activeCount > 1 && (
-                            <IconButton
+                            <Button
                               iconOnly
                               label={t('revoke-credential.label')}
                               icon='ph--trash--regular'
@@ -152,21 +153,17 @@ export const RecoveryCredentialsContainer = () => {
             )}
             {revokeError && (
               <Banner.Root valence='error'>
-                <Banner.Content>
-                  <Banner.Body>{revokeError}</Banner.Body>
-                </Banner.Content>
+                <Banner.Body>{revokeError}</Banner.Body>
               </Banner.Root>
             )}
             {activeCount === 1 && (
               <Banner.Root valence='warning'>
-                <Banner.Content>
-                  <Banner.Body>{t('last-credential.message')}</Banner.Body>
-                </Banner.Content>
+                <Banner.Body>{t('last-credential.message')}</Banner.Body>
               </Banner.Root>
             )}
             {recoveryCredentials.length > 0 && (
               <Form.Field standalone label={t('manage-passkeys.label')} description={t('manage-passkeys.description')}>
-                <IconButton
+                <Button
                   label={t('manage-passkeys.label')}
                   icon='ph--arrow-square-out--regular'
                   variant='default'

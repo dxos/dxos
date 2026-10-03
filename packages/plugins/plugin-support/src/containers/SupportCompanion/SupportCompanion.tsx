@@ -19,7 +19,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Button, Carousel, Panel, ScrollArea, Toolbar, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
 
 import { useTours } from '#hooks';
@@ -88,10 +88,10 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {tours.map((tour) => (
-            <Toolbar.IconButton
+            <Button
               key={tour.id}
               icon='ph--path--regular'
               label={toLocalizedString(tour.label, t)}
@@ -100,28 +100,26 @@ export const SupportCompanion = ({ companionTo, attendableId }: SupportCompanion
             />
           ))}
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='flex flex-col items-center p-3 gap-3'>
             {screenshots.length > 0 && (
               <Carousel.Root count={screenshots.length}>
-                <Carousel.Content classNames='w-full'>
-                  <Carousel.Previous />
-                  <Carousel.Viewport>
-                    {screenshots.map((src, index) => (
-                      <Carousel.Slide key={src} index={index} src={src} />
-                    ))}
-                  </Carousel.Viewport>
-                  <Carousel.Next />
-                  <Carousel.Indicators />
-                </Carousel.Content>
+                <Carousel.PrevTrigger />
+                <Carousel.ItemGroup>
+                  {screenshots.map((src, index) => (
+                    <Carousel.Item key={src} index={index} src={src} />
+                  ))}
+                </Carousel.ItemGroup>
+                <Carousel.NextTrigger />
+                <Carousel.IndicatorGroup />
               </Carousel.Root>
             )}
             <MarkdownView classNames='w-full' content={content} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

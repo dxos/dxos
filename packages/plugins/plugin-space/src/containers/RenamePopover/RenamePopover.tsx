@@ -9,7 +9,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Entity, Obj } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { type Space, isSpace } from '@dxos/react-client/echo';
-import { Field, useTranslation } from '@dxos/react-ui';
+import { Field, Input, useTranslation } from '@dxos/react-ui';
+import { ObjectProperties } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
 
@@ -44,9 +45,22 @@ export type RenamePopoverProps = { subject: RenameSubject };
 //   so any plugin can use the rename popover without depending on plugin-space.
 
 /**
- * Inline rename popover anchored to a navtree row. Commits on Enter or when dismissed; Escape cancels.
+ * Rename popover anchored to a navtree row: an object's basic properties (name, description, tags), which write as they
+ * change; a space or a callback subject keeps the inline name field.
  */
-export const RenamePopover = ({ subject }: RenamePopoverProps) => {
+export const RenamePopover = ({ subject }: RenamePopoverProps) =>
+  !isRenameCallback(subject) && Obj.isObject(subject) ? (
+    <ObjectProperties object={subject} classNames='max-h-[min(var(--available-height),32rem)]' />
+  ) : (
+    <RenameField subject={subject} />
+  );
+
+RenamePopover.displayName = 'RenamePopover';
+
+/**
+ * Inline name field. Commits on Enter or when dismissed; Escape cancels.
+ */
+const RenameField = ({ subject }: RenamePopoverProps) => {
   const { t } = useTranslation(meta.profile.key);
   const space = !isRenameCallback(subject) && isSpace(subject);
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -98,7 +112,7 @@ export const RenamePopover = ({ subject }: RenamePopoverProps) => {
     <div className='p-2'>
       <Field.Root>
         <Field.Label srOnly>{t(space ? 'space-name.label' : 'object-name.label')}</Field.Label>
-        <Field.Input
+        <Input
           autoFocus
           value={name}
           placeholder={t(space ? 'unnamed-space.label' : 'object.placeholder')}
@@ -124,4 +138,4 @@ export const RenamePopover = ({ subject }: RenamePopoverProps) => {
   );
 };
 
-RenamePopover.displayName = 'RenamePopover';
+RenameField.displayName = 'RenameField';

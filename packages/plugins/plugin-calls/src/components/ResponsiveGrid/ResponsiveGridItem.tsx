@@ -4,7 +4,7 @@
 
 import React, { type CSSProperties, type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Waveform } from '@dxos/react-ui-components';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
@@ -88,11 +88,11 @@ export const ResponsiveGridItem = <T extends object = any>({
       {/* Action. */}
       {onClick && (
         <div className='z-10 absolute top-1 right-1 flex'>
-          <IconButton
+          <Button
             classNames={mx('p-1 min-h-1 rounded-sm', groupHoverControlItemWithTransition)}
             iconOnly
             icon={pinned ? 'ph--x--regular' : 'ph--arrows-out--regular'}
-            size={pinned ? 5 : 4}
+            iconSize={pinned ? 'lg' : 'md'}
             label={pinned ? t('icon-unpin.label') : t('icon-pin.label')}
             onClick={() => onClick?.(item)}
           />
@@ -104,7 +104,7 @@ export const ResponsiveGridItem = <T extends object = any>({
         <div className='z-10 absolute bottom-1 left-8 right-1 flex justify-end gap-1 items-center'>
           {/* TODO(burdon): Replace with avatar for everyone. */}
           {/* {self && <Icon icon='ph--asterisk--regular' size={pinned ? 5 : 4} />} */}
-          {screenshare && <Icon icon='ph--broadcast--regular' size={pinned ? 5 : 4} />}
+          {screenshare && <Icon icon='ph--broadcast--regular' size={pinned ? 'lg' : 'md'} />}
           <div
             className={mx(
               'bg-neutral-800 text-neutral-100 py-0.5 truncate rounded-sm',
@@ -120,11 +120,11 @@ export const ResponsiveGridItem = <T extends object = any>({
       <div className='z-10 absolute bottom-1 left-1 flex'>
         {(speaking && <Waveform active size={pinned ? 5 : 4} />) ||
           (props && (
-            <IconButton
+            <Button
               classNames={mx('p-1 min-h-1 rounded-sm', props?.classNames)}
               icon={props?.icon}
               label={props?.label}
-              size={pinned ? 5 : 4}
+              iconSize={pinned ? 'lg' : 'md'}
               iconOnly
             />
           ))}

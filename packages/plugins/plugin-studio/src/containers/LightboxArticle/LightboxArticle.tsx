@@ -201,10 +201,10 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
       onAdd={({ x, y }) => void handleAddArtifact({ x, y })}
     >
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Board.Container>
             <Board.Viewport>
               <Board.Backdrop />
@@ -225,7 +225,7 @@ export const LightboxArticle = ({ role, subject: lightbox, attendableId }: Light
               </Board.Content>
             </Board.Viewport>
           </Board.Container>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Board.Root>
   );

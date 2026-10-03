@@ -16,7 +16,7 @@ import * as Schema from 'effect/Schema';
  */
 
 /** What a presentation carries. Only these reach the user's screen; stdout does not. */
-export const PresentationKind = Schema.Literals(['markdown', 'mermaid', 'table', 'json', 'text']);
+export const PresentationKind = Schema.Literals(['markdown', 'mermaid', 'table', 'json', 'text', 'graph']);
 
 export type PresentationKind = typeof PresentationKind.Type;
 
@@ -30,6 +30,7 @@ export const toKind = (value: string): PresentationKind => {
     case 'mermaid':
     case 'table':
     case 'json':
+    case 'graph':
       return value;
     default:
       return 'text';

@@ -108,14 +108,14 @@ const DefaultStory = () => {
  * the live object so its own edits persist. */
 const EditableObject = ({ title, object }: { title: string; object: Obj.Unknown }) => (
   <Panel.Root>
-    <Panel.Content asChild>
+    <Panel.Body asChild>
       <ScrollArea.Root orientation='vertical'>
         <ScrollArea.Viewport>
-          <h2 className='mb-1 px-2 pt-2 text-sm font-medium text-description'>{title}</h2>
+          <h2 className='mb-1 px-2 pt-2 text-sm font-medium text-fg-muted'>{title}</h2>
           <ObjectProperties object={object} />
         </ScrollArea.Viewport>
       </ScrollArea.Root>
-    </Panel.Content>
+    </Panel.Body>
   </Panel.Root>
 );
 
@@ -132,17 +132,17 @@ const JsonView = ({ data, db }: { data: unknown; db?: ReturnType<typeof Obj.getD
     getReplacer={(depth) => (db ? Json.createRefReplacer({ db, depth }) : undefined)}
   >
     <Panel.Root>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+      <Panel.Header>
+        <Toolbar.Root classNames='grid grid-cols-[1fr_6rem]'>
           <Syntax.Filter />
           <Syntax.Depth />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Syntax.Viewport>
           <Syntax.Code />
         </Syntax.Viewport>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   </Syntax.Root>
 );

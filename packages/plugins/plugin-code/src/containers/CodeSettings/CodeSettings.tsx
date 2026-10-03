@@ -11,7 +11,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Field, useTranslation } from '@dxos/react-ui';
+import { PasswordInput, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -73,13 +73,12 @@ export const CodeSettings = ({ subject }: CodeSettingsProps) => {
             actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Field label={t('api-key.label')}>
-              <Field.Input
-                type='password'
+              <PasswordInput
                 placeholder={existing ? t('api-key.set.placeholder') : t('api-key.empty.placeholder')}
                 value={draft}
-                onChange={(event) => {
+                onValueChange={(value) => {
                   touchedRef.current = true;
-                  setDraft(event.target.value);
+                  setDraft(value);
                 }}
                 onBlur={handleCommit}
               />

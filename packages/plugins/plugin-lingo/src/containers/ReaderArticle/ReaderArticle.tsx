@@ -462,21 +462,21 @@ export const ReaderArticle = ({ role, subject, attendableId }: ReaderArticleProp
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild classNames='dx-expand'>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attentionId} alwaysActive />
-      </Panel.Toolbar>
+      </Panel.Header>
       {/* The editor scrolls itself, so the panel must not: it only supplies the box to fill. */}
-      <Panel.Content classNames='flex flex-col'>
+      <Panel.Body classNames='flex flex-col'>
         {text === undefined ? (
-          <div className='p-8 text-description'>{t('no-text.message')}</div>
+          <div className='p-8 text-fg-muted'>{t('no-text.message')}</div>
         ) : passageText === undefined ? (
           // Never stand in the source: the document itself is already on screen beside this
           // companion, so a duplicate reads as a broken pane rather than a useful fallback.
-          <div className='p-8 text-description'>{t('not-translated.message')}</div>
+          <div className='p-8 text-fg-muted'>{t('not-translated.message')}</div>
         ) : (
           <ReaderPane {...paneProps} side='target' content={passageText} images={false} />
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

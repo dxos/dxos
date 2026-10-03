@@ -22,7 +22,7 @@ import { createPortal } from 'react-dom';
 
 import { addEventListener } from '@dxos/async';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeContext } from '@dxos/react-ui';
+import { ErrorBoundary, type ThemedClassName, useDynamicRef, useStateWithRef, useThemeMode } from '@dxos/react-ui';
 import { type UseTextEditor, useTextEditor } from '@dxos/react-ui-editor';
 import {
   type AutoScrollProps,
@@ -290,7 +290,7 @@ const useMarkdownStreamTextEditor = (
     setFooterRoot,
   }: MarkdownStreamTextEditorParams,
 ): MarkdownStreamTextEditorResult => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
 
   // Active widgets.
   const [widgets, setWidgets] = useState<WidgetState[]>([]);
@@ -313,7 +313,7 @@ const useMarkdownStreamTextEditor = (
             xmlBlockDecoration({
               tag: 'prompt',
               lineClass:
-                'cm-prompt-line cm-prompt-bubble bg-group-surface text-base-fg border-l-[8px] pl-[8px]! pr-2 [&_*]:text-inherit!',
+                'cm-prompt-line cm-prompt-bubble bg-group-surface text-fg border-l-[8px] pl-[8px]! pr-2 [&_*]:text-inherit!',
               firstLineClass: 'pt-1.5 rounded-t-sm',
               lastLineClass: 'pb-1.5 rounded-b-sm',
               hideTags: true,

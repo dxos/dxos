@@ -53,6 +53,7 @@
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/ui": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
+    "@dxos/ui-types": "workspace:*",
     "@lezer/common": "catalog:",
     "@lezer/highlight": "catalog:",
     "dompurify": "catalog:",

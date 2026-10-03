@@ -14,7 +14,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection, Cursor } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { useConnector } from '#hooks';
@@ -106,49 +106,45 @@ export const ConnectorCompanion = ({ subject, role }: ConnectorCompanionProps) =
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
-        <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            <Form.Root variant='settings' schema={EMPTY_SCHEMA} values={EMPTY_VALUES}>
-              <Form.Viewport>
-                <Form.Content>
-                  <Form.FieldSet label={title} description={source}>
-                    <Form.Field
-                      standalone
-                      label={t('sync-target.label')}
-                      description={status}
-                      error={!targetMissing && !sourceMissing && subject.lastError ? subject.lastError : undefined}
+      <Panel.Body>
+        <Form.Root variant='settings' schema={EMPTY_SCHEMA} values={EMPTY_VALUES}>
+          <Form.Viewport scroll>
+            <Form.Content>
+              <Form.FieldSet label={title} description={source}>
+                <Form.Field
+                  standalone
+                  label={t('sync-target.label')}
+                  description={status}
+                  error={!targetMissing && !sourceMissing && subject.lastError ? subject.lastError : undefined}
+                >
+                  {targetMissing || sourceMissing ? (
+                    <Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button>
+                  ) : undefined}
+
+                  {connector?.sync?.optionsSchema && !targetMissing && !sourceMissing && (
+                    <Form.Root
+                      schema={connector.sync.optionsSchema}
+                      defaultValues={optionsDefaultValues}
+                      onValuesChanged={handleOptionsChanged}
                     >
-                      {targetMissing || sourceMissing ? (
-                        <Button onClick={handleRemoveBinding}>{t('remove-binding.label')}</Button>
-                      ) : undefined}
+                      <Form.Content>
+                        <Form.Fields />
+                      </Form.Content>
+                    </Form.Root>
+                  )}
+                </Form.Field>
 
-                      {connector?.sync?.optionsSchema && !targetMissing && !sourceMissing && (
-                        <Form.Root
-                          schema={connector.sync.optionsSchema}
-                          defaultValues={optionsDefaultValues}
-                          onValuesChanged={handleOptionsChanged}
-                        >
-                          <Form.Content>
-                            <Form.Fields />
-                          </Form.Content>
-                        </Form.Root>
-                      )}
-                    </Form.Field>
-
-                    {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
-                    {!sourceMissing && (
-                      <Form.Field standalone label={t('open-connection.label')}>
-                        <Button onClick={handleOpenConnection}>{t('open-connection.label')}</Button>
-                      </Form.Field>
-                    )}
-                  </Form.FieldSet>
-                </Form.Content>
-              </Form.Viewport>
-            </Form.Root>
-          </ScrollArea.Viewport>
-        </ScrollArea.Root>
-      </Panel.Content>
+                {/* TODO(wittjosiah): Ideally this would be in the section header but there's no place to add actions in there currently. */}
+                {!sourceMissing && (
+                  <Form.Field standalone label={t('open-connection.label')}>
+                    <Button onClick={handleOpenConnection}>{t('open-connection.label')}</Button>
+                  </Form.Field>
+                )}
+              </Form.FieldSet>
+            </Form.Content>
+          </Form.Viewport>
+        </Form.Root>
+      </Panel.Body>
     </Panel.Root>
   );
 };

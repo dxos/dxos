@@ -35,7 +35,7 @@ export const FeedbackPanel = () => {
 
   return (
     <Panel.Root>
-      <Panel.Content>
+      <Panel.Body>
         <FeedbackForm.Root hidden={hidden} plugins={plugins} onSubmit={handleSubmit}>
           <Form.Viewport>
             <Form.Content>
@@ -45,7 +45,7 @@ export const FeedbackPanel = () => {
             </Form.Content>
           </Form.Viewport>
         </FeedbackForm.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

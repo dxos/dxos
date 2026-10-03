@@ -138,20 +138,20 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
   return (
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
-        <Flex column gap='lg' classNames='mx-auto max-w-[48rem] p-4'>
+        <Flex column gap='lg' classNames='mx-auto max-w-document-max-width p-4'>
           {/* Header — cover + catalog identity. */}
           <section className='flex gap-4 rounded-lg border border-separator p-4'>
             {cover ? (
-              <img src={cover} alt='' className='w-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
+              <img src={cover} alt='' className='w-24 aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
-              <Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input-surface'>
-                <Icon icon='ph--book--regular' size={8} classNames='text-description' />
+              <Flex center classNames='w-24 aspect-[2/3] shrink-0 rounded bg-input-surface'>
+                <Icon icon='ph--book--regular' size='xl' tone='muted' />
               </Flex>
             )}
             <Flex column gap='sm' classNames='min-w-0'>
               <h1 className='text-xl font-semibold'>{catalog?.title}</h1>
               {authors.length > 0 && (
-                <p className='text-description'>{t('by-author.label', { authors: authors.join(', ') })}</p>
+                <p className='text-fg-muted'>{t('by-author.label', { authors: authors.join(', ') })}</p>
               )}
               {/* The user's own rating (1–10) as five stars in half-star increments. */}
               {stars != null && <StarRating value={stars / STARS_PER_STAR} />}
@@ -160,7 +160,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                 {live.owned && <Tag hue='neutral'>{t('owned.label')}</Tag>}
               </Flex>
               {(publication || externalLinks.length > 0) && (
-                <p className='text-sm text-description'>
+                <p className='text-sm text-fg-muted'>
                   {publication}
                   {externalLinks.map((link, index) => (
                     <Fragment key={link.label}>
@@ -238,8 +238,8 @@ const StarRating = ({ value }: { value: number }) => (
         <Icon
           key={index}
           icon={filled ? 'ph--star--fill' : half ? 'ph--star-half--fill' : 'ph--star--regular'}
-          size={5}
-          classNames={filled || half ? 'text-primary-500' : 'text-subdued'}
+          size='lg'
+          classNames={filled || half ? 'text-primary-500' : 'text-fg-subtle'}
         />
       );
     })}

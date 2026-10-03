@@ -8,7 +8,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { Column, Flex, Panel, ScrollArea } from '@dxos/react-ui';
+import { Container, Flex, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -27,7 +27,7 @@ export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
 /**
  * Per-space Home article shell. Owns only the chrome: a toolbar sourced from graph actions
  * contributed with `disposition: 'toolbar'` (e.g. Start / Hide Welcome from plugin-support),
- * and a Column layout that delegates its body to surface contributors:
+ * and a Container layout that delegates its body to surface contributors:
  *
  * - `space-home-content`: scrollable region (Welcome panel, recent-objects masonry, starter prompts).
  * - `space-home-pin-bottom`: pinned region (assistant prompt), capped at one contributor.
@@ -42,24 +42,24 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Toolbar>
+      </Panel.Header>
 
-      <Panel.Content asChild>
-        <Column.Root gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
-          <ScrollArea.Root orientation='vertical' centered padding>
+      <Panel.Body asChild>
+        <Container gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
               <Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
                 <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
               </Flex>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-          <Column.Center classNames='dx-document pb-4'>
+          <div className='dx-document pb-4'>
             <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
-          </Column.Center>
-        </Column.Root>
-      </Panel.Content>
+          </div>
+        </Container>
+      </Panel.Body>
     </Panel.Root>
   );
 };

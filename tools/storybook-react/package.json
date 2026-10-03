@@ -22,6 +22,7 @@
   "devDependencies": {
     "@dxos/agent-claude": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/react-ui": "workspace:*",
     "@dxos/storybook-addon-logger": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/vite-plugin-icons": "workspace:*",

@@ -112,10 +112,10 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
         onSubmit={onSubmit}
       >
         <Panel.Root role={role} ref={forwardedRef}>
-          <Panel.Toolbar>
+          <Panel.Header>
             <ChatComponent.Toolbar classNames='dx-document' attendableId={attendableId} companionTo={companionTo} />
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <ChatComponent.Content>
               <div className='dx-expand relative'>
                 {/* Thread outline (Table of Contents). */}
@@ -160,7 +160,7 @@ export const ChatArticle = forwardRef<HTMLDivElement, ChatArticleProps>(
                 />
               </div>
             </ChatComponent.Content>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </ChatComponent.Root>
     );

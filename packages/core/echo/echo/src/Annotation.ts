@@ -5,6 +5,8 @@
 // @import-as-namespace
 
 export {
+  type ArrayPresentation,
+  ArrayPresentationAnnotation,
   DEFAULT_LAYOUT_NAME,
   DescriptionAnnotation,
   FieldLookupAnnotationId,

@@ -26,7 +26,7 @@ export const InstrumentCard = ({ subject }: InstrumentCardProps) => {
         <Card.Title>{instrument.symbol}</Card.Title>
       </Card.Row>
       <Card.Row>
-        <Card.Text variant='description' classNames='line-clamp-1'>
+        <Card.Text variant='muted' classNames='line-clamp-1'>
           {[instrument.name, instrument.exchange, instrument.assetClass].filter(Boolean).join(' · ')}
         </Card.Text>
       </Card.Row>

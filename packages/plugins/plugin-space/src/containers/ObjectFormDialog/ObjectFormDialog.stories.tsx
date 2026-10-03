@@ -78,16 +78,14 @@ const DefaultStory = ({ mode = 'live' }: { mode?: 'draft' | 'live' }) => {
       </div>
       {space ? (
         <Dialog.Root defaultOpen>
-          <Dialog.Overlay>
-            <ObjectFormDialog
-              target={space.db}
-              typename={typename}
-              mode={mode}
-              defaults={{ name: 'Seeded' }}
-              handle={handle}
-              shouldNavigate={() => false}
-            />
-          </Dialog.Overlay>
+          <ObjectFormDialog
+            target={space.db}
+            typename={typename}
+            mode={mode}
+            defaults={{ name: 'Seeded' }}
+            handle={handle}
+            shouldNavigate={() => false}
+          />
         </Dialog.Root>
       ) : (
         <Loading />

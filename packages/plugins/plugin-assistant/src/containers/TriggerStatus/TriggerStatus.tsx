@@ -8,7 +8,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type InvocationsState } from '@dxos/compute-runtime';
 import * as Hooks from '@dxos/plugin-routine/Hooks';
 import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
-import { Flex, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Container, Flex, Popover, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -69,10 +69,10 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
   }, [isEnabled, state?.invocations]);
 
   return (
-    <Popover.Root>
+    <Popover.Root positioning={{ placement: 'left' }}>
       <Popover.Trigger asChild>
         <StatusBar.Item>
-          <IconButton
+          <Button
             variant='ghost'
             icon={getIcon(triggerState)}
             iconOnly
@@ -81,18 +81,15 @@ export const SpaceStatus = ({ space }: SpaceStatusProps) => {
           />
         </StatusBar.Item>
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content side='left'>
-          <TriggerStatusPopover
-            state={triggerState}
-            currentFunctionName={
-              state?.invocations.at(-1)?.function?.meta.name ?? state?.invocations.at(-1)?.function?.meta.key
-            }
-            lastInvocation={state?.invocations.at(-1)}
-          />
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content>
+        <TriggerStatusPopover
+          state={triggerState}
+          currentFunctionName={
+            state?.invocations.at(-1)?.function?.meta.name ?? state?.invocations.at(-1)?.function?.meta.key
+          }
+          lastInvocation={state?.invocations.at(-1)}
+        />
+      </Popover.Content>
     </Popover.Root>
   );
 };
@@ -111,13 +108,13 @@ const TriggerStatusPopover = ({
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <Flex column gap='sm' classNames='p-2 w-[240px]'>
-      <Flex column gap='xs'>
+    <Flex column gap='sm' classNames='p-2 w-popover-min-width'>
+      <Container gap='sm' gutter='none'>
         <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (
-          <div className='text-xs text-description'>{currentFunctionName}</div>
+          <div className='text-xs text-fg-muted'>{currentFunctionName}</div>
         )}
-      </Flex>
+      </Container>
     </Flex>
   );
 };

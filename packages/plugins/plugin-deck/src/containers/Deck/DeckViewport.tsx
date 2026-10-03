@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import './deck.css';
+
 import React, {
   type CSSProperties,
   type MouseEvent,
@@ -24,8 +26,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { addEventListener } from '@dxos/async';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import {
+  Button,
   Flex,
-  IconButton,
   Main,
   type MainContentProps,
   ScrollArea,
@@ -35,7 +37,6 @@ import {
   useOnTransition,
   useTranslation,
 } from '@dxos/react-ui';
-import { mainIntrinsicSize, mainPaddingTransitions } from '@dxos/react-ui';
 import { Attention, useAttended, useAttention, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
@@ -186,7 +187,6 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
   return (
     <Main.Content
       bounce
-      handlesFocus
       classNames={[
         'grid top-[env(safe-area-inset-top)]!',
         topbar && 'top-[calc(env(safe-area-inset-top)+var(--dx-rail-size))]!',
@@ -421,7 +421,7 @@ const PlankSplit = ({
       <Splitter.Panel position='start'>
         <DeckPlank id={id} part='main' active={active} classNames='size-full' />
       </Splitter.Panel>
-      <Splitter.Handle />
+      <Splitter.ResizeTrigger />
       <Splitter.Panel position='end'>
         {companion && <CompanionPlank id={companionId ?? id} classNames='size-full' />}
       </Splitter.Panel>
@@ -529,7 +529,7 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
           companionId={companionId}
           active={deck.active}
           companionSize={soloCompanionSize}
-          classNames={mx('dx-fullscreen', mainPaddingTransitions)}
+          classNames={'dx-fullscreen dx-main-content-padding-transitions'}
         />
       </Mosaic.Tile>
     );
@@ -1790,7 +1790,7 @@ export const DeckPlanks = () => {
         {fullscreen && fullscreenId ? (
           <>
             <ExitFullscreenButton onExit={toggleFullscreen} />
-            <DeckPlank id={fullscreenId} part='main' fullscreen classNames={mx('dx-fullscreen', mainIntrinsicSize)} />
+            <DeckPlank id={fullscreenId} part='main' fullscreen classNames={'dx-fullscreen dx-main-intrinsic-size'} />
           </>
         ) : (
           // Every non-fullscreen presentation renders through this one pipeline — fullbleed included
@@ -1799,7 +1799,7 @@ export const DeckPlanks = () => {
           // DOM mounted across 1↔2 plank transitions; a separate fullbleed branch here remounted the
           // surviving plank on every message open/close (the mailbox-list flash). The stack is `w-full` when not sliding so the lone tile's `w-full`
           // resolves against the viewport instead of a shrink-wrapped flex row.
-          <Mosaic.Container orientation='horizontal' classNames={['dx-fullscreen', mainPaddingTransitions]}>
+          <Mosaic.Container orientation='horizontal' classNames='dx-fullscreen dx-main-content-padding-transitions'>
             <ScrollArea.Root orientation='horizontal' classNames='size-full'>
               <ScrollArea.Viewport
                 ref={viewportRef}
@@ -1869,7 +1869,7 @@ const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
         'transition-opacity opacity-(--controls-opacity)',
       )}
     >
-      <IconButton
+      <Button
         label={t('exit-fullscreen.label')}
         icon='ph--corners-in--regular'
         iconOnly

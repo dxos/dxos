@@ -453,10 +453,10 @@ const MessageList = ({
       return (
         <div
           key={message.id}
-          className='flex flex-col dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+          className='flex flex-col dx-card-surface border border-separator-subtle rounded-sm px-3 py-2'
         >
           <span className='font-medium truncate'>{String(message.properties?.subject ?? '')}</span>
-          <span className='text-sm text-description truncate'>{message.sender.email}</span>
+          <span className='text-sm text-fg-muted truncate'>{message.sender.email}</span>
           <span className='text-sm'>{summary || Message.extractText(message)}</span>
         </div>
       );
@@ -469,10 +469,10 @@ const ThreadList = ({ result }: { result: { threads: readonly Thread[] } }) => (
     {result.threads.map((thread) => (
       <div
         key={thread.id}
-        className='flex flex-col dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+        className='flex flex-col dx-card-surface border border-separator-subtle rounded-sm px-3 py-2'
       >
         <span className='font-medium truncate'>{thread.subject}</span>
-        <span className='text-sm text-description'>
+        <span className='text-sm text-fg-muted'>
           {thread.state} · {thread.messageIds.length} message(s) · {thread.participants.join(', ')}
         </span>
       </div>
@@ -484,12 +484,12 @@ const TranscriptView = ({ lines, summary }: { lines: readonly string[]; summary?
   <div className='flex flex-col gap-3 p-3 h-full overflow-auto'>
     {summary && (
       <div className='flex flex-col gap-1'>
-        <span className='text-sm text-description'>Summary</span>
+        <span className='text-sm text-fg-muted'>Summary</span>
         <span className='text-sm'>{summary}</span>
       </div>
     )}
     <div className='flex flex-col gap-1'>
-      <span className='text-sm text-description'>Transcript</span>
+      <span className='text-sm text-fg-muted'>Transcript</span>
       {lines.map((line, index) => (
         <span key={index} className='text-sm'>
           {line}

@@ -237,6 +237,11 @@
       "types": "./dist/types/src/NotFoundArticle.d.ts",
       "import": "./dist/lib/ns/NotFoundArticle.mjs"
     },
+    "./ObjectCard": {
+      "source": "./src/ObjectCard.ts",
+      "types": "./dist/types/src/ObjectCard.d.ts",
+      "import": "./dist/lib/ns/ObjectCard.mjs"
+    },
     "./PluginRegistryButton": {
       "source": "./src/PluginRegistryButton.ts",
       "types": "./dist/types/src/PluginRegistryButton.d.ts",

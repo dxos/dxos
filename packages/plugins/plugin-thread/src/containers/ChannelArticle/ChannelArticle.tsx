@@ -115,16 +115,16 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
   return (
     <Panel.Root role={role}>
       {canStartCall && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...menuActions} attendableId={attendableId} />
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
       {showCall ? (
-        <Panel.Content>
+        <Panel.Body>
           <Surface.Surface type={AppSurface.Article} data={{ subject: { roomId: id }, attendableId }} limit={1} />
-        </Panel.Content>
+        </Panel.Body>
       ) : (
-        <Panel.Content asChild>
+        <Panel.Body asChild>
           <MessageThread
             id={id}
             classNames='dx-document'
@@ -135,7 +135,7 @@ export const ChannelArticle = ({ role, subject: channel, attendableId, chatOnly 
             onSend={handleSend}
             readOnly={readOnly}
           />
-        </Panel.Content>
+        </Panel.Body>
       )}
     </Panel.Root>
   );

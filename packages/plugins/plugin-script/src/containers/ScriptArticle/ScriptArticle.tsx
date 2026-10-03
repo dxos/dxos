@@ -68,10 +68,10 @@ export const ScriptArticle = ({
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ScriptToolbar script={script} attendableId={attendableId} state={state} role={role} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <TypescriptEditor
           classNames={editorClassNames(role)}
           id={script.id}
@@ -81,7 +81,7 @@ export const ScriptArticle = ({
           inputMode={settings.editorInputMode}
           toolbar
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

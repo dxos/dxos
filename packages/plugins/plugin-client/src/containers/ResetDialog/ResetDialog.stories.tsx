@@ -17,9 +17,7 @@ import { ResetDialog, type ResetDialogProps } from './ResetDialog.tsx';
 
 const DefaultStory = (props: ResetDialogProps) => (
   <Dialog.Root open>
-    <Dialog.Overlay>
-      <ResetDialog {...props} />
-    </Dialog.Overlay>
+    <ResetDialog {...props} />
   </Dialog.Root>
 );
 

@@ -5,13 +5,16 @@
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, useTranslation } from '@dxos/react-ui';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { SettingsOperation } from '../../operations/index.ts';
 import { usePluginRegistryAvailable } from '../hooks/index.ts';
 
-export type PluginRegistryButtonProps = Partial<Omit<ComponentPropsWithoutRef<typeof IconButton>, 'icon' | 'label'>>;
+export type PluginRegistryButtonProps = Pick<
+  ComponentPropsWithoutRef<typeof Button>,
+  'onClick' | 'variant' | 'size' | 'disabled' | 'classNames'
+>;
 
 /**
  * Icon button that opens the plugin registry via {@link SettingsOperation.OpenPluginRegistry}.
@@ -30,7 +33,7 @@ export const PluginRegistryButton = forwardRef<HTMLButtonElement, PluginRegistry
     }
 
     return (
-      <IconButton
+      <Button
         {...props}
         ref={forwardedRef}
         icon='ph--squares-four--regular'

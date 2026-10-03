@@ -36,9 +36,7 @@ const DeploymentDialogStory = () => {
   );
   return (
     <Dialog.Root defaultOpen={true}>
-      <Dialog.Overlay>
-        <DeploymentDialog accessToken={accessToken} scriptTemplates={scriptTemplates} />
-      </Dialog.Overlay>
+      <DeploymentDialog accessToken={accessToken} scriptTemplates={scriptTemplates} />
     </Dialog.Root>
   );
 };

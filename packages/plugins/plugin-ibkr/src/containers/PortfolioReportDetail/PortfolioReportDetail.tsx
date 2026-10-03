@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { IconButton, Panel, SystemIconButton, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, SystemButton, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { ReportSections } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
@@ -59,10 +59,10 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root classNames='justify-end'>
           {companionTo && (
-            <IconButton
+            <Button
               disabled={syncingLots}
               variant='primary'
               iconClassNames={syncingLots ? 'animate-spin' : undefined}
@@ -73,12 +73,12 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
               }}
             />
           )}
-          <SystemIconButton.Clipboard label={t('copy-xml.label')} value={subject.xml} />
+          <SystemButton.Clipboard label={t('copy-xml.label')} value={subject.xml} />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-rows-1 min-h-0'>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-rows-1 min-h-0'>
         <ReportSections positions={positions} trades={trades} cash={cash} openLots={openLots} closedLots={closedLots} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

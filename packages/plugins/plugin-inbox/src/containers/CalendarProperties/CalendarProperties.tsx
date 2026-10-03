@@ -11,7 +11,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
-import { Button, ButtonGroup, Field, Flex, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Flex, Group, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { useSyncTrigger } from '#hooks';
@@ -44,7 +44,7 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
         <Field.Label>{t('calendar-sync.label')}</Field.Label>
         {/* TODO(burdon): Replace custom components with Field.Switch. */}
         <Flex gap='xs'>
-          <ButtonGroup>
+          <Group>
             <Button onClick={handleToggleSync} disabled={pending}>
               {pending
                 ? t('enabling-background-sync.label')
@@ -53,14 +53,9 @@ export const CalendarProperties = ({ subject }: CalendarPropertiesProps) => {
                   : t('enable-background-sync.label')}
             </Button>
             {syncTrigger && (
-              <IconButton
-                iconOnly
-                icon='ph--gear--regular'
-                label={t('view-trigger.label')}
-                onClick={handleViewTrigger}
-              />
+              <Button iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
             )}
-          </ButtonGroup>
+          </Group>
         </Flex>
       </Field.Root>
     </Form.FieldSet>

@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
-import { Column, Dialog, useTranslation } from '@dxos/react-ui';
+import { Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -130,9 +130,9 @@ export const ImportPullRequestDialog = () => {
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('import-pull-request-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <Form.Root
@@ -142,12 +142,10 @@ export const ImportPullRequestDialog = () => {
           onSave={handleSave}
           onCancel={handleCancel}
         >
-          <Column.Center>
-            <Form.Content>
-              <Form.Fields />
-              <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
-            </Form.Content>
-          </Column.Center>
+          <Form.Content>
+            <Form.Fields />
+            <Form.Actions submitLabel={t('import-pull-request-submit.label')} />
+          </Form.Content>
         </Form.Root>
       </Dialog.Body>
     </Dialog.Content>

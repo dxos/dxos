@@ -38,14 +38,14 @@ export const PipelineArticle = ({ role, subject: pipeline, attendableId }: Pipel
   return (
     <PipelineComponent.Root Item={PipelineItem} onAddColumn={handleColumnAdd}>
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
-          <PipelineComponent.Toolbar disabled={!hasAttention} />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        <Panel.Header>
+          <PipelineComponent.Toolbar inactive={!hasAttention} />
+        </Panel.Header>
+        <Panel.Body asChild>
           <PipelineComponent.Content asChild model={model}>
             <PipelineComponent.Columns pipeline={pipeline} />
           </PipelineComponent.Content>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </PipelineComponent.Root>
   );

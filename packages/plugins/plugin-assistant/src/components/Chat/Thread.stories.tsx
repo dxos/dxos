@@ -66,7 +66,7 @@ const Thread = ({ messages, viewType }: { messages: MessageType.Message[]; viewT
       objectImage={objectImage}
       onEvent={(event) => recordedEvents.push(event)}
     >
-      <ChatThread.Viewport padding />
+      <ChatThread.Viewport />
     </ChatThread.Root>
   );
 };

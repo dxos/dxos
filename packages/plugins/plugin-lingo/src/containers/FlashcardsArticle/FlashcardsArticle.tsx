@@ -95,10 +95,10 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild classNames='dx-expand'>
+      <Panel.Header classNames='dx-expand'>
         <ActionToolbar {...menuActions} attendableId={attentionId} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='flex flex-col'>
+      </Panel.Header>
+      <Panel.Body classNames='flex flex-col'>
         {word ? (
           <Flashcard
             key={word.id}
@@ -108,12 +108,12 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
             onAnswer={handleAnswer}
           />
         ) : (
-          <div className='flex flex-col items-center gap-2 p-8 text-description'>
+          <div className='flex flex-col items-center gap-2 p-8 text-fg-muted'>
             <span>{queue.length === 0 ? t('empty-deck.message') : t('session-complete.message')}</span>
             {session.answered > 0 && <span>{t('session-score.message', session)}</span>}
           </div>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

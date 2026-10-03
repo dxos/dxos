@@ -47,18 +47,18 @@ const ExecutionGraphContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Execution Graph</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
-        <ScrollArea.Root orientation='vertical' classNames='h-full' thin>
+      </Panel.Header>
+      <Panel.Body>
+        <ScrollArea.Root orientation='vertical' classNames='h-full'>
           <ScrollArea.Viewport ref={setViewport}>
             <Timeline branches={branches} commits={commits} scroller={viewport} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

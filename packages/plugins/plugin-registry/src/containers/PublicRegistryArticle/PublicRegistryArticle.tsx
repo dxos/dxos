@@ -177,11 +177,11 @@ export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryAr
     );
 
     const empty = error ? (
-      <div className='p-4 text-description'>{t('registry.error.label', { message: error.message })}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.error.label', { message: error.message })}</div>
     ) : loading ? (
-      <div className='p-4 text-description'>{t('registry.loading.label')}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.loading.label')}</div>
     ) : (
-      <div className='p-4 text-description'>{t('registry.empty.label')}</div>
+      <div className='p-4 text-fg-muted'>{t('registry.empty.label')}</div>
     );
 
     return (

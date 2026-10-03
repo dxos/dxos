@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Message } from '@dxos/types';
 
@@ -28,7 +28,7 @@ export const ChatQueue = ({ classNames, messages, onCancel }: ChatQueueProps) =>
   }
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={messages.map((message) => ({ value: message.id, label: Message.extractText(message) }))}>
       <Listbox.Content classNames={['w-full gap-1 items-end', classNames]}>
         {messages.map((message) => (
           <QueuedItem key={message.id} message={message} onCancel={onCancel} />
@@ -54,17 +54,17 @@ const QueuedItem = ({ message, onCancel }: QueuedItemProps) => {
     <Listbox.Item
       id={message.id}
       data-testid='assistant.queued-message'
-      classNames='w-fit max-w-[85%] ps-2 pe-1 gap-2 rounded-sm bg-group-surface text-description text-sm'
+      classNames='w-fit max-w-[85%] ps-2 pe-1 gap-2 rounded-sm bg-group-surface text-fg-muted text-sm'
     >
       {/* `min-w-0` is what lets the span shrink so `truncate` clips its tail; without it the row
           overflows its max-width and the start of the prompt is what gets cut. */}
       <span className='min-w-0 truncate'>{Message.extractText(message)}</span>
       {onCancel && (
-        <IconButton
+        <Button
           iconOnly
           icon='ph--x--regular'
           variant='ghost'
-          density='sm'
+          size='sm'
           data-testid='assistant.queued-message.cancel'
           label={t('cancel-queued.button')}
           onClick={handleCancel}

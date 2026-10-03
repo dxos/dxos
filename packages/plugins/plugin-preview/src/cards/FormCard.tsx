@@ -98,7 +98,7 @@ export const FormCard = ({ subject, projection, readonly = true, layout }: FormC
     return (
       <Card.Body>
         <Card.Row>
-          <Card.Text variant='description'>{t('unable-to-create-preview.message')}</Card.Text>
+          <Card.Text variant='muted'>{t('unable-to-create-preview.message')}</Card.Text>
         </Card.Row>
       </Card.Body>
     );

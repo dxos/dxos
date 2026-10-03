@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
-import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -66,7 +66,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
 
           <Form.FieldSet label={t('test.title')}>
             <Flex gap='sm'>
-              <IconButton
+              <Button
                 disabled={test.kind === 'pending'}
                 icon='ph--plug--regular'
                 label={t('test.button.label')}
@@ -83,7 +83,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
                       ? 'text-sm text-success-text'
                       : test.kind === 'error'
                         ? 'text-sm text-error-text'
-                        : 'text-sm text-description'
+                        : 'text-sm text-fg-muted'
                   }
                 >
                   {test.kind === 'ok' || test.kind === 'error' ? test.message : ''}

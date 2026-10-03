@@ -51,7 +51,7 @@ const DefaultStory = ({ selectedIndex = 0 }: StoryArgs) => {
 
   const segment = Trip.getSegments(trip)[selectedIndex];
   if (!segment) {
-    return <div className='p-4 text-description'>Select a segment to view details.</div>;
+    return <div className='p-4 text-fg-muted'>Select a segment to view details.</div>;
   }
 
   return <SegmentArticle role='article' subject={segment} companionTo={trip} attendableId='story' />;

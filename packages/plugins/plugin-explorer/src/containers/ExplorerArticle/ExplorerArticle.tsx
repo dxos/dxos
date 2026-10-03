@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Filter, Obj, type View } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { DxAnchorActivate, Icon, Panel, Toolbar } from '@dxos/react-ui';
+import { DxAnchorActivate, Panel, ToggleGroup, Toolbar } from '@dxos/react-ui';
 import { QueryEditor, type QueryEditorProps } from '@dxos/react-ui-components';
 import { type TreeNode } from '@dxos/react-ui-graph';
 import '@dxos/react-ui-graph/styles/graph.css';
@@ -87,20 +87,18 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
   return (
     <Panel.Root role={role}>
       {showToolbar && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <QueryEditor db={db} onFilterChange={handleFilterChange} />
             <Toolbar.ToggleGroup type='single' value={selected} onValueChange={handleVariantChange}>
               {VARIANTS.map(({ value, icon, label }) => (
-                <Toolbar.ToggleGroupItem key={value} value={value} aria-label={label} title={label}>
-                  <Icon icon={icon} size={4} />
-                </Toolbar.ToggleGroupItem>
+                <ToggleGroup.Item key={value} value={value} icon={icon} iconOnly label={label} />
               ))}
             </Toolbar.ToggleGroup>
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <Visualization.Root
           classNames='dx-base-surface'
           variant={selected}
@@ -109,7 +107,7 @@ export const ExplorerArticle = ({ role, subject, variant }: ExplorerArticleProps
         >
           <Visualization.Graph onNodeHover={handleHover} />
         </Visualization.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

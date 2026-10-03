@@ -4,7 +4,7 @@
 
 import React, { type ReactNode } from 'react';
 
-import { IconButton, Popover } from '@dxos/react-ui';
+import { Button, Popover } from '@dxos/react-ui';
 
 import { type ArtifactKind, type ArtifactLink } from '../../pull-request-body.ts';
 
@@ -52,34 +52,30 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
   const label = typeof children === 'string' && children !== artifact.url ? children : artifact.name;
   if (artifact.kind === 'file') {
     return (
-      <a href={artifact.url} target='_blank' rel='noopener noreferrer' className='dx-tag--anchor'>
+      <a href={artifact.url} target='_blank' rel='noopener noreferrer' className='dx-tag-anchor'>
         {label}
       </a>
     );
   }
 
   return (
-    <Popover.Root>
+    <Popover.Root autoFocus={false}>
       <Popover.Trigger asChild>
-        <IconButton
-          variant='tag'
-          density='sm'
-          classNames='bg-input-surface text-base-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border align-baseline'
+        <Button
+          hue='neutral'
+          size='sm'
+          classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border align-baseline'
           icon={artifactIcon[artifact.kind]}
           iconClassNames={artifact.kind === 'video' ? 'text-violet-500' : 'text-sky-500'}
           label={label}
-          noTooltip
           data-testid='pull-request.artifact.pill'
         />
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content classNames='w-[min(40rem,90vw)]' onOpenAutoFocus={(event) => event.preventDefault()}>
-          <Popover.Viewport classNames='p-1'>
-            <ArtifactMedia artifact={artifact} />
-          </Popover.Viewport>
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content classNames='w-[min(40rem,90vw)]'>
+        <Popover.Body classNames='p-1'>
+          <ArtifactMedia artifact={artifact} />
+        </Popover.Body>
+      </Popover.Content>
     </Popover.Root>
   );
 };

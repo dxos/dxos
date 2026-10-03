@@ -97,10 +97,10 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} attendableId={attendableId} />
-      </Panel.Toolbar>
-      <Panel.Content classNames='grid grid-rows-[auto_1fr]'>
+      </Panel.Header>
+      <Panel.Body classNames='grid grid-rows-[auto_1fr]'>
         <Surface.Surface
           type={AppSurface.Section}
           data={{
@@ -120,7 +120,7 @@ export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps)
           isRegenerateDisabled={!hasTranscript || summarizing}
           isSummarizing={summarizing}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -162,10 +162,10 @@ const TranscriptTabs = ({
   // The tablist only needs the `Tabs.Root` context, which wraps the whole panel.
   const tabs = useMemo(
     () => (
-      <Tabs.Tablist>
-        <Tabs.Button value='transcript'>{t('transcript.tab.label')}</Tabs.Button>
-        <Tabs.Button value='summary'>{t('summary.tab.label')}</Tabs.Button>
-      </Tabs.Tablist>
+      <Tabs.List>
+        <Tabs.Trigger value='transcript'>{t('transcript.tab.label')}</Tabs.Trigger>
+        <Tabs.Trigger value='summary'>{t('summary.tab.label')}</Tabs.Trigger>
+      </Tabs.List>
     ),
     [t],
   );
@@ -209,25 +209,23 @@ const TranscriptTabs = ({
         selectedVariant={hasAttention ? 'primary' : 'default'}
         onValueChange={onTabChange}
       >
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           {/* `alwaysActive`: the tablist is navigation, not an attention-gated action, and `disabled`
               would otherwise cascade `*:opacity-20` onto it as a direct child of the toolbar root. */}
           <ActionToolbar {...regenerateActions} attendableId={attendableId} alwaysActive />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <Tabs.Viewport classNames='dx-expand grid grid-rows-[auto_1fr]'>
-            <Tabs.Panel value='transcript' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface
-                type={AppSurface.Tabpanel}
-                data={{ subject, attendableId, part: 'transcript' }}
-                limit={1}
-              />
-            </Tabs.Panel>
-            <Tabs.Panel value='summary' tabIndex={-1} classNames='overflow-hidden'>
-              <Surface.Surface type={AppSurface.Tabpanel} data={{ subject, attendableId, part: 'summary' }} limit={1} />
-            </Tabs.Panel>
-          </Tabs.Viewport>
-        </Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
+          <Tabs.Content value='transcript' tabIndex={-1} classNames='overflow-hidden'>
+            <Surface.Surface
+              type={AppSurface.Tabpanel}
+              data={{ subject, attendableId, part: 'transcript' }}
+              limit={1}
+            />
+          </Tabs.Content>
+          <Tabs.Content value='summary' tabIndex={-1} classNames='overflow-hidden'>
+            <Surface.Surface type={AppSurface.Tabpanel} data={{ subject, attendableId, part: 'summary' }} limit={1} />
+          </Tabs.Content>
+        </Panel.Body>
       </Tabs.Root>
     </Panel.Root>
   );

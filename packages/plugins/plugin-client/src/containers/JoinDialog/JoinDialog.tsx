@@ -45,8 +45,8 @@ export const JoinDialog = (props: JoinPanelProps) => {
         <JoinPanel
           {...props}
           mode='halo-only'
-          exitActionParent={<Dialog.Close asChild />}
-          doneActionParent={<Dialog.Close asChild />}
+          exitActionParent={<Dialog.CloseTrigger asChild />}
+          doneActionParent={<Dialog.CloseTrigger asChild />}
           onCancelResetStorage={handleCancelResetStorage}
           onDone={handleDone}
         />

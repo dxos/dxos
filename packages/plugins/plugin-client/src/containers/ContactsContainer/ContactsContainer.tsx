@@ -9,7 +9,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { useSpaces } from '@dxos/react-client/echo';
 import { useContacts } from '@dxos/react-client/halo';
-import { Field, useTranslation } from '@dxos/react-ui';
+import { Field, Input, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { ContactList, type ContactSpace } from '@dxos/shell/react';
 
@@ -36,7 +36,7 @@ export const ContactsContainer = () => {
           <Form.FieldSet label={t('contacts.label')} description={t('contacts.description')}>
             {(contacts.length > 1 || filter !== '') && (
               <Field.Root>
-                <Field.Input
+                <Input
                   placeholder={t('contacts-search.placeholder')}
                   value={filter}
                   onChange={(event) => setFilter(event.target.value)}

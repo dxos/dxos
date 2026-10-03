@@ -126,6 +126,11 @@
       "types": "./dist/types/src/types/SupportService.d.ts",
       "import": "./dist/lib/SupportService.mjs"
     },
+    "./SupportSurface": {
+      "source": "./src/SupportSurface.ts",
+      "types": "./dist/types/src/SupportSurface.d.ts",
+      "import": "./dist/lib/ns/SupportSurface.mjs"
+    },
     "./SupportPlugin": {
       "source": "./src/SupportPlugin.ts",
       "types": "./dist/types/src/SupportPlugin.d.ts",

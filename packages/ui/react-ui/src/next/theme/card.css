@@ -7,56 +7,98 @@
  */
 
 @layer dx-components {
-  .nx-card {
-    --nx-card-inset: var(--dx-gutter-md);
-    --nx-card-display: flex;
-    --nx-card-header-gap: var(--nx-gap-size);
-    --nx-card-title-inset: 0px;
-    --nx-card-trailing-min: 0px;
+  .dx-card {
+    --dx-card-inset: var(--dx-gutter-md);
+    --dx-card-display: flex;
+    --dx-card-header-gap: var(--dx-gap-size);
+    --dx-card-title-inset: 0px;
+    --dx-card-trailing-min: 0px;
     display: flex;
     flex-direction: column;
     min-width: 0;
     box-sizing: border-box;
-    padding-block: var(--nx-gap-size);
-    padding-inline: var(--nx-card-inset);
+    padding-block: var(--dx-gap-size);
+    padding-inline: var(--dx-card-inset);
     border: 1px solid var(--color-separator);
     border-radius: var(--radius-md, 0.375rem);
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
   }
-  .nx-card[data-grid] {
-    --nx-card-inset: var(--nx-gap-size);
-    --nx-card-display: grid;
-    --nx-card-header-gap: 0px;
-    --nx-card-title-inset: var(--nx-gutter);
-    --nx-card-trailing-min: var(--nx-gutter);
+  .dx-card[data-grid] {
+    --dx-card-inset: var(--dx-gap-size);
+    --dx-card-display: grid;
+    --dx-card-header-gap: 0px;
+    --dx-card-title-inset: var(--dx-gutter);
+    --dx-card-trailing-min: var(--dx-gutter);
     display: grid;
   }
   /* A leading poster is flush with the card's top edge, and every poster bleeds across the inline padding. */
-  .nx-card:has(> .nx-card-poster:first-child) {
+  .dx-card:has(> .dx-card-poster:first-child) {
     padding-block-start: 0;
   }
-  .nx-card > .nx-card-poster {
-    margin-inline: calc(-1 * var(--nx-card-inset));
+  .dx-card > .dx-card-poster {
+    margin-inline: calc(-1 * var(--dx-card-inset));
   }
   /* Inside the border, so the inner radius is the card's less its border width. */
-  .nx-card > .nx-card-poster:first-child {
+  .dx-card > .dx-card-poster:first-child {
     border-start-start-radius: calc(var(--radius-md, 0.375rem) - 1px);
     border-start-end-radius: calc(var(--radius-md, 0.375rem) - 1px);
   }
 
+  /*
+   * Tile: a leading full-height hue block with a large icon. The card becomes a row with no start or block padding, so
+   * the tile meets the border on three sides, and the column after it takes the block padding instead.
+   */
+  .dx-card:has(> .dx-card-tile:first-child) {
+    flex-direction: row;
+    gap: var(--dx-card-inset);
+    padding-block: 0;
+    padding-inline-start: 0;
+    overflow: hidden;
+  }
+  .dx-card:has(> .dx-card-tile:first-child) > :not(.dx-card-tile) {
+    flex: 1;
+    padding-block: var(--dx-gap-size);
+  }
+  .dx-card-tile {
+    --dx-hue-bg: var(--color-neutral-surface);
+    --dx-hue-fg: var(--color-neutral-fg);
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+    width: var(--dx-card-tile-size, 5rem);
+    padding-block-start: var(--dx-block-size);
+    background: var(--dx-hue-bg);
+  }
+  .dx-card-tile > .dx-icon {
+    width: calc(var(--dx-card-tile-size, 5rem) * 0.7);
+    height: calc(var(--dx-card-tile-size, 5rem) * 0.7);
+    color: var(--dx-hue-fg);
+  }
+  .dx-card-tile-clickable {
+    cursor: pointer;
+  }
+  /* A Body beside a Tile ends with its Footer, whatever the description's length. */
+  .dx-card:has(> .dx-card-tile:first-child) > .dx-card-body > .dx-card-footer {
+    margin-block-start: auto;
+  }
+
   /* Body and Section: flex columns, or subgrids across a grid card's rails whose children sit in the content track. */
-  .nx-card-body,
-  .nx-card-section {
-    display: var(--nx-card-display);
+  .dx-card-body,
+  .dx-card-section {
+    display: var(--dx-card-display);
     flex-direction: column;
     grid-template-columns: subgrid;
     min-width: 0;
   }
-  :is(.nx-card-body, .nx-card-section) > * {
+  :is(.dx-card-body, .dx-card-section) > * {
     grid-column: content;
   }
-  :is(.nx-card, .nx-card-body, .nx-card-section) > :is(.nx-card-header, .nx-card-body, .nx-card-section, .nx-card-row) {
+  /* Also through a plugin surface (`<dx-surface>`, box-less), e.g. the Body a `CardContent` surface renders. */
+  :is(.dx-card, .dx-card-body, .dx-card-section) > :is(.dx-card-header, .dx-card-body, .dx-card-section, .dx-card-row),
+  :is(.dx-card, .dx-card-body, .dx-card-section)
+    > dx-surface
+    > :is(.dx-card-header, .dx-card-body, .dx-card-section, .dx-card-row) {
     grid-column: full;
   }
 
@@ -65,60 +107,60 @@
    * Button's inset cell) is one block wide, the rail's width: the first fills the start rail and the last the end rail,
    * so a Title with neither takes a rail-wide margin instead.
    */
-  .nx-card-header {
+  .dx-card-header {
     display: flex;
     align-items: center;
-    gap: var(--nx-card-header-gap);
-    min-height: var(--nx-block-size);
+    gap: var(--dx-card-header-gap);
+    min-height: var(--dx-block-size);
   }
-  .nx-card-header > .nx-block {
-    width: var(--nx-control-size);
-    height: var(--nx-control-size);
-    margin: var(--nx-control-inset);
+  .dx-card-header > .dx-block {
+    width: var(--dx-control-size);
+    height: var(--dx-control-size);
+    margin: var(--dx-control-inset);
   }
-  .nx-card-header > .nx-card-title:first-child {
-    margin-inline-start: var(--nx-card-title-inset);
+  .dx-card-header > .dx-card-title:first-child {
+    margin-inline-start: var(--dx-card-title-inset);
   }
-  .nx-card-header > .nx-card-title:last-child {
-    margin-inline-end: var(--nx-card-title-inset);
+  .dx-card-header > .dx-card-title:last-child {
+    margin-inline-end: var(--dx-card-title-inset);
   }
 
-  .nx-card-title {
+  .dx-card-title {
     flex: 1;
     min-width: 0;
     margin: 0;
-    font-size: var(--nx-font-size);
-    line-height: var(--nx-line-height);
+    font-size: var(--dx-font-size);
+    line-height: var(--dx-line-height);
     font-weight: 500;
   }
 
-  .nx-card-description {
+  .dx-card-description {
     margin: 0;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
 
-  .nx-card[data-border='false'] {
+  .dx-card[data-border='false'] {
     border-color: transparent;
   }
-  .nx-card[data-selected] {
+  .dx-card[data-selected] {
     border-color: var(--color-accent-bg);
   }
 
   /* A clickable card or row: the hover surface, and the shared inset ring on keyboard focus. */
-  .nx-card-clickable {
+  .dx-card-clickable {
     cursor: pointer;
   }
-  .nx-card-clickable:hover {
+  .dx-card-clickable:hover {
     background: var(--color-hover-surface);
   }
 
-  .nx-card-section-title {
+  .dx-card-section-title {
     display: flex;
     align-items: center;
-    min-height: var(--nx-control-size);
-    font-size: var(--nx-label-font-size);
-    line-height: var(--nx-label-line-height);
-    color: var(--color-description);
+    min-height: var(--dx-control-size);
+    font-size: var(--dx-label-font-size);
+    line-height: var(--dx-label-line-height);
+    color: var(--color-fg-muted);
   }
 
   /*
@@ -127,66 +169,66 @@
    * tracks: in a grid card the trailing cell is at least the rail's width and ends one inset short, so an icon-only
    * action fills the rail exactly and a wider one (a Tag) extends back over the text, which truncates before it.
    */
-  .nx-card-row {
-    display: var(--nx-card-display);
+  .dx-card-row {
+    display: var(--dx-card-display);
     grid-template-columns: subgrid;
-    grid-auto-rows: minmax(var(--nx-block-size), auto);
+    grid-auto-rows: minmax(var(--dx-block-size), auto);
     align-items: center;
     min-width: 0;
-    min-height: var(--nx-block-size);
+    min-height: var(--dx-block-size);
     border-radius: var(--radius-sm, 0.25rem);
     color: inherit;
     text-decoration: none;
   }
-  .nx-card-row > * {
+  .dx-card-row > * {
     grid-row: 1;
     grid-column: content;
   }
-  .nx-card-row > [data-rail='start'] {
+  .dx-card-row > [data-rail='start'] {
     grid-column: full-start / content-start;
   }
-  .nx-card-row > [data-rail='end'] {
+  .dx-card-row > [data-rail='end'] {
     grid-column: content-end / full-end;
   }
-  .nx-card-row-main {
+  .dx-card-row-main {
     display: grid;
     flex: 1;
     grid-template-columns: minmax(0, 1fr);
     align-items: center;
     min-width: 0;
   }
-  .nx-card-row[data-trailing] > .nx-card-row-main {
+  .dx-card-row[data-trailing] > .dx-card-row-main {
     grid-column: content-start / full-end;
-    grid-template-columns: minmax(0, 1fr) minmax(var(--nx-card-trailing-min), auto);
+    grid-template-columns: minmax(0, 1fr) minmax(var(--dx-card-trailing-min), auto);
   }
-  .nx-card-row-content {
+  .dx-card-row-content {
     flex: 1;
     min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .nx-card-row-trailing {
+  .dx-card-row-trailing {
     display: flex;
     align-items: center;
     justify-content: end;
-    gap: var(--nx-control-inset);
-    padding-inline: var(--nx-control-inset);
+    gap: var(--dx-control-inset);
+    padding-inline: var(--dx-control-inset);
   }
-  .nx-card-row[aria-current='true'] {
+  .dx-card-row[aria-current='true'] {
     background: var(--color-hover-surface);
   }
-  .nx-card-link:hover {
+  .dx-card-link:hover {
     background: var(--color-hover-surface);
   }
-  .nx-card-link > .nx-block:last-child {
+  .dx-card-link > .dx-block:last-child {
     visibility: hidden;
   }
-  .nx-card-link:is(:hover, :focus-visible) > .nx-block:last-child {
+  .dx-card-link:is(:hover, :focus-visible) > .dx-block:last-child {
     visibility: visible;
   }
   /* The trailing cell's padding is the rail's inset, so an icon-only Button drops its own. */
-  .nx-card-row-trailing > .nx-button[data-square] {
+  .dx-card-row-trailing > .dx-button[data-square] {
     margin: 0;
   }
 }

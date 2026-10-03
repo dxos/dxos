@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { ToggleGroup, ToggleGroupIconItem, useTranslation } from '@dxos/react-ui';
+import { ToggleGroup, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 
@@ -32,22 +32,22 @@ export const PluginScope = ({ synced, onPin, onUnpin }: PluginScopeProps) => {
   );
 
   return (
-    <ToggleGroup type='single' value={synced ? 'shared' : 'local'} onValueChange={handleValueChange}>
-      <ToggleGroupIconItem
+    <ToggleGroup.Root type='single' value={synced ? 'shared' : 'local'} onValueChange={handleValueChange}>
+      <ToggleGroup.Item
         value='shared'
         data-testid='pluginDetail.scope.shared'
         icon='ph--cloud-check--regular'
         label={t('plugin-scope.shared.label')}
         iconOnly
       />
-      <ToggleGroupIconItem
+      <ToggleGroup.Item
         value='local'
         data-testid='pluginDetail.scope.local'
         icon='ph--monitor--regular'
         label={t('plugin-scope.device-only.label')}
         iconOnly
       />
-    </ToggleGroup>
+    </ToggleGroup.Root>
   );
 };
 

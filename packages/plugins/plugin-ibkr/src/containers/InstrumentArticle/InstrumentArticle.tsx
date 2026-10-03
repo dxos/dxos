@@ -8,7 +8,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Block, Card, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 
 import { FundamentalsPanel, TradingViewChart } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
@@ -56,38 +56,38 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
-            <Card.Root fullWidth border={false}>
+            <Card.Root border={false}>
               <Card.Header>
-                <Card.Block />
+                <Block />
                 <Flex column gap='xs' classNames='min-w-0'>
                   <Card.Title>
                     {instrument.symbol}
                     {instrument.name ? ` · ${instrument.name}` : ''}
                   </Card.Title>
                   {(instrument.exchange || instrument.sector) && (
-                    <Card.Text variant='description'>
+                    <Card.Text variant='muted'>
                       {[instrument.exchange, instrument.sector, instrument.industry].filter(Boolean).join(' · ')}
                     </Card.Text>
                   )}
                 </Flex>
-                <Card.Block />
+                <Block />
               </Card.Header>
               <Card.Body>
-                <Card.Row fullWidth>
+                <Card.Row>
                   <TradingViewChart symbol={tradingViewSymbol} className='h-[480px] w-full border-0' />
                 </Card.Row>
                 <Card.Row>
-                  <Card.Text variant='description'>{t('instrument.chart-attribution.label')}</Card.Text>
+                  <Card.Text variant='muted'>{t('instrument.chart-attribution.label')}</Card.Text>
                 </Card.Row>
               </Card.Body>
             </Card.Root>
             <FundamentalsPanel snapshot={fundamentals} loading={loading} error={error} onRefresh={loadFundamentals} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

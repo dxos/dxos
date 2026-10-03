@@ -9,60 +9,118 @@ import React from 'react';
 import { expect, waitFor } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { type CSSVariables } from '../Container/index.ts';
+import { Block, Button, Container, Icon, Panel, ScrollArea, Toolbar, Typography } from '../index.ts';
+
+/** A narrow reading width, so the story's pane is wider than the document. */
+const READING_WIDTH: CSSVariables = { '--spacing-document-max-width': '20rem' };
+
+/** `--dx-gutter-sm` and `--dx-gutter-md` (ui-theme spacing): the form and dialog insets, the same at every size. */
+const SM_GUTTER = 8;
+const MD_GUTTER = 16;
 
 const ROWS = Array.from({ length: 30 }, (_, index) => `Item ${index + 1}`);
 
-/** A panel filling a fixed-height host: a toolbar header, 30 rows with rail icons that overflow the body, and a footer. */
+/**
+ * A panel filling a fixed-height host: a toolbar header, 30 rows with rail icons that overflow the body (so its
+ * Container names `gutter='rail'`), and a footer.
+ */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <div data-place='full' className='h-64' data-testid={`host-${size}`}>
-    <Next.Panel.Root size={size} data-testid={`panel-${size}`}>
-      <Next.Panel.Header data-testid={`header-${size}`}>
-        <Next.Toolbar.Root>
-          <Next.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
-          <Next.Toolbar.Text>Inbox</Next.Toolbar.Text>
-          <Next.Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
-        </Next.Toolbar.Root>
-      </Next.Panel.Header>
-      <Next.Panel.Body data-testid={`body-${size}`}>
-        {ROWS.map((label, index) => (
-          <Next.Container key={label} layout='row' data-testid={index === 0 ? `row-${size}` : undefined}>
-            <Next.Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
-              <Next.Icon icon='ph--envelope--regular' />
-            </Next.Block>
-            <Next.Typography data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Next.Typography>
-          </Next.Container>
-        ))}
-      </Next.Panel.Body>
-      <Next.Panel.Footer data-testid={`footer-${size}`}>
-        <Next.Toolbar.Root>
-          <Next.Toolbar.Text>{ROWS.length} items</Next.Toolbar.Text>
-        </Next.Toolbar.Root>
-      </Next.Panel.Footer>
-    </Next.Panel.Root>
+    <Panel.Root size={size} data-testid={`panel-${size}`}>
+      <Panel.Header data-testid={`header-${size}`}>
+        <Toolbar.Root>
+          <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+          <Toolbar.Text>Inbox</Toolbar.Text>
+          <Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
+        </Toolbar.Root>
+      </Panel.Header>
+      <Panel.Body asChild data-testid={`body-${size}`}>
+        <ScrollArea.Root>
+          <ScrollArea.Viewport asChild>
+            <Container gutter='rail'>
+              {ROWS.map((label, index) => (
+                <Container key={label} layout='row' data-testid={index === 0 ? `row-${size}` : undefined}>
+                  <Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
+                    <Icon icon='ph--envelope--regular' />
+                  </Block>
+                  <Typography data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Typography>
+                </Container>
+              ))}
+            </Container>
+          </ScrollArea.Viewport>
+        </ScrollArea.Root>
+      </Panel.Body>
+      <Panel.Footer data-testid={`footer-${size}`}>
+        <Toolbar.Root>
+          <Toolbar.Text>{ROWS.length} items</Toolbar.Text>
+        </Toolbar.Root>
+      </Panel.Footer>
+    </Panel.Root>
   </div>
 );
 
-/** The default panel above one whose header is empty and which has no footer, so both rows collapse to nothing. */
+/**
+ * The default panel above one whose header is empty and which has no footer, so both rows collapse to nothing (its Body
+ * a plain slot with no ScrollArea), a panel at the document width, and two whose body Containers name no gutter: they
+ * take the panel's (`sm` by default, `md` here), and a Container nested in one stays a subgrid.
+ */
 const TestStory = (args: SizeArgs) => (
   <>
     <DefaultStory {...args} />
     <div data-place='full' className='h-16' data-testid={`bare-host-${args.size}`}>
-      <Next.Panel.Root size={args.size}>
-        <Next.Panel.Header data-testid={`empty-header-${args.size}`} />
-        <Next.Panel.Body data-testid={`bare-body-${args.size}`}>
-          <Next.Typography>Body</Next.Typography>
-        </Next.Panel.Body>
-      </Next.Panel.Root>
+      <Panel.Root size={args.size}>
+        <Panel.Header data-testid={`empty-header-${args.size}`} />
+        <Panel.Body data-testid={`bare-body-${args.size}`}>
+          <Typography>Body</Typography>
+        </Panel.Body>
+      </Panel.Root>
+    </div>
+    <div data-place='full' className='h-16' style={READING_WIDTH}>
+      <Panel.Root size={args.size} width='document' data-testid={`reading-${args.size}`}>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport asChild>
+              <Container>
+                <Typography data-testid={`reading-text-${args.size}`}>Reading width</Typography>
+              </Container>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
+    </div>
+    <div data-place='full' className='h-16'>
+      <Panel.Root size={args.size} data-testid={`default-gutter-${args.size}`}>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport asChild>
+              <Container data-testid={`default-gutter-body-${args.size}`}>
+                <Container data-testid={`default-gutter-nested-${args.size}`}>
+                  <Typography data-testid={`default-gutter-text-${args.size}`}>Default gutter</Typography>
+                </Container>
+              </Container>
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Body>
+      </Panel.Root>
+    </div>
+    <div data-place='full' className='h-16'>
+      <Panel.Root size={args.size} gutter='md' data-testid={`md-gutter-${args.size}`}>
+        <Panel.Body>
+          <Container>
+            <Typography data-testid={`md-gutter-text-${args.size}`}>Panel gutter</Typography>
+          </Container>
+        </Panel.Body>
+      </Panel.Root>
     </div>
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Panel',
+  title: 'ui/react-ui-core/components/Panel',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },
@@ -78,15 +136,21 @@ export const Default: Story = {};
 
 /**
  * At every size the panel fills its host and stacks a header and footer sized to their one-row toolbars (one block) and
- * the growing body with no gaps, while an empty header and a missing footer take no space; its `data-size` reaches the
- * toolbar's controls and the body's rail Blocks. The body overflows and scrolls with the thin overlay thumb in the end
- * gutter. Narrowed below the collapse width, the panel (the query container) collapses the body's rail gutter to the
- * inset and hides the rail Blocks.
+ * the growing body with no gaps, while an empty header and a missing footer take no space and a plain Body adds no
+ * frame; its `data-size` reaches the toolbar's controls and the body's rail Blocks. The body overflows and scrolls with
+ * the thin overlay thumb in the end gutter. Narrowed below the collapse width, the panel (the query container)
+ * collapses the body's rail gutter to the inset and hides the rail Blocks.
  */
 export const Test: Story = {
   render: TestStory,
   args: { allSizes: true },
   play: async ({ canvasElement }) => {
+    // `width='document'` keeps the body's content at the reading width, centred in the panel.
+    const reading = byTestId(canvasElement, 'reading-md').getBoundingClientRect();
+    const readingText = byTestId(canvasElement, 'reading-text-md').getBoundingClientRect();
+    await expect(readingText.width).toBeCloseTo(320 - 2 * SM_GUTTER, 0);
+    await expect(readingText.left - reading.left).toBeCloseTo(reading.right - readingText.right, 0);
+
     for (const size of SIZES) {
       const { block, inset } = GEOMETRY[size];
       const panel = byTestId(canvasElement, `panel-${size}`);
@@ -115,22 +179,40 @@ export const Test: Story = {
       await expect(emptyHeader.height, `${size} empty header height`).toBe(0);
       await expect(bareBody.top, `${size} bare body top`).toBeCloseTo(bareHost.top, 0);
       await expect(bareBody.bottom, `${size} bare body bottom`).toBeCloseTo(bareHost.bottom, 0);
+      // A Body that composes nothing is a plain slot: no ScrollArea frame of its own.
+      const bareBodyElement = byTestId(canvasElement, `bare-body-${size}`);
+      await expect(bareBodyElement).toHaveAttribute('data-part', 'body');
+      await expect(bareBodyElement.querySelector('.dx-scroll-root')).toBeNull();
 
       // Size flows to the toolbar's controls and the body's rails.
       const add = byTestId(canvasElement, `add-${size}`).getBoundingClientRect();
       await expect(add.height, `${size} control`).toBeCloseTo(controlSize(size), 0);
-      await expect(add.left - rect.left, `${size} control inset`).toBeCloseTo(inset, 0);
+      // The toolbar pads its inline edges by half a gap, then the control sits its inset into its cell.
+      const toolbar = byTestId(canvasElement, `add-${size}`).closest<HTMLElement>('.dx-toolbar');
+      const toolbarPadding = toolbar ? parseFloat(getComputedStyle(toolbar).paddingLeft) : 0;
+      await expect(add.left - rect.left, `${size} control inset`).toBeCloseTo(inset + toolbarPadding, 0);
       const rail = byTestId(canvasElement, `rail-${size}`).getBoundingClientRect();
       await expect(rail.width, `${size} rail block`).toBeCloseTo(block, 0);
       await expect(rail.left, `${size} rail start`).toBeCloseTo(rect.left, 0);
       await expect(byTestId(canvasElement, `text-${size}`).getBoundingClientRect().left).toBeCloseTo(rail.right, 0);
       await expect(byTestId(canvasElement, `row-${size}`).getBoundingClientRect().height).toBeCloseTo(block, 0);
+
+      // A body Container that names no gutter takes the panel's: `sm` by default, at every size; one nested in it
+      // inherits; `Panel.Root gutter` changes it.
+      const defaultPanel = byTestId(canvasElement, `default-gutter-${size}`).getBoundingClientRect();
+      await expect(byTestId(canvasElement, `default-gutter-body-${size}`)).toHaveAttribute('data-gutter', 'sm');
+      await expect(byTestId(canvasElement, `default-gutter-nested-${size}`)).toHaveAttribute('data-gutter', 'inherit');
+      const defaultText = byTestId(canvasElement, `default-gutter-text-${size}`).getBoundingClientRect();
+      await expect(defaultText.left - defaultPanel.left, `${size} default panel gutter`).toBeCloseTo(SM_GUTTER, 0);
+      const mdPanel = byTestId(canvasElement, `md-gutter-${size}`).getBoundingClientRect();
+      const mdText = byTestId(canvasElement, `md-gutter-text-${size}`).getBoundingClientRect();
+      await expect(mdText.left - mdPanel.left, `${size} md panel gutter`).toBeCloseTo(MD_GUTTER, 0);
     }
     await expectScoped(canvasElement);
 
     // The body scrolls, the thumb in the end gutter following it.
     const frame = byTestId(canvasElement, 'body-md');
-    const viewport = frame.querySelector<HTMLElement>(':scope > .nx-scroll-viewport');
+    const viewport = frame.querySelector<HTMLElement>(':scope > .dx-scroll-viewport');
     await expect(viewport).not.toBeNull();
     if (!viewport) {
       return;

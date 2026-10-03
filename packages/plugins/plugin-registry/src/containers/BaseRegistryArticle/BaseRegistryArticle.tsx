@@ -7,6 +7,8 @@ import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+// Loaded only through the lazy registry containers, so Next's CSS stays out of the boot graph.
+import '@dxos/react-ui/theme.css';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
@@ -14,8 +16,16 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import {
+  Container,
+  Input,
+  Panel,
+  ScrollArea,
+  Toolbar,
+  composable,
+  composableProps,
+  useTranslation,
+} from '@dxos/react-ui';
 
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
@@ -139,46 +149,46 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
 
     return (
       <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
-            <Field.Root>
-              <Field.Label srOnly>{t('filter.label')}</Field.Label>
-              <Field.Input
-                placeholder={t('filter.placeholder')}
-                value={filter}
-                onChange={(event) => setFilter(event.target.value)}
-              />
-            </Field.Root>
+            <Input
+              aria-label={t('filter.label')}
+              placeholder={t('filter.placeholder')}
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+            />
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content asChild>
-          <ScrollArea.Root orientation='vertical'>
-            <ScrollArea.Viewport>
-              {filtered.length > 0 ? (
-                <PluginList
-                  plugins={filtered}
-                  enabled={enabled}
-                  installed={installed}
-                  installing={installing}
-                  updating={updating}
-                  updateAvailableIds={updateAvailableIds}
-                  extraTagsById={extraTagsById}
-                  failuresById={failuresById}
-                  deviceOnlyIds={deviceOnlyIds}
-                  onClick={handleClick}
-                  readOnly={settingsSync === undefined}
-                  onChange={handleChange}
-                  onInstall={onInstall}
-                  onUpdate={onUpdate}
-                  hasSettings={hasSettings}
-                  onSettings={handleSettings}
-                />
-              ) : (
-                empty
-              )}
+        </Panel.Header>
+        <Panel.Body asChild>
+          <ScrollArea.Root>
+            <ScrollArea.Viewport asChild>
+              <Container gutter='md' padBlock>
+                {filtered.length > 0 ? (
+                  <PluginList
+                    plugins={filtered}
+                    enabled={enabled}
+                    installed={installed}
+                    installing={installing}
+                    updating={updating}
+                    updateAvailableIds={updateAvailableIds}
+                    extraTagsById={extraTagsById}
+                    failuresById={failuresById}
+                    deviceOnlyIds={deviceOnlyIds}
+                    onClick={handleClick}
+                    readOnly={settingsSync === undefined}
+                    onChange={handleChange}
+                    onInstall={onInstall}
+                    onUpdate={onUpdate}
+                    hasSettings={hasSettings}
+                    onSettings={handleSettings}
+                  />
+                ) : (
+                  empty
+                )}
+              </Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },

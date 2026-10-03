@@ -5,10 +5,8 @@
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
-import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Script from '@dxos/compute/Script';
-import { ElevationProvider, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   ActionToolbar,
@@ -43,9 +41,7 @@ export const ScriptToolbar = composable<HTMLDivElement, ScriptToolbarProps>(
     const menuActions = useMenuActions(menuCreator);
 
     return (
-      <ElevationProvider elevation={role === AppSurface.Section.role ? 'positioned' : 'base'}>
-        <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />
-      </ElevationProvider>
+      <ActionToolbar {...menuActions} attendableId={attendableId} {...composableProps(props)} ref={forwardedRef} />
     );
   },
 );

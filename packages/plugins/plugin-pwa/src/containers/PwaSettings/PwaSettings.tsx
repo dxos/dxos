@@ -6,6 +6,7 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
+import '@dxos/react-ui/theme.css';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';

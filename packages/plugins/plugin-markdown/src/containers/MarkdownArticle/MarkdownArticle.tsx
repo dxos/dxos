@@ -354,21 +354,21 @@ const MarkdownArticleImpl = forwardRef<
             {binding.overlays}
             <Panel.Root role={role} ref={forwardedRef}>
               {settings.toolbar && (
-                <Panel.Toolbar>
+                <Panel.Header>
                   <MarkdownEditor.Toolbar
                     classNames='dx-document'
                     customActions={customActions}
                     viewModes={viewModes}
                   />
-                </Panel.Toolbar>
+                </Panel.Header>
               )}
-              <Panel.Content classNames='flex flex-col'>
+              <Panel.Body classNames='flex flex-col'>
                 {binding.banner}
                 <MarkdownEditor.Content initialValue={binding.initialValue} />
                 <Editor.Blocks />
                 {/* Developer diagnostics panel (live editor state), gated behind the debug setting. */}
                 {settings.debug && <Editor.Diagnostics />}
-              </Panel.Content>
+              </Panel.Body>
             </Panel.Root>
           </Editor.Root>
         )}

@@ -5,7 +5,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Panel, Show, Toolbar, useMediaQuery, useTranslation } from '@dxos/react-ui';
+import { Panel, Show, ToggleGroup, Toolbar, useMediaQuery, useTranslation } from '@dxos/react-ui';
 import { Calendar, type CalendarController } from '@dxos/react-ui-calendar';
 import { mx } from '@dxos/ui-theme';
 
@@ -29,14 +29,14 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.ToggleGroup
             type='single'
             value={showCalendar ? 'calendar' : ''}
             onValueChange={(value) => setShowCalendar(value === 'calendar')}
           >
-            <Toolbar.ToggleGroupIconItem
+            <ToggleGroup.Item
               value='calendar'
               label={t('toggle-calendar.label')}
               icon='ph--calendar--regular'
@@ -44,8 +44,8 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
             />
           </Toolbar.ToggleGroup>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         {/* TODO(burdon): Splitter. */}
         <div
           className={mx(
@@ -59,19 +59,19 @@ export const JournalArticle = ({ role, attendableId: _attendableId, subject: jou
           <Show when={showCalendar}>
             <Calendar.Root ref={controllerRef}>
               <Panel.Root>
-                <Panel.Toolbar asChild>
+                <Panel.Header>
                   <Calendar.Toolbar />
-                </Panel.Toolbar>
-                <Panel.Content asChild>
+                </Panel.Header>
+                <Panel.Body asChild>
                   <Calendar.Grid rows={isNotMobile ? undefined : 6} />
-                </Panel.Content>
+                </Panel.Body>
               </Panel.Root>
             </Calendar.Root>
           </Show>
 
           <JournalComponent journal={journal} classNames='dx-document' onSelect={handleSelect} />
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

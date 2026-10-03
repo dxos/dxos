@@ -18,6 +18,8 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 import * as AppApp from '@dxos/app-framework/App';
 import type * as Devtools from '@dxos/app-framework/Devtools';
 import * as Hooks from '@dxos/app-framework/Hooks';
+// Next components style through `.dx-*` rules that ship separately from the theme.
+import '@dxos/react-ui/theme.css';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginAssetCache from '@dxos/app-framework/PluginAssetCache';
 import * as Registry from '@dxos/app-framework/Registry';
@@ -34,8 +36,7 @@ import { translations as observabilityTranslations } from '@dxos/plugin-observab
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
 import * as SupportService from '@dxos/plugin-support/SupportService';
 import { ErrorBoundary, ErrorFallback } from '@dxos/react-error-boundary';
-import { ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 import { TRACE_PROCESSOR } from '@dxos/tracing';
 import { getHostPlatform, isMobile as isMobile$, isTauri as isTauri$ } from '@dxos/util';
@@ -696,20 +697,18 @@ const main = async () => {
           tx={defaultTx}
           resourceExtensions={[...reactUiTranslations, ...translations, ...observabilityTranslations]}
         >
-          <Tooltip.Provider>
-            {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
+          {/* If the lazy chunk fails to load (broken deploy, offline), the throw reaches the
                 fatal-dialog boundary above, which shows the original error via ErrorFallback. */}
-            <Suspense fallback={null}>
-              <ResetDialog
-                error={error}
-                logStore={logStore}
-                onSubmitReport={submitReport}
-                needRefresh={needRefresh}
-                onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
-                onReset={import.meta.env.DEV ? handleReset : undefined}
-              />
-            </Suspense>
-          </Tooltip.Provider>
+          <Suspense fallback={null}>
+            <ResetDialog
+              error={error}
+              logStore={logStore}
+              onSubmitReport={submitReport}
+              needRefresh={needRefresh}
+              onRefresh={needRefresh ? () => void updateServiceWorker(true) : undefined}
+              onReset={import.meta.env.DEV ? handleReset : undefined}
+            />
+          </Suspense>
         </ThemeProvider>
       </ErrorBoundary>
     );

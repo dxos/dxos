@@ -64,17 +64,17 @@ export const SampleArticle = ({ role, subject, attendableId }: SampleArticleProp
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...actions} attendableId={attendableId} onAction={onAction} />
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <SampleItemView
           name={snapshot.name}
           description={snapshot.description}
           status={snapshot.status}
           onValuesChanged={handleValuesChanged}
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

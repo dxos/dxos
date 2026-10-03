@@ -73,7 +73,7 @@ export const WorkflowArticle = ({ role, ...props }: ArticleProps & { space?: Spa
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {!props.space && <DataSpaceSelector />}
           <ControlledSelector values={Object.values(DisplayMode)} value={displayMode} setValue={setDisplayMode} />
@@ -83,8 +83,8 @@ export const WorkflowArticle = ({ role, ...props }: ArticleProps & { space?: Spa
             setValue={setExecutionMode}
           />
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <div className={'h-full grid grid-rows-[4fr_3fr]'}>
           <MasterDetailTable
             properties={properties}
@@ -97,7 +97,7 @@ export const WorkflowArticle = ({ role, ...props }: ArticleProps & { space?: Spa
             {selected && <WorkflowDebugPanel loader={loader} graph={selected} mode={executionMode} />}
           </div>
         </div>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

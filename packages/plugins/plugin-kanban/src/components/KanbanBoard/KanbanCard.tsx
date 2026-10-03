@@ -8,9 +8,9 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
-import { Card, IconButton, useTranslation } from '@dxos/react-ui';
+import { Block, Button, Card, DragHandle, Focus, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
-import { Focus, Mosaic, useBoard } from '@dxos/react-ui-mosaic';
+import { Mosaic, useBoard } from '@dxos/react-ui-mosaic';
 
 import { meta } from '#meta';
 
@@ -62,21 +62,21 @@ export const KanbanCard = forwardRef<HTMLDivElement, KanbanCardProps>(
         dragHandle={dragHandle}
       >
         <Focus.Item asChild>
-          <Card.Root ref={forwardedRef} data-testid='board-item'>
+          <Card.Root grid ref={forwardedRef} data-testid='board-item'>
             <Card.Header ref={cardRef}>
-              <Card.DragHandle ref={dragHandleRef} testId='mosaicBoard.cardDragHandle' />
+              <DragHandle ref={dragHandleRef} data-testid='mosaicBoard.cardDragHandle' />
               <Card.Title data-testid='mosaicBoard.cardTitle'>{Obj.getLabel(data)}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Card.Block end>
+              <Block rail='end'>
                 <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                  <IconButton
+                  <Button
                     iconOnly
                     variant='ghost'
                     icon='ph--dots-three-vertical--regular'
                     label={t('action-menu.label')}
                   />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             <Card.Body>
               {projection && (

@@ -10,7 +10,7 @@ import { useResolveRef } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, Show, ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Panel, Show, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
@@ -137,12 +137,12 @@ export const OutlineArticle = ({
   if (task) {
     return (
       <Panel.Root role={role}>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <ActionToolbar {...taskActions} attendableId={attendableId} classNames='dx-document' />
-        </Panel.Toolbar>
-        <Panel.Content>
-          <TaskForm task={task} classNames='dx-document' />
-        </Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
+          <TaskForm task={task} />
+        </Panel.Body>
       </Panel.Root>
     );
   }
@@ -162,13 +162,13 @@ export const OutlineArticle = ({
         >
           <Panel.Root role={role}>
             <Show when={toolbar}>
-              <Panel.Toolbar asChild>
+              <Panel.Header>
                 <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
-              </Panel.Toolbar>
+              </Panel.Header>
             </Show>
-            <Panel.Content asChild>
+            <Panel.Body asChild>
               <Outline.Content classNames='dx-document' />
-            </Panel.Content>
+            </Panel.Body>
           </Panel.Root>
         </Outline.Root>
       )}
@@ -178,7 +178,7 @@ export const OutlineArticle = ({
 
 OutlineArticle.displayName = 'OutlineArticle';
 
-const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) => {
+const TaskForm = ({ task }: { task: Task.Task }) => {
   const schema = useMemo(() => omitId(Type.getSchema(Task.Task)), []);
 
   const handleSave = useCallback(
@@ -196,7 +196,7 @@ const TaskForm = ({ classNames, task }: ThemedClassName<{ task: Task.Task }>) =>
 
   return (
     <Form.Root schema={schema} values={task} autoSave onSave={handleSave}>
-      <Form.Viewport classNames={classNames} scroll>
+      <Form.Viewport scroll width='document'>
         <Form.Content>
           <Form.Fields />
         </Form.Content>

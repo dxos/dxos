@@ -46,20 +46,20 @@ export const CredentialsArticle = ({ role, ...props }: ArticleProps & { space?: 
   return (
     <Panel.Root role={role}>
       {!props.space && (
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <SpaceSelector />
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       )}
-      <Panel.Content>
+      <Panel.Body>
         <MasterDetailTable
           properties={properties}
           data={data}
           detailsTransform={(d) => d._original}
           detailsPosition='bottom'
         />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

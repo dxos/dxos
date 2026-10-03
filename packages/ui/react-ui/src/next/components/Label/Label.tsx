@@ -28,4 +28,4 @@ export const Label = composable<HTMLLabelElement, LabelProps>(({ children, srOnl
   );
 });
 
-Label.displayName = 'Next.Label';
+Label.displayName = 'Label';

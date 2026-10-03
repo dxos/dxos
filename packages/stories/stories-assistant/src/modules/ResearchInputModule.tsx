@@ -31,12 +31,12 @@ const ResearchInputModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Research Input</Toolbar.Text>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='flex flex-col gap-4 p-4'>
             {objects.map((object) => (
@@ -44,7 +44,7 @@ const ResearchInputModuleContainer = ({ space }: { space: Space }) => {
             ))}
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -62,7 +62,7 @@ const DebugCard = ({ object }: DebugCardProps) => {
           <span className='text-sm font-mono dx-text' data-hue={getHashHue(object.id)}>
             {object.id.slice(-6)}
           </span>
-          <span className='text-sm text-description bg-neutral-800 px-2 py-1 rounded-sm'>
+          <span className='text-sm text-fg-muted bg-neutral-800 px-2 py-1 rounded-sm'>
             {Entity.getTypename(object)}
           </span>
         </p>

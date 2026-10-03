@@ -3,7 +3,7 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import React from 'react';
+import React, { type ComponentPropsWithoutRef } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
@@ -11,11 +11,10 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import {
+  Button,
   Icon,
-  IconButton,
-  type IconButtonProps,
-  Toolbar as NaturalToolbar,
   type ThemedClassName,
+  Toolbar as UiToolbar,
   toLocalizedString,
   useTranslation,
 } from '@dxos/react-ui';
@@ -73,7 +72,7 @@ export const Toolbar = ({
   // TODO(wittjosiah): In order to use toolbar, need to update to actually use the graph action callbacks directly.
   return (
     <div className={mx('z-20 flex justify-center m-8', autoHideControls && groupHoverControlItemWithTransition)}>
-      <NaturalToolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
+      <UiToolbar.Root classNames={['p-2 dx-modal-surface rounded-md shadow-md', classNames]}>
         <ToggleButton
           active={audioEnabled}
           state={{
@@ -107,11 +106,11 @@ export const Toolbar = ({
         />
 
         {(participants !== undefined && (
-          <div className='flex justify-center items-center gap-2 w-[5rem] text-xs text-subdued'>
+          <div className='flex justify-center items-center gap-2 w-[5rem] text-xs text-fg-subtle'>
             <Icon icon='ph--users--regular' />
             <div>{participants}</div>
           </div>
-        )) || <NaturalToolbar.Separator variant='gap' />}
+        )) || <UiToolbar.Separator variant='gap' />}
 
         {inRoom && (
           <>
@@ -136,7 +135,7 @@ export const Toolbar = ({
             {actions
               .filter((action): action is AppGraphNode.Action => AppGraphNode.isAction(action))
               .map((action) => (
-                <IconButton
+                <Button
                   key={action.id}
                   {...defaultButtonProps}
                   icon={action.properties.icon}
@@ -164,14 +163,9 @@ export const Toolbar = ({
           </>
         )}
         {inRoom ? (
-          <IconButton
-            variant='destructive'
-            icon='ph--phone-x--regular'
-            label={t('leave-call.button')}
-            onClick={onLeave}
-          />
+          <Button variant='destructive' icon='ph--phone-x--regular' label={t('leave-call.button')} onClick={onLeave} />
         ) : (
-          <IconButton
+          <Button
             variant='primary'
             icon='ph--phone-incoming--regular'
             label={t('join-call.button')}
@@ -179,29 +173,34 @@ export const Toolbar = ({
             onClick={onJoin}
           />
         )}
-      </NaturalToolbar.Root>
+      </UiToolbar.Root>
     </div>
   );
 };
 
 Toolbar.displayName = 'MeetingToolbar';
 
-type ToolbarButtonProps = Pick<IconButtonProps, 'disabled'> & {
+type ButtonProps = ComponentPropsWithoutRef<typeof Button>;
+
+type ToggleButtonState = Pick<ButtonProps, 'icon' | 'label' | 'onClick'> & { classNames?: string };
+
+type ToolbarButtonProps = Pick<ButtonProps, 'disabled'> & {
   active?: boolean;
   state: {
-    on: Pick<IconButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
-    off: Pick<IconButtonProps, 'icon' | 'label' | 'onClick' | 'classNames'>;
+    on: ToggleButtonState;
+    off: ToggleButtonState;
   };
 };
 
-const defaultButtonProps: Partial<IconButtonProps> = {
-  size: 5,
+const defaultButtonProps = {
+  iconSize: 'lg',
   iconOnly: true,
-};
+} as const satisfies Partial<ButtonProps>;
 
-const ToggleButton = ({ active, state }: ToolbarButtonProps) => (
-  <IconButton
+const ToggleButton = ({ active, disabled, state }: ToolbarButtonProps) => (
+  <Button
     {...defaultButtonProps}
+    disabled={disabled}
     classNames={[active ? (state.on.classNames ?? 'bg-accent-bg') : state.off.classNames]}
     icon={active ? state.on.icon : state.off.icon}
     label={active ? state.on.label : state.off.label}

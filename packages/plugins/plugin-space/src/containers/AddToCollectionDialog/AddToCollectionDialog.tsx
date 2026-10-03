@@ -14,7 +14,7 @@ import { useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useSpace } from '@dxos/react-client/echo';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, SystemButton, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
 import { meta } from '#meta';
@@ -104,9 +104,9 @@ export const AddToCollectionDialog = ({ object }: AddToCollectionDialogProps) =>
     <Dialog.Content>
       <Dialog.Header>
         <Dialog.Title>{t('add-to-collection-dialog.title')}</Dialog.Title>
-        <Dialog.Close asChild>
-          <Dialog.ActionIconButton action='close' />
-        </Dialog.Close>
+        <Dialog.CloseTrigger asChild>
+          <SystemButton.Close />
+        </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
         <SearchList.Root onSearch={handleSearch} resetSelectionOnChange>

@@ -8,10 +8,9 @@ import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useComposedRefs } from '@dxos/react-hooks';
-import { Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
-import { Card, Icon, IconButton } from '@dxos/react-ui';
+import { Block, Button, Card, Focus, Icon, Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
-import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import { Board, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
@@ -86,16 +85,16 @@ export const PipelineColumn = ({ data: column, location, classNames, debug }: Pi
         classNames={classNames}
         dragHandle={dragHandle}
       >
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Board.Column.Header
             classNames='_opacity-10'
             label={column.name || t('untitled-column.title')}
             dragHandleRef={setDragHandle}
           />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Board.Column.Body data={column} Tile={PipelineTile} />
-        </Panel.Content>
+        </Panel.Body>
       </Board.Column.Root>
     </Panel.Root>
   );
@@ -127,16 +126,16 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
         <Focus.Item asChild>
           <Card.Root classNames={classNames} ref={composedRef}>
             <Card.Header>
-              <Card.Block>
+              <Block>
                 <Icon icon={icon} />
-              </Card.Block>
+              </Block>
               <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
               {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-              <Card.Block end>
+              <Block rail='end'>
                 <ActionMenu>
-                  <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                  <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                 </ActionMenu>
-              </Card.Block>
+              </Block>
             </Card.Header>
             <Card.Body>
               <Item {...itemProps} menu={menu} />

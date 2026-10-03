@@ -24,9 +24,9 @@ const meta = {
   decorators: [
     (Story) => (
       <Panel.Root>
-        <Panel.Content>
+        <Panel.Body>
           <Story />
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     ),
     withTheme(),

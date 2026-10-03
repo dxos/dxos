@@ -6,7 +6,7 @@ import React, { type FC, useMemo } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { Card } from '@dxos/react-ui';
+import { Card, DragHandle } from '@dxos/react-ui';
 import { CardContainer, type CardContainerProps } from '@dxos/react-ui-mosaic/testing';
 
 import { JsonCard } from '../cards/index.ts';
@@ -35,13 +35,12 @@ export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
       {roles.map((role, i) => (
         <div key={i} className='flex h-full justify-center overflow-hidden'>
           <div className='flex flex-col gap-4 w-full items-center'>
-            <span className='text-sm text-description'>{role}</span>
+            <span className='text-sm text-fg-muted'>{role}</span>
             <CardContainer role={role}>
               <Card.Root border={false}>
                 <Card.Header>
-                  <Card.DragHandle />
+                  <DragHandle />
                   <Card.Title>{Obj.getLabel(object)}</Card.Title>
-                  <Card.Menu />
                 </Card.Header>
                 <Component
                   role={role ?? 'card--content'}

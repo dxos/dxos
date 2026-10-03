@@ -48,12 +48,12 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
   }
 
   return (
-    <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-subdued-separator rounded-sm'>
+    <Flex role='group' column gap='sm' classNames='my-2 p-3 border border-separator-subtle rounded-sm'>
       <Flex gap='sm' align='center'>
-        <Icon icon='ph--plugs--regular' size={5} classNames='shrink-0 text-subdued' />
+        <Icon icon='ph--plugs--regular' size='lg' tone='subtle' />
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('integration-prompt.title', { service: label })}</p>
-          <p className='text-sm text-subdued'>
+          <p className='text-sm text-fg-subtle'>
             {/* With no connector matched, nothing can satisfy the request, so the unavailable
                 message outranks the agent's reason. */}
             {connectorIds.length > 0
@@ -64,8 +64,8 @@ export const IntegrationPrompt = ({ service, scopes, reason }: IntegrationPrompt
       </Flex>
       {scopes && scopes.length > 0 && (
         <div>
-          <p className='text-sm text-subdued'>{t('integration-prompt.scopes')}</p>
-          <ul className='text-sm text-subdued list-disc list-inside'>
+          <p className='text-sm text-fg-subtle'>{t('integration-prompt.scopes')}</p>
+          <ul className='text-sm text-fg-subtle list-disc list-inside'>
             {scopes.map((scope) => (
               <li key={scope}>{scope}</li>
             ))}

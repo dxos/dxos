@@ -7,7 +7,7 @@ import React, { type PropsWithChildren, useCallback, useMemo, useRef, useState }
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Field, useTranslation } from '@dxos/react-ui';
+import { Field, Input, useTranslation } from '@dxos/react-ui';
 import { Form, useFormContext, useSubmitOnEnter } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
@@ -70,7 +70,7 @@ export const CreateProjectPanel = ({ onCreateObject, onCancel, templates: templa
             chrome; the gap spaces the name field from the template picker, which are otherwise flush. */}
         <CreateProjectContent>
           <Field.Root>
-            <Field.Input
+            <Input
               autoFocus
               data-testid='create-project-panel.name-input'
               placeholder={t('create-panel.name.placeholder')}
@@ -113,11 +113,7 @@ const CreateProjectContent = ({ children }: PropsWithChildren) => {
   const contentRef = useRef<HTMLDivElement>(null);
   useSubmitOnEnter(contentRef, () => canSave && onSave());
 
-  return (
-    <Form.Content classNames='pt-form-padding gap-form-gap' ref={contentRef}>
-      {children}
-    </Form.Content>
-  );
+  return <Form.Content ref={contentRef}>{children}</Form.Content>;
 };
 
 CreateProjectContent.displayName = 'CreateProjectPanel.Content';

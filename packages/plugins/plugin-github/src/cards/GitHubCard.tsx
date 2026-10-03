@@ -42,14 +42,14 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
     <Card.Body>
       <Card.Row>
         <div className='flex justify-between items-center gap-2 text-sm'>
-          <span className='text-description'>{[`${owner}/${name}`, number].filter(Boolean).join('#')}</span>
+          <span className='text-fg-muted'>{[`${owner}/${name}`, number].filter(Boolean).join('#')}</span>
           {state && (
-            <span className='dx-tag' data-hue={stateHue[state]}>
+            <span className='dx-tag dx-tag-inline' data-hue={stateHue[state]}>
               {state}
             </span>
           )}
           {defaultBranch && (
-            <span className='dx-tag' data-hue='neutral'>
+            <span className='dx-tag dx-tag-inline' data-hue='neutral'>
               {defaultBranch}
             </span>
           )}
@@ -57,7 +57,7 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
       </Card.Row>
       {author && (
         <Card.Row>
-          <span className='text-sm text-description whitespace-nowrap'>{author}</span>
+          <span className='text-sm text-fg-muted whitespace-nowrap'>{author}</span>
         </Card.Row>
       )}
       {(additions !== undefined || deletions !== undefined) && (
@@ -70,12 +70,14 @@ export const GitHubCard = ({ subject }: AppSurface.ObjectCardProps<Subject>) => 
       )}
       {description && (
         <Card.Row>
-          <Card.Text classNames='line-clamp-3 text-description'>{description}</Card.Text>
+          <Card.Text classNames='line-clamp-3' variant='muted'>
+            {description}
+          </Card.Text>
         </Card.Row>
       )}
       {url && (
         <Card.Row>
-          <a className='dx-link text-sm' href={url} target='_blank' rel='noopener noreferrer'>
+          <a className='dx-link-accent text-sm' href={url} target='_blank' rel='noopener noreferrer'>
             Open on GitHub
           </a>
         </Card.Row>

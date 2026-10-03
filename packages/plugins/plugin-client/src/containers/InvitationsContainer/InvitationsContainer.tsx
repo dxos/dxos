@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { Context } from '@dxos/context';
-import { Flex, Icon, IconButton, SystemIconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Icon, SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -75,7 +75,7 @@ export const InvitationsContainer = () => {
               label={t('generate-invitation.label')}
               description={t('generate-invitation.description', { count: remaining })}
             >
-              <IconButton
+              <Button
                 icon='ph--plus--regular'
                 label={t('generate-invitation.label')}
                 variant='primary'
@@ -87,7 +87,7 @@ export const InvitationsContainer = () => {
 
           {available.length > 0 ? (
             <Form.FieldSet label={t('available-invitations.title')}>
-              <Listbox.Root>
+              <Listbox.Root items={available.map((row) => ({ value: row.code, label: row.code }))}>
                 <Listbox.Content classNames='gap-1'>
                   {available.map((row) => (
                     <AvailableInvitationItem key={row.code} row={row} />
@@ -99,7 +99,7 @@ export const InvitationsContainer = () => {
 
           {redeemed.length > 0 ? (
             <Form.FieldSet label={t('redeemed-invitations.title')}>
-              <Listbox.Root>
+              <Listbox.Root items={redeemed.map((row) => ({ value: row.code, label: row.code }))}>
                 <Listbox.Content classNames='gap-1'>
                   {redeemed.map((row) => (
                     <RedeemedInvitationItem key={row.code} row={row} />
@@ -116,12 +116,12 @@ export const InvitationsContainer = () => {
 
 const AvailableInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitation }) => (
   <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr_min-content] items-center gap-2'>
-    <Icon icon='ph--paper-plane-tilt--duotone' size={5} classNames='text-description' />
+    <Icon icon='ph--paper-plane-tilt--duotone' size='lg' tone='muted' />
     <Flex column classNames='min-w-0'>
       <div className='font-mono truncate'>{row.code}</div>
-      <p className='text-description text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
+      <p className='text-fg-muted text-xs'>{new Date(row.createdAt).toLocaleString()}</p>
     </Flex>
-    <SystemIconButton.Clipboard iconOnly value={row.code} />
+    <SystemButton.Clipboard iconOnly value={row.code} />
   </Listbox.Item>
 );
 
@@ -129,10 +129,10 @@ const RedeemedInvitationItem = ({ row }: { row: AccountCache.AccountCacheInvitat
   const date = row.redeemedAt ?? row.createdAt;
   return (
     <Listbox.Item id={row.code} classNames='grid grid-cols-[min-content_1fr] items-center gap-2'>
-      <Icon icon='ph--check-circle--duotone' size={5} classNames='text-success-text' />
+      <Icon icon='ph--check-circle--duotone' size='lg' valence='success' />
       <Flex column classNames='min-w-0'>
         <div className='font-mono truncate'>{row.code}</div>
-        <p className='text-description text-xs'>{new Date(date).toLocaleString()}</p>
+        <p className='text-fg-muted text-xs'>{new Date(date).toLocaleString()}</p>
       </Flex>
     </Listbox.Item>
   );

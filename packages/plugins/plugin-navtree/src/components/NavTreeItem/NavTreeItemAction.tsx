@@ -5,26 +5,14 @@
 import React, { useCallback } from 'react';
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as Hooks from '@dxos/plugin-graph/Hooks';
-import { IconButton, toLocalizedString, useDensityContext, useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
+import { Button, composable, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
-import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { NavTreeNode } from '#types';
 
 const fallbackIcon = 'ph--circle-dashed--regular';
-
-const mdActionButtonProps = {
-  size: 4 as const,
-  density: 'md' as const,
-};
-
-const lgActionButtonProps = {
-  size: 5 as const,
-  density: 'lg' as const,
-};
 
 export type NavTreeItemActionMenuProps = NavTreeNode.ActionProperties & {
   parent: AppGraphNode.Node;
@@ -37,8 +25,7 @@ export type NavTreeItemActionMenuProps = NavTreeNode.ActionProperties & {
 export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTreeItemActionMenuProps>(
   ({ parent, path, label, icon, testId, menuActions, caller, ...props }, forwardedRef) => {
     const { t } = useTranslation(meta.profile.key);
-    const density = useDensityContext();
-    const runAction = Hooks.useActionRunner();
+    const runAction = GraphHooks.useActionRunner();
     const handleAction = useCallback(
       (action: AppGraphNode.Action, params: AppGraphNode.InvokeProps = {}) => runAction(action, { ...params, path }),
       [runAction, path],
@@ -46,10 +33,9 @@ export const NavTreeItemActionDropdownMenu = composable<HTMLButtonElement, NavTr
 
     return (
       <ActionMenu caller={caller} onAction={handleAction} group={parent} actions={menuActions as MenuItem[]}>
-        <IconButton
-          {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
-          {...composableProps(props)}
-          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+        <Button
+          {...props}
+          classNames='shrink-0 px-2 pointer-fine:px-1'
           variant='ghost'
           icon={icon ?? fallbackIcon}
           iconOnly
@@ -81,18 +67,11 @@ export const NavTreeItemMonolithicAction = (
     properties: { disabled, caller, testId, icon, variant = 'ghost', iconOnly = true } = { label: 'never' },
     baseLabel,
   } = props;
-  const density = useDensityContext();
-  const runAction = Hooks.useActionRunner();
+  const runAction = GraphHooks.useActionRunner();
   return (
-    <IconButton
-      {...(density === 'lg' ? lgActionButtonProps : mdActionButtonProps)}
+    <Button
       variant={variant}
-      classNames={[
-        'shrink-0',
-        hoverableControlItem,
-        hoverableOpenControlItem,
-        iconOnly ? 'px-2 pointer-fine:px-1' : 'p-2 pointer-fine:p-2 me-1',
-      ]}
+      classNames={['shrink-0', iconOnly ? 'px-2 pointer-fine:px-1' : 'p-2 pointer-fine:p-2 me-1']}
       icon={icon ?? fallbackIcon}
       iconOnly={iconOnly}
       label={baseLabel}

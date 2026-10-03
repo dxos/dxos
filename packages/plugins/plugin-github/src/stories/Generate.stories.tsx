@@ -11,7 +11,7 @@ import React, { useCallback, useState } from 'react';
 import { AiService } from '@dxos/ai';
 import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { Button, Field, Icon } from '@dxos/react-ui';
+import { Button, Field, Icon, Input } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { WalkthroughView } from '../components/WalkthroughView/index.ts';
@@ -96,7 +96,7 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
     <div className='dx-fill grid grid-rows-[auto_1fr]'>
       <div className='flex items-center gap-2 p-2 border-be border-separator'>
         <Field.Root classNames='flex-1'>
-          <Field.Input
+          <Input
             placeholder='https://github.com/owner/repo/pull/123'
             value={url}
             disabled={busy}
@@ -111,7 +111,7 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
           <span className='ms-2'>{busy ? PHASE_LABEL[phase] : 'Generate'}</span>
         </Button>
         {result && (
-          <span className='text-sm text-description whitespace-nowrap'>
+          <span className='text-sm text-fg-muted whitespace-nowrap'>
             {result.covered} of {result.total} hunks narrated
           </span>
         )}

@@ -8,9 +8,10 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SupportSurface from '@dxos/plugin-support/SupportSurface';
 
 import { AboutDialog, AuthorizingDeviceDialog, NativeRedirectDialog } from '../components/index.ts';
-import { ABOUT_DIALOG, AUTHORIZING_DEVICE_DIALOG, NATIVE_REDIRECT_DIALOG, WELCOME_SCREEN } from '../constants.ts';
+import { AUTHORIZING_DEVICE_DIALOG, NATIVE_REDIRECT_DIALOG, WELCOME_SCREEN } from '../constants.ts';
 import { WelcomeContainer } from '../containers/index.ts';
 
 export default Capability.makeModule(() =>
@@ -34,7 +35,7 @@ export default Capability.makeModule(() =>
       }),
       Surface.create({
         id: 'aboutDialog',
-        filter: AppSurface.component(AppSurface.Dialog, ABOUT_DIALOG),
+        filter: AppSurface.component(AppSurface.Dialog, SupportSurface.ABOUT_DIALOG),
         component: AboutDialog,
       }),
     ]),

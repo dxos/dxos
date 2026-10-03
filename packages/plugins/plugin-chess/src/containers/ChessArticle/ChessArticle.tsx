@@ -9,7 +9,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as GameCapabilities from '@dxos/plugin-game/GameCapabilities';
-import { Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Button, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { type Player } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
@@ -69,11 +69,11 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
     <Chessboard.Root state={state} ref={controller}>
       <Panel.Root role={role} classNames='@container'>
         {role === AppSurface.Article.role && (
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              {isGameOver && <Toolbar.Button onClick={handleNewGame}>{t('new-game.button')}</Toolbar.Button>}
+              {isGameOver && <Button onClick={handleNewGame}>{t('new-game.button')}</Button>}
               <div className='grow' />
-              <Toolbar.IconButton
+              <Button
                 icon='ph--info--regular'
                 iconOnly
                 label={t('toggle-info.button')}
@@ -81,9 +81,9 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
                 onClick={() => setShowInfo((open) => !open)}
               />
             </Toolbar.Root>
-          </Panel.Toolbar>
+          </Panel.Header>
         )}
-        <Panel.Content>
+        <Panel.Body>
           <div
             className={mx(
               'grid dx-fill',
@@ -110,7 +110,7 @@ export const ChessArticle = ({ role, variant }: ChessArticleProps) => {
               </div>
             )}
           </div>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     </Chessboard.Root>
   );

@@ -55,9 +55,9 @@ export const ProjectModule = ({ data }: { data: ProjectModuleProps }) => {
   if (error) {
     return (
       <Panel.Root>
-        <Panel.Content>
+        <Panel.Body>
           <div role='alert'>{error}</div>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   }
@@ -65,13 +65,13 @@ export const ProjectModule = ({ data }: { data: ProjectModuleProps }) => {
   if (!project) {
     return (
       <Panel.Root>
-        <Panel.Toolbar>
+        <Panel.Header>
           <Toolbar.Root>
             <Button data-testid='projects.story.setup' onClick={() => handleCreate(mailbox)}>
               Set up project
             </Button>
           </Toolbar.Root>
-        </Panel.Toolbar>
+        </Panel.Header>
       </Panel.Root>
     );
   }

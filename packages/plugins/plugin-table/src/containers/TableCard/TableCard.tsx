@@ -57,7 +57,7 @@ export const TableCard = ({ role, subject: object }: TableCardProps) => {
 
   return (
     <Card.Body>
-      <Card.Row fullWidth>
+      <Card.Row>
         <TableComponent.Root ref={tableRef}>
           <TableComponent.Content
             key={Obj.getURI(object)}

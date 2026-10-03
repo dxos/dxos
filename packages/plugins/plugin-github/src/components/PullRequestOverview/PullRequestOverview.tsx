@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { Banner, Icon, useTranslation } from '@dxos/react-ui';
+import { Empty, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { MarkdownLink, MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
 
@@ -43,12 +43,12 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
   // rather than each nesting a gutter of its own.
   return (
     <Form.Root schema={PullRequestDetailsSchema} values={details} layout='static' readonly>
-      <Form.Viewport scroll>
+      <Form.Viewport scroll width='document'>
         <Form.Content>
           {parsed.markdown ? (
             <MarkdownView content={parsed.markdown} components={components} data-testid='pull-request.body' />
           ) : (
-            <Banner.Empty label={t('no-description.message')} />
+            <Empty>{t('no-description.message')}</Empty>
           )}
           <Form.FieldSet label={t('details.label')} data-testid='pull-request.details'>
             <Form.Fields />
@@ -90,9 +90,9 @@ const useBodyComponents = (): MarkdownViewProps['components'] => {
         }
         const icon = PreviewCapabilities.linkIcon(all, href);
         return (
-          <DxAnchor eid={href} className='dx-tag--anchor'>
+          <DxAnchor eid={href} className='dx-tag-anchor'>
             {icon && (
-              <Icon icon={icon.icon} size={4} classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
+              <Icon icon={icon.icon} size='md' classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
             )}
             {children === href ? (PreviewCapabilities.linkLabel(all, href) ?? children) : children}
           </DxAnchor>

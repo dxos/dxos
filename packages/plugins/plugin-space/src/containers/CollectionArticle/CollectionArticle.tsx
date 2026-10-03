@@ -11,11 +11,10 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { type Collection, Obj } from '@dxos/echo';
-import { ScrollArea, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Card, Icon } from '@dxos/react-ui';
+import { Block, Card, Icon, Menu, ScrollArea, Tag, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListResults } from '@dxos/react-ui-search';
-import { getStyles } from '@dxos/ui-theme';
+import { getStyles, osTranslations } from '@dxos/ui-theme';
 
 import { useArchiveMenuItem } from '#hooks';
 import { meta } from '#meta';
@@ -30,7 +29,7 @@ export const CollectionArticle = ({ subject, attendableId }: AppSurface.ObjectAr
   return (
     <SearchPanel onSearch={handleSearch}>
       <Mosaic.Container asChild>
-        <ScrollArea.Root centered padding thin>
+        <ScrollArea.Root>
           <ScrollArea.Viewport>
             <Mosaic.Stack
               classNames='gap-1'
@@ -71,13 +70,20 @@ const ObjectTile: MosaicStackTileComponent<ObjectItem> = ({ data: item }) => {
   const { archived, item: archiveItem } = useArchiveMenuItem(item.object);
 
   return (
-    <Card.Root fullWidth role='button' classNames='cursor-pointer' onClick={handleClick}>
+    <Card.Root role='button' classNames='cursor-pointer' onClick={handleClick}>
       <Card.Header>
-        <Card.Block>
+        <Block>
           <Icon icon={item.icon} classNames={styles?.fg} />
-        </Card.Block>
+        </Block>
         <Card.Title>{label}</Card.Title>
-        <Card.Menu items={archiveItem ? [archiveItem] : undefined} />
+        {archiveItem && (
+          <Card.Menu label={t('toolbar-menu.label', { ns: osTranslations })}>
+            <Menu.Item
+              item={{ value: archiveItem.label, label: archiveItem.label, icon: archiveItem.icon }}
+              onClick={archiveItem.onClick}
+            />
+          </Card.Menu>
+        )}
       </Card.Header>
       {archived && (
         <Card.Row>

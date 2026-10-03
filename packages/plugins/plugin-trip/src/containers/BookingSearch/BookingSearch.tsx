@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginRegistryButton from '@dxos/app-toolkit/PluginRegistryButton';
 import { Obj, Ref } from '@dxos/echo';
-import { Banner, Flex, Select, Separator, useTranslation } from '@dxos/react-ui';
+import { Banner, Empty, Flex, Select, Separator, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { trim } from '@dxos/util';
 
@@ -179,13 +179,11 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
   if (services.length === 0) {
     return (
       <Banner.Root valence='info'>
-        <Banner.Content classNames='m-form-padding'>
-          <Banner.Title>{t('booking.no-providers.message')}</Banner.Title>
-          <Banner.Body classNames='flex flex-col py-1 gap-2'>
-            <span>{t('booking.enable-providers.message')}</span>
-            <PluginRegistryButton.Root />
-          </Banner.Body>
-        </Banner.Content>
+        <Banner.Title>{t('booking.no-providers.message')}</Banner.Title>
+        <Banner.Body classNames='flex flex-col py-1 gap-2'>
+          <span>{t('booking.enable-providers.message')}</span>
+          <PluginRegistryButton.Root />
+        </Banner.Body>
       </Banner.Root>
     );
   }
@@ -205,19 +203,17 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
         <Form.Viewport>
           <Form.Content>
             {services.length > 1 && (
-              <Select.Root value={service?.id} onValueChange={setServiceId}>
-                <Select.TriggerButton placeholder={t('booking.provider.placeholder')} />
-                <Select.Portal>
-                  <Select.Content>
-                    <Select.Viewport>
-                      {services.map((candidate) => (
-                        <Select.Option key={candidate.id} value={candidate.id}>
-                          {candidate.label}
-                        </Select.Option>
-                      ))}
-                    </Select.Viewport>
-                  </Select.Content>
-                </Select.Portal>
+              <Select.Root
+                value={service ? [service.id] : []}
+                onValueChange={({ value: [value] }) => value && setServiceId(value)}
+                items={services.map((candidate) => ({ value: candidate.id, label: candidate.label }))}
+              >
+                <Select.Trigger placeholder={t('booking.provider.placeholder')} />
+                <Select.Content>
+                  {services.map((candidate) => (
+                    <Select.Item key={candidate.id} item={{ value: candidate.id, label: candidate.label }} />
+                  ))}
+                </Select.Content>
               </Select.Root>
             )}
             <Form.Layout template={SEARCH_LAYOUT} />
@@ -236,7 +232,7 @@ const BookingSearchContainer = ({ segment }: BookingSearchProps) => {
         <>
           <Separator />
           {flightOffers.length === 0 ? (
-            <Banner.Empty label={t('booking.no-offers.message')} />
+            <Empty>{t('booking.no-offers.message')}</Empty>
           ) : (
             <OfferStack offers={flightOffers} onSelect={handleSelectOffer} />
           )}

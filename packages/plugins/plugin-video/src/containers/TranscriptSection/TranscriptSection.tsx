@@ -81,14 +81,14 @@ export const TranscriptSection = ({ attendableId, subject }: TranscriptSectionPr
     }
     if (!transcribable) {
       return (
-        <Flex column center classNames='w-full p-4 text-description'>
+        <Flex column center classNames='w-full p-4 text-fg-muted'>
           {t('unsupported-url.message')}
         </Flex>
       );
     }
     if (transcribeError !== undefined) {
       return (
-        <Flex column center gap='sm' classNames='w-full p-4 text-description'>
+        <Flex column center gap='sm' classNames='w-full p-4 text-fg-muted'>
           <span>{transcribeError}</span>
           <Button variant='ghost' onClick={() => setRetryCount((c) => c + 1)}>
             {t('transcribe-retry.label')}

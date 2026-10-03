@@ -37,9 +37,7 @@ const DefaultStory = () => {
   return (
     <SearchContextProvider>
       <Dialog.Root defaultOpen>
-        <Dialog.Overlay>
-          <SearchDialog role='article' space={space} attendableId={space.id} pivotId='storybook' />
-        </Dialog.Overlay>
+        <SearchDialog role='article' space={space} attendableId={space.id} pivotId='storybook' />
       </Dialog.Root>
     </SearchContextProvider>
   );

@@ -11,7 +11,6 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 import { translations } from '#translations';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
 import { type Size, SIZES } from '../../sizes.ts';
 import {
   byTestId,
@@ -23,42 +22,43 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
+import { Group, SystemButton } from '../index.ts';
 
 type PresetProps = { 'iconOnly': boolean; 'data-testid': string };
 
 /** Each preset once per form, keyed for the Test: `<preset>-<size>` icon-only, `<preset>-labelled-<size>` labelled. */
 const PRESETS: { id: string; render: (props: PresetProps, size?: Size) => ReactNode }[] = [
-  { id: 'disclosure', render: (props) => <Next.SystemButton.Disclosure {...props} /> },
-  { id: 'star', render: (props) => <Next.SystemButton.Star {...props} /> },
-  { id: 'bookmark', render: (props) => <Next.SystemButton.Bookmark {...props} /> },
-  { id: 'clipboard', render: (props, size) => <Next.SystemButton.Clipboard {...props} value={`Copied at ${size}`} /> },
+  { id: 'disclosure', render: (props) => <SystemButton.Disclosure {...props} /> },
+  { id: 'star', render: (props) => <SystemButton.Star {...props} /> },
+  { id: 'bookmark', render: (props) => <SystemButton.Bookmark {...props} /> },
+  { id: 'clipboard', render: (props, size) => <SystemButton.Clipboard {...props} value={`Copied at ${size}`} /> },
   { id: 'mic', render: (props) => <MicPreset {...props} /> },
-  { id: 'upload', render: (props) => <Next.SystemButton.Upload {...props} accept='*/*' /> },
+  { id: 'upload', render: (props) => <SystemButton.Upload {...props} accept='*/*' /> },
   {
     id: 'download',
     render: (props) => (
-      <Next.SystemButton.Download
+      <SystemButton.Download
         {...props}
         filename='example.txt'
         onDownload={() => new Blob(['Hello from SystemButton'])}
       />
     ),
   },
-  { id: 'ai', render: (props) => <Next.SystemButton.Ai {...props} /> },
-  { id: 'add', render: (props) => <Next.SystemButton.Add {...props} /> },
-  { id: 'edit', render: (props) => <Next.SystemButton.Edit {...props} /> },
-  { id: 'delete', render: (props) => <Next.SystemButton.Delete {...props} /> },
-  { id: 'remove', render: (props) => <Next.SystemButton.Remove {...props} /> },
-  { id: 'close', render: (props) => <Next.SystemButton.Close {...props} /> },
-  { id: 'save', render: (props) => <Next.SystemButton.Save {...props} /> },
-  { id: 'cancel', render: (props) => <Next.SystemButton.Cancel {...props} /> },
+  { id: 'ai', render: (props) => <SystemButton.Ai {...props} /> },
+  { id: 'add', render: (props) => <SystemButton.Add {...props} /> },
+  { id: 'edit', render: (props) => <SystemButton.Edit {...props} /> },
+  { id: 'delete', render: (props) => <SystemButton.Delete {...props} /> },
+  { id: 'remove', render: (props) => <SystemButton.Remove {...props} /> },
+  { id: 'close', render: (props) => <SystemButton.Close {...props} /> },
+  { id: 'save', render: (props) => <SystemButton.Save {...props} /> },
+  { id: 'cancel', render: (props) => <SystemButton.Cancel {...props} /> },
 ];
 
 /** Mic has no translated label: the caller's recording state names it. */
 const MicPreset = (props: PresetProps) => {
   const [recording, setRecording] = useState(false);
   return (
-    <Next.SystemButton.Mic
+    <SystemButton.Mic
       {...props}
       label={recording ? 'Stop recording' : 'Start recording'}
       recording={recording}
@@ -71,16 +71,16 @@ const MicPreset = (props: PresetProps) => {
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     {PRESETS.map(({ id, render }) => (
-      <Next.Group key={id} data-testid={`row-${id}-${size}`}>
+      <Group key={id} data-testid={`row-${id}-${size}`}>
         {render({ 'iconOnly': true, 'data-testid': `${id}-${size}` }, size)}
         {render({ 'iconOnly': false, 'data-testid': `${id}-labelled-${size}` }, size)}
-      </Next.Group>
+      </Group>
     ))}
   </>
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/SystemButton',
+  title: 'ui/react-ui-core/components/SystemButton',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[24rem]' }), withTheme()],
   args: { size: 'md' },
@@ -95,7 +95,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** The icon's sprite reference, which resolves once the sprite registry has the icon. */
-const iconHref = (button: HTMLElement) => button.querySelector('use')?.getAttribute('href') ?? '';
+const iconName = (button: HTMLElement) => button.querySelector('[data-scope="icon"]')?.getAttribute('data-icon') ?? '';
 
 const NAMES: Record<string, string> = {
   disclosure: 'Open',
@@ -109,7 +109,7 @@ const NAMES: Record<string, string> = {
   add: 'Add',
   edit: 'Edit',
   delete: 'Delete',
-  remove: 'Remove',
+  remove: 'Delete',
   close: 'Close',
   save: 'Save',
   cancel: 'Cancel',
@@ -183,15 +183,15 @@ export const Test: Story = {
     await expect(getComputedStyle(byTestId(md, 'save-labelled-md')).backgroundColor).not.toBe(
       getComputedStyle(byTestId(md, 'cancel-labelled-md')).backgroundColor,
     );
-    await waitFor(() => expect(iconHref(byTestId(md, 'save-md'))).toContain('ph--check--regular'));
-    await waitFor(() => expect(iconHref(byTestId(md, 'cancel-md'))).toContain('ph--x--regular'));
+    await waitFor(() => expect(iconName(byTestId(md, 'save-md'))).toContain('ph--check--regular'), { timeout: 10_000 });
+    await waitFor(() => expect(iconName(byTestId(md, 'cancel-md'))).toContain('ph--x--regular'));
 
     const star = byTestId(md, 'star-md');
     await expect(star).toHaveAttribute('aria-pressed', 'false');
-    await waitFor(() => expect(iconHref(star)).toContain('ph--star--regular'));
+    await waitFor(() => expect(iconName(star)).toContain('ph--star--regular'));
     await userEvent.click(star);
     await waitFor(() => expect(star).toHaveAttribute('aria-pressed', 'true'));
-    await waitFor(() => expect(iconHref(star)).toContain('ph--star--fill'));
+    await waitFor(() => expect(iconName(star)).toContain('ph--star--fill'));
     await expect(star).toHaveAccessibleName('Unstar');
     await expect(star).toHaveAttribute('data-icon-valence', 'warning');
     await expect(star).not.toHaveAttribute('aria-expanded');
@@ -203,7 +203,7 @@ export const Test: Story = {
     const bookmark = byTestId(md, 'bookmark-md');
     await userEvent.click(bookmark);
     await waitFor(() => expect(bookmark).toHaveAttribute('aria-pressed', 'true'));
-    await waitFor(() => expect(iconHref(bookmark)).toContain('ph--bookmark-simple--fill'));
+    await waitFor(() => expect(iconName(bookmark)).toContain('ph--bookmark-simple--fill'));
     await expect(bookmark).toHaveAccessibleName('Remove bookmark');
     await userEvent.click(bookmark);
     await waitFor(() => expect(bookmark).toHaveAttribute('aria-pressed', 'false'));
@@ -217,12 +217,12 @@ export const Test: Story = {
     }
     await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
     await expect(disclosure).not.toHaveAttribute('aria-pressed');
-    await waitFor(() => expect(iconHref(disclosure)).toContain('ph--caret-right--regular'));
+    await waitFor(() => expect(iconName(disclosure)).toContain('ph--caret-right--regular'));
     await expect(getComputedStyle(caret).transform).toBe('none');
     await userEvent.click(disclosure);
     await waitFor(() => expect(disclosure).toHaveAttribute('aria-expanded', 'true'));
     await expect(disclosure).toHaveAccessibleName('Close');
-    await expect(iconHref(disclosure)).toContain('ph--caret-right--regular');
+    await expect(iconName(disclosure)).toContain('ph--caret-right--regular');
     await expect(getComputedStyle(caret).transitionProperty).toContain('transform');
     await waitFor(() => expect(rotation(caret)).toBe(90));
     await userEvent.click(disclosure);
@@ -250,7 +250,7 @@ export const Test: Story = {
       await userEvent.click(copy);
       await waitFor(() => expect(written).toEqual(['Copied at md']));
       await waitFor(() => expect(copy).toHaveAccessibleName('Copied'));
-      await waitFor(() => expect(iconHref(copy)).toContain('ph--check--regular'));
+      await waitFor(() => expect(iconName(copy)).toContain('ph--check--regular'), { timeout: 10_000 });
       await expect(copy).toHaveAttribute('data-icon-valence', 'success');
       await waitFor(() => expect(copy).toHaveAccessibleName('Copy'), { timeout: 3_000 });
     } finally {

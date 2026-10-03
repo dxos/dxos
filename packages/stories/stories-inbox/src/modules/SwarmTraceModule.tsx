@@ -12,7 +12,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Trace from '@dxos/compute/Trace';
 import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Panel, Toolbar } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 
 /** Cap on retained events so a long-running story does not grow the list unbounded. */
@@ -83,20 +83,20 @@ const SwarmTraceModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           <Toolbar.Text>Swarm Trace</Toolbar.Text>
           <Toolbar.Separator />
           <Toolbar.Text>{events.length} events</Toolbar.Text>
           <Toolbar.Separator />
-          <Toolbar.Button onClick={() => setEvents([])} disabled={events.length === 0}>
+          <Button onClick={() => setEvents([])} disabled={events.length === 0}>
             Clear
-          </Toolbar.Button>
+          </Button>
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content classNames='overflow-hidden'>
-        {monitor ? <EventList events={events} /> : <div className='p-2 text-description'>No swarm trace source.</div>}
-      </Panel.Content>
+      </Panel.Header>
+      <Panel.Body classNames='overflow-hidden'>
+        {monitor ? <EventList events={events} /> : <div className='p-2 text-fg-muted'>No swarm trace source.</div>}
+      </Panel.Body>
     </Panel.Root>
   );
 };
@@ -124,7 +124,7 @@ const EventList = ({ events }: { events: readonly ReceivedEvent[] }) => {
   }, [events]);
 
   if (events.length === 0) {
-    return <div className='p-2 text-description'>Waiting for swarm trace events…</div>;
+    return <div className='p-2 text-fg-muted'>Waiting for swarm trace events…</div>;
   }
 
   return (
@@ -140,10 +140,10 @@ const EventList = ({ events }: { events: readonly ReceivedEvent[] }) => {
 const EventRow = memo(({ event }: { event: ReceivedEvent }) => (
   <div className='flex flex-col gap-1 rounded border border-separator p-2'>
     <div className='flex items-center gap-2 text-xs'>
-      <span className='text-description tabular-nums'>{formatTime(event.receivedAt)}</span>
+      <span className='text-fg-muted tabular-nums'>{formatTime(event.receivedAt)}</span>
       <span className='font-mono truncate'>{event.type}</span>
-      {event.meta.runtimeName && <span className='text-description truncate'>{event.meta.runtimeName}</span>}
-      {event.meta.pid && <span className='text-description font-mono truncate'>pid:{event.meta.pid}</span>}
+      {event.meta.runtimeName && <span className='text-fg-muted truncate'>{event.meta.runtimeName}</span>}
+      {event.meta.pid && <span className='text-fg-muted font-mono truncate'>pid:{event.meta.pid}</span>}
     </div>
     {event.data != null && <JsonHighlighter data={event.data} />}
   </div>

@@ -32,7 +32,7 @@ export const AttachmentArticle = ({ role, subject, attachmentIndex = 0 }: Attach
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport classNames='h-full'>
             <AttachmentViewer
@@ -47,7 +47,7 @@ export const AttachmentArticle = ({ role, subject, attachmentIndex = 0 }: Attach
             />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

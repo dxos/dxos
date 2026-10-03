@@ -5,7 +5,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { SystemIconButton, useTranslation } from '@dxos/react-ui';
+import { Group, SystemButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 import {
   type AudioInputDevice,
@@ -24,7 +24,7 @@ export type MicProps = {
 };
 
 /**
- * Connects the {@link SystemIconButton.Mic} and {@link MicSettings} to the recording session and settings
+ * Connects the {@link SystemButton.Mic} and {@link MicSettings} to the recording session and settings
  * capabilities, and enumerates available audio inputs. Mounted from the toolbar's custom action, so
  * capability hooks resolve — every surface that offers dictation (a document, a chat prompt) gets
  * this same control that way, rather than a copy of it.
@@ -157,8 +157,8 @@ export const Mic = ({ docId }: MicProps) => {
         : t('start-recording.label');
 
   return (
-    <div className='flex items-center'>
-      <SystemIconButton.Mic
+    <Group compact>
+      <SystemButton.Mic
         iconOnly
         variant='ghost'
         disabled={microphoneDenied}
@@ -179,6 +179,6 @@ export const Mic = ({ docId }: MicProps) => {
         onEntityExtractionChange={handleEntityExtractionChange}
         onSelectDevice={handleSelectDevice}
       />
-    </div>
+    </Group>
   );
 };

@@ -17,13 +17,13 @@ export const SkillArticle = ({ role, attendableId, subject }: SkillArticleProps)
   const { hasAttention } = useAttention(attendableId);
 
   return (
-    <Panel.Root role={role} classNames='dx-document'>
-      <Panel.Toolbar asChild>
-        <Toolbar.Root disabled={!hasAttention} />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+    <Panel.Root role={role} width='document'>
+      <Panel.Header>
+        <Toolbar.Root inactive={!hasAttention} />
+      </Panel.Header>
+      <Panel.Body asChild>
         <TemplateEditor id={subject.id} source={subject.instructions.source} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

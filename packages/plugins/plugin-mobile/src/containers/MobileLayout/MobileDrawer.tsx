@@ -9,7 +9,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as DeckHooks from '@dxos/plugin-deck/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { Banner, ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
+import { Empty, ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
 
 import { Loading } from '#components';
@@ -55,10 +55,10 @@ export const MobileDrawer = () => {
 
   return (
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <ActionToolbar {...menuActions} alwaysActive onAction={onAction} />
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         {/* A drawer opened on a plank that contributes no companion would otherwise read as broken. */}
         {data ? (
           <Surface.Surface
@@ -69,9 +69,9 @@ export const MobileDrawer = () => {
             placeholder={placeholder}
           />
         ) : (
-          <Banner.Empty label={t('empty-drawer.message')} />
+          <Empty>{t('empty-drawer.message')}</Empty>
         )}
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

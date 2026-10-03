@@ -4,6 +4,7 @@
 // @import-as-namespace
 //
 
+import * as DecisionModel from 'effect/ai/DecisionModel';
 import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
@@ -15,6 +16,8 @@ import { homedir, tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import * as Cache from '../design/Cache.ts';
+import * as Design from '../design/Design.ts';
 import * as Ontology from '../Ontology.ts';
 import * as Store from '../Store.ts';
 import * as Events from './Events.ts';
@@ -24,7 +27,7 @@ import * as Log from './Log.ts';
  * Runs one snippet in a Bun child process and answers the host calls it makes. The snippet is the
  * agent's only way to act, and this bridge is the snippet's only way to reach anything: it gets no
  * network client, no filesystem helper and no database handle, so the capability surface is
- * exactly the four namespaces in `sandbox/api.d.ts`.
+ * exactly the namespaces in `sandbox/api.d.ts`.
  *
  * The isolation here is process-level — a fresh interpreter, a scrubbed environment, a temporary
  * working directory and a wall-clock deadline. It bounds accidents (a runaway loop, a snippet that
@@ -105,6 +108,20 @@ const VOCABULARY_QUERY = `PREFIX deus: <${Ontology.PREFIX}>
     FILTER(STRSTARTS(STR(?term), '${Ontology.PREFIX}'))
   } GROUP BY ?kind ?term ORDER BY ?kind DESC(?count)`;
 
+export type VocabularyTerm = { readonly term: string; readonly kind: string; readonly count: number };
+
+/** The `deus:` classes and predicates in the graph, by local name — what `rdf.vocabulary()` returns. */
+export const readVocabulary = (store: Store.Api): Effect.Effect<VocabularyTerm[], Store.StoreError> =>
+  store.select(VOCABULARY_QUERY).pipe(
+    Effect.map((rows) =>
+      rows.map((row) => ({
+        term: row.term.slice(Ontology.PREFIX.length),
+        kind: row.kind,
+        count: Number(row.count),
+      })),
+    ),
+  );
+
 type HostCall = { readonly id: number; readonly method: string; readonly params: Record<string, unknown> };
 
 const make = Effect.gen(function* () {
@@ -112,17 +129,12 @@ const make = Effect.gen(function* () {
   const log = yield* Log.Log;
 
   // A whole-graph scan, so it is computed once and shared by every snippet in the process.
-  const vocabulary = yield* Effect.cached(
-    store.select(VOCABULARY_QUERY).pipe(
-      Effect.map((rows) =>
-        rows.map((row) => ({
-          term: row.term.slice(Ontology.PREFIX.length),
-          kind: row.kind,
-          count: Number(row.count),
-        })),
-      ),
-    ),
-  );
+  const vocabulary = yield* Effect.cached(readVocabulary(store));
+
+  // Optional, so the chat runs with no decision model at all; `design.subgraph` then scores by baseline.
+  const decisions = yield* Effect.serviceOption(DecisionModel.DecisionModel);
+  // Opened on first use: most sessions never ask a design question.
+  const designCache = yield* Effect.cached(Cache.open(join(store.dir, 'design-cache.jsonl')));
 
   /** One host call. A failure here is the snippet's failure, not the run's: it sees the message. */
   const handle = (
@@ -168,6 +180,17 @@ const make = Effect.gen(function* () {
             }),
           );
         });
+      case 'design.subgraph':
+        return designCache.pipe(
+          Effect.flatMap((cache) =>
+            Design.subgraph(store, cache, decisions, {
+              prompt: String(params.prompt),
+              budget: typeof params.budget === 'number' ? params.budget : undefined,
+              threshold: typeof params.threshold === 'number' ? params.threshold : undefined,
+            }),
+          ),
+          Effect.mapError((cause) => new SandboxError({ message: cause.message, cause })),
+        );
       case 'display.clear':
         return Effect.sync(() => {
           presented.length = 0;
