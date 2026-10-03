@@ -10,7 +10,7 @@ from Discord threads and Composer chats.
 - The plugin ships a workerd variant (`./AgentPlugin` resolves without React) so EDGE's
   operation service can host the operations.
 
-Docs: [design](./docs/DESIGN.md), [memory and profiles](./docs/MEMORY.md), [developing behaviour](./docs/TESTING.md), and
+Docs: [design](./docs/DESIGN.md), [memory and profiles](./docs/MEMORY.md), [developing behaviour](./docs/TESTING.md), [memory ontology](./docs/ONTOLOGY.md), and
 [end-to-end setup with Discord](./docs/SETUP.md).
 
 License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2026 © DXOS
