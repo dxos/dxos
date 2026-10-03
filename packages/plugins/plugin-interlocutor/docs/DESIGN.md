@@ -1,6 +1,8 @@
 # Interlocutor — design
 
-Status: draft 2 (2026-10-02), decisions recorded. Scope: architecture, and the first spike.
+Status: draft 3 (2026-10-03) — architecture as built for the first spike. Memory model:
+[MEMORY.md](./MEMORY.md). EDGE half: dxos/edge `compute-service/src/discord/` and that repo's
+`.agents/projects/interlocutor/DESIGN.md`.
 
 ## What it is
 
@@ -12,108 +14,143 @@ and controls each agent's Discord bot.
 
 ## Architecture
 
+Two loops share one ECHO space: a control loop (Composer configures and starts a bot on EDGE) and a
+conversation loop (Discord ↔ EDGE ↔ the agent). Memory lives as ECHO objects in that space, so
+Discord threads and Composer chats see the same knowledge.
+
 ```
- Discord guild                     EDGE                                   ECHO
- ─────────────                     ────                                   ────
-  channels ──gateway ws──▶  DiscordBot DO (one per bot) ──append──▶  Agent's home space
-  & threads ◀──REST reply──  · holds bot token (AccessToken)           · Agent  (name, did, instructions)
-                            · maps channel → Chat                       · Chat per Discord channel/thread
-                                    │                                   · Chat per Composer session
-                                    │ feed trigger                      · Profiles: Person / Team + Goals
-                                    ▼                                   · Facts (memory)
-                            compute-service  ── AgentProcess ──read/write──▶  (and joined spaces, via
-                            (process DO)        skills + tools               their skills)
-                                    ▲
- Composer (browser) ────── Chat article ─── AgentService.getSession(chat) ────┘
+ Composer (browser)                    EDGE (Cloudflare)                                  Discord
+ ──────────────────                    ─────────────────                                  ───────
+ Agent + DiscordBinding form
+   │ Start ─ startDiscordBot ─ PUT /compute/discord/bots/:appId ─▶ compute-service
+   │   (EdgeHttpClient.request, signed with the user's identity)  ├ edgeAuth + space membership
+   │                                                              └▶ DiscordBot DO (one per bot)
+   │                                                                  ├ reads DiscordBinding + AccessToken (DataService)
+   │                                                                  ├ gateway websocket ◀───────────── MESSAGE_CREATE
+   │                                                                  ├ SQLite inbox → alarm drains in order
+   │                                                                  ├ ensureThreadChat ─▶ operation-service
+   │                                                                  │                      (Chat per thread, child of Agent)
+   │                                                                  ├ spawn AgentProcess + submitInput(AgentInput)
+   │                                                                  │     └▶ model + skills → tool calls → ECHO writes
+   │                                                                  └ mirror: new assistant Messages ── REST ──▶ thread reply
+   │
+   └ Chat article / Profile panel ◀── replication ── ECHO space: Agent, Chats, Person, Goal, Memory, profile doc
 ```
 
-Three loops, one agent:
+### 1. Setup (Composer)
 
-1. **Discord in.** A Durable Object per bot holds the Discord Gateway websocket (EDGE's
-   `DiscordPresence` DO already proves a DO can drive the gateway). Each `MESSAGE_CREATE` in a bound
-   channel is appended as a `Message` to that channel's `Chat` feed in the agent's home space.
-2. **Agent turn.** A feed trigger on the chat wakes the agent: `AgentService.getSession(chat)` runs
-   an `AgentProcess` with the agent's instructions and skills. Whether it answers is the agent's
-   call (mentioned, asked a question, or relevant to a goal) — the existing relay operation
-   (`assistant-toolkit/skills/agent/operations/relay.ts`) already does "qualify with a cheap model,
-   then forward".
-3. **Out.** Replies go through a `SendDiscordMessage` operation (dfx `DiscordREST.createMessage`),
-   exposed as a tool, so posting to Discord is an ordinary tool call the trace records.
+- `createAgent` makes an `Agent` (instructions, primary chat, the interlocutor and interview skills).
+- The agent's Properties carry a `DiscordBinding` form: `{ agent, accessToken, applicationId,
+guildId?, channels }`, parented to the agent. The bot token is an `AccessToken` object.
+- Start / Stop / Refresh invoke `startDiscordBot` / `stopDiscordBot` / `getDiscordBotStatus`, which
+  call `PUT` / `DELETE` / `GET /compute/discord/bots/:appId` through `EdgeHttpClient.request`, a
+  generic call signed with the identity's verifiable presentation. `PUT` sends
+  `{ spaceId, binding: "echo://<space>/<bindingId>" }`; every verb returns `DiscordBotStatus`
+  (`running`, `gateway`, `threads`, `lastError`…), shown under the form. These operations are
+  browser-only: they need the user's identity, so the EDGE build of the plugin leaves them out.
 
-A Composer user talks to the same agent through a normal `Chat` article. Every chat — Discord channel
-or Composer session — is a child of the one `Agent`, so they share instructions, memory and profiles.
+### 2. Inbound (Discord → agent)
+
+1. compute-service routes to the `DiscordBot` Durable Object keyed by application id. It reads the
+   binding and the token from the space with DataService (a managed token resolves through KMS) and
+   caches them in SQLite with the gateway session and the thread map. The ECHO binding is the source
+   of truth; `DELETE` stops the gateway but keeps that cache.
+2. The DO holds the gateway websocket (heartbeat, IDENTIFY / RESUME, a 30 s watchdog alarm for
+   eviction).
+3. Each `MESSAGE_CREATE` from a person in a bound channel (or a thread under one) is appended to a
+   SQLite inbox, and an immediate alarm drains it in order. Gateway events arrive outside any
+   request, where the DO cannot call other services, so the work runs in the alarm; draining in order
+   also serializes each thread.
+4. A message outside a thread starts a thread. The DO invokes `ensureThreadChat` on
+   operation-service: the `Chat` with meta key `{ source: 'discord.com', id: threadId }` under the
+   agent, created on a miss with the agent's skills and context. It returns `{ chat, feed }`.
+5. The DO spawns an `AgentProcess` for the chat (idempotency key per chat) and calls `submitInput`
+   with `AgentInput` `{ prompt, sender: { name }, properties: { discord: { userId, messageId,
+threadId } } }`. The message lands on the chat feed with its author, and the model sees
+   `[From: <name>]` ahead of the text. (Feed triggers do not advance a process, so spawning is how the
+   agent wakes.)
+
+### 3. Agent turn
+
+`AgentProcess` runs the model with the agent's instructions and skills. On EDGE, tools resolve from
+the operations registered in operation-service, which include plugin-interlocutor's. The interview
+skill writes the graph as it goes — `resolveEntity`, `recordMemory`, `suggestGoal`,
+`setGoalStatus`, `updateProfile` (see [MEMORY.md](./MEMORY.md)).
+
+### 4. Outbound (agent → Discord)
+
+The DO reads new assistant messages from the chat feed after a cursor and posts their text to the
+thread with Discord REST and the bot token. A `SendDiscordMessage` tool the agent calls itself is
+the follow-up; it needs hosted tool calls to resolve managed tokens.
+
+### 5. Composer
+
+Every chat — the agent's primary chat and one per Discord thread — is a child of the one `Agent`, so
+they share instructions, skills and memory. `Agent.loadChat` skips chats carrying a foreign key, so a
+thread never becomes the primary chat. Person and Organization properties show the profile panel
+(goals and memories, live).
 
 ## Spaces
 
 - **Home space.** Each agent owns one space holding its `Agent` object, its chats, the profiles it
   builds and its memory. That's where the agent's state lives, regardless of who it talks to.
-- **Joined spaces.** An agent may be invited into other spaces. There it reads and writes as a member
-  and binds that space's skills (space-authored `Skill` objects plus plugin skills) into the
-  sessions it runs for that space. Today skills bind to a chat explicitly (`AiContext.Binder`); the
-  agent needs "all skills of the spaces I'm in" as a resolved list.
-- **Management.** `plugin-interlocutor` lists, creates, configures and disables agents in the current
-  space: name, instructions, model, Discord bot binding, which channels map to which chats.
+- **Joined spaces** (not built). An agent may be invited into other spaces. There it reads and writes
+  as a member and binds that space's skills into the sessions it runs for that space. Today skills
+  bind to a chat explicitly (`AiContext.Binder`); the agent needs "all skills of the spaces I'm in"
+  as a resolved list.
 
 ## Identity
 
-- **Now (spike).** The agent's DID is `Agent.did`: a `did:halo:` string with no keypair behind it,
-  per the agent-identity spec (2026-07-21). It is enough to attribute what the agent writes. The
-  agent acts in its home space with the creating user's credentials, run on EDGE.
+- **Now.** The agent's DID is `Agent.did`: a `did:halo:` string with no keypair behind it, per the
+  agent-identity spec (2026-07-21). It is enough to attribute what the agent writes. The agent acts in
+  its home space with the creating user's credentials.
 - **Target.** A real HALO identity per agent, keypair held on EDGE (identity-service already keeps
   keyrings in a DO for EDGE devices), admitted to spaces as a member through ordinary invitations.
-  Then `Agent.did` holds the real DID and member lists show the agent like any person. What an agent
-  may do in a joined space should come from the permission design (grants scoped per space and
-  command), not from blanket membership.
-- **Discord side.** The bot's own Discord identity is the bot user. Each Discord author is mapped to
-  a `Person` through `Person.identities` (`{ label: 'discord', value: <user id> }`), so the same person
-  is recognised in Discord and in Composer.
+  What an agent may do in a joined space should come from the permission design (grants scoped per
+  space and command), not from blanket membership.
+- **Discord side.** The bot's Discord identity is the bot user. Each Discord author maps to a `Person`
+  through `Person.identities` (`{ label: 'discord', value: <user id> }`), so the same person is
+  recognised in Discord and in Composer.
 
 ## Profiles, goals and relay
 
-- **Profile** = a `Person` (or `Organization` for a team) plus the facts the agent holds about them,
-  summarised into a profile document (`ProfileOf`, as plugin-crm does). Facts are the agent's memory:
-  their value is giving context to a new message the agent receives, not summarising old ones.
-- **Goal** is new: `{ title, description, owners: Ref<Person|Team>[], status }`, individual when it
-  has one owner and shared when it has several. The agent proposes goals from conversation; people
-  confirm them.
-- **Relay** is a task: "tell team X about Y" becomes a `Task` assigned to the agent, which it
-  completes by posting to the right Chat (Discord channel, DM, or Composer), recording the delivery
-  on the task.
+- **Profile** = a `Person` (or `Organization` for a team) plus the memories and goals the agent holds
+  about them, summarised into a profile document linked by `ProfileOf`. Details in
+  [MEMORY.md](./MEMORY.md).
+- **Relay** (not built) is a task: "tell team X about Y" becomes a `Task` assigned to the agent, which
+  it completes by posting to the right Chat, recording the delivery on the task.
 
-## First spike — Discord ↔ agent ↔ Composer
+## Decisions
 
-Goal: one agent you can talk to from a Discord channel and from a Composer chat, with the same
-memory behind both.
+1. **The gateway runs in an EDGE Durable Object**, one per bot, hosted in **compute-service** (not
+   discord-service): compute-service already has every binding the bot needs (process objects,
+   DataService, queues, KMS, operation-service) plus edgeAuth. The outbound websocket keeps the DO
+   awake; that cost is accepted.
+2. **The agent turn runs on EDGE**, spawned by the DO; hosted agents get tools from operation-service's
+   plugin registry.
+3. **One Chat per Discord thread**, created on demand by `ensureThreadChat` and idempotent on the
+   thread id.
+4. **`DiscordBinding` in ECHO is the source of truth** for which bot serves which agent in which
+   channels; the DO caches it.
+5. **Replies are mirrored by the DO for the spike** (option A); a tool the agent calls is the target
+   (option B).
+6. **`plugin-interlocutor` manages agents**; shared Discord code (dfx client, message mapping) is
+   extracted into a library when option B lands. Until then the DO calls Discord REST with `fetch`.
 
-1. `plugin-interlocutor` scaffold: create an agent (reuse `Agent.makeInitialized`), list agents,
-   bind a Discord bot token (existing `Connection` + `AccessToken` flow from plugin-discord).
-2. Bind one Discord channel to the agent; each thread in it gets its own `Chat` under the agent.
-3. Gateway listener (EDGE DO) → `Message` appended to the thread's chat feed.
-4. Feed trigger → agent turn → `SendDiscordMessage` tool reply.
-5. A Composer chat with the same agent; a fact learned in Discord is usable in Composer.
+## Known gaps
 
-Out of scope for the spike: real HALO identity, joined spaces, goals, relay, multiple bots.
-
-## Decisions (2026-10-02)
-
-1. **The gateway runs in an EDGE Durable Object**, one per bot: always on, no browser required, with
-   the `DiscordPresence` DO as precedent. The outbound websocket keeps the DO awake; that cost is
-   accepted.
-2. **The agent turn runs on EDGE.** EDGE resolves tools from registered plugins, so a hosted agent
-   has the skills it needs. (The earlier note in `.agents/projects/agent-process-edge` about hosted
-   agents getting no tools is to be re-checked against the current code, not assumed.)
-3. **One Chat per Discord thread.** A message in a channel outside a thread starts a thread for the
-   agent's reply, so every conversation has its own Chat and history.
-4. **`plugin-interlocutor` manages agents.** It reaches Discord through plugin-discord's
-   capabilities (a plugin dependency), and code both need — the dfx client, message mapping,
-   `SendDiscordMessage` — is extracted into a shared library that EDGE's DO uses too.
+- **Bot tokens live inline in the space.** KMS manages OAuth tokens only; storing a pasted key in KMS
+  needs a kms-service route plus plugin-connector support.
+- **Publishing.** plugin-interlocutor and plugin-crm are private, so EDGE's operation-service only gets
+  them through a local `link-packages`, not the pinned catalog.
+- **Live run pending.** The live Discord ↔ model run waits on an Anthropic key and a bot token. The
+  scripted interview story and the EDGE workerd integration test (fake Discord) cover each side.
 
 ## Existing pieces this builds on
 
 - `Agent`, `Chat`, `AgentService`, `AgentIdentity` — `packages/core/compute/{assistant,compute,agent-runtime}`.
 - plugin-discord (REST sync into `Channel` feeds), `@dxos/pipeline-discord`, `@dxos/crawler`.
-- EDGE `discord-service` (`DiscordPresence` DO, webhook interactions), `compute-service` triggers and
-  process DOs, identity-service keyrings.
-- plugin-brain fact store (in memory today; needs persistence), plugin-crm `ProfileOf`.
+- EDGE compute-service process DOs and operation-service, identity-service keyrings, kms-service.
+- plugin-crm `ProfileOf`; plugin-brain's fact store becomes a derived index over `Memory` (open).
 - Prior specs: `agents/superpowers/specs/2026-07-08-discord-bot-design.md`,
   `2026-07-21-agent-identity.md`, `.agents/projects/agent-process-edge/DESIGN.md`.
