@@ -7,6 +7,7 @@
 import type * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Layer from 'effect/Layer';
 
+import * as SystemOne from '../design/SystemOne.ts';
 import * as Store from '../Store.ts';
 import * as Agent from './Agent.ts';
 import * as Log from './Log.ts';
@@ -27,7 +28,10 @@ export const layer = (options: {
 }): Layer.Layer<Services, Store.StoreError | Log.LogError | Models.ModelError> => {
   const stores = Layer.merge(Store.layer(options.storeDir), Log.layer(options.storeDir));
   const models = Models.layer(options.model);
-  const sandbox = Sandbox.layer.pipe(Layer.provide(stores));
+  // System One scores the sandbox's design questions when a key is present; the baseline otherwise.
+  const sandbox = Sandbox.layer.pipe(
+    Layer.provide(Layer.merge(stores, SystemOne.available() ? SystemOne.layer : SystemOne.refusing)),
+  );
   return Layer.mergeAll(
     stores,
     models,

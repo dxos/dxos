@@ -4,22 +4,22 @@
  */
 
 @layer dx-components {
-  .nx-button[data-icon-valence='warning'] > .nx-icon {
+  .dx-button[data-icon-valence='warning'] > .dx-icon {
     color: var(--color-warning-text);
   }
-  .nx-button[data-icon-valence='success'] > .nx-icon {
+  .dx-button[data-icon-valence='success'] > .dx-icon {
     color: var(--color-success-text);
   }
 
   /* Disclosure: one caret that turns a quarter to point down while its region is expanded. */
-  .nx-button[data-disclosure] > .nx-icon {
+  .dx-button[data-disclosure] > .dx-icon {
     transition: transform 150ms ease;
   }
-  .nx-button[data-disclosure][aria-expanded='true'] > .nx-icon {
+  .dx-button[data-disclosure][aria-expanded='true'] > .dx-icon {
     transform: rotate(90deg);
   }
   @media (prefers-reduced-motion: reduce) {
-    .nx-button[data-disclosure] > .nx-icon {
+    .dx-button[data-disclosure] > .dx-icon {
       transition: none;
     }
   }

@@ -1,0 +1,293 @@
+/*
+ * Main: the app shell. Two fixed sidebars (navigation at the start, complementary at the end), the content between
+ * them and a bottom drawer. From `lg` (64rem) the sidebars are landmarks the content pads around; below it they slide
+ * in over a scrim. The sidebar widths are the app's spacing tokens (ui-theme `spacing.css`). Each fixed region is a
+ * named view-transition group, so it is not lost under the content's snapshot during a transition.
+ */
+
+@layer dx-components {
+  :root {
+    --dx-main-duration: var(--dx-disclosure-duration);
+    --dx-main-easing: cubic-bezier(0.4, 0, 0.6, 1);
+    --dx-main-start-size: var(--dx-nav-sidebar-size, 350px);
+    --dx-main-start-rail: var(--dx-l0-size, 72px);
+    --dx-main-end-size: var(--dx-complementary-sidebar-size, 25rem);
+    --dx-main-end-rail: var(--dx-r0-size, 3rem);
+    --dx-main-line: var(--border-width-landmark-line, 1px);
+  }
+
+  /* Content */
+
+  /* The sidebars are fixed, so the content is the host's only in-flow child and must fill it whatever its display. */
+  .dx-main-content {
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    view-transition-name: dx-main-content;
+    padding-inline: 0;
+    scroll-padding-inline: 0;
+    /* The drawer sits above the bottom safe area, so the reserved space includes it. */
+    padding-block-end: calc(var(--dx-main-drawer-height, 0rem) + env(safe-area-inset-bottom));
+    scroll-padding-block-end: calc(var(--dx-main-drawer-height, 0rem) + env(safe-area-inset-bottom));
+    transition-property: padding-inline-start, padding-inline-end, padding-block-end;
+    transition-duration: var(--dx-main-duration);
+    transition-timing-function: var(--dx-main-easing);
+  }
+  .dx-main-content[data-bounce] {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: auto;
+    overscroll-behavior: auto;
+  }
+  /*
+   * The content's box runs under the fixed sidebars (it pads around them), so its ring is a fixed overlay over the
+   * visible area between them rather than an outline on the box, whose sides the sidebars would cover.
+   */
+  .dx-main-content[data-handles-focus]:focus-visible {
+    outline: none;
+  }
+  .dx-main-content[data-handles-focus]:focus-visible::after {
+    content: '';
+    position: fixed;
+    inset-block: 0 calc(var(--dx-main-drawer-height, 0rem) + env(safe-area-inset-bottom));
+    inset-inline: var(--dx-main-pad-start, 0) var(--dx-main-pad-end, 0);
+    z-index: 6;
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
+    pointer-events: none;
+  }
+
+  @media (width >= 64rem) {
+    .dx-main-content[data-sidebar-left-state='collapsed'] {
+      --dx-main-pad-start: var(--dx-main-start-rail);
+      padding-inline-start: var(--dx-main-start-rail);
+      scroll-padding-inline-start: var(--dx-main-start-rail);
+    }
+    .dx-main-content[data-sidebar-left-state='expanded'] {
+      --dx-main-pad-start: var(--dx-main-start-size);
+      padding-inline-start: var(--dx-main-start-size);
+      scroll-padding-inline-start: var(--dx-main-start-size);
+    }
+    .dx-main-content[data-sidebar-right-state='collapsed'] {
+      --dx-main-pad-end: var(--dx-main-end-rail);
+      padding-inline-end: var(--dx-main-end-rail);
+      scroll-padding-inline-end: var(--dx-main-end-rail);
+    }
+    .dx-main-content[data-sidebar-right-state='expanded'] {
+      --dx-main-pad-end: var(--dx-main-end-size);
+      padding-inline-end: var(--dx-main-end-size);
+      scroll-padding-inline-end: var(--dx-main-end-size);
+    }
+  }
+
+  /*
+   * A focus area an app declares inside a region (`useMainLandmark`): a ring on an overlay above its children, since a
+   * positioned child (a toolbar's scroll frame) paints over the element's own outline. These areas are positioned
+   * panes, so the overlay spans the element.
+   */
+  [data-main-landmark]:not(.dx-main-content, .dx-main-sidebar, .dx-main-drawer):focus-visible {
+    outline: none;
+  }
+  [data-main-landmark]:not(.dx-main-content, .dx-main-sidebar, .dx-main-drawer):focus-visible::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
+    pointer-events: none;
+  }
+
+  /* Sidebars */
+
+  .dx-main-sidebar {
+    position: fixed;
+    inset-block: max(0.5rem, env(safe-area-inset-top)) max(0.5rem, env(safe-area-inset-bottom));
+    z-index: 7;
+    box-sizing: border-box;
+    width: calc(100dvw - 3rem);
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    border-radius: var(--radius-md, 0.375rem);
+    border-color: var(--color-separator);
+    color: var(--color-sidebar-fg, inherit);
+    backdrop-filter: blur(12px);
+    transition-property: inset-inline-start, inset-inline-end, width;
+    transition-timing-function: var(--dx-main-easing);
+  }
+  .dx-main-sidebar[data-resizing='false'] {
+    transition-duration: var(--dx-main-duration);
+  }
+  .dx-main-sidebar:focus-visible {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
+  }
+  .dx-main-sidebar :is([aria-current]:not([aria-current='false']), [aria-selected='true']) {
+    color: var(--color-sidebar-current-fg, inherit);
+  }
+
+  /* The sidebars wear the shell's L1/R1 tones; collapsed, they are the rail's width and wear its tone. */
+  .dx-main-sidebar[data-side='start'] {
+    --surface-bg: var(--color-l1-surface);
+    view-transition-name: dx-main-navigation-sidebar;
+    z-index: 8;
+    inset-inline-start: -100vw;
+    border-inline-end: var(--dx-main-line) solid var(--color-l1-separator, var(--color-separator));
+  }
+  .dx-main-sidebar[data-side='start'][data-state='collapsed'] {
+    --surface-bg: var(--color-l0-surface);
+  }
+  .dx-main-sidebar[data-side='start'][data-state='expanded'] {
+    inset-inline-start: max(0.5rem, env(safe-area-inset-left));
+  }
+  .dx-main-sidebar[data-side='end'] {
+    --surface-bg: var(--color-r1-surface);
+    view-transition-name: dx-main-complementary-sidebar;
+    inset-inline-end: -100vw;
+    /* Kept at every width: the companion plank beside it wears the same tone, so only the line separates them. */
+    border-inline-start: var(--dx-main-line) solid var(--color-r1-separator, var(--color-separator));
+  }
+  .dx-main-sidebar[data-side='end'][data-state='collapsed'] {
+    --surface-bg: var(--color-r0-surface);
+  }
+  .dx-main-sidebar[data-side='end'][data-state='expanded'] {
+    inset-inline-end: max(0.5rem, env(safe-area-inset-right));
+  }
+  .dx-main-sidebar {
+    background-color: var(--surface-bg);
+  }
+
+  @media (width >= 40rem) {
+    .dx-main-sidebar[data-side='start'] {
+      width: var(--dx-main-start-size);
+    }
+    .dx-main-sidebar[data-side='end'] {
+      width: var(--dx-main-end-size);
+    }
+  }
+
+  @media (width >= 64rem) {
+    .dx-main-sidebar {
+      inset-block: 0;
+      border-radius: 0;
+    }
+    .dx-main-sidebar[data-side='start'] {
+      border-inline-end-width: 0;
+    }
+    .dx-main-sidebar[data-side='start']:is([data-state='collapsed'], [data-state='expanded']) {
+      inset-inline-start: 0;
+    }
+    .dx-main-sidebar[data-side='start'][data-state='collapsed'] {
+      width: var(--dx-main-start-rail);
+    }
+    .dx-main-sidebar[data-side='end']:is([data-state='collapsed'], [data-state='expanded']) {
+      inset-inline-end: 0;
+    }
+    .dx-main-sidebar[data-side='end'][data-state='collapsed'] {
+      width: var(--dx-main-end-rail);
+    }
+  }
+
+  /* The edge strip a swipe opens a sidebar from: touch only, since under a mouse it would take clicks at the edge. */
+  .dx-main-swipe-area {
+    display: none;
+  }
+  @media (pointer: coarse) {
+    .dx-main-swipe-area {
+      display: block;
+    }
+  }
+
+  /* Overlay: the scrim behind an open sidebar below `lg`. */
+
+  .dx-main-overlay {
+    view-transition-name: dx-main-overlay;
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    display: none;
+    opacity: 0;
+    background: var(--color-scrim-surface);
+    transition: opacity var(--dx-main-duration) var(--dx-main-easing);
+  }
+  .dx-main-overlay[data-state='open'] {
+    display: block;
+    opacity: 1;
+  }
+  @media (width >= 64rem) {
+    .dx-main-overlay[data-state='open'] {
+      display: none;
+    }
+  }
+
+  /* Drawer: fixed to the block-end edge between the sidebars (above the content, below them). */
+
+  .dx-main-drawer {
+    view-transition-name: dx-main-drawer;
+    position: fixed;
+    inset-block-end: env(safe-area-inset-bottom);
+    inset-inline: 0;
+    z-index: 6;
+    display: grid;
+    grid-template-rows: min-content minmax(0, 1fr);
+    overflow: hidden;
+    border-block-start: 1px solid var(--color-separator);
+    background-color: var(--surface-bg);
+    transition-property: inset-inline-start, inset-inline-end;
+    transition-duration: var(--dx-main-duration);
+    transition-timing-function: var(--dx-main-easing);
+  }
+  .dx-main-drawer:focus-visible {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
+  }
+  @media (width >= 64rem) {
+    .dx-main-drawer[data-sidebar-left-state='collapsed'] {
+      inset-inline-start: var(--dx-main-start-rail);
+    }
+    .dx-main-drawer[data-sidebar-left-state='expanded'] {
+      inset-inline-start: var(--dx-main-start-size);
+    }
+    .dx-main-drawer[data-sidebar-right-state='collapsed'] {
+      inset-inline-end: var(--dx-main-end-rail);
+    }
+    .dx-main-drawer[data-sidebar-right-state='expanded'] {
+      inset-inline-end: var(--dx-main-end-size);
+    }
+  }
+
+  .dx-main-drawer-handle {
+    height: 0.25rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: row-resize;
+    touch-action: none;
+  }
+  .dx-main-drawer-handle:is(:hover, :focus-visible) {
+    outline: none;
+    background: var(--color-focus);
+  }
+
+  /* A running slide would jump the rest of the way when a view transition ends, so the transition stands in for it. */
+  :root:active-view-transition :is(.dx-main-sidebar, .dx-main-content, .dx-main-drawer, .dx-main-overlay) {
+    transition: none;
+  }
+}
+
+/* One clock for every view transition the app starts; a plank transition (`dx-plank`) is shorter. */
+@layer dx-components {
+  :root {
+    --dx-main-transition-duration: 150ms;
+    --dx-main-plank-transition-duration: 50ms;
+    --dx-main-transition-easing: cubic-bezier(0.4, 0, 0.6, 1);
+  }
+
+  ::view-transition-group(*) {
+    animation-duration: var(--dx-main-transition-duration);
+    animation-timing-function: var(--dx-main-transition-easing);
+  }
+
+  :root:active-view-transition-type(dx-plank)::view-transition-group(*) {
+    animation-duration: var(--dx-main-plank-transition-duration);
+  }
+}

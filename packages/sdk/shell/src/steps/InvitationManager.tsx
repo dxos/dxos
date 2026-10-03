@@ -5,7 +5,7 @@
 import React, { useMemo } from 'react';
 
 import { type InvitationStatus } from '@dxos/react-client/invitations';
-import { Icon, QrCode, SystemIconButton, useId, useTranslation } from '@dxos/react-ui';
+import { Icon, QrCode, SystemButton, useId, useTranslation } from '@dxos/react-ui';
 import { getSize, mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -65,7 +65,7 @@ export const InvitationManager = ({
             <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
             </p>
-            <div className={mx('text-description', 'w-full max-w-[14rem] relative')}>
+            <div className={mx('text-fg-muted', 'w-full max-w-[14rem] relative')}>
               <QrCode
                 classNames={['p-2', showAuthCode && 'invisible']}
                 aria-labelledby={qrLabel}
@@ -79,7 +79,7 @@ export const InvitationManager = ({
             <span id={qrLabel} className='sr-only'>
               {t('qr.label')}
             </span>
-            <SystemIconButton.Clipboard variant='ghost' value={invitationUrl ?? 'never'} />
+            <SystemButton.Clipboard variant='ghost' value={invitationUrl ?? 'never'} />
           </InvitationManagerView>
           <InvitationManagerView id='showing-auth-code'>
             <Label>{t('auth-code.message')}</Label>

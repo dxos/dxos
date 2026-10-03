@@ -24,16 +24,14 @@ export const UnsupportedType = ({ role, typename }: UnsupportedTypeProps) => {
 
   return (
     <Panel.Root role={role}>
-      <Panel.Content classNames='grid place-items-center p-8'>
+      <Panel.Body classNames='grid place-items-center p-8'>
         <Banner.Root valence='info' icon='ph--puzzle-piece--regular'>
-          <Banner.Content classNames='max-w-[32rem]'>
-            <Banner.Title>{t('unsupported-type.title')}</Banner.Title>
-            <Banner.Body data-testid='previewPlugin.unsupportedType'>
-              {t('unsupported-type.message', { typename })}
-            </Banner.Body>
-          </Banner.Content>
+          <Banner.Title>{t('unsupported-type.title')}</Banner.Title>
+          <Banner.Body data-testid='previewPlugin.unsupportedType'>
+            {t('unsupported-type.message', { typename })}
+          </Banner.Body>
         </Banner.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

@@ -8,7 +8,7 @@ import { StatusBar } from '@dxos/plugin-status-bar/components';
 import { type EdgeStatus, EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
-import { Flex, Grid, Icon, IconButton, Popover, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, Grid, Icon, Popover, useTranslation } from '@dxos/react-ui';
 import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
@@ -54,19 +54,16 @@ export const SyncStatusIndicator = ({
   const icon = getIcon(status);
 
   return (
-    <Popover.Root>
+    <Popover.Root positioning={{ placement: 'left' }}>
       <Popover.Trigger asChild>
         <StatusBar.Item>
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
-          <IconButton variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
+          <Button variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
         </StatusBar.Item>
       </Popover.Trigger>
-      <Popover.Portal>
-        <Popover.Content side='left'>
-          <EdgeConnectionPopover status={edgeStatus} />
-          <Popover.Arrow />
-        </Popover.Content>
-      </Popover.Portal>
+      <Popover.Content>
+        <EdgeConnectionPopover status={edgeStatus} />
+      </Popover.Content>
     </Popover.Root>
   );
 };
@@ -79,7 +76,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
   const edgeUrl = client.config.get('runtime.services.edge.url');
 
   return (
-    <Flex column gap='sm' classNames='w-[240px] p-2' style={iconSize(4)}>
+    <Flex column gap='sm' classNames='w-popover-min-width p-2' style={iconSize(4)}>
       {/* Connection Status Header */}
       <Flex gap='sm' align='center' classNames='mb-2'>
         <Icon
@@ -95,7 +92,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
       {!isConnected && (
         <Grid cols={SYNC_COLS} grow={false} gap='sm'>
           <Icon icon='ph--cloud-x--regular' />
-          <span className='text-description'>{t('sync-no-connection.label')}</span>
+          <span className='text-fg-muted'>{t('sync-no-connection.label')}</span>
         </Grid>
       )}
 
@@ -104,7 +101,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
           {/* Latency */}
           <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
             <Icon icon='ph--timer--regular' />
-            <span className='text-description'>{t('sync-latency.label')}</span>
+            <span className='text-fg-muted'>{t('sync-latency.label')}</span>
             <div />
             <UnitValue value={status.rtt} format={Unit.Millisecond} />
           </Grid>
@@ -112,7 +109,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
           {/* Upload Speed */}
           <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
             <Icon icon='ph--arrow-up--regular' classNames='text-green-500' />
-            <span className='text-description'>{t('sync-upload.label')}</span>
+            <span className='text-fg-muted'>{t('sync-upload.label')}</span>
             <UnitValue value={status.messagesSent} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesUp} format={Unit.Kilobyte} suffix='/s' />
           </Grid>
@@ -120,7 +117,7 @@ const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
           {/* Download Speed */}
           <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
             <Icon icon='ph--arrow-down--regular' classNames='text-orange-500' />
-            <span className='text-description'>{t('sync-download.label')}</span>
+            <span className='text-fg-muted'>{t('sync-download.label')}</span>
             <UnitValue value={status.messagesReceived} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesDown} format={Unit.Kilobyte} suffix='/s' />
           </Grid>
@@ -136,7 +133,7 @@ const UnitValue = ({ value: input, format, suffix }: { value: number; format: Un
   return (
     <span className='font-mono'>
       {formattedValue}
-      <span className='ms-1 text-subdued'>
+      <span className='ms-1 text-fg-subtle'>
         {unit.symbol}
         {suffix}
       </span>

@@ -14,17 +14,17 @@ import { Logger } from '@dxos/react-ui-debug';
 export const LoggingModule = () => (
   <Logger.Root>
     <Panel.Root>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Logger.Toolbar />
-      </Panel.Toolbar>
-      <Panel.Content asChild>
+      </Panel.Header>
+      <Panel.Body asChild>
         <Logger.Content>
           <Logger.List />
         </Logger.Content>
-      </Panel.Content>
-      <Panel.Statusbar asChild>
+      </Panel.Body>
+      <Panel.Footer>
         <Logger.Filter />
-      </Panel.Statusbar>
+      </Panel.Footer>
     </Panel.Root>
   </Logger.Root>
 );

@@ -62,7 +62,7 @@ const PopoverRoot = ({ lazyMount = true, unmountOnExit = true, positioning, ...p
   />
 );
 
-PopoverRoot.displayName = 'Next.Popover.Root';
+PopoverRoot.displayName = 'Popover.Root';
 
 //
 // Trigger
@@ -70,12 +70,12 @@ PopoverRoot.displayName = 'Next.Popover.Root';
 
 type PopoverTriggerProps = PopoverPrimitive.TriggerProps;
 
-/** Use `asChild` to open the popover from a `Next.Button`. */
+/** Use `asChild` to open the popover from a `Button`. */
 const PopoverTrigger = forwardRef<HTMLButtonElement, PopoverTriggerProps>((props, forwardedRef) => (
   <PopoverPrimitive.Trigger {...props} ref={forwardedRef} />
 ));
 
-PopoverTrigger.displayName = 'Next.Popover.Trigger';
+PopoverTrigger.displayName = 'Popover.Trigger';
 
 //
 // Anchor
@@ -88,7 +88,7 @@ const PopoverAnchor = forwardRef<HTMLDivElement, PopoverAnchorProps>((props, for
   <PopoverPrimitive.Anchor {...props} ref={forwardedRef} />
 ));
 
-PopoverAnchor.displayName = 'Next.Popover.Anchor';
+PopoverAnchor.displayName = 'Popover.Anchor';
 
 //
 // Content
@@ -143,7 +143,7 @@ const PopoverContent = forwardRef<HTMLDivElement, PopoverContentProps>(
   },
 );
 
-PopoverContent.displayName = 'Next.Popover.Content';
+PopoverContent.displayName = 'Popover.Content';
 
 //
 // Header
@@ -162,7 +162,7 @@ const PopoverHeader = forwardRef<HTMLDivElement, PopoverHeaderProps>(({ classNam
   />
 ));
 
-PopoverHeader.displayName = 'Next.Popover.Header';
+PopoverHeader.displayName = 'Popover.Header';
 
 //
 // Title
@@ -175,7 +175,7 @@ const PopoverTitle = forwardRef<HTMLHeadingElement, PopoverTitleProps>(({ classN
   return <PopoverPrimitive.Title {...props} className={mx(recipes.popoverTitle(), classNames)} ref={forwardedRef} />;
 });
 
-PopoverTitle.displayName = 'Next.Popover.Title';
+PopoverTitle.displayName = 'Popover.Title';
 
 //
 // Description
@@ -196,7 +196,7 @@ const PopoverDescription = forwardRef<HTMLParagraphElement, PopoverDescriptionPr
   },
 );
 
-PopoverDescription.displayName = 'Next.Popover.Description';
+PopoverDescription.displayName = 'Popover.Description';
 
 //
 // Body
@@ -218,14 +218,14 @@ const PopoverBody = forwardRef<HTMLDivElement, PopoverBodyProps>(({ classNames, 
   </ScrollArea.Root>
 ));
 
-PopoverBody.displayName = 'Next.Popover.Body';
+PopoverBody.displayName = 'Popover.Body';
 
 //
 // CloseTrigger
 //
 
 type PopoverCloseTriggerProps = Omit<PopoverPrimitive.CloseTriggerProps, 'children'> & {
-  /** With `asChild`, the child (e.g. a `Next.Button`) closes the popover instead of the default icon button. */
+  /** With `asChild`, the child (e.g. a `Button`) closes the popover instead of the default icon button. */
   children?: ReactNode;
   icon?: string;
   label?: string;
@@ -257,7 +257,7 @@ const PopoverCloseTrigger = forwardRef<HTMLButtonElement, PopoverCloseTriggerPro
   },
 );
 
-PopoverCloseTrigger.displayName = 'Next.Popover.CloseTrigger';
+PopoverCloseTrigger.displayName = 'Popover.CloseTrigger';
 
 export const Popover = {
   Root: PopoverRoot,

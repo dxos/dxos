@@ -8,12 +8,13 @@ import React, { type KeyboardEvent, type MouseEvent, useCallback, useEffect, use
 import { type Database, Obj } from '@dxos/echo';
 import { EID, type URI } from '@dxos/keys';
 import {
+  Block,
+  Button,
+  type ButtonProps,
   Card,
   DxAnchorActivate,
   Icon,
-  IconButton,
-  type IconButtonProps,
-  SystemIconButton,
+  SystemButton,
   Tag,
   useTranslation,
 } from '@dxos/react-ui';
@@ -111,7 +112,6 @@ type AnchorIconButtonProps = {
   fallbackLabel?: string;
   title?: string;
   value?: URI.URI;
-  size?: 4 | 5 | 6;
   /** Also open the card on hover (never the `onClick` fallback — hovering must not create anything). */
   hover?: boolean;
   onClick?: () => void;
@@ -129,7 +129,6 @@ const AnchorIconButton = ({
   fallbackLabel,
   title,
   value,
-  size = 4,
   hover,
   onClick,
 }: AnchorIconButtonProps) => {
@@ -151,7 +150,7 @@ const AnchorIconButton = ({
   }, [value, openCard, onClick]);
 
   return (
-    <IconButton
+    <Button
       onPointerEnter={startHover}
       onPointerLeave={cancelHover}
       classNames={compact ? 'min-h-0' : 'aspect-square'}
@@ -159,7 +158,6 @@ const AnchorIconButton = ({
       disabled={!value && !onClick}
       icon={value ? icon : (fallbackIcon ?? icon)}
       iconOnly
-      size={size}
       label={value ? label : (fallbackLabel ?? label)}
       onClick={handleClick}
       ref={buttonRef}
@@ -188,12 +186,12 @@ const RowDate = ({ start, end }: RowDateProps) => {
 
   return (
     <Card.Row>
-      <Card.Block>
+      <Block>
         <Icon icon='ph--calendar--regular' />
-      </Card.Block>
+      </Block>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
-        <div className='truncate text-description'>{format(start, 'PPp')}</div>
-        {duration.length > 0 && <div className='text-description text-xs'>({duration})</div>}
+        <div className='truncate text-fg-muted'>{format(start, 'PPp')}</div>
+        {duration.length > 0 && <div className='text-fg-muted text-xs'>({duration})</div>}
       </div>
     </Card.Row>
   );
@@ -218,9 +216,9 @@ const RowRef = ({ object }: RowRefProps) => {
   // TODO(burdon): Nav?
   return (
     <Card.Row>
-      <Card.Block>
+      <Block>
         <AnchorIconButton icon={icon} label={label} title={label} value={echoUri} />
-      </Card.Block>
+      </Block>
       <div className='flex items-center'>
         <span className='truncate text-primary-text'>{label}</span>
       </div>
@@ -267,9 +265,9 @@ type RowPersonProps = {
  */
 const PersonAvatarRow = ({ actor, size, onClick }: Pick<RowPersonProps, 'actor' | 'size' | 'onClick'>) => (
   <Card.Row>
-    <Card.Block>
+    <Block>
       <Avatar actor={actor} size={size} onClick={onClick} />
-    </Card.Block>
+    </Block>
     <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
   </Card.Row>
 );
@@ -350,13 +348,13 @@ export const ContactAvatar = ({
         <Avatar actor={actor} size={size} onClick={onClick} />
       </div>
       {canCreate && (
-        <IconButton
+        <Button
           variant='ghost'
           iconOnly
           icon='ph--user-circle-plus--regular'
           // One step below the avatar it replaces, so the button reads as an affordance rather than
           // as a heavier stand-in for the face.
-          size={Number(size) >= 8 ? 5 : 4}
+          iconSize={Number(size) >= 8 ? 'lg' : 'md'}
           label={t('create-contact.label')}
           classNames='dx-fullscreen opacity-0 group-hover/contact:opacity-100 focus-visible:opacity-100'
           onClick={handleContactCreate}
@@ -382,7 +380,7 @@ const PersonContactRow = ({
 
   return (
     <Card.Row>
-      <Card.Block>
+      <Block>
         <ContactAvatar
           actor={actor}
           role={role}
@@ -392,18 +390,18 @@ const PersonContactRow = ({
           onContactCreate={onContactCreate}
           onClick={onClick}
         />
-      </Card.Block>
+      </Block>
       <Card.Text>{avatarName(actor) || actor.email}</Card.Text>
       {onRemove && (
-        <Card.Block end>
-          <IconButton
+        <Block rail='end'>
+          <Button
             variant='ghost'
             iconOnly
             icon='ph--x--regular'
             label={t('remove-attendee.label')}
             onClick={onRemove}
           />
-        </Card.Block>
+        </Block>
       )}
     </Card.Row>
   );
@@ -440,9 +438,9 @@ const RowTags = ({ tags, onTagClick }: RowTagsProps) => {
 
   return (
     <Card.Row>
-      <Card.Block>
+      <Block>
         <Icon icon='ph--tag--regular' />
-      </Card.Block>
+      </Block>
       <div className='flex flex-wrap gap-1 py-1' data-testid='extracted-tags'>
         {tags.map((tag) => (
           <Tag
@@ -483,7 +481,7 @@ type RowStarProps = {
  * the click from bubbling so starring doesn't also select/activate the surrounding tile or card.
  */
 const RowStar = ({ starred, onToggle }: RowStarProps) => {
-  const handleClick = useCallback<NonNullable<IconButtonProps['onClick']>>(
+  const handleClick = useCallback<NonNullable<ButtonProps['onClick']>>(
     (event) => {
       event.stopPropagation();
       onToggle?.();
@@ -495,7 +493,7 @@ const RowStar = ({ starred, onToggle }: RowStarProps) => {
     return null;
   }
 
-  return <SystemIconButton.Star iconOnly variant='ghost' active={starred} onClick={handleClick} />;
+  return <SystemButton.Star iconOnly variant='ghost' pressed={starred} onClick={handleClick} />;
 };
 
 RowStar.displayName = 'Row.Star';
@@ -522,9 +520,9 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
 
   return (
     <Card.Row>
-      <Card.Block>
+      <Block>
         <Icon icon='ph--paperclip--regular' />
-      </Card.Block>
+      </Block>
       <div className='flex flex-wrap gap-1 py-1' data-testid='message-attachments'>
         {attachments.map((attachment, index) => (
           <Tag
@@ -551,7 +549,7 @@ const RowAttachments = ({ attachments, onAttachmentClick }: RowAttachmentsProps)
               },
             })}
           >
-            <Icon icon='ph--file--regular' size={3} />
+            <Icon icon='ph--file--regular' size='xs' />
             {attachment.name ?? attachment.ref.uri}
           </Tag>
         ))}

@@ -355,7 +355,7 @@ const walkthroughSidebarTheme = EditorView.theme({
     gap: '0.0625rem',
     padding: '1rem 0.5rem',
     overflowY: 'auto',
-    borderInlineStart: '1px solid var(--color-subdued-separator)',
+    borderInlineStart: '1px solid var(--color-separator-subtle)',
     fontFamily: 'var(--font-body)',
   },
   // The rail overlays the editor, so the text is inset by exactly its width.
@@ -382,14 +382,14 @@ const walkthroughSidebarTheme = EditorView.theme({
   '.cm-walkthrough-entry[data-level="3"] .cm-walkthrough-name': { paddingInlineStart: '0.75rem' },
 
   '.cm-walkthrough-entry .cm-walkthrough-name': {
-    color: 'var(--color-base-fg)',
+    color: 'var(--color-fg)',
     fontSize: '0.8125rem',
   },
   // The second level: one file per row, indented under the section that touches it.
   '.cm-walkthrough-file': { paddingInlineStart: '1.25rem' },
   '.cm-walkthrough-file[data-level="3"]': { paddingInlineStart: '2rem' },
   '.cm-walkthrough-file .cm-walkthrough-name': {
-    color: 'var(--color-subdued)',
+    color: 'var(--color-fg-subtle)',
     fontSize: '0.75rem',
   },
   '.cm-walkthrough-name': {

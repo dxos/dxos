@@ -8,11 +8,9 @@ import * as Rpc from 'effect/rpc/Rpc';
 import * as RpcGroup from 'effect/rpc/RpcGroup';
 import * as Schema from 'effect/Schema';
 
-import * as Ontology from '../Ontology.ts';
-
 /**
  * The contract between the crawling main thread and the parsing workers. Workers receive a batch of
- * paths and return one JSON-LD document per file — they never touch a database, so nothing
+ * paths and return each file's document as N-Triples — they never touch a database, so nothing
  * contends on SQLite or LevelDB.
  */
 
@@ -23,11 +21,17 @@ export const FileRef = Schema.Struct({
 
 export type FileRef = typeof FileRef.Type;
 
+/**
+ * A file's ledger record and its document as N-Triples, encoded in the worker: the main thread
+ * commits it as is, with no JSON-LD to parse or document to validate on the one thread that writes.
+ */
 export const AnalyzedFile = Schema.Struct({
   path: Schema.String,
   mtime: Schema.Number,
-  // JSON-LD text on the wire, a decoded document on both ends (see `design/ONTOLOGY.md`).
-  document: Schema.fromJsonString(Ontology.FileDocument),
+  language: Schema.String,
+  size: Schema.Number,
+  hash: Schema.String,
+  triples: Schema.String,
 });
 
 export type AnalyzedFile = typeof AnalyzedFile.Type;
@@ -45,6 +49,9 @@ export const Rpcs = RpcGroup.make(
     success: Schema.Struct({
       analyzed: Schema.Array(AnalyzedFile),
       skipped: Schema.Array(SkippedFile),
+      /** Worker time spent analyzing the batch's files and encoding their documents. */
+      analyzeMs: Schema.Number,
+      encodeMs: Schema.Number,
     }),
   }),
 );

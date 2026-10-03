@@ -15,7 +15,7 @@ import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { corePlugins } from '@dxos/plugin-testing';
 import { random } from '@dxos/random';
-import { Focus, Panel, Toolbar } from '@dxos/react-ui';
+import { Button, Focus, Panel, Toolbar } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { Dnd } from '@dxos/react-ui-dnd';
@@ -50,14 +50,14 @@ const StoryTile = (props: MosaicTileProps<Obj.Any>) => {
     <Mosaic.Tile {...props} asChild>
       <Focus.Item asChild border current={props.current}>
         <Panel.Root classNames='dx-current dx-hover w-full md:w-[50rem] snap-start shrink-0' {...attentionAttrs}>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
               <p>{Obj.getLabel(props.data)}</p>
             </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <JsonHighlighter data={props.data} />
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </Focus.Item>
     </Mosaic.Tile>
@@ -136,20 +136,20 @@ const DefaultStory = ({ Tile }: StoryArgs) => {
     <Dnd.Root>
       <Matrix.Root Tile={Tile} items={items} current={current} onCurrentChange={handleCurrentChange} ref={controller}>
         <Panel.Root>
-          <Panel.Toolbar asChild>
+          <Panel.Header>
             <Toolbar.Root>
-              <Toolbar.IconButton icon='ph--caret-left--regular' iconOnly label='Back' onClick={handlePrev} />
-              <Toolbar.IconButton icon='ph--caret-right--regular' iconOnly label='Forward' onClick={handleNext} />
+              <Button icon='ph--caret-left--regular' iconOnly label='Back' onClick={handlePrev} />
+              <Button icon='ph--caret-right--regular' iconOnly label='Forward' onClick={handleNext} />
               <Toolbar.Text>
                 {currentIndex + 1} / {items.length}
               </Toolbar.Text>
             </Toolbar.Root>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
+          </Panel.Header>
+          <Panel.Body asChild>
             <Matrix.Content>
               <Matrix.Viewport />
             </Matrix.Content>
-          </Panel.Content>
+          </Panel.Body>
         </Panel.Root>
       </Matrix.Root>
     </Dnd.Root>

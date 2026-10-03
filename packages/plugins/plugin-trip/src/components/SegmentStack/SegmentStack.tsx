@@ -4,8 +4,8 @@
 
 import React, { type KeyboardEvent, useCallback, useMemo, useState } from 'react';
 
-import { ScrollArea, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
-import { Focus, Mosaic } from '@dxos/react-ui-mosaic';
+import { Focus, ScrollArea, ThemedClassName, composable, composableProps } from '@dxos/react-ui';
+import { Mosaic } from '@dxos/react-ui-mosaic';
 
 import { Segment } from '#types';
 
@@ -62,7 +62,7 @@ export const SegmentStack = composable<HTMLDivElement, SegmentStackProps>(
           selectedIds={selectedIds}
           onSelectionChange={handleSelectionChange}
         >
-          <ScrollArea.Root orientation='vertical' padding centered thin>
+          <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport ref={setViewport}>
               <Mosaic.VirtualStack
                 Tile={SegmentTile}

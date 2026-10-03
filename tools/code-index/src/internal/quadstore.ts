@@ -166,12 +166,20 @@ export const make = <E>(
     const reason: Graph<E>['reason'] = (graph, rules, materialize) => reasonWith(graph, rules, materialize, new Set());
 
     const graph: Graph<E> = {
-      swap: (clear, target, document) =>
+      swap: (writes) =>
         Effect.gen(function* () {
-          const quads = yield* attempt('Failed to parse document', () => parseJsonLd(document, target));
+          const quads: Quad[] = [];
           const stale: Quad[] = [];
-          for (const name of clear) {
-            stale.push(...(yield* ofGraph(name)));
+          for (const { clear, graph, triples } of writes) {
+            const target = DataFactory.namedNode(graph);
+            const parsed = yield* Effect.try({
+              try: () => new Parser({ format: 'N-Triples' }).parse(triples),
+              catch: fail('Failed to parse document'),
+            });
+            quads.push(...parsed.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, target)));
+            for (const name of clear) {
+              stale.push(...(yield* ofGraph(name)));
+            }
           }
           yield* patch(stale, quads);
         }),
@@ -237,12 +245,21 @@ export const make = <E>(
 
       count: () => Effect.map(match(), (quads) => quads.length),
 
-      clear: () =>
-        Effect.flatMap(match(), (quads) =>
-          quads.length === 0
-            ? Effect.void
-            : attempt('Failed to clear graph', () => quadstore.multiDel(quads).then(() => undefined)),
-        ),
+      countGraph: (name) =>
+        attempt('Failed to count quads', async () => {
+          const { iterator } = await quadstore.getStream({ graph: DataFactory.namedNode(name) });
+          // Counted as they stream past, so a large graph is never held in memory.
+          return new Promise<number>((resolve, reject) => {
+            let count = 0;
+            iterator.on('data', () => {
+              count += 1;
+            });
+            iterator.on('error', reject);
+            iterator.on('end', () => resolve(count));
+          });
+        }),
+
+      clear: () => attempt('Failed to clear graph', () => quadstore.clear()),
     };
     return graph;
   });

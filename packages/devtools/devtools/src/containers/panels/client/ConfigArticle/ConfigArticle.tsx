@@ -21,15 +21,15 @@ export const ConfigArticle = ({ role, vaultSelector = true, edgeSelector = true 
 
   return (
     <Panel.Root role={role}>
-      <Panel.Toolbar asChild>
+      <Panel.Header>
         <Toolbar.Root>
           {vaultSelector && <VaultSelector />}
           {edgeSelector && <EdgeSelector />}
         </Toolbar.Root>
-      </Panel.Toolbar>
-      <Panel.Content>
+      </Panel.Header>
+      <Panel.Body>
         <JsonView data={config.values} />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

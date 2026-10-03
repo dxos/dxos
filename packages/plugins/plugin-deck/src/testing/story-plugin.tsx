@@ -175,7 +175,7 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
 
           return (
             <Panel.Root>
-              <Panel.Content classNames='grid grid-rows-[min-content_1fr]'>
+              <Panel.Body classNames='grid grid-rows-[min-content_1fr]'>
                 {attendableId && <ItemComponent id={attendableId} />}
                 <Syntax.Root data={subject}>
                   <Syntax.Content>
@@ -185,7 +185,7 @@ const storySurfaces = Capability.inlineModule('story-surfaces', { provides: [Cap
                     </Syntax.Viewport>
                   </Syntax.Content>
                 </Syntax.Root>
-              </Panel.Content>
+              </Panel.Body>
             </Panel.Root>
           );
         },
@@ -305,25 +305,27 @@ const NavContainer = forwardRef<HTMLDivElement, NavContainerProps>((_props, forw
 
   return (
     <div className='dx-expand overflow-y-auto p-2' ref={forwardedRef}>
-      <Listbox.Root>
+      <Listbox.Root items={items.map(toOption)}>
         <Listbox.Content aria-label='Navigation'>
           {items.map((node) => (
             <Listbox.Item
               key={node.id}
               id={node.id}
-              classNames={activeSet.has(node.id) ? 'bg-current-surface' : undefined}
+              current={activeSet.has(node.id)}
               onClick={() => void invokePromise(LayoutOperation.Set, { subject: [node.id] })}
-            >
-              <Listbox.ItemContent
-                icon={node.properties.icon}
-                title={typeof node.properties.label === 'string' ? node.properties.label : node.id}
-              />
-            </Listbox.Item>
+            />
           ))}
         </Listbox.Content>
       </Listbox.Root>
     </div>
   );
+});
+
+/** A graph node as a list option: its icon, and its label when it is plain text. */
+const toOption = (node: AppGraphNode.Node) => ({
+  value: node.id,
+  label: typeof node.properties.label === 'string' ? node.properties.label : node.id,
+  icon: node.properties.icon,
 });
 
 type ItemComponentProps = {
@@ -337,19 +339,12 @@ const ItemComponent = ({ id }: ItemComponentProps) => {
   const items = useMemo(() => connections.filter((node) => !AppGraphNode.isActionLike(node)), [connections]);
 
   return (
-    <Listbox.Root>
+    <Listbox.Root items={items.map(toOption)}>
       <Listbox.Content aria-label='Items'>
         {items.map((node) => {
           const open = () =>
             void invokePromise(LayoutOperation.Open, { subject: [node.id], pivotId: id, navigation: 'immediate' });
-          return (
-            <Listbox.Item key={node.id} id={node.id} classNames='dx-hover cursor-pointer' onClick={open}>
-              <Listbox.ItemContent
-                icon={node.properties.icon}
-                title={typeof node.properties.label === 'string' ? node.properties.label : node.id}
-              />
-            </Listbox.Item>
-          );
+          return <Listbox.Item key={node.id} id={node.id} highlightOnHover onClick={open} />;
         })}
       </Listbox.Content>
     </Listbox.Root>

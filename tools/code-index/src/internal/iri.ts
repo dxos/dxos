@@ -8,8 +8,9 @@
  * stay as written, so `deus/module/@dxos/compute/Operation#make` reads like the import it names.
  */
 
-// `%` itself, the query and fragment delimiters, and the characters RFC 3987 excludes from an IRI.
-const RESERVED = new Set('%#?<>"{}|\\^`');
+// `%` itself, the query and fragment delimiters, and the characters RFC 3987 excludes from an IRI —
+// `[` and `]` among them, which only an IP-literal host may hold (`src/[id]/page.ts`).
+const RESERVED = new Set('%#?<>"{}|\\^`[]');
 
 /** Whitespace and the C0/C1 controls are excluded too. */
 const mustEscape = (char: string): boolean => {

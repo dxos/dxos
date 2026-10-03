@@ -14,6 +14,7 @@ import { readFile } from 'node:fs/promises';
 import { extname, relative, resolve } from 'node:path';
 
 import * as Crawler from './Crawler.ts';
+import * as DesignCli from './design/DesignCli.ts';
 import * as Indexer from './Indexer.ts';
 import * as Ontology from './Ontology.ts';
 import * as Reasoner from './Reasoner.ts';
@@ -379,6 +380,10 @@ const serveFlags = {
   endpoint: endpointFlag,
   port: Flag.Int('port').pipe(Flag.withDescription('Listen port (default: 5599).'), Flag.optional),
   host: Flag.String('host').pipe(Flag.withDescription('Bind address (default: 127.0.0.1).'), Flag.optional),
+  noWatch: Flag.Boolean('no-watch').pipe(
+    Flag.withDefault(false),
+    Flag.withDescription('Serve the index as it is, without reindexing as files change.'),
+  ),
 };
 
 type ServeFlags = {
@@ -389,9 +394,10 @@ type ServeFlags = {
   readonly endpoint: Option.Option<string>;
   readonly port: Option.Option<number>;
   readonly host: Option.Option<string>;
+  readonly noWatch: boolean;
 };
 
-const serveHandler = ({ root, store, provider, model, endpoint, port, host }: ServeFlags) =>
+const serveHandler = ({ root, store, provider, model, endpoint, port, host, noWatch }: ServeFlags) =>
   Effect.gen(function* () {
     const repo = yield* resolveRoot(root);
     const selection = yield* Models.select({
@@ -407,12 +413,27 @@ const serveHandler = ({ root, store, provider, model, endpoint, port, host }: Se
       port: Option.getOrUndefined(port),
       host: Option.getOrUndefined(host),
       model: selection,
+      reasoners: noWatch ? undefined : yield* Reasoner.load(DEFAULT_RULES),
     }).pipe(Effect.provide(workspaceLayer(repo, store, selection)));
   });
 
 const serve = Command.make('serve', serveFlags, serveHandler).pipe(
   Command.withDescription('Start the web UI (also what a bare `code-index` does).'),
 );
+
+const VERSION = '0.11.1';
+
+const mcp = Command.make('mcp', { root: rootFlag, store: storeFlag }, ({ root, store }) =>
+  Effect.gen(function* () {
+    const repo = yield* resolveRoot(root);
+    // Imported here: only this command needs the MCP server and its protocol schemas.
+    const Server = yield* Effect.promise(() => import('./mcp/Server.ts'));
+    return yield* Server.run({
+      dir: Option.match(store, { onNone: () => Crawler.storeDir(repo), onSome: resolve }),
+      version: VERSION,
+    });
+  }),
+).pipe(Command.withDescription('Serve the index read-only over MCP on stdio (Claude Code, Claude Desktop).'));
 
 /**
  * The root command carries `serve`'s flags and handler, which is what makes the webserver the
@@ -421,8 +442,22 @@ const serve = Command.make('serve', serveFlags, serveHandler).pipe(
  */
 export const command = Command.make('code-index', serveFlags, serveHandler).pipe(
   Command.withDescription('Index a codebase into SQLite + RDF (DEUS ontology), and reason about it in a browser.'),
-  Command.withSubcommands([serve, chat, index, files, query, ask, dump, stats, clear, ontology, types]),
+  Command.withSubcommands([
+    serve,
+    chat,
+    index,
+    files,
+    query,
+    ask,
+    dump,
+    stats,
+    clear,
+    ontology,
+    types,
+    mcp,
+    DesignCli.command,
+  ]),
 );
 
 /** Runs one command; `Layer.launch` is not involved — every command opens and closes its own store. */
-export const run = Command.runWith(command, { version: '0.11.1' });
+export const run = Command.runWith(command, { version: VERSION });

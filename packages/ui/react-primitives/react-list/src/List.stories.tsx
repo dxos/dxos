@@ -110,14 +110,14 @@ const MultiSelectStory = () => {
 //
 
 const CollapsibleStory = () => (
-  <List variant='unordered' className='dx-expand border border-separator divide-y divide-subdued-separator'>
+  <List variant='unordered' className='dx-expand border border-separator divide-y divide-separator-subtle'>
     {items.slice(0, 3).map((item) => (
       <ListItem key={item.id} collapsible defaultOpen={item.id === items[0].id}>
         <ListItemOpenTrigger asChild>
           <ListItemHeading className='cursor-pointer px-3 py-2 select-none'>{item.label}</ListItemHeading>
         </ListItemOpenTrigger>
         <ListItemCollapsibleContent>
-          <div className='px-3 pb-2 text-description text-sm'>Details for {item.label}.</div>
+          <div className='px-3 pb-2 text-fg-muted text-sm'>Details for {item.label}.</div>
         </ListItemCollapsibleContent>
       </ListItem>
     ))}

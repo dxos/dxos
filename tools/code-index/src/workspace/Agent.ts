@@ -68,6 +68,8 @@ export const WARN_AT_REMAINING = 3;
 export type TurnOptions = {
   readonly projectId: string;
   readonly text: string;
+  /** Replaces the chat system prompt, for a turn with a dedicated job (e.g. the design explorer). */
+  readonly system?: string;
 };
 
 export interface Api {
@@ -78,9 +80,9 @@ export interface Api {
 export class Agent extends Context.Service<Agent, Api>()('code-index/Agent') {}
 
 /** The prompt is the log, folded: the transcript lives nowhere else. */
-const promptOf = (state: Fold.State): Prompt.Prompt =>
+const promptOf = (state: Fold.State, system: string = Docs.systemPrompt()): Prompt.Prompt =>
   Prompt.make([
-    { role: 'system', content: Docs.systemPrompt() },
+    { role: 'system', content: system },
     ...state.turns.map((turn) =>
       turn.role === 'user'
         ? ({ role: 'user', content: [{ type: 'text', text: turn.text }] } as const)
@@ -127,13 +129,13 @@ const make = Effect.gen(function* () {
       }),
     });
 
-  const turn: Api['turn'] = ({ projectId, text }) =>
+  const turn: Api['turn'] = ({ projectId, text, system }) =>
     Effect.gen(function* () {
       yield* log.append(projectId, new Events.UserMessage({ text })).pipe(Effect.mapError(fail('Cannot record turn')));
       const entries = yield* log.read(projectId).pipe(Effect.mapError(fail('Cannot read project log')));
       const handlers = handlerLayer(projectId);
 
-      let prompt = promptOf(Fold.fold(entries));
+      let prompt = promptOf(Fold.fold(entries), system);
       // The loop is explicit: `generateText` resolves the calls of one round-trip but does not go
       // back to the model with their results, and going back is what makes this agentic.
       for (let step = 0; step < MAX_STEPS; step++) {

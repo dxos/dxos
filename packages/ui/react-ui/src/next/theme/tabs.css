@@ -1,0 +1,79 @@
+/*
+ * Tabs: a list of ghost Buttons over (horizontal) or beside (vertical) the selected content. The selected trigger fills
+ * like a default Button in a horizontal list, or takes the selection surface in a vertical one (a navigation column).
+ */
+
+@layer dx-components {
+  /* A Tabs root merged onto a Panel (`asChild`) only supplies context; the Panel keeps its own grid. */
+  .dx-tabs:not(.dx-panel) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  .dx-tabs:not(.dx-panel)[data-orientation='vertical'] {
+    flex-direction: row;
+  }
+
+  .dx-tabs-list {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--dx-control-inset);
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .dx-tabs-list[data-orientation='vertical'] {
+    flex-direction: column;
+    align-items: stretch;
+    overflow-x: visible;
+    overflow-y: auto;
+  }
+  .dx-tabs-list[data-orientation='vertical'] > .dx-tabs-trigger:not([data-square]) {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .dx-tabs-trigger[aria-selected='true'] {
+    background: var(--color-input-surface);
+  }
+  .dx-tabs[data-selected-variant='primary'] .dx-tabs-trigger[aria-selected='true'] {
+    background: var(--color-accent-bg);
+    color: var(--color-accent-fg);
+  }
+  .dx-tabs-list[data-orientation='vertical'] > .dx-tabs-trigger[aria-selected='true'] {
+    background: var(--color-selected-surface);
+    color: inherit;
+  }
+
+  .dx-tabs-content {
+    flex: 1 1 0%;
+    min-width: 0;
+    min-height: 0;
+  }
+  .dx-tabs-content[hidden] {
+    display: none;
+  }
+
+  .dx-tabs-indicator {
+    height: 2px;
+    width: var(--width);
+    bottom: 0;
+    background: var(--color-accent-bg);
+    transition-property: left, width;
+    transition-duration: 150ms;
+  }
+  .dx-tabs-indicator[data-orientation='vertical'] {
+    width: 2px;
+    height: var(--height);
+    left: 0;
+    transition-property: top, height;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dx-tabs-indicator {
+      transition: none;
+    }
+  }
+}

@@ -20,14 +20,14 @@ import React, {
 
 import { Obj } from '@dxos/echo';
 import {
+  Button,
   type ComposableProps,
   Icon,
-  IconButton,
   ScrollArea,
   type ThemedClassName,
   composable,
   composableProps,
-  useThemeContext,
+  useThemeMode,
   useTranslation,
 } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
@@ -182,13 +182,13 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
         ref={forwardedRef}
       >
         <div className='flex items-center justify-center'>
-          <IconButton
+          <Button
             iconOnly
             variant='ghost'
-            density='sm'
+            size='sm'
             icon='ph--caret-double-right--regular'
             label={t('select-thread.label')}
-            classNames='text-description'
+            classNames='text-fg-muted'
             onClick={handleSelect}
           />
         </div>
@@ -198,7 +198,7 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
             data-testid='thread.heading'
             className={mx(
               'me-2 font-medium truncate italic',
-              current ? 'text-accent-text' : 'text-description',
+              current ? 'text-accent-text' : 'text-fg-muted',
               detached && 'line-through decoration-1',
             )}
           >
@@ -318,7 +318,7 @@ const groupMessages = (
 
 const ThreadDivider = ({ label }: { label?: string }) =>
   label ? (
-    <div className='flex items-center gap-2 px-2 py-2 text-xs text-description'>
+    <div className='flex items-center gap-2 px-2 py-2 text-xs text-fg-muted'>
       <div className='h-px grow bg-separator' />
       <span className='shrink-0'>{label}</span>
       <div className='h-px grow bg-separator' />
@@ -428,7 +428,7 @@ export type ThreadTextboxProps = MessageMetadata & {
 /** Message composer pinned at the foot of a thread. */
 const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, ...metadata }: ThreadTextboxProps) => {
   const { t } = useTranslation(translationKey);
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const { registerComposerFocus } = useThreadContext('Thread.Textbox');
   const composerRef = useRef<{ focus: () => void } | null>(null);
   const messageRef = useRef('');
@@ -492,7 +492,7 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
       <div
         {...props}
         className={mx(
-          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pe-2 text-xs text-description',
+          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pe-2 text-xs text-fg-muted',
           classNames,
         )}
         ref={forwardedRef}

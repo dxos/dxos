@@ -34,12 +34,12 @@ export const FileArticle = ({ role, subject: file, attendableId }: FileArticlePr
         size={rendered.size}
         attendableId={attendableId}
       >
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Preview.Toolbar />
-        </Panel.Toolbar>
-        <Panel.Content asChild>
+        </Panel.Header>
+        <Panel.Body asChild>
           <Preview.Content />
-        </Panel.Content>
+        </Panel.Body>
       </Preview.Root>
     </Panel.Root>
   );

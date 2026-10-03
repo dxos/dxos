@@ -3,51 +3,143 @@
 //
 
 //! Semi-naive evaluation of one stratum, and its DRed maintenance under a change of premises.
+//! Backward rules are proved on demand, inside whichever rule body calls them.
 
-use rustc_hash::FxHashSet;
+use std::cell::RefCell;
+use std::rc::Rc;
+
+use oxigraph::model::Term;
+use regex::Regex;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::facts::{Before, Dict, Facts, Id, Pattern, Triple, TripleSet, Union};
-use crate::rules::{Atom, Literal, Rule, RuleSet, Slot, string_literal};
+use crate::rules::{
+    Atom, Compare, Group, Literal, Rule, RuleSet, Slot, integer_literal, string_literal,
+};
 
 type Binding = Vec<Option<Id>>;
 
-fn resolve(slot: &Slot, binding: &Binding) -> Option<Id> {
+/// How deep backward rules may call each other: a cycle in the data (an alias of an alias of
+/// itself) would otherwise recurse forever, where EYE's own loop check would cut it.
+const MAX_CALL_DEPTH: usize = 64;
+
+/// Past this many matches an atom is simply large; counting further would cost a scan.
+const ESTIMATE_CAP: usize = 10_000;
+
+/// How much smaller than the written next atom another must be to go first.
+const FAR_SMALLER: usize = 8;
+
+thread_local! {
+    /// Patterns a body builds (`("#" ?name "\\.(\\w+)$") string:concatenation ?pattern`), compiled once.
+    /// Shared rather than cloned: a cloned `Regex` starts with an empty match cache, and rebuilding
+    /// it cost more than the match itself.
+    static PATTERNS: RefCell<FxHashMap<String, Option<Rc<Regex>>>> = RefCell::default();
+}
+
+/// A pattern built at run time; an invalid one matches nothing.
+fn compiled(pattern: &str) -> Option<Rc<Regex>> {
+    PATTERNS.with(|patterns| {
+        if let Some(regex) = patterns.borrow().get(pattern) {
+            return regex.clone();
+        }
+        let regex = Regex::new(pattern).ok().map(Rc::new);
+        patterns
+            .borrow_mut()
+            .insert(pattern.to_owned(), regex.clone());
+        regex
+    })
+}
+
+/// A slot's value under `binding`; a list is a value once all its members are.
+fn resolve(rule: &Rule, dict: &Dict, slot: &Slot, binding: &Binding) -> Option<Id> {
     match slot {
         Slot::Const(id) => Some(*id),
         Slot::Var(var) => binding[*var],
+        Slot::List(index) => {
+            let items = rule.lists[*index]
+                .iter()
+                .map(|item| resolve(rule, dict, item, binding))
+                .collect::<Option<Vec<_>>>()?;
+            Some(dict.list(&items))
+        }
     }
 }
 
-fn pattern(atom: &Atom, binding: &Binding) -> Pattern {
+fn pattern(rule: &Rule, dict: &Dict, atom: &Atom, binding: &Binding) -> Pattern {
     [
-        resolve(&atom.0[0], binding),
-        resolve(&atom.0[1], binding),
-        resolve(&atom.0[2], binding),
+        resolve(rule, dict, &atom.0[0], binding),
+        resolve(rule, dict, &atom.0[1], binding),
+        resolve(rule, dict, &atom.0[2], binding),
     ]
 }
 
-/// Binds the atom's unbound variables to `triple`, pushing what it bound onto `trail`. False (and
-/// nothing left bound) if the triple does not fit — a constant or an already-bound value differs.
-fn unify(atom: &Atom, triple: &Triple, binding: &mut Binding, trail: &mut Vec<usize>) -> bool {
+/// Binds the slot's unbound variables to `value`, pushing what it bound onto `trail`. False if the
+/// value does not fit; the caller undoes a partial binding.
+fn unify_slot(
+    rule: &Rule,
+    dict: &Dict,
+    slot: &Slot,
+    value: Id,
+    binding: &mut Binding,
+    trail: &mut Vec<usize>,
+) -> bool {
+    match slot {
+        Slot::Const(id) => *id == value,
+        Slot::Var(var) => match binding[*var] {
+            Some(bound) => bound == value,
+            None => {
+                binding[*var] = Some(value);
+                trail.push(*var);
+                true
+            }
+        },
+        Slot::List(index) => match dict.items(value) {
+            Some(items) if items.len() == rule.lists[*index].len() => rule.lists[*index]
+                .iter()
+                .zip(items)
+                .all(|(item, value)| unify_slot(rule, dict, item, value, binding, trail)),
+            _ => false,
+        },
+    }
+}
+
+/// [`unify_slot`] for each position with a value; nothing is left bound if any does not fit.
+fn unify_values(
+    rule: &Rule,
+    dict: &Dict,
+    atom: &Atom,
+    values: &[Option<Id>; 3],
+    binding: &mut Binding,
+    trail: &mut Vec<usize>,
+) -> bool {
     let mark = trail.len();
-    for (slot, value) in atom.0.iter().zip(triple) {
-        let fits = match slot {
-            Slot::Const(id) => id == value,
-            Slot::Var(var) => match binding[*var] {
-                Some(bound) => bound == *value,
-                None => {
-                    binding[*var] = Some(*value);
-                    trail.push(*var);
-                    true
-                }
-            },
-        };
-        if !fits {
+    for (slot, value) in atom.0.iter().zip(values) {
+        if let Some(value) = value
+            && !unify_slot(rule, dict, slot, *value, binding, trail)
+        {
             undo(binding, trail, mark);
             return false;
         }
     }
     true
+}
+
+fn unify(
+    rule: &Rule,
+    dict: &Dict,
+    atom: &Atom,
+    triple: &Triple,
+    binding: &mut Binding,
+    trail: &mut Vec<usize>,
+) -> bool {
+    unify_values(
+        rule,
+        dict,
+        atom,
+        &[Some(triple[0]), Some(triple[1]), Some(triple[2])],
+        binding,
+        trail,
+    )
 }
 
 fn undo(binding: &mut Binding, trail: &mut Vec<usize>, mark: usize) {
@@ -56,57 +148,213 @@ fn undo(binding: &mut Binding, trail: &mut Vec<usize>, mark: usize) {
     }
 }
 
+/// Pushes what a caller knows about one position into a backward rule's frame: a value, or for a
+/// list the members that are bound. An unbound caller variable constrains nothing.
+fn push(
+    dict: &Dict,
+    (caller, slot, binding): (&Rule, &Slot, &Binding),
+    callee: &Rule,
+    head: &Slot,
+    frame: &mut Binding,
+    trail: &mut Vec<usize>,
+) -> bool {
+    if let Some(value) = resolve(caller, dict, slot, binding) {
+        return unify_slot(callee, dict, head, value, frame, trail);
+    }
+    match (slot, head) {
+        (Slot::List(outer), Slot::List(inner)) => {
+            caller.lists[*outer].len() == callee.lists[*inner].len()
+                && caller.lists[*outer]
+                    .iter()
+                    .zip(&callee.lists[*inner])
+                    .all(|(slot, head)| {
+                        push(dict, (caller, slot, binding), callee, head, frame, trail)
+                    })
+        }
+        _ => true,
+    }
+}
+
 /// How narrow a scan the atom is under the current binding. A subject or object bound by the join
 /// is the narrowest key there is; a constant there is usually a class or a well-known IRI (`rdf:type
 /// deus:Plugin` names hundreds of facts), and a constant predicate narrows least.
-fn selectivity(atom: &Atom, binding: &Binding) -> usize {
+fn selectivity(rule: &Rule, dict: &Dict, atom: &Atom, binding: &Binding) -> usize {
     atom.0
         .iter()
         .enumerate()
-        .map(|(position, slot)| match (slot, position) {
-            (Slot::Var(var), 0 | 2) if binding[*var].is_some() => 4,
-            (Slot::Const(_), 0 | 2) => 2,
-            (Slot::Var(var), _) if binding[*var].is_some() => 2,
-            (Slot::Const(_), _) => 1,
-            _ => 0,
+        .map(|(position, slot)| {
+            let bound =
+                !matches!(slot, Slot::Const(_)) && resolve(rule, dict, slot, binding).is_some();
+            match (slot, position) {
+                (_, 0 | 2) if bound => 4,
+                (Slot::Const(_), 0 | 2) => 2,
+                _ if bound => 2,
+                (Slot::Const(_), _) => 1,
+                _ => 0,
+            }
         })
         .sum()
+}
+
+/// A call's solutions by its predicate and what the caller had bound, valid while the facts its
+/// proof reads do not change.
+type Memo = RefCell<FxHashMap<(Id, Vec<Option<Id>>), Rc<Vec<[Option<Id>; 3]>>>>;
+
+/// What one evaluation of an EYE-idiom stratum reuses: the proofs of its stable backward predicates
+/// ([`RuleSet::stable`]).
+#[derive(Default)]
+struct Cache {
+    stable: Memo,
+}
+
+/// The memos an evaluation proves calls into: one round's, and the stratum's stable proofs.
+#[derive(Clone, Copy, Default)]
+struct Memos<'a> {
+    round: Option<&'a Memo>,
+    cache: Option<&'a Cache>,
+}
+
+/// What a call's solutions depend on from its caller: each position's value, or for a partly bound
+/// list its length and members.
+fn call_key(rule: &Rule, dict: &Dict, slot: &Slot, binding: &Binding, out: &mut Vec<Option<Id>>) {
+    if let Some(value) = resolve(rule, dict, slot, binding) {
+        out.push(Some(value));
+        return;
+    }
+    match slot {
+        Slot::List(index) => {
+            out.push(Some(
+                Id::MAX - u32::try_from(rule.lists[*index].len()).unwrap_or(0),
+            ));
+            for item in &rule.lists[*index] {
+                call_key(rule, dict, item, binding, out);
+            }
+        }
+        _ => out.push(None),
+    }
 }
 
 struct Solver<'a> {
     dict: &'a Dict,
     view: &'a dyn Facts,
+    rules: &'a RuleSet,
+    memo: Option<&'a Memo>,
+    cache: Option<&'a Cache>,
+    depth: usize,
     stop: bool,
 }
 
 impl Solver<'_> {
     /// The next literal to evaluate: anything filter-like whose inputs are bound, else the positive
-    /// atom with the most bound positions.
-    fn pick(literals: &[&Literal], done: &[bool], binding: &Binding) -> Option<usize> {
+    /// atom with the most bound positions, else a negation or collection over what is bound so far.
+    /// A call waits for the atoms written before it, as EYE's left-to-right proof would: a backward
+    /// rule may aggregate over whatever its caller leaves unbound.
+    fn pick(
+        &mut self,
+        rule: &Rule,
+        literals: &[&Literal],
+        done: &[bool],
+        binding: &Binding,
+    ) -> Option<usize> {
+        if !self.rules.maintainable {
+            return self.pick_in_order(rule, literals, done, binding);
+        }
         let mut best: Option<(usize, usize)> = None;
+        let mut fallback = None;
+        let mut pending_atom = false;
         for (index, literal) in literals.iter().enumerate() {
             if done[index] {
                 continue;
             }
             match literal {
-                Literal::Pos(atom) => {
-                    let score = selectivity(atom, binding);
+                Literal::Call(_) if pending_atom => {}
+                Literal::Pos(atom) | Literal::Call(atom) => {
+                    pending_atom = true;
+                    let score = selectivity(rule, self.dict, atom, binding);
                     if best.is_none_or(|(_, best)| score > best) {
                         best = Some((index, score));
                     }
                 }
                 other => {
-                    if other.inputs().iter().all(|var| binding[*var].is_some()) {
+                    if rule.inputs(other).iter().all(|var| binding[*var].is_some()) {
                         return Some(index);
+                    }
+                    if fallback.is_none()
+                        && matches!(other, Literal::Neg { .. } | Literal::Collect { .. })
+                    {
+                        fallback = Some(index);
                     }
                 }
             }
         }
-        best.map(|(index, _)| index)
+        best.map(|(index, _)| index).or(fallback)
+    }
+
+    /// For a stratum written in EYE's idiom (backward rules, aggregates): a builtin as soon as its
+    /// inputs are bound, else the next atom as written unless another has far fewer solutions under
+    /// the current binding. A call counts only once the atoms written before it are done.
+    fn pick_in_order(
+        &mut self,
+        rule: &Rule,
+        literals: &[&Literal],
+        done: &[bool],
+        binding: &Binding,
+    ) -> Option<usize> {
+        let mut atoms = Vec::new();
+        let mut fallback = None;
+        for (index, literal) in literals.iter().enumerate() {
+            if done[index] {
+                continue;
+            }
+            match literal {
+                Literal::Call(_) if !atoms.is_empty() => {}
+                Literal::Pos(_) | Literal::Call(_) => atoms.push(index),
+                other => {
+                    if rule.inputs(other).iter().all(|var| binding[*var].is_some()) {
+                        return Some(index);
+                    }
+                    if fallback.is_none()
+                        && matches!(other, Literal::Neg { .. } | Literal::Collect { .. })
+                    {
+                        fallback = Some(index);
+                    }
+                }
+            }
+        }
+        if atoms.len() <= 1 {
+            return atoms.first().copied().or(fallback);
+        }
+        // The written order, unless another atom is far smaller: the author ordered the body for
+        // EYE, which proves left to right, and a modest saving early can multiply the work later
+        // (binding a module's operations before the scan they do not narrow).
+        let first = atoms[0];
+        let mut chosen = first;
+        let mut smallest = self.estimate(rule, literals[first], binding);
+        let written = smallest;
+        for &index in &atoms[1..] {
+            let estimate = self.estimate(rule, literals[index], binding);
+            if estimate.saturating_mul(FAR_SMALLER) < written && estimate < smallest {
+                chosen = index;
+                smallest = estimate;
+            }
+        }
+        Some(chosen)
+    }
+
+    /// How many solutions an atom has as things stand; a call is proved (and memoized) to find out.
+    fn estimate(&mut self, rule: &Rule, literal: &Literal, binding: &Binding) -> usize {
+        match literal {
+            Literal::Pos(atom) => self
+                .view
+                .estimate(&pattern(rule, self.dict, atom, binding), ESTIMATE_CAP),
+            Literal::Call(atom) => self.call(rule, atom, binding).len(),
+            _ => usize::MAX,
+        }
     }
 
     fn solve(
         &mut self,
+        rule: &Rule,
         literals: &[&Literal],
         done: &mut Vec<bool>,
         binding: &mut Binding,
@@ -116,61 +364,211 @@ impl Solver<'_> {
         if self.stop {
             return;
         }
-        let Some(index) = Self::pick(literals, done, binding) else {
+        let Some(index) = self.pick(rule, literals, done, binding) else {
             if done.iter().all(|done| *done) && !emit(binding) {
                 self.stop = true;
             }
             return;
         };
         done[index] = true;
+        let dict = self.dict;
+        // Each arm binds what the literal concludes, recurses, and undoes from `mark`.
+        let mark = trail.len();
+        let mut next = |solver: &mut Self, binding: &mut Binding, trail: &mut Vec<usize>| {
+            solver.solve(rule, literals, done, binding, trail, emit);
+        };
         match literals[index] {
             Literal::Pos(atom) => {
-                let query = pattern(atom, binding);
+                let query = pattern(rule, dict, atom, binding);
                 let mut matches = Vec::new();
                 self.view.scan(&query, &mut |triple| matches.push(triple));
                 for triple in matches {
                     if self.stop {
                         break;
                     }
-                    let mark = trail.len();
-                    if unify(atom, &triple, binding, trail) {
-                        self.solve(literals, done, binding, trail, emit);
+                    if unify(rule, dict, atom, &triple, binding, trail) {
+                        next(self, binding, trail);
                         undo(binding, trail, mark);
                     }
                 }
             }
-            Literal::Neg { atoms, .. } => {
-                if !self.exists(atoms, binding, trail) {
-                    self.solve(literals, done, binding, trail, emit);
+            Literal::Call(atom) => {
+                for values in self.call(rule, atom, binding).iter() {
+                    if self.stop {
+                        break;
+                    }
+                    if unify_values(rule, dict, atom, values, binding, trail) {
+                        next(self, binding, trail);
+                        undo(binding, trail, mark);
+                    }
                 }
             }
-            Literal::Matches { arg, regex, negate } => {
-                let value = resolve(arg, binding).map(|id| self.dict.text(id));
-                if value.is_some_and(|value| regex.is_match(&value) != *negate) {
-                    self.solve(literals, done, binding, trail, emit);
+            Literal::Neg { body, .. } => {
+                if !self.exists(rule, body, binding, trail) {
+                    next(self, binding, trail);
+                }
+            }
+            Literal::Collect {
+                template,
+                body,
+                out,
+                ..
+            } => {
+                let list = self.collect(rule, template, body, binding, trail);
+                if unify_slot(rule, dict, &Slot::Var(*out), list, binding, trail) {
+                    next(self, binding, trail);
+                }
+                undo(binding, trail, mark);
+            }
+            Literal::Matches {
+                arg,
+                pattern,
+                regex,
+                negate,
+            } => {
+                let built;
+                let compiled = match regex {
+                    Some(regex) => Some(regex),
+                    None => {
+                        built = resolve(rule, dict, pattern, binding)
+                            .and_then(|id| compiled(&dict.text(id)));
+                        built.as_deref()
+                    }
+                };
+                // A pattern from the data that does not compile matches nothing, negated or not.
+                let value = resolve(rule, dict, arg, binding).map(|id| dict.text(id));
+                if let (Some(value), Some(regex)) = (value, compiled)
+                    && regex.is_match(&value) != *negate
+                {
+                    next(self, binding, trail);
                 }
             }
             Literal::Concat { parts, out } => {
-                let text: String = parts
+                let text: Option<String> = parts
                     .iter()
-                    .filter_map(|part| resolve(part, binding))
-                    .map(|id| self.dict.text(id))
+                    .map(|part| resolve(rule, dict, part, binding).map(|id| dict.text(id)))
                     .collect();
-                let id = self.dict.intern(&string_literal(text));
-                let mark = trail.len();
-                let fits = match out {
-                    Slot::Const(value) => *value == id,
-                    Slot::Var(var) => match binding[*var] {
-                        Some(bound) => bound == id,
-                        None => {
-                            binding[*var] = Some(id);
-                            trail.push(*var);
-                            true
-                        }
-                    },
+                if let Some(text) = text
+                    && unify_slot(
+                        rule,
+                        dict,
+                        out,
+                        dict.intern(&string_literal(text)),
+                        binding,
+                        trail,
+                    )
+                {
+                    next(self, binding, trail);
+                }
+                undo(binding, trail, mark);
+            }
+            Literal::Scrape {
+                text,
+                pattern,
+                regex,
+                out,
+            } => {
+                let built;
+                let compiled = match regex {
+                    Some(regex) => Some(regex),
+                    None => {
+                        built = resolve(rule, dict, pattern, binding)
+                            .and_then(|id| compiled(&dict.text(id)));
+                        built.as_deref()
+                    }
                 };
-                if fits {
-                    self.solve(literals, done, binding, trail, emit);
+                let scraped =
+                    resolve(rule, dict, text, binding)
+                        .zip(compiled)
+                        .and_then(|(id, regex)| {
+                            regex
+                                .captures(&dict.text(id))
+                                .and_then(|captures| captures.get(1))
+                                .map(|group| group.as_str().to_owned())
+                        });
+                if let Some(scraped) = scraped
+                    && unify_slot(
+                        rule,
+                        dict,
+                        out,
+                        dict.intern(&string_literal(scraped)),
+                        binding,
+                        trail,
+                    )
+                {
+                    next(self, binding, trail);
+                }
+                undo(binding, trail, mark);
+            }
+            Literal::Compare { left, right, op } => {
+                if let (Some(left), Some(right)) = (
+                    resolve(rule, dict, left, binding),
+                    resolve(rule, dict, right, binding),
+                ) && match op {
+                    Compare::NotEqual => left != right,
+                    Compare::StartsWith => dict.text(left).starts_with(&dict.text(right)),
+                    Compare::EndsWith => dict.text(left).ends_with(&dict.text(right)),
+                    Compare::Contains => dict.text(left).contains(&dict.text(right)),
+                } {
+                    next(self, binding, trail);
+                }
+            }
+            Literal::Uri { node, text } => {
+                let iri = resolve(rule, dict, node, binding).and_then(|id| match dict.term(id) {
+                    Term::NamedNode(node) => Some(node.into_string()),
+                    _ => None,
+                });
+                if let Some(iri) = iri
+                    && unify_slot(
+                        rule,
+                        dict,
+                        text,
+                        dict.intern(&string_literal(iri)),
+                        binding,
+                        trail,
+                    )
+                {
+                    next(self, binding, trail);
+                }
+                undo(binding, trail, mark);
+            }
+            Literal::In { item, list } => {
+                let items = resolve(rule, dict, list, binding)
+                    .and_then(|id| dict.items(id))
+                    .unwrap_or_default();
+                for value in items {
+                    if self.stop {
+                        break;
+                    }
+                    if unify_slot(rule, dict, item, value, binding, trail) {
+                        next(self, binding, trail);
+                    }
+                    undo(binding, trail, mark);
+                }
+            }
+            Literal::Length { list, length } => {
+                if let Some(items) =
+                    resolve(rule, dict, list, binding).and_then(|id| dict.items(id))
+                    && unify_slot(
+                        rule,
+                        dict,
+                        length,
+                        dict.intern(&integer_literal(items.len())),
+                        binding,
+                        trail,
+                    )
+                {
+                    next(self, binding, trail);
+                }
+                undo(binding, trail, mark);
+            }
+            Literal::First { list, item } => {
+                if let Some(first) = resolve(rule, dict, list, binding)
+                    .and_then(|id| dict.items(id))
+                    .and_then(|items| items.first().copied())
+                    && unify_slot(rule, dict, item, first, binding, trail)
+                {
+                    next(self, binding, trail);
                 }
                 undo(binding, trail, mark);
             }
@@ -178,33 +576,172 @@ impl Solver<'_> {
         done[index] = false;
     }
 
-    fn exists(&mut self, atoms: &[Atom], binding: &mut Binding, trail: &mut Vec<usize>) -> bool {
-        let literals: Vec<Literal> = atoms.iter().cloned().map(Literal::Pos).collect();
-        let refs: Vec<&Literal> = literals.iter().collect();
-        let mut done = vec![false; refs.len()];
-        let mut inner = Solver {
-            dict: self.dict,
-            view: self.view,
-            stop: false,
+    /// Every distinct solution of `atom` as a value per position: the facts that match it, then what
+    /// each backward rule concluding its predicate proves for it. A position the proof leaves
+    /// unbound stays `None`.
+    fn call(&mut self, rule: &Rule, atom: &Atom, binding: &Binding) -> Rc<Vec<[Option<Id>; 3]>> {
+        let Slot::Const(predicate) = atom.0[1] else {
+            return Rc::new(self.prove(rule, atom, binding));
         };
+        let memo = match self.cache {
+            Some(cache) if self.rules.stable.contains(&predicate) => &cache.stable,
+            _ => match self.memo {
+                Some(memo) => memo,
+                None => return Rc::new(self.prove(rule, atom, binding)),
+            },
+        };
+        let mut key = Vec::new();
+        for slot in &atom.0 {
+            call_key(rule, self.dict, slot, binding, &mut key);
+        }
+        let key = (predicate, key);
+        if let Some(solutions) = memo.borrow().get(&key) {
+            return Rc::clone(solutions);
+        }
+        // A call that reaches itself with the same arguments sees no solutions rather than recursing.
+        memo.borrow_mut().insert(key.clone(), Rc::new(Vec::new()));
+        let solutions = Rc::new(self.prove(rule, atom, binding));
+        memo.borrow_mut().insert(key, Rc::clone(&solutions));
+        solutions
+    }
+
+    fn prove(&mut self, rule: &Rule, atom: &Atom, binding: &Binding) -> Vec<[Option<Id>; 3]> {
+        let dict = self.dict;
+        let mut solutions: Vec<[Option<Id>; 3]> = Vec::new();
+        let mut seen = FxHashSet::default();
+        let query = pattern(rule, dict, atom, binding);
+        self.view.scan(&query, &mut |triple| {
+            let values = [Some(triple[0]), Some(triple[1]), Some(triple[2])];
+            if seen.insert(values) {
+                solutions.push(values);
+            }
+        });
+        let Slot::Const(predicate) = atom.0[1] else {
+            return solutions;
+        };
+        if self.depth >= MAX_CALL_DEPTH {
+            return solutions;
+        }
+        let rules = self.rules;
+        for callee in rules.backward.get(&predicate).into_iter().flatten() {
+            let head = &callee.head[0];
+            let mut frame: Binding = vec![None; callee.vars];
+            let mut trail = Vec::new();
+            if !(0..3).all(|position| {
+                push(
+                    dict,
+                    (rule, &atom.0[position], binding),
+                    callee,
+                    &head.0[position],
+                    &mut frame,
+                    &mut trail,
+                )
+            }) {
+                continue;
+            }
+            let literals: Vec<&Literal> = callee.body.iter().collect();
+            let mut done = vec![false; literals.len()];
+            self.depth += 1;
+            let stop = self.stop;
+            self.solve(
+                callee,
+                &literals,
+                &mut done,
+                &mut frame,
+                &mut trail,
+                &mut |frame| {
+                    let values = [
+                        resolve(callee, dict, &head.0[0], frame),
+                        resolve(callee, dict, &head.0[1], frame),
+                        resolve(callee, dict, &head.0[2], frame),
+                    ];
+                    if seen.insert(values) {
+                        solutions.push(values);
+                    }
+                    true
+                },
+            );
+            self.stop = stop;
+            self.depth -= 1;
+        }
+        solutions
+    }
+
+    /// The list of `template` over each distinct solution of `body`, in the order found.
+    fn collect(
+        &mut self,
+        rule: &Rule,
+        template: &Slot,
+        body: &[Literal],
+        binding: &mut Binding,
+        trail: &mut Vec<usize>,
+    ) -> Id {
+        let dict = self.dict;
+        let literals: Vec<&Literal> = body.iter().collect();
+        let mut done = vec![false; literals.len()];
+        let mut seen = FxHashSet::default();
+        let mut items = Vec::new();
+        let stop = self.stop;
+        let mark = trail.len();
+        self.solve(
+            rule,
+            &literals,
+            &mut done,
+            binding,
+            trail,
+            &mut |solution| {
+                if seen.insert(solution.clone())
+                    && let Some(value) = resolve(rule, dict, template, solution)
+                {
+                    items.push(value);
+                }
+                true
+            },
+        );
+        undo(binding, trail, mark);
+        self.stop = stop;
+        dict.list(&items)
+    }
+
+    fn exists(
+        &mut self,
+        rule: &Rule,
+        body: &[Literal],
+        binding: &mut Binding,
+        trail: &mut Vec<usize>,
+    ) -> bool {
+        let literals: Vec<&Literal> = body.iter().collect();
+        let mut done = vec![false; literals.len()];
+        let stop = self.stop;
         let mut found = false;
         let mark = trail.len();
-        inner.solve(&refs, &mut done, binding, trail, &mut |_| {
+        self.solve(rule, &literals, &mut done, binding, trail, &mut |_| {
             found = true;
             false
         });
         undo(binding, trail, mark);
+        self.stop = stop;
         found
     }
 }
 
-fn heads(rule: &Rule, binding: &Binding, out: &mut Vec<Triple>) {
+fn heads(rule: &Rule, dict: &Dict, binding: &Binding, out: &mut Vec<Triple>) {
     for atom in &rule.head {
-        let [Some(s), Some(p), Some(o)] = pattern(atom, binding) else {
+        let [Some(s), Some(p), Some(o)] = pattern(rule, dict, atom, binding) else {
             continue;
         };
         out.push([s, p, o]);
     }
+}
+
+/// The positive atoms of a negated formula, which a delta triple can falsify.
+fn negated_atoms(body: &[Literal]) -> Vec<&Atom> {
+    body.iter()
+        .filter_map(|literal| match literal {
+            Literal::Pos(atom) => Some(atom),
+            _ => None,
+        })
+        .collect()
 }
 
 /// How a rule evaluation is started.
@@ -222,10 +759,12 @@ enum Seed<'a> {
 
 /// Evaluates `rule` from `seed`; `emit` returns false to stop at the first solution.
 fn run(
+    rules: &RuleSet,
     rule: &Rule,
     seed: Seed<'_>,
     view: &dyn Facts,
     dict: &Dict,
+    memos: Memos<'_>,
     emit: &mut dyn FnMut(&Binding) -> bool,
 ) {
     let mut binding: Binding = vec![None; rule.vars];
@@ -238,17 +777,24 @@ fn run(
             let Literal::Pos(atom) = literals[index] else {
                 return;
             };
-            if !unify(atom, triple, &mut binding, &mut trail) {
+            if !unify(rule, dict, atom, triple, &mut binding, &mut trail) {
                 return;
             }
             done[index] = true;
         }
         Seed::Neg(index, atom_index, triple) => {
-            let Literal::Neg { atoms, outer } = literals[index] else {
+            let Literal::Neg { body, outer } = literals[index] else {
                 return;
             };
             let mut local = vec![None; rule.vars];
-            if !unify(&atoms[atom_index], triple, &mut local, &mut Vec::new()) {
+            if !unify(
+                rule,
+                dict,
+                negated_atoms(body)[atom_index],
+                triple,
+                &mut local,
+                &mut Vec::new(),
+            ) {
                 return;
             }
             for var in outer {
@@ -256,7 +802,14 @@ fn run(
             }
         }
         Seed::Head(index, triple) => {
-            if !unify(&rule.head[index], triple, &mut binding, &mut trail) {
+            if !unify(
+                rule,
+                dict,
+                &rule.head[index],
+                triple,
+                &mut binding,
+                &mut trail,
+            ) {
                 return;
             }
         }
@@ -264,25 +817,93 @@ fn run(
     let mut solver = Solver {
         dict,
         view,
+        rules,
+        memo: memos.round,
+        cache: memos.cache,
+        depth: 0,
         stop: false,
     };
-    solver.solve(&literals, &mut done, &mut binding, &mut trail, emit);
+    solver.solve(rule, &literals, &mut done, &mut binding, &mut trail, emit);
+}
+
+/// Whether a triple fits an atom's constants; variables are checked when the atom is unified.
+fn fits(atom: &Atom, triple: &Triple) -> bool {
+    atom.0.iter().zip(triple).all(|(slot, value)| match slot {
+        Slot::Const(id) => id == value,
+        _ => true,
+    })
+}
+
+/// Entries keyed by the constant predicate of the atom each names, so a delta triple is tried only
+/// against atoms it can fit: with every premise as the delta (a full recomputation), trying each
+/// triple against every atom of every rule dominated a stratum's cost.
+struct ByPredicate<T> {
+    by_predicate: FxHashMap<Id, Vec<T>>,
+    /// Entries whose predicate is a variable, tried against every triple.
+    any: Vec<T>,
+}
+
+impl<T: Copy> ByPredicate<T> {
+    fn new(entries: impl Iterator<Item = (Slot, T)>) -> Self {
+        let mut index = ByPredicate {
+            by_predicate: FxHashMap::default(),
+            any: Vec::new(),
+        };
+        for (predicate, entry) in entries {
+            match predicate {
+                Slot::Const(id) => index.by_predicate.entry(id).or_default().push(entry),
+                _ => index.any.push(entry),
+            }
+        }
+        index
+    }
+
+    fn candidates(&self, triple: &Triple) -> impl Iterator<Item = T> + '_ {
+        self.by_predicate
+            .get(&triple[1])
+            .into_iter()
+            .flatten()
+            .chain(&self.any)
+            .copied()
+    }
 }
 
 /// Everything derivable in one step from `delta` triples: each positive literal a triple fits seeds
 /// an evaluation of the rest of its rule against `view`.
 fn step(rules: &RuleSet, delta: &[Triple], view: &dyn Facts, dict: &Dict, out: &mut Vec<Triple>) {
+    let atoms = ByPredicate::new(
+        rules
+            .rules
+            .iter()
+            .enumerate()
+            .flat_map(|(rule_index, rule)| {
+                rule.body
+                    .iter()
+                    .enumerate()
+                    .filter_map(move |(index, literal)| match literal {
+                        Literal::Pos(atom) => Some((atom.0[1], (rule_index, index))),
+                        _ => None,
+                    })
+            }),
+    );
     for triple in delta {
-        for rule in &rules.rules {
-            for (index, literal) in rule.body.iter().enumerate() {
-                if let Literal::Pos(atom) = literal
-                    && crate::facts::matches(&pattern(atom, &vec![None; rule.vars]), triple)
-                {
-                    run(rule, Seed::Pos(index, triple), view, dict, &mut |binding| {
-                        heads(rule, binding, out);
+        for (rule_index, index) in atoms.candidates(triple) {
+            let rule = &rules.rules[rule_index];
+            if let Literal::Pos(atom) = &rule.body[index]
+                && fits(atom, triple)
+            {
+                run(
+                    rules,
+                    rule,
+                    Seed::Pos(index, triple),
+                    view,
+                    dict,
+                    Memos::default(),
+                    &mut |binding| {
+                        heads(rule, dict, binding, out);
                         true
-                    });
-                }
+                    },
+                );
             }
         }
     }
@@ -296,25 +917,43 @@ fn negation_step(
     dict: &Dict,
     out: &mut Vec<Triple>,
 ) {
+    let atoms = ByPredicate::new(
+        rules
+            .rules
+            .iter()
+            .enumerate()
+            .flat_map(|(rule_index, rule)| {
+                rule.body
+                    .iter()
+                    .enumerate()
+                    .flat_map(move |(index, literal)| match literal {
+                        Literal::Neg { body, .. } => negated_atoms(body)
+                            .into_iter()
+                            .enumerate()
+                            .map(|(atom_index, atom)| (atom.0[1], (rule_index, index, atom_index)))
+                            .collect::<Vec<_>>(),
+                        _ => Vec::new(),
+                    })
+            }),
+    );
     for triple in delta {
-        for rule in &rules.rules {
-            for (index, literal) in rule.body.iter().enumerate() {
-                if let Literal::Neg { atoms, .. } = literal {
-                    for (atom_index, atom) in atoms.iter().enumerate() {
-                        if crate::facts::matches(&pattern(atom, &vec![None; rule.vars]), triple) {
-                            run(
-                                rule,
-                                Seed::Neg(index, atom_index, triple),
-                                view,
-                                dict,
-                                &mut |binding| {
-                                    heads(rule, binding, out);
-                                    true
-                                },
-                            );
-                        }
-                    }
-                }
+        for (rule_index, index, atom_index) in atoms.candidates(triple) {
+            let rule = &rules.rules[rule_index];
+            if let Literal::Neg { body, .. } = &rule.body[index]
+                && fits(negated_atoms(body)[atom_index], triple)
+            {
+                run(
+                    rules,
+                    rule,
+                    Seed::Neg(index, atom_index, triple),
+                    view,
+                    dict,
+                    Memos::default(),
+                    &mut |binding| {
+                        heads(rule, dict, binding, out);
+                        true
+                    },
+                );
             }
         }
     }
@@ -356,25 +995,83 @@ fn saturate(
     added
 }
 
+/// One group of rules from nothing against `premises` plus `derived`; what is new joins `derived`.
+fn round(
+    rules: &RuleSet,
+    group: &Group,
+    premises: &dyn Facts,
+    derived: &mut TripleSet,
+    dict: &Dict,
+    cache: &Cache,
+) -> bool {
+    let mut found = Vec::new();
+    // Proofs that read this group's own conclusions hold for one round only.
+    let memo = Memo::default();
+    {
+        let view = Union {
+            premises,
+            derived,
+            excluded: None,
+        };
+        for rule in group.rules.iter().map(|index| &rules.rules[*index]) {
+            run(
+                rules,
+                rule,
+                Seed::None,
+                &view,
+                dict,
+                Memos {
+                    round: Some(&memo),
+                    cache: Some(cache),
+                },
+                &mut |binding| {
+                    heads(rule, dict, binding, &mut found);
+                    true
+                },
+            );
+        }
+    }
+    found.retain(|triple| derived.insert(*triple));
+    !found.is_empty()
+}
+
 /// The stratum's materialisation over `premises`, computed from nothing.
 pub fn full(rules: &RuleSet, premises: &dyn Facts, dict: &Dict) -> TripleSet {
     let mut derived = TripleSet::default();
-    let mut first = Vec::new();
-    {
-        let empty = TripleSet::default();
-        let view = Union {
-            premises,
-            derived: &empty,
-            excluded: None,
+    if rules.maintainable {
+        let first = {
+            let empty = TripleSet::default();
+            let mut first = Vec::new();
+            let view = Union {
+                premises,
+                derived: &empty,
+                excluded: None,
+            };
+            for rule in &rules.rules {
+                run(
+                    rules,
+                    rule,
+                    Seed::None,
+                    &view,
+                    dict,
+                    Memos::default(),
+                    &mut |binding| {
+                        heads(rule, dict, binding, &mut first);
+                        true
+                    },
+                );
+            }
+            first
         };
-        for rule in &rules.rules {
-            run(rule, Seed::None, &view, dict, &mut |binding| {
-                heads(rule, binding, &mut first);
-                true
-            });
+        saturate(rules, premises, &mut derived, first, dict);
+    } else {
+        // A conclusion may feed a backward rule another body calls, which no delta-seeded step
+        // sees: each group runs once its inputs are complete, a cyclic one until nothing is new.
+        let cache = Cache::default();
+        for group in &rules.groups {
+            while round(rules, group, premises, &mut derived, dict, &cache) && group.cyclic {}
         }
     }
-    saturate(rules, premises, &mut derived, first, dict);
     derived
 }
 
@@ -385,7 +1082,8 @@ pub struct Change {
 }
 
 /// DRed: updates `derived` (the materialisation over the premises *before* the change) to the
-/// materialisation over `premises`, which `plus`/`minus` describe relative to before.
+/// materialisation over `premises`, which `plus`/`minus` describe relative to before. Only for a
+/// [`RuleSet::maintainable`] stratum.
 pub fn maintain(
     rules: &RuleSet,
     premises: &dyn Facts,
@@ -443,10 +1141,18 @@ pub fn maintain(
             let mut found = false;
             'rules: for rule in &rules.rules {
                 for index in 0..rule.head.len() {
-                    run(rule, Seed::Head(index, triple), &view, dict, &mut |_| {
-                        found = true;
-                        false
-                    });
+                    run(
+                        rules,
+                        rule,
+                        Seed::Head(index, triple),
+                        &view,
+                        dict,
+                        Memos::default(),
+                        &mut |_| {
+                            found = true;
+                            false
+                        },
+                    );
                     if found {
                         break 'rules;
                     }

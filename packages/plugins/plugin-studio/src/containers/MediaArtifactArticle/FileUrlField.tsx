@@ -11,7 +11,7 @@ import { useCapabilities } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
-import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
+import { Button, Flex, useTranslation } from '@dxos/react-ui';
 import { type FormFieldRendererProps, FormFieldRow, TextField } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -82,7 +82,7 @@ export const FileUrlField = ({ accept, ...props }: FileUrlFieldProps) => {
       {/* The row's control slot holds one node: the input and its upload button side by side. */}
       <Flex classNames='items-center gap-1'>
         <TextField {...props} />
-        <IconButton
+        <Button
           variant='ghost'
           disabled={!!props.readonly || !upload || !space || uploading}
           icon={uploading ? 'ph--spinner-gap--regular' : 'ph--upload-simple--regular'}

@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { Term } from '@rdfjs/types';
 import * as Effect from 'effect/Effect';
 import { DataFactory } from 'n3';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -16,13 +17,14 @@ import * as Ontology from './Ontology.ts';
 import * as Reasoner from './Reasoner.ts';
 import * as Store from './Store.ts';
 import * as TypeBinding from './TypeBinding.ts';
+import { analyze } from './worker/analyze.ts';
 import { createResolver } from './worker/analyzers/resolver.ts';
 import { analyzeTypeScript } from './worker/analyzers/typescript.ts';
 
 /**
  * The rule files as shipped, run against a real store — a paraphrase of a rule in a test proves the
- * paraphrase. `60-canonical.n3` is the one with a property worth guarding: exactly one canonical
- * name per symbol, which its scoped negation is what secures.
+ * paraphrase. `60-canonical.n3` is the one with a property worth guarding: a canonical name is
+ * stated only where it differs from the declared one.
  */
 
 const CANONICAL = join(Reasoner.BUNDLED_DIR, '60-canonical.n3');
@@ -89,9 +91,10 @@ describe('bundled rules', () => {
       }).pipe(Effect.provide(Store.layer(join(dir, `store-${documents.length}-${Math.random()}`))), Effect.scoped),
     );
 
-  test('an identifier imported directly is its own canonical name', async () => {
+  test('an identifier imported directly is not restated', async () => {
+    // Its canonical name is its `deus:name`; a query reads `COALESCE(?canonical, ?name)`.
     const names = await canonicalNames([document('src/plain.ts', [symbol('src/plain.ts', 'helper')])]);
-    expect(names).toEqual([`${Ontology.symbolIri('src/plain.ts', 'helper').value} = helper`]);
+    expect(names).toEqual([]);
   });
 
   test('a namespaced module qualifies its identifiers, and only that', async () => {
@@ -110,8 +113,6 @@ describe('bundled rules', () => {
     expect(names).toEqual([
       `${Ontology.symbolIri('src/Ontology.ts', 'fileIri').value} = Ontology.fileIri`,
       `${Ontology.symbolIri('src/Ontology.ts', 'symbolIri').value} = Ontology.symbolIri`,
-      // The namespace is imported by name from the barrel, so it is its own canonical name.
-      `${Ontology.symbolIri('src/index.ts', 'Ontology').value} = Ontology`,
     ]);
   });
 
@@ -121,6 +122,30 @@ describe('bundled rules', () => {
       document('src/private.ts', [symbol('src/private.ts', 'internal', { exported: false })]),
     ]);
     expect(names).toEqual([]);
+  });
+
+  test('a non-test file importing a test file is flagged, and a test importing a test is not', async () => {
+    const testScript = (path: string, imports: string[]): Ontology.FileDocument => ({
+      ...document(path, []),
+      testFile: true,
+      imports: imports.map((each) => Ontology.fileIri(each).value),
+    });
+    const derived = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        yield* store.putDocument(testScript('src/a.test.ts', ['src/b.test.ts']));
+        yield* store.putDocument(testScript('src/b.test.ts', []));
+        yield* store.putDocument({
+          ...document('src/lib.ts', []),
+          imports: [Ontology.fileIri('src/b.test.ts').value],
+        });
+        const [reasoner] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '50-example.n3'));
+        return yield* store.reason(reasoner.name, reasoner.rules);
+      }).pipe(Effect.provide(Store.layer(join(dir, `store-example-${Math.random()}`))), Effect.scoped),
+    );
+    expect(derived.map((quad) => `${quad.subject.value} ${quad.predicate.value} ${quad.object.value}`)).toEqual([
+      `${Ontology.fileIri('src/lib.ts').value} ${Ontology.importsTestFile.value} ${Ontology.fileIri('src/b.test.ts').value}`,
+    ]);
   });
 });
 
@@ -869,5 +894,228 @@ describe('ordered reasoners', () => {
       }).pipe(Effect.provide(Store.layer(join(dir, 'store'))), Effect.scoped),
     );
     expect(concluded).toEqual(['urn:r']);
+  });
+});
+
+/**
+ * `65-packages`, `70-specs` and `80-gaps` over a small repository run through the real analyzers, so
+ * the facts the rules join on are the ones the parsers actually emit.
+ */
+describe('spec and package rules', () => {
+  let dir: string;
+
+  beforeAll(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'code-index-specs-'));
+  });
+
+  afterAll(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  const PLUGIN = 'packages/plugin-x';
+  const FILES: Record<string, string> = {
+    [`${PLUGIN}/package.json`]: JSON.stringify({
+      name: '@dxos/plugin-x',
+      exports: { '.': { source: './src/index.ts' } },
+      dependencies: { '@dxos/echo': 'workspace:*', '@dxos/unused': 'workspace:*' },
+    }),
+    [`${PLUGIN}/moon.yml`]: 'layer: library\n',
+    [`${PLUGIN}/src/index.ts`]: `export * from './ops.ts';\nexport * as X from './types.ts';\n`,
+    [`${PLUGIN}/src/ops.ts`]: `import * as Operation from '@dxos/compute/Operation';
+import { DXN } from '@dxos/keys';
+
+export const Create = Operation.make({ meta: { key: DXN.make('org.dxos.operation.x.create') } });
+
+export const Orphan = Operation.make({ meta: { key: DXN.make('org.dxos.operation.x.orphan') } });
+
+export const helper = 1;
+`,
+    [`${PLUGIN}/src/types.ts`]: `import { Type } from '@dxos/echo';
+import { App } from '@dxos/app';
+import * as Schema from 'effect/Schema';
+
+export const Document = Schema.Struct({ name: Schema.String }).pipe(Type.Obj({ typename: 'x', version: '1' }));
+
+export const view = (app: App) => app;
+`,
+    'packages/echo/package.json': JSON.stringify({
+      name: '@dxos/echo',
+      exports: { '.': { source: './src/index.ts' } },
+    }),
+    'packages/echo/src/index.ts': 'export const Type = {};\n',
+    'packages/app/package.json': JSON.stringify({ name: '@dxos/app' }),
+    'packages/app/moon.yml': 'layer: application\n',
+    'packages/app/src/index.ts': 'export type App = {};\n',
+    'packages/unused/package.json': JSON.stringify({ name: '@dxos/unused' }),
+    'packages/e2e/composer-e2e/package.json': JSON.stringify({ name: '@dxos/composer-e2e' }),
+    'packages/e2e/composer-e2e/src/playwright/basic.spec.ts': 'export const run = 1;\n',
+    [`${PLUGIN}/PLUGIN.mdl`]: `---
+id: org.dxos.plugin.x
+name: XPlugin
+version: 0.1.0
+---
+
+## Extensions
+
+| Term   | URI                     |
+|--------|-------------------------|
+| \`op\`   | \`org.dxos.mdl.op@1.1\`   |
+| \`type\` | \`org.dxos.mdl.type@1.0\` |
+
+\`\`\`mdl
+op create
+  key: org.dxos.operation.x.create
+  desc: Creates an \`X.Document\` with \`helper\`.
+  bogus: not in the schema
+
+op ghost
+  key: org.dxos.operation.x.ghost
+\`\`\`
+
+\`\`\`mdl
+type Document
+  fields:
+    name: string
+
+type Phantom
+  desc: Nothing declares this.
+\`\`\`
+
+\`\`\`mdl
+feat F-1: Create
+  req F-1.1: Creating works.
+\`\`\`
+
+\`\`\`mdl
+scenario T-1: Create
+  then: a document exists
+  tags: [F-1.1]
+\`\`\`
+
+\`\`\`mdl
+test QA-1: Create
+  covers: [F-1]
+  automated:
+    - composer-e2e:basic.spec.ts#Basic › create
+  steps:
+    - do: create
+\`\`\`
+
+\`\`\`mdl
+suite smoke: The quick one
+  tests: [QA-1]
+\`\`\`
+
+\`\`\`mdl
+rule ops-only: Operations live in ops files
+  files:
+    - src/ops.ts
+\`\`\`
+
+\`\`\`mdl
+ext op
+  uri: org.dxos.mdl.op@1.1
+  fields:
+    key?: NSID
+    desc?: Prose
+\`\`\`
+`,
+    'packages/spec/SCHEMAS.mdl': `\`\`\`mdl
+ext type
+  uri: org.dxos.mdl.type@1.0
+  fields:
+    fields: FieldMap
+    desc?: Prose
+\`\`\`
+`,
+  };
+
+  const PACKAGES: Record<string, string> = {
+    [PLUGIN]: '@dxos/plugin-x',
+    'packages/echo': '@dxos/echo',
+    'packages/app': '@dxos/app',
+    'packages/unused': '@dxos/unused',
+    'packages/e2e/composer-e2e': '@dxos/composer-e2e',
+  };
+  const RESOLVED: Record<string, string> = {
+    '@dxos/echo': 'packages/echo/src/index.ts',
+    '@dxos/app': 'packages/app/src/index.ts',
+    './ops.ts': `${PLUGIN}/src/ops.ts`,
+    './types.ts': `${PLUGIN}/src/types.ts`,
+  };
+
+  const derive = async (): Promise<string[]> =>
+    EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        for (const [path, source] of Object.entries(FILES)) {
+          yield* store.putDocument(
+            analyze({
+              root: '/repo',
+              path,
+              source,
+              mtime: 1,
+              resolve: (_from, specifier) => (RESOLVED[specifier] ? `/repo/${RESOLVED[specifier]}` : undefined),
+              packageOf: (candidate) =>
+                Object.entries(PACKAGES).find(([prefix]) => candidate.startsWith(`${prefix}/`))?.[1],
+            }),
+          );
+        }
+        yield* Reasoner.run(yield* Reasoner.load(Reasoner.BUNDLED_DIR));
+        const local = (term: Term) =>
+          term.termType === 'Literal'
+            ? term.datatype.value.endsWith('#boolean')
+              ? term.value
+              : JSON.stringify(term.value)
+            : term.value.startsWith(Ontology.GLOB_BASE)
+              ? `glob:${term.value.slice(Ontology.GLOB_BASE.length)}`
+              : term.value.startsWith(Ontology.PACKAGE_BASE)
+                ? term.value.slice(Ontology.PACKAGE_BASE.length)
+                : term.value.startsWith(Ontology.PREFIX)
+                  ? term.value.slice(Ontology.PREFIX.length)
+                  : term.value.slice(Math.max(term.value.lastIndexOf('#'), term.value.lastIndexOf('/')) + 1);
+        const facts: string[] = [];
+        for (const name of ['30-compute', '65-packages', '70-specs', '80-gaps']) {
+          for (const quad of yield* store.derived(name)) {
+            facts.push(`${local(quad.subject)} ${local(quad.predicate)} ${local(quad.object)}`);
+          }
+        }
+        return [...new Set(facts)].sort();
+      }).pipe(Effect.provide(Store.layer(join(dir, `store-${Math.random()}`))), Effect.scoped),
+    );
+
+  test('specs link to code and to each other, and the gaps are found', async () => {
+    const facts = await derive();
+    const having = (predicate: string) => facts.filter((fact) => fact.split(' ')[1] === predicate);
+
+    expect(having('operationKey')).toEqual([
+      'Create operationKey "org.dxos.operation.x.create"',
+      'Orphan operationKey "org.dxos.operation.x.orphan"',
+    ]);
+    expect(having('specifies')).toEqual(['op:create specifies Create', 'type:Document specifies Document']);
+    // The mention `X.Document` is the canonical name of `Document`, published as a namespace; `helper`
+    // has none, so its declared name is what an importer writes.
+    expect(having('describes')).toEqual(
+      expect.arrayContaining(['op:create describes Document', 'op:create describes helper']),
+    );
+    expect(having('covers')).toEqual(['scenario:T-1 covers req:F-1.1', 'test:QA-1 covers feat:F-1']);
+    expect(having('includesTest')).toEqual(['suite:smoke includesTest test:QA-1']);
+    expect(having('automatedBy')).toEqual(['test:QA-1 automatedBy basic.spec.ts']);
+    expect(having('matchesGlob')).toEqual([`ops.ts matchesGlob glob:${PLUGIN}/src/ops.ts`]);
+
+    expect(having('phantom')).toEqual(['op:ghost phantom true', 'type:Phantom phantom true']);
+    expect(having('unspecified')).toEqual(['Orphan unspecified true']);
+    expect(having('undocumented')).toEqual(['Orphan undocumented true', 'view undocumented true']);
+    expect(having('unknownField')).toEqual(['op:create unknownField "bogus"']);
+    expect(having('missingField')).toEqual(['type:Phantom missingField "fields"']);
+
+    expect(having('usesPackage')).toEqual([
+      '@dxos/plugin-x usesPackage @dxos/app',
+      '@dxos/plugin-x usesPackage @dxos/echo',
+    ]);
+    expect(having('usesPackageInApi')).toEqual(['@dxos/plugin-x usesPackageInApi @dxos/app']);
+    expect(having('undeclaredDependency')).toEqual(['@dxos/plugin-x undeclaredDependency @dxos/app']);
+    expect(having('unusedDependency')).toEqual(['@dxos/plugin-x unusedDependency @dxos/unused']);
+    expect(having('violatesLayering')).toEqual(['@dxos/plugin-x violatesLayering @dxos/app']);
   });
 });
