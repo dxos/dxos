@@ -274,25 +274,6 @@ export const TaskSetArticle = ({
     </TaskFilter>
   );
 
-  // Grows to fill a host that gives it height (the panel body, a section in a full-height tab), so the editor below it
-  // sits at the bottom; in a host sized to its content it stays as tall as its rows.
-  const viewport = (
-    <TaskList.Viewport classNames='dx-grow'>
-      <TaskList.Content />
-    </TaskList.Viewport>
-  );
-
-  const editor = (
-    <TaskList.Editor
-      createOnly
-      showDescription
-      acceptFiles={!!attachFile}
-      descriptionExtensions={descriptionExtensions}
-      classNames='p-2 bg-input-surface border border-separator-subtle rounded-sm'
-      placeholder={t('task-create.placeholder')}
-    />
-  );
-
   return (
     // One layout whether the set is its own plank or a host's section (the project's Tasks tab): the filter in the
     // header, the list filling the body, and the editor in the footer so it stays below the list. `TaskList.Root`
@@ -320,8 +301,22 @@ export const TaskSetArticle = ({
         <Panel.Header>
           <Toolbar.Root inactive={!hasAttention}>{filterRow}</Toolbar.Root>
         </Panel.Header>
-        <Panel.Body>{viewport}</Panel.Body>
-        <Panel.Footer classNames='p-2 bg-transparent'>{editor}</Panel.Footer>
+        <Panel.Body>
+          {/* Fills the body (no flex container, so growing alone would not bound it): rows scroll inside it. */}
+          <TaskList.Viewport classNames='dx-expand'>
+            <TaskList.Content />
+          </TaskList.Viewport>
+        </Panel.Body>
+        <Panel.Footer classNames='p-2 dx-grow bg-base-surface'>
+          <TaskList.Editor
+            createOnly
+            showDescription
+            acceptFiles={!!attachFile}
+            descriptionExtensions={descriptionExtensions}
+            classNames='p-2 bg-input-surface border border-separator-subtle rounded-sm'
+            placeholder={t('task-create.placeholder')}
+          />
+        </Panel.Footer>
       </Panel.Root>
     </TaskList.Root>
   );
