@@ -11,7 +11,7 @@ import { Annotation, Format } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { translationKey } from '#translations';
 import { type CreateOptions, type FormFieldRenderer, type FormFieldRendererProps } from '#types';
@@ -104,7 +104,7 @@ export const FormFieldDispatch = (props: FormFieldDispatchProps) => {
     resolveCreateEntry,
     refInline,
   } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const title = SchemaEx.getAnnotation<string>(SchemaAST.TitleAnnotationId)(type);
   const description = SchemaEx.getAnnotation<string>(SchemaAST.DescriptionAnnotationId)(type);
   const examples = SchemaEx.getAnnotation<string[]>(SchemaAST.ExamplesAnnotationId)(type);

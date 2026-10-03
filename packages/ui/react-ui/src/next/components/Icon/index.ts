@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Icon.tsx';
+export * as Icon from './Icon.tsx';

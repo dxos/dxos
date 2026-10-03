@@ -11,7 +11,9 @@ import * as PluginNS from '@dxos/app-framework/Plugin';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { DXN } from '@dxos/keys';
 import { random } from '@dxos/random';
-import { Container, Panel, ScrollArea } from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { getHashHue } from '@dxos/ui-theme';
 
@@ -60,9 +62,9 @@ const DefaultStory = () => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container gutter='md' padBlock>
+            <Container.Container gutter='md' padBlock>
               <PluginList plugins={plugins} enabled={enabled} onChange={handleChange} hasSettings={() => true} />
-            </Container>
+            </Container.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>

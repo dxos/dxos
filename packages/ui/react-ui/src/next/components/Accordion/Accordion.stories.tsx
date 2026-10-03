@@ -11,9 +11,10 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Accordion, type AccordionRootProps, Typography } from '../index.ts';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Accordion from './Accordion.tsx';
 
-type StoryArgs = SizeArgs & Pick<AccordionRootProps, 'border' | 'multiple'>;
+type StoryArgs = SizeArgs & Pick<Accordion.RootProps, 'border' | 'multiple'>;
 
 const ITEMS = [
   { value: 'search', icon: 'ph--magnifying-glass--regular', label: 'Search the web', detail: '12 results for "zag"' },
@@ -31,13 +32,13 @@ const DefaultStory = ({ border, multiple }: StoryArgs) => {
             <Accordion.ItemTrigger icon={icon}>{label}</Accordion.ItemTrigger>
             {detail && (
               <Accordion.ItemContent>
-                <Typography>{detail}</Typography>
+                <Typography.Typography>{detail}</Typography.Typography>
               </Accordion.ItemContent>
             )}
           </Accordion.Item>
         ))}
       </Accordion.Root>
-      <Typography data-testid='open'>Open: {open.join(', ') || 'none'}</Typography>
+      <Typography.Typography data-testid='open'>Open: {open.join(', ') || 'none'}</Typography.Typography>
     </>
   );
 };

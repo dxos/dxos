@@ -8,7 +8,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Type } from '@dxos/echo';
 import { getPropertyMetaAnnotation } from '@dxos/echo/internal';
 import * as SchemaAST from '@dxos/effect/SchemaAST';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { Task } from '@dxos/types';
 
 export const TaskCard = ({ subject }: AppSurface.ObjectCardProps<Task.Task>) => {

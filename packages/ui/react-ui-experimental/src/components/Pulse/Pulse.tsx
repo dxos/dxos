@@ -5,12 +5,12 @@
 import { useAnimationFrame } from 'motion/react';
 import React, { useRef } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 export type PulseSignal = (i: number, j: number, time: number) => number;
 
-export type PulseProps = ThemedClassName<{
+export type PulseProps = Util.ThemedClassName<{
   /** Grid dimension; renders `dim × dim` dots. */
   dim?: number;
   /** Maximum dot radius in CSS pixels (reached when the signal is 1). */

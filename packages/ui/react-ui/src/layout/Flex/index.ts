@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Flex.tsx';
+export * as Flex from './Flex.tsx';

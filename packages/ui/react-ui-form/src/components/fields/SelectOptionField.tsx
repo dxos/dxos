@@ -6,8 +6,14 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { type SelectOption } from '@dxos/echo/Format';
 import { PublicKey } from '@dxos/keys';
-import { Button, Container, Field, Group, Input, Tag, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Container from '@dxos/react-ui/Container';
+import * as Field from '@dxos/react-ui/Field';
+import * as Group from '@dxos/react-ui/Group';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Tag from '@dxos/react-ui/Tag';
 import { hues } from '@dxos/ui-types';
 import { arrayMove } from '@dxos/util';
 
@@ -40,7 +46,7 @@ export const SelectOptionField = ({
   getValue,
   onValueChange,
 }: FormFieldRendererProps<SelectOption[] | undefined>) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const options = getValue();
   const [expandedId, setExpandedId] = useState<string>();
 
@@ -96,10 +102,10 @@ export const SelectOptionField = ({
               >
                 <OrderedList.DragHandle />
                 <OrderedList.ItemText>
-                  <Tag hue={hues.find((hue) => hue === option.color)}>{option.title || '\u200b'}</Tag>
+                  <Tag.Tag hue={hues.find((hue) => hue === option.color)}>{option.title || '\u200b'}</Tag.Tag>
                 </OrderedList.ItemText>
                 {!readonly && (
-                  <Button
+                  <Button.Button
                     iconOnly
                     variant='ghost'
                     icon='ph--x--regular'
@@ -113,10 +119,10 @@ export const SelectOptionField = ({
                   />
                 )}
                 <OrderedList.Detail>
-                  <Container layout='row' gutter='none' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
+                  <Container.Container layout='row' gutter='none' columns='minmax(0, 1fr) minmax(0, 1fr)' gap='sm'>
                     <Field.Root>
                       <Field.Label>{t('select-option.label')}</Field.Label>
-                      <Input
+                      <Input.Input
                         autoFocus={expandedId === option.id && option.title === ''}
                         disabled={!!readonly}
                         placeholder={t('select-option-label.placeholder')}
@@ -133,7 +139,7 @@ export const SelectOptionField = ({
                         onValueChange={(color) => color && update(option.id, { color })}
                       />
                     </Field.Root>
-                  </Container>
+                  </Container.Container>
                 </OrderedList.Detail>
               </OrderedList.Item>
             ))}
@@ -141,9 +147,9 @@ export const SelectOptionField = ({
         )}
       </OrderedList.Root>
       {!readonly && (
-        <Group>
-          <Button icon='ph--plus--regular' label={t('select-option-add.button')} onClick={handleAdd} />
-        </Group>
+        <Group.Group>
+          <Button.Button icon='ph--plus--regular' label={t('select-option-add.button')} onClick={handleAdd} />
+        </Group.Group>
       )}
     </>
   );

@@ -8,8 +8,11 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Annotation, Format } from '@dxos/echo';
-import { Container, Panel, ScrollArea, Typography } from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Typography from '@dxos/react-ui/Typography';
 import { trim } from '@dxos/util';
 
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
@@ -53,7 +56,7 @@ const DefaultStory = ({ layoutName }: StoryArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container>
+            <Container.Container>
               <Form.Root
                 schema={Flight}
                 values={values}
@@ -63,14 +66,14 @@ const DefaultStory = ({ layoutName }: StoryArgs) => {
                   <Form.Fields layoutName={layoutName} />
                 </Form.Content>
               </Form.Root>
-            </Container>
+            </Container.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
       <Panel.Footer>
-        <Typography truncate data-testid='values'>
+        <Typography.Typography truncate data-testid='values'>
           {JSON.stringify(values)}
-        </Typography>
+        </Typography.Typography>
       </Panel.Footer>
     </Panel.Root>
   );

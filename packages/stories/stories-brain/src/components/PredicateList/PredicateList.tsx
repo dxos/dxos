@@ -4,12 +4,16 @@
 
 import React, { useRef } from 'react';
 
-import { Button, Empty, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { type PredicateItem } from '../types.ts';
 
-export type PredicateListProps = ThemedClassName<{
+export type PredicateListProps = Util.ThemedClassName<{
   predicates: PredicateItem[];
   /** Selected predicate (the filter); `undefined` means no filter (show all). */
   selected?: string;
@@ -33,7 +37,7 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
           <Toolbar.Text classNames='grow'>
             Predicates{predicates.length > 0 ? ` (${predicates.length})` : ''}
           </Toolbar.Text>
-          <Button
+          <Button.Button
             icon='ph--x--regular'
             iconOnly
             label='Clear'
@@ -44,7 +48,7 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
       </Panel.Header>
       <Panel.Body classNames='overflow-auto'>
         {predicates.length === 0 ? (
-          <Empty>No predicates.</Empty>
+          <Empty.Empty>No predicates.</Empty.Empty>
         ) : (
           <Listbox.Root
             value={selected}

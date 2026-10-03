@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
 import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -59,7 +59,7 @@ export const RepositoryFileTree = ({
   onExpandedChange,
   onSelect,
 }: RepositoryFileTreeProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const root = useMemo(() => buildNode({ path: '', name: '', type: 'root' }, directories), [directories]);
 
   const model = useMemo(

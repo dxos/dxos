@@ -11,8 +11,12 @@ import { DXN, Filter, JsonSchema, Query, Type, type View } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Container, Panel, ScrollArea, Typography, useAsyncEffect } from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Typography from '@dxos/react-ui/Typography';
 import { type ProjectionModel, ViewModel } from '@dxos/schema';
 import { Organization } from '@dxos/types';
 
@@ -33,7 +37,7 @@ const DefaultStory = ({ system }: StoryArgs) => {
   const [type, setType] = useState<Type.AnyEntity>();
   const [view, setView] = useState<View.View>();
   const projectionRef = useRef<ProjectionModel>(null);
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     if (!space) {
       return;
     }
@@ -61,7 +65,7 @@ const DefaultStory = ({ system }: StoryArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container>
+            <Container.Container>
               <ViewEditor
                 ref={projectionRef}
                 type={type}
@@ -70,16 +74,16 @@ const DefaultStory = ({ system }: StoryArgs) => {
                 db={space?.db}
                 onDelete={(fieldId) => projectionRef.current?.deleteFieldProjection(fieldId)}
               />
-            </Container>
+            </Container.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
       <Panel.Footer>
-        <Typography truncate data-testid='fields'>
+        <Typography.Typography truncate data-testid='fields'>
           {JSON.stringify(
             snapshot?.projection.fields.map((field) => (field.visible === false ? `-${field.path}` : field.path)),
           )}
-        </Typography>
+        </Typography.Typography>
       </Panel.Footer>
     </Panel.Root>
   );

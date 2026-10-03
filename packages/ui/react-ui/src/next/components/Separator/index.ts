@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Separator.tsx';
+export * as Separator from './Separator.tsx';

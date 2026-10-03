@@ -5,8 +5,10 @@
 import React from 'react';
 
 import { type Device } from '@dxos/react-client/halo';
-import { Button, Icon, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 import { getSize, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -24,7 +26,7 @@ export const DeviceList = ({
   onClickJoinExisting,
   onAgentDestroy,
 }: DeviceListProps & Partial<Pick<AgentFormProps, 'onAgentDestroy'>>) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
     <div className='p-1'>
       <h2 className={mx('text-fg-muted', 'text-center mt-2')}>{t('devices.heading')}</h2>
@@ -50,18 +52,18 @@ export const DeviceList = ({
           </Listbox.Content>
         </Listbox.Root>
       )}
-      <Button
+      <Button.Button
         variant='ghost'
         classNames='justify-start gap-2 ps-0 pe-3 w-full'
         data-testid='devices-panel.create-invitation'
         onClick={onClickAdd}
       >
         <div role='img' className={mx(getSize(8), 'm-1 rounded-xs bg-input-surface grid place-items-center')}>
-          <Icon icon='ph--plus--light' size='xl' />
+          <Icon.Icon icon='ph--plus--light' size='xl' />
         </div>
         <span className='grow font-medium text-start'>{t('choose-add-device.label')}</span>
-        <Icon icon='ph--caret-right--bold' size='md' />
-      </Button>
+        <Icon.Icon icon='ph--caret-right--bold' size='md' />
+      </Button.Button>
     </div>
   );
 };

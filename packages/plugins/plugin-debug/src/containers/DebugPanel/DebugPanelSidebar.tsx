@@ -9,9 +9,9 @@ import * as AppGraph from '@dxos/app-graph/AppGraph';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { useTranslation } from '@dxos/react-ui';
 import { useManager } from '@dxos/react-ui-attention';
 import { Path, Tree, type TreeSelectEvent } from '@dxos/react-ui-list';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { DebugNodes } from '#types';
@@ -37,7 +37,7 @@ const LEGACY_PAGE_IDS: Record<string, string> = {
 
 /** The tree over the hidden `root/debug` category: every developer tool, selected here and shown in `Main`. */
 export const DebugPanelSidebar = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { contextId, nodeId, open, select, setOpen } = useDebugPanelContext();
   const { graph } = Hooks.useAppGraph();
   const manager = useManager();

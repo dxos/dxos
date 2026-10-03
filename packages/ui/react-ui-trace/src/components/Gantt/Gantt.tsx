@@ -17,15 +17,11 @@ import React, {
 } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
-import {
-  Button,
-  HoverCard,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as HoverCard from '@dxos/react-ui/HoverCard';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type Hue, mx } from '@dxos/ui-theme';
 
 import { translationKey } from '../../translations.ts';
@@ -260,7 +256,7 @@ const [GanttProvider, useGanttContext] = createContext<GanttContextValue>('Gantt
 // Root
 //
 
-type GanttRootProps = ThemedClassName<GanttData & { children?: ReactNode }>;
+type GanttRootProps = Util.ThemedClassName<GanttData & { children?: ReactNode }>;
 
 /**
  * Gantt view of lanes on a shared axis. The root resolves the rows and the axis; the parts lay out
@@ -268,7 +264,7 @@ type GanttRootProps = ThemedClassName<GanttData & { children?: ReactNode }>;
  * them, `Meta` shows whatever the host attached. A host that already lists the lanes renders the
  * chart alone.
  */
-const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
+const GanttRoot = Util.composable<HTMLDivElement, GanttRootProps>(
   (
     {
       groups = [],
@@ -323,7 +319,7 @@ const GanttRoot = composable<HTMLDivElement, GanttRootProps>(
         onAxisChange={onAxisChange}
       >
         <div
-          {...composableProps(props, {
+          {...Util.composableProps(props, {
             // `items-start`: the parts are drawn in pixel rows, so a stretching host must not spread them.
             classNames: 'flex w-full items-start text-xs font-mono overflow-hidden',
           })}
@@ -342,17 +338,17 @@ GanttRoot.displayName = 'Gantt.Root';
 // Legend
 //
 
-type GanttLegendProps = ThemedClassName<PropsWithChildren>;
+type GanttLegendProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
  * The lane names, one per row, indented by depth; each row is the lane's keyboard path. Children go
  * in the header row above the names, beside the chart's axis labels (e.g. `Gantt.AxisToggle`).
  */
-const GanttLegend = composable<HTMLDivElement, GanttLegendProps>(({ children, ...props }, forwardedRef) => {
+const GanttLegend = Util.composable<HTMLDivElement, GanttLegendProps>(({ children, ...props }, forwardedRef) => {
   const { rows, onLaneSelect } = useGanttContext('Gantt.Legend');
   return (
     <div
-      {...composableProps(props, { classNames: 'shrink-0 w-[min(15rem,20%)] min-w-40 flex flex-col font-sans' })}
+      {...Util.composableProps(props, { classNames: 'shrink-0 w-[min(15rem,20%)] min-w-40 flex flex-col font-sans' })}
       ref={forwardedRef}
     >
       <div className='flex items-center' style={{ height: HEADER_HEIGHT }}>
@@ -404,7 +400,7 @@ type GanttAxisToggleProps = {};
  * event. Renders nothing unless the root was given `onAxisChange`, since the axis is the host's state.
  */
 const GanttAxisToggle = (_: GanttAxisToggleProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { axis = 'unit', onAxisChange } = useGanttContext('Gantt.AxisToggle');
   if (!onAxisChange) {
     return null;
@@ -412,7 +408,7 @@ const GanttAxisToggle = (_: GanttAxisToggleProps) => {
 
   // The icon names the axis in use; the label names the one a click switches to.
   return (
-    <Button
+    <Button.Button
       variant='ghost'
       size='sm'
       iconSize='xs'
@@ -431,13 +427,13 @@ GanttAxisToggle.displayName = 'Gantt.AxisToggle';
 // Meta
 //
 
-type GanttMetaProps = ThemedClassName<{}>;
+type GanttMetaProps = Util.ThemedClassName<{}>;
 
 /** Whatever the host attached to each lane, aligned to the rows. */
-const GanttMeta = composable<HTMLDivElement, GanttMetaProps>((props, forwardedRef) => {
+const GanttMeta = Util.composable<HTMLDivElement, GanttMetaProps>((props, forwardedRef) => {
   const { rows } = useGanttContext('Gantt.Meta');
   return (
-    <div {...composableProps(props, { classNames: 'shrink-0 flex flex-col' })} ref={forwardedRef}>
+    <div {...Util.composableProps(props, { classNames: 'shrink-0 flex flex-col' })} ref={forwardedRef}>
       <div style={{ height: HEADER_HEIGHT }} />
       {rows.map(({ lane }) => (
         <div
@@ -462,7 +458,7 @@ GanttMeta.displayName = 'Gantt.Meta';
 // Chart
 //
 
-type GanttChartProps = ThemedClassName<{}>;
+type GanttChartProps = Util.ThemedClassName<{}>;
 
 /** One drawn stretch of a lane: where its bar runs, and the nodes threaded through it. */
 type Stretch = {

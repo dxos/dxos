@@ -16,16 +16,13 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import {
-  Container,
-  Input,
-  Panel,
-  ScrollArea,
-  Toolbar,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
@@ -63,7 +60,7 @@ export type BaseRegistryArticleProps = {
   | 'onUpdate'
 >;
 
-export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticleProps>(
+export const BaseRegistryArticle = Util.composable<HTMLDivElement, BaseRegistryArticleProps>(
   (
     {
       id,
@@ -83,7 +80,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(meta.profile.key);
     const manager = PluginManagerProvider.usePluginManager();
     const { invoke, invokePromise } = Hooks.useOperationInvoker();
     const allSettings = Hooks.useCapabilities(AppCapabilities.Settings);
@@ -148,10 +145,10 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     );
 
     return (
-      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+      <Panel.Root {...Util.composableProps(props)} ref={forwardedRef}>
         <Panel.Header>
           <Toolbar.Root>
-            <Input
+            <Input.Input
               aria-label={t('filter.label')}
               placeholder={t('filter.placeholder')}
               value={filter}
@@ -162,7 +159,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
         <Panel.Body asChild>
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
-              <Container gutter='md' padBlock>
+              <Container.Container gutter='md' padBlock>
                 {filtered.length > 0 ? (
                   <PluginList
                     plugins={filtered}
@@ -185,7 +182,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
                 ) : (
                   empty
                 )}
-              </Container>
+              </Container.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>

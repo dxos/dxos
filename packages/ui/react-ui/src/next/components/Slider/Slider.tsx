@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Slider as SliderPrimitive } from '@ark-ui/react/slider';
 import React, { type ReactNode, forwardRef, useId } from 'react';
 

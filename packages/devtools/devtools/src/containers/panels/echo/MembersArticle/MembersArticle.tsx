@@ -6,10 +6,10 @@ import React, { useMemo } from 'react';
 
 import { Format } from '@dxos/echo/Format';
 import { toPublicKey } from '@dxos/protocols/buf';
-import { SpaceMember_PresenceState, useMembers } from '@dxos/react-client/echo';
-import { type Space } from '@dxos/react-client/echo';
-import { Panel, Toolbar } from '@dxos/react-ui';
+import { type Space, SpaceMember_PresenceState, useMembers } from '@dxos/react-client/echo';
 import { type TablePropertyDefinition } from '@dxos/react-ui-table';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { MasterDetailTable } from '../../../../components/index.ts';
 import { DataSpaceSelector } from '../../../../containers/index.ts';

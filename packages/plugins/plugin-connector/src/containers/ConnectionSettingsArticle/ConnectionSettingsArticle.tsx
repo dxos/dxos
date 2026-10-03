@@ -13,9 +13,10 @@ import { Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -29,7 +30,7 @@ const ACTIONS_VALUES = {};
 export type ConnectionSettingsArticleProps = Record<string, never>;
 
 export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const space = ToolkitHooks.useActiveSpace();
   const { invokePromise } = Hooks.useOperationInvoker();
   const connections = useQuery(
@@ -69,7 +70,7 @@ export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps
         <Form.Content>
           <Form.FieldSet label={t('connections.label')} description={t('connections.description')}>
             <Form.Field standalone label={t('add-connection.label')} description={t('connect-service.description')}>
-              <Button onClick={handleAdd}>{t('connect.label')}</Button>
+              <Button.Button onClick={handleAdd}>{t('connect.label')}</Button.Button>
             </Form.Field>
           </Form.FieldSet>
 

@@ -6,7 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -24,7 +25,7 @@ const SWARM_PEEK_INTERVAL = 1_000;
 // Root
 //
 
-type LobbyRootProps = PropsWithChildren<ThemedClassName>;
+type LobbyRootProps = PropsWithChildren<Util.ThemedClassName>;
 
 // TODO(burdon): Make headless?
 const LobbyRoot = ({ children }: LobbyRootProps) => {
@@ -40,7 +41,7 @@ LobbyRoot.displayName = 'LobbyRoot';
 type LobbyPreviewProps = {};
 
 const LobbyPreview = (_props: LobbyPreviewProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const call = Hooks.useCapability(CallsCapabilities.Manager);
   const videoEnabled = useAtomValue(call.videoEnabledAtom);
   const videoStream = useAtomValue(call.localVideoStreamAtom);
@@ -84,7 +85,7 @@ LobbyPreview.displayName = 'LobbyPreview';
 // Toolbar
 //
 
-type LobbyToolbarProps = ThemedClassName<
+type LobbyToolbarProps = Util.ThemedClassName<
   {
     roomId: string;
   } & Pick<ToolbarProps, 'onJoin' | 'joinDisabled'>

@@ -9,19 +9,16 @@ import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMe
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { addEventListener } from '@dxos/async';
-import { ProcessManager } from '@dxos/compute-runtime';
-import { FeedTraceSink } from '@dxos/compute-runtime';
+import { FeedTraceSink, ProcessManager } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Feed, Filter, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
-import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { initializeIdentity } from '@dxos/plugin-client/testing';
+import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
-import { Button, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { type Commit, Timeline, buildExecutionGraph } from '@dxos/react-ui-trace';
@@ -32,7 +29,11 @@ import {
   subAgentDelegationFixture,
   useLocalStorageNumber,
 } from '@dxos/react-ui-trace/testing';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { AssistantPlugin } from '#plugin';
@@ -124,7 +125,7 @@ const DefaultStory = () => {
     <BaseStory
       toolbar={
         <Toolbar.Root>
-          <Button icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
+          <Button.Button icon='ph--plus--regular' label='Start Agent' onClick={handleStart} />
         </Toolbar.Root>
       }
     >
@@ -281,16 +282,16 @@ const TimelinePlayback = ({
     <BaseStory
       toolbar={
         <Toolbar.Root>
-          <Button icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
-          <Button icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
-          <Button
+          <Button.Button icon='ph--skip-back--regular' iconOnly label='Reset (R)' onClick={handleReset} />
+          <Button.Button icon='ph--caret-left--regular' iconOnly label='Step back (← / H)' onClick={handlePrev} />
+          <Button.Button
             icon={playing ? 'ph--pause--regular' : 'ph--play--regular'}
             iconOnly
             label={playing ? 'Pause (Space)' : 'Play (Space)'}
             onClick={handleTogglePlay}
           />
-          <Button icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
-          <Button icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
+          <Button.Button icon='ph--caret-right--regular' iconOnly label='Step forward (→ / L)' onClick={handleNext} />
+          <Button.Button icon='ph--skip-forward--regular' iconOnly label='Show all (E / End)' onClick={handleShowAll} />
           <Toolbar.Text classNames='text-right text-sm tabular-nums opacity-70'>
             {step} / {total}
           </Toolbar.Text>

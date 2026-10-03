@@ -5,17 +5,13 @@
 import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import {
-  Button,
-  Menu,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { arrayMove } from '@dxos/util';
 
@@ -30,14 +26,14 @@ const minSectionHeight = 'min-h-[16rem]';
 
 const getCellId = (cell: Notebook.Cell) => cell.id;
 
-export type NotebookStackProps = ThemedClassName<
+export type NotebookStackProps = Util.ThemedClassName<
   {
     notebook?: Notebook.Notebook;
   } & (Pick<NotebookSectionProps, 'db' | 'graph' | 'promptResults' | 'onCellInsert' | 'onCellDelete'> &
     Pick<TypescriptEditorProps, 'env'>)
 >;
 
-export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
+export const NotebookStack = Util.composable<HTMLDivElement, NotebookStackProps>(
   ({ notebook, db, graph, promptResults, onCellInsert, onCellDelete, env, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
 
@@ -103,7 +99,7 @@ export const NotebookStack = composable<HTMLDivElement, NotebookStackProps>(
         eventHandler={eventHandler}
         ref={forwardedRef}
       >
-        <ScrollArea.Root orientation='vertical' {...composableProps(props)}>
+        <ScrollArea.Root orientation='vertical' {...Util.composableProps(props)}>
           <ScrollArea.Viewport ref={setViewport}>
             <Mosaic.Stack orientation='vertical' items={notebook?.cells ?? []} getId={getCellId} Tile={Tile} />
           </ScrollArea.Viewport>
@@ -128,7 +124,7 @@ const NotebookSection = ({
   onCellDelete,
   ...tileProps
 }: NotebookSectionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const resizable = cell.type === 'query';
   const [dragHandle, setDragHandle] = useState<HTMLButtonElement | null>(null);
 
@@ -144,7 +140,7 @@ const NotebookSection = ({
     >
       {/* Side rail */}
       <div className='flex flex-col p-1 border-e border-separator-subtle dx-attention-surface'>
-        <Button
+        <Button.Button
           ref={setDragHandle}
           variant='ghost'
           icon='ph--dots-six-vertical--regular'
@@ -153,7 +149,12 @@ const NotebookSection = ({
         />
         <Menu.Root>
           <Menu.Trigger asChild>
-            <Button variant='ghost' icon='ph--dots-three--regular' iconOnly label={t('notebook-cell-insert.label')} />
+            <Button.Button
+              variant='ghost'
+              icon='ph--dots-three--regular'
+              iconOnly
+              label={t('notebook-cell-insert.label')}
+            />
           </Menu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
         </Menu.Root>

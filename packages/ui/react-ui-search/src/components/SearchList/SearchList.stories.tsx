@@ -6,8 +6,12 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { KeyboardEvent, useEffect, useRef, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Button, Field, Input, Panel, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
@@ -98,7 +102,7 @@ const ControlledStory = ({ items = defaultItems }: StoryArgs) => {
         <Panel.Header>
           <Toolbar.Root>
             <SearchList.Input placeholder='Controlled search...' onChange={(e) => handleQueryChange(e.target.value)} />
-            <Button onClick={() => handleQueryChange('')}>Clear Query</Button>
+            <Button.Button onClick={() => handleQueryChange('')}>Clear Query</Button.Button>
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body asChild>
@@ -351,7 +355,7 @@ const CustomInput = () => {
   return (
     <Toolbar.Root>
       <Field.Root>
-        <Input
+        <Input.Input
           type='text'
           value={query}
           placeholder='Custom input...'
@@ -359,7 +363,7 @@ const CustomInput = () => {
           onKeyDown={handleKeyDown}
         />
       </Field.Root>
-      {query && <Button icon='ph--x--regular' iconOnly label='Clear' onClick={() => onQueryChange('')} />}
+      {query && <Button.Button icon='ph--x--regular' iconOnly label='Clear' onClick={() => onQueryChange('')} />}
     </Toolbar.Root>
   );
 };

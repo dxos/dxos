@@ -8,20 +8,18 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useQuery, useResolveRef } from '@dxos/echo-react';
-import {
-  Block,
-  Button,
-  Card,
-  Checkbox,
-  Empty,
-  Field,
-  Panel,
-  ScrollArea,
-  Toolbar,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Block from '@dxos/react-ui/Block';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Checkbox from '@dxos/react-ui/Checkbox';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as Field from '@dxos/react-ui/Field';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Message } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -37,7 +35,7 @@ type SubscriptionTileData = {
 const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<SubscriptionTileData>, 'data' | 'location'>>(
   ({ data, location }, forwardedRef) => {
     const { subscription, selected, onToggle } = data;
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(meta.profile.key);
     return (
       <Mosaic.Tile
         asChild
@@ -48,15 +46,15 @@ const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Subscri
       >
         <Card.Root border={false} ref={forwardedRef} data-testid='subscription-card'>
           <Card.Header>
-            <Block>
+            <Block.Block>
               <Field.Root>
-                <Checkbox
+                <Checkbox.Checkbox
                   checked={selected}
                   onCheckedChange={() => onToggle(subscription.email)}
                   data-testid='subscription-checkbox'
                 />
               </Field.Root>
-            </Block>
+            </Block.Block>
             <Card.Title>{subscription.name ?? subscription.email}</Card.Title>
           </Card.Header>
           <Card.Body>
@@ -82,7 +80,7 @@ export type SubscriptionsArticleProps = AppSurface.ObjectArticleProps<Mailbox.Ma
  * unsubscribe (`UnsubscribeSender`). Already-filtered senders drop out of the list.
  */
 export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const feed = useResolveRef(mailbox.feed);
   const db = Obj.getDatabase(mailbox);
@@ -174,7 +172,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
         <Panel.Header>
           <Toolbar.Root classNames='dx-document px-3'>
             <Field.Root>
-              <Checkbox
+              <Checkbox.Checkbox
                 checked={allSelected ? true : someSelected ? 'indeterminate' : false}
                 disabled={results.length === 0}
                 onCheckedChange={() => toggleAll()}
@@ -182,7 +180,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
               />
             </Field.Root>
             <SearchList.Input classNames='grow' placeholder={t('subscriptions.filter.placeholder')} />
-            <Button
+            <Button.Button
               icon='ph--trash--regular'
               iconOnly={false}
               disabled={selected.size === 0}
@@ -194,7 +192,7 @@ export const SubscriptionsArticle = ({ role, subject: mailbox }: SubscriptionsAr
         </Panel.Header>
         <Panel.Body asChild>
           {empty ? (
-            <Empty>{empty}</Empty>
+            <Empty.Empty>{empty}</Empty.Empty>
           ) : (
             <ScrollArea.Root orientation='vertical'>
               <ScrollArea.Viewport classNames='dx-document'>

@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Button, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '../../meta.ts';
 
@@ -13,7 +14,7 @@ import { meta } from '../../meta.ts';
  * Gives the user the option to stay in the browser instead.
  */
 export const NativeRedirectDialog = ({ onOpenHere }: { onOpenHere: () => void }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <div className='flex flex-col items-center justify-center h-full gap-8'>
@@ -21,9 +22,9 @@ export const NativeRedirectDialog = ({ onOpenHere }: { onOpenHere: () => void })
         composer
       </h1>
       <p className='text-lg text-fg-subtle'>{t('native-redirect.message')}</p>
-      <Button variant='ghost' onClick={onOpenHere}>
+      <Button.Button variant='ghost' onClick={onOpenHere}>
         {t('open-in-browser-button.label')}
-      </Button>
+      </Button.Button>
     </div>
   );
 };

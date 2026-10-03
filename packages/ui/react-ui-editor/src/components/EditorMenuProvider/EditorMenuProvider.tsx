@@ -16,20 +16,16 @@ import React, {
 import { addEventListener } from '@dxos/async';
 import { invariant } from '@dxos/invariant';
 import { useControllableState } from '@dxos/react-hooks';
-import {
-  DX_ANCHOR_ACTIVATE,
-  type DxAnchorActivate,
-  Field,
-  Icon,
-  Input,
-  Popover,
-  Separator,
-  Typography,
-  toLocalizedString,
-  useDynamicRef,
-  useTranslation,
-  virtualAnchor,
-} from '@dxos/react-ui';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as Separator from '@dxos/react-ui/Separator';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Typography from '@dxos/react-ui/Typography';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -79,11 +75,11 @@ export const EditorMenuProvider = ({
   onQueryChange,
   onNavigate,
 }: EditorMenuProviderProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Hold the latest `getView` so callbacks/effects always read the current view without re-subscribing.
-  const getViewRef = useDynamicRef(getView);
+  const getViewRef = Hooks.useDynamicRef(getView);
   const [open, setOpen] = useControllableState({
     prop: openProp,
     defaultProp: defaultOpen,
@@ -187,7 +183,7 @@ export const EditorMenuProvider = ({
     <Popover.Root
       open={open}
       onOpenChange={({ open }) => setOpen(open)}
-      positioning={{ ...virtualAnchor(triggerRef), placement: 'bottom-start' }}
+      positioning={{ ...VirtualAnchor.virtualAnchor(triggerRef), placement: 'bottom-start' }}
       // In search mode the query is typed into the popover's own input, so it must take focus.
       autoFocus={!!search}
       // Focus stays in the editor; the menu machine still routes Escape here.
@@ -208,7 +204,7 @@ export const EditorMenuProvider = ({
       >
         {search && (
           <Field.Root>
-            <Input
+            <Input.Input
               ref={searchInputRef}
               variant='subdued'
               classNames='shrink-0 mb-1'
@@ -249,7 +245,7 @@ const Menu = ({ groups, currentItem, onSelect }: MenuProps) => {
       {groups.map((group, index) => (
         <Fragment key={group.id}>
           <MenuGroup group={group} currentItem={currentItem} onSelect={onSelect} />
-          {index < groups.length - 1 && <Separator />}
+          {index < groups.length - 1 && <Separator.Separator />}
         </Fragment>
       ))}
     </ul>
@@ -266,14 +262,14 @@ type MenuGroupProps = {
 } & Pick<MenuItemProps, 'onSelect'>;
 
 const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
 
   return (
     <>
       {group.label && (
-        <Typography tone='muted' classNames='px-2'>
-          {toLocalizedString(group.label, t)}
-        </Typography>
+        <Typography.Typography tone='muted' classNames='px-2'>
+          {ThemeProvider.toLocalizedString(group.label, t)}
+        </Typography.Typography>
       )}
 
       {group.items.map((item) => (
@@ -294,7 +290,7 @@ type MenuItemProps = {
 };
 
 const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
 
   const listRef = useRef<HTMLLIElement>(null);
   useEffect(() => {
@@ -310,8 +306,8 @@ const MenuItem = ({ item, current, onSelect }: MenuItemProps) => {
   return (
     // Menu row metrics without a Menu machine: the popover keeps focus in the editor, so `current` is the highlight.
     <li ref={listRef} className='dx-menu-item' data-highlighted={current ? '' : undefined} onClick={handleSelect}>
-      {item.icon && <Icon icon={item.icon} />}
-      <span className='dx-menu-item-text'>{toLocalizedString(item.label, t)}</span>
+      {item.icon && <Icon.Icon icon={item.icon} />}
+      <span className='dx-menu-item-text'>{ThemeProvider.toLocalizedString(item.label, t)}</span>
     </li>
   );
 };

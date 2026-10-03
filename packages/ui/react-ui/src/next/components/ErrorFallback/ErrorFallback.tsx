@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import ErrorStackParser from 'error-stack-parser';
 import React, { type PropsWithChildren } from 'react';
 import { type FallbackProps } from 'react-error-boundary';
@@ -14,7 +16,7 @@ import { safeStringify } from '@dxos/util';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
-import { SystemButton } from '../SystemButton/index.ts';
+import * as SystemButton from '../SystemButton/SystemButton.tsx';
 import { type ParsedStackFrame } from './parse-stack.ts';
 
 //
@@ -166,3 +168,6 @@ const parseLocalFrame = (fileUrl: string, line?: number, column?: number): Local
     return undefined;
   }
 };
+
+export { type ParsedStackFrame, parseCaptureOwnerStack } from './parse-stack.ts';
+export { ErrorBoundary, type ErrorBoundaryProps, type FallbackProps } from '@dxos/react-error-boundary';

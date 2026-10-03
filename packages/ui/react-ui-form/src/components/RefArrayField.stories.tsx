@@ -8,8 +8,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Annotation, DXN, Entity, Obj, Ref, Tag, Type } from '@dxos/echo';
-import { Container, Panel, ScrollArea, Typography } from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Typography from '@dxos/react-ui/Typography';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, hues } from '@dxos/ui-types';
 
 import { type RefFieldDataProps } from '#types';
@@ -101,7 +104,7 @@ const DefaultStory = ({ display, ordered }: StoryArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container>
+            <Container.Container>
               <Form.Root
                 schema={schema}
                 values={values}
@@ -115,17 +118,17 @@ const DefaultStory = ({ display, ordered }: StoryArgs) => {
                   <Form.Fields />
                 </Form.Content>
               </Form.Root>
-            </Container>
+            </Container.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
       <Panel.Footer>
-        <Typography truncate data-testid='values'>
+        <Typography.Typography truncate data-testid='values'>
           {JSON.stringify(labels)}
-        </Typography>
-        <Typography truncate data-testid='activated'>
+        </Typography.Typography>
+        <Typography.Typography truncate data-testid='activated'>
           {activated ?? ''}
-        </Typography>
+        </Typography.Typography>
       </Panel.Footer>
     </Panel.Root>
   );

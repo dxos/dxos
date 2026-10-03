@@ -14,13 +14,17 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
-import { Block, Card, Icon, Popover, useThemeMode } from '@dxos/react-ui';
 import {
   EditorPreviewProvider,
   type EditorPreviewProviderProps,
   useEditorPreview,
   useTextEditor,
 } from '@dxos/react-ui-editor';
+import * as Block from '@dxos/react-ui/Block';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import {
   createBasicExtensions,
@@ -52,9 +56,9 @@ const PreviewCard = () => {
       <Popover.Body>
         <Card.Root border={false} classNames='dx-card-popover'>
           <Card.Header>
-            <Block>
-              <Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
-            </Block>
+            <Block.Block>
+              <Icon.Icon icon={Obj.getIcon(target.object)?.icon ?? 'ph--circle-dashed--regular'} />
+            </Block.Block>
             <Card.Title>{Obj.getLabel(target.object) ?? target.label}</Card.Title>
             <Popover.CloseTrigger asChild>
               <Card.Action system='close' />
@@ -77,7 +81,7 @@ type StoryArgs = {
  * surface renders the card.
  */
 const DefaultStory = ({ text }: StoryArgs) => {
-  const themeMode = useThemeMode();
+  const themeMode = UiHooks.useThemeMode();
   const resolvers = Hooks.useCapabilities(PreviewCapabilities.LinkResolver);
   const handleLookup = useCallback<NonNullable<EditorPreviewProviderProps['onLookup']>>(
     async (ref) => {

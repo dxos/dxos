@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Steps as StepsPrimitive, useStepsContext } from '@ark-ui/react/steps';
 import React, { type CSSProperties, forwardRef, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +14,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
-import { type CSSVariables } from '../Container/index.ts';
+import type * as Container from '../Container/Container.tsx';
 
 /** One stage of a plan that has identity: a stage the caller can address and select. */
 export type Step = {
@@ -77,7 +79,7 @@ export const Steps = forwardRef<HTMLDivElement, StepsProps>(
   ) => {
     const count = stepCount(steps);
     const { shown, handover } = useHandover(active, duration);
-    const rootStyle: CSSProperties & CSSVariables = { ...style, '--dx-steps-duration': `${duration}ms` };
+    const rootStyle: CSSProperties & Container.CSSVariables = { ...style, '--dx-steps-duration': `${duration}ms` };
 
     return (
       <StepsPrimitive.Root

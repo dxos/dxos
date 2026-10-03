@@ -6,8 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 import * as Tone from 'tone';
 
-import { Button, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Sound, createDrum } from './sounds.ts';
 
@@ -79,7 +80,7 @@ const DefaultStory = () => {
 
   return (
     <Toolbar.Root>
-      <Button
+      <Button.Button
         icon='ph--play--regular'
         iconOnly
         variant='ghost'
@@ -87,7 +88,7 @@ const DefaultStory = () => {
         label='play'
         onClick={() => setRunning(true)}
       />
-      <Button
+      <Button.Button
         icon='ph--stop--regular'
         iconOnly
         variant='ghost'

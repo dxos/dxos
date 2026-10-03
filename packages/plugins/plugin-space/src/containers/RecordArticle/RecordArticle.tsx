@@ -11,7 +11,6 @@ import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { Card, Field, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
   type ActionExecutor,
@@ -22,6 +21,12 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { mx } from '@dxos/ui-theme';
 
 import { ObjectCard, RelatedTypeFilter } from '#components';
@@ -30,7 +35,7 @@ import { meta } from '#meta';
 import { SpaceSurface } from '#types';
 
 export const RecordArticle = ({ role, subject, attendableId }: AppSurface.ObjectArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { actions, onAction } = useMenuActions(attendableId);
   useObject(subject);
   // Obj.getType fails for database-registered (dynamic) schemas due to DXN mismatch;
@@ -69,12 +74,12 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 
             {/* TODO(burdon): Only show label if surface exists? */}
             {/* TODO(burdon): Remove this section — move the related actions into the object menu. */}
-            <Flex column gap='form'>
+            <Flex.Flex column gap='form'>
               <Field.Root>
                 <Field.Label>{t('related-actions.label')}</Field.Label>
               </Field.Root>
               <Surface.Surface type={SpaceSurface.Prompts} data={{ subject, attendableId: subject.id }} limit={1} />
-            </Flex>
+            </Flex.Flex>
 
             {/* Gated on the unfiltered set so hiding every type does not remove the filter itself. */}
             {relatedObjects.length > 0 && (

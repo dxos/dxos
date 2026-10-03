@@ -35,9 +35,10 @@ const isConventional = (key, packageName) =>
  * Entry points that predate this rule and are each a migration of their own.
  *
  * TODO(wittjosiah): Whittle this down to nothing. `echo/internal` should become actually internal;
- *  `app-framework/config` only re-exports `Config2` from `@dxos/protocols`.
+ *  `app-framework/config` only re-exports `Config2` from `@dxos/protocols`; `react-ui/theme.css` is the
+ *  component stylesheet, which belongs in a conventional asset entry point.
  */
-const PENDING_ENTRYPOINTS = new Set(['@dxos/app-framework/config', '@dxos/echo/internal']);
+const PENDING_ENTRYPOINTS = new Set(['@dxos/app-framework/config', '@dxos/echo/internal', '@dxos/react-ui/theme.css']);
 
 /**
  * ESLint rule rejecting entry points that are not namespaces in a package that has migrated to

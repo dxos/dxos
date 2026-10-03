@@ -6,14 +6,14 @@ import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Collection } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
 export type CollectionSectionProps = AppSurface.ObjectSectionProps<Collection.Collection>;
 
 export const CollectionSection = ({ role, subject }: CollectionSectionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   // TODO(wittjosiah): Better placeholder.
   return (

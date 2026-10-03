@@ -10,12 +10,12 @@
 import React from 'react';
 
 import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
-import { Button } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 
 export const SampleStatusIndicator = () => {
   return (
     <StatusBar.Item>
-      <Button variant='ghost' icon='ph--book-open--regular' iconOnly label='Sample plugin active.' />
+      <Button.Button variant='ghost' icon='ph--book-open--regular' iconOnly label='Sample plugin active.' />
     </StatusBar.Item>
   );
 };

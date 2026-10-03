@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { createContext, useContext } from 'react';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { DefaultGutterProvider, type Gutter, type Level } from '../Container/index.ts';
+import * as Container from '../Container/Container.tsx';
 
 //
 // Root
@@ -17,17 +19,17 @@ import { DefaultGutterProvider, type Gutter, type Level } from '../Container/ind
 type PanelRootProps = {
   size?: Size;
   /** An absolute rung of the surface ladder; `base` by default, as the current Panel's content. */
-  level?: Exclude<Level, '+1'>;
+  level?: Exclude<Container.Level, '+1'>;
   /** `document` keeps a scrolling Body's content at the reading width, centred, while it still scrolls at the panel's edge. */
   width?: 'document';
   /**
    * The gutter of the first Container under the Body when it names none (`sm`, the form inset, by default); content
    * that puts icons in the rails names `gutter='rail'` itself.
    */
-  gutter?: Exclude<Gutter, 'inherit'>;
+  gutter?: Exclude<Container.Gutter, 'inherit'>;
 };
 
-const PanelGutterContext = createContext<Exclude<Gutter, 'inherit'>>('sm');
+const PanelGutterContext = createContext<Exclude<Container.Gutter, 'inherit'>>('sm');
 
 /**
  * The plank host (Phase 4 decision 1): fills its parent, sets `data-size` and a level for its subtree, and is the pane's
@@ -103,11 +105,11 @@ const PanelBody = slottable<HTMLDivElement, PanelBodyProps>(({ children, asChild
   const gutter = useContext(PanelGutterContext);
   const { className, ...rest } = composableProps(props, { classNames: recipes.panelBody() });
   return (
-    <DefaultGutterProvider gutter={gutter}>
+    <Container.DefaultGutterProvider gutter={gutter}>
       <ark.div asChild={asChild} {...rest} data-scope='panel' data-part='body' className={className} ref={forwardedRef}>
         {children}
       </ark.div>
-    </DefaultGutterProvider>
+    </Container.DefaultGutterProvider>
   );
 });
 
@@ -138,12 +140,11 @@ const PanelFooter = slottable<HTMLDivElement, PanelFooterProps>(({ children, asC
 });
 
 PanelFooter.displayName = 'Panel.Footer';
-
-export const Panel = {
-  Root: PanelRoot,
-  Header: PanelHeader,
-  Body: PanelBody,
-  Footer: PanelFooter,
+export type {
+  PanelBodyProps as BodyProps,
+  PanelFooterProps as FooterProps,
+  PanelHeaderProps as HeaderProps,
+  PanelRootProps as RootProps,
 };
 
-export type { PanelBodyProps, PanelFooterProps, PanelHeaderProps, PanelRootProps };
+export { PanelBody as Body, PanelFooter as Footer, PanelHeader as Header, PanelRoot as Root };

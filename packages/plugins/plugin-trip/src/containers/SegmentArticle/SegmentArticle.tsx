@@ -7,8 +7,11 @@ import React, { useCallback, useMemo, useState } from 'react';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
-import { Panel, ToggleGroup, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { BookingSearch } from '#containers';
 import { meta } from '#meta';
@@ -25,7 +28,7 @@ type ViewMode = 'form' | 'search';
 export type SegmentArticleProps = AppSurface.ArticleProps<Segment.Segment, {}, Trip.Trip>;
 
 export const SegmentArticle = ({ role, subject: segment }: SegmentArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const type = Obj.getType(segment);
   const echoSchema = type && Type.getSchema(type);
   const schema = useMemo(() => echoSchema && omitId(echoSchema), [echoSchema]);

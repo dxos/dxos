@@ -8,7 +8,7 @@ import { useMemo } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { Annotation, Obj } from '@dxos/echo';
-import { useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { ArchivedAnnotation, isArchivable } from '@dxos/schema';
 
 import { meta } from '#meta';
@@ -22,7 +22,7 @@ export type ArchiveMenuItem = { label: string; icon: string; onClick: () => void
  * the object's type is not archivable or the object is not persisted.
  */
 export const useArchiveMenuItem = (object: Obj.Unknown): { archived: boolean; item?: ArchiveMenuItem } => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const archivable = isArchivable(object) && Obj.getDatabase(object) !== undefined;
   const archived = Option.getOrElse(

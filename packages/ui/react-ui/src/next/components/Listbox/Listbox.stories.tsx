@@ -14,19 +14,16 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import {
-  Button,
-  Checkbox,
-  Container,
-  Listbox,
-  type ListboxOption,
-  Panel,
-  ScrollArea,
-  SystemButton,
-  Typography,
-} from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Checkbox from '../Checkbox/Checkbox.tsx';
+import * as Container from '../Container/Container.tsx';
+import * as Panel from '../Panel/Panel.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as SystemButton from '../SystemButton/SystemButton.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Listbox from './Listbox.tsx';
 
-const PEOPLE: ListboxOption[] = [
+const PEOPLE: Listbox.Option[] = [
   { value: 'alice', label: 'Alice Green', icon: 'ph--user--regular' },
   { value: 'bob', label: 'Bob Grey', icon: 'ph--user--regular', description: 'Away until Monday' },
   { value: 'carol', label: 'Carol Black', icon: 'ph--user--regular' },
@@ -34,35 +31,35 @@ const PEOPLE: ListboxOption[] = [
   { value: 'erin', label: 'Erin White', icon: 'ph--user--regular' },
 ];
 
-const TAGS: ListboxOption[] = [
+const TAGS: Listbox.Option[] = [
   { value: 'urgent', label: 'Urgent' },
   { value: 'later', label: 'Later' },
   { value: 'idea', label: 'Idea' },
 ];
 
-const LONG: ListboxOption[] = Array.from({ length: 40 }, (_, index) => ({
+const LONG: Listbox.Option[] = Array.from({ length: 40 }, (_, index) => ({
   value: `item-${index + 1}`,
   label: `Item ${index + 1}`,
 }));
 
-const TASKS: ListboxOption[] = [
+const TASKS: Listbox.Option[] = [
   { value: 'report', label: 'Write report' },
   { value: 'review', label: 'Review budget' },
 ];
 
-const MANY: ListboxOption[] = Array.from({ length: 1_000 }, (_, index) => ({
+const MANY: Listbox.Option[] = Array.from({ length: 1_000 }, (_, index) => ({
   value: `row-${index + 1}`,
   label: `Row ${index + 1}`,
 }));
 
-const FILES: ListboxOption[] = [
+const FILES: Listbox.Option[] = [
   { value: 'a', label: 'Annual plan', icon: 'ph--file--regular', description: '12 KB' },
   { value: 'b', label: 'Budget', icon: 'ph--table--regular', description: '1.4 MB' },
 ];
 
-const NONE: ListboxOption[] = [];
+const NONE: Listbox.Option[] = [];
 
-const RECENT: ListboxOption[] = [
+const RECENT: Listbox.Option[] = [
   { value: 'notes', label: 'Notes', icon: 'ph--file--regular' },
   { value: 'tasks', label: 'Tasks', icon: 'ph--file--regular' },
 ];
@@ -90,7 +87,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                   <Listbox.ItemText />
                   {item.description && <Listbox.ItemDescription />}
                   {item.value === 'carol' && (
-                    <Button icon='ph--envelope--regular' label='Message Carol' iconOnly variant='ghost' />
+                    <Button.Button icon='ph--envelope--regular' label='Message Carol' iconOnly variant='ghost' />
                   )}
                   <Listbox.ItemIndicator />
                 </>
@@ -99,7 +96,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           ))}
         </Listbox.Content>
       </Listbox.Root>
-      <Typography data-testid={`people-${size}-value`}>{person.join(', ') || 'None'}</Typography>
+      <Typography.Typography data-testid={`people-${size}-value`}>{person.join(', ') || 'None'}</Typography.Typography>
       <Listbox.Root items={TAGS} selectionMode='multiple' value={tags} onValueChange={setTags}>
         <Listbox.Label>Tags</Listbox.Label>
         <Listbox.Content>
@@ -114,7 +111,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           </Listbox.ItemGroup>
         </Listbox.Content>
       </Listbox.Root>
-      <Typography data-testid={`tags-${size}-value`}>{tags.join(', ') || 'None'}</Typography>
+      <Typography.Typography data-testid={`tags-${size}-value`}>{tags.join(', ') || 'None'}</Typography.Typography>
       <div className='h-40'>
         <Listbox.Root items={LONG} data-testid={`long-${size}`}>
           <Listbox.Content aria-label='Long'>
@@ -129,8 +126,8 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           <Panel.Body asChild data-testid={`panel-${size}`}>
             <ScrollArea.Root>
               <ScrollArea.Viewport asChild>
-                <Container gutter='rail'>
-                  <Typography data-testid={`panel-heading-${size}`}>In a panel</Typography>
+                <Container.Container gutter='rail'>
+                  <Typography.Typography data-testid={`panel-heading-${size}`}>In a panel</Typography.Typography>
                   <Listbox.Root items={LONG}>
                     <Listbox.Content aria-label='In panel' scroll={false}>
                       {LONG.map((item) => (
@@ -138,7 +135,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                       ))}
                     </Listbox.Content>
                   </Listbox.Root>
-                </Container>
+                </Container.Container>
               </ScrollArea.Viewport>
             </ScrollArea.Root>
           </Panel.Body>
@@ -159,9 +156,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Listbox.Content data-testid={`tasks-${size}`}>
           {tasks.map((item) => (
             <Listbox.Item key={item.value} item={item} data-testid={`task-${item.value}-${size}`}>
-              <Checkbox aria-label={`Done ${item.label}`} />
+              <Checkbox.Checkbox aria-label={`Done ${item.label}`} />
               <Listbox.ItemText />
-              <Button icon='ph--pen--regular' label={`Edit ${item.label}`} iconOnly variant='ghost' />
+              <Button.Button icon='ph--pen--regular' label={`Edit ${item.label}`} iconOnly variant='ghost' />
               <SystemButton.Remove
                 onClick={() => setTasks((tasks) => tasks.filter((task) => task.value !== item.value))}
               />

@@ -4,19 +4,19 @@
 
 import React from 'react';
 
-import { Button, type ButtonVariant } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 
 export const TEST_ID = 'test';
 
 export type TestProps = {
   'icon': string;
   'label': string;
-  'variant'?: ButtonVariant;
+  'variant'?: Button.ButtonVariant;
   'onClick'?: () => void;
   'id'?: string;
   'data-testid'?: string;
 };
 
 export const Test = (props: TestProps) => {
-  return <Button {...props} />;
+  return <Button.Button {...props} />;
 };

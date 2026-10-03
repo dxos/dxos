@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type ComponentPropsWithoutRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 
 export type AttentionGlyphPresence = 'none' | 'one' | 'many';
 
@@ -56,7 +58,7 @@ const PresenceMany = () => (
 /** Every spinner on the page shares one phase, so a list of syncing items turns together rather than flickering. */
 const Syncing = () => {
   const style = useMemo<CSSProperties>(() => ({ animationDelay: `-${Date.now() % 2_000}ms` }), []);
-  return <Icon icon='ph--circle-notch--bold' data-spin='' style={style} />;
+  return <Icon.Icon icon='ph--circle-notch--bold' data-spin='' style={style} />;
 };
 
 /**

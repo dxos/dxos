@@ -14,11 +14,14 @@ import { invariant } from '@dxos/invariant';
 import { random } from '@dxos/random';
 import { PublicKey } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
-import { Button, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
 import { ViewEditor } from '@dxos/react-ui-form';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { ViewModel, getSchemaFromPropertyDefinitions } from '@dxos/schema';
 import { TestSchema, createObjectFactory } from '@dxos/schema/testing';
 
@@ -363,7 +366,7 @@ const ExternalMutationStory = () => {
   return (
     <div className='flex flex-col h-full'>
       <Toolbar.Root>
-        <Button onClick={handleMutate}>Mutate row externally</Button>
+        <Button.Button onClick={handleMutate}>Mutate row externally</Button.Button>
       </Toolbar.Root>
       <TableComponent.Root ref={tableRef}>
         <Panel.Root>

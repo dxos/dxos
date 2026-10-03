@@ -5,7 +5,8 @@
 import React, { type ComponentType } from 'react';
 
 import { random } from '@dxos/random';
-import { Button, SystemButton } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { type ContentBlock, Message } from '@dxos/types';
 import { type XmlWidgetRegistry } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
@@ -474,8 +475,14 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
                 bubble's edge — right-aligned, like the words it belongs to. */}
             <div className='flex items-center justify-end gap-1 pt-1 text-xs text-fg-muted opacity-0 transition-opacity group-hover:opacity-100'>
               <CopyButton message={message} />
-              <Button icon='ph--arrow-counter-clockwise--regular' iconOnly label='Rewind' variant='ghost' size='sm' />
-              <Button icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size='sm' />
+              <Button.Button
+                icon='ph--arrow-counter-clockwise--regular'
+                iconOnly
+                label='Rewind'
+                variant='ghost'
+                size='sm'
+              />
+              <Button.Button icon='ph--git-branch--regular' iconOnly label='Fork' variant='ghost' size='sm' />
               <span className='text-fg-subtle'>#{index}</span>
               <span>{timeOf(message)}</span>
             </div>
@@ -486,7 +493,7 @@ const AssistantChrome = ({ message, index, selected, children }: MessageChromePr
           {children}
           <div className='flex items-center gap-1 pt-1 text-xs text-fg-muted opacity-0 transition-opacity group-hover:opacity-100'>
             <CopyButton message={message} />
-            <Button icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size='sm' />
+            <Button.Button icon='ph--arrow-bend-up-left--regular' iconOnly label='Reply' variant='ghost' size='sm' />
             <span className='text-fg-subtle'>#{index}</span>
             <span>{timeOf(message)}</span>
           </div>
@@ -536,7 +543,7 @@ const CommentChrome = ({ message, children }: MessageChromeProps) => (
       <span className='font-medium'>{message.sender.name}</span>
       <span>{timeOf(message)}</span>
       <span className='grow' />
-      <Button
+      <Button.Button
         icon={message.properties?.resolved ? 'ph--check-circle--regular' : 'ph--circle--regular'}
         iconOnly
         label='Resolve'

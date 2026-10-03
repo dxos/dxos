@@ -7,8 +7,13 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Entity, Obj } from '@dxos/echo';
-import { Button, Container, Panel, ScrollArea, Toolbar, Typography } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Container from '@dxos/react-ui/Container';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { type RefFieldDataProps, type RefOption } from '#types';
 
@@ -50,7 +55,7 @@ const DefaultStory = (_: PaneArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container>
+            <Container.Container>
               <Form.Root
                 schema={RefSchema}
                 values={values}
@@ -65,14 +70,14 @@ const DefaultStory = (_: PaneArgs) => {
                   <Form.Fields />
                 </Form.Content>
               </Form.Root>
-            </Container>
+            </Container.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
       <Panel.Footer>
-        <Typography truncate data-testid='values'>
+        <Typography.Typography truncate data-testid='values'>
           {JSON.stringify(values)}
-        </Typography>
+        </Typography.Typography>
       </Panel.Footer>
     </Panel.Root>
   );
@@ -155,7 +160,7 @@ const CustomTriggerStory = () => {
       <ObjectPicker
         options={OPTIONS}
         onSelect={setPicked}
-        trigger={<Button icon='ph--plus--regular' iconOnly label='Add object' />}
+        trigger={<Button.Button icon='ph--plus--regular' iconOnly label='Add object' />}
       />
       <span data-testid='picked'>{picked}</span>
     </Toolbar.Root>

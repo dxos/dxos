@@ -6,7 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { Container, Panel, type PanelRootProps, ScrollArea } from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { NextJsonLayout, type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
@@ -16,7 +18,7 @@ import { SCALAR_VALUES, ScalarSchema, type ScalarValues } from './testing.ts';
 
 const fieldMap = { model: createSelectField({ options: ['opus', 'sonnet', 'haiku'] }) };
 
-type StoryArgs = PaneArgs & { size?: PanelRootProps['size'] };
+type StoryArgs = PaneArgs & { size?: Panel.RootProps['size'] };
 
 /**
  * Same contract as the current Form: schema, values, onValuesChanged, onSave/onCancel, fieldMap, test ids. The values
@@ -31,7 +33,7 @@ const DefaultStory = ({ size = 'md' }: StoryArgs) => {
         <Panel.Body asChild>
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
-              <Container>
+              <Container.Container>
                 <Form.Root
                   schema={ScalarSchema}
                   values={values}
@@ -47,7 +49,7 @@ const DefaultStory = ({ size = 'md' }: StoryArgs) => {
                     <Form.Actions />
                   </Form.Content>
                 </Form.Root>
-              </Container>
+              </Container.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>

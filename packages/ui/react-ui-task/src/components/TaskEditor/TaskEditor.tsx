@@ -15,8 +15,11 @@ import React, {
 
 import { type Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Field, Input, composable, composableProps, useTranslation } from '@dxos/react-ui';
 import { MarkdownEditable, type MarkdownEditableController, type MarkdownEditableProps } from '@dxos/react-ui-markdown';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Util from '@dxos/react-ui/Util';
 import { type Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps, type ThemedClassName } from '@dxos/ui-types';
@@ -103,7 +106,7 @@ export type TaskEditorTitleProps = ThemedClassName<{}>;
 
 /** The task's title, committing on blur and on Enter. */
 const TaskEditorTitle = ({ classNames }: TaskEditorTitleProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { task, current, draft, setDraft, commitTitle, onUpdate } = useTaskEditorContext('TaskEditor.Title');
   const inputRef = useRef<HTMLInputElement>(null);
   // An untitled task is one just added (a sub-task from a row's menu), so its title is where the
@@ -127,7 +130,7 @@ const TaskEditorTitle = ({ classNames }: TaskEditorTitleProps) => {
 
   return (
     <Field.Root>
-      <Input
+      <Input.Input
         variant='subdued'
         // An input clips its overflow rather than wrapping it, so a long title ends mid-word with
         // nothing to say it continues; the ellipsis says so. (Shown while the field is not focused,
@@ -161,7 +164,7 @@ export type TaskEditorDescriptionProps = ThemedClassName<{
 
 /** The task's description, as the markdown it is. */
 const TaskEditorDescription = ({ placeholder, extensions, classNames }: TaskEditorDescriptionProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { task, current, onUpdate, descriptionRef } = useTaskEditorContext('TaskEditor.Description');
 
   return (
@@ -213,9 +216,9 @@ export type TaskEditorProps = ComposableProps<
  * and edits it; the strip under a list has neither until a row is selected, which is what all of
  * that machinery is for.
  */
-const TaskEditorComposite = composable<HTMLDivElement, TaskEditorProps>(
+const TaskEditorComposite = Util.composable<HTMLDivElement, TaskEditorProps>(
   ({ task, onUpdate, showDescription = false, descriptionExtensions, ...props }, forwardedRef) => {
-    const { className, ...rest } = composableProps(props);
+    const { className, ...rest } = Util.composableProps(props);
     return (
       <TaskEditorRoot task={task} onUpdate={onUpdate}>
         <div {...rest} className={mx('flex flex-col w-full min-w-0 gap-2', className)} ref={forwardedRef}>

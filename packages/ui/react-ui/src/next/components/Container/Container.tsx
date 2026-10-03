@@ -2,13 +2,15 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type CSSProperties, type PropsWithChildren, createContext, useContext, useEffect, useRef } from 'react';
 
 import { log } from '@dxos/log';
 import { useComposedRefs } from '@dxos/react-hooks';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 

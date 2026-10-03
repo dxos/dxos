@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type PullRequest } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -41,7 +41,7 @@ export type PullRequestStatusProps = {
 
 /** One line answering where the pull request stands: open or merged, approved or not, CI green or red. */
 export const PullRequestStatus = ({ reference, title, state, review, ci }: PullRequestStatusProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   return (
     <div
       role='status'

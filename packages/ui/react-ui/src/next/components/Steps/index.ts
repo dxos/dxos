@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Steps.tsx';
+export * as Steps from './Steps.tsx';

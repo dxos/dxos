@@ -5,12 +5,12 @@
 import React, { useCallback, useMemo } from 'react';
 import { I18nProvider } from 'react-aria-components';
 
-import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 import { ChatThread } from '@dxos/react-ui-assistant';
 import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
 import { ChatEditor, ChatStatusIndicator } from '@dxos/react-ui-chat';
 import { translations as chatTranslations } from '@dxos/react-ui-chat/translations';
 import { useFeedModel } from '@dxos/react-ui-feed';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { Message } from '@dxos/types';
 
 import type * as Fold from '../../workspace/Fold.ts';
@@ -88,8 +88,12 @@ const Transcript = ({ turns, busy, onSend }: ThreadIslandProps) => {
  */
 export const ThreadIsland = (props: ThreadIslandProps) => (
   <I18nProvider locale='en-US'>
-    <ThemeProvider tx={defaultTx} themeMode='dark' resourceExtensions={[...assistantTranslations, ...chatTranslations]}>
+    <ThemeProvider.ThemeProvider
+      tx={ThemeProvider.defaultTx}
+      themeMode='dark'
+      resourceExtensions={[...assistantTranslations, ...chatTranslations]}
+    >
       <Transcript {...props} />
-    </ThemeProvider>
+    </ThemeProvider.ThemeProvider>
   </I18nProvider>
 );

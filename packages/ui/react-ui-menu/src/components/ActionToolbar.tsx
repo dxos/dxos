@@ -4,22 +4,16 @@
 
 import React, { type ButtonHTMLAttributes, forwardRef, useCallback, useMemo, useRef, useState } from 'react';
 
-import {
-  Button,
-  type ButtonVariant,
-  type Size,
-  Switch,
-  Toggle,
-  ToggleGroup,
-  Toolbar,
-  type ToolbarRootProps,
-  Tooltip,
-  composable,
-  composableProps,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Switch from '@dxos/react-ui/Switch';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Toggle from '@dxos/react-ui/Toggle';
+import * as ToggleGroup from '@dxos/react-ui/ToggleGroup';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Util from '@dxos/react-ui/Util';
 import {
   type ClassNameValue,
   type DropdownMenuItemGroupProperties,
@@ -50,8 +44,8 @@ type ItemProps<T> = { menu: MenuActions } & T;
 
 type ActionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> & {
   action: MenuAction | MenuItemGroup<DropdownMenuItemGroupProperties>;
-  variant: ButtonVariant;
-  iconSize?: Size;
+  variant: Button.ButtonVariant;
+  iconSize?: Util.Size;
   caretDown?: boolean;
   classNames?: ClassNameValue;
   testId?: string;
@@ -63,7 +57,7 @@ type ActionButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children
  */
 const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
   ({ action, classNames, testId, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const { icon, iconOnly = true, spin } = action.properties;
     const common = {
       ...props,
@@ -73,11 +67,11 @@ const ActionButton = forwardRef<HTMLButtonElement, ActionButtonProps>(
       ref: forwardedRef,
     };
     return icon && iconOnly ? (
-      <Button {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
+      <Button.Button {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
     ) : (
-      <Button {...common} icon={icon}>
+      <Button.Button {...common} icon={icon}>
         <ActionLabel action={action} />
-      </Button>
+      </Button.Button>
     );
   },
 );
@@ -126,7 +120,7 @@ const ActionToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
 /** A `toggle` action is a pressed button whose state is the action's `checked`. */
 const ToggleToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) => {
   const { onAction, caller, iconSize } = menu;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, checked, classNames, spin } = action.properties;
 
   const handlePressedChange = useCallback(() => {
@@ -153,19 +147,19 @@ const ToggleToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   };
 
   return icon && iconOnly ? (
-    <Toggle {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
+    <Toggle.Toggle {...common} icon={icon} label={actionLabel(action, t)} iconOnly />
   ) : (
-    <Toggle {...common} icon={icon}>
+    <Toggle.Toggle {...common} icon={icon}>
       <ActionLabel action={action} />
-    </Toggle>
+    </Toggle.Toggle>
   );
 };
 
 const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) => {
   const { onAction, caller } = menu;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { label, iconOnly, disabled, testId, hidden, checked } = action.properties;
-  const labelStr = toLocalizedString(label, t);
+  const labelStr = ThemeProvider.toLocalizedString(label, t);
 
   const handleCheckedChange = useCallback(() => {
     if (onAction) {
@@ -180,7 +174,7 @@ const SwitchToolbarItem = ({ menu, action }: ItemProps<{ action: MenuAction }>) 
   }
 
   const control = (
-    <Switch
+    <Switch.Switch
       checked={checked}
       disabled={disabled}
       onCheckedChange={handleCheckedChange}
@@ -252,7 +246,7 @@ const ToggleGroupItem = ({
   action,
 }: ItemProps<{ group: MenuItemGroup<ToggleGroupMenuItemGroupProperties>; action: MenuAction }>) => {
   const { onAction, caller, iconSize } = menu;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { icon, iconOnly = true, disabled, testId, hidden, classNames, spin } = action.properties;
 
   const handleClick = useCallback(() => {
@@ -291,9 +285,9 @@ const ToggleGroupToolbarItem = ({
   menu,
   group,
 }: ItemProps<{ group: MenuItemGroup<ToggleGroupMenuItemGroupProperties> }>) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const items = useMenuItems(menu, group);
-  const label = toLocalizedString(group.properties.label, t);
+  const label = ThemeProvider.toLocalizedString(group.properties.label, t);
 
   // Only actions render as toggle group items.
   const children = items
@@ -355,7 +349,7 @@ const ActionToolbarItems = ({ menu }: { menu: MenuActions }) => {
 //
 
 export type ActionToolbarProps = Partial<MenuActions> &
-  Omit<ToolbarRootProps, 'disabled'> & {
+  Omit<Toolbar.RootProps, 'disabled'> & {
     /** The toolbar is dimmed (still operable) while this attendable lacks attention, unless `alwaysActive`. */
     attendableId?: string;
     alwaysActive?: boolean;
@@ -366,7 +360,7 @@ export type ActionToolbarProps = Partial<MenuActions> &
  * children. Mix graph and hand-written controls the other way round by dropping an `ActionMenu` into a plain
  * `Toolbar.Root`. Without a `MenuActions` it is an empty toolbar until one arrives.
  */
-export const ActionToolbar = composable<HTMLDivElement, ActionToolbarProps>(
+export const ActionToolbar = Util.composable<HTMLDivElement, ActionToolbarProps>(
   (
     { items, contributions, onAction, caller, iconSize, attendableId, alwaysActive, children, ...props },
     forwardedRef,
@@ -387,7 +381,7 @@ export const ActionToolbar = composable<HTMLDivElement, ActionToolbarProps>(
 
     return (
       <Toolbar.Root
-        {...composableProps(props, { classNames: attendableId })}
+        {...Util.composableProps(props, { classNames: attendableId })}
         inactive={!alwaysActive && !hasAttention}
         ref={forwardedRef}
       >

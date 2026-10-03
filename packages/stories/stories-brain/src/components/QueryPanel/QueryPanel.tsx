@@ -6,8 +6,11 @@ import * as Schema from 'effect/Schema';
 import React from 'react';
 
 import { Format } from '@dxos/echo';
-import { Button, Panel, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 
 // Default SPARQL: every fact. Parsed to a structured query and run over the store (no Comunica).
 export const DEFAULT_SPARQL = 'SELECT ?fact ?p ?o WHERE { ?fact ?p ?o }';
@@ -20,7 +23,7 @@ const QueryOptions = Schema.Struct({
   ),
 });
 
-export type QueryPanelProps = ThemedClassName<{
+export type QueryPanelProps = Util.ThemedClassName<{
   /** Natural-language question; Generate translates it into the SPARQL field. */
   question: string;
   query: string;
@@ -54,15 +57,15 @@ export const QueryPanel = ({
     <Panel.Header>
       <Toolbar.Root>
         <Toolbar.Separator />
-        <Button
+        <Button.Button
           icon='ph--sparkle--regular'
           iconOnly
           label='Generate SPARQL'
           disabled={!!busy || !question}
           onClick={onGenerate}
         />
-        <Button icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
-        <Button
+        <Button.Button icon='ph--play--regular' iconOnly label='Run' disabled={!!busy || !query} onClick={onRun} />
+        <Button.Button
           icon='ph--arrow-counter-clockwise--regular'
           iconOnly
           label='Reset query'

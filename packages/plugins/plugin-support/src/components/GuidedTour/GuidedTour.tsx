@@ -9,7 +9,10 @@ import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvide
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import type * as Tour from '@dxos/app-toolkit/Tour';
 import { log } from '@dxos/log';
-import { Button, Icon, type TourStepDetails, Tour as UiTour, useTour, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as UiTour from '@dxos/react-ui/Tour';
 
 import { meta } from '#meta';
 
@@ -22,7 +25,7 @@ const toStep = (
   step: Tour.Step,
   index: number,
   capabilities: CapabilityManager.CapabilityManager,
-): TourStepDetails => ({
+): UiTour.StepDetails => ({
   id: step.id ?? String(index + 1),
   type: 'tooltip',
   target: resolveTarget(step.target),
@@ -47,7 +50,7 @@ export type GuidedTourProps = {
 };
 
 export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: GuidedTourProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const manager = PluginManagerProvider.usePluginManager();
   const layout = Hooks.useLayout();
   const paused = layout.dialogOpen;
@@ -72,7 +75,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
   const resumeAt = useRef<string | undefined>(undefined);
   const pausing = useRef(false);
   const lastStepId = useRef<string | undefined>(undefined);
-  const tour = useTour({
+  const tour = UiTour.useTour({
     steps: tourSteps,
     closeOnInteractOutside: false,
     onStepChange: ({ stepId }) => {
@@ -145,7 +148,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
           <div className='flex items-start'>
             <UiTour.Title classNames='grow px-2 py-1 text-accent-fg' data-testid='helpPlugin.tooltip.title' />
             <UiTour.CloseTrigger asChild ref={closeRef}>
-              <Button
+              <Button.Button
                 size='md'
                 icon='ph--x--bold'
                 iconOnly
@@ -158,7 +161,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
           </div>
           <UiTour.Description classNames='grow px-4 my-2 text-accent-fg' />
           <UiTour.Control>
-            <Button
+            <Button.Button
               classNames={[!tour.hasPrevStep && 'invisible']}
               icon='ph--caret-left--regular'
               iconOnly
@@ -169,7 +172,7 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
             />
             <div className='flex grow justify-center'>
               {Array.from({ length: tour.totalSteps }).map((_, index) => (
-                <Icon
+                <Icon.Icon
                   key={index}
                   icon={stepIndex === index ? 'ph--circle--fill' : 'ph--circle--regular'}
                   size='xs'
@@ -179,12 +182,12 @@ export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunnin
             </div>
             {last ? (
               <UiTour.CloseTrigger asChild>
-                <Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
+                <Button.Button variant='primary' data-testid='helpPlugin.tooltip.finish'>
                   {t('tour-done.label')}
-                </Button>
+                </Button.Button>
               </UiTour.CloseTrigger>
             ) : (
-              <Button
+              <Button.Button
                 icon='ph--caret-right--regular'
                 iconOnly
                 label={t('tour-next.label')}

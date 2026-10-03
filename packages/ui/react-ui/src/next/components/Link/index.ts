@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Link.tsx';
+export * as Link from './Link.tsx';

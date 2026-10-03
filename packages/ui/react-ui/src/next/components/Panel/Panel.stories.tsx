@@ -12,11 +12,17 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { type CSSVariables } from '../Container/index.ts';
-import { Block, Button, Container, Icon, Panel, ScrollArea, Toolbar, Typography } from '../index.ts';
+import * as Block from '../Block/Block.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Container from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Panel from './Panel.tsx';
 
 /** A narrow reading width, so the story's pane is wider than the document. */
-const READING_WIDTH: CSSVariables = { '--spacing-document-max-width': '20rem' };
+const READING_WIDTH: Container.CSSVariables = { '--spacing-document-max-width': '20rem' };
 
 /** `--dx-gutter-sm` and `--dx-gutter-md` (ui-theme spacing): the form and dialog insets, the same at every size. */
 const SM_GUTTER = 8;
@@ -33,24 +39,26 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
     <Panel.Root size={size} data-testid={`panel-${size}`}>
       <Panel.Header data-testid={`header-${size}`}>
         <Toolbar.Root>
-          <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+          <Button.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
           <Toolbar.Text>Inbox</Toolbar.Text>
-          <Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
+          <Button.Button icon='ph--dots-three-vertical--regular' label='More' iconOnly />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild data-testid={`body-${size}`}>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container gutter='rail'>
+            <Container.Container gutter='rail'>
               {ROWS.map((label, index) => (
-                <Container key={label} layout='row' data-testid={index === 0 ? `row-${size}` : undefined}>
-                  <Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
-                    <Icon icon='ph--envelope--regular' />
-                  </Block>
-                  <Typography data-testid={index === 0 ? `text-${size}` : undefined}>{label}</Typography>
-                </Container>
+                <Container.Container key={label} layout='row' data-testid={index === 0 ? `row-${size}` : undefined}>
+                  <Block.Block rail='start' data-testid={index === 0 ? `rail-${size}` : undefined}>
+                    <Icon.Icon icon='ph--envelope--regular' />
+                  </Block.Block>
+                  <Typography.Typography data-testid={index === 0 ? `text-${size}` : undefined}>
+                    {label}
+                  </Typography.Typography>
+                </Container.Container>
               ))}
-            </Container>
+            </Container.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
@@ -75,7 +83,7 @@ const TestStory = (args: SizeArgs) => (
       <Panel.Root size={args.size}>
         <Panel.Header data-testid={`empty-header-${args.size}`} />
         <Panel.Body data-testid={`bare-body-${args.size}`}>
-          <Typography>Body</Typography>
+          <Typography.Typography>Body</Typography.Typography>
         </Panel.Body>
       </Panel.Root>
     </div>
@@ -84,9 +92,9 @@ const TestStory = (args: SizeArgs) => (
         <Panel.Body asChild>
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
-              <Container>
-                <Typography data-testid={`reading-text-${args.size}`}>Reading width</Typography>
-              </Container>
+              <Container.Container>
+                <Typography.Typography data-testid={`reading-text-${args.size}`}>Reading width</Typography.Typography>
+              </Container.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>
@@ -97,11 +105,13 @@ const TestStory = (args: SizeArgs) => (
         <Panel.Body asChild>
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
-              <Container data-testid={`default-gutter-body-${args.size}`}>
-                <Container data-testid={`default-gutter-nested-${args.size}`}>
-                  <Typography data-testid={`default-gutter-text-${args.size}`}>Default gutter</Typography>
-                </Container>
-              </Container>
+              <Container.Container data-testid={`default-gutter-body-${args.size}`}>
+                <Container.Container data-testid={`default-gutter-nested-${args.size}`}>
+                  <Typography.Typography data-testid={`default-gutter-text-${args.size}`}>
+                    Default gutter
+                  </Typography.Typography>
+                </Container.Container>
+              </Container.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>
@@ -110,9 +120,9 @@ const TestStory = (args: SizeArgs) => (
     <div data-place='full' className='h-16'>
       <Panel.Root size={args.size} gutter='md' data-testid={`md-gutter-${args.size}`}>
         <Panel.Body>
-          <Container>
-            <Typography data-testid={`md-gutter-text-${args.size}`}>Panel gutter</Typography>
-          </Container>
+          <Container.Container>
+            <Typography.Typography data-testid={`md-gutter-text-${args.size}`}>Panel gutter</Typography.Typography>
+          </Container.Container>
         </Panel.Body>
       </Panel.Root>
     </div>

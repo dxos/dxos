@@ -5,8 +5,14 @@
 import React from 'react';
 
 import type * as Surface from '@dxos/app-framework/Surface';
-import { Button, Container, Flex, Grid, Switch, SystemButton, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Container from '@dxos/react-ui/Container';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Switch from '@dxos/react-ui/Switch';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { mx } from '@dxos/ui-theme';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
@@ -101,19 +107,19 @@ const surfaceId = (id: string): string => id.slice('surface/'.length, id.lastInd
 
 /** Tooltip body for a role row: the pooled figures, then the mounted surfaces by id. */
 const RoleDetail = ({ group }: { group: RoleGroup }) => (
-  <Flex column gap='xs' classNames='max-w-64 text-xs'>
+  <Flex.Flex column gap='xs' classNames='max-w-64 text-xs'>
     <span>
       {group.ids.length} mounted · {group.totalRenders} renders · {group.errors} errors
     </span>
     {group.trouble && <span className='text-error-text'>unstable data or errors</span>}
-    <Container gutter='none'>
+    <Container.Container gutter='none'>
       {group.ids.map((id) => (
         <span key={id} className='font-mono text-info-text truncate'>
           {surfaceId(id)}
         </span>
       ))}
-    </Container>
-  </Flex>
+    </Container.Container>
+  </Flex.Flex>
 );
 
 /** Role takes the slack; fixed count, average and maximum tracks line the figures up as a grid. */
@@ -138,25 +144,31 @@ export const SurfaceProfilerCard = ({
         title='Surfaces'
         action={
           onClear && (
-            <Button iconOnly variant='ghost' icon='ph--arrow-clockwise--regular' label='Reset' onClick={onClear} />
+            <Button.Button
+              iconOnly
+              variant='ghost'
+              icon='ph--arrow-clockwise--regular'
+              label='Reset'
+              onClick={onClear}
+            />
           )
         }
       />
       {onDebugChange && (
         <StatCard.Row
           label='Highlight surfaces'
-          action={<Switch checked={!!debug} onCheckedChange={({ checked }) => onDebugChange(checked)} />}
+          action={<Switch.Switch checked={!!debug} onCheckedChange={({ checked }) => onDebugChange(checked)} />}
         />
       )}
       {groups.length === 0 && <StatCard.Row span label='No surfaces mounted.' />}
       {groups.length > 0 && (
         <StatCard.Row unit='ms'>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
+          <Grid.Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>role</span>
             <span>×</span>
             <span>avg</span>
             <span>max</span>
-          </Grid>
+          </Grid.Grid>
         </StatCard.Row>
       )}
       {groups.map((group) => (
@@ -168,7 +180,7 @@ export const SurfaceProfilerCard = ({
           current={group.roleId === selected}
           onClick={onSelect && (() => onSelect(group.roleId === selected ? undefined : group.roleId))}
         >
-          <Grid
+          <Grid.Grid
             cols={ROW_TRACKS}
             gap='sm'
             classNames={mx('font-mono tabular-nums text-end', group.avgActualDuration > SLOW_TIME && 'text-error-text')}
@@ -179,7 +191,7 @@ export const SurfaceProfilerCard = ({
             <span className='text-fg-muted'>{group.ids.length}</span>
             <span>{group.totalRenders > 0 ? group.avgActualDuration.toFixed(1) : '–'}</span>
             <span>{group.totalRenders > 0 ? group.maxActualDuration.toFixed(1) : '–'}</span>
-          </Grid>
+          </Grid.Grid>
         </StatCard.Row>
       ))}
       {selectedGroup && detail && (

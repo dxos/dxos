@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { type Space } from '@dxos/react-client/echo';
-import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { AssistantOperation } from '#types';
@@ -22,12 +22,12 @@ const FALLBACK_SUGGESTION_KEYS = [
  * error falls back to the hardcoded defaults.
  */
 export const useHomeSuggestions = (space?: Space): readonly string[] | undefined => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const fallbacks = useMemo(() => FALLBACK_SUGGESTION_KEYS.map((key) => t(key)), [t]);
   const [suggestions, setSuggestions] = useState<readonly string[] | undefined>(undefined);
 
-  useAsyncEffect(
+  UiHooks.useAsyncEffect(
     async (controller) => {
       setSuggestions(undefined);
       if (!space) {

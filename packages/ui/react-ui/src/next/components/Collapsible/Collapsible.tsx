@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Collapsible as CollapsiblePrimitive } from '@ark-ui/react/collapsible';
 import React, { forwardRef, useContext } from 'react';
 
@@ -9,8 +11,8 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { containerAttributes } from '../Container/index.ts';
-import { Icon } from '../Icon/index.ts';
+import * as Container from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
 import { RowContext } from '../Listbox/grid.ts';
 
 //
@@ -54,7 +56,7 @@ const CollapsibleTrigger = forwardRef<HTMLButtonElement, CollapsibleTriggerProps
         ref={forwardedRef}
       >
         <CollapsiblePrimitive.Indicator className={recipes.collapsibleIndicator()}>
-          <Icon icon={icon} />
+          <Icon.Icon icon={icon} />
         </CollapsiblePrimitive.Indicator>
         {children}
       </CollapsiblePrimitive.Trigger>
@@ -76,7 +78,7 @@ type CollapsibleContentProps = ThemedClassName<CollapsiblePrimitive.ContentProps
 /** Animates its height from Ark's measured `--height`. */
 const CollapsibleContent = forwardRef<HTMLDivElement, CollapsibleContentProps>(
   ({ classNames, gutter, style, ...props }, forwardedRef) => {
-    const { style: gridStyle, ...grid } = gutter ? containerAttributes({ gutter }) : { style: undefined };
+    const { style: gridStyle, ...grid } = gutter ? Container.containerAttributes({ gutter }) : { style: undefined };
     return (
       <CollapsiblePrimitive.Content
         {...props}
@@ -90,11 +92,10 @@ const CollapsibleContent = forwardRef<HTMLDivElement, CollapsibleContentProps>(
 );
 
 CollapsibleContent.displayName = 'Collapsible.Content';
-
-export const Collapsible = {
-  Root: CollapsibleRoot,
-  Trigger: CollapsibleTrigger,
-  Content: CollapsibleContent,
+export type {
+  CollapsibleContentProps as ContentProps,
+  CollapsibleRootProps as RootProps,
+  CollapsibleTriggerProps as TriggerProps,
 };
 
-export type { CollapsibleContentProps, CollapsibleRootProps, CollapsibleTriggerProps };
+export { CollapsibleContent as Content, CollapsibleRoot as Root, CollapsibleTrigger as Trigger };

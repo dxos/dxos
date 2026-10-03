@@ -12,19 +12,19 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Skeleton } from '../index.ts';
+import * as Skeleton from './Skeleton.tsx';
 
 /** A placeholder for a contact row: avatar, name and a line of description, then a block-tall action. */
 const DefaultStory = () => (
   <>
     <div className='flex gap-2'>
-      <Skeleton variant='circle' data-testid='circle' />
+      <Skeleton.Skeleton variant='circle' data-testid='circle' />
       <div className='flex flex-col grow'>
-        <Skeleton variant='text' classNames='w-2/3' data-testid='text' />
-        <Skeleton variant='text' classNames='w-1/3' />
+        <Skeleton.Skeleton variant='text' classNames='w-2/3' data-testid='text' />
+        <Skeleton.Skeleton variant='text' classNames='w-1/3' />
       </div>
     </div>
-    <Skeleton data-testid='default' />
+    <Skeleton.Skeleton data-testid='default' />
   </>
 );
 

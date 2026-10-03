@@ -12,21 +12,16 @@ import { requirePublicKey, toPublicKey } from '@dxos/protocols/buf';
 import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { useClient } from '@dxos/react-client';
 import { type Identity, useDevices, useHaloInvitations, useIdentity } from '@dxos/react-client/halo';
-import { useInvitationStatus } from '@dxos/react-client/invitations';
-import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
+import { type CancellableInvitationObservable, useInvitationStatus } from '@dxos/react-client/invitations';
 import { ConnectionState, useNetworkStatus } from '@dxos/react-client/mesh';
-import {
-  Avatar,
-  Button,
-  Field,
-  Input,
-  SystemButton,
-  Toolbar,
-  toAvatarHue,
-  useId,
-  useTranslation,
-} from '@dxos/react-ui';
 import { EmojiPickerToolbarButton, HuePicker } from '@dxos/react-ui-pickers';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { hexToEmoji, hexToHue, keyToFallback } from '@dxos/util';
 
 import { CloseButton, Heading, Viewport } from '../../components/index.ts';
@@ -61,8 +56,8 @@ const IdentityHeading = ({
   onManageCredentials,
 }: IdentityPanelHeadingProps) => {
   const fallbackValue = keyToFallback(requirePublicKey(identity.identityKey));
-  const displayNameId = useId('identityHeading__displayName');
-  const { t } = useTranslation(translationKey);
+  const displayNameId = Hooks.useId('identityHeading__displayName');
+  const { t } = Hooks.useTranslation(translationKey);
   const [displayName, setDisplayNameDirectly] = useState(identity.profile?.displayName ?? '');
   const [emoji, setEmojiDirectly] = useState<string>(getEmojiValue(identity));
   const [hue, setHueDirectly] = useState<string | undefined>(getHueValue(identity));
@@ -115,7 +110,7 @@ const IdentityHeading = ({
           fill
           variant='circle'
           status={isConnected ? 'active' : 'error'}
-          hue={toAvatarHue(hue || fallbackValue.hue)}
+          hue={Avatar.toAvatarHue(hue || fallbackValue.hue)}
           fallback={emoji || fallbackValue.emoji}
           aria-labelledby={displayNameId}
           classNames='w-16 relative z-[2] chromatic-ignore'
@@ -128,7 +123,7 @@ const IdentityHeading = ({
 
       <Field.Root>
         <Field.Label srOnly>{t('display-name-input.label')}</Field.Label>
-        <Input
+        <Input.Input
           variant='subdued'
           data-testid='display-name-input'
           placeholder={t('display-name-input.placeholder')}
@@ -150,7 +145,7 @@ const IdentityHeading = ({
             value={identity.did}
           />
           {onManageCredentials && (
-            <Button
+            <Button.Button
               iconSize='lg'
               icon='ph--identification-card--regular'
               iconOnly
@@ -159,7 +154,7 @@ const IdentityHeading = ({
               onClick={onManageCredentials}
             />
           )}
-          <Button
+          <Button.Button
             iconSize='lg'
             icon={isConnected ? 'ph--plugs-connected--regular' : 'ph--plugs--regular'}
             iconOnly
@@ -191,7 +186,7 @@ export const IdentityPanelImpl = (props: IdentityPanelImplProps) => {
     onManageCredentials,
     ...rest
   } = props;
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const title = useMemo(() => {
     switch (activeView) {
       case 'device-invitation-manager':
@@ -284,7 +279,7 @@ export const IdentityPanel = ({
   initialDisposition = 'default',
   ...props
 }: IdentityPanelProps) => {
-  const titleId = useId('identityPanel__heading', propsTitleId);
+  const titleId = Hooks.useId('identityPanel__heading', propsTitleId);
   const client = useClient();
   const devices = useDevices();
   const identity = useIdentity();

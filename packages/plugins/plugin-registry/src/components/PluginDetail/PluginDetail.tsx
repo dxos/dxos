@@ -7,24 +7,19 @@ import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
-import {
-  Button,
-  Carousel,
-  Field,
-  Grid,
-  Icon,
-  Link,
-  ScrollArea,
-  Select,
-  Switch,
-  Tag,
-  ThemedClassName,
-  composable,
-  composableProps,
-  useThemeMode,
-  useTranslation,
-} from '@dxos/react-ui';
 import { MarkdownView } from '@dxos/react-ui-markdown';
+import * as Button from '@dxos/react-ui/Button';
+import * as Carousel from '@dxos/react-ui/Carousel';
+import * as Field from '@dxos/react-ui/Field';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Link from '@dxos/react-ui/Link';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
+import * as Switch from '@dxos/react-ui/Switch';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Util from '@dxos/react-ui/Util';
 import { getStyles, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -110,7 +105,7 @@ export type PluginDetailProps = {
   onVersionChange?: (tag: string) => void;
 };
 
-export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
+export const PluginDetail = Util.composable<HTMLDivElement, PluginDetailProps>(
   (
     {
       plugin,
@@ -138,8 +133,8 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(meta.profile.key);
-    const themeMode = useThemeMode();
+    const { t } = UiHooks.useTranslation(meta.profile.key);
+    const themeMode = UiHooks.useThemeMode();
     const layout = Hooks.useLayout();
     // The gutters exist to hold the icon (col 1) and carousel nav (col 3); on a phone the fixed
     // 4rem floor on both left it with less width for the center content than the gutters themselves.
@@ -163,7 +158,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
       .filter((url): url is string => typeof url === 'string' && url.length > 0);
 
     return (
-      <ScrollArea.Root {...composableProps(props)} orientation='vertical' ref={forwardedRef}>
+      <ScrollArea.Root {...Util.composableProps(props)} orientation='vertical' ref={forwardedRef}>
         <ScrollArea.Viewport>
           {/*
            * 3-column grid: [icon/prev | content/viewport | next].
@@ -174,18 +169,18 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
            * with the rest of the content in col 2, and `Carousel.Next` sits
            * in col 3.
            */}
-          <Grid
+          <Grid.Grid
             cols={isMobile ? ['2.5rem', 'minmax(0, 1fr)', '2.5rem'] : ['4rem', 'minmax(0, 1fr)', '4rem']}
             grow={false}
             align='start'
             classNames='dx-document gap-x-4 p-4'
           >
-            <Icon
+            <Icon.Icon
               classNames={mx('row-start-1 p-1 rounded-md', isMobile ? 'size-8' : 'size-14', styles.bg, styles.fg)}
               icon={iconKey}
             />
 
-            <Grid
+            <Grid.Grid
               cols={['1fr', 'min-content']}
               grow={false}
               classNames='row-start-1 col-start-2 col-span-2 gap-x-3 w-full pt-1'
@@ -195,12 +190,12 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                 {failure && <PluginFailureBadge failure={failure} size='lg' />}
               </div>
               {onInstall ? (
-                <Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
+                <Button.Button size='md' variant='primary' disabled={installing} onClick={onInstall}>
                   {installing ? t('installing.label') : t('install.label')}
-                </Button>
+                </Button.Button>
               ) : (
                 <Field.Root>
-                  <Switch
+                  <Switch.Switch
                     classNames='self-center'
                     checked={enabled}
                     onCheckedChange={({ checked }) => onEnabledChange?.(checked)}
@@ -215,7 +210,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   </span>
                 )}
               </div>
-            </Grid>
+            </Grid.Grid>
 
             {scope && (
               <Section.Root>
@@ -254,25 +249,25 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Body>
                 <div className='flex gap-3 items-center'>
                   {homePage && (
-                    <Link href={homePage} classNames='text-sm text-fg-muted'>
+                    <Link.Link href={homePage} classNames='text-sm text-fg-muted'>
                       {t('home-page.label')}
-                      <Icon
+                      <Icon.Icon
                         icon='ph--arrow-square-out--regular'
                         size='xs'
                         classNames='ml-1 inline-block align-[-0.125em]'
                       />
-                    </Link>
+                    </Link.Link>
                   )}
 
                   {source && (
-                    <Link href={source} classNames='text-sm text-fg-muted'>
+                    <Link.Link href={source} classNames='text-sm text-fg-muted'>
                       {t('source.label')}
-                      <Icon
+                      <Icon.Icon
                         icon='ph--arrow-square-out--regular'
                         size='xs'
                         classNames='ml-1 inline-block align-[-0.125em]'
                       />
-                    </Link>
+                    </Link.Link>
                   )}
 
                   {onOpenSpec && <Chip id={slug} name={t('open-spec.label')} onClick={onOpenSpec} />}
@@ -334,14 +329,14 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                       </Select.Content>
                     </Select.Root>
                     {onInstallVersion && (
-                      <Button
+                      <Button.Button
                         size='md'
                         variant='primary'
                         disabled={installing || selectedVersionTag === installedVersionTag}
                         onClick={onInstallVersion}
                       >
                         {installing ? t('installing.label') : t('install-version.label')}
-                      </Button>
+                      </Button.Button>
                     )}
                   </div>
                 </Section.Body>
@@ -351,18 +346,18 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
             {(onUninstall || (hasUpdate && onUpdate) || updating) && (
               <div className='col-start-2 col-span-2 flex gap-2'>
                 {updating ? (
-                  <Button variant='primary' disabled>
+                  <Button.Button variant='primary' disabled>
                     {t('updating.label')}
-                  </Button>
+                  </Button.Button>
                 ) : hasUpdate && onUpdate ? (
-                  <Button variant='primary' onClick={onUpdate}>
+                  <Button.Button variant='primary' onClick={onUpdate}>
                     {t('update.label')}
-                  </Button>
+                  </Button.Button>
                 ) : null}
-                {onUninstall && <Button onClick={onUninstall}>{t('uninstall.label')}</Button>}
+                {onUninstall && <Button.Button onClick={onUninstall}>{t('uninstall.label')}</Button.Button>}
               </div>
             )}
-          </Grid>
+          </Grid.Grid>
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );
@@ -377,7 +372,7 @@ const SectionHeading = ({ title }: { title: string }) => (
   <h2 className='col-start-2 col-span-2 pt-6 pb-2 uppercase text-sm font-medium text-fg-subtle'>{title}</h2>
 );
 
-const SectionBody = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (
+const SectionBody = ({ classNames, children }: Util.ThemedClassName<PropsWithChildren>) => (
   <div className={mx('col-start-2 flex flex-col gap-2', classNames)}>{children}</div>
 );
 
@@ -388,7 +383,7 @@ const Section = {
 };
 
 const Chip = ({ id, name, onClick }: { id: string; name: string; onClick?: (pluginId: string) => void }) => (
-  <Tag title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
+  <Tag.Tag title={id} onClick={onClick ? () => onClick(id) : undefined} classNames='dx-hover'>
     {name}
-  </Tag>
+  </Tag.Tag>
 );

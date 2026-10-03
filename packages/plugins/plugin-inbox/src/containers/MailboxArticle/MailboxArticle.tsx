@@ -20,7 +20,6 @@ import { type EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { AtomState, useAtomState } from '@dxos/react-hooks';
-import { Deferred, Panel } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { type EditorController } from '@dxos/react-ui-editor';
@@ -32,6 +31,8 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Deferred from '@dxos/react-ui/Deferred';
+import * as Panel from '@dxos/react-ui/Panel';
 import { TagIndex } from '@dxos/schema';
 import { DraftMessage, Message } from '@dxos/types';
 
@@ -432,7 +433,7 @@ export const MailboxArticle = ({
         <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
       </Panel.Header>
       <Panel.Body>
-        <Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
+        <Deferred.Deferred pending={showEmptyState} fallback={() => <InitializeMailbox mailbox={mailbox} />}>
           <InboxStack
             id={id}
             items={items}
@@ -448,7 +449,7 @@ export const MailboxArticle = ({
             searchQuery={searchQuery}
             onAction={handleAction}
           />
-        </Deferred>
+        </Deferred.Deferred>
       </Panel.Body>
       <Panel.Footer>
         <ProgressMeter

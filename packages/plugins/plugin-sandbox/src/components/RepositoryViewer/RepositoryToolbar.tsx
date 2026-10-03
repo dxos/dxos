@@ -4,7 +4,10 @@
 
 import React from 'react';
 
-import { Button, Select, Toolbar, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -30,7 +33,7 @@ export const RepositoryToolbar = ({
   onViewChange,
   onRefresh,
 }: RepositoryToolbarProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const isCommit = currentRef !== undefined && !branches.some((branch) => branch.name === currentRef);
   const commitItem = isCommit && currentRef ? { value: currentRef, label: currentRef.slice(0, 7) } : undefined;
   const branchItems = branches.map((branch) => ({ value: branch.name, label: branch.name }));
@@ -55,13 +58,13 @@ export const RepositoryToolbar = ({
         </Select.Content>
       </Select.Root>
       <Toolbar.Separator />
-      <Button
+      <Button.Button
         icon={view === 'files' ? 'ph--clock-counter-clockwise--regular' : 'ph--files--regular'}
         label={t(view === 'files' ? 'show-history.button' : 'show-files.button')}
         onClick={() => onViewChange(view === 'files' ? 'history' : 'files')}
         data-testid='repository.view'
       />
-      <Button icon='ph--arrow-clockwise--regular' label={t('refresh.button')} iconOnly onClick={onRefresh} />
+      <Button.Button icon='ph--arrow-clockwise--regular' label={t('refresh.button')} iconOnly onClick={onRefresh} />
     </Toolbar.Root>
   );
 };

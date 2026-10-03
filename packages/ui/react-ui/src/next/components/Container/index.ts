@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Container.tsx';
+export * as Container from './Container.tsx';

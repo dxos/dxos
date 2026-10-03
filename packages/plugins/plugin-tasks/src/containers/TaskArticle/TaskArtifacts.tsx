@@ -6,7 +6,9 @@ import React from 'react';
 
 import { useObject } from '@dxos/echo-react';
 import * as CardMasonry from '@dxos/plugin-space/CardMasonry';
-import { Container, Typography, useTranslation } from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Typography from '@dxos/react-ui/Typography';
 import { type Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -20,7 +22,7 @@ export type TaskArtifactsProps = {
  * Absent rather than empty for a task with no artifacts.
  */
 export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // The property, not the whole task: the query re-emits on membership only, so an artifact recorded
   // on the open task would otherwise not reach the grid until the reader selected away and back.
   const [artifacts] = useObject(task, 'artifacts');
@@ -29,13 +31,13 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
   }
 
   return (
-    <Container asChild gutter='inherit' gap='md'>
+    <Container.Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.artifacts'>
-        <Typography asChild tone='subtle'>
+        <Typography.Typography asChild tone='subtle'>
           <h2>{t('task-artifacts.label')}</h2>
-        </Typography>
+        </Typography.Typography>
         <CardMasonry.Root objects={artifacts} size='compact' inline />
       </section>
-    </Container>
+    </Container.Container>
   );
 };

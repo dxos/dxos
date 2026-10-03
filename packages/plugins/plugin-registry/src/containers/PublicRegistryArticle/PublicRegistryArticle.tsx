@@ -15,8 +15,8 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { useTranslation } from '@dxos/react-ui';
-import { composable } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Util from '@dxos/react-ui/Util';
 
 import { meta } from '#meta';
 
@@ -55,9 +55,9 @@ export type PublicRegistryArticleProps = {
   id: string;
 };
 
-export const PublicRegistryArticle = composable<HTMLDivElement, PublicRegistryArticleProps>(
+export const PublicRegistryArticle = Util.composable<HTMLDivElement, PublicRegistryArticleProps>(
   ({ id, ...props }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = UiHooks.useTranslation(meta.profile.key);
     const manager = PluginManagerProvider.usePluginManager();
     const { invoke } = Hooks.useOperationInvoker();
     const { entries, loading, error } = useRegistryPlugins();

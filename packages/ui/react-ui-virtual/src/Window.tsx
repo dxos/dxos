@@ -14,7 +14,7 @@ import React, {
   useState,
 } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type EdgeDrift, type Extents, type Layout, Placement } from './placement.ts';
@@ -81,7 +81,7 @@ export type WindowController = {
   scrollToIndex: (index: number, align?: 'start' | 'end', behavior?: ScrollBehavior) => void;
 };
 
-export type WindowProps = ThemedClassName<{
+export type WindowProps = Util.ThemedClassName<{
   model: WindowModel;
   extents: Extents;
   /** Which way the list runs. The principles hold either way; only this mapping differs (§9). */

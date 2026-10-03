@@ -6,13 +6,15 @@ import { cleanup, render, screen } from '@testing-library/react';
 import React, { type PropsWithChildren } from 'react';
 import { afterEach, describe, expect, test } from 'vitest';
 
-import { ThemeProvider } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { SearchResultList } from './SearchResultList.tsx';
 
 // `Listbox.Viewport` renders a `ScrollArea`, which reads theme tokens via context.
-const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider>{children}</ThemeProvider>;
+const Wrapper = ({ children }: PropsWithChildren) => (
+  <ThemeProvider.ThemeProvider>{children}</ThemeProvider.ThemeProvider>
+);
 
 const results: SearchResult[] = [
   {

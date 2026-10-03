@@ -24,8 +24,9 @@ import * as TranscriptionCapabilities from '@dxos/plugin-transcription/Transcrip
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
 import { Config } from '@dxos/react-client';
 import { getSpace, useSpaces } from '@dxos/react-client/echo';
-import { Button, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 import { Loading, withLayout } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { Text } from '@dxos/schema';
 import { Transcript } from '@dxos/types';
 
@@ -119,9 +120,14 @@ const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewPro
   return (
     <div className='dx-expand flex flex-col gap-2'>
       <Toolbar.Root>
-        <Button icon='ph--phone-call--regular' label='Start call' disabled={!callManager} onClick={handleStartCall} />
+        <Button.Button
+          icon='ph--phone-call--regular'
+          label='Start call'
+          disabled={!callManager}
+          onClick={handleStartCall}
+        />
         {/* TODO(burdon): Replace with SystemIconButton.Mic. */}
-        <Button
+        <Button.Button
           icon={recording ? 'ph--stop--regular' : 'ph--microphone--regular'}
           label={recording ? 'Stop transcription' : 'Start transcription'}
           onClick={toggleRecording}

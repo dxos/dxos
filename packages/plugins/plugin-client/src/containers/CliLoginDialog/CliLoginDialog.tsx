@@ -10,7 +10,9 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Invitation } from '@dxos/halo';
 import { useIdentity, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
-import { AlertDialog, Button, useTranslation } from '@dxos/react-ui';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { ClientCapabilities, CliLogin } from '#types';
@@ -32,7 +34,7 @@ type Status = 'confirm' | 'sending' | 'waiting' | 'success' | 'error';
  * why it is only created on an explicit click and only sent to a loopback callback.
  */
 export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
   const [identityService] = Hooks.useCapabilities(ClientCapabilities.IdentityService);
@@ -131,14 +133,14 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
             <AlertDialog.Cancel data-testid='cliLogin.deny' disabled={status === 'sending'} onClick={close}>
               {t('cli-login-deny.label')}
             </AlertDialog.Cancel>
-            <Button
+            <Button.Button
               data-testid='cliLogin.authorize'
               variant='primary'
               disabled={!identity || status === 'sending'}
               onClick={handleAuthorize}
             >
               {t('cli-login-authorize.label')}
-            </Button>
+            </Button.Button>
           </>
         ) : (
           <AlertDialog.Action

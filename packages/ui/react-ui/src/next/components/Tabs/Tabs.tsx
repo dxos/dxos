@@ -2,21 +2,23 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Tabs as TabsPrimitive, useTabsContext } from '@ark-ui/react/tabs';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
+import * as Button from '../Button/Button.tsx';
 
-export type TabsOrientation = 'horizontal' | 'vertical';
+type TabsOrientation = 'horizontal' | 'vertical';
 
 /** How the selected trigger is filled: the input surface, or the accent (e.g. while the host has attention). */
-export type TabsSelectedVariant = 'default' | 'primary';
+type TabsSelectedVariant = 'default' | 'primary';
 
 //
 // Root
@@ -90,7 +92,7 @@ TabsList.displayName = 'Tabs.List';
 //
 
 type TabsTriggerProps =
-  | (ComponentPropsWithoutRef<typeof Button> & Pick<TabsPrimitive.TriggerProps, 'value'> & { asChild?: false })
+  | (ComponentPropsWithoutRef<typeof Button.Button> & Pick<TabsPrimitive.TriggerProps, 'value'> & { asChild?: false })
   | (Omit<TabsPrimitive.TriggerProps, 'asChild'> & { asChild: true });
 
 /**
@@ -105,7 +107,12 @@ const TabsTrigger = forwardRef<HTMLButtonElement, TabsTriggerProps>((props, forw
   const { value, disabled, classNames, variant = 'ghost', asChild: _asChild, ...buttonProps } = props;
   return (
     <TabsPrimitive.Trigger value={value} disabled={disabled} asChild>
-      <Button {...buttonProps} variant={variant} classNames={[recipes.tabsTrigger(), classNames]} ref={forwardedRef} />
+      <Button.Button
+        {...buttonProps}
+        variant={variant}
+        classNames={[recipes.tabsTrigger(), classNames]}
+        ref={forwardedRef}
+      />
     </TabsPrimitive.Trigger>
   );
 });
@@ -136,15 +143,20 @@ const TabsIndicator = forwardRef<HTMLDivElement, TabsIndicatorProps>(({ classNam
 ));
 
 TabsIndicator.displayName = 'Tabs.Indicator';
-
-export const Tabs = {
-  Root: TabsRoot,
-  List: TabsList,
-  Trigger: TabsTrigger,
-  Content: TabsContent,
-  Indicator: TabsIndicator,
-  /** Ark's tabs api (`value`, `setValue`, `focusedValue`, …) for parts inside the Root. */
-  useContext: useTabsContext,
+export type {
+  TabsContentProps as ContentProps,
+  TabsIndicatorProps as IndicatorProps,
+  TabsListProps as ListProps,
+  TabsRootProps as RootProps,
+  TabsTriggerProps as TriggerProps,
 };
 
-export type { TabsContentProps, TabsIndicatorProps, TabsListProps, TabsRootProps, TabsTriggerProps };
+export {
+  TabsContent as Content,
+  TabsIndicator as Indicator,
+  TabsList as List,
+  TabsRoot as Root,
+  TabsTrigger as Trigger,
+  useTabsContext as useContext,
+};
+export type { TabsOrientation as Orientation, TabsSelectedVariant as SelectedVariant };

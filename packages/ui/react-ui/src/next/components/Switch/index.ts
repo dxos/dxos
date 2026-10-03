@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Switch.tsx';
+export * as Switch from './Switch.tsx';

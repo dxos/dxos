@@ -5,9 +5,12 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useRef, useState } from 'react';
 
-import { Button, Card, Panel, Toolbar } from '@dxos/react-ui';
 import { Dnd } from '@dxos/react-ui-dnd';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { cardDefaultInlineSize } from '@dxos/ui-theme';
 
 import { translations } from '#translations';
@@ -113,15 +116,15 @@ const DefaultStory = ({ layout: layoutProp, items: itemsProp, mode, zoom: zoomPr
         <Panel.Root>
           <Panel.Header>
             <Toolbar.Root>
-              <Button
+              <Button.Button
                 icon='ph--crosshair--regular'
                 iconOnly
                 label='Center board'
                 onClick={() => controller.current?.center()}
               />
-              <Button onClick={() => setZoom(1)} disabled={zoom === 1}>
+              <Button.Button onClick={() => setZoom(1)} disabled={zoom === 1}>
                 100%
-              </Button>
+              </Button.Button>
             </Toolbar.Root>
           </Panel.Header>
           <Panel.Body asChild>

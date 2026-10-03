@@ -5,7 +5,7 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Card } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
 import { type Issue, type PullRequest, type Repo } from '@dxos/types';
 
 type Subject = Repo.Repo | Issue.Issue | PullRequest.PullRequest;

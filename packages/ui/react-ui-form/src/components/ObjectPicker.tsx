@@ -14,7 +14,10 @@ import React, {
   useState,
 } from 'react';
 
-import { Combobox, type ComboboxOption, Container, Tag, Typography } from '@dxos/react-ui';
+import * as Combobox from '@dxos/react-ui/Combobox';
+import * as Container from '@dxos/react-ui/Container';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as Typography from '@dxos/react-ui/Typography';
 import { hues } from '@dxos/ui-types';
 import { arrayMove } from '@dxos/util';
 
@@ -49,7 +52,7 @@ type PickerBaseProps = PickerCreateProps & {
 const usePickerState = ({ options, createSchema, onCreate }: PickerBaseProps) => {
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState<string>();
-  const items = useMemo<ComboboxOption[]>(
+  const items = useMemo<Combobox.Option[]>(
     () => options.map(({ id, label, description }) => ({ value: id, label, description })),
     [options],
   );
@@ -86,12 +89,12 @@ const CreateForm = ({ schema, query, createInitialValuePath, createFieldMap, onS
     onSave={onSave}
     onCancel={onCancel}
   >
-    <Container gutter='inset'>
+    <Container.Container gutter='inset'>
       <FormContent>
         <FormFields />
         <FormActions />
       </FormContent>
-    </Container>
+    </Container.Container>
   </FormRoot>
 );
 
@@ -240,16 +243,18 @@ export const ObjectMultiPicker = ({
       createIcon={createIcon}
     >
       <Combobox.Control wrap data-testid={testId}>
-        {selected.length === 0 && placeholder && <Typography tone='muted'>{placeholder}</Typography>}
+        {selected.length === 0 && placeholder && (
+          <Typography.Typography tone='muted'>{placeholder}</Typography.Typography>
+        )}
         {selected.map((option) => (
-          <Tag
+          <Tag.Tag
             key={option.id}
             hue={hues.find((hue) => hue === option.hue)}
             onDelete={() => onValueChange(value.filter((id) => id !== option.id))}
             {...(ordered && chipProps(option.id))}
           >
             {option.label}
-          </Tag>
+          </Tag.Tag>
         ))}
         <Combobox.Trigger />
       </Combobox.Control>

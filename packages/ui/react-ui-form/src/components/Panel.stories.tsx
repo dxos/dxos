@@ -7,8 +7,11 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { invariant } from '@dxos/invariant';
-import { Container, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
 import { Form } from './Form.tsx';
@@ -34,11 +37,11 @@ const DefaultStory = (_: PaneArgs) => {
         <Panel.Body asChild>
           <ScrollArea.Root>
             <ScrollArea.Viewport asChild>
-              <Container>
+              <Container.Container>
                 <Form.Content>
                   <Form.Fields />
                 </Form.Content>
-              </Container>
+              </Container.Container>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
         </Panel.Body>

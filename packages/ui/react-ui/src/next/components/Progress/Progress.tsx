@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Progress as ProgressPrimitive } from '@ark-ui/react/progress';
 import React, { type CSSProperties, forwardRef, useEffect, useRef } from 'react';
 

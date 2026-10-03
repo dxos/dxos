@@ -9,8 +9,10 @@ import { Filter, Obj } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Panel, Toolbar, useThemeMode } from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import {
   createBasicExtensions,
   createDataExtensions,
@@ -29,7 +31,7 @@ export const TasksModule = () => {
 };
 
 const TasksModuleContainer = ({ space }: { space: Space }) => {
-  const themeMode = useThemeMode();
+  const themeMode = UiHooks.useThemeMode();
   const [document] = useQuery(space.db, Filter.type(Markdown.Document));
   if (!document?.content.target) {
     return null;

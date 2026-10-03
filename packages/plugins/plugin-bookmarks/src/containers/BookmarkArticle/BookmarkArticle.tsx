@@ -8,8 +8,12 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Block, Card, Flex, Image, Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Block from '@dxos/react-ui/Block';
+import * as Card from '@dxos/react-ui/Card';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Image from '@dxos/react-ui/Image';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { Summary } from '#components';
 import { meta } from '#meta';
@@ -85,13 +89,13 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
         <ActionToolbar {...menuActions} attendableId={attendableId} />
       </Panel.Header>
       <Panel.Body classNames='flex flex-col'>
-        <Flex justify='center'>
+        <Flex.Flex justify='center'>
           <div className='dx-document py-3'>
             <Card.Root border={false}>
               <Card.Header>
-                <Block>
+                <Block.Block>
                   <img src={bookmark.favicon} alt={bookmark.title} />
-                </Block>
+                </Block.Block>
                 <Card.Title>{bookmark.title}</Card.Title>
               </Card.Header>
               <Card.Body>
@@ -101,13 +105,13 @@ export const BookmarkArticle = ({ role, attendableId, subject }: BookmarkArticle
                   </Card.Text>
                   <Card.Text>{bookmark.excerpt}</Card.Text>
                   {bookmark.image && imageLoads && (
-                    <Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
+                    <Image.Image classNames='my-2' alt={bookmark.title} src={bookmark.image} />
                   )}
                 </Card.Section>
               </Card.Body>
             </Card.Root>
           </div>
-        </Flex>
+        </Flex.Flex>
         {summary && <Summary id={`${Obj.getURI(subject)}/summary`} source={subject.summary} />}
       </Panel.Body>
     </Panel.Root>

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Toggle.tsx';
+export * as Toggle from './Toggle.tsx';

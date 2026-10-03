@@ -18,7 +18,6 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { type CellRange, rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { Obj } from '@dxos/echo';
 import { defaultColSize, defaultRowSize } from '@dxos/lit-grid';
-import { Menu, composable, composableProps, useTranslation, virtualAnchor } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   type DxGridCellIndex,
@@ -33,6 +32,10 @@ import {
   editorKeys,
   parseCellIndex,
 } from '@dxos/react-ui-grid';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Util from '@dxos/react-ui/Util';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import { meta } from '#meta';
 import { SheetCapabilities, SheetOperation, SheetUtil } from '#types';
@@ -72,8 +75,8 @@ const sheetRowDefault = {
 
 export type SheetContentProps = {};
 
-export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
-  const { t } = useTranslation(meta.profile.key);
+export const SheetContent = Util.composable<HTMLDivElement, SheetContentProps>((props, forwardedRef) => {
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const {
     id,
     attendableId,
@@ -339,7 +342,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
   useSelectThreadOnCellFocus();
 
   return (
-    <div ref={forwardedRef} {...composableProps(props, { classNames: 'relative min-h-0' })}>
+    <div ref={forwardedRef} {...Util.composableProps(props, { classNames: 'relative min-h-0' })}>
       <GridCellEditor getCellContent={getCellContent} extensions={extensions} onBlur={handleBlur} />
       <Grid.Content
         className='[--dx-grid-base:var(--base-surface)] [&_.dx-grid]:absolute [&_.dx-grid]:inset-0'
@@ -366,7 +369,7 @@ export const SheetContent = composable<HTMLDivElement, SheetContentProps>((props
         open={!!contextMenuOpen}
         onOpenChange={({ open: nextOpen }) => setContextMenuOpen(nextOpen ? inertPosition : null)}
         positioning={{
-          ...virtualAnchor(contextMenuAnchorRef),
+          ...VirtualAnchor.virtualAnchor(contextMenuAnchorRef),
           placement: contextMenuAxis === 'col' ? 'bottom' : 'right',
           gutter: 4,
           overflowPadding: 8,

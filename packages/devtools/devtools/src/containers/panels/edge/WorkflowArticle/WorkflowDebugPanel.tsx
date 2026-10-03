@@ -23,8 +23,14 @@ import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useConfig } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
-import { Avatar, Button, Field, Input, type ThemedClassName, Toolbar, useAsyncEffect } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { useDevtoolsState } from '../../../../hooks/index.ts';
@@ -36,7 +42,7 @@ export enum WorkflowDebugPanelMode {
   REMOTE = 'remote',
 }
 
-export type WorkflowDebugPanelProps = ThemedClassName<{
+export type WorkflowDebugPanelProps = Util.ThemedClassName<{
   mode: WorkflowDebugPanelMode;
   loader: WorkflowLoader;
   graph: ComputeGraph;
@@ -57,7 +63,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
     return new EdgeHttpClient(edgeUrl);
   }, [config]);
 
-  useAsyncEffect(async () => {
+  Hooks.useAsyncEffect(async () => {
     setInputTemplate('');
     await props.loader
       .load(EID.make({ entityId: props.graph.id }))
@@ -163,7 +169,7 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
 
       <Toolbar.Root>
         <Field.Root>
-          <Input
+          <Input.Input
             ref={inputRef}
             autoFocus
             placeholder={'Input JSON'}
@@ -172,8 +178,8 @@ export const WorkflowDebugPanel = (props: WorkflowDebugPanelProps) => {
             onKeyDown={(ev) => ev.key === 'Enter' && handleRequest(input)}
           />
         </Field.Root>
-        <Button icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
-        <Button
+        <Button.Button icon='ph--play--regular' label='Execute' iconOnly onClick={() => handleRequest(input)} />
+        <Button.Button
           icon={isExecuting ? 'ph--stop--regular' : 'ph--trash--regular'}
           label={isExecuting ? 'Stop' : 'Clear'}
           iconOnly
@@ -209,7 +215,7 @@ const MessageThread = forwardRef<HTMLDivElement, MessageThreadProps>(
   },
 );
 
-const MessageItem = ({ classNames, message }: ThemedClassName<{ message: Message }>) => {
+const MessageItem = ({ classNames, message }: Util.ThemedClassName<{ message: Message }>) => {
   const { type, text, data, error } = message;
   const wrapper = 'p-1 px-2 rounded-md bg-hover-surface';
   return (

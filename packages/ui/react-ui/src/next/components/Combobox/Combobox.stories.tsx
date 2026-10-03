@@ -25,19 +25,15 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import {
-  Button,
-  Combobox,
-  type ComboboxFilter,
-  type ComboboxOption,
-  Field,
-  Group,
-  Input,
-  Tag,
-  Typography,
-} from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Field from '../Field/Field.tsx';
+import * as Group from '../Group/Group.tsx';
+import * as Input from '../Input/Input.tsx';
+import * as Tag from '../Tag/Tag.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Combobox from './Combobox.tsx';
 
-const OPTIONS: ComboboxOption[] = [
+const OPTIONS: Combobox.Option[] = [
   { value: 'alice', label: 'Alice Green', icon: 'ph--user--regular' },
   { value: 'bob', label: 'Bob Grey', icon: 'ph--user--regular' },
   { value: 'carol', label: 'Carol Black', icon: 'ph--user--regular' },
@@ -45,22 +41,22 @@ const OPTIONS: ComboboxOption[] = [
 ];
 
 /** Enough options to overflow the popup's 20rem cap at every size. */
-const LONG: ComboboxOption[] = Array.from({ length: 30 }, (_, index) => ({
+const LONG: Combobox.Option[] = Array.from({ length: 30 }, (_, index) => ({
   value: `person-${index + 1}`,
   label: `Person ${index + 1}`,
 }));
 
-const DESCRIBED: ComboboxOption[] = [
+const DESCRIBED: Combobox.Option[] = [
   { value: 'draft', label: 'Draft', description: 'Only you can see it', icon: 'ph--pencil-simple--regular' },
   { value: 'review', label: 'In review', description: 'Reviewers can comment', icon: 'ph--eye--regular' },
   { value: 'published', label: 'Published', description: 'Everyone in the space can read it' },
 ];
 
-const startsWith: ComboboxFilter = (option, query) => option.label.toLowerCase().startsWith(query.toLowerCase());
+const startsWith: Combobox.Filter = (option, query) => option.label.toLowerCase().startsWith(query.toLowerCase());
 
 /** Items that arrive after mount, with a value already selected, as a lookup or query would deliver them. */
 const AsyncCombobox = ({ size = 'md' }: SizeArgs) => {
-  const [items, setItems] = useState<ComboboxOption[]>([]);
+  const [items, setItems] = useState<Combobox.Option[]>([]);
   useEffect(() => {
     const timeout = setTimeout(() => setItems(OPTIONS), 100);
     return () => clearTimeout(timeout);
@@ -78,7 +74,7 @@ const AsyncCombobox = ({ size = 'md' }: SizeArgs) => {
 
 /** A button trigger whose popup offers a create row while the query matches no label exactly. */
 const CreatableCombobox = ({ size = 'md' }: SizeArgs) => {
-  const [items, setItems] = useState<ComboboxOption[]>(OPTIONS);
+  const [items, setItems] = useState<Combobox.Option[]>(OPTIONS);
   const [value, setValue] = useState<string[]>([]);
   const [created, setCreated] = useState<string>();
   return (
@@ -98,7 +94,9 @@ const CreatableCombobox = ({ size = 'md' }: SizeArgs) => {
         <Combobox.Trigger placeholder='Pick or create' data-testid={`create-${size}`} />
         <Combobox.Content data-testid={`create-popup-${size}`} />
       </Combobox.Root>
-      <Typography data-testid={`created-${size}`}>{created ? `Created: ${created}` : 'Nothing created'}</Typography>
+      <Typography.Typography data-testid={`created-${size}`}>
+        {created ? `Created: ${created}` : 'Nothing created'}
+      </Typography.Typography>
     </Field.Root>
   );
 };
@@ -106,7 +104,7 @@ const CreatableCombobox = ({ size = 'md' }: SizeArgs) => {
 /** Results the caller loads for the query (no client-side filter), with a loading row meanwhile. */
 const SearchCombobox = ({ size = 'md' }: SizeArgs) => {
   const [query, setQuery] = useState<string>();
-  const [items, setItems] = useState<ComboboxOption[]>([]);
+  const [items, setItems] = useState<Combobox.Option[]>([]);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (query === undefined) {
@@ -144,17 +142,17 @@ const AnchoredCombobox = ({ size = 'md' }: SizeArgs) => {
   const anchor = useRef<HTMLSpanElement>(null);
   return (
     <>
-      <Group>
-        <Button onClick={() => setOpen(true)} data-testid={`open-anchored-${size}`}>
+      <Group.Group>
+        <Button.Button onClick={() => setOpen(true)} data-testid={`open-anchored-${size}`}>
           Mention
-        </Button>
-        <Typography>
+        </Button.Button>
+        <Typography.Typography>
           Hello{' '}
           <span ref={anchor} data-testid={`anchor-${size}`}>
             @{OPTIONS.find((option) => option.value === value[0])?.label ?? '…'}
           </span>
-        </Typography>
-      </Group>
+        </Typography.Typography>
+      </Group.Group>
       <Combobox.Root
         items={OPTIONS}
         open={open}
@@ -191,7 +189,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         <Combobox.Content data-testid={`listbox-${size}`} />
       </Combobox.Root>
     </Field.Root>
-    <Input aria-label='Note' data-testid={`input-${size}`} />
+    <Input.Input aria-label='Note' data-testid={`input-${size}`} />
     <Field.Root>
       <Combobox.Root items={OPTIONS} filter={startsWith}>
         <Combobox.Label>Reviewer</Combobox.Label>
@@ -492,7 +490,7 @@ export const Test: Story = {
   },
 };
 
-const TAGS: ComboboxOption[] = [
+const TAGS: Combobox.Option[] = [
   { value: 'urgent', label: 'Urgent' },
   { value: 'later', label: 'Later' },
   { value: 'idea', label: 'Idea' },
@@ -525,9 +523,9 @@ const MultipleStory = () => {
         <Combobox.Label>Tags</Combobox.Label>
         <Combobox.Control wrap data-testid='tags'>
           {value.map((id) => (
-            <Tag key={id} onDelete={() => setValue((value) => value.filter((other) => other !== id))}>
+            <Tag.Tag key={id} onDelete={() => setValue((value) => value.filter((other) => other !== id))}>
               {labelOf(id)}
-            </Tag>
+            </Tag.Tag>
           ))}
           <Combobox.Trigger />
         </Combobox.Control>

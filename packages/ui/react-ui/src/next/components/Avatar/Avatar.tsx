@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Avatar as AvatarPrimitive } from '@ark-ui/react/avatar';
 import React, { type CSSProperties, forwardRef, useState } from 'react';
 
@@ -11,23 +13,23 @@ import { type ChromaticPalette, type NeutralPalette, type ThemedClassName, hues 
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { type CSSVariables } from '../Container/index.ts';
-import { Icon } from '../Icon/index.ts';
+import type * as Container from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
 
-export type AvatarVariant = 'circle' | 'square';
+type AvatarVariant = 'circle' | 'square';
 
-export type AvatarStatus = 'active' | 'inactive' | 'current' | 'internal' | 'error' | 'warning';
+type AvatarStatus = 'active' | 'inactive' | 'current' | 'internal' | 'error' | 'warning';
 
-export type AvatarAnimation = 'pulse' | 'none';
+type AvatarAnimation = 'pulse' | 'none';
 
-export type AvatarHue = NeutralPalette | ChromaticPalette;
+type AvatarHue = NeutralPalette | ChromaticPalette;
 
 /** A stored hue name (e.g. from a profile) as an `AvatarHue`; `undefined` when it names no palette. */
 export const toAvatarHue = (value?: string): AvatarHue | undefined =>
   value === 'neutral' ? 'neutral' : hues.find((hue) => hue === value);
 
 /** `fill` paints the hue's solid background, `surface` its tint (Tag's colours), `transparent` none. */
-export type AvatarHueVariant = 'fill' | 'surface' | 'transparent';
+type AvatarHueVariant = 'fill' | 'surface' | 'transparent';
 
 const getInitials = (label: string): string[] =>
   label
@@ -105,7 +107,7 @@ const AvatarRoot = forwardRef<HTMLDivElement, AvatarRootProps>(
     // Keyed by source, so a new `src` drops the previous image's colour without an effect racing the load event.
     const [sampled, setSampled] = useState<{ src: string; color?: string }>();
     const color = sampled && sampled.src === src ? sampled.color : undefined;
-    const backdropStyle: CSSProperties & CSSVariables = color ? { '--dx-avatar-backdrop': color } : {};
+    const backdropStyle: CSSProperties & Container.CSSVariables = color ? { '--dx-avatar-backdrop': color } : {};
     return (
       <AvatarPrimitive.Root
         role='img'
@@ -136,7 +138,7 @@ const AvatarRoot = forwardRef<HTMLDivElement, AvatarRootProps>(
               />
             )}
             <AvatarFallback data-emoji={!icon && EMOJI.test(fallback) ? '' : undefined}>
-              {icon ? <Icon icon={icon} /> : getAvatarGlyph(fallback)}
+              {icon ? <Icon.Icon icon={icon} /> : getAvatarGlyph(fallback)}
             </AvatarFallback>
           </>
         )}
@@ -178,11 +180,13 @@ const AvatarFallback = forwardRef<HTMLSpanElement, AvatarFallbackProps>(({ class
 ));
 
 AvatarFallback.displayName = 'Avatar.Fallback';
+export type { AvatarFallbackProps as FallbackProps, AvatarImageProps as ImageProps, AvatarRootProps as RootProps };
 
-export const Avatar = {
-  Root: AvatarRoot,
-  Image: AvatarImage,
-  Fallback: AvatarFallback,
+export { AvatarFallback as Fallback, AvatarImage as Image, AvatarRoot as Root };
+export type {
+  AvatarAnimation as Animation,
+  AvatarHue as Hue,
+  AvatarHueVariant as HueVariant,
+  AvatarStatus as Status,
+  AvatarVariant as Variant,
 };
-
-export type { AvatarFallbackProps, AvatarImageProps, AvatarRootProps };

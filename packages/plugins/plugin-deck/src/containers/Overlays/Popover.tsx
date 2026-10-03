@@ -9,18 +9,15 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CardMenuSlot from '@dxos/app-toolkit/CardMenuSlot';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
-import {
-  Block,
-  Button,
-  Card,
-  Popover,
-  toLocalizedString,
-  useMediaQuery,
-  useTranslation,
-  virtualAnchor,
-} from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
+import * as Block from '@dxos/react-ui/Block';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import { useDeckState } from '#hooks';
 import { meta } from '#meta';
@@ -65,7 +62,7 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
   // The rename popover is modal so other navtree item menus are inert while it is open.
   const modal = isRename;
   // Anchor to the right of the row on wide displays; drop centered below on narrow ones.
-  const [isLg] = useMediaQuery('lg', { fallback: [true] });
+  const [isLg] = UiHooks.useMediaQuery('lg', { fallback: [true] });
   const side = isRename ? (isLg ? 'right' : 'bottom') : state.popoverSide;
 
   const handleOpenChange = useCallback(
@@ -97,7 +94,7 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
       // The trigger was the row that asked for the popover; the rename field takes focus, a card does not.
       autoFocus={isRename}
       positioning={{
-        ...(state.popoverAnchor ? virtualAnchor(virtualRef) : {}),
+        ...(state.popoverAnchor ? VirtualAnchor.virtualAnchor(virtualRef) : {}),
         placement: side,
         hideWhenDetached: true,
       }}
@@ -110,7 +107,7 @@ export const PopoverRoot = ({ children }: PopoverRootProps) => {
 };
 
 export const PopoverContent = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { state } = useDeckState();
   const popoverSubject =
     state.popoverContent && 'subject' in state.popoverContent ? state.popoverContent.subject : undefined;
@@ -120,7 +117,7 @@ export const PopoverContent = () => {
   const objectMenuItems = Hooks.useObjectMenuItems(popoverSubject, pivotId);
   const menu = useMenuActions();
   const menuItems = useMenuItems(menu, undefined, objectMenuItems);
-  const title = state.popoverTitle ? toLocalizedString(state.popoverTitle, t) : 'Unknown';
+  const title = state.popoverTitle ? ThemeProvider.toLocalizedString(state.popoverTitle, t) : 'Unknown';
   const content = state.popoverContent;
   // Base and rename popovers render a plugin-provided component; everything else falls through to the card.
   const isComponentPopover =
@@ -174,12 +171,12 @@ export const PopoverContent = () => {
             subject={popoverSubject}
             menu={
               // TODO(wittjosiah): Reconcile with Card.Menu.
-              <Block rail='end'>
+              <Block.Block rail='end'>
                 {popoverSubject !== undefined && <CardMenuSlot.Root subject={popoverSubject} menu={menu} />}
                 <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                  <Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
+                  <Button.Button variant='ghost' icon='ph--dots-three-vertical--regular' iconOnly label='Actions' />
                 </ActionMenu>
-              </Block>
+              </Block.Block>
             }
           >
             {title}

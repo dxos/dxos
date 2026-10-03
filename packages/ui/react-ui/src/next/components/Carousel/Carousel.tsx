@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // The zag machine owns the scroll-snap track, the page in view, wrap-around, autoplay (stopped the moment the reader
 // takes over), the indicator keys and the `region`/`slide` roles; Next owns the grid around the track and the media
 // each slide renders.
@@ -16,10 +18,10 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { animationsDisabled, useReducedMotion } from '../../../util/index.ts';
+import { animationsDisabled, useReducedMotion } from '../../../util/animation.ts';
 import { recipes } from '../../recipes.ts';
-import { Button } from '../Button/index.ts';
-import { MediaPlayer, type MediaPlayerProps } from '../MediaPlayer/index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as MediaPlayer from '../MediaPlayer/MediaPlayer.tsx';
 
 //
 // Root
@@ -111,7 +113,10 @@ CarouselItemGroup.displayName = 'Carousel.ItemGroup';
 
 type CarouselItemProps = ThemedClassName<Omit<CarouselPrimitive.ItemProps, 'children'>> &
   Partial<
-    Pick<MediaPlayerProps, 'src' | 'kind' | 'alt' | 'controls' | 'autoPlay' | 'loop' | 'muted' | 'crossOrigin'>
+    Pick<
+      MediaPlayer.MediaPlayerProps,
+      'src' | 'kind' | 'alt' | 'controls' | 'autoPlay' | 'loop' | 'muted' | 'crossOrigin'
+    >
   > & {
     /** Replaces the default MediaPlayer of `src`. */
     children?: ReactNode;
@@ -133,7 +138,7 @@ const CarouselItem = forwardRef<HTMLDivElement, CarouselItemProps>(
       >
         {children ??
           (src && (
-            <MediaPlayer
+            <MediaPlayer.MediaPlayer
               src={src}
               kind={kind}
               alt={alt}
@@ -168,7 +173,7 @@ const CarouselPrevTrigger = forwardRef<HTMLButtonElement, CarouselTriggerProps>(
 
   return (
     <CarouselPrimitive.PrevTrigger asChild>
-      <Button
+      <Button.Button
         variant='ghost'
         icon='ph--caret-left--regular'
         iconOnly
@@ -192,7 +197,7 @@ const CarouselNextTrigger = forwardRef<HTMLButtonElement, CarouselTriggerProps>(
 
   return (
     <CarouselPrimitive.NextTrigger asChild>
-      <Button
+      <Button.Button
         variant='ghost'
         icon='ph--caret-right--regular'
         iconOnly
@@ -285,22 +290,21 @@ const CarouselCaption = forwardRef<HTMLParagraphElement, CarouselCaptionProps>(
 );
 
 CarouselCaption.displayName = 'Carousel.Caption';
-
-export const Carousel = {
-  Root: CarouselRoot,
-  ItemGroup: CarouselItemGroup,
-  Item: CarouselItem,
-  PrevTrigger: CarouselPrevTrigger,
-  NextTrigger: CarouselNextTrigger,
-  IndicatorGroup: CarouselIndicatorGroup,
-  Caption: CarouselCaption,
+export type {
+  CarouselCaptionProps as CaptionProps,
+  CarouselIndicatorGroupProps as IndicatorGroupProps,
+  CarouselItemGroupProps as ItemGroupProps,
+  CarouselItemProps as ItemProps,
+  CarouselRootProps as RootProps,
+  CarouselTriggerProps as TriggerProps,
 };
 
-export type {
-  CarouselCaptionProps,
-  CarouselIndicatorGroupProps,
-  CarouselItemGroupProps,
-  CarouselItemProps,
-  CarouselRootProps,
-  CarouselTriggerProps,
+export {
+  CarouselCaption as Caption,
+  CarouselIndicatorGroup as IndicatorGroup,
+  CarouselItem as Item,
+  CarouselItemGroup as ItemGroup,
+  CarouselNextTrigger as NextTrigger,
+  CarouselPrevTrigger as PrevTrigger,
+  CarouselRoot as Root,
 };

@@ -9,9 +9,11 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import { debounce } from '@dxos/async';
 import { type Identity } from '@dxos/halo';
 import { useIdentity } from '@dxos/halo-react';
-import { Flex, Input, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap, type FormUpdateMeta } from '@dxos/react-ui-form';
 import { EmojiPickerBlock, HuePicker } from '@dxos/react-ui-pickers';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
 import { hexToEmoji, hexToHue } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -43,11 +45,11 @@ const usePendingGatedState = <T,>(value: T, pending: boolean): [T, Dispatch<SetS
   if (!pending) {
     lastRef.current = value;
   }
-  return useControlledState(lastRef.current);
+  return UiHooks.useControlledState(lastRef.current);
 };
 
 export const ProfileContainer = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const identity = useIdentity();
   const pendingRef = useRef(false);
@@ -132,7 +134,7 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Input
+            <Input.Input
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
@@ -169,16 +171,16 @@ export const ProfileContainer = () => {
 
         return (
           <Form.Field standalone label={label} description={t('hue.description')}>
-            <Flex classNames='justify-self-end'>
+            <Flex.Flex classNames='justify-self-end'>
               <HuePicker value={getValue()} onChange={handleChange} onReset={handleHueReset} />
-            </Flex>
+            </Flex.Flex>
           </Form.Field>
         );
       },
       did: ({ label, getValue }) => {
         return (
           <Form.Field label={label} description={t('did.description')}>
-            <Input variant='mono' value={getValue() ?? ''} readOnly copyable />
+            <Input.Input variant='mono' value={getValue() ?? ''} readOnly copyable />
           </Form.Field>
         );
       },

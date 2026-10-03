@@ -22,7 +22,8 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Group, SystemButton } from '../index.ts';
+import * as Group from '../Group/Group.tsx';
+import * as SystemButton from './SystemButton.tsx';
 
 type PresetProps = { 'iconOnly': boolean; 'data-testid': string };
 
@@ -71,10 +72,10 @@ const MicPreset = (props: PresetProps) => {
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
     {PRESETS.map(({ id, render }) => (
-      <Group key={id} data-testid={`row-${id}-${size}`}>
+      <Group.Group key={id} data-testid={`row-${id}-${size}`}>
         {render({ 'iconOnly': true, 'data-testid': `${id}-${size}` }, size)}
         {render({ 'iconOnly': false, 'data-testid': `${id}-labelled-${size}` }, size)}
-      </Group>
+      </Group.Group>
     ))}
   </>
 );

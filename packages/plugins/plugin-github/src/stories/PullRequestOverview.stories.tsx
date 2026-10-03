@@ -9,7 +9,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { GitHubPlugin } from '#plugin';

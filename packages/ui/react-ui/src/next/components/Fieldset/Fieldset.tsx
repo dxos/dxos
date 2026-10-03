@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Fieldset as FieldsetPrimitive, useFieldsetContext } from '@ark-ui/react/fieldset';
 import React, { forwardRef } from 'react';
 
@@ -10,13 +12,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import {
-  DefaultGutterProvider,
-  type Level,
-  type Span,
-  containerAttributes,
-  spanAttributes,
-} from '../Container/index.ts';
+import * as Container from '../Container/Container.tsx';
 
 //
 // Root
@@ -24,14 +20,14 @@ import {
 
 type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps> & {
   /** Tracks the set spans in its parent Container. */
-  span?: Span;
+  span?: Container.Span;
   /**
    * `inherit` makes the set a subgrid of the enclosing Container, as an inheriting Container is, so nested sets keep
    * the parent's tracks at any depth; without it the set is a flex stack of its own.
    */
   gutter?: 'inherit';
   /** A rung for the set's surface, as on Container; only applies with `gutter='inherit'`. */
-  level?: Level;
+  level?: Container.Level;
   /**
    * A nested group (with `gutter='inherit'`): bordered and indented one step inside the parent's content track, on its
    * host's surface, its fields still sharing the parent's columns.
@@ -46,8 +42,10 @@ type FieldsetRootProps = ThemedClassName<FieldsetPrimitive.RootProps> & {
  */
 const FieldsetRoot = forwardRef<HTMLDivElement, FieldsetRootProps>(
   ({ classNames, span, gutter, level, inset, style, disabled, children, ...props }, forwardedRef) => {
-    const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
-    const { style: gridStyle, ...grid } = gutter ? containerAttributes({ gutter, level }) : { style: undefined };
+    const { style: spanStyle, ...spanAttrs } = Container.spanAttributes(span);
+    const { style: gridStyle, ...grid } = gutter
+      ? Container.containerAttributes({ gutter, level })
+      : { style: undefined };
     return (
       <FieldsetPrimitive.Root
         {...props}
@@ -60,7 +58,11 @@ const FieldsetRoot = forwardRef<HTMLDivElement, FieldsetRootProps>(
         className={mx(recipes.fieldsetRoot(), gutter && recipes.container(), classNames)}
       >
         <div role='group' aria-disabled={disabled ? true : undefined} ref={forwardedRef}>
-          {gutter ? <DefaultGutterProvider gutter={undefined}>{children}</DefaultGutterProvider> : children}
+          {gutter ? (
+            <Container.DefaultGutterProvider gutter={undefined}>{children}</Container.DefaultGutterProvider>
+          ) : (
+            children
+          )}
         </div>
       </FieldsetPrimitive.Root>
     );
@@ -134,12 +136,16 @@ export const useFieldsetDisabled = (disabled?: boolean): boolean | undefined => 
   const fieldset = useFieldsetContext();
   return disabled ?? (fieldset?.disabled || undefined);
 };
-
-export const Fieldset = {
-  Root: FieldsetRoot,
-  Legend: FieldsetLegend,
-  HelperText: FieldsetHelperText,
-  ErrorText: FieldsetErrorText,
+export type {
+  FieldsetErrorTextProps as ErrorTextProps,
+  FieldsetHelperTextProps as HelperTextProps,
+  FieldsetLegendProps as LegendProps,
+  FieldsetRootProps as RootProps,
 };
 
-export type { FieldsetErrorTextProps, FieldsetHelperTextProps, FieldsetLegendProps, FieldsetRootProps };
+export {
+  FieldsetErrorText as ErrorText,
+  FieldsetHelperText as HelperText,
+  FieldsetLegend as Legend,
+  FieldsetRoot as Root,
+};

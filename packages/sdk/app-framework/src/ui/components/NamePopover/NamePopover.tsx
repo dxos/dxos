@@ -4,7 +4,10 @@
 
 import React, { type PropsWithChildren, useState } from 'react';
 
-import { Button, Field, Input, Popover } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Popover from '@dxos/react-ui/Popover';
 
 export type NamePopoverProps = PropsWithChildren<{
   open: boolean;
@@ -39,7 +42,7 @@ export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit
         <div className='flex items-center gap-1 p-2'>
           <Field.Root>
             <Field.Label srOnly>{placeholder}</Field.Label>
-            <Input
+            <Input.Input
               autoFocus
               placeholder={placeholder}
               value={value}
@@ -55,9 +58,9 @@ export const NamePopover = ({ children, open, placeholder, submitLabel, onSubmit
               }}
             />
           </Field.Root>
-          <Button variant='primary' onClick={submit}>
+          <Button.Button variant='primary' onClick={submit}>
             {submitLabel}
-          </Button>
+          </Button.Button>
         </div>
       </Popover.Content>
     </Popover.Root>

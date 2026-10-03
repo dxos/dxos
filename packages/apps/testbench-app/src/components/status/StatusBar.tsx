@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { Button } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 
 import { ErrorIndicator } from './ErrorIndicator.tsx';
 import { NetworkIndicator } from './NetworkIndicator.tsx';
@@ -32,7 +32,7 @@ export type StatusBarProps = {
 export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) => {
   return (
     <div className='flex items-center'>
-      <Button
+      <Button.Button
         icon='ph--chart-bar--regular'
         iconOnly
         label='Toggle stats'
@@ -40,7 +40,7 @@ export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) 
         variant='ghost'
       />
       {flushing && (
-        <Button
+        <Button.Button
           classNames='animate-spin'
           icon='ph--arrows-clockwise--regular'
           iconOnly
@@ -48,12 +48,12 @@ export const StatusBar = ({ flushing, showStats, onShowStats }: StatusBarProps) 
           variant='ghost'
         />
       )}
-      <Button variant='ghost'>
+      <Button.Button variant='ghost'>
         <NetworkIndicator />
-      </Button>
-      <Button variant='ghost'>
+      </Button.Button>
+      <Button.Button variant='ghost'>
         <ErrorIndicator />
-      </Button>
+      </Button.Button>
     </div>
   );
 };

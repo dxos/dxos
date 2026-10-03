@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './TextCrawl.tsx';
+export * as TextCrawl from './TextCrawl.tsx';

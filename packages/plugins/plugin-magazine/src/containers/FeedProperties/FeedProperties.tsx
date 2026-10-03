@@ -13,8 +13,12 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
-import { Button, Field, Flex, Switch, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Switch from '@dxos/react-ui/Switch';
 
 import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
@@ -22,7 +26,7 @@ import { FeedOperation, Subscription } from '#types';
 export type FeedPropertiesProps = AppSurface.ObjectPropertiesProps<Subscription.Subscription>;
 
 export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = useMemo(() => Obj.getDatabase(subject), [subject]);
   const [pending, setPending] = useState(false);
@@ -80,8 +84,8 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
     <Form.FieldSet>
       <Field.Root>
         <Field.Label>{t('feed-sync.label')}</Field.Label>
-        <Flex align='center'>
-          <Switch
+        <Flex.Flex align='center'>
+          <Switch.Switch
             checked={syncEnabled ?? false}
             disabled={pending}
             onCheckedChange={() => {
@@ -89,9 +93,14 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
             }}
           />
           {syncTrigger && (
-            <Button iconOnly icon='ph--gear--regular' label={t('view-trigger.label')} onClick={handleViewTrigger} />
+            <Button.Button
+              iconOnly
+              icon='ph--gear--regular'
+              label={t('view-trigger.label')}
+              onClick={handleViewTrigger}
+            />
           )}
-        </Flex>
+        </Flex.Flex>
       </Field.Root>
     </Form.FieldSet>
   );

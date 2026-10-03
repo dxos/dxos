@@ -14,7 +14,13 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectAnchoredBelow, expectArrow, expectPopupSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Field, Group, Input, Popover, Typography, useVirtualAnchor } from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Field from '../Field/Field.tsx';
+import * as Group from '../Group/Group.tsx';
+import * as Input from '../Input/Input.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as VirtualAnchor from '../VirtualAnchor/VirtualAnchor.ts';
+import * as Popover from './Popover.tsx';
 
 type SharePopoverProps = {
   /** Overrides the size the popover inherits from its trigger's row. */
@@ -27,7 +33,7 @@ type SharePopoverProps = {
 const SharePopover = ({ contentSize, arrow, label, testId }: SharePopoverProps) => (
   <Popover.Root>
     <Popover.Trigger asChild>
-      <Button data-testid={`${testId}-trigger`}>{label}</Button>
+      <Button.Button data-testid={`${testId}-trigger`}>{label}</Button.Button>
     </Popover.Trigger>
     <Popover.Content size={contentSize} arrow={arrow} data-testid={testId}>
       <Popover.Header>
@@ -37,13 +43,13 @@ const SharePopover = ({ contentSize, arrow, label, testId }: SharePopoverProps) 
       <Popover.Description>Anyone with the link can view.</Popover.Description>
       <Field.Root>
         <Field.Label>Link</Field.Label>
-        <Input defaultValue='https://composer.space/s/123' readOnly />
+        <Input.Input defaultValue='https://composer.space/s/123' readOnly />
       </Field.Root>
-      <Group justify='end'>
+      <Group.Group justify='end'>
         <Popover.CloseTrigger asChild>
-          <Button>Done</Button>
+          <Button.Button>Done</Button.Button>
         </Popover.CloseTrigger>
-      </Group>
+      </Group.Group>
     </Popover.Content>
   </Popover.Root>
 );
@@ -59,7 +65,7 @@ const NotesPopover = ({ size }: SizeArgs) => {
     <>
       <Popover.Root modal>
         <Popover.Trigger asChild>
-          <Button data-testid={`notes-${size}-trigger`}>Notes</Button>
+          <Button.Button data-testid={`notes-${size}-trigger`}>Notes</Button.Button>
         </Popover.Trigger>
         <Popover.Content container={container} data-testid={`notes-${size}`}>
           <Popover.Header>
@@ -68,14 +74,14 @@ const NotesPopover = ({ size }: SizeArgs) => {
           </Popover.Header>
           <Popover.Body data-testid={`notes-${size}-body`}>
             {NOTES.map((note, index) => (
-              <Typography key={index}>{note}</Typography>
+              <Typography.Typography key={index}>{note}</Typography.Typography>
             ))}
           </Popover.Body>
-          <Group justify='end'>
+          <Group.Group justify='end'>
             <Popover.CloseTrigger asChild>
-              <Button>Done</Button>
+              <Button.Button>Done</Button.Button>
             </Popover.CloseTrigger>
-          </Group>
+          </Group.Group>
         </Popover.Content>
       </Popover.Root>
       <div ref={container} data-testid={`notes-${size}-container`} />
@@ -89,15 +95,19 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
   const anchor = useRef<HTMLSpanElement>(null);
   return (
     <>
-      <Button onClick={() => setOpen(true)} data-testid={`anchored-${size}-trigger`}>
+      <Button.Button onClick={() => setOpen(true)} data-testid={`anchored-${size}-trigger`}>
         Open at anchor
-      </Button>
-      <Typography asChild>
+      </Button.Button>
+      <Typography.Typography asChild>
         <span ref={anchor} data-testid={`anchor-${size}`}>
           Anchor
         </span>
-      </Typography>
-      <Popover.Root open={open} onOpenChange={({ open }) => setOpen(open)} positioning={useVirtualAnchor(anchor)}>
+      </Typography.Typography>
+      <Popover.Root
+        open={open}
+        onOpenChange={({ open }) => setOpen(open)}
+        positioning={VirtualAnchor.useVirtualAnchor(anchor)}
+      >
         <Popover.Content data-testid={`anchored-${size}`}>
           <Popover.Description>Anchored to a span.</Popover.Description>
         </Popover.Content>
@@ -112,12 +122,12 @@ const AnchoredPopover = ({ size }: SizeArgs) => {
  * the arrowless one, which is `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
-  <Group>
+  <Group.Group>
     <SharePopover label='Share' testId={`popover-${size}`} />
     <SharePopover contentSize='lg' arrow={false} label='Share (no arrow)' testId={`plain-${size}`} />
     <NotesPopover size={size} />
     <AnchoredPopover size={size} />
-  </Group>
+  </Group.Group>
 );
 
 const meta = {

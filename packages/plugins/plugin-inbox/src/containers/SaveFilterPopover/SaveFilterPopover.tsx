@@ -7,13 +7,18 @@ import React, { useCallback, useRef, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { Button, Field, Flex, Input, Popover, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Popover from '@dxos/react-ui/Popover';
 
 import { meta } from '#meta';
 import { Mailbox } from '#types';
 
 export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbox; filter: string }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const doneButton = useRef<HTMLButtonElement>(null);
   const [name, setName] = useState('');
   const { invokePromise } = Hooks.useOperationInvoker();
@@ -26,11 +31,11 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
   }, [mailbox, name, filter, invokePromise]);
 
   return (
-    <Flex gap='sm' classNames='p-2'>
+    <Flex.Flex gap='sm' classNames='p-2'>
       <div className='flex-1'>
         <Field.Root>
           <Field.Label srOnly>{t('saved-filter-name.label')}</Field.Label>
-          <Input
+          <Input.Input
             defaultValue={name}
             placeholder={t('save-filter.placeholder')}
             onChange={({ target: { value } }) => setName(value)}
@@ -41,11 +46,11 @@ export const SaveFilterPopover = ({ mailbox, filter }: { mailbox: Mailbox.Mailbo
         </Field.Root>
       </div>
       <Popover.CloseTrigger asChild>
-        <Button ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
+        <Button.Button ref={doneButton} classNames='self-stretch' disabled={!name} onClick={handleDone}>
           {t('save-filter.button')}
-        </Button>
+        </Button.Button>
       </Popover.CloseTrigger>
-    </Flex>
+    </Flex.Flex>
   );
 };
 

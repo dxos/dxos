@@ -9,10 +9,14 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Entity } from '@dxos/echo';
-import { Block, Button, Focus, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
+import * as Block from '@dxos/react-ui/Block';
+import * as Button from '@dxos/react-ui/Button';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 
 //
 // SearchResultStack
@@ -23,7 +27,7 @@ export type SearchResultStackProps = {
   query: string;
 };
 
-export const SearchResultStack = composable<HTMLDivElement, SearchResultStackProps>(
+export const SearchResultStack = Util.composable<HTMLDivElement, SearchResultStackProps>(
   ({ results, query, ...props }, forwardedRef) => {
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
     const items = useMemo(() => results.map((result) => ({ result, query })), [results, query]);
@@ -36,7 +40,7 @@ export const SearchResultStack = composable<HTMLDivElement, SearchResultStackPro
     }, []);
 
     return (
-      <Focus.Group asChild {...composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
+      <Focus.Group asChild {...Util.composableProps(props)} onKeyDown={handleKeyDown} ref={forwardedRef}>
         <Mosaic.Container asChild>
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport ref={setViewport}>
@@ -94,11 +98,11 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
               ref={cardRef}
               subject={result.object}
               menu={
-                <Block rail='end'>
+                <Block.Block rail='end'>
                   <ActionMenu disabled={!menuItems?.length} actions={menuItems}>
-                    <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                    <Button.Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
                   </ActionMenu>
-                </Block>
+                </Block.Block>
               }
             >
               <Highlighted text={label} query={query} />

@@ -6,8 +6,8 @@ import { useContext } from 'react';
 
 import { log } from '@dxos/log';
 
-import { ThemeContext, type ThemeContextValue } from '../providers/index.ts';
-import { defaultTx } from '../theme/index.ts';
+import * as ThemeProvider from '../providers/ThemeProvider/ThemeProvider.tsx';
+import { defaultTx } from '../theme/defaultTheme.ts';
 import { initialSafeArea } from './useSafeArea.ts';
 
 // Failing soft (rather than throwing) keeps error-reporting surfaces renderable:
@@ -15,7 +15,7 @@ import { initialSafeArea } from './useSafeArea.ts';
 // the vite dev dual-module split, where the mounted ThemeProvider holds a
 // different ThemeContext identity than this consumer — would otherwise crash the
 // dialog meant to report the original error.
-const fallbackContextValue: ThemeContextValue = {
+const fallbackContextValue: ThemeProvider.ThemeContextValue = {
   tx: defaultTx,
   themeMode: 'dark',
   hasIosKeyboard: false,
@@ -26,8 +26,8 @@ const fallbackContextValue: ThemeContextValue = {
 
 let warned = false;
 
-export const useThemeContext = (): ThemeContextValue => {
-  const contextValue = useContext(ThemeContext);
+export const useThemeContext = (): ThemeProvider.ThemeContextValue => {
+  const contextValue = useContext(ThemeProvider.ThemeContext);
   if (!contextValue) {
     if (!warned) {
       warned = true;

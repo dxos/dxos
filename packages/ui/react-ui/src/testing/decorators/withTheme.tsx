@@ -8,8 +8,8 @@ import { I18nProvider } from 'react-aria-components';
 
 import { type ThemeMode } from '@dxos/ui-types';
 
-import { type ThemeContextValue, ThemeProvider } from '../../providers/index.ts';
-import { defaultTx } from '../../theme/index.ts';
+import * as ThemeProvider from '../../providers/ThemeProvider/ThemeProvider.tsx';
+import { defaultTx } from '../../theme/defaultTheme.ts';
 
 /**
  * Adds theme decorator.
@@ -19,7 +19,7 @@ import { defaultTx } from '../../theme/index.ts';
  * empty.
  */
 export const withTheme =
-  ({ tx = defaultTx, platform }: Partial<ThemeContextValue> = {}): Decorator =>
+  ({ tx = defaultTx, platform }: Partial<ThemeProvider.ThemeContextValue> = {}): Decorator =>
   (Story, context) => {
     const {
       globals: { theme },
@@ -28,14 +28,14 @@ export const withTheme =
 
     return (
       <I18nProvider locale='en-US'>
-        <ThemeProvider
+        <ThemeProvider.ThemeProvider
           tx={tx}
           themeMode={(theme as ThemeMode) || 'dark'}
           resourceExtensions={translations}
           platform={platform}
         >
           <Story />
-        </ThemeProvider>
+        </ThemeProvider.ThemeProvider>
       </I18nProvider>
     );
   };

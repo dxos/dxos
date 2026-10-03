@@ -13,9 +13,9 @@ import { Database, Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { RoutineCapabilities, RoutineEvents } from '#types';
@@ -55,7 +55,7 @@ export const CreateRoutinePanel = ({
   onCancel,
   templates: templatesProp,
 }: CreateRoutinePanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   Hooks.useActivationSignal(RoutineEvents.Start);
   const capabilityTemplates = Hooks.useCapabilities(RoutineCapabilities.Template);
   const { invokePromise } = Hooks.useOperationInvoker();

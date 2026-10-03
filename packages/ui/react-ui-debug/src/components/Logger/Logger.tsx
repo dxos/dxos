@@ -13,29 +13,24 @@ import React, {
 } from 'react';
 
 import { logFileRegistry } from '@dxos/log';
-import {
-  Button,
-  Checkbox,
-  ErrorStack,
-  Field,
-  Icon,
-  Input,
-  Panel,
-  Popover,
-  ScrollArea,
-  Select,
-  SystemButton,
-  type ThemedClassName,
-  Toggle,
-  Toolbar,
-  composable,
-  composableProps,
-  parseCaptureOwnerStack,
-  useTranslation,
-} from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Checkbox from '@dxos/react-ui/Checkbox';
+import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Toggle from '@dxos/react-ui/Toggle';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { type ComposableProps } from '@dxos/ui-types';
 
@@ -227,17 +222,17 @@ LoggerRoot.displayName = 'Logger.Root';
 
 type LoggerToolbarProps = ComposableProps;
 
-const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
+const LoggerToolbar = Util.composable<HTMLDivElement>((props, forwardedRef) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const { filter, setFilter, recording, setRecording, clear, copyAll } = useLoggerContext('Logger.Toolbar');
 
   // A bare level matching the filter selects it; a scoped filter shows no selection.
   const selectedLevel = (LEVELS as readonly string[]).includes(filter) ? filter : '';
 
   return (
-    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
+    <Toolbar.Root {...Util.composableProps(props)} ref={forwardedRef}>
       <Field.Root>
-        <Input
+        <Input.Input
           placeholder={t('filter.placeholder')}
           value={filter}
           autoComplete='off'
@@ -258,7 +253,7 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
         </Select.Content>
       </Select.Root>
       <LoggerLevels />
-      <Toggle
+      <Toggle.Toggle
         pressed={recording}
         onPressedChange={(pressed) => setRecording(() => pressed)}
         icon='ph--record--regular'
@@ -266,8 +261,8 @@ const LoggerToolbar = composable<HTMLDivElement>((props, forwardedRef) => {
         iconOnly
         label={t('record.label')}
       />
-      <Button icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
-      <Button icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
+      <Button.Button icon='ph--eraser--regular' iconOnly label={t('clear.label')} onClick={clear} />
+      <Button.Button icon='ph--clipboard--regular' iconOnly label={t('copy.label')} onClick={copyAll} />
     </Toolbar.Root>
   );
 });
@@ -278,10 +273,10 @@ LoggerToolbar.displayName = 'Logger.Toolbar';
 // Levels
 //
 
-type LoggerLevelsProps = ThemedClassName<{}>;
+type LoggerLevelsProps = Util.ThemedClassName<{}>;
 
 const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { files, fileLevels, setFileLevel, clearFileLevels } = useLoggerContext('Logger.Levels');
   const [fileFilter, setFileFilter] = useState('');
 
@@ -300,7 +295,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
   return (
     <Popover.Root>
       <Popover.Trigger asChild>
-        <Button
+        <Button.Button
           icon='ph--sliders--regular'
           iconOnly
           label={t('levels.label')}
@@ -313,7 +308,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
             <Panel.Header>
               <Toolbar.Root>
                 <Field.Root>
-                  <Input
+                  <Input.Input
                     placeholder={t('levels.filter.placeholder')}
                     value={fileFilter}
                     autoComplete='off'
@@ -321,7 +316,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
                     onChange={(ev) => setFileFilter(ev.target.value)}
                   />
                 </Field.Root>
-                <Button
+                <Button.Button
                   icon='ph--trash--regular'
                   iconOnly
                   label={t('levels.reset.label')}
@@ -402,7 +397,7 @@ LoggerLevels.displayName = 'Logger.Levels';
 
 type LoggerContentProps = ComposableProps;
 
-const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
+const LoggerContent = Util.composable<HTMLDivElement>(({ children, ...props }, forwardedRef) => {
   const { rows } = useLoggerContext('Logger.Content');
 
   // Keep the viewport pinned to the newest entry.
@@ -415,7 +410,7 @@ const LoggerContent = composable<HTMLDivElement>(({ children, ...props }, forwar
   }, [rows]);
 
   return (
-    <ScrollArea.Root {...composableProps(props)} ref={forwardedRef}>
+    <ScrollArea.Root {...Util.composableProps(props)} ref={forwardedRef}>
       <ScrollArea.Viewport ref={viewportRef} classNames='text-xs'>
         {children}
       </ScrollArea.Viewport>
@@ -429,10 +424,10 @@ LoggerContent.displayName = 'Logger.Content';
 // List
 //
 
-type LoggerListProps = ThemedClassName<{}>;
+type LoggerListProps = Util.ThemedClassName<{}>;
 
 const LoggerList = ({ classNames }: LoggerListProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { rows, expanded, toggleExpand, current, setCurrent, checked, toggleChecked, textFilter } =
     useLoggerContext('Logger.List');
 
@@ -472,7 +467,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
           {visible.map(({ id, entry, record }) => {
             const isExpanded = expanded.has(id);
             // Parse the serialized stack into frames only while expanded (deterministic via error-stack-parser).
-            const frames = isExpanded && record.error ? parseCaptureOwnerStack(record.error) : null;
+            const frames = isExpanded && record.error ? ErrorFallback.parseCaptureOwnerStack(record.error) : null;
             return (
               <Listbox.Item
                 key={id}
@@ -484,7 +479,11 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
               >
                 <div className='flex items-center pl-2'>
                   <Field.Root>
-                    <Checkbox tabIndex={-1} checked={checked.has(id)} onCheckedChange={() => toggleChecked(id)} />
+                    <Checkbox.Checkbox
+                      tabIndex={-1}
+                      checked={checked.has(id)}
+                      onCheckedChange={() => toggleChecked(id)}
+                    />
                   </Field.Root>
                 </div>
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
@@ -519,7 +518,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                         }}
                       />
                     </Syntax.Viewport>
-                    {frames && <ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
+                    {frames && <ErrorFallback.ErrorStack classNames='p-1 dx-input-surface' frames={frames} />}
                   </div>
                 )}
               </Listbox.Item>
@@ -539,24 +538,29 @@ LoggerList.displayName = 'Logger.List';
 
 type LoggerFilterProps = ComposableProps;
 
-const LoggerFilter = composable<HTMLDivElement>((props, forwardedRef) => {
-  const { t } = useTranslation(translationKey);
+const LoggerFilter = Util.composable<HTMLDivElement>((props, forwardedRef) => {
+  const { t } = Hooks.useTranslation(translationKey);
   const { textFilter, setTextFilter } = useLoggerContext('Logger.Filter');
 
   return (
-    <Toolbar.Root {...composableProps(props, { classNames: 'bg-transparent' })} ref={forwardedRef}>
+    <Toolbar.Root {...Util.composableProps(props, { classNames: 'bg-transparent' })} ref={forwardedRef}>
       <Field.Root>
-        <Input
+        <Input.Input
           placeholder={t('search.placeholder')}
           value={textFilter}
           autoComplete='off'
           spellCheck={false}
           onChange={(ev) => setTextFilter(ev.target.value)}
-          start={<Icon icon='ph--magnifying-glass--regular' />}
+          start={<Icon.Icon icon='ph--magnifying-glass--regular' />}
         />
       </Field.Root>
       {textFilter.length > 0 && (
-        <Button icon='ph--x--regular' iconOnly label={t('search.clear.label')} onClick={() => setTextFilter('')} />
+        <Button.Button
+          icon='ph--x--regular'
+          iconOnly
+          label={t('search.clear.label')}
+          onClick={() => setTextFilter('')}
+        />
       )}
     </Toolbar.Root>
   );

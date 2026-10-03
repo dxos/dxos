@@ -12,7 +12,11 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size } from '../../sizes.ts';
 import { byTestId, expectPopupSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { AlertDialog, Button, DIALOG_AUTOFOCUS_ATTRIBUTE, Group, Typography } from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Dialog from '../Dialog/Dialog.tsx';
+import * as Group from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as AlertDialog from './AlertDialog.tsx';
 
 type ConfirmProps = {
   /** Overrides the size the dialog inherits from its trigger's row. */
@@ -26,7 +30,7 @@ type ConfirmProps = {
 const Confirm = ({ contentSize, testId, autofocusAction, onAction }: ConfirmProps) => (
   <AlertDialog.Root>
     <AlertDialog.Trigger asChild>
-      <Button data-testid={`${testId}-trigger`}>Delete space</Button>
+      <Button.Button data-testid={`${testId}-trigger`}>Delete space</Button.Button>
     </AlertDialog.Trigger>
     <AlertDialog.Content size={contentSize} data-testid={testId}>
       <AlertDialog.Header>
@@ -40,7 +44,7 @@ const Confirm = ({ contentSize, testId, autofocusAction, onAction }: ConfirmProp
         <AlertDialog.Action
           variant='destructive'
           onClick={onAction}
-          {...(autofocusAction && { [DIALOG_AUTOFOCUS_ATTRIBUTE]: '' })}
+          {...(autofocusAction && { [Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE]: '' })}
         >
           Delete
         </AlertDialog.Action>
@@ -56,7 +60,7 @@ const Confirm = ({ contentSize, testId, autofocusAction, onAction }: ConfirmProp
 const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [deleted, setDeleted] = useState(0);
   return (
-    <Group>
+    <Group.Group>
       <Confirm testId={`confirm-${size}`} onAction={() => setDeleted((count) => count + 1)} />
       <Confirm
         contentSize='lg'
@@ -64,8 +68,8 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         autofocusAction
         onAction={() => setDeleted((count) => count + 1)}
       />
-      <Typography data-testid={`deleted-${size}`}>Deleted {deleted}</Typography>
-    </Group>
+      <Typography.Typography data-testid={`deleted-${size}`}>Deleted {deleted}</Typography.Typography>
+    </Group.Group>
   );
 };
 

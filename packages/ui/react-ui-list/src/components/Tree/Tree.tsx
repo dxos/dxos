@@ -40,23 +40,17 @@ import React, {
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 
-import {
-  Block,
-  DragPreview,
-  Empty,
-  Icon,
-  type IconHue,
-  ScrollArea,
-  type Size,
-  Tag,
-  Typography,
-  VirtualSpacer,
-  composable,
-  composableProps,
-  toLocalizedString,
-  useTranslation,
-  useVirtualRows,
-} from '@dxos/react-ui';
+import * as Block from '@dxos/react-ui/Block';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Listbox from '@dxos/react-ui/Listbox';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Tag from '@dxos/react-ui/Tag';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as Typography from '@dxos/react-ui/Typography';
+import * as Util from '@dxos/react-ui/Util';
 import { hues } from '@dxos/ui-types';
 
 import { Path } from '../../util/index.ts';
@@ -126,7 +120,7 @@ type TreeRootProps<T extends { id: string } = any> = {
    * the drag scope, so trees mounted under one root (a tree per workspace tab) accept each other's rows.
    */
   path?: string[];
-  size?: Size;
+  size?: Util.Size;
   /**
    * Each row's grid template; the default is disclosure, icon, label and trailing tracks. A template that keeps
    * `Tree.ItemIndicator` starts with its `var(--dx-half-block-size)` track.
@@ -216,7 +210,7 @@ const TreeRoot = <T extends { id: string }>({
   onDrop,
   children,
 }: TreeRootProps<T>) => {
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   const rootPath = useMemo(() => (path ? [...path, id] : [id]), [path, id]);
   const treeId = rootPath[0];
   const walkAtom = useMemo(() => createTreeWalkAtom(model, rootId, rootPath), [model, rootId, rootPath]);
@@ -224,7 +218,7 @@ const TreeRoot = <T extends { id: string }>({
   const walkRef = useRef<TreeWalk<T>>(walk);
   walkRef.current = walk;
   const collection = useMemo(
-    () => createCollection(walk.root, (node) => toLocalizedString(node.props.label, t)),
+    () => createCollection(walk.root, (node) => ThemeProvider.toLocalizedString(node.props.label, t)),
     [walk.root, t],
   );
   const scrollToIndexRef = useRef<((index: number) => void) | null>(null);
@@ -700,9 +694,9 @@ TreeLabel.displayName = 'Tree.Label';
  * Ark's `tree` element carrying Container attributes, so the ScrollArea viewport slot merges onto it and the tree
  * element itself scrolls (part-naming rules 1 and 2).
  */
-const TreeContentElement = composable<HTMLDivElement, {}>(({ children, ...props }, forwardedRef) => {
+const TreeContentElement = Util.composable<HTMLDivElement, {}>(({ children, ...props }, forwardedRef) => {
   const { onTreeKeyDown, onTreePointerDownCapture } = useTreeContext('Tree.Content');
-  const { className, ...rest } = composableProps(props, { classNames: 'dx-container dx-tree-content' });
+  const { className, ...rest } = Util.composableProps(props, { classNames: 'dx-container dx-tree-content' });
   return (
     <TreeView.Tree
       {...rest}
@@ -747,7 +741,7 @@ const TreeContent = ({ children }: TreeContentProps) => {
   const { rows } = walk;
   const windowed = virtual === 'fixed';
   const focused = windowed && focusedValue ? walk.rowIndex.get(focusedValue) : undefined;
-  const windowing = useVirtualRows({
+  const windowing = Listbox.useVirtualRows({
     mode: virtual,
     count: rows.length,
     pinned: focused,
@@ -768,14 +762,14 @@ const TreeContent = ({ children }: TreeContentProps) => {
   const content: ReactNode[] = [];
   let next = 0;
   for (const span of windowing.spans) {
-    content.push(<VirtualSpacer key={`gap-${next}`} height={windowing.spacer(span.first - next)} />);
+    content.push(<Listbox.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(span.first - next)} />);
     for (let index = span.first; index <= span.last; index++) {
       const node = rows[index];
       content.push(<Fragment key={node.value}>{renderRow(node)}</Fragment>);
     }
     next = span.last + 1;
   }
-  content.push(<VirtualSpacer key={`gap-${next}`} height={windowing.spacer(rows.length - next)} />);
+  content.push(<Listbox.VirtualSpacer key={`gap-${next}`} height={windowing.spacer(rows.length - next)} />);
 
   return (
     <ScrollArea.Root>
@@ -891,13 +885,13 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
     disclosures,
     claimFocus,
   } = useTreeContext('Tree.Item');
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   const rowRef = useRef<HTMLDivElement | null>(null);
   const [drag, setDrag] = useState<DragState>({ instruction: null, kind: 'move', dragging: false });
   const { id, value, path, item, depth, branch, open, last, current, props } = node;
   const canDrag = draggable && props.draggable !== false;
   const canBeTarget = draggable && props.droppable !== false;
-  const label = toLocalizedString(props.label, t);
+  const label = ThemeProvider.toLocalizedString(props.label, t);
   // `expanded` drops the reorder-below zone, because below an open branch and its first child are the same place;
   // `last-in-group` offers the `reparent` bands that move a row out to a shallower level.
   const mode: ItemMode = branch && open && !dropBelowExpanded ? 'expanded' : last ? 'last-in-group' : 'standard';
@@ -958,9 +952,9 @@ const TreeItemRow = ({ node, children }: TreeItemProps) => {
                     const root = createRoot(container);
                     flushSync(() =>
                       root.render(
-                        <DragPreview source={source.element}>
+                        <DragHandle.DragPreview source={source.element}>
                           {renderDragPreview ? renderDragPreview(node) : <span className='truncate'>{label}</span>}
-                        </DragPreview>,
+                        </DragHandle.DragPreview>,
                       ),
                     );
                     // The preview's own root has no icon registry; the row's icon is already resolved, so it is copied.
@@ -1182,11 +1176,11 @@ type TreeItemGroupLabelProps = {
 /** The group's label (`itemProps.label`, translated). */
 const TreeItemGroupLabel = ({ children }: TreeItemGroupLabelProps) => {
   const { node } = useTreeItemContext('Tree.ItemGroupLabel');
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   return (
-    <Typography truncate classNames='dx-tree-group-label'>
-      {children ?? toLocalizedString(node.props.label, t)}
-    </Typography>
+    <Typography.Typography truncate classNames='dx-tree-group-label'>
+      {children ?? ThemeProvider.toLocalizedString(node.props.label, t)}
+    </Typography.Typography>
   );
 };
 
@@ -1209,15 +1203,15 @@ type TreeItemIndicatorProps = {
 const TreeItemIndicator = ({ icon = 'ph--caret-right--regular' }: TreeItemIndicatorProps) => {
   const { node } = useTreeItemContext('Tree.ItemIndicator');
   return (
-    <Block classNames='dx-tree-item-indicator'>
+    <Block.Block classNames='dx-tree-item-indicator'>
       {node.branch && (
         <TreeView.BranchTrigger className='dx-tree-branch-trigger' data-empty={node.empty ? '' : undefined}>
           <TreeView.BranchIndicator className='dx-tree-branch-indicator'>
-            <Icon icon={icon} />
+            <Icon.Icon icon={icon} />
           </TreeView.BranchIndicator>
         </TreeView.BranchTrigger>
       )}
-    </Block>
+    </Block.Block>
   );
 };
 
@@ -1227,7 +1221,7 @@ TreeItemIndicator.displayName = 'Tree.ItemIndicator';
 // ItemIcon
 //
 
-type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Icon>> & {
+type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Icon.Icon>> & {
   /** Replaces the Icon in the cell, for a glyph that carries its own state (a tooltip, an animation, a per-state hue). */
   children?: ReactNode;
 };
@@ -1235,7 +1229,7 @@ type TreeItemIconProps = Partial<ComponentPropsWithoutRef<typeof Icon>> & {
 const ICON_HUES: readonly string[] = ['neutral', 'success', 'info', 'warning', 'error', ...hues];
 
 /** Narrows the model's free-form `iconHue` to a hue the Icon can draw. */
-const isIconHue = (value: string | undefined): value is IconHue => !!value && ICON_HUES.includes(value);
+const isIconHue = (value: string | undefined): value is Icon.IconHue => !!value && ICON_HUES.includes(value);
 
 /**
  * The icon cell: one block holding the row's icon (`itemProps.icon`, hued by `itemProps.iconHue`), or `children` in
@@ -1247,9 +1241,10 @@ const TreeItemIcon = ({ icon, hue, children, ...props }: TreeItemIconProps) => {
   const glyph = icon ?? node.props.icon;
   const iconHue = node.props.iconHue;
   return (
-    <Block classNames='dx-tree-item-icon'>
-      {children ?? (glyph && <Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />)}
-    </Block>
+    <Block.Block classNames='dx-tree-item-icon'>
+      {children ??
+        (glyph && <Icon.Icon {...props} icon={glyph} hue={hue ?? (isIconHue(iconHue) ? iconHue : undefined)} />)}
+    </Block.Block>
   );
 };
 
@@ -1268,11 +1263,11 @@ type TreeItemTextProps = {
 /** The row's label (`itemProps.label`, translated), truncated to one line. */
 const TreeItemText = ({ children, 'data-testid': testId }: TreeItemTextProps) => {
   const { node } = useTreeItemContext('Tree.ItemText');
-  const { t } = useTranslation();
+  const { t } = Hooks.useTranslation();
   return (
-    <Typography truncate classNames='dx-tree-item-text' data-testid={testId}>
-      {children ?? toLocalizedString(node.props.label, t)}
-    </Typography>
+    <Typography.Typography truncate classNames='dx-tree-item-text' data-testid={testId}>
+      {children ?? ThemeProvider.toLocalizedString(node.props.label, t)}
+    </Typography.Typography>
   );
 };
 
@@ -1291,16 +1286,16 @@ const TreeItemCount = () => {
   const { count, modifiedCount } = node.props;
   if (typeof modifiedCount === 'number' && modifiedCount > 0) {
     return (
-      <Tag hue='rose' classNames='dx-tree-item-count'>
+      <Tag.Tag hue='rose' classNames='dx-tree-item-count'>
         {modifiedCount}
-      </Tag>
+      </Tag.Tag>
     );
   }
   if (typeof count === 'number') {
     return (
-      <Tag hue='neutral' classNames='dx-tree-item-count'>
+      <Tag.Tag hue='neutral' classNames='dx-tree-item-count'>
         {count}
-      </Tag>
+      </Tag.Tag>
     );
   }
   // Holds the count's track even when empty, so the cells after it (actions, item end) keep their own columns.
@@ -1343,7 +1338,7 @@ type TreeEmptyProps = {
 /** `Empty` (its text the children or the translated "No items"), rendered only while the root has no children. */
 const TreeEmpty = forwardRef<HTMLDivElement, TreeEmptyProps>((props, forwardedRef) => {
   const { walk } = useTreeContext('Tree.Empty');
-  return walk.rows.length === 0 ? <Empty {...props} ref={forwardedRef} /> : null;
+  return walk.rows.length === 0 ? <Empty.Empty {...props} ref={forwardedRef} /> : null;
 });
 
 TreeEmpty.displayName = 'Tree.Empty';

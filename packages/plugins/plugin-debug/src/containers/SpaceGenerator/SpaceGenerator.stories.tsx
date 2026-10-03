@@ -16,8 +16,8 @@ import { SpacePlugin } from '@dxos/plugin-space/testing';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
-import { ScrollArea } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';

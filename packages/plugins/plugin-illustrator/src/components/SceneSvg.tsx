@@ -5,7 +5,7 @@
 import React, { type MouseEvent, useId, useMemo } from 'react';
 
 import { Scene } from '@dxos/diagram';
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 /**
@@ -386,7 +386,7 @@ const SceneElement = ({ object, element, registry, markers }: ElementProps) => {
   }
 };
 
-export type SceneSvgProps = ThemedClassName<{
+export type SceneSvgProps = Util.ThemedClassName<{
   objects: readonly Scene.WorldObject[];
   /** Draw the alignment grid at this spacing (scene px). */
   grid?: number;

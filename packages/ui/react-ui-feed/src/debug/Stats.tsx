@@ -4,7 +4,7 @@
 
 import React, { Fragment } from 'react';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 /** Readouts are mostly counts, but a range (`463–499`) is one reading and reads as one cell. */
@@ -18,7 +18,7 @@ export type Stat = {
   classNames?: (value: StatValue) => string | false | undefined;
 };
 
-export type StatsProps = ThemedClassName<{
+export type StatsProps = Util.ThemedClassName<{
   'stats': Stat[];
   'values': Record<string, StatValue>;
   /** Readouts side by side, for a panel that is wider than it is tall. @default 1 */

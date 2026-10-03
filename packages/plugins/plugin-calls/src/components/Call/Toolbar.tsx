@@ -10,21 +10,19 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Obj } from '@dxos/echo';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import {
-  Button,
-  Icon,
-  type ThemedClassName,
-  Toolbar as UiToolbar,
-  toLocalizedString,
-  useTranslation,
-} from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as UiToolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import { type Channel } from '@dxos/types';
 import { groupHoverControlItemWithTransition, mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { CallsCapabilities } from '#types';
 
-export type ToolbarProps = ThemedClassName<{
+export type ToolbarProps = Util.ThemedClassName<{
   channel?: Channel.Channel;
   participants?: number;
   autoHideControls?: boolean;
@@ -46,7 +44,7 @@ export const Toolbar = ({
   joinDisabled,
   onLeave,
 }: ToolbarProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { graph } = ToolkitHooks.useAppGraph();
   const runAction = GraphHooks.useActionRunner();
   const call = Hooks.useCapability(CallsCapabilities.Manager);
@@ -107,7 +105,7 @@ export const Toolbar = ({
 
         {(participants !== undefined && (
           <div className='flex justify-center items-center gap-2 w-[5rem] text-xs text-fg-subtle'>
-            <Icon icon='ph--users--regular' />
+            <Icon.Icon icon='ph--users--regular' />
             <div>{participants}</div>
           </div>
         )) || <UiToolbar.Separator variant='gap' />}
@@ -135,11 +133,11 @@ export const Toolbar = ({
             {actions
               .filter((action): action is AppGraphNode.Action => AppGraphNode.isAction(action))
               .map((action) => (
-                <Button
+                <Button.Button
                   key={action.id}
                   {...defaultButtonProps}
                   icon={action.properties.icon}
-                  label={toLocalizedString(action.properties.label, t)}
+                  label={ThemeProvider.toLocalizedString(action.properties.label, t)}
                   classNames={action.properties.classNames}
                   onClick={() => node && void runAction(action, { parent: node })}
                 />
@@ -163,9 +161,14 @@ export const Toolbar = ({
           </>
         )}
         {inRoom ? (
-          <Button variant='destructive' icon='ph--phone-x--regular' label={t('leave-call.button')} onClick={onLeave} />
+          <Button.Button
+            variant='destructive'
+            icon='ph--phone-x--regular'
+            label={t('leave-call.button')}
+            onClick={onLeave}
+          />
         ) : (
-          <Button
+          <Button.Button
             variant='primary'
             icon='ph--phone-incoming--regular'
             label={t('join-call.button')}
@@ -180,7 +183,7 @@ export const Toolbar = ({
 
 Toolbar.displayName = 'MeetingToolbar';
 
-type ButtonProps = ComponentPropsWithoutRef<typeof Button>;
+type ButtonProps = ComponentPropsWithoutRef<typeof Button.Button>;
 
 type ToggleButtonState = Pick<ButtonProps, 'icon' | 'label' | 'onClick'> & { classNames?: string };
 
@@ -198,7 +201,7 @@ const defaultButtonProps = {
 } as const satisfies Partial<ButtonProps>;
 
 const ToggleButton = ({ active, disabled, state }: ToolbarButtonProps) => (
-  <Button
+  <Button.Button
     {...defaultButtonProps}
     disabled={disabled}
     classNames={[active ? (state.on.classNames ?? 'bg-accent-bg') : state.off.classNames]}

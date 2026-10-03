@@ -11,19 +11,17 @@ import { expect, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import {
-  Block,
-  Button,
-  Checkbox,
-  Collapsible,
-  Container,
-  Field,
-  Fieldset,
-  Group,
-  Icon,
-  Input,
-  Switch,
-} from '../index.ts';
+import * as Block from '../Block/Block.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Checkbox from '../Checkbox/Checkbox.tsx';
+import * as Collapsible from '../Collapsible/Collapsible.tsx';
+import * as Container from '../Container/Container.tsx';
+import * as Field from '../Field/Field.tsx';
+import * as Group from '../Group/Group.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Input from '../Input/Input.tsx';
+import * as Switch from '../Switch/Switch.tsx';
+import * as Fieldset from './Fieldset.tsx';
 
 /**
  * Valid and enabled sets, then an invalid and a disabled one, and a set whose fields span a two-column row; test ids are
@@ -34,21 +32,21 @@ const DefaultStory = () => (
     <Fieldset.Root data-testid='profile'>
       <Fieldset.Legend>
         Profile
-        <Block data-testid='profile-lock'>
-          <Icon icon='ph--user--regular' />
-        </Block>
+        <Block.Block data-testid='profile-lock'>
+          <Icon.Icon icon='ph--user--regular' />
+        </Block.Block>
       </Fieldset.Legend>
       <Field.Root data-testid='name'>
         <Field.Header>
           <Field.Label>Name</Field.Label>
         </Field.Header>
-        <Input placeholder='Ada Lovelace' />
+        <Input.Input placeholder='Ada Lovelace' />
       </Field.Root>
       <Field.Root data-testid='email'>
         <Field.Header>
           <Field.Label>Email</Field.Label>
         </Field.Header>
-        <Input type='email' placeholder='ada@example.com' />
+        <Input.Input type='email' placeholder='ada@example.com' />
       </Field.Root>
       <Fieldset.HelperText>Shown on your public page.</Fieldset.HelperText>
       <Fieldset.ErrorText>Complete your profile.</Fieldset.ErrorText>
@@ -56,10 +54,10 @@ const DefaultStory = () => (
 
     <Fieldset.Root data-testid='notifications'>
       <Fieldset.Legend>Notifications</Fieldset.Legend>
-      <Switch label='Email digests' defaultChecked />
-      <Switch label='Mentions' />
-      <Switch label='Product updates' />
-      <Checkbox label='Email me a weekly digest' />
+      <Switch.Switch label='Email digests' defaultChecked />
+      <Switch.Switch label='Mentions' />
+      <Switch.Switch label='Product updates' />
+      <Checkbox.Checkbox label='Email me a weekly digest' />
     </Fieldset.Root>
 
     <Fieldset.Root invalid>
@@ -68,52 +66,52 @@ const DefaultStory = () => (
         <Field.Header>
           <Field.Label>Handle</Field.Label>
         </Field.Header>
-        <Input />
+        <Input.Input />
       </Field.Root>
       <Field.Root>
         <Field.Header>
           <Field.Label>Recovery email</Field.Label>
         </Field.Header>
-        <Input type='email' />
+        <Input.Input type='email' />
       </Field.Root>
       <Fieldset.ErrorText>Complete your account.</Fieldset.ErrorText>
     </Fieldset.Root>
 
     <Fieldset.Root disabled>
       <Fieldset.Legend>Privacy</Fieldset.Legend>
-      <Switch label='Show online status' />
-      <Switch label='Read receipts' />
-      <Checkbox label='Share usage data' />
-      <Input aria-label='Alias' />
-      <Button>Reset</Button>
+      <Switch.Switch label='Show online status' />
+      <Switch.Switch label='Read receipts' />
+      <Checkbox.Checkbox label='Share usage data' />
+      <Input.Input aria-label='Alias' />
+      <Button.Button>Reset</Button.Button>
     </Fieldset.Root>
 
     <Fieldset.Root data-testid='address'>
       <Fieldset.Legend>Address</Fieldset.Legend>
-      <Container layout='row' columns='repeat(2, minmax(0, 1fr))' gap='md' data-testid='address-grid'>
+      <Container.Container layout='row' columns='repeat(2, minmax(0, 1fr))' gap='md' data-testid='address-grid'>
         <Field.Root span='full' data-testid='street'>
           <Field.Header>
             <Field.Label>Street</Field.Label>
           </Field.Header>
-          <Input />
+          <Input.Input />
         </Field.Root>
         <Field.Root data-testid='city'>
           <Field.Header>
             <Field.Label>City</Field.Label>
           </Field.Header>
-          <Input />
+          <Input.Input />
         </Field.Root>
         <Field.Root data-testid='zip'>
           <Field.Header>
             <Field.Label>ZIP</Field.Label>
           </Field.Header>
-          <Input />
+          <Input.Input />
         </Field.Root>
         <Fieldset.Root span={2} data-testid='delivery'>
           <Fieldset.Legend>Delivery</Fieldset.Legend>
-          <Checkbox label='Leave at the door' />
+          <Checkbox.Checkbox label='Leave at the door' />
         </Fieldset.Root>
-      </Container>
+      </Container.Container>
     </Fieldset.Root>
 
     {/* Grid sets: subgrids of the enclosing Container at any depth, the inner one folding a subgrid Collapsible. */}
@@ -123,7 +121,7 @@ const DefaultStory = () => (
         <Field.Header>
           <Field.Label>Carrier</Field.Label>
         </Field.Header>
-        <Input />
+        <Input.Input />
       </Field.Root>
       <Collapsible.Root asChild defaultOpen>
         <Fieldset.Root gutter='inherit' level='+1' disabled data-testid='geo'>
@@ -135,19 +133,19 @@ const DefaultStory = () => (
               <Field.Header>
                 <Field.Label>Latitude</Field.Label>
               </Field.Header>
-              <Input />
+              <Input.Input />
             </Field.Root>
           </Collapsible.Content>
         </Fieldset.Root>
       </Collapsible.Root>
     </Fieldset.Root>
 
-    <Group justify='end'>
-      <Button>Cancel</Button>
-      <Button type='submit' variant='primary'>
+    <Group.Group justify='end'>
+      <Button.Button>Cancel</Button.Button>
+      <Button.Button type='submit' variant='primary'>
         Save
-      </Button>
-    </Group>
+      </Button.Button>
+    </Group.Group>
   </>
 );
 

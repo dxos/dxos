@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './NumberInput.tsx';
+export * as NumberInput from './NumberInput.tsx';

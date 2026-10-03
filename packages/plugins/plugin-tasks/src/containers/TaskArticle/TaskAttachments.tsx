@@ -22,8 +22,11 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as FileOperation from '@dxos/plugin-file/FileOperation';
 import * as CardMasonry from '@dxos/plugin-space/CardMasonry';
-import { Container, Icon, Typography, useTranslation } from '@dxos/react-ui';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
+import * as Container from '@dxos/react-ui/Container';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Typography from '@dxos/react-ui/Typography';
 import { type File, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 
@@ -239,7 +242,7 @@ export type TaskAttachmentsProps = {
  * and nothing could be.
  */
 export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: TaskAttachmentsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [refs] = useObject(task, 'attachments');
   const dragging = useContext(FileDragContext);
 
@@ -271,11 +274,11 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
 
   return (
     // A section of the pane's column, headed like the questions and artifacts around it.
-    <Container asChild gutter='inherit' gap='md'>
+    <Container.Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.attachments'>
-        <Typography asChild tone='subtle'>
+        <Typography.Typography asChild tone='subtle'>
           <h2>{t('task-attachments.label')}</h2>
-        </Typography>
+        </Typography.Typography>
         <div
           className={mx(
             'rounded-md border border-dashed',
@@ -300,13 +303,13 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
             </RemoveAttachmentContext.Provider>
           ) : (
             <>
-              <Icon icon='ph--paperclip--regular' />
+              <Icon.Icon icon='ph--paperclip--regular' />
               {t('task-attachments.drop-area.label')}
             </>
           )}
         </div>
       </section>
-    </Container>
+    </Container.Container>
   );
 };
 
@@ -315,7 +318,7 @@ const RemoveAttachmentContext = createContext<((object: Obj.Unknown) => void) | 
 
 /** Adds "Remove attachment" to each attachment card's menu, beside the file's own actions. */
 const AttachmentCardMenu = ({ subject, menu }: AppSurface.CardMenuData<Obj.Unknown>) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const onRemove = useContext(RemoveAttachmentContext);
   const items = useMemo(
     () =>

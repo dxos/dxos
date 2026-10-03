@@ -5,7 +5,9 @@
 import React, { type ReactNode, useCallback, useState } from 'react';
 
 import { log } from '@dxos/log';
-import { Banner, Dialog, useTranslation } from '@dxos/react-ui';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { Action, TextInput } from '../components/index.ts';
 import { translationKey } from '../translations.ts';
@@ -50,7 +52,7 @@ export const ConfirmReset = ({
   confirmationValue: confirmationValueProp,
   errorMessage,
 }: ConfirmResetProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const [validationMessage, setValidationMessage] = useState('');
   const [pending, setPending] = useState(false);
   const [inputValue, setInputValue] = useState('');

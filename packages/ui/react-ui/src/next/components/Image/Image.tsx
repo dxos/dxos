@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, {
   type ComponentPropsWithoutRef,
   type CSSProperties,
@@ -16,8 +18,8 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { clickableProps } from '../../clickable.ts';
 import { recipes } from '../../recipes.ts';
-import { type CSSVariables } from '../Container/index.ts';
-import { Icon } from '../Icon/index.ts';
+import type * as Container from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
 
 type ImageStatus = 'loading' | 'loaded' | 'error';
 
@@ -73,7 +75,7 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
     const [result, setResult] = useState<{ source: string; status: ImageStatus; color?: string }>();
     const status: ImageStatus = result?.source === source ? result.status : 'loading';
     const color = result?.source === source ? result.color : undefined;
-    const aspectStyle: CSSProperties & CSSVariables = {
+    const aspectStyle: CSSProperties & Container.CSSVariables = {
       '--dx-image-aspect': aspectRatio,
       ...(color ? { '--dx-image-backdrop': color } : {}),
     };
@@ -91,7 +93,7 @@ export const Image = forwardRef<HTMLDivElement, ImageProps>(
         ref={forwardedRef}
       >
         {status === 'error' ? (
-          <Icon icon='ph--image-broken--regular' label={alt} />
+          <Icon.Icon icon='ph--image-broken--regular' label={alt} />
         ) : (
           <img
             src={src}

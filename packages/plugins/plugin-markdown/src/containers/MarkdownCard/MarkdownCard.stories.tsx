@@ -11,8 +11,9 @@ import { Obj } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { random } from '@dxos/random';
-import { Card, DragHandle } from '@dxos/react-ui';
 import { CardContainer } from '@dxos/react-ui-mosaic/testing';
+import * as Card from '@dxos/react-ui/Card';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
@@ -35,7 +36,7 @@ const MarkdownCardStory = ({ ...args }: Omit<MarkdownCardProps, 'subject'>) => {
     <CardContainer icon='ph--text-aa--regular'>
       <Card.Root border={false}>
         <Card.Header>
-          <DragHandle />
+          <DragHandle.DragHandle />
           <Card.Title>{Obj.getLabel(subject)}</Card.Title>
         </Card.Header>
         <MarkdownCard subject={subject} {...args} />

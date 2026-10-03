@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { Block, Icon } from '@dxos/react-ui';
 import { TogglePanel } from '@dxos/react-ui-components';
+import * as Block from '@dxos/react-ui/Block';
+import * as Icon from '@dxos/react-ui/Icon';
 import { type WidgetProps, type XmlWidgetRegistry, getXmlTextChild } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
@@ -63,9 +64,9 @@ const Panel = ({
         <TogglePanel.Content classNames={mx('min-h-[2.125rem] rounded border border-separator-subtle', classNames)}>
           <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
             <span className='grow text-fg-muted truncate'>{title}</span>
-            <Block>
-              <Icon icon={icon} size='md' />
-            </Block>
+            <Block.Block>
+              <Icon.Icon icon={icon} size='md' />
+            </Block.Block>
           </TogglePanel.Header>
           <TogglePanel.Body>
             <TogglePanel.Viewport classNames='px-2 pb-1 text-sm'>{children}</TogglePanel.Viewport>
@@ -78,7 +79,7 @@ const Panel = ({
 
 const Frame = ({ icon, title, children, classNames }: WidgetProps<any> & { classNames?: string }) => (
   <div className={mx('flex gap-2 px-2 py-1 rounded border border-separator-subtle text-sm', classNames)}>
-    {icon && <Icon icon={icon} size='md' classNames='mt-1' tone='muted' />}
+    {icon && <Icon.Icon icon={icon} size='md' classNames='mt-1' tone='muted' />}
     <div className='min-w-0'>
       {title && <p className='text-xs text-fg-muted'>{title}</p>}
       {children}

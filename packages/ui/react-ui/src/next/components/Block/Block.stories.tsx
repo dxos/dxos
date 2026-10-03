@@ -12,25 +12,28 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Block, Container, Icon, Typography } from '../index.ts';
+import * as Container from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Block from './Block.tsx';
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Container gutter='rail' layout='row' data-testid={`row-${size}`}>
-      <Block rail='start' data-testid={`start-${size}`}>
-        <Icon icon='ph--circle--regular' />
-      </Block>
-      <Typography>Block</Typography>
-      <Block rail='end' data-testid={`end-${size}`}>
-        <Icon icon='ph--dots-three--regular' />
-      </Block>
-    </Container>
-    <Container gutter='rail' layout='row'>
-      <Block rail='start' compact data-testid={`compact-${size}`}>
-        <Icon icon='ph--star--regular' />
-      </Block>
-      <Typography>Compact</Typography>
-    </Container>
+    <Container.Container gutter='rail' layout='row' data-testid={`row-${size}`}>
+      <Block.Block rail='start' data-testid={`start-${size}`}>
+        <Icon.Icon icon='ph--circle--regular' />
+      </Block.Block>
+      <Typography.Typography>Block</Typography.Typography>
+      <Block.Block rail='end' data-testid={`end-${size}`}>
+        <Icon.Icon icon='ph--dots-three--regular' />
+      </Block.Block>
+    </Container.Container>
+    <Container.Container gutter='rail' layout='row'>
+      <Block.Block rail='start' compact data-testid={`compact-${size}`}>
+        <Icon.Icon icon='ph--star--regular' />
+      </Block.Block>
+      <Typography.Typography>Compact</Typography.Typography>
+    </Container.Container>
   </>
 );
 

@@ -2,18 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Dialog as DialogPrimitive, useDialogContext } from '@ark-ui/react/dialog';
 import { useEnvironmentContext } from '@ark-ui/react/environment';
 import React, { forwardRef, useId } from 'react';
 
-import { Button, type ButtonProps } from '../Button/index.ts';
-import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, type DialogRootProps } from '../Dialog/index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Dialog from '../Dialog/Dialog.tsx';
 
 //
 // Root
 //
 
-type AlertDialogRootProps = Omit<DialogRootProps, 'role'>;
+type AlertDialogRootProps = Omit<Dialog.RootProps, 'role'>;
 
 /**
  * A Dialog with `role=alertdialog`, which zag keeps open on an outside click. It opens with focus on a control marked
@@ -36,7 +38,7 @@ const AlertDialogRoot = ({ ids, initialFocusEl, ...props }: AlertDialogRootProps
       ids={{ ...ids, content: contentId, closeTrigger: cancelId }}
       initialFocusEl={
         initialFocusEl ??
-        (() => byId(contentId)?.querySelector<HTMLElement>(`[${DIALOG_AUTOFOCUS_ATTRIBUTE}]`) ?? byId(cancelId))
+        (() => byId(contentId)?.querySelector<HTMLElement>(`[${Dialog.DIALOG_AUTOFOCUS_ATTRIBUTE}]`) ?? byId(cancelId))
       }
     />
   );
@@ -48,12 +50,12 @@ AlertDialogRoot.displayName = 'AlertDialog.Root';
 // Cancel
 //
 
-type AlertDialogCancelProps = ButtonProps;
+type AlertDialogCancelProps = Button.ButtonProps;
 
 /** A Button that closes the dialog without acting; the caller names it (Next ships no translated labels). */
 const AlertDialogCancel = forwardRef<HTMLButtonElement, AlertDialogCancelProps>((props, forwardedRef) => (
   <DialogPrimitive.CloseTrigger asChild>
-    <Button {...props} ref={forwardedRef} />
+    <Button.Button {...props} ref={forwardedRef} />
   </DialogPrimitive.CloseTrigger>
 ));
 
@@ -63,14 +65,14 @@ AlertDialogCancel.displayName = 'AlertDialog.Cancel';
 // Action
 //
 
-type AlertDialogActionProps = ButtonProps;
+type AlertDialogActionProps = Button.ButtonProps;
 
 /** The confirming Button (`primary` by default): runs `onClick`, then closes unless the handler prevents default. */
 const AlertDialogAction = forwardRef<HTMLButtonElement, AlertDialogActionProps>(
   ({ variant = 'primary', onClick, ...props }, forwardedRef) => {
     const dialog = useDialogContext();
     return (
-      <Button
+      <Button.Button
         {...props}
         variant={variant}
         onClick={(event) => {
@@ -86,18 +88,28 @@ const AlertDialogAction = forwardRef<HTMLButtonElement, AlertDialogActionProps>(
 );
 
 AlertDialogAction.displayName = 'AlertDialog.Action';
-
-export const AlertDialog = {
-  Root: AlertDialogRoot,
-  Trigger: Dialog.Trigger,
-  Content: Dialog.Content,
-  Header: Dialog.Header,
-  Title: Dialog.Title,
-  Description: Dialog.Description,
-  Body: Dialog.Body,
-  Footer: Dialog.Footer,
-  Cancel: AlertDialogCancel,
-  Action: AlertDialogAction,
+const AlertDialogTrigger = Dialog.Trigger;
+const AlertDialogContent = Dialog.Content;
+const AlertDialogHeader = Dialog.Header;
+const AlertDialogTitle = Dialog.Title;
+const AlertDialogDescription = Dialog.Description;
+const AlertDialogBody = Dialog.Body;
+const AlertDialogFooter = Dialog.Footer;
+export type {
+  AlertDialogActionProps as ActionProps,
+  AlertDialogCancelProps as CancelProps,
+  AlertDialogRootProps as RootProps,
 };
 
-export type { AlertDialogActionProps, AlertDialogCancelProps, AlertDialogRootProps };
+export {
+  AlertDialogAction as Action,
+  AlertDialogBody as Body,
+  AlertDialogCancel as Cancel,
+  AlertDialogContent as Content,
+  AlertDialogDescription as Description,
+  AlertDialogFooter as Footer,
+  AlertDialogHeader as Header,
+  AlertDialogRoot as Root,
+  AlertDialogTitle as Title,
+  AlertDialogTrigger as Trigger,
+};

@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Icon, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { CompoundButton, InputLabel } from '../../../components/index.ts';
 import { translationKey } from '../../../translations.ts';
@@ -16,11 +17,11 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
   const disabled = !viewStateProps.active;
   const { send } = viewStateProps;
 
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
 
   const sharedButtonProps = {
     disabled,
-    after: <Icon icon='ph--caret-right--bold' size='md' />,
+    after: <Icon.Icon icon='ph--caret-right--bold' size='md' />,
     slots: { label: { className: 'text-sm' } },
   };
 
@@ -31,7 +32,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
         <CompoundButton
           {...sharedButtonProps}
           description={t('create-identity.description')}
-          before={<Icon icon='ph--plus--regular' size='xl' />}
+          before={<Icon.Icon icon='ph--plus--regular' size='xl' />}
           onClick={() => send({ type: 'createIdentity' })}
           data-autofocus='choosingAuthMethod'
           data-testid='identity-chooser.create-identity'
@@ -41,7 +42,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
         <CompoundButton
           {...sharedButtonProps}
           description={t('join-identity.description')}
-          before={<Icon icon='ph--qr-code--regular' size='xl' />}
+          before={<Icon.Icon icon='ph--qr-code--regular' size='xl' />}
           onClick={() => send({ type: 'acceptHaloInvitation' })}
           data-testid='identity-chooser.join-identity'
         >
@@ -50,7 +51,7 @@ export const AdditionMethodChooser = (viewStateProps: AdditionMethodChooserProps
         <CompoundButton
           {...sharedButtonProps}
           description={t('recover-identity.description')}
-          before={<Icon icon='ph--textbox--regular' size='xl' />}
+          before={<Icon.Icon icon='ph--textbox--regular' size='xl' />}
           onClick={() => send({ type: 'recoverIdentity' })}
           data-testid='identity-chooser.recover-identity'
         >

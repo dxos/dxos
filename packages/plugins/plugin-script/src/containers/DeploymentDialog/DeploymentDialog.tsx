@@ -8,7 +8,10 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
-import { Button, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { useCreateAndDeployScriptTemplates } from '#hooks';
 import { meta } from '#meta';
@@ -26,7 +29,7 @@ export type DeploymentDialogProps = {
 };
 
 export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const db = useMemo(() => Obj.getDatabase(accessToken), [accessToken]);
 
   // TODO(ZaymonFC): Thinking further. All of this should get moved to intents to run async in the background.
@@ -88,9 +91,9 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
       </Dialog.Body>
       <Dialog.Footer>
         <Dialog.CloseTrigger asChild>
-          <Button disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Button>
+          <Button.Button disabled={status === 'pending'}>{t('deployment-dialog-skip-button.label')}</Button.Button>
         </Dialog.CloseTrigger>
-        <Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
+        <Button.Button variant='primary' onClick={handleCreateAndDeployScripts} disabled={status === 'pending'}>
           {status === 'pending'
             ? t('deployment-dialog-deploy-functions-pending-button.label', {
                 count: scriptTemplates.length,
@@ -98,7 +101,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
             : t('deployment-dialog-deploy-functions-button.label', {
                 count: scriptTemplates.length,
               })}
-        </Button>
+        </Button.Button>
       </Dialog.Footer>
     </Dialog.Content>
   );

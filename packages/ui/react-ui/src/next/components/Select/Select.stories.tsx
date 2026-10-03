@@ -26,40 +26,42 @@ import {
   watchResizeObserverLoop,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Select, type SelectOption, Tag, Toolbar } from '../index.ts';
+import * as Tag from '../Tag/Tag.tsx';
+import * as Toolbar from '../Toolbar/Toolbar.tsx';
+import * as Select from './Select.tsx';
 
-const OPTIONS: SelectOption[] = [
+const OPTIONS: Select.Option[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
   { value: 'black', label: 'Black', disabled: true },
 ];
 
-const ICON_OPTIONS: SelectOption[] = [
+const ICON_OPTIONS: Select.Option[] = [
   { value: 'list', label: 'List', icon: 'ph--list--regular' },
   { value: 'grid', label: 'Grid', icon: 'ph--squares-four--regular' },
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
 ];
 
 /** Labels of very different widths, for the `fit='options'` trigger. */
-const DENSITY: SelectOption[] = [
+const DENSITY: Select.Option[] = [
   { value: 'xs', label: 'XS' },
   { value: 'comfortable', label: 'Comfortable spacing' },
   { value: 'md', label: 'Medium' },
 ];
 
 /** Enough options to overflow the popup's 20rem cap at every size. */
-const LONG: SelectOption[] = Array.from({ length: 30 }, (_, index) => ({
+const LONG: Select.Option[] = Array.from({ length: 30 }, (_, index) => ({
   value: `option-${index + 1}`,
   label: `Option ${index + 1}`,
 }));
 
-const FRUIT: SelectOption[] = [
+const FRUIT: Select.Option[] = [
   { value: 'apple', label: 'Apple', icon: 'ph--circle--fill', iconHue: 'red' },
   { value: 'pear', label: 'Pear', icon: 'ph--circle--fill', iconHue: 'lime' },
 ];
 
-const VEGETABLES: SelectOption[] = [
+const VEGETABLES: Select.Option[] = [
   { value: 'kale', label: 'Kale', icon: 'ph--circle--fill', iconHue: 'emerald' },
   { value: 'leek', label: 'Leek' },
 ];
@@ -106,7 +108,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
                   <Select.Item key={item.value} item={item}>
                     <Select.ItemIcon icon='ph--circle--fill' hue='amber' />
                     <Select.ItemText>
-                      <Tag hue='amber'>Leek</Tag>
+                      <Tag.Tag hue='amber'>Leek</Tag.Tag>
                     </Select.ItemText>
                     <Select.ItemIndicator />
                   </Select.Item>

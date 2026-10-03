@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, {
   type ComponentPropsWithRef,
   type CSSProperties,
@@ -17,7 +19,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { type CSSVariables } from '../Container/index.ts';
+import type * as Container from '../Container/Container.tsx';
 
 const emptyLines: string[] = [];
 
@@ -165,7 +167,10 @@ export const TextCrawl = forwardRef<HTMLDivElement, TextCrawlProps>(
       return () => clearInterval(interval);
     }, [lines, wasReset, indexProp, autoAdvance, greedy, minDuration, cyclic, transition]);
 
-    const rootStyle: CSSProperties & CSSVariables = { ...style, '--dx-text-crawl-duration': `${transition}ms` };
+    const rootStyle: CSSProperties & Container.CSSVariables = {
+      ...style,
+      '--dx-text-crawl-duration': `${transition}ms`,
+    };
     const shown = (line: number) => index === line || (line === 0 && index === lines.length);
 
     return (

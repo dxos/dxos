@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 // Ark's toast machine is a store plus a `Toaster` host rather than a tree of roots. The declarative API is kept:
 // `Toast.Provider` owns the store, `Toast.Root` registers its content and mirrors `open` into the store, and
 // `Toast.Toaster` renders each registered root inside the machine's actor so the parts find their toast.
@@ -34,9 +36,9 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Progress } from '../Progress/index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Progress from '../Progress/Progress.tsx';
 import { ToastContextProvider, type ToastEntry, ToastRegistry, useToastContext } from './registry.ts';
 
 const DEFAULT_DURATION = 5_000;
@@ -99,7 +101,9 @@ const ToastHost = ({ entry, size }: { entry: ToastEntry; size?: Size }) => {
       ref={entry.ref}
     >
       {entry.children}
-      {timed && <Progress countdown={entry.countdown} paused={toast.paused} classNames={recipes.toastCountdown()} />}
+      {timed && (
+        <Progress.Progress countdown={entry.countdown} paused={toast.paused} classNames={recipes.toastCountdown()} />
+      )}
     </ToastPrimitive.Root>
   );
 };
@@ -253,7 +257,7 @@ const ToastCloseTrigger = forwardRef<HTMLButtonElement, ToastCloseTriggerProps>(
   const { t } = useTranslation(translationKey);
   return (
     <ToastPrimitive.CloseTrigger asChild>
-      <Button
+      <Button.Button
         variant='ghost'
         icon='ph--x--regular'
         iconOnly
@@ -287,7 +291,7 @@ const ToastHeader = forwardRef<HTMLDivElement, ToastHeaderProps>(
       className={mx(recipes.toastHeader(), classNames)}
       ref={forwardedRef}
     >
-      {icon && <Icon icon={icon} classNames={recipes.toastIcon()} />}
+      {icon && <Icon.Icon icon={icon} classNames={recipes.toastIcon()} />}
       <ToastTitle>{children}</ToastTitle>
       {closable && <ToastCloseTrigger />}
     </div>
@@ -331,37 +335,36 @@ ToastFooter.displayName = 'Toast.Footer';
 // ActionTrigger
 //
 
-type ToastActionTriggerProps = ComponentPropsWithRef<typeof Button>;
+type ToastActionTriggerProps = ComponentPropsWithRef<typeof Button.Button>;
 
 /** A Button that runs the toast's action, after which the machine dismisses the toast. */
 const ToastActionTrigger = forwardRef<HTMLButtonElement, ToastActionTriggerProps>((props, forwardedRef) => (
   <ToastPrimitive.ActionTrigger asChild>
-    <Button {...props} ref={forwardedRef} />
+    <Button.Button {...props} ref={forwardedRef} />
   </ToastPrimitive.ActionTrigger>
 ));
 
 ToastActionTrigger.displayName = 'Toast.ActionTrigger';
-
-export const Toast = {
-  Provider: ToastProvider,
-  Toaster: ToastToaster,
-  Root: ToastRoot,
-  Header: ToastHeader,
-  Title: ToastTitle,
-  Description: ToastDescription,
-  Footer: ToastFooter,
-  ActionTrigger: ToastActionTrigger,
-  CloseTrigger: ToastCloseTrigger,
+export type {
+  ToastActionTriggerProps as ActionTriggerProps,
+  ToastCloseTriggerProps as CloseTriggerProps,
+  ToastDescriptionProps as DescriptionProps,
+  ToastFooterProps as FooterProps,
+  ToastHeaderProps as HeaderProps,
+  ToastProviderProps as ProviderProps,
+  ToastRootProps as RootProps,
+  ToastTitleProps as TitleProps,
+  ToastToasterProps as ToasterProps,
 };
 
-export type {
-  ToastActionTriggerProps,
-  ToastCloseTriggerProps,
-  ToastDescriptionProps,
-  ToastFooterProps,
-  ToastHeaderProps,
-  ToastProviderProps,
-  ToastRootProps,
-  ToastTitleProps,
-  ToastToasterProps,
+export {
+  ToastActionTrigger as ActionTrigger,
+  ToastCloseTrigger as CloseTrigger,
+  ToastDescription as Description,
+  ToastFooter as Footer,
+  ToastHeader as Header,
+  ToastProvider as Provider,
+  ToastRoot as Root,
+  ToastTitle as Title,
+  ToastToaster as Toaster,
 };

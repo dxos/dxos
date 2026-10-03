@@ -13,8 +13,12 @@ import React, {
 
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { keySymbols } from '@dxos/react-focus';
-import { Button, Icon, Menu, type MenuOption, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Attention, useAttention } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { osTranslations } from '@dxos/ui-theme';
 import { resolveKeyBinding } from '@dxos/util';
 
@@ -35,7 +39,7 @@ const sigilSizeClassNames: Record<AttentionSigilButtonSize, string> = {
   lg: 'w-(--dx-rail-action) h-(--dx-rail-action)',
 };
 
-export type AttentionSigilButtonProps = Omit<ComponentPropsWithoutRef<typeof Button>, 'variant' | 'size'> &
+export type AttentionSigilButtonProps = Omit<ComponentPropsWithoutRef<typeof Button.Button>, 'variant' | 'size'> &
   Attention.AttendableId &
   Attention.Related & {
     isMenu?: boolean;
@@ -67,7 +71,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
     const variant = (related && isRelated) || hasAttention || isAncestor ? 'primary' : 'ghost';
     // TODO(wittjosiah): Disable hover styles when isMenu is false.
     return (
-      <Button
+      <Button.Button
         {...props}
         variant={variant}
         classNames={['shrink-0 px-0 min-h-0 relative dx-app-no-drag', sigilSizeClassNames[size], classNames]}
@@ -75,7 +79,7 @@ export const AttentionSigilButton = forwardRef<HTMLButtonElement, AttentionSigil
       >
         {isMenu && <MenuSignifierHorizontal />}
         {children}
-      </Button>
+      </Button.Button>
     );
   },
 );
@@ -98,7 +102,7 @@ export type AttentionSigilProps = PropsWithChildren<
  */
 export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>(
   ({ actions: actionGroups, onAction, triggerLabel, attendableId, icon, related, size, children }, forwardedRef) => {
-    const { t } = useTranslation(osTranslations);
+    const { t } = Hooks.useTranslation(osTranslations);
 
     const [optionsMenuOpen, setOptionsMenuOpen] = useState(false);
 
@@ -117,7 +121,7 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
         classNames={!hasActions && 'cursor-default'}
       >
         <span className='sr-only'>{triggerLabel}</span>
-        <Icon icon={icon} />
+        <Icon.Icon icon={icon} />
       </AttentionSigilButton>
     );
 
@@ -138,9 +142,9 @@ export const AttentionSigil = forwardRef<HTMLButtonElement, AttentionSigilProps>
                 {separator}
                 {actions.map((action) => {
                   const shortcut = resolveKeyBinding(action.properties.keyBinding);
-                  const item: MenuOption = {
+                  const item: Menu.Option = {
                     value: action.id,
-                    label: toLocalizedString(action.properties.label ?? '', t),
+                    label: ThemeProvider.toLocalizedString(action.properties.label ?? '', t),
                     icon: action.properties.icon ?? 'ph--circle-dashed--regular',
                     shortcut: shortcut ? keySymbols(shortcut).join('') : undefined,
                     disabled: action.properties.disabled,

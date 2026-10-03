@@ -11,7 +11,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { useQuery } from '@dxos/echo-react';
 import * as Dashboard from '@dxos/plugin-space/Dashboard';
-import { Panel } from '@dxos/react-ui';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { VirtualStreamDeck } from '#components';
 import * as Protocol from '#protocol';

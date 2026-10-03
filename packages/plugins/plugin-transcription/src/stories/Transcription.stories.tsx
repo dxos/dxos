@@ -16,8 +16,11 @@ import * as Effect from 'effect/Effect';
 import React, { type ChangeEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { type CommitFn, type TranscribeConfig, makeCorrectionStage } from '@dxos/pipeline-transcription';
-import { Button, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { Transcription, useAudioFile, useFeedModelAdapter, useRecordingPipeline } from '@dxos/react-ui-transcription';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { type ContentBlock, Message } from '@dxos/types';
 
 import { createStoryDecorators } from '#testing';
@@ -131,7 +134,7 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
       <Panel.Root>
         <Panel.Header>
           <Toolbar.Root>
-            <Button
+            <Button.Button
               iconOnly
               disabled={!stream}
               icon={running ? 'ph--pause--regular' : 'ph--play--regular'}
@@ -139,7 +142,7 @@ const DefaultStory = ({ audioUrl, audioConstraints }: StoryArgs) => {
               onClick={() => setRunning((value) => !value)}
             />
             <input ref={fileInputRef} type='file' accept='audio/*' className='hidden' onChange={handleFileChange} />
-            <Button
+            <Button.Button
               iconOnly
               icon='ph--upload--regular'
               label='Upload audio'

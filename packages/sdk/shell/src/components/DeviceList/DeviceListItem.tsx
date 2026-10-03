@@ -6,8 +6,13 @@ import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
 import { generateName } from '@dxos/display-name';
 import { ConnectionState } from '@dxos/react-client/mesh';
-import { Avatar, Button, Menu, Tag, type ThemedClassName, toAvatarHue, useId, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Tag from '@dxos/react-ui/Tag';
+import type * as Util from '@dxos/react-ui/Util';
 import { hexToFallback } from '@dxos/util';
 
 import { translationKey } from '../../translations.ts';
@@ -25,7 +30,7 @@ const KIND_ICONS: Record<NonNullable<ShellDevice['kind']>, string> = {
 
 export const DeviceListItem = forwardRef<
   HTMLDivElement,
-  ThemedClassName<ComponentPropsWithoutRef<'div'>> &
+  Util.ThemedClassName<ComponentPropsWithoutRef<'div'>> &
     DeviceListItemProps &
     Partial<Pick<AgentFormProps, 'onAgentDestroy'>>
 >(
@@ -44,9 +49,9 @@ export const DeviceListItem = forwardRef<
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const fallbackValue = hexToFallback(device.key);
-    const labelId = useId('identityListItem__label');
+    const labelId = Hooks.useId('identityListItem__label');
     const displayName =
       device.label ??
       (device.os || device.platform
@@ -70,7 +75,7 @@ export const DeviceListItem = forwardRef<
                 ? 'active'
                 : 'inactive'
           }
-          hue={toAvatarHue(fallbackValue.hue)}
+          hue={Avatar.toAvatarHue(fallbackValue.hue)}
           variant='square'
           classNames='place-self-center'
           {...(device.kind ? { icon: KIND_ICONS[device.kind] } : { fallback: fallbackValue.emoji })}
@@ -78,7 +83,7 @@ export const DeviceListItem = forwardRef<
         <span id={labelId} className='flex-1 text-sm truncate'>
           {displayName}
         </span>
-        {isCurrent && <Tag color='primary'>{t('current-device-tag.label')}</Tag>}
+        {isCurrent && <Tag.Tag color='primary'>{t('current-device-tag.label')}</Tag.Tag>}
         {/* TODO(wittjosiah): EDGE agents cannot current be turned off. */}
         {/* {device.profile?.type === DeviceType.AGENT_MANAGED && (
             <Tooltip.Root>
@@ -103,7 +108,7 @@ export const DeviceListItem = forwardRef<
         {isCurrent && (onClickJoinExisting || onClickRecover || onClickReset) && (
           <Menu.Root>
             <Menu.Trigger asChild>
-              <Button
+              <Button.Button
                 variant='ghost'
                 icon='ph--dots-three--regular'
                 iconOnly

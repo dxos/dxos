@@ -9,9 +9,15 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useMembers } from '@dxos/halo-react';
-import { Button, Container, Panel, ScrollArea, Toolbar, Typography, useTranslation } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { TaskEditor, TaskHistory, TaskMnemonic, TaskProperties, TaskQuestion, TaskTags } from '@dxos/react-ui-task';
+import * as Button from '@dxos/react-ui/Button';
+import * as Container from '@dxos/react-ui/Container';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Task } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -39,7 +45,7 @@ export type TaskArticleProps = AppSurface.ObjectArticleProps<Task.Task>;
  * a plugin that can store files is present.
  */
 export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attendableId }: TaskArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const spaceId = Obj.getDatabase(task)?.spaceId;
   const descriptionExtensions = useMarkdownExtensions(task);
 
@@ -87,7 +93,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
               {/* One column for the whole pane, so the gutter has a single owner: the fields, the
                 section headings and the cards all start at the content track, and only a glyph
                 hangs outside it. */}
-              <Container gutter='md' gap='lg' classNames='py-2'>
+              <Container.Container gutter='md' gap='lg' classNames='py-2'>
                 {/* The task's own fields, not the list's strip: the pane has a subject, so it
                   needs neither the create case nor the selection the strip reads. */}
                 <TaskEditor
@@ -115,11 +121,11 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                   standing "Questions" label over nothing says the pane expects them, when what a
                   task with none has is nothing to answer. */}
                 {openQuestions.length > 0 && (
-                  <Container asChild gutter='inherit' gap='md'>
+                  <Container.Container asChild gutter='inherit' gap='md'>
                     <section data-testid='tasksPlugin.questions'>
-                      <Typography asChild tone='subtle'>
+                      <Typography.Typography asChild tone='subtle'>
                         <h2>{t('task-questions.label')}</h2>
-                      </Typography>
+                      </Typography.Typography>
                       {openQuestions.map((thread) => (
                         <TaskQuestion
                           key={thread.question.id}
@@ -128,7 +134,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                         />
                       ))}
                     </section>
-                  </Container>
+                  </Container.Container>
                 )}
 
                 <TaskAttachments
@@ -139,7 +145,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 />
                 {history && history.length > 0 && <TaskHistory entries={history} />}
                 <TaskArtifacts task={task} />
-              </Container>
+              </Container.Container>
             </TaskAttachmentDropZone>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
@@ -155,7 +161,7 @@ TaskArticle.displayName = 'TaskArticle';
  * row's trailing gutter, where the pane's whole subject is the task and they are its actions.
  */
 const TaskActions = ({ task }: { task: Task.Task }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const contributed = useTaskActions();
   const actions = useMemo(() => contributed(task), [contributed, task]);
 
@@ -165,7 +171,7 @@ const TaskActions = ({ task }: { task: Task.Task }) => {
 
   return (
     <ActionMenu deferUntilOpen actions={actions}>
-      <Button
+      <Button.Button
         variant='ghost'
         iconOnly
         icon='ph--dots-three-vertical--regular'

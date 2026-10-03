@@ -17,7 +17,6 @@ import { useObject, useQuery, useType } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
 import * as SearchHooks from '@dxos/plugin-search/Hooks';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Panel } from '@dxos/react-ui';
 import { graphActions, isToolbarAction } from '@dxos/react-ui-menu';
 import {
   Table as TableComponent,
@@ -33,6 +32,7 @@ import {
   useTableModel,
 } from '@dxos/react-ui-table';
 import { type Table } from '@dxos/react-ui-table/types';
+import * as Panel from '@dxos/react-ui/Panel';
 import { getTagFromQuery, getTypeURIFromQuery } from '@dxos/schema';
 import { downloadBlob } from '@dxos/util';
 

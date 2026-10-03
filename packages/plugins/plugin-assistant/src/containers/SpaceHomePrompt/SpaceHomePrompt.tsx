@@ -10,7 +10,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as ChatType from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Space, useRegistry } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { type ChatEvent, ChatPrompt } from '#components';
 import { useChatProcessor, useChatServices, usePresets } from '#hooks';
@@ -31,7 +31,7 @@ type SpaceScopedProps = {
  * back the context-binder UI.
  */
 export const SpaceHomePrompt = ({ space }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   const registry = useRegistry();

@@ -4,7 +4,8 @@
 
 import React, { type ButtonHTMLAttributes, type ComponentPropsWithoutRef, type ReactNode } from 'react';
 
-import { Button, type ButtonVariant, useId } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { mx } from '@dxos/ui-theme';
 
 export type CompoundButtonSlots = {
@@ -15,7 +16,7 @@ export type CompoundButtonSlots = {
 };
 
 export type CompoundButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
-  variant?: ButtonVariant;
+  variant?: Button.ButtonVariant;
   children?: ReactNode;
   description?: ReactNode;
   before?: ReactNode;
@@ -33,11 +34,11 @@ export const CompoundButton = ({
   slots = {},
   ...buttonProps
 }: CompoundButtonProps) => {
-  const labelId = useId('compoundButton-label');
-  const descriptionId = useId('compoundButton-description');
+  const labelId = Hooks.useId('compoundButton-label');
+  const descriptionId = Hooks.useId('compoundButton-description');
 
   return (
-    <Button
+    <Button.Button
       {...buttonProps}
       variant={variant}
       align='start'
@@ -69,6 +70,6 @@ export const CompoundButton = ({
         )}
       </div>
       {after && <div className='grow-0'>{after}</div>}
-    </Button>
+    </Button.Button>
   );
 };

@@ -11,8 +11,12 @@ import { type ConfigInit, SaveConfig, Storage, defs } from '@dxos/config';
 import { log } from '@dxos/log';
 import { type IdbLogStore, MANUAL_LOG_EXPORT_MAX_BYTES } from '@dxos/log-store-idb';
 import { useClient } from '@dxos/react-client';
-import { Button, Select, Switch, Toast as UiToast, useFileDownload, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
+import * as Switch from '@dxos/react-ui/Switch';
+import * as UiToast from '@dxos/react-ui/Toast';
 import { TRACE_ALL_KEY } from '@dxos/tracing';
 import { gzip, setDeep } from '@dxos/util';
 
@@ -40,9 +44,9 @@ export type DebugSettingsProps = AppSurface.SettingsProps<
 >;
 
 export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onUpload }: DebugSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [toast, setToast] = useState<Toast>();
-  const download = useFileDownload();
+  const download = Hooks.useFileDownload();
   const [storageConfig, setStorageConfig] = useState<ConfigInit>({});
   const client = useClient();
 
@@ -159,14 +163,14 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
         <Form.Content>
           <Form.FieldSet label={meta.profile.name ?? meta.profile.key} actions={scope}>
             <Form.Field label={t('settings.wireframe.label')} description={t('settings.wireframe.description')}>
-              <Switch
+              <Switch.Switch
                 disabled={!onSettingsChange}
                 checked={settings.wireframe}
                 onCheckedChange={({ checked }) => handleWireframeChange(checked)}
               />
             </Form.Field>
             <Form.Field label={t('settings.trace-all.label')} description={t('settings.trace-all.description')}>
-              <Switch
+              <Switch.Switch
                 disabled={!onSettingsChange}
                 checked={traceAll}
                 onCheckedChange={({ checked }) => handleTraceAllChange(checked)}
@@ -177,7 +181,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.tracing-panel.label')}
               description={t('settings.tracing-panel.description')}
             >
-              <Button
+              <Button.Button
                 icon='ph--arrow-square-out--regular'
                 iconOnly
                 label={t('settings.tracing-panel.label')}
@@ -189,7 +193,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-diagnostics.label')}
               description={t('settings.download-diagnostics.description')}
             >
-              <Button
+              <Button.Button
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-diagnostics.label')}
@@ -201,7 +205,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               label={t('settings.download-logs.label')}
               description={t('settings.download-logs.description')}
             >
-              <Button
+              <Button.Button
                 icon='ph--download-simple--regular'
                 iconOnly
                 label={t('settings.download-logs.label')}
@@ -209,7 +213,7 @@ export const DebugSettings = ({ settings, onSettingsChange, scope, logStore, onU
               />
             </Form.Field>
             <Form.Field standalone label={t('settings.repair.label')} description={t('settings.repair.description')}>
-              <Button
+              <Button.Button
                 icon='ph--first-aid-kit--regular'
                 iconOnly
                 label={t('settings.repair.label')}

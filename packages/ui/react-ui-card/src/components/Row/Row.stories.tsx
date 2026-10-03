@@ -16,9 +16,14 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Obj, Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
-import { Block, Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover, virtualAnchor } from '@dxos/react-ui';
+import * as Block from '@dxos/react-ui/Block';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { type Actor, Person } from '@dxos/types';
+import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
@@ -74,7 +79,7 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
     <Popover.Root
       open={open}
       onOpenChange={({ open }) => setOpen(open)}
-      positioning={virtualAnchor(triggerRef as RefObject<HTMLButtonElement>)}
+      positioning={VirtualAnchor.virtualAnchor(triggerRef as RefObject<HTMLButtonElement>)}
       autoFocus={false}
     >
       {children}
@@ -83,9 +88,9 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
           <Popover.Body classNames='dx-card-popover-width'>
             <Card.Root border={false} data-testid='contact-preview'>
               <Card.Header>
-                <Block>
-                  <Icon icon='ph--user--regular' />
-                </Block>
+                <Block.Block>
+                  <Icon.Icon icon='ph--user--regular' />
+                </Block.Block>
                 <Card.Title>{link.title ?? link.label}</Card.Title>
               </Card.Header>
               <Card.Row>
@@ -131,9 +136,9 @@ const DefaultStory = () => {
       <Card.Root border={false} classNames='p-1'>
         <Card.Body>
           <Card.Row>
-            <Block>
+            <Block.Block>
               <Row.Star starred={starred} onToggle={handleToggleStar} />
-            </Block>
+            </Block.Block>
             <Card.Text classNames='text-lg line-clamp-2'>Quarterly planning sync</Card.Text>
           </Card.Row>
           {/* Neither `db` nor `getContact`: no contact resolution, so the avatar is inert. */}

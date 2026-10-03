@@ -6,8 +6,9 @@ import React, { useCallback } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { Version } from '@dxos/versioning';
 
 import { useVersioning } from '#hooks';
@@ -20,7 +21,7 @@ export type MarkdownPropertiesProps = AppSurface.ObjectPropertiesProps<Markdown.
  * The full manager lives in the History companion tab.
  */
 export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const versioning = useVersioning(subject);
   const { document, history, selection, activeBranch } = versioning;
 
@@ -52,7 +53,11 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
         }
       >
         <div className='flex gap-1'>
-          <Button icon='ph--bookmark-simple--regular' label={t('create-checkpoint.label')} onClick={handleCheckpoint} />
+          <Button.Button
+            icon='ph--bookmark-simple--regular'
+            label={t('create-checkpoint.label')}
+            onClick={handleCheckpoint}
+          />
         </div>
       </Form.Field>
     </Form.FieldSet>

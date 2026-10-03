@@ -14,7 +14,6 @@ import { Obj, Ref, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import * as ProjectOperation from '@dxos/plugin-projects/ProjectOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
-import { Card, Panel } from '@dxos/react-ui';
 import { useAttention } from '@dxos/react-ui-attention';
 import {
   Board,
@@ -25,6 +24,8 @@ import {
   resizeToFit,
 } from '@dxos/react-ui-board';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Card from '@dxos/react-ui/Card';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 import { Lightbox, MediaArtifact } from '#types';

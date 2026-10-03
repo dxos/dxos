@@ -14,7 +14,7 @@ import React, {
 } from 'react';
 import { useResizeDetector } from 'react-resize-detector';
 
-import { type ThemedClassName } from '@dxos/react-ui';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { CanvasContext, ProjectionMapper, type ProjectionState, defaultOrigin } from '../../hooks/index.ts';
@@ -23,7 +23,9 @@ export interface CanvasController {
   setProjection(projection: ProjectionState): Promise<void>;
 }
 
-export type CanvasProps = ThemedClassName<PropsWithChildren<Partial<ProjectionState> & HTMLAttributes<HTMLDivElement>>>;
+export type CanvasProps = Util.ThemedClassName<
+  PropsWithChildren<Partial<ProjectionState> & HTMLAttributes<HTMLDivElement>>
+>;
 
 /**
  * Root canvas component.

@@ -12,7 +12,9 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Group, ToggleGroup, Typography } from '../index.ts';
+import * as Group from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as ToggleGroup from './ToggleGroup.tsx';
 
 /** A single-select group of icon-only items (alignment) and a multiple-select group of text items (marks). */
 const DefaultStory = ({ size }: SizeArgs) => {
@@ -20,7 +22,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
   const [marks, setMarks] = useState<string[]>(['bold']);
   return (
     <>
-      <Group>
+      <Group.Group>
         <ToggleGroup.Root
           type='single'
           value={align}
@@ -45,10 +47,10 @@ const DefaultStory = ({ size }: SizeArgs) => {
             Code
           </ToggleGroup.Item>
         </ToggleGroup.Root>
-      </Group>
-      <Typography data-testid={`state-${size}`}>
+      </Group.Group>
+      <Typography.Typography data-testid={`state-${size}`}>
         {align} / {marks.join(', ') || 'none'}
-      </Typography>
+      </Typography.Typography>
     </>
   );
 };

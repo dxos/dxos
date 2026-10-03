@@ -9,7 +9,8 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { useClient } from '@dxos/react-client';
-import { Dialog, useTranslation } from '@dxos/react-ui';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -31,7 +32,7 @@ export type ResetDialogProps = Pick<ConfirmResetProps, 'mode'> & {
  * one in — the client stays open throughout, so nothing reloads.
  */
 export const ResetDialog = ({ mode, invitationCode, onBeforeReset }: ResetDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const onIdentityDeleted = Hooks.useCapabilities(ClientCapabilities.OnIdentityDeleted);

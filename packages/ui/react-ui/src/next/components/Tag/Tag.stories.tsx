@@ -16,12 +16,15 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size, SIZES } from '../../sizes.ts';
 import { byTestId, centreY, controlSize, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Container, Group, Tag, type TagHue } from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Container from '../Container/Container.tsx';
+import * as Group from '../Group/Group.tsx';
+import * as Tag from './Tag.tsx';
 
 /** Label text (one step below the body) per size, in px. */
 const LABEL_FONT: Record<Size, number> = { xs: 12, sm: 12, md: 14, lg: 16, xl: 18 };
 
-const VALENCES: TagHue[] = ['neutral', 'info', 'success', 'warning', 'error'];
+const VALENCES: Tag.TagHue[] = ['neutral', 'info', 'success', 'warning', 'error'];
 
 /** Clickable, deletable, and clickable and deletable tags, counting their clicks and restoring deleted ones. */
 const InteractiveTags = ({ size }: { size?: Size }) => {
@@ -30,54 +33,54 @@ const InteractiveTags = ({ size }: { size?: Size }) => {
   const remove = (name: string) => () => setDeleted((current) => [...current, name]);
   const shown = (name: string) => !deleted.includes(name);
   return (
-    <Container layout='row' data-testid={`interactive-${size}`}>
-      <Group>
-        <Tag hue='sky' onClick={() => setClicks((count) => count + 1)} data-testid={`clickable-${size}`}>
+    <Container.Container layout='row' data-testid={`interactive-${size}`}>
+      <Group.Group>
+        <Tag.Tag hue='sky' onClick={() => setClicks((count) => count + 1)} data-testid={`clickable-${size}`}>
           Filter
-        </Tag>
+        </Tag.Tag>
         {shown('design') && (
-          <Tag hue='violet' onDelete={remove('design')} data-testid={`deletable-${size}`}>
+          <Tag.Tag hue='violet' onDelete={remove('design')} data-testid={`deletable-${size}`}>
             Design
-          </Tag>
+          </Tag.Tag>
         )}
         {shown('bug') && (
-          <Tag
+          <Tag.Tag
             hue='rose'
             onClick={() => setClicks((count) => count + 1)}
             onDelete={remove('bug')}
             data-testid={`both-${size}`}
           >
             Bug
-          </Tag>
+          </Tag.Tag>
         )}
-        <Button compact onClick={() => setDeleted([])} data-testid={`reset-${size}`}>
+        <Button.Button compact onClick={() => setDeleted([])} data-testid={`reset-${size}`}>
           Reset
-        </Button>
+        </Button.Button>
         <output data-testid={`clicks-${size}`}>{clicks}</output>
-      </Group>
-    </Container>
+      </Group.Group>
+    </Container.Container>
   );
 };
 
 /** A row of tags centred in a block row, clickable and deletable tags, then every valence and hue. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Container layout='row' data-testid={`row-${size}`}>
-      <Group>
-        <Tag hue='blue' data-testid={`tag-${size}`}>
+    <Container.Container layout='row' data-testid={`row-${size}`}>
+      <Group.Group>
+        <Tag.Tag hue='blue' data-testid={`tag-${size}`}>
           Release
-        </Tag>
-        <Tag hue='amber'>Draft</Tag>
-      </Group>
-    </Container>
+        </Tag.Tag>
+        <Tag.Tag hue='amber'>Draft</Tag.Tag>
+      </Group.Group>
+    </Container.Container>
     <InteractiveTags size={size} />
-    <Group>
+    <Group.Group>
       {[...VALENCES, ...hues].map((hue) => (
-        <Tag key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
+        <Tag.Tag key={hue} hue={hue} data-testid={`hue-${hue}-${size}`}>
           {hue}
-        </Tag>
+        </Tag.Tag>
       ))}
-    </Group>
+    </Group.Group>
   </>
 );
 

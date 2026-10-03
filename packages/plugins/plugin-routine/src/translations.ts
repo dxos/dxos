@@ -4,13 +4,13 @@
 
 import * as Routine from '@dxos/compute/Routine';
 import { Type } from '@dxos/echo';
-import { type Resource } from '@dxos/react-ui';
 import { translations as componentsTranslations } from '@dxos/react-ui-components/translations';
 import { translations as formTranslations } from '@dxos/react-ui-form/translations';
+import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { meta } from '#meta';
 
-export const translations: Resource[] = [
+export const translations: ThemeProvider.Resource[] = [
   ...componentsTranslations,
   ...formTranslations,
   {
@@ -117,4 +117,4 @@ export const translations: Resource[] = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies ThemeProvider.Resource[];

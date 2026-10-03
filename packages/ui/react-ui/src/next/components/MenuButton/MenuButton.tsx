@@ -2,11 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { forwardRef } from 'react';
 
 import { type Size } from '../../sizes.ts';
-import { Button, type ButtonProps } from '../Button/index.ts';
-import { Menu } from '../Menu/index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Menu from '../Menu/Menu.tsx';
 
 /**
  * One entry in a {@link MenuButton}'s menu: a caller describes the menu it wants instead of assembling the Menu parts.
@@ -74,7 +76,7 @@ const toSections = (items: MenuButtonItem[]): Section[] => {
   return sections;
 };
 
-export type MenuButtonProps = Omit<ButtonProps, 'onSelect'> & {
+export type MenuButtonProps = Omit<Button.ButtonProps, 'onSelect'> & {
   items: MenuButtonItem[];
   /** The menu's size; `md` by default. */
   menuSize?: Size;
@@ -88,7 +90,7 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
   ({ items, menuSize, ...props }, forwardedRef) => (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <Button {...props} ref={forwardedRef} />
+        <Button.Button {...props} ref={forwardedRef} />
       </Menu.Trigger>
       <Menu.Content size={menuSize}>
         {toSections(items).map((section, index) =>

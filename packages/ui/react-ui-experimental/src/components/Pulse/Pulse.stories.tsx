@@ -5,8 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { Button, Panel, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Pulse, type PulseProps, type PulseSignal } from './Pulse.tsx';
 
@@ -19,7 +21,7 @@ const DefaultStory = (props: PulseProps) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button>
+          <Button.Button onClick={() => setActive((a) => !a)}>{active ? 'Stop' : 'Start'}</Button.Button>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='flex items-center justify-center'>

@@ -5,9 +5,10 @@
 import React, { useEffect, useState } from 'react';
 
 import { ClientProvider, type ClientProviderProps } from '@dxos/react-client';
-import { ErrorBoundary, type ThemeMode, ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
 import { translations as logPanelTranslations } from '@dxos/react-ui-debug/translations';
+import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import { type ThemeMode } from '@dxos/ui-types';
 
 import { Devtools } from './Devtools.tsx';
 
@@ -33,13 +34,16 @@ export const App = (props: ClientProviderProps) => {
   const themeMode = useThemeWatcher();
 
   return (
-    <ThemeProvider {...{ tx: defaultTx, themeMode }} resourceExtensions={logPanelTranslations}>
-      <ErrorBoundary name='devtools.app'>
+    <ThemeProvider.ThemeProvider
+      {...{ tx: ThemeProvider.defaultTx, themeMode }}
+      resourceExtensions={logPanelTranslations}
+    >
+      <ErrorFallback.ErrorBoundary name='devtools.app'>
         <ClientProvider {...props}>
           <Devtools />
         </ClientProvider>
-      </ErrorBoundary>
-    </ThemeProvider>
+      </ErrorFallback.ErrorBoundary>
+    </ThemeProvider.ThemeProvider>
   );
 };
 

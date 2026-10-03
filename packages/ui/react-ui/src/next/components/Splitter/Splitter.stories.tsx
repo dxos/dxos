@@ -9,16 +9,17 @@ import React, { useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Splitter, type SplitterRootProps, Typography } from '../index.ts';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Splitter from './Splitter.tsx';
 
 type StoryArgs = Pick<
-  SplitterRootProps,
+  Splitter.RootProps,
   'orientation' | 'anchor' | 'mode' | 'resizable' | 'defaultSize' | 'minSize' | 'transition'
 >;
 
 const Pane = ({ label }: { label: string }) => (
   <div className='grid place-items-center' data-testid={`pane-${label}`}>
-    <Typography>{label}</Typography>
+    <Typography.Typography>{label}</Typography.Typography>
   </div>
 );
 
@@ -36,7 +37,7 @@ const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
           <Pane label='End' />
         </Splitter.Panel>
       </Splitter.Root>
-      <Typography data-testid='size'>{size.toFixed(2)}rem</Typography>
+      <Typography.Typography data-testid='size'>{size.toFixed(2)}rem</Typography.Typography>
     </div>
   );
 };

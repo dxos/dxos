@@ -5,7 +5,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { Group, SystemButton, useTranslation } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
 import {
   type AudioInputDevice,
@@ -14,6 +13,9 @@ import {
   listAudioInputs,
   setPreferredAudioInput,
 } from '@dxos/react-ui-transcription';
+import * as Group from '@dxos/react-ui/Group';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { meta } from '#meta';
 import { Settings, TranscriptionCapabilities } from '#types';
@@ -30,7 +32,7 @@ export type MicProps = {
  * this same control that way, rather than a copy of it.
  */
 export const Mic = ({ docId }: MicProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [session, setSession] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.RecordingSession);
   const [settings, setSettings] = Hooks.useAtomCapabilityState(TranscriptionCapabilities.Settings);
 
@@ -157,7 +159,7 @@ export const Mic = ({ docId }: MicProps) => {
         : t('start-recording.label');
 
   return (
-    <Group compact>
+    <Group.Group compact>
       <SystemButton.Mic
         iconOnly
         variant='ghost'
@@ -179,6 +181,6 @@ export const Mic = ({ docId }: MicProps) => {
         onEntityExtractionChange={handleEntityExtractionChange}
         onSelectDevice={handleSelectDevice}
       />
-    </Group>
+    </Group.Group>
   );
 };

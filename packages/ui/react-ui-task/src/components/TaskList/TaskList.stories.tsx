@@ -8,10 +8,15 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Block, Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover, virtualAnchor } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
+import * as Block from '@dxos/react-ui/Block';
+import * as Card from '@dxos/react-ui/Card';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 import { File, PullRequest, Task, TaskSet } from '@dxos/types';
+import { DX_ANCHOR_ACTIVATE, DxAnchorActivate } from '@dxos/ui-types';
 
 import { translations } from '#translations';
 
@@ -454,7 +459,7 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
     <Popover.Root
       open={open}
       onOpenChange={({ open }) => setOpen(open)}
-      positioning={virtualAnchor(triggerRef)}
+      positioning={VirtualAnchor.virtualAnchor(triggerRef)}
       autoFocus={false}
     >
       {children}
@@ -466,9 +471,9 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
           <Popover.Body classNames='dx-card-popover-width'>
             <Card.Root border={false} data-testid='artifact-preview'>
               <Card.Header>
-                <Block>
-                  <Icon icon={iconFor(artifact)} />
-                </Block>
+                <Block.Block>
+                  <Icon.Icon icon={iconFor(artifact)} />
+                </Block.Block>
                 <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
               </Card.Header>
               {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}

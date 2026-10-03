@@ -4,7 +4,13 @@
 
 import React from 'react';
 
-import { Button, Empty, Panel, ScrollArea, Select, type ThemedClassName, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 export type StageInfo = {
@@ -21,7 +27,7 @@ export type PipelineInfo = {
   stages: StageInfo[];
 };
 
-export type PipelinePanelProps = ThemedClassName<{
+export type PipelinePanelProps = Util.ThemedClassName<{
   /** Available pipelines; the toolbar picker selects which one runs. */
   pipelines: PipelineInfo[];
   /** Selected pipeline id. */
@@ -72,7 +78,7 @@ export const PipelinePanel = ({
           </Select.Root>
           <div className='grow' />
           <span className='text-sm text-fg-muted tabular-nums'>{processed} processed</span>
-          <Button
+          <Button.Button
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
             iconOnly
             label={running ? 'Stop' : 'Start'}
@@ -84,7 +90,7 @@ export const PipelinePanel = ({
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
-            {stages.length === 0 && <Empty>No stages.</Empty>}
+            {stages.length === 0 && <Empty.Empty>No stages.</Empty.Empty>}
             {stages.map((stage) => (
               <div
                 key={stage.id}

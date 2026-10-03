@@ -6,11 +6,14 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 
 import { findFirstFocusable, useFocusGroup } from '@dxos/react-focus';
-import { useMergeRefs } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
-import { Checkbox, Field, Input, ScrollArea } from '../next/components/index.ts';
+import * as Hooks from '../hooks/Hooks.ts';
+import * as Checkbox from '../next/components/Checkbox/Checkbox.tsx';
+import * as Field from '../next/components/Field/Field.tsx';
+import * as Input from '../next/components/Input/Input.tsx';
+import * as ScrollArea from '../next/components/ScrollArea/ScrollArea.tsx';
 
 // TODO(burdon): Implement horizontal movement between columns when column is selected.
 // TODO(burdon): Prevent tab out of app.
@@ -29,7 +32,7 @@ const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, 
 
   return (
     <div
-      ref={useMergeRefs<HTMLDivElement>([ref, focusGroupRef])}
+      ref={Hooks.useMergeRefs<HTMLDivElement>([ref, focusGroupRef])}
       tabIndex={0}
       {...focusGroupProps}
       className='flex dx-fill overflow-hidden dx-focus-ring rounded-xs'
@@ -81,10 +84,10 @@ const Item = ({ value }: { value: string }) => {
       className={mx('flex shrink-0 w-full gap-4 p-4 items-center', border)}
     >
       <Field.Root>
-        <Checkbox />
+        <Checkbox.Checkbox />
       </Field.Root>
       <Field.Root>
-        <Input defaultValue={value} />
+        <Input.Input defaultValue={value} />
       </Field.Root>
     </div>
   );

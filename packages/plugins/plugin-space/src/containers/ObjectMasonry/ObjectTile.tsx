@@ -13,7 +13,11 @@ import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Card, Focus, Menu, Tag, useTranslation } from '@dxos/react-ui';
+import * as Card from '@dxos/react-ui/Card';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Tag from '@dxos/react-ui/Tag';
 import { CardAnnotation } from '@dxos/schema';
 import { osTranslations } from '@dxos/ui-theme';
 
@@ -39,7 +43,7 @@ export const TileAdapter = ({ data }: { data: TileData | undefined; index: numbe
 
 /** Selectable header-only card for a single object. */
 export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
@@ -124,7 +128,7 @@ export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: Tile
         </ObjectCard.Header>
         {archived && (
           <Card.Row>
-            <Tag classNames='justify-self-start'>{t('archived.label')}</Tag>
+            <Tag.Tag classNames='justify-self-start'>{t('archived.label')}</Tag.Tag>
           </Card.Row>
         )}
         {showCardContent && <Surface.Surface type={AppSurface.CardContent} data={cardData} limit={1} />}

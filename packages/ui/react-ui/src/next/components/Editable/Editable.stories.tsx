@@ -11,10 +11,14 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { controlSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Editable, type EditableRootProps, Input, Typography, useEditable } from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Input from '../Input/Input.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Editable from './Editable.tsx';
+import { useEditable } from './useEditable.ts';
 
 type StoryArgs = SizeArgs &
-  Pick<EditableRootProps, 'activation' | 'blurBehavior' | 'disabled' | 'placeholder'> & {
+  Pick<Editable.RootProps, 'activation' | 'blurBehavior' | 'disabled' | 'placeholder'> & {
     /** Names the preview, to prove a caller's own label survives the machine's. */
     previewLabel?: string;
     initialValue?: string;
@@ -50,9 +54,9 @@ const DefaultStory = ({
         <Editable.Input data-testid='editable.input' />
       </Editable.Root>
       {/* `onValueChange` fires on commit, never per keystroke: one entry per edit. */}
-      <Typography tone='muted' data-testid='editable.commits'>
+      <Typography.Typography tone='muted' data-testid='editable.commits'>
         {commits.length === 0 ? 'No commits yet' : `Commits: ${commits.join(' · ')}`}
-      </Typography>
+      </Typography.Typography>
     </>
   );
 };
@@ -196,17 +200,17 @@ const HeldOpenStory = ({ initialValue = 'Ship the spring release', held = true }
 
   return (
     <>
-      <Input data-testid='held.input' value={draft} onChange={(event) => setDraft(event.target.value)} />
+      <Input.Input data-testid='held.input' value={draft} onChange={(event) => setDraft(event.target.value)} />
       <div className='flex gap-2'>
-        <Button data-testid='held.edit' onClick={() => edit()}>
+        <Button.Button data-testid='held.edit' onClick={() => edit()}>
           Edit
-        </Button>
-        <Button data-testid='held.commit' onClick={() => commit()}>
+        </Button.Button>
+        <Button.Button data-testid='held.commit' onClick={() => commit()}>
           Commit
-        </Button>
-        <Button data-testid='held.revert' onClick={() => revert()}>
+        </Button.Button>
+        <Button.Button data-testid='held.revert' onClick={() => revert()}>
           Revert
-        </Button>
+        </Button.Button>
       </div>
       <span data-testid='held.editing'>{editing ? 'editing' : 'preview'}</span>
       <span data-testid='held.value'>{value}</span>

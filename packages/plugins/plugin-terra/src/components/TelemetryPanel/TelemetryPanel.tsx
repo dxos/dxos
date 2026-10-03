@@ -4,7 +4,7 @@
 
 import React, { type KeyboardEvent } from 'react';
 
-import { ScrollArea } from '@dxos/react-ui';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { TerraObject } from '#types';
 
