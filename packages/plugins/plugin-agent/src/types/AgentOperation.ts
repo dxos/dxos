@@ -11,11 +11,11 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, DXN, Feed, Ref } from '@dxos/echo';
 
-/** Creates an interlocutor agent (instructions, feed and companion chat) in the space. */
+/** Creates an agent (instructions, feed and companion chat) in the space. */
 export const CreateAgent = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.create'),
-    name: 'Create interlocutor agent',
+    name: 'Create agent',
     description: 'Creates an autonomous agent that converses with people from Discord threads and Composer chats.',
     icon: 'ph--chats-circle--regular',
   },
@@ -59,7 +59,7 @@ export const EnsureThreadChat = Operation.make({
 export const ListAgents = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.list'),
-    name: 'List interlocutor agents',
+    name: 'List agents',
     description: 'Lists the agents in the space and how many chats each one has.',
     icon: 'ph--list--regular',
   },
