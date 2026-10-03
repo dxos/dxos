@@ -167,8 +167,14 @@ const SkillBinder = ({ skills = [], children }: { skills?: string[]; children: R
     }
 
     const registry = makeRegistry({ initial: skillDefinitions.map((def) => def.make()) });
+    // A returning profile already holds the clones, and cloning again would write a new skill per load.
+    const stored = await space.db.query(Filter.type(Skill.Skill)).run();
     const skillObjects = skills
       .map((key) => {
+        const existing = stored.find((candidate) => Obj.getMeta(candidate).key === key);
+        if (existing) {
+          return existing;
+        }
         const skill = registry
           .query(Filter.type(Skill.Skill))
           .runSync()
@@ -365,6 +371,13 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           );
         }
       } else {
+        // A returning profile reopens the chat it was seeded with; creating one per load would make
+        // every reload write a chat, its feed and its bindings.
+        const [existing] = yield* Effect.promise(() => space.db.query(Filter.type(Chat.Chat)).run());
+        if (existing) {
+          return;
+        }
+
         // Create the initial chat via the canonical CreateChat operation (which binds the default
         // skills and the chat), then apply any story-specific context bindings. The story-side
         // `onChatCreated` must run here: the operation handler that creates the chat is owned by

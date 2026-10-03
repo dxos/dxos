@@ -251,6 +251,11 @@ class SqliteRandomAccessFile extends BaseEventEmitter implements RandomAccessSto
     const saving = this._ensureLoaded()
       .then(() => {
         const end = offset + data.length;
+        // Hypercore rewrites unchanged header and bitfield pages on every open; each save rewrites
+        // the whole blob, so a write that changes nothing must not reach the database.
+        if (end <= this.#buffer.length && this.#buffer.subarray(offset, end).equals(data)) {
+          return;
+        }
         if (end > this.#buffer.length) {
           const enlarged = Buffer.alloc(end);
           this.#buffer.copy(enlarged);
