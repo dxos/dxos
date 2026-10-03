@@ -62,6 +62,20 @@ describe('scoreStageRun', () => {
     expect(report.groups.map(({ group }) => group).sort()).toEqual(['busy space', STAGE_WALL_GROUP].sort());
   });
 
+  test('rejects extra scales without a primary scale', ({ expect }) => {
+    expect(() =>
+      scoreStageRun({
+        ...setup([{ scale: 'blank', wallMs: 100 }]),
+        flow: 'chat',
+        extraScales: [BUSY],
+        suite: 'chat',
+        title: 'Chat',
+        budgets,
+        budgetsFile: 'budgets.json',
+      }),
+    ).toThrow('scale is required when extraScales is set');
+  });
+
   test('floors an extra scale that produced no rows', ({ expect }) => {
     const report = score([{ scale: 'blank', wallMs: 100 }]);
     const busy = report.groups.find(({ group }) => group === 'busy space');

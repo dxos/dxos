@@ -85,6 +85,10 @@ export const scoreStageRun = ({
         }
       }),
   );
+  // Without a primary scale its metrics would pool every fixture's rows, extra scales' included.
+  if (scale === undefined && extraScales.length > 0) {
+    throw new Error('scale is required when extraScales is set');
+  }
   const events = allEvents.filter(({ properties }) => scale === undefined || properties.scale === scale);
   if (events.length === 0) {
     throw new Error(
