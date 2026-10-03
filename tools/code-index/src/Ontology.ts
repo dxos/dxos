@@ -363,8 +363,9 @@ export const undocumented = iri('undocumented');
 export const phantom = iri('phantom');
 export const unspecified = iri('unspecified');
 /**
- * The name an external importer writes: the identifier alone, or `<Namespace>.<identifier>` when
- * the declaring module is published whole under one name.
+ * The name an external importer writes, stated only when it is not the declared name:
+ * `<Namespace>.<identifier>` when the declaring module is published whole under one name. Otherwise
+ * it is `deus:name` — `COALESCE(?canonical, ?name)` in a query.
  */
 export const canonicalName = iri('canonicalName');
 
