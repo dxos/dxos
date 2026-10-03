@@ -16,7 +16,7 @@ bun tools/code-index/bin/code-index.ts query 'PREFIX deus: <https://dxos.org/voc
 
 # everything a file transitively imports — a property path, nothing materialized
 bun tools/code-index/bin/code-index.ts query 'PREFIX deus: <https://dxos.org/vocab/deus#>
-  SELECT ?to WHERE { <https://dxos.org/deus/file/packages%2Fcommon%2Flog%2Fsrc%2Findex.ts> deus:imports+ ?t .
+  SELECT ?to WHERE { <https://dxos.org/deus/file/packages/common/log/src/index.ts> deus:imports+ ?t .
                      ?t deus:path ?to }'
 ```
 

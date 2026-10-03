@@ -5,10 +5,10 @@
 # the parser does not read — a snippet shows it, and a JS reasoner could lift it later.
 
 @prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix echo: <https://dxos.org/deus/module/@dxos/echo#>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 
-{ ?s deus:pipedThrough <https://dxos.org/deus/module/%40dxos%2Fecho#Type.Obj> } => { ?s rdf:type deus:EchoType }.
-{ ?s deus:pipedThrough <https://dxos.org/deus/module/%40dxos%2Fecho#Type.Relation> }
-  => { ?s rdf:type deus:EchoRelation }.
-{ ?s deus:extends <https://dxos.org/deus/module/%40dxos%2Fecho#Type.makeObject> } => { ?s rdf:type deus:EchoType }.
-{ ?s deus:extends <https://dxos.org/deus/module/%40dxos%2Fecho#Type.makeRelation> } => { ?s rdf:type deus:EchoRelation }.
+{ ?s deus:pipedThrough echo:Type.Obj } => { ?s rdf:type deus:EchoType }.
+{ ?s deus:pipedThrough echo:Type.Relation } => { ?s rdf:type deus:EchoRelation }.
+{ ?s deus:extends echo:Type.makeObject } => { ?s rdf:type deus:EchoType }.
+{ ?s deus:extends echo:Type.makeRelation } => { ?s rdf:type deus:EchoRelation }.
