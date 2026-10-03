@@ -4,12 +4,12 @@
 // @import-as-namespace
 //
 
+import * as Argument from 'effect/cli/Argument';
+import * as Command from 'effect/cli/Command';
+import * as Flag from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Argument from 'effect/unstable/cli/Argument';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Flag from 'effect/unstable/cli/Flag';
 import { readFile } from 'node:fs/promises';
 import { extname, resolve } from 'node:path';
 
@@ -31,17 +31,17 @@ import * as Workspace from './workspace/Workspace.ts';
 /** The bundled rule files; read `rules/50-example.n3` before adding rules of your own. */
 export const DEFAULT_RULES = Reasoner.BUNDLED_DIR;
 
-const rootFlag = Flag.string('root').pipe(
+const rootFlag = Flag.String('root').pipe(
   Flag.withDescription('Repository root to index (default: the git root of the working directory).'),
   Flag.optional,
 );
 
-const storeFlag = Flag.string('store').pipe(
+const storeFlag = Flag.String('store').pipe(
   Flag.withDescription('Store directory (default: <root>/node_modules/.code-index).'),
   Flag.optional,
 );
 
-const jsonFlag = Flag.boolean('json').pipe(Flag.withDescription('Emit JSON.'));
+const jsonFlag = Flag.Boolean('json').pipe(Flag.withDescription('Emit JSON.'));
 
 /** Both defaults come from git, so the same store is found from anywhere inside the repository. */
 const resolveRoot = (root: Option.Option<string>): Effect.Effect<string, Crawler.CrawlError> =>
@@ -61,13 +61,13 @@ const index = Command.make(
     root: rootFlag,
     store: storeFlag,
     json: jsonFlag,
-    force: Flag.boolean('force').pipe(Flag.withDescription('Reindex every file, ignoring recorded mtimes.')),
-    workers: Flag.integer('workers').pipe(Flag.withDescription('Parsing workers.'), Flag.optional),
-    rules: Flag.string('rules').pipe(
+    force: Flag.Boolean('force').pipe(Flag.withDescription('Reindex every file, ignoring recorded mtimes.')),
+    workers: Flag.Int('workers').pipe(Flag.withDescription('Parsing workers.'), Flag.optional),
+    rules: Flag.String('rules').pipe(
       Flag.withDescription('N3 rules file or directory, recomputed at the end of the pass (default: bundled rules/).'),
       Flag.optional,
     ),
-    noReason: Flag.boolean('no-reason').pipe(Flag.withDescription('Skip the reasoning phase.')),
+    noReason: Flag.Boolean('no-reason').pipe(Flag.withDescription('Skip the reasoning phase.')),
   },
   ({ root, store, json, force, workers, rules, noReason }) =>
     Effect.gen(function* () {
@@ -114,7 +114,7 @@ const withStore = <A, E, R>(
 
 const files = Command.make(
   'files',
-  { root: rootFlag, store: storeFlag, json: jsonFlag, lang: Flag.string('lang').pipe(Flag.optional) },
+  { root: rootFlag, store: storeFlag, json: jsonFlag, lang: Flag.String('lang').pipe(Flag.optional) },
   ({ root, store, json, lang }) =>
     withStore(root, store, (api) =>
       Effect.gen(function* () {
@@ -137,11 +137,11 @@ const readQuery = (query: string, fromFile: boolean): Effect.Effect<string, Stor
 const query = Command.make(
   'query',
   {
-    query: Argument.string('sparql'),
+    query: Argument.String('sparql'),
     root: rootFlag,
     store: storeFlag,
     json: jsonFlag,
-    file: Flag.boolean('file').pipe(Flag.withDescription('Read the query from a file.')),
+    file: Flag.Boolean('file').pipe(Flag.withDescription('Read the query from a file.')),
   },
   ({ query, root, store, json, file }) =>
     withStore(root, store, (api) =>
@@ -163,11 +163,11 @@ const query = Command.make(
 const ask = Command.make(
   'ask',
   {
-    query: Argument.string('sparql'),
+    query: Argument.String('sparql'),
     root: rootFlag,
     store: storeFlag,
     json: jsonFlag,
-    file: Flag.boolean('file'),
+    file: Flag.Boolean('file'),
   },
   ({ query, root, store, json, file }) =>
     withStore(root, store, (api) =>
@@ -203,22 +203,22 @@ const ontology = Command.make('ontology', { json: jsonFlag }, ({ json }) =>
 // terminal and the browser are two renderers of one session rather than two implementations.
 //
 
-const providerFlag = Flag.string('provider').pipe(
+const providerFlag = Flag.String('provider').pipe(
   Flag.withDescription(`Model provider: ${Models.PROVIDERS.join(' | ')} (default: ollama).`),
   Flag.optional,
 );
 
-const modelFlag = Flag.string('model').pipe(
+const modelFlag = Flag.String('model').pipe(
   Flag.withDescription(`Model name (default: ${Models.DEFAULT_OLLAMA_MODEL}, or ${Models.DEFAULT_ANTHROPIC_MODEL}).`),
   Flag.optional,
 );
 
-const endpointFlag = Flag.string('endpoint').pipe(
+const endpointFlag = Flag.String('endpoint').pipe(
   Flag.withDescription(`Ollama endpoint (default: ${Models.OLLAMA_ENDPOINT}).`),
   Flag.optional,
 );
 
-const projectFlag = Flag.string('project').pipe(
+const projectFlag = Flag.String('project').pipe(
   Flag.withDescription('Project id to open (default: the one used last, or a new one).'),
   Flag.optional,
 );
@@ -254,7 +254,7 @@ const chat = Command.make(
     provider: providerFlag,
     model: modelFlag,
     endpoint: endpointFlag,
-    prompt: Flag.string('prompt').pipe(
+    prompt: Flag.String('prompt').pipe(
       Flag.withDescription('Run one turn with this prompt and exit (how a script or a test drives the agent).'),
       Flag.optional,
     ),
@@ -280,8 +280,8 @@ const serveFlags = {
   provider: providerFlag,
   model: modelFlag,
   endpoint: endpointFlag,
-  port: Flag.integer('port').pipe(Flag.withDescription('Listen port (default: 5599).'), Flag.optional),
-  host: Flag.string('host').pipe(Flag.withDescription('Bind address (default: 127.0.0.1).'), Flag.optional),
+  port: Flag.Int('port').pipe(Flag.withDescription('Listen port (default: 5599).'), Flag.optional),
+  host: Flag.String('host').pipe(Flag.withDescription('Bind address (default: 127.0.0.1).'), Flag.optional),
 };
 
 type ServeFlags = {

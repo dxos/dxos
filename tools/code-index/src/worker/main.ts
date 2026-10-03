@@ -7,14 +7,14 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import * as RpcServer from 'effect/rpc/RpcServer';
 import { existsSync, readFileSync } from 'node:fs';
 import { readFile, stat } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import type * as Ontology from '../Ontology.ts';
 import { type PackageOf, type Resolve, analyze, createResolver } from './analyze.ts';
-import { Rpcs } from './Protocol.ts';
+import * as Protocol from './Protocol.ts';
 
 type RootState = { readonly resolve: Resolve; readonly packageOf: PackageOf };
 
@@ -59,7 +59,7 @@ const stateFor = (root: string): RootState => {
   return created;
 };
 
-const handlers = Rpcs.toLayer({
+const handlers = Protocol.Rpcs.toLayer({
   AnalyzeBatch: ({ root, files }) =>
     Effect.promise(async () => {
       const { resolve, packageOf } = stateFor(root);
@@ -90,7 +90,7 @@ const handlers = Rpcs.toLayer({
     }),
 });
 
-const layer = RpcServer.layer(Rpcs).pipe(
+const layer = RpcServer.layer(Protocol.Rpcs).pipe(
   Layer.provide(handlers),
   Layer.provide(RpcServer.layerProtocolWorkerRunner),
   Layer.provide(await workerRunnerLayer()),
@@ -101,9 +101,9 @@ Effect.runFork(Layer.launch(layer));
 /** The runner platform differs per runtime: Bun spawns web workers, Node spawns worker threads. */
 async function workerRunnerLayer() {
   if (typeof globalThis.Bun !== 'undefined') {
-    const { BunWorkerRunner } = await import('@effect/platform-bun');
+    const BunWorkerRunner = await import('@effect/platform-bun/BunWorkerRunner');
     return BunWorkerRunner.layer;
   }
-  const { NodeWorkerRunner } = await import('@effect/platform-node');
+  const NodeWorkerRunner = await import('@effect/platform-node/NodeWorkerRunner');
   return NodeWorkerRunner.layer;
 }

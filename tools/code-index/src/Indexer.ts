@@ -6,9 +6,9 @@
 
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
+import type * as RpcClientError from 'effect/rpc/RpcClientError';
 import type * as Scope from 'effect/Scope';
-import type * as RpcClientError from 'effect/unstable/rpc/RpcClientError';
-import type * as WorkerError from 'effect/unstable/workers/WorkerError';
+import type * as WorkerError from 'effect/workers/WorkerError';
 import { realpath } from 'node:fs/promises';
 import { availableParallelism } from 'node:os';
 

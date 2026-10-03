@@ -6,13 +6,13 @@
 
 import * as AnthropicClient from '@effect/ai-anthropic/AnthropicClient';
 import * as AnthropicLanguageModel from '@effect/ai-anthropic/AnthropicLanguageModel';
+import type * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Config from 'effect/Config';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Redacted from 'effect/Redacted';
-import type * as LanguageModel from 'effect/unstable/ai/LanguageModel';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as ChatCompletionsAdapter from '@dxos/ai/chat-completions';
 
@@ -71,8 +71,8 @@ const ollama = (model: string, endpoint: string): Layer.Layer<LanguageModel.Lang
 const anthropic = (model: string): Layer.Layer<LanguageModel.LanguageModel, ModelError> =>
   Layer.unwrap(
     Effect.map(
-      Config.redacted('DX_ANTHROPIC_API_KEY').pipe(
-        Config.orElse(() => Config.redacted('ANTHROPIC_API_KEY')),
+      Config.Redacted('DX_ANTHROPIC_API_KEY').pipe(
+        Config.orElse(() => Config.Redacted('ANTHROPIC_API_KEY')),
         Effect.mapError(
           () =>
             new ModelError({
