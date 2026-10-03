@@ -40,7 +40,8 @@ type WireValue = MessageEvent['data'];
  */
 export const serveStore = (port: StorePort, run: Run): CleanupFn => {
   const drivers = new Map<SpaceId, StoreDriver>();
-  const dispatch = (driver: StoreDriver, call: StoreCall): Promise<unknown> => {
+  // Async so a synchronous throw still becomes an error response rather than a call that never settles.
+  const dispatch = async (driver: StoreDriver, call: StoreCall): Promise<unknown> => {
     switch (call.op) {
       case 'open':
         return driver.open();
@@ -56,6 +57,9 @@ export const serveStore = (port: StorePort, run: Run): CleanupFn => {
         return driver.deletedIds();
       case 'counts':
         return driver.counts();
+      default:
+        // Requests arrive untyped over the port, so an unknown op is possible at runtime.
+        throw new Error('Unsupported store operation');
     }
   };
 

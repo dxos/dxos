@@ -234,7 +234,12 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   async _closeLocalDatabases(): Promise<void> {
     const databases = [...this.#localDatabases.values()];
     this.#localDatabases.clear();
-    await Promise.all(databases.map((db) => db.close()));
+    // Settled, so one failed close cannot abandon the others' pending flushes.
+    const results = await Promise.allSettled(databases.map((db) => db.close()));
+    const failure = results.find((result) => result.status === 'rejected');
+    if (failure) {
+      throw failure.reason;
+    }
   }
 
   /**

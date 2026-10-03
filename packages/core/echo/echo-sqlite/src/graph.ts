@@ -3,7 +3,7 @@
 //
 
 import { type CleanupFn, Event } from '@dxos/async';
-import { Blob, type Database, type Entity, type Hypergraph, type Ref, Type } from '@dxos/echo';
+import { Blob, type Database, type Entity, Hypergraph, type Ref, Type } from '@dxos/echo';
 import { type RefResolverRequest, type RefSource, makeSettledRequest } from '@dxos/echo/internal';
 import { type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -133,9 +133,9 @@ export class SqliteHypergraph implements Hypergraph.Hypergraph {
     return spaceId === this._db.spaceId ? this._db : undefined;
   }
 
-  localDatabase(_name: string): Database.Database {
+  localDatabase(name: string): Database.Database {
     // This graph already is one local database; opening siblings belongs to the graph that owns storage.
-    throw new UnsupportedOperationError('localDatabase');
+    throw new Hypergraph.LocalDatabaseNotAvailableError({ context: { name } });
   }
 
   registerBlobBackend(): CleanupFn {
