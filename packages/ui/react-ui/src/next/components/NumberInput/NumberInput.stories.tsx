@@ -50,7 +50,7 @@ const DefaultStory = ({ size }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/NumberInput',
+  title: 'ui/react-ui-core/components/NumberInput',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

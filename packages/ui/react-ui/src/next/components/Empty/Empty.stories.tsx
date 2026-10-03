@@ -27,7 +27,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Empty',
+  title: 'ui/react-ui-core/components/Empty',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[24rem]' }), withTheme()],
   args: { size: 'md' },

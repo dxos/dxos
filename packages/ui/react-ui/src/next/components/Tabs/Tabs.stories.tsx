@@ -47,7 +47,7 @@ const DefaultStory = ({ size, orientation, selectedVariant, keepMounted }: Story
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Tabs',
+  title: 'ui/react-ui-core/components/Tabs',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md', orientation: 'horizontal', selectedVariant: 'default', keepMounted: false },

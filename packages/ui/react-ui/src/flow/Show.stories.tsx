@@ -62,7 +62,7 @@ const SwitchStory = () => {
 //
 
 const meta: Meta = {
-  title: 'ui/react-ui-core/flow/Show',
+  title: 'ui/react-ui-core/components/Show',
   decorators: [withTheme(), withLayout()],
 };
 

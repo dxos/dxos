@@ -45,7 +45,7 @@ const DefaultStory = ({ size, autoResize }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Textarea',
+  title: 'ui/react-ui-core/components/Textarea',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

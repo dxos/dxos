@@ -58,7 +58,7 @@ const DefaultStory = ({ orientation, border }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Focus',
+  title: 'ui/react-ui-core/components/Focus',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md', orientation: 'vertical', border: true },

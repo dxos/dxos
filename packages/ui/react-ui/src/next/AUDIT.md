@@ -785,7 +785,7 @@ No open questions remain.
 
 - **Master-detail:** not a component. Selection stays in the list's or tabs' Root context (`Next.Listbox.useContext()`,
   `Next.Tabs.useContext()`); the layout is `Next.Splitter` with `collapseBelow`, a controllable `mode`, and
-  `resizable={false}` by default with a static divider. `Splitter/MasterDetail.stories.tsx` is the approved pattern.
+  `resizable={false}` by default with a static divider. `exemplars/MasterDetail.stories.tsx` is the approved pattern.
   At the cut-over, react-ui-list `MasterDetail` and the current Tabs' `activePart`/`Viewport`/`BackButton` are
   removed; their callers (ChatOptions, Welcome, VideoArticle) compose Tabs + Splitter.
 - **Disclosure timing:** one duration, `--nx-disclosure-duration` (ui-theme's `--duration-tree-disclosure`, 0 under

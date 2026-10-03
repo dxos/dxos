@@ -94,7 +94,7 @@ const DefaultStory = ({
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Main',
+  title: 'ui/react-ui-core/components/Main',
   render: DefaultStory,
   decorators: [withTheme(), withLayout({ layout: 'fullscreen' })],
   args: { defaultNavigationSidebarState: 'expanded', defaultComplementarySidebarState: 'expanded' },

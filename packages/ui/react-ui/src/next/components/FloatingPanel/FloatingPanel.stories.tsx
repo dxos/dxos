@@ -62,7 +62,7 @@ const DefaultStory = (args: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/FloatingPanel',
+  title: 'ui/react-ui-core/components/FloatingPanel',
   render: DefaultStory,
   decorators: [withLayout({ classNames: 'p-4' }), withTheme()],
   args: { resizable: true, draggable: true },

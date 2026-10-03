@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import '../../theme/index.css';
+import '../next/theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ComponentPropsWithoutRef, type PropsWithChildren, forwardRef, useState } from 'react';
@@ -10,8 +10,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { translations } from '#translations';
 
-import { withLayout, withTheme } from '../../../testing/index.ts';
-import { Next } from '../../Next.tsx';
+import { Next } from '../next/Next.tsx';
+import { withLayout, withTheme } from '../testing/index.ts';
 
 // Master-detail is not a component: the list's own Root owns the selection, and a Splitter with `collapseBelow` lays
 // out the list and the detail, showing one at a time when the host is narrow.
@@ -388,7 +388,7 @@ const NestedStory = ({ width, size, collapseBelow, resizable }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Splitter/MasterDetail',
+  title: 'ui/react-ui-core/exemplars/MasterDetail',
   render: ListboxStory,
   decorators: [withLayout({ classNames: 'p-0' }), withTheme()],
   args: { width: 48, size: 16, collapseBelow: '32rem', resizable: true },

@@ -26,7 +26,7 @@ const DefaultStory = ({ value, indeterminate, error, countdown, paused }: StoryA
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Progress',
+  title: 'ui/react-ui-core/components/Progress',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { value: 0.6, indeterminate: false, error: false, countdown: 0, paused: false },

@@ -50,7 +50,7 @@ const DefaultStory = ({ size, duration, title, description }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Toast',
+  title: 'ui/react-ui-core/components/Toast',
   render: DefaultStory,
   decorators: [withLayout({ classNames: 'p-4' }), withTheme()],
   args: {

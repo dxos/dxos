@@ -50,7 +50,7 @@ const DefaultStory = ({ live }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Timestamp',
+  title: 'ui/react-ui-core/components/Timestamp',
   render: DefaultStory,
   decorators: [withLayout({ classNames: 'p-4 w-[24rem]' }), withTheme()],
   args: { live: true },

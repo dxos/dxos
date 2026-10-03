@@ -33,7 +33,7 @@ const DefaultStory = ({ delay, minDuration }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Deferred',
+  title: 'ui/react-ui-core/components/Deferred',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md', delay: 500, minDuration: 1_000 },

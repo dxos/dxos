@@ -38,7 +38,7 @@ const DefaultStory = ({ pin }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/ScrollContainer',
+  title: 'ui/react-ui-core/components/ScrollContainer',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md', pin: true },

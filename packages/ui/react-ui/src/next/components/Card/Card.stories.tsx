@@ -180,7 +180,7 @@ const rails = (card: HTMLElement, size: Size) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Card',
+  title: 'ui/react-ui-core/components/Card',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[52rem]' }), withTheme()],
   args: { size: 'md' },

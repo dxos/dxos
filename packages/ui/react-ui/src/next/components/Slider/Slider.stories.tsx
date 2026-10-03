@@ -53,7 +53,7 @@ const DefaultStory = ({ size: _size, allSizes: _allSizes, ...props }: StoryArgs)
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Slider',
+  title: 'ui/react-ui-core/components/Slider',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md', min: 0, max: 100, step: 1, disabled: false },

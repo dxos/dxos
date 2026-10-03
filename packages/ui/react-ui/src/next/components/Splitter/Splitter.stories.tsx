@@ -42,7 +42,7 @@ const DefaultStory = ({ defaultSize = 12, ...args }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Splitter',
+  title: 'ui/react-ui-core/components/Splitter',
   render: DefaultStory,
   decorators: [withLayout({ classNames: 'p-0' }), withTheme()],
   args: { orientation: 'horizontal', anchor: 'start', mode: 'split', resizable: true, defaultSize: 12, minSize: 6 },

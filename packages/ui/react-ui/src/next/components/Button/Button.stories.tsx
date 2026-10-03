@@ -135,7 +135,7 @@ const DefaultStory = ({ size, variants }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Button',
+  title: 'ui/react-ui-core/components/Button',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[48rem]' }), withTheme()],
   parameters: { layout: 'centered' },

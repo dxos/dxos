@@ -70,7 +70,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/AlertDialog',
+  title: 'ui/react-ui-core/components/AlertDialog',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

@@ -70,7 +70,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/DateInput',
+  title: 'ui/react-ui-core/components/DateInput',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

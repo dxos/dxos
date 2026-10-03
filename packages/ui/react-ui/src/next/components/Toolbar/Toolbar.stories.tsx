@@ -86,7 +86,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Toolbar',
+  title: 'ui/react-ui-core/components/Toolbar',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[40rem]' }), withTheme()],
   args: { size: 'md' },
@@ -103,11 +103,12 @@ export const Default: Story = {};
 /** A search-style toolbar at every size: an input taking the remaining width, a text button and an icon button. */
 export const InputAndButton: Story = {
   args: { allSizes: true },
+  parameters: { sizes: { gutter: 'none' } },
   render: ({ size = 'md' }) => (
-    <Next.Toolbar.Root data-testid={`input-toolbar-${size}`}>
+    <Next.Toolbar.Root data-testid={`input-toolbar-${size}`} classNames='border'>
+      <Next.Button icon='ph--magnifying-glass--regular' label='Search' iconOnly />
       <Next.Input placeholder={`Search (${size})`} aria-label='Search' />
       <Next.Button>Go</Next.Button>
-      <Next.Button icon='ph--magnifying-glass--regular' label='Search' iconOnly />
     </Next.Toolbar.Root>
   ),
 };

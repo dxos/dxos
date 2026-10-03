@@ -32,7 +32,7 @@ const DefaultStory = ({ variant }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Link',
+  title: 'ui/react-ui-core/components/Link',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md', variant: 'accent' },

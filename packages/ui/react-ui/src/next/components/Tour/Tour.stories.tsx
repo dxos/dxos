@@ -101,7 +101,7 @@ const DefaultStory = () => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Tour',
+  title: 'ui/react-ui-core/components/Tour',
   render: DefaultStory,
   decorators: [withLayout({ classNames: 'p-4 w-[32rem]' }), withTheme()],
   parameters: { layout: 'centered', translations },

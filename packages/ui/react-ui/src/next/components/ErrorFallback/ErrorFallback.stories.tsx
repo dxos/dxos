@@ -41,7 +41,7 @@ const DefaultStory = ({ title, message }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/ErrorFallback',
+  title: 'ui/react-ui-core/components/ErrorFallback',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[40rem]' }), withTheme()],
   args: { size: 'md', title: 'Plank Error', message: 'Cannot read properties of undefined' },

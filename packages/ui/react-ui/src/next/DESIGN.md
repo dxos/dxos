@@ -97,16 +97,14 @@
     and centred in it: `--nx-control-size: calc(var(--nx-block-size) - 2 * var(--nx-control-inset))`, with a per-size
     inset (provisional: xs 1px, sm 2px, md 2px, lg 3px, xl 3px; controls 18/20/28/34/42px). `--nx-control-icon` equals `--nx-icon-size` (one
     icon scale, decision 2), so an icon is the same size in a control as in a rail Block. The block stays the row height, so rails and Typography's first-line centring are unchanged.
-    Illustrated in `spike/Choices.stories.tsx` (ControlSizing).
 13. **Field layout.** Field is a part, not a container (containers are Container, Form, Toolbar). `Field.Root` is a
     flex stack placed in the content track: Label above the control, HelperText/ErrorText below. Labels do not share a
-    column across fields; `columns` remains for other row layouts. Illustrated in `spike/Choices.stories.tsx`
-    (FieldLayout).
+    column across fields; `columns` remains for other row layouts..
 
 14. **Master-detail is composed, not a component.** Selection stays in the list's or tabs' Root context
     (`Next.Listbox.useContext()`, `Next.Tabs.useContext()`); the layout is `Next.Splitter` with `collapseBelow`, a
     controllable `mode`, and `resizable={false}` by default with a static divider
-    (`Splitter/MasterDetail.stories.tsx`).
+    (`exemplars/MasterDetail.stories.tsx`).
 15. **One disclosure timing.** `--nx-disclosure-duration` (ui-theme's `--duration-tree-disclosure`, 0 under reduced
     motion) with `--nx-disclosure-ease-open` (ease-out) and `--nx-disclosure-ease-close` (ease-in), shared by Tree,
     Collapsible, Accordion, Main and Splitter; Main keeps its own ease-in-out curve.
@@ -115,8 +113,8 @@
 
 ## Spike findings
 
-`spike/Spike.stories.tsx` (`playground/spike`) exercises decision 5 with play tests that measure alignment across a
-header, top-level rows, a nested form and a nested scroll pane — all pass (Default, Native, Narrow, Sizes). The internal-scroll variant was removed once decision 5 settled on the composed API.
+The spike stories (since removed) exercised decision 5 with play tests that measured alignment across a
+header, top-level rows, a nested form and a nested scroll pane — all passed (Default, Native, Narrow, Sizes). The internal-scroll variant was removed once decision 5 settled on the composed API.
 
 1. **Subgrid survives scrolling.** A scroll frame and its viewport can both be subgrids, so rows inside a nested scroll
    pane share the parent's rails and its content-sized (`auto`) label track.
@@ -304,7 +302,7 @@ header, top-level rows, a nested form and a nested scroll pane — all pass (Def
     arrows, justify) are rows or args of the same story rather than extra stories, and a single `Test` play function
     holds every geometry, role and behaviour assertion for the component, ending with any overlay open unless it
     tests dismissal. A variants × sizes matrix decorator was not needed: variants render as a row per size.
-    `components.stories.tsx`, `Form.stories.tsx` and `spike/*` keep their own layouts.
+    `testing/components.stories.tsx` keeps its own layout.
 
 38. **Separator** is one 1px rule in `--color-separator` (`theme/separator.css`): horizontal it stretches across its
     track with an inset above and below; vertical it is control-tall with an inline inset, so a toolbar keeps three

@@ -59,7 +59,7 @@ const DefaultStory = (args: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/TextCrawl',
+  title: 'ui/react-ui-core/components/TextCrawl',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md', autoAdvance: true, cyclic: true, transition: 500 },

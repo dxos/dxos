@@ -84,7 +84,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/MenuButton',
+  title: 'ui/react-ui-core/components/MenuButton',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

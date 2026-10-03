@@ -43,7 +43,7 @@ const DefaultStory = ({ border, multiple }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Accordion',
+  title: 'ui/react-ui-core/components/Accordion',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md', border: true, multiple: true },

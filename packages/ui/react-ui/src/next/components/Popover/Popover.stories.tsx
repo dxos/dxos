@@ -125,7 +125,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Popover',
+  title: 'ui/react-ui-core/components/Popover',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

@@ -25,7 +25,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Switch',
+  title: 'ui/react-ui-core/components/Switch',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

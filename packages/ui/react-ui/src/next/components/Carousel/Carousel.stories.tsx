@@ -43,7 +43,7 @@ const DefaultStory = ({ count, continuous, autoAdvance }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Carousel',
+  title: 'ui/react-ui-core/components/Carousel',
   render: DefaultStory,
   decorators: [withLayout({ classNames: 'p-4 w-[40rem]' }), withTheme()],
   args: { count: 5, continuous: false, autoAdvance: 0 },

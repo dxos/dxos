@@ -149,7 +149,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Field',
+  title: 'ui/react-ui-core/components/Field',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

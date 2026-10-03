@@ -43,7 +43,7 @@ const DefaultStory = ({ size, variant, status, hue, hueVariant, fallback }: Stor
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Avatar',
+  title: 'ui/react-ui-core/components/Avatar',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md', variant: 'circle', status: 'current', hue: 'blue', hueVariant: 'fill', fallback: 'Ada Lovelace' },

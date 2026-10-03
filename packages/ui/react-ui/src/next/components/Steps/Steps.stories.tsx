@@ -45,7 +45,7 @@ const DefaultStory = ({ stages = 5, indeterminate, error }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Steps',
+  title: 'ui/react-ui-core/components/Steps',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md', stages: 5, indeterminate: false, error: false },

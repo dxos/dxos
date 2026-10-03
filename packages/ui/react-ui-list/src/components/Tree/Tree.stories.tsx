@@ -4,7 +4,7 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useRef } from 'react';
 import { type Mock, expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/theme.css';
@@ -24,6 +24,8 @@ random.seed(1234);
 const ICONS = ['ph--folder--regular', 'ph--file--regular', 'ph--planet--regular', 'ph--gear--regular'];
 
 /** `roots` branches of `leaves` leaves each: `roots * (leaves + 1)` rows once every branch is open. */
+const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
+
 const createWideTree = (roots: number, leaves: number): TestItem => ({
   id: 'root',
   name: 'Root',
@@ -844,101 +846,5 @@ export const DropBelowExpandedTest: Story = {
     } finally {
       dispatchDrag(grain, 'dragend', dataTransfer);
     }
-  },
-};
-
-//
-// Benchmark
-//
-
-type BenchMode = TreeVirtual | 'none';
-
-type Sample = { mode: BenchMode; mount: number; scroll: { mean: number; p95: number; max: number }; key: number };
-
-// Shared by the Benchmark story's component and its play function, which run in the same module.
-const bench: { mount: (mode: BenchMode | undefined) => void; start: () => number } = {
-  mount: () => {},
-  start: () => 0,
-};
-
-const nextFrame = () => new Promise<number>((resolve) => requestAnimationFrame(resolve));
-
-/** Mounts the 5,000-row tree in one mode per run and records mount-to-paint time. */
-const BenchmarkStory = () => {
-  const [mode, setMode] = useState<BenchMode | undefined>();
-  const startRef = useRef(0);
-  useLayoutEffect(() => {
-    bench.mount = (next: BenchMode | undefined) => {
-      startRef.current = performance.now();
-      setMode(next);
-    };
-    bench.start = () => startRef.current;
-  }, []);
-  return mode ? (
-    <DefaultStory
-      key={mode}
-      tree={LARGE}
-      open
-      virtual={mode === 'none' ? undefined : mode}
-      height='32rem'
-      indentGuides
-      testId='bench'
-    />
-  ) : null;
-};
-
-const LARGE = () => createWideTree(50, 99);
-
-/**
- * Not a test: mounts the Large tree in each virtualization mode and logs initial render (mount to next frame), scroll
- * frame times over 60 frames of 400px steps, and the mean ArrowDown latency, for SPIKE.md.
- */
-export const Benchmark: StoryObj<typeof meta> = {
-  tags: ['!test'],
-  render: () => <BenchmarkStory />,
-  play: async ({ canvasElement }) => {
-    const samples: Sample[] = [];
-    const modes: BenchMode[] = ['fixed', 'variable', 'none'];
-    for (const mode of modes) {
-      bench.mount(undefined);
-      await nextFrame();
-      bench.mount(mode);
-      await waitFor(() => expect(canvasElement.querySelector('[data-tree-row]')).not.toBeNull(), { timeout: 30_000 });
-      const painted = await nextFrame();
-      const mount = painted - bench.start();
-
-      const viewport = canvasElement.querySelector<HTMLElement>('[data-part="tree"]');
-      if (!viewport) {
-        throw new Error('missing tree');
-      }
-      const frames: number[] = [];
-      let last = await nextFrame();
-      for (let frame = 0; frame < 60; frame++) {
-        viewport.scrollTop += 400;
-        const now = await nextFrame();
-        frames.push(now - last);
-        last = now;
-      }
-      frames.sort((a, b) => a - b);
-      const scroll = {
-        mean: frames.reduce((sum, value) => sum + value, 0) / frames.length,
-        p95: frames[Math.floor(frames.length * 0.95)],
-        max: frames[frames.length - 1],
-      };
-
-      viewport.scrollTop = 0;
-      await nextFrame();
-      canvasElement.querySelector<HTMLElement>('[data-tree-row]')?.focus();
-      const keyStart = performance.now();
-      for (let press = 0; press < 10; press++) {
-        await userEvent.keyboard('{ArrowDown}');
-      }
-      await nextFrame();
-      const key = (performance.now() - keyStart) / 10;
-      samples.push({ mode, mount, scroll, key });
-      // eslint-disable-next-line no-console
-      console.log(`[tree-bench] ${JSON.stringify({ mode, rows: 5000, mount, scroll, key })}`);
-    }
-    await expect(samples).toHaveLength(3);
   },
 };

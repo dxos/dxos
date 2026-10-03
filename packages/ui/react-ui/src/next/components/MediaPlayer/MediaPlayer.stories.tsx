@@ -45,7 +45,7 @@ const DefaultStory = ({ fit, controls, muted, loop }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/MediaPlayer',
+  title: 'ui/react-ui-core/components/MediaPlayer',
   render: DefaultStory,
   decorators: [withLayout({ classNames: 'p-4 w-[40rem]' }), withTheme()],
   args: { fit: 'cover', controls: true, muted: false, loop: false },

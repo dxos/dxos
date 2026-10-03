@@ -24,7 +24,7 @@ const DefaultStory = ({ value, errorCorrection, icon }: StoryArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/QrCode',
+  title: 'ui/react-ui-core/components/QrCode',
   render: DefaultStory,
   decorators: [withLayout({ classNames: 'p-4 w-[32rem]' }), withTheme()],
   args: { value: 'https://dxos.org', errorCorrection: 'Q', icon: 'ph--planet--regular' },

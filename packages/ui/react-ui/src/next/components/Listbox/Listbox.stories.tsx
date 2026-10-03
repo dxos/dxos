@@ -198,7 +198,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Listbox',
+  title: 'ui/react-ui-core/components/Listbox',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

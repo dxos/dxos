@@ -44,7 +44,7 @@ const DefaultStory = ({ steps }: StoryArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/Breadcrumb',
+  title: 'ui/react-ui-core/components/Breadcrumb',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[24rem]' }), withTheme()],
   args: { size: 'md', steps: TRAIL.length },

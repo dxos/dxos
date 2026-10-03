@@ -72,7 +72,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
 };
 
 const meta = {
-  title: 'ui/react-ui-core/next/components/DragHandle',
+  title: 'ui/react-ui-core/components/DragHandle',
   render: DefaultStory,
   decorators: [withSizes(), withLayout({ classNames: 'p-0 w-[32rem]' }), withTheme()],
   args: { size: 'md' },

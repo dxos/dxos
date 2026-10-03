@@ -2,19 +2,16 @@
 // Copyright 2026 DXOS.org
 //
 
-import './theme/index.css';
+import '../theme/index.css';
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React, { useLayoutEffect, useRef } from 'react';
+import React from 'react';
 import { expect, userEvent } from 'storybook/test';
 
-import { log } from '@dxos/log';
-
-import { withTheme } from '../testing/index.ts';
-import { Next } from './Next.tsx';
-import { type Size, SIZES } from './sizes.ts';
-import { byTestId } from './testing.ts';
-import { SIZE_ARG_TYPES, type SizeArgs } from './testing/stories.tsx';
+import { withTheme } from '../../testing/index.ts';
+import { Next } from '../Next.tsx';
+import { type Size, SIZES } from '../sizes.ts';
+import { SIZE_ARG_TYPES, type SizeArgs } from './stories.tsx';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
@@ -94,7 +91,7 @@ const DefaultStory = ({ size = 'md', allSizes = true }: SizeArgs) => (
 );
 
 const meta = {
-  title: 'ui/react-ui-core/next/components',
+  title: 'ui/react-ui-core/testing/components',
   render: DefaultStory,
   args: { size: 'md', allSizes: true },
   argTypes: { ...SIZE_ARG_TYPES, allSizes: { control: 'boolean' } },
@@ -108,63 +105,6 @@ type Story = StoryObj<typeof meta>;
 
 /** Cross-component gallery; per-component assertions live in each component's own stories. */
 export const Default: Story = {};
-
-//
-// Benchmark
-//
-
-const ROWS = Array.from({ length: 1_000 }, (_, index) => index);
-
-/** 1,000 rows in a nested Container inside a ScrollArea (decision 11); the mount-to-layout time is recorded. */
-const BenchmarkStory = () => {
-  const start = useRef(performance.now());
-  const rootRef = useRef<HTMLDivElement>(null);
-  useLayoutEffect(() => {
-    // Reading geometry forces style and layout, so the time covers subgrid and `:has` resolution.
-    rootRef.current?.getBoundingClientRect();
-    rootRef.current?.setAttribute('data-render-ms', (performance.now() - start.current).toFixed(1));
-  }, []);
-
-  return (
-    <div ref={rootRef} className='nx-scope @container flex flex-col h-[40rem] w-[40rem]' data-size='md'>
-      <Next.ScrollArea.Root classNames='flex-1'>
-        <Next.ScrollArea.Viewport asChild>
-          <Next.Container gutter='rail' columns={LABEL_COLUMNS} data-testid='benchmark-body'>
-            <Next.Container data-testid='benchmark-nested'>
-              {ROWS.map((index) => (
-                <Next.Container key={index} layout='row' data-testid={`bench-${index}`}>
-                  <Next.Block rail='start'>
-                    <Next.Icon icon='ph--circle--regular' />
-                  </Next.Block>
-                  <Next.Label>Row {index}</Next.Label>
-                  <Next.Typography>Value {index}</Next.Typography>
-                  <Next.Block rail='end'>
-                    <Next.Icon icon='ph--dots-three--regular' />
-                  </Next.Block>
-                </Next.Container>
-              ))}
-            </Next.Container>
-          </Next.Container>
-        </Next.ScrollArea.Viewport>
-      </Next.ScrollArea.Root>
-    </div>
-  );
-};
-
-export const Benchmark: Story = {
-  render: BenchmarkStory,
-  play: async ({ canvasElement }) => {
-    const rows = canvasElement.querySelectorAll('[data-testid^="bench-"]');
-    await expect(rows).toHaveLength(ROWS.length);
-    // The last row still shares the first row's subgrid tracks.
-    const first = byTestId(canvasElement, 'bench-0').children[1].getBoundingClientRect();
-    const last = byTestId(canvasElement, `bench-${ROWS.length - 1}`).children[1].getBoundingClientRect();
-    await expect(last.left).toBeCloseTo(first.left, 0);
-    const root = canvasElement.querySelector('[data-render-ms]');
-    // eslint-disable-next-line no-console
-    log.info('benchmark', { rows: ROWS.length, ms: root?.getAttribute('data-render-ms') });
-  },
-};
 
 /** A recognisable ring colour, so the audit can tell Next's ring from the browser's or Tailwind's. */
 const AUDIT_RING = 'rgb(255, 0, 255)';
