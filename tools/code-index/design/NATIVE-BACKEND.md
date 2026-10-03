@@ -69,6 +69,12 @@ recomputation cheap:
 - **One snapshot of the premises.** Every base fact with a predicate some rule reads is loaded into
   an in-memory, position-indexed set once per `reasonAll`; joins probe it instead of seeking RocksDB
   and re-interning each result. (A rule that leaves a body predicate unbound falls back to the store.)
+  Decoding a quad out of oxigraph costs a RocksDB read per non-inline term — about 10 µs a quad,
+  17 s for this repository's 1.4M premises — so the snapshot is decoded on every core, and each
+  run keeps it on disk (`premises.bin`, `src/snapshot.rs`): the next run reads it back (≈1 s) and
+  applies the journal's net change, which is exactly the base's change since that run. The file is
+  trusted only under a token the engine state records once the run commits, so anything that
+  resets the engine state (`invalidate`, `clear`, an overflowing journal) also retires the file.
 - **Dependency order.** The file's forward rules are grouped into strongly connected components of
   "reads what the other concludes" (through the backward rules each calls), run dependencies first;
   only a cyclic group repeats until nothing is new. This is also what makes an aggregate see the
