@@ -77,7 +77,8 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
           />
         </Popover.Trigger>
         <Popover.Content classNames={styles.panel}>
-          <Popover.Body>{context && <ObjectsPanel db={db} context={context} />}</Popover.Body>
+          {/* No Body: the list scrolls itself above its filter controls, in the popover's column. */}
+          {context && <ObjectsPanel db={db} context={context} />}
         </Popover.Content>
       </Popover.Root>
 
@@ -93,41 +94,40 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
           />
         </Popover.Trigger>
         <Popover.Content classNames={styles.panel}>
-          <Popover.Body>
-            <Tabs.Root orientation='horizontal' defaultValue='view' classNames='grid grid-rows-[1fr_40px] w-full'>
-              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
-                <ViewPanel chat={chat} />
-              </Tabs.Content>
-              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
-                {context && <SkillsPanel registry={registry} db={db} context={context} />}
-              </Tabs.Content>
-              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
-                <McpServersPanel db={db} />
-              </Tabs.Content>
-              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
-                <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
-              </Tabs.Content>
-              <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
-                <EnvironmentPanel chat={chat} />
-              </Tabs.Content>
-              <Tabs.List classNames={[styles.toolbar]}>
-                <Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-                <Tabs.Trigger value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
-                <Tabs.Trigger value='mcp-servers' icon='ph--plugs-connected--regular' label={t('options.mcp.title')} />
-                <Tabs.Trigger
-                  value='model'
-                  icon='ph--cpu--regular'
-                  label={t('options.chat-model.title')}
-                  data-testid='assistant.options.model'
-                />
-                <Tabs.Trigger
-                  value='environment'
-                  icon='ph--hard-drives--regular'
-                  label={t('options.environment.title')}
-                />
-              </Tabs.List>
-            </Tabs.Root>
-          </Popover.Body>
+          {/* No Body: each tab's list and the tab bar share the popover's own padding. */}
+          <Tabs.Root orientation='horizontal' defaultValue='view' classNames='grid grid-rows-[1fr_40px] w-full'>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='view'>
+              <ViewPanel chat={chat} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='skills'>
+              {context && <SkillsPanel registry={registry} db={db} context={context} />}
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='mcp-servers'>
+              <McpServersPanel db={db} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='model'>
+              <ModelsPanel presets={presets} preset={preset} onPresetChange={onPresetChange} />
+            </Tabs.Content>
+            <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
+              <EnvironmentPanel chat={chat} />
+            </Tabs.Content>
+            <Tabs.List classNames={[styles.toolbar]}>
+              <Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
+              <Tabs.Trigger value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
+              <Tabs.Trigger value='mcp-servers' icon='ph--plugs-connected--regular' label={t('options.mcp.title')} />
+              <Tabs.Trigger
+                value='model'
+                icon='ph--cpu--regular'
+                label={t('options.chat-model.title')}
+                data-testid='assistant.options.model'
+              />
+              <Tabs.Trigger
+                value='environment'
+                icon='ph--hard-drives--regular'
+                label={t('options.environment.title')}
+              />
+            </Tabs.List>
+          </Tabs.Root>
         </Popover.Content>
       </Popover.Root>
     </div>
@@ -187,7 +187,8 @@ const ViewPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
         label: t(`chat-view.${view}.label`, { defaultValue: view }),
       }))}
     >
-      <Listbox.Content aria-label={t('chat-view.title')}>
+      {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
+      <Listbox.Content gutter='none' aria-label={t('chat-view.title')}>
         {Assistant.ChatViews.map((view) => (
           <Listbox.Item key={view} id={view} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
             <Listbox.ItemText>{t(`chat-view.${view}.label`, { defaultValue: view })}</Listbox.ItemText>
@@ -228,7 +229,8 @@ const EnvironmentPanel = ({ chat }: Pick<ChatOptionsProps, 'chat'>) => {
         label: t(`chat-environment.${environment}.label`),
       }))}
     >
-      <Listbox.Content aria-label={t('options.environment.title')}>
+      {/* No gutter: the popover's padding is the inset, shared with the tab bar below. */}
+      <Listbox.Content gutter='none' aria-label={t('options.environment.title')}>
         {environments.map((environment) => (
           <Listbox.Item key={environment} id={environment} classNames='px-2 py-1 dx-focus-ring rounded-xs'>
             <Listbox.ItemText>{t(`chat-environment.${environment}.label`)}</Listbox.ItemText>
@@ -611,8 +613,8 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
     <SearchList.Root onSearch={handleSearch}>
       {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
           `Content` and so sits flush against the panel edge. */}
-      <SearchList.Content>
-        <SearchList.Viewport padding={false}>
+      <SearchList.Content classNames='flex flex-col'>
+        <SearchList.Viewport padding={false} classNames='dx-grow'>
           {results.length ? (
             results.map((object) => {
               const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;

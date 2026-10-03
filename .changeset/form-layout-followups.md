@@ -14,3 +14,4 @@ Layout and contrast fixes for the new `@dxos/react-ui` components:
 - Row hover and selection are lower-contrast, and a fieldset's collapse button is a ghost button.
 - The `description` of Project, Task, TaskSet, Milestone, Organization, Issue, PullRequest, Event, Pipeline, Skill, Routine and Script is `Format.Text`, so forms edit it as multi-line text; `Format.Text` is also on the `Format` namespace from `@dxos/echo/Format`.
 - The task set's add-task editor stays at the bottom, below the list.
+- Popovers are unpadded by default (the call site sets the inset; Body and Header keep theirs); a popup's arrow no longer covers its first highlighted row; menu checkbox and radio rows show the action's icon with a trailing check; an inheriting Container whose parent is no grid lays out its own column.

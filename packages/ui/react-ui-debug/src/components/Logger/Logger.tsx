@@ -16,15 +16,12 @@ import { logFileRegistry } from '@dxos/log';
 import {
   Button,
   Checkbox,
-  composable,
-  composableProps,
   ErrorStack,
   Field,
   Flex,
   Icon,
   Input,
   Panel,
-  parseCaptureOwnerStack,
   Popover,
   ScrollArea,
   Select,
@@ -32,6 +29,9 @@ import {
   type ThemedClassName,
   Toggle,
   Toolbar,
+  composable,
+  composableProps,
+  parseCaptureOwnerStack,
   useTranslation,
 } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
