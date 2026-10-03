@@ -585,8 +585,8 @@ export const TypePropertyNode = Schema.Struct({
   '@type': Schema.Literal('TypeProperty'),
   'name': Schema.String,
   'hasType': Schema.optional(Schema.String),
-  'optional': Schema.Boolean,
-  'readonly': Schema.Boolean,
+  'optional': Schema.optional(Schema.Literal(true)),
+  'readonly': Schema.optional(Schema.Literal(true)),
 });
 
 export type TypePropertyNode = typeof TypePropertyNode.Type;
