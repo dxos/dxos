@@ -275,7 +275,7 @@ const waitForSpace = async (
 export const Default: Story = {
   decorators,
   args: {
-    layout: [[StoryRole.Chat], [StoryRole.Profile], [StoryRole.AgentState]],
+    layout: [[StoryRole.Chat], [StoryRole.Profile], [StoryRole.AgentState, StoryRole.AgentKnowledge]],
   },
 };
 
@@ -283,7 +283,7 @@ export const Default: Story = {
 export const TestInterviewScripted: Story = {
   decorators,
   args: {
-    layout: [[StoryRole.Chat], [StoryRole.Profile], [StoryRole.AgentState]],
+    layout: [[StoryRole.Chat], [StoryRole.Profile], [StoryRole.AgentState, StoryRole.AgentKnowledge]],
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -360,7 +360,7 @@ export const Live: Story = {
     },
   }),
   args: {
-    layout: [[StoryRole.Chat], [StoryRole.Profile], [StoryRole.AgentState]],
+    layout: [[StoryRole.Chat], [StoryRole.Profile], [StoryRole.AgentState, StoryRole.AgentKnowledge]],
   },
   tags: ['!test'],
 };

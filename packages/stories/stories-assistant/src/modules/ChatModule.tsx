@@ -24,6 +24,8 @@ export type ChatModuleData = {
    * them (see plugin-agent's `ChatParticipant`) and attributes every prompt to them.
    */
   participant?: string;
+  /** Hue of the participant's messages, so each panel's speaker is distinguishable. */
+  hue?: string;
 };
 
 export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => {
@@ -31,10 +33,10 @@ export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => 
   if (!space) {
     return null;
   }
-  return <ChatModuleContainer space={space} participant={data?.participant} />;
+  return <ChatModuleContainer space={space} participant={data?.participant} hue={data?.hue} />;
 };
 
-const ChatModuleContainer = ({ space, participant }: { space: Space; participant?: string }) => {
+const ChatModuleContainer = ({ space, participant, hue }: { space: Space; participant?: string; hue?: string }) => {
   const chats = useQuery(space.db, Filter.type(ChatSchema.Chat));
   const people = useQuery(space.db, Filter.type(Person.Person));
   const person = participant
@@ -92,7 +94,7 @@ const ChatModuleContainer = ({ space, participant }: { space: Space; participant
         </Panel.Toolbar>
         <Panel.Content asChild>
           <Chat.Content>
-            <Chat.Thread viewType={view} />
+            <Chat.Thread viewType={view} userHue={hue} />
             <div className='flex flex-col gap-1 p-1'>
               <Chat.Queue />
               <Chat.Activity />

@@ -55,10 +55,14 @@ const TYPES = [
   ProfileOf.ProfileOf,
 ];
 
-/** One chat per person, then the agent's state with a Learn action on the transcript. */
+const HUES = ['amber', 'emerald', 'sky'];
+
+/** One chat per person (each in its own hue), then the agent's state (with a Learn action) over its knowledge. */
 const LAYOUT = [
-  ...PARTICIPANTS.map((participant) => [{ type: StoryRole.Chat, data: { participant }, id: `chat-${participant}` }]),
-  [{ type: StoryRole.AgentState, data: { learnFrom: TRANSCRIPT_NAME } }],
+  ...PARTICIPANTS.map((participant, index) => [
+    { type: StoryRole.Chat, data: { participant, hue: HUES[index % HUES.length] }, id: `chat-${participant}` },
+  ]),
+  [{ type: StoryRole.AgentState, data: { learnFrom: TRANSCRIPT_NAME } }, StoryRole.AgentKnowledge],
 ];
 
 /**

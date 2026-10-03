@@ -2,13 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, type ReactNode, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { type Obj } from '@dxos/echo';
-import { ForceGraph } from '@dxos/plugin-explorer/components';
 import { Flex, Panel, ScrollArea, Tag, Timestamp, type TimestampProps, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
-import { type SpaceGraphEdge, SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 
 import { meta } from '#meta';
 import { type Memory } from '#types';
@@ -26,7 +23,7 @@ type AgentStateRootProps = PropsWithChildren<{
   actions?: ReactNode;
 }>;
 
-/** The agent's state panel: its name above a scrolling body of sections. */
+/** The agent's state panel: its name above a scrolling body of identity, counts and recent memories. */
 const AgentStateRoot = ({ role, name, actions, children }: AgentStateRootProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
@@ -119,63 +116,6 @@ const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
 };
 
 AgentStateIdentity.displayName = 'AgentState.Identity';
-
-//
-// Channels
-//
-
-type AgentStateChannel = {
-  id: string;
-  /** The chat's name, or the person it is with. */
-  name?: string;
-  /** The name of the chat's current mode. */
-  mode: string;
-  /** The skills the chat binds. */
-  skills: readonly AgentStateSkill[];
-};
-
-type AgentStateChannelsProps = { channels: readonly AgentStateChannel[] };
-
-/** Each conversation the agent holds and the mode it is in there. */
-const AgentStateChannels = ({ channels }: AgentStateChannelsProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  if (channels.length === 0) {
-    return null;
-  }
-
-  return (
-    <AgentStateSection heading={t('agent-state-channels.heading')}>
-      <Listbox.Root>
-        <Listbox.Content>
-          {channels.map((channel) => (
-            <Listbox.Item key={channel.id} id={channel.id} data-testid={`agent-state-channel-${channel.id}`}>
-              <Listbox.ItemContent
-                icon='ph--chat-circle--regular'
-                title={channel.name || t('agent-state-channel-unnamed.label')}
-                description={
-                  <Flex asChild wrap gap='xs'>
-                    <span>
-                      <Tag hue='sky' data-testid='agent-state-channel-mode'>
-                        {t('agent-state-channel-mode.label', { mode: channel.mode })}
-                      </Tag>
-                      {channel.skills.map((skill) => (
-                        <Tag key={skill.key} hue='violet'>
-                          {skill.name}
-                        </Tag>
-                      ))}
-                    </span>
-                  </Flex>
-                }
-              />
-            </Listbox.Item>
-          ))}
-        </Listbox.Content>
-      </Listbox.Root>
-    </AgentStateSection>
-  );
-};
-
-AgentStateChannels.displayName = 'AgentState.Channels';
 
 //
 // Summary
@@ -305,86 +245,21 @@ const AgentStateActivity = ({ memories, now }: AgentStateActivityProps) => {
 AgentStateActivity.displayName = 'AgentState.Activity';
 
 //
-// Graph
-//
-
-type AgentStateNode = {
-  id: string;
-  label: string;
-  /** Colors the node by its type; plain nodes render uncolored. */
-  object?: Obj.Unknown;
-};
-
-type AgentStateEdge = {
-  source: string;
-  target: string;
-  /** `subject`: memory → entity it is about; `owner`: goal → holder; `knows`: agent → entity. */
-  kind: 'subject' | 'owner' | 'knows';
-};
-
-type AgentStateGraphProps = {
-  nodes: readonly AgentStateNode[];
-  edges: readonly AgentStateEdge[];
-};
-
-/** The agent's knowledge as a force-directed graph of people, organizations, goals and memories. */
-const AgentStateGraph = ({ nodes, edges }: AgentStateGraphProps) => {
-  const { t } = useTranslation(meta.profile.key);
-  // One model for the component's life, so the layout keeps its positions as the knowledge grows.
-  const model = useMemo(() => new SpaceGraphModel(), []);
-  useEffect(() => {
-    const ids = new Set(nodes.map((node) => node.id));
-    model.setGraph({
-      nodes: nodes.map(({ id, label, object }): SpaceGraphNode => ({ id, type: 'object', data: { label, object } })),
-      edges: edges
-        .filter(({ source, target }) => ids.has(source) && ids.has(target))
-        .map(({ source, target, kind }): SpaceGraphEdge => ({
-          id: `${source}-${kind}-${target}`,
-          type: kind,
-          source,
-          target,
-        })),
-    });
-  }, [model, nodes, edges]);
-
-  return (
-    <AgentStateSection heading={t('agent-state-graph.heading')}>
-      {nodes.length === 0 ? (
-        <Flex center classNames='p-2 text-description' role='status'>
-          {t('agent-state-graph-empty.message')}
-        </Flex>
-      ) : (
-        <ForceGraph classNames='h-96' model={model} />
-      )}
-    </AgentStateSection>
-  );
-};
-
-AgentStateGraph.displayName = 'AgentState.Graph';
-
-//
 // AgentState
 //
 
 export const AgentState = {
   Root: AgentStateRoot,
   Identity: AgentStateIdentity,
-  Channels: AgentStateChannels,
   Summary: AgentStateSummary,
   Activity: AgentStateActivity,
-  Graph: AgentStateGraph,
 };
 
 export type {
   AgentStateActivityProps,
-  AgentStateChannel,
-  AgentStateChannelsProps,
   AgentStateCounts,
-  AgentStateEdge,
-  AgentStateGraphProps,
   AgentStateIdentityProps,
   AgentStateMemory,
-  AgentStateNode,
   AgentStateRootProps,
   AgentStateSkill,
   AgentStateSummaryProps,

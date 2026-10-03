@@ -9,20 +9,12 @@ import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import { DXN, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
+import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { EID } from '@dxos/keys';
-import { HasSubject, Organization, Person, Task } from '@dxos/types';
+import { Organization, Person, Task } from '@dxos/types';
 
-import {
-  type AgentStateChannel,
-  AgentState as AgentStateComponent,
-  type AgentStateCounts,
-  type AgentStateEdge,
-  type AgentStateNode,
-  type AgentStateSkill,
-} from '#components';
-import { AgentOperation, ChatParticipant, Goal, Memory, Mode, Profile } from '#types';
+import { AgentState as AgentStateComponent, type AgentStateCounts, type AgentStateSkill } from '#components';
+import { AgentOperation, Goal, Memory, Profile } from '#types';
 
 /** How many of the newest memories the activity list shows. */
 const RECENT_MEMORIES = 5;
@@ -47,7 +39,7 @@ export type AgentStateProps = {
   actions?: ReactNode;
 };
 
-/** What the agent is doing and knows: its mode, counts of what it tracks, recent memories and knowledge graph. */
+/** What the agent is doing: its identity and mode, counts of what it tracks and its recent memories. */
 export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
   const db = Obj.getDatabase(agent);
   const [name] = useObject(agent, 'name');
@@ -61,7 +53,6 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
   const goals = useQuery(db, Filter.type(Goal.Goal));
   const people = useQuery(db, Filter.type(Person.Person));
   const organizations = useQuery(db, Filter.type(Organization.Organization));
-  const subjects = useQuery(db, Filter.type(HasSubject.HasSubject));
   const tasks = useQuery(db, Filter.type(Task.Task));
 
   // A query re-emits on membership only, so status, title and checklist changes need per-object subscriptions.
@@ -106,39 +97,11 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
               : undefined,
         };
 
-        const liveGoals = goals.filter(Profile.isLiveGoal);
-        const entities = [...people, ...organizations];
-        const nodes: AgentStateNode[] =
-          entities.length + liveGoals.length + active.length === 0
-            ? []
-            : [
-                { id: agent.id, label: name || 'Agent', object: agent },
-                ...entities.map((entity) => ({ id: entity.id, label: Profile.displayName(entity), object: entity })),
-                ...liveGoals.map((goal) => ({ id: goal.id, label: goal.title, object: goal })),
-                ...active.map((memory) => ({ id: memory.id, label: memory.content, object: memory })),
-              ];
-        const edges: AgentStateEdge[] = [
-          ...entities.map((entity): AgentStateEdge => ({ source: agent.id, target: entity.id, kind: 'knows' })),
-          ...liveGoals.flatMap((goal) =>
-            entities
-              .filter((entity) => goal.owners.some((owner) => Profile.refersTo(owner, entity.id)))
-              .map((entity): AgentStateEdge => ({ source: goal.id, target: entity.id, kind: 'owner' })),
-          ),
-          ...subjects.flatMap((relation): AgentStateEdge[] => {
-            // Read from the URIs so an endpoint that has not loaded yet does not throw.
-            const source = EID.tryParse(Relation.getSourceURI(relation));
-            const target = EID.tryParse(Relation.getTargetURI(relation));
-            const sourceId = source && EID.getEntityId(source);
-            const targetId = target && EID.getEntityId(target);
-            return sourceId && targetId ? [{ source: sourceId, target: targetId, kind: 'subject' }] : [];
-          }),
-        ];
-
-        return { counts, recent: active.slice(0, RECENT_MEMORIES), nodes, edges };
+        return { counts, recent: active.slice(0, RECENT_MEMORIES) };
       }),
-    [agent, name, chats, memories, goals, people, organizations, subjects, tasks],
+    [chats, memories, goals, people, organizations, tasks],
   );
-  const { counts, recent, nodes, edges } = useAtomValue(stateAtom);
+  const { counts, recent } = useAtomValue(stateAtom);
 
   const primary = useMemo(
     () =>
@@ -150,15 +113,12 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
     [chats],
   );
   const skills = useBoundSkills(agent, primary);
-  const channels = useChannels(agent, chats, people);
 
   return (
     <AgentStateComponent.Root role={role} name={name} actions={actions}>
       <AgentStateComponent.Identity did={did} skills={skills} />
-      <AgentStateComponent.Channels channels={channels} />
       <AgentStateComponent.Summary counts={counts} />
       <AgentStateComponent.Activity memories={recent} />
-      <AgentStateComponent.Graph nodes={nodes} edges={edges} />
     </AgentStateComponent.Root>
   );
 };
@@ -198,67 +158,4 @@ const useBoundSkills = (agent: Agent.Agent, chat: Chat.Chat | undefined): AgentS
   }, [refresh, chat?.id, bindings.length]);
 
   return skills;
-};
-
-/**
- * Each of the agent's chats with its current mode and bound skills. The skills are re-read when a
- * chat's mode changes, which is how `switchMode` announces a rebinding.
- */
-const useChannels = (
-  agent: Agent.Agent,
-  chats: readonly Chat.Chat[],
-  people: readonly Person.Person[],
-): AgentStateChannel[] => {
-  const { invokePromise } = useOperationInvoker();
-  const spaceId = Obj.getDatabase(agent)?.spaceId;
-
-  // Annotations are object state, so each chat is subscribed to see its mode and participant change.
-  const headersAtom = useMemo(
-    () =>
-      Atom.make((get) =>
-        [...chats]
-          .sort((left, right) => left.id.localeCompare(right.id))
-          .map((chat) => {
-            get(Obj.atom(chat));
-            const participant = ChatParticipant.get(chat);
-            const person = participant ? people.find((person) => person.id === participant) : undefined;
-            return {
-              id: chat.id,
-              name: person ? Profile.displayName(person) : chat.name,
-              mode: Mode.getCurrent(chat),
-            };
-          }),
-      ),
-    [chats, people],
-  );
-  const headers = useAtomValue(headersAtom);
-  const [skills, setSkills] = useState<Record<string, AgentStateSkill[]>>({});
-
-  const signature = headers.map(({ id, mode }) => `${id}:${mode}`).join(',');
-  useEffect(() => {
-    if (!spaceId) {
-      return;
-    }
-
-    let cancelled = false;
-    void Promise.all(
-      chats.map(async (chat) => {
-        const { data } = await invokePromise(
-          AgentOperation.ListSkills,
-          { agent: Ref.make(agent), chat: Ref.make(chat) },
-          { spaceId },
-        );
-        return [chat.id, (data?.skills ?? []).map(({ key, name }) => ({ key: key ?? name, name }))] as const;
-      }),
-    ).then((entries) => {
-      if (!cancelled) {
-        setSkills(Object.fromEntries(entries));
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [invokePromise, agent, spaceId, signature]);
-
-  return useMemo(() => headers.map((header) => ({ ...header, skills: skills[header.id] ?? [] })), [headers, skills]);
 };

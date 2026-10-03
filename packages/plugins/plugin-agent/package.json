@@ -84,6 +84,11 @@
       "types": "./dist/types/src/AgentPlugin.d.ts",
       "import": "./dist/lib/AgentPlugin.mjs"
     },
+    "./AgentKnowledge": {
+      "source": "./src/containers/AgentKnowledge/AgentKnowledge.tsx",
+      "types": "./dist/types/src/containers/AgentKnowledge/AgentKnowledge.d.ts",
+      "import": "./dist/lib/AgentKnowledge.mjs"
+    },
     "./AgentState": {
       "source": "./src/containers/AgentState/AgentState.tsx",
       "types": "./dist/types/src/containers/AgentState/AgentState.d.ts",
@@ -166,6 +171,9 @@
     "*": {
       "AgentOperation": [
         "dist/types/src/types/AgentOperation.d.ts"
+      ],
+      "AgentKnowledge": [
+        "dist/types/src/containers/AgentKnowledge/AgentKnowledge.d.ts"
       ],
       "AgentState": [
         "dist/types/src/containers/AgentState/AgentState.d.ts"

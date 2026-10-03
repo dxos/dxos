@@ -6,6 +6,7 @@ import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
 import { ModuleRole, moduleSurfaces as commonSurfaces } from '@dxos/storybook-testing/modules';
 
+import { AgentKnowledgeModule } from './AgentKnowledgeModule.tsx';
 import { AgentModule } from './AgentModule.tsx';
 import { AgentStateModule } from './AgentStateModule.tsx';
 import { ChatModule } from './ChatModule.tsx';
@@ -28,6 +29,7 @@ export const StoryRole = {
   ...ModuleRole,
 
   Agent: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agent'),
+  AgentKnowledge: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentKnowledge'),
   AgentState: Role.make<Record<string, unknown>>('org.dxos.storybook.role.agentState'),
   Chat: Role.make<Record<string, unknown>>('org.dxos.storybook.role.chat'),
   Context: Role.make<Record<string, unknown>>('org.dxos.storybook.role.context'),
@@ -51,6 +53,11 @@ export const moduleSurfaces: Surface.Definition[] = [
     id: 'role.agent',
     filter: Surface.makeFilter(StoryRole.Agent),
     component: AgentModule,
+  }),
+  Surface.create({
+    id: 'role.agentKnowledge',
+    filter: Surface.makeFilter(StoryRole.AgentKnowledge),
+    component: AgentKnowledgeModule,
   }),
   Surface.create({
     id: 'role.agentState',
