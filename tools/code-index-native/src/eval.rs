@@ -56,6 +56,23 @@ fn undo(binding: &mut Binding, trail: &mut Vec<usize>, mark: usize) {
     }
 }
 
+/// How narrow a scan the atom is under the current binding. A subject or object bound by the join
+/// is the narrowest key there is; a constant there is usually a class or a well-known IRI (`rdf:type
+/// deus:Plugin` names hundreds of facts), and a constant predicate narrows least.
+fn selectivity(atom: &Atom, binding: &Binding) -> usize {
+    atom.0
+        .iter()
+        .enumerate()
+        .map(|(position, slot)| match (slot, position) {
+            (Slot::Var(var), 0 | 2) if binding[*var].is_some() => 4,
+            (Slot::Const(_), 0 | 2) => 2,
+            (Slot::Var(var), _) if binding[*var].is_some() => 2,
+            (Slot::Const(_), _) => 1,
+            _ => 0,
+        })
+        .sum()
+}
+
 struct Solver<'a> {
     dict: &'a Dict,
     view: &'a dyn Facts,
@@ -73,13 +90,9 @@ impl Solver<'_> {
             }
             match literal {
                 Literal::Pos(atom) => {
-                    let bound = atom
-                        .0
-                        .iter()
-                        .filter(|slot| resolve(slot, binding).is_some())
-                        .count();
-                    if best.is_none_or(|(_, score)| bound > score) {
-                        best = Some((index, bound));
+                    let score = selectivity(atom, binding);
+                    if best.is_none_or(|(_, best)| score > best) {
+                        best = Some((index, score));
                     }
                 }
                 other => {
