@@ -49,6 +49,8 @@ export const DESCRIBE_DEFAULT_LIMIT = 50;
 export const DESCRIBE_MAX_LIMIT = 500;
 export const FILES_DEFAULT_LIMIT = 500;
 export const FILES_MAX_LIMIT = 5_000;
+export const DESIGN_DEFAULT_BUDGET = 30;
+export const DESIGN_MAX_BUDGET = 200;
 
 /** Candidates listed when a name matches several resources, rather than describing one at random. */
 const MAX_CANDIDATES = 20;
@@ -422,7 +424,16 @@ export const handlers = (store: Store.Api) =>
 
       design: ({ prompt, budget, threshold }) =>
         designCache.pipe(
-          Effect.flatMap((cache) => Design.answer(store, cache, { prompt, budget, threshold })),
+          Effect.flatMap((cache) =>
+            Design.answer(store, cache, {
+              prompt,
+              budget: budget === undefined ? undefined : clamp(budget, DESIGN_DEFAULT_BUDGET, DESIGN_MAX_BUDGET),
+              threshold:
+                threshold === undefined || !Number.isFinite(threshold)
+                  ? undefined
+                  : Math.min(1, Math.max(0, threshold)),
+            }),
+          ),
           Effect.mapError(toFailure),
         ),
 

@@ -153,7 +153,7 @@ export const command = Command.make(
       }
       const child = spawnSync(node, [DRAW_MAIN, dir, '--runs', String(runs)], { stdio: 'inherit' });
       if (child.status !== 0) {
-        yield* Console.error(`Layout failed (exit ${child.status ?? child.signal}).`);
+        yield* Console.error(`Layout failed (${child.error?.message ?? `exit ${child.status ?? child.signal}`}).`);
       } else {
         yield* Console.log(`diagram: ${join(dir, 'diagram.svg')}`);
       }

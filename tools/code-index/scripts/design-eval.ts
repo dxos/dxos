@@ -87,11 +87,24 @@ const argument = (flag: string) => {
   return index > 0 ? process.argv[index + 1] : undefined;
 };
 
+/** A flag's positive-integer operand; a missing or malformed one fails rather than silently skipping the judges. */
+const positiveInteger = (flag: string, fallback: number): number => {
+  if (!process.argv.includes(flag)) {
+    return fallback;
+  }
+  const raw = argument(flag);
+  const value = Number(raw);
+  if (raw === undefined || raw.startsWith('-') || !Number.isInteger(value) || value < 1) {
+    throw new Error(`${flag} expects a positive integer, got ${raw ?? 'nothing'}`);
+  }
+  return value;
+};
+
 const options = {
   out: resolve(argument('--out') ?? 'design-eval'),
   llm: process.argv.includes('--llm'),
   model: argument('--model') ?? 'claude-haiku-4-5-20251001',
-  runs: Math.max(1, Number(argument('--runs') ?? 3)),
+  runs: positiveInteger('--runs', 3),
   only: argument('--only')?.split(','),
   store: argument('--store'),
 };

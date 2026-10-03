@@ -64,7 +64,11 @@ const parse = (content: string): { nodes: InputNode[]; edges: InputEdge[] } => {
                 id: node.id,
                 label: 'label' in node && typeof node.label === 'string' ? node.label : node.id,
                 group: 'group' in node && typeof node.group === 'string' ? node.group : undefined,
-                score: 'score' in node && typeof node.score === 'number' ? node.score : 1,
+                // A model-authored score outside [0, 1] would draw a negative radius or break the layout.
+                score:
+                  'score' in node && typeof node.score === 'number' && Number.isFinite(node.score)
+                    ? Math.min(1, Math.max(0, node.score))
+                    : 1,
                 kept: !('kept' in node) || node.kept !== false,
                 card:
                   'card' in node && typeof node.card === 'object' && node.card !== null

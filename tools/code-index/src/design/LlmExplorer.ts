@@ -136,6 +136,11 @@ export const explore = ({ prompt, maxNodes = 300 }: LlmExploreOptions) =>
           seed.iri.startsWith(Ontology.FILE_BASE) &&
           Explore.isComponentPath(Graph.pathOf(seed.iri, Ontology.FILE_BASE)),
       );
+    if (seeds.length === 0) {
+      return yield* Effect.fail(
+        new Agent.AgentError({ message: `The explorer turn recorded no usable seeds (project ${project.id}).` }),
+      );
+    }
     const relations = choice.relations.filter(isEdgeKind);
     return yield* Explore.fromSeeds(store, {
       prompt,

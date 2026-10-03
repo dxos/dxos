@@ -363,6 +363,8 @@ export const zoom = ({
     // A question whose relation kinds all fall below 0.5 still needs arrows; imports are the floor.
     if (relevantKinds.size === 0) {
       relevantKinds.add('imports');
+      // Downstream edge filters read the scores, not this set, so the floor has to show in them too.
+      relationScores.imports = Math.max(relationScores.imports ?? 0, 0.5);
     }
     const scoredNodes = candidates.nodes.map((card, index) => ({ ...card, score: nodeScores[index] }));
     const { kept, edges: keptEdges } = Graph.prune(scoredNodes, candidates.edges, {

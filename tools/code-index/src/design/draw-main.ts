@@ -24,7 +24,9 @@ const Variants = Schema.Array(
 const args = process.argv.slice(2);
 const dir = args.find((arg) => !arg.startsWith('--'));
 const runsIndex = args.indexOf('--runs');
-const runs = runsIndex >= 0 ? Math.max(1, Number(args[runsIndex + 1] ?? 1)) : 1;
+const parsedRuns = runsIndex >= 0 ? Math.floor(Number(args[runsIndex + 1] ?? 1)) : 1;
+// A malformed operand would make zero judge runs and an objective-only table that looks complete.
+const runs = Number.isFinite(parsedRuns) ? Math.max(1, parsedRuns) : 1;
 const judges = !args.includes('--no-judges') && SystemOne.available();
 
 const program = Effect.gen(function* () {

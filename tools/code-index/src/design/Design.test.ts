@@ -173,6 +173,25 @@ describe('Zoom', () => {
     expect(second.scored.nodes.map((node) => node.score)).toEqual(first.scored.nodes.map((node) => node.score));
   });
 
+  test('when every relation kind is judged irrelevant, imports still draw', async () => {
+    const dismissive = SystemOne.scripted(({ state }): Record<string, DecisionModel.ProviderAnswer> => ({
+      matters: { _tag: 'Probability', probability: JSON.stringify(state).includes('"relation"') ? 0.1 : 0.9 },
+    }));
+    const { scored } = await EffectEx.runPromise(
+      Zoom.zoom({
+        prompt: candidates.prompt,
+        candidates,
+        scorer: 'system-one',
+        model: 'test',
+        cache: Cache.memory(),
+        threshold: 0.5,
+        budget: 10,
+      }).pipe(Effect.provide(dismissive)),
+    );
+    expect(scored.relations.imports).toBe(0.5);
+    expect(Zoom.keptEdges(scored).some((edge) => edge.kind === 'imports')).toBe(true);
+  });
+
   test('a refused call falls back to the baseline instead of scoring zero', async () => {
     const result = await EffectEx.runPromise(
       Zoom.zoom({
