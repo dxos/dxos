@@ -24,7 +24,7 @@ const PORTRAIT = `data:image/svg+xml,${encodeURIComponent(
 
 type StoryArgs = SizeArgs & Pick<AvatarRootProps, 'variant' | 'status' | 'hue' | 'hueVariant' | 'fallback'>;
 
-/** Initials, an emoji, an icon, an image and a portrait filling its host, in a row with a visible name. */
+/** Initials, an emoji, an icon, an image (one with a dominant-colour backdrop) and a portrait filling its host, in a row with a visible name. */
 const DefaultStory = ({ size, variant, status, hue, hueVariant, fallback }: StoryArgs) => (
   <div className='flex items-center gap-2'>
     <Avatar.Root
@@ -36,6 +36,7 @@ const DefaultStory = ({ size, variant, status, hue, hueVariant, fallback }: Stor
     <Avatar.Root fallback='🦊' hue='amber' variant={variant} label='Fox' data-testid={`emoji-${size}`} />
     <Avatar.Root icon='ph--robot--regular' hue='violet' hueVariant='surface' label='Agent' />
     <Avatar.Root src={PORTRAIT} fallback='Pat Lee' status='active' label='Pat Lee' data-testid={`image-${size}`} />
+    <Avatar.Root src={PORTRAIT} backdrop='dominant' hue='rose' label='Backdrop' data-testid={`backdrop-${size}`} />
     <div className='w-20 shrink-0'>
       <Avatar.Root src={PORTRAIT} fill variant='square' label='Portrait' data-testid={`fill-${size}`} />
     </div>
@@ -91,6 +92,11 @@ export const Test: Story = {
       await waitFor(() => expect(image.querySelector('[data-part="image"]')).toHaveAttribute('data-state', 'visible'));
       const fallback = image.querySelector<HTMLElement>('[data-part="fallback"]');
       await waitFor(() => expect(fallback).not.toBeVisible());
+
+      // `backdrop='dominant'` fills behind the loaded image with its edge colour in place of the hue.
+      const backdrop = canvas.getByTestId(`backdrop-${size}`);
+      await waitFor(() => expect(backdrop.style.getPropertyValue('--dx-avatar-backdrop')).not.toBe(''));
+      await expect(getComputedStyle(backdrop).backgroundColor).not.toBe(getComputedStyle(initials).backgroundColor);
 
       // A filled avatar takes its host's width as a square.
       const fill = canvas.getByTestId(`fill-${size}`).getBoundingClientRect();

@@ -3,13 +3,15 @@
 //
 
 import { Avatar as AvatarPrimitive } from '@ark-ui/react/avatar';
-import React, { forwardRef } from 'react';
+import React, { type CSSProperties, forwardRef, useState } from 'react';
 
+import { sampleDominantColor } from '@dxos/lit-ui';
 import { mx } from '@dxos/ui-theme';
 import { type ChromaticPalette, type NeutralPalette, type ThemedClassName, hues } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
+import { type CSSVariables } from '../Container/index.ts';
 import { Icon } from '../Icon/index.ts';
 
 export type AvatarVariant = 'circle' | 'square';
@@ -62,6 +64,8 @@ type AvatarRootProps = ThemedClassName<Omit<AvatarPrimitive.RootProps, 'children
   hueVariant?: AvatarHueVariant;
   /** Image source; the fallback shows until it loads, and again if it fails. */
   src?: string;
+  /** Fills behind the image with its dominant edge colour once it loads (a photo with transparent or uneven edges). */
+  backdrop?: 'dominant';
   /** A name (shown as initials) or an emoji. */
   fallback?: string;
   /** Shown in place of the fallback text. */
@@ -88,38 +92,57 @@ const AvatarRoot = forwardRef<HTMLDivElement, AvatarRootProps>(
       hue,
       hueVariant = 'fill',
       src,
+      backdrop,
       fallback = '🫥',
       icon,
       label,
       children,
+      style,
       ...props
     },
     forwardedRef,
-  ) => (
-    <AvatarPrimitive.Root
-      role='img'
-      {...(label && { 'aria-label': label })}
-      {...props}
-      data-size={size}
-      data-fill={fill ? '' : undefined}
-      data-variant={variant}
-      data-status={status}
-      data-animation={animation === 'none' ? undefined : animation}
-      data-hue={hue}
-      data-hue-variant={hueVariant}
-      className={mx(recipes.avatar(), classNames)}
-      ref={forwardedRef}
-    >
-      {children ?? (
-        <>
-          {src && <AvatarImage src={src} />}
-          <AvatarFallback data-emoji={!icon && EMOJI.test(fallback) ? '' : undefined}>
-            {icon ? <Icon icon={icon} /> : getAvatarGlyph(fallback)}
-          </AvatarFallback>
-        </>
-      )}
-    </AvatarPrimitive.Root>
-  ),
+  ) => {
+    // Keyed by source, so a new `src` drops the previous image's colour without an effect racing the load event.
+    const [sampled, setSampled] = useState<{ src: string; color?: string }>();
+    const color = sampled && sampled.src === src ? sampled.color : undefined;
+    const backdropStyle: CSSProperties & CSSVariables = color ? { '--dx-avatar-backdrop': color } : {};
+    return (
+      <AvatarPrimitive.Root
+        role='img'
+        {...(label && { 'aria-label': label })}
+        {...props}
+        data-size={size}
+        data-fill={fill ? '' : undefined}
+        data-variant={variant}
+        data-status={status}
+        data-animation={animation === 'none' ? undefined : animation}
+        data-hue={hue}
+        data-hue-variant={hueVariant}
+        data-backdrop={backdrop}
+        style={{ ...backdropStyle, ...style }}
+        className={mx(recipes.avatar(), classNames)}
+        ref={forwardedRef}
+      >
+        {children ?? (
+          <>
+            {src && (
+              <AvatarImage
+                src={src}
+                onLoad={
+                  backdrop === 'dominant'
+                    ? (event) => setSampled({ src, color: sampleDominantColor(event.currentTarget) })
+                    : undefined
+                }
+              />
+            )}
+            <AvatarFallback data-emoji={!icon && EMOJI.test(fallback) ? '' : undefined}>
+              {icon ? <Icon icon={icon} /> : getAvatarGlyph(fallback)}
+            </AvatarFallback>
+          </>
+        )}
+      </AvatarPrimitive.Root>
+    );
+  },
 );
 
 AvatarRoot.displayName = 'Next.Avatar.Root';

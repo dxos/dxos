@@ -24,6 +24,16 @@
     overflow: hidden;
     user-select: none;
   }
+  /* `backdrop='dominant'`: the loaded image's edge colour stands in for the hue fill behind it. */
+  .dx-avatar[data-backdrop='dominant'] {
+    background: var(--dx-avatar-backdrop, var(--dx-avatar-bg));
+    transition: background-color 0.5s ease-in-out;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dx-avatar[data-backdrop='dominant'] {
+      transition: none;
+    }
+  }
   .dx-avatar[data-fill] {
     width: 100%;
     height: auto;
