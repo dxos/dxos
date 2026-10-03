@@ -34,12 +34,12 @@ import { useTaskListContext } from './TaskListContext.ts';
 
 export type TaskStatusControlProps = {
   classNames?: string;
+  task: Task.Task;
   /**
    * Overrides whether the glyph spins. Defaults to {@link Task.isAgentWorking} — a host passes this
    * only when it knows something the task does not, e.g. that the session behind it has stopped.
    */
   active?: boolean;
-  task: Task.Task;
   /** Absent for a readonly list, which renders the glyph without the control. */
   onTaskUpdate?: (task: Task.Task, patch: Task.Edit) => void;
 };
@@ -139,9 +139,9 @@ export const TaskMnemonic = ({ task }: { task: Obj.Unknown | Obj.Snapshot }) => 
 TaskMnemonic.displayName = 'TaskList.Mnemonic';
 
 export type TaskOrdinalProps = {
+  classNames?: string;
   task: Task.Task;
   ordinal: number;
-  classNames?: string;
 };
 
 /** The gutter's ordinal, tinted by outcome so a scan down the column reads as progress. */
