@@ -273,6 +273,9 @@ type StoryPluginOptions = {
   onChatCreated?: (props: { db: Database.Database; chat: Chat.Chat; binder: AiContext.Binder }) => Promise<void>;
 };
 
+/** Marks the chat this harness creates, so a reload finds it among any chats a story seeded. */
+const HARNESS_CHAT_KEY = { source: 'com.example.plugin.testing', id: 'chat' };
+
 const StoryPlugin = Plugin.define<StoryPluginOptions>(
   Plugin.makeMeta({
     key: DXN.make('com.example.plugin.testing'),
@@ -371,9 +374,12 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
           );
         }
       } else {
-        // A returning profile reopens the chat it was seeded with; creating one per load would make
-        // every reload write a chat, its feed and its bindings.
-        const [existing] = yield* Effect.promise(() => space.db.query(Filter.type(Chat.Chat)).run());
+        // A returning profile reopens the chat this harness seeded it with; creating one per load would
+        // make every reload write a chat, its feed and its bindings. Matched by key rather than by any
+        // chat, since a seeded space can hold earlier chats of its own.
+        const [existing] = yield* Effect.promise(() =>
+          space.db.query(Filter.foreignKeys(Chat.Chat, [HARNESS_CHAT_KEY])).run(),
+        );
         if (existing) {
           return;
         }
@@ -383,6 +389,9 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // `onChatCreated` must run here: the operation handler that creates the chat is owned by
         // the assistant plugin and has no hook for it.
         const { object: chat } = yield* invoke(AssistantOperation.CreateChat, {}, { spaceId: space.db.spaceId });
+        Obj.update(chat, (chat) => {
+          Obj.getMeta(chat).keys.push(HARNESS_CHAT_KEY);
+        });
         // Added directly: this harness registers no plugin-space handlers, so `AddObject` has none.
         space.db.add(chat);
         if (onChatCreated) {
