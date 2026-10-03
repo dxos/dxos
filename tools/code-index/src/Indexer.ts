@@ -160,7 +160,7 @@ export const run = (
     // this pass changed nothing, which would strand a pass run with `--no-reason` or interrupted
     // before reasoning, reporting stale conclusions until some file changed.
     const reasoners = options.reasoners ?? [];
-    const willReason = reasoners.length > 0 && !(yield* store.isReasoned(reasoners));
+    const willReason = reasoners.length > 0 && !(yield* store.isReasoned(Reasoner.signature(reasoners)));
     const [reasonMs, outcomes] = yield* millis(willReason ? Reasoner.run(reasoners) : Effect.succeed([]));
     const derived = willReason
       ? outcomes.reduce((total, outcome) => total + outcome.derived, 0)

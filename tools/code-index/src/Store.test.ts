@@ -360,27 +360,38 @@ describe('Store', () => {
 
   test('any write after reasoning marks the conclusions stale, across reopening', async () => {
     const reasoners = [{ name: REASONER, rules: RULES }];
-    await withStore((store) => store.putDocument(document('src/a.ts', 6, ['src/b.ts'])));
-    expect(await withStore((store) => store.isReasoned(reasoners))).toBe(false);
+    // What `Reasoner.run` does: note the generation, reason, record it.
+    const reason = () =>
+      withStore((store) =>
+        Effect.gen(function* () {
+          const generation = yield* store.generation();
+          yield* store.reasonAll(reasoners);
+          yield* store.recordReasoned('rules', generation);
+        }),
+      );
+    const current = () => withStore((store) => store.isReasoned('rules'));
 
-    await withStore((store) => store.reasonAll(reasoners));
-    expect(await withStore((store) => store.isReasoned(reasoners))).toBe(true);
+    await withStore((store) => store.putDocument(document('src/a.ts', 6, ['src/b.ts'])));
+    expect(await current()).toBe(false);
+
+    await reason();
+    expect(await current()).toBe(true);
     expect(await withStore((store) => store.derivedCount())).toEqual(1);
     // Another rule set did not compute these graphs.
-    expect(await withStore((store) => store.isReasoned([{ name: REASONER, rules: `${RULES}\n` }]))).toBe(false);
+    expect(await withStore((store) => store.isReasoned('other rules'))).toBe(false);
 
     await withStore((store) => store.putDocument(document('src/c.ts', 1)));
-    expect(await withStore((store) => store.isReasoned(reasoners))).toBe(false);
-    await withStore((store) => store.reasonAll(reasoners));
+    expect(await current()).toBe(false);
+    await reason();
 
     await withStore((store) => store.removeFile('src/c.ts'));
-    expect(await withStore((store) => store.isReasoned(reasoners))).toBe(false);
-    await withStore((store) => store.reasonAll(reasoners));
+    expect(await current()).toBe(false);
+    await reason();
 
     await withStore((store) =>
       store.putQuads([DataFactory.quad(namedNode('urn:b'), namedNode('urn:p'), literal('v'))]),
     );
-    expect(await withStore((store) => store.isReasoned(reasoners))).toBe(false);
+    expect(await current()).toBe(false);
   });
 
   test('clear empties both databases', async () => {

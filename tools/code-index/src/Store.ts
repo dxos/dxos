@@ -14,9 +14,8 @@ import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
-import { type Lens, type Schema as LdkitSchema } from 'ldkit';
+import { type Schema as LdkitSchema, type Lens } from 'ldkit';
 import { DataFactory, Parser, Writer } from 'n3';
-import { createHash } from 'node:crypto';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -138,11 +137,15 @@ export interface Api {
   readonly derived: (reasoner?: string) => Effect.Effect<Quad[], StoreError>;
   /** How many quads the reasoners' graphs hold, counted where they live rather than materialised. */
   readonly derivedCount: () => Effect.Effect<number, StoreError>;
+  /** Advanced by every write to the facts; what a reasoning pass records it ran over. */
+  readonly generation: () => Effect.Effect<number, StoreError>;
+  /** Records that the reasoners `signature` names ran over the facts as of `generation`. */
+  readonly recordReasoned: (signature: string, generation: number) => Effect.Effect<void, StoreError>;
   /**
-   * Whether the derived graphs are what `reasonAll(reasoners)` would leave: they were last computed
-   * by this exact rule set over the facts the store holds now. False after any write since.
+   * Whether the conclusions are what the reasoners `signature` names would leave: those reasoners
+   * last ran over the facts the store holds now. False after any write since.
    */
-  readonly isReasoned: (reasoners: readonly Graph.ReasonerInput[]) => Effect.Effect<boolean, StoreError>;
+  readonly isReasoned: (signature: string) => Effect.Effect<boolean, StoreError>;
 
   readonly stats: () => Effect.Effect<Stats, StoreError>;
   readonly clear: () => Effect.Effect<void, StoreError>;
@@ -162,7 +165,7 @@ const VERSION_KEY = 'ontologyVersion';
 /** Advanced by every write, before it lands, so a reasoning pass can tell its premises moved since. */
 const GENERATION_KEY = 'generation';
 
-/** {@link Reasoned} of the last completed `reasonAll` — see {@link Api.isReasoned}. */
+/** {@link Reasoned} of the last completed reasoning pass — see {@link Api.isReasoned}. */
 const REASONED_KEY = 'reasoned';
 
 const Reasoned = Schema.fromJsonString(Schema.Struct({ signature: Schema.String, generation: Schema.Number }));
@@ -171,12 +174,6 @@ const Reasoned = Schema.fromJsonString(Schema.Struct({ signature: Schema.String,
 const DERIVED_GRAPHS_KEY = 'derivedGraphs';
 
 const DerivedGraphs = Schema.fromJsonString(Schema.Array(Schema.String));
-
-/** Identifies a rule set by its ordered names and texts; a changed rule file means stale conclusions. */
-const signatureOf = (reasoners: readonly Graph.ReasonerInput[]): string =>
-  createHash('sha256')
-    .update(JSON.stringify(reasoners.map(({ name, rules }) => [name, rules])))
-    .digest('hex');
 
 /**
  * Empty a store written under another {@link Ontology.VERSION} before the graph opens, so the next
@@ -490,36 +487,32 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
         exclusive(
           Effect.gen(function* () {
             yield* recordDerived(reasoners.map((reasoner) => Ontology.derivedGraphIri(reasoner.name).value));
-            const reasonedOver = yield* generation();
-            const outcomes = yield* graphs.reasonAll(reasoners);
-            const reasoned = yield* Schema.encodeEffect(Reasoned)({
-              signature: signatureOf(reasoners),
-              generation: reasonedOver,
-            }).pipe(Effect.mapError(fail('Failed to record the reasoning pass')));
-            yield* setMeta(REASONED_KEY, reasoned);
-            return outcomes;
+            return yield* graphs.reasonAll(reasoners);
           }),
         ),
 
       writePass: (pass, quads) =>
-        Effect.gen(function* () {
-          const graph = Ontology.passGraphIri(pass);
-          const stale = yield* match(undefined, undefined, undefined, graph);
-          const next = quads.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, graph));
-          // Only the difference is written, so the native journal sees what actually changed.
-          const key = (quad: Quad) =>
-            JSON.stringify([
-              quad.subject.value,
-              quad.predicate.value,
-              quad.object.termType,
-              quad.object.value,
-              quad.object.termType === 'Literal' ? [quad.object.datatype.value, quad.object.language] : [],
-            ]);
-          const kept = new Set(next.map(key));
-          const had = new Set(stale.map(key));
-          yield* graphs.delQuads(stale.filter((quad) => !kept.has(key(quad))));
-          yield* graphs.putQuads(next.filter((quad) => !had.has(key(quad))));
-        }),
+        exclusive(
+          Effect.gen(function* () {
+            const graph = Ontology.passGraphIri(pass);
+            yield* recordDerived([graph.value]);
+            const stale = yield* match(undefined, undefined, undefined, graph);
+            const next = quads.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, graph));
+            // Only the difference is written, so the native journal sees what actually changed.
+            const key = (quad: Quad) =>
+              JSON.stringify([
+                quad.subject.value,
+                quad.predicate.value,
+                quad.object.termType,
+                quad.object.value,
+                quad.object.termType === 'Literal' ? [quad.object.datatype.value, quad.object.language] : [],
+              ]);
+            const kept = new Set(next.map(key));
+            const had = new Set(stale.map(key));
+            yield* graphs.delQuads(stale.filter((quad) => !kept.has(key(quad))));
+            yield* graphs.putQuads(next.filter((quad) => !had.has(key(quad))));
+          }),
+        ),
 
       derived: (reasoner) =>
         reasoner === undefined
@@ -533,13 +526,21 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
 
       derivedCount,
 
-      isReasoned: (reasoners) =>
+      generation,
+
+      recordReasoned: (signature, generation) =>
+        Effect.flatMap(
+          Schema.encodeEffect(Reasoned)({ signature, generation }).pipe(
+            Effect.mapError(fail('Failed to record the reasoning pass')),
+          ),
+          (reasoned) => setMeta(REASONED_KEY, reasoned),
+        ),
+
+      isReasoned: (signature) =>
         Effect.gen(function* () {
           const reasoned = yield* readMeta(REASONED_KEY, Reasoned);
           return (
-            reasoned !== undefined &&
-            reasoned.generation === (yield* generation()) &&
-            reasoned.signature === signatureOf(reasoners)
+            reasoned !== undefined && reasoned.generation === (yield* generation()) && reasoned.signature === signature
           );
         }),
 

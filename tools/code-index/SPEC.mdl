@@ -132,10 +132,12 @@ module Store
     dump / load                               # N3 text in and out.
     reason: (reasoner, rules, { materialize? }) => Effect<Quad[]>  # premises exclude the reasoner's
                                                                    # own graph; materialize replaces it.
-    reasonAll: (reasoners) => Effect<Outcome[]>       # every reasoner in order; records the pass.
+    reasonAll: (rules) => Effect<Outcome[]>   # every rule file in order, maintained natively.
     derived: (reasoner?) => Effect<Quad[]>    # what a reasoner (or every reasoner) concluded.
     derivedCount: () => Effect<number>        # the same, counted in the store.
-    isReasoned: (reasoners) => Effect<boolean>  # these rules already ran over the current facts.
+    generation: () => Effect<number>          # advanced by every write to the facts.
+    recordReasoned: (signature, generation)   # what `Reasoner.run` ran, over which facts.
+    isReasoned: (signature) => Effect<boolean>  # those reasoners already ran over the current facts.
     stats / clear
 ```
 
