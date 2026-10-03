@@ -36,8 +36,9 @@
     justify-content: flex-start;
   }
 
+  /* The control fill, as a default Button's: a well tone (`input-surface`) barely separates from a toolbar's bar. */
   .dx-tabs-trigger[aria-selected='true'] {
-    background: var(--color-input-surface);
+    background: var(--color-input-bg);
   }
   .dx-tabs[data-selected-variant='primary'] .dx-tabs-trigger[aria-selected='true'] {
     background: var(--color-accent-bg);
