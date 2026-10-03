@@ -342,7 +342,8 @@ export const Multiline: Story = {
       throw new Error('Multiline row not found.');
     }
     const block = branch.getBoundingClientRect().height;
-    await expect(row.getBoundingClientRect().height).toBeGreaterThan(block);
+    // A variable-height row reports its one-block intrinsic size until it has rendered, so wait for it to grow.
+    await waitFor(() => expect(row.getBoundingClientRect().height).toBeGreaterThan(block));
     await expect(description.getBoundingClientRect().top).toBeGreaterThanOrEqual(label.getBoundingClientRect().bottom);
     await expect(Math.abs(description.getBoundingClientRect().left - label.getBoundingClientRect().left)).toBeLessThan(
       1,
