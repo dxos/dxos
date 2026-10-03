@@ -10,4 +10,7 @@ from Discord threads and Composer chats.
 - The plugin ships a workerd variant (`./InterlocutorPlugin` resolves without React) so EDGE's
   operation service can host the operations.
 
+Docs: [design](./docs/DESIGN.md), [memory and profiles](./docs/MEMORY.md), and
+[end-to-end setup with Discord](./docs/SETUP.md).
+
 License: [FSL-1.1-Apache-2.0](./LICENSE) Copyright 2026 © DXOS
