@@ -395,7 +395,8 @@ type.
 | `deus:providesService`       | The key a providing constructor (`Layer.effect/succeed/sync/scoped/mock`) is built for, named by its declaration (or by its member when it resolves to none); each service in the `ROut` of its inferred type; and what the layer it is piped from or merges first provides (`rules/15-types.n3`).                                                                          | `rules/10-effect.n3`       |
 | `deus:requiresService`       | A layer built by `Layer.effect/scoped/effectDiscard` whose initializer refers to a service key other than the one it provides — what its code reads, not what remains after `Layer.provide` (that is `layerRequires`). Skipped when it calls `Effect.serviceOption`.                                                                                                        | `rules/10-effect.n3`       |
 | `deus:layerRequires`         | A layer's `RIn`: each service its inferred `Layer<ROut, E, RIn>` type still needs. Exact where the type is known.                                                                                                                                                                                                                                                           | `rules/15-types.n3`        |
-| `deus:resolvesTo`            | A reference IRI as an importer wrote it (`file:<barrel>#X` through `export *` barrels and named re-exports, `module:<specifier>#X` paired with the import's `file:` reference) and the declaration it denotes; concluded only for the service keys the layer facts name.                                                                                                    | `rules/10-effect.n3`       |
+| `deus:resolvesTo`            | A reference IRI as an importer wrote it (`file:<barrel>#X` through `export *`, aliases and namespaces; `module:<specifier>#X.y` via `deus:moduleFile`) and the declaration it denotes. Every reference and alias, where they differ. An `#imports` module naming several files is skipped; `10-effect` restates service keys through the `file:` twin.                      | `resolve-refs` pass        |
+| `deus:usesDeprecated`        | A symbol (not a re-export) and a `deus:deprecated` declaration it depends on, directly or through `deus:resolvesTo`. Class and interface members are not symbols, so their deprecations are unseen.                                                                                                                                                                         | `rules/67-usage.n3`        |
 | `deus:importsTestFile`       | A non-test file importing a test file.                                                                                                                                                                                                                                                                                                                                      | `rules/50-example.n3`      |
 | `deus:canonicalName`         | **The name an external importer writes**, stated only when it differs from `deus:name`: `<Namespace>.<identifier>` when the declaring module is published whole via `export * as N`. Elsewhere the canonical name is `deus:name`; a query reads `COALESCE(?canonical, ?name)`.                                                                                              | `rules/60-canonical.n3`    |
 | `deus:publishedBy`           | File → `Package`: the file is a `deus:entry` of the package, or reachable from one through `deus:reexports` or a namespace's `deus:namespaceOf`.                                                                                                                                                                                                                            | `rules/65-packages.n3`     |
@@ -522,6 +523,21 @@ sees its sibling members by bare name, innermost namespace first. Local shadowin
 modeled; a reference that binds to nothing is counted in `deus:unresolvedReferences` on the file,
 so the approximation stays measurable. Full scope analysis is a later step, not a design change.
 
+### Finding usages
+
+The parser records a dependency as its file wrote it, so a use of `proxyFetchLegacy` lands on the
+declaration, on the barrel (`file:…/edge-client/src/index.ts#proxyFetchLegacy`) or on the module
+member (`module:@dxos/edge-client#proxyFetchLegacy`). The `resolve-refs` pass links the last two to
+the declaration with `deus:resolvesTo`, so every user of a declaration `D` is
+
+```sparql
+SELECT DISTINCT ?user WHERE { ?user deus:implDependsOn|deus:apiDependsOn ?r . ?r deus:resolvesTo? D }
+```
+
+and the MCP `usages` tool runs that query and groups the users by package and role. A user→declaration
+edge is deliberately not materialised: it would restate every dependency edge, and `resolvesTo?` answers
+the same question at query time.
+
 ## Snippets
 
 `deus:snippet` is the declaration's source span with implementation replaced, produced by **span
@@ -582,10 +598,12 @@ The test for which kind to write: if the conclusion is a _class_ or a _join_, N3
 _walk_ or a _computation_, JS. Never a closure rule over a whole relation in N3 (see Derived). The
 one recursion shipped, `deus:publishedBy` in `65-packages.n3`, is seeded by the package entries and
 follows only `deus:reexports`, so its output is the set of public files (a few thousand), not a
-closure of the import graph. The one JS pass shipped is `bind-types` (`src/TypeBinding.ts`), which
-binds type terms across files into `graph:pass/bind-types` before the rule files run; the
-computations specs need — glob compilation and reference splitting — are still done by the parser
-(see SpecField).
+closure of the import graph. Two JS passes ship: `bind-types` (`src/TypeBinding.ts`), which
+binds type terms across files into `graph:pass/bind-types`, and `resolve-refs`
+(`src/ReferenceResolution.ts`), which states `deus:resolvesTo` for every reference into
+`graph:pass/resolve-refs`; both run before the rule files, through the same resolution
+(`src/worker/types/Bind.ts`). The computations specs need — glob compilation and reference
+splitting — are still done by the parser (see SpecField).
 
 Deleting a file does not dirty the files that imported it, so an unchanged importer keeps its
 `deus:imports` edge to the departed file until that importer is itself reindexed.

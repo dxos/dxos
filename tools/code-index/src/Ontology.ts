@@ -297,8 +297,10 @@ export const providesService = iri('providesService');
 export const requiresService = iri('requiresService');
 /** A layer's `RIn`, read off its inferred type — exact, where `requiresService` is a heuristic. */
 export const layerRequires = iri('layerRequires');
-/** A reference IRI (`file:<barrel>#X`, `module:<specifier>#X`) and the declaration it denotes — concluded for service keys. */
+/** A reference IRI (`file:<barrel>#X`, `module:<specifier>#X`) and the declaration it denotes (the `resolve-refs` pass). */
 export const resolvesTo = iri('resolvesTo');
+/** A symbol and a deprecated declaration it depends on, directly or through a barrel. */
+export const usesDeprecated = iri('usesDeprecated');
 export const implementsOperation = iri('implementsOperation');
 /** An ECHO type's typename and version: the literal `DXN.make(typename, version)` it is built from. */
 export const echoTypename = iri('echoTypename');

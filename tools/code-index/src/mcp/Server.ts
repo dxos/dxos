@@ -53,6 +53,10 @@ export const DESCRIBE_DEFAULT_LIMIT = 50;
 export const DESCRIBE_MAX_LIMIT = 500;
 export const FILES_DEFAULT_LIMIT = 500;
 export const FILES_MAX_LIMIT = 5_000;
+export const USAGES_DEFAULT_LIMIT = 500;
+export const USAGES_MAX_LIMIT = 5_000;
+/** Reference rows read for one symbol; past this the totals come from a COUNT and the roles are partial. */
+const USAGES_MAX_ROWS = 50_000;
 export const DESIGN_DEFAULT_BUDGET = 30;
 export const DESIGN_MAX_BUDGET = 200;
 
@@ -350,6 +354,70 @@ export const Describe = readOnly(
   }),
 );
 
+const UsageRole = Schema.Literals(['impl', 'test', 'story']);
+
+const RoleCounts = Schema.Struct({ impl: Schema.Number, test: Schema.Number, story: Schema.Number });
+
+const UsageFile = Schema.Struct({
+  path: Schema.String,
+  role: UsageRole,
+  symbols: Schema.Array(Schema.String).annotate({ description: 'The symbols of the file that use it.' }),
+  via: Schema.Literals(['direct', 'barrel']).annotate({
+    description: 'direct when a symbol names the declaration itself; barrel when only through a re-export.',
+  }),
+});
+
+export const Usages = readOnly(
+  Tool.make('usages', {
+    description:
+      'Finds every symbol that uses a declaration, through `export *` barrels, named re-exports, namespaces ' +
+      '(`Order.natural` via `export * as Order`) and bare specifiers, grouped by package. Each file has a role — ' +
+      'test (a *.test.* / *.spec.* file), story (*.stories.*) or impl — and `via`. `reexportedBy` lists the ' +
+      'barrels and alias files it passes through; `total` counts symbols, files, packages and roles before the ' +
+      '`limit` on files (default 500, max 5000). `symbol` takes the forms `describe` does; an alias or a barrel ' +
+      'reference is followed to its declaration, and several declarations come back as `candidates`. Example: ' +
+      '{ "symbol": "proxyFetchLegacy", "includeTests": false }',
+    parameters: Schema.Struct({
+      symbol: Schema.String.annotate({ description: DESCRIBE_FORMS }),
+      kind: Schema.optional(
+        Schema.Literals(['api', 'impl', 'all']).annotate({
+          description: 'api: uses in signatures (deus:apiDependsOn); impl: in bodies; all (default): both.',
+        }),
+      ),
+      includeTests: Schema.optional(
+        Schema.Boolean.annotate({ description: 'Whether test files count (default true); stories always do.' }),
+      ),
+      limit: count(`Maximum files to list (default ${USAGES_DEFAULT_LIMIT}, max ${USAGES_MAX_LIMIT}).`),
+    }),
+    success: Schema.Struct({
+      declaration: Schema.optional(Schema.String),
+      resolvedBy: Schema.optional(Schema.String),
+      candidates: Schema.Array(Candidate),
+      packages: Schema.Array(
+        Schema.Struct({
+          package: Schema.String.annotate({ description: 'The package name, or "" for a file in none.' }),
+          counts: RoleCounts,
+          files: Schema.Array(UsageFile),
+        }),
+      ),
+      reexportedBy: Schema.Array(Schema.String).annotate({
+        description: 'Paths of the barrels and alias files a use reaches the declaration through.',
+      }),
+      total: Schema.Struct({
+        symbols: Schema.Number,
+        files: Schema.Number,
+        packages: Schema.Number,
+        impl: Schema.Number,
+        test: Schema.Number,
+        story: Schema.Number,
+      }),
+      truncated: Schema.Boolean,
+      hint: Schema.optional(Schema.String),
+    }),
+    failure: ToolFailure,
+  }),
+);
+
 const FileEntry = Schema.Struct({ path: Schema.String, language: Schema.String, size: Schema.Number });
 
 export const Files = readOnly(
@@ -431,7 +499,7 @@ export const DesignTool = readOnly(
   }),
 );
 
-export const CodeIndexToolkit = Toolkit.make(Query, Ask, Vocabulary, Describe, Files, Stats, DesignTool);
+export const CodeIndexToolkit = Toolkit.make(Query, Ask, Vocabulary, Describe, Usages, Files, Stats, DesignTool);
 
 //
 // Name resolution.
@@ -505,6 +573,144 @@ const meaning = (term: Terms.Term | undefined) => ({
   ...(term?.subjectClass === undefined ? {} : { subjectClass: term.subjectClass }),
   ...(term?.range === undefined ? {} : { range: term.range }),
 });
+
+//
+// Usages.
+//
+
+const STORY_FILE = /\.stories\.[cm]?[jt]sx?$/;
+
+type Role = 'impl' | 'test' | 'story';
+
+const roleOf = (path: string, test: boolean): Role => (test ? 'test' : STORY_FILE.test(path) ? 'story' : 'impl');
+
+/** The repository-relative path of a `file:` IRI's file, which `Ontology.fileIri` escaped. */
+const pathOfFileIri = (iri: string): string | undefined => {
+  const hash = iri.indexOf('#');
+  return iri.startsWith(Ontology.FILE_BASE)
+    ? decodeURIComponent(iri.slice(Ontology.FILE_BASE.length, hash < 0 ? undefined : hash))
+    : undefined;
+};
+
+const USAGE_PREDICATES = {
+  api: [Ontology.apiDependsOn.value],
+  impl: [Ontology.implDependsOn.value],
+  all: [Ontology.implDependsOn.value, Ontology.apiDependsOn.value],
+} as const;
+
+/**
+ * Each use of `declaration`, directly or through a reference, joined with `tail` inside every branch:
+ * the native evaluator joins a UNION with what follows it by scanning, so the tail must not trail it.
+ */
+const usagePattern = (declaration: string, predicates: readonly string[], tail: string): string =>
+  predicates
+    .flatMap((predicate) => [
+      `{ ?user <${predicate}> <${declaration}> . BIND(<${declaration}> AS ?ref) ${tail} }`,
+      `{ ?ref deus:resolvesTo <${declaration}> . ?user <${predicate}> ?ref . ${tail} }`,
+    ])
+    .join(' UNION ');
+
+const usageQuery = (declaration: string, predicates: readonly string[], limit: number): string => `${DEUS}
+  SELECT DISTINCT ?user ?name ?kind ?ref ?path ?pkg ?test WHERE {
+    ${usagePattern(
+      declaration,
+      predicates,
+      `?file deus:declares ?user ; deus:path ?path .
+      OPTIONAL { ?user deus:name ?name }
+      OPTIONAL { ?user deus:kind ?kind }
+      OPTIONAL { ?file deus:inPackage ?package . ?package deus:name ?pkg }
+      OPTIONAL { ?file deus:testFile ?test }`,
+    )}
+  } LIMIT ${limit}`;
+
+const usageCountQuery = (declaration: string, predicates: readonly string[]): string => `${DEUS}
+  SELECT (COUNT(DISTINCT ?user) AS ?symbols) (COUNT(DISTINCT ?file) AS ?files) WHERE {
+    ${usagePattern(declaration, predicates, '?file deus:declares ?user .')}
+  }`;
+
+type UsageFileEntry = { path: string; role: Role; symbols: Set<string>; direct: boolean; package: string };
+
+/**
+ * Groups reference rows by package and file. A re-export is a passage, not a use, so it lands in
+ * `reexportedBy`; a symbol depending on both twins of one import (`module:` and `file:`) counts once.
+ */
+const groupUsages = (
+  declaration: string,
+  rows: readonly Store.Binding[],
+  options: { readonly includeTests: boolean; readonly limit: number },
+) => {
+  const declarationFile = pathOfFileIri(declaration);
+  const reexportedBy = new Set<string>();
+  const files = new Map<string, UsageFileEntry>();
+  const users = new Set<string>();
+  for (const row of rows) {
+    const barrel = row.ref === declaration ? undefined : pathOfFileIri(row.ref);
+    if (barrel !== undefined && barrel !== declarationFile) {
+      reexportedBy.add(barrel);
+    }
+    if (row.kind === 'reexport') {
+      reexportedBy.add(row.path);
+      continue;
+    }
+    // A recursive declaration names itself; that is not a use.
+    if (row.user === declaration) {
+      continue;
+    }
+    const role = roleOf(row.path, row.test === 'true');
+    if (role === 'test' && !options.includeTests) {
+      continue;
+    }
+    users.add(row.user);
+    const entry = files.get(row.path) ?? {
+      path: row.path,
+      role,
+      symbols: new Set<string>(),
+      direct: false,
+      package: row.pkg ?? '',
+    };
+    entry.symbols.add(row.name ?? row.user);
+    entry.direct ||= row.ref === declaration;
+    files.set(row.path, entry);
+  }
+
+  const sorted = [...files.values()].sort(
+    (left, right) => left.package.localeCompare(right.package) || left.path.localeCompare(right.path),
+  );
+  const total = { impl: 0, test: 0, story: 0 };
+  const packages = new Map<
+    string,
+    {
+      package: string;
+      counts: Record<Role, number>;
+      files: { path: string; role: Role; symbols: string[]; via: 'direct' | 'barrel' }[];
+    }
+  >();
+  sorted.forEach((entry, index) => {
+    total[entry.role]++;
+    const group = packages.get(entry.package) ?? {
+      package: entry.package,
+      counts: { impl: 0, test: 0, story: 0 },
+      files: [],
+    };
+    group.counts[entry.role]++;
+    if (index < options.limit) {
+      group.files.push({
+        path: entry.path,
+        role: entry.role,
+        symbols: [...entry.symbols].sort(),
+        via: entry.direct ? 'direct' : 'barrel',
+      });
+    }
+    packages.set(entry.package, group);
+  });
+  return {
+    // Past the cap a package keeps only its place in `total`, so the answer stays bounded.
+    packages: [...packages.values()].filter((group) => group.files.length > 0),
+    reexportedBy: [...reexportedBy].sort(),
+    total: { symbols: users.size, files: sorted.length, packages: packages.size, ...total },
+    truncated: sorted.length > options.limit,
+  };
+};
 
 //
 // Handlers.
@@ -735,6 +941,69 @@ export const handlers = (store: Store.Api) =>
           };
         }).pipe(Effect.mapError(toFailure)),
 
+      usages: ({ symbol, kind, includeTests, limit }) =>
+        Effect.gen(function* () {
+          const cap = clamp(limit, USAGES_DEFAULT_LIMIT, USAGES_MAX_LIMIT);
+          const none = {
+            candidates: [],
+            packages: [],
+            reexportedBy: [],
+            total: { symbols: 0, files: 0, packages: 0, impl: 0, test: 0, story: 0 },
+            truncated: false,
+          };
+          const matches = yield* resolve(symbol);
+          if (matches.length === 0) {
+            return { ...none, hint: `Nothing matched ${JSON.stringify(symbol)}. ${DESCRIBE_FORMS}` };
+          }
+          // The best tier, each followed to its declaration. A symbol outranks a type property of the same
+          // name, and an exported one a file-local one (a test's `const proxyFetchLegacy = vi.fn()`).
+          const tier = matches.filter((match) => match.tier === matches[0].tier);
+          const preferred = (candidates: readonly Match[], keep: (match: Match) => boolean) =>
+            candidates.some(keep) ? candidates.filter(keep) : candidates;
+          const valid = preferred(
+            preferred(tier, (match) => match.primary),
+            (match) => match.exported || match.packagePublic,
+          ).filter((match) => !INVALID_IRI.test(match.iri));
+          const declared = yield* Effect.forEach(valid, (match) =>
+            Effect.map(
+              store.select(`${DEUS} SELECT ?declaration WHERE { <${match.iri}> deus:resolvesTo ?declaration }`),
+              (rows) => ({ ...match, iri: rows[0]?.declaration ?? match.iri }),
+            ),
+          );
+          const declarations = best(declared);
+          const [chosen, ...others] = declarations;
+          if (chosen === undefined) {
+            return { ...none, hint: `Not a valid IRI: ${matches[0].iri}` };
+          }
+          if (others.length > 0) {
+            return { ...none, candidates: yield* candidatesOf(declarations) };
+          }
+          const predicates = USAGE_PREDICATES[kind ?? 'all'];
+          const rows = yield* store.select(usageQuery(chosen.iri, predicates, USAGES_MAX_ROWS + 1));
+          const grouped = groupUsages(chosen.iri, rows.slice(0, USAGES_MAX_ROWS), {
+            includeTests: includeTests ?? true,
+            limit: cap,
+          });
+          if (rows.length <= USAGES_MAX_ROWS) {
+            return { declaration: chosen.iri, resolvedBy: chosen.matchedBy, candidates: [], ...grouped };
+          }
+          // Too many rows to group: the symbol and file totals are counted, and the rest describe the rows read.
+          const [counted] = yield* store.select(usageCountQuery(chosen.iri, predicates));
+          return {
+            declaration: chosen.iri,
+            resolvedBy: chosen.matchedBy,
+            candidates: [],
+            ...grouped,
+            total: {
+              ...grouped.total,
+              symbols: Number(counted?.symbols ?? grouped.total.symbols),
+              files: Number(counted?.files ?? grouped.total.files),
+            },
+            truncated: true,
+            hint: `Over ${USAGES_MAX_ROWS} references: roles and packages cover the first ${USAGES_MAX_ROWS}, and the symbol and file totals include re-exports and tests.`,
+          };
+        }).pipe(Effect.mapError(toFailure)),
+
       files: ({ prefix, language, limit }) =>
         Effect.gen(function* () {
           const cap = clamp(limit, FILES_DEFAULT_LIMIT, FILES_MAX_LIMIT);
@@ -789,9 +1058,11 @@ const PREFIXES_NOTE =
 export const INSTRUCTIONS =
   'Read-only access to a code index: the files, packages, symbols and relations of one repository as an RDF ' +
   'graph (the DEUS ontology, design/ONTOLOGY.md). Start with `vocabulary` to learn the classes and predicates, ' +
-  '`describe` to explore a file, package, symbol, operation key, ECHO typename or plugin id by name, and ' +
+  '`describe` to explore a file, package, symbol, operation key, ECHO typename or plugin id by name, ' +
+  '`usages` for who uses a declaration (through barrels, re-exports and namespaces, grouped by package), and ' +
   '`query`/`ask` for SPARQL (cancelled after 30 s by default; prefer bound subjects and LIMITs over unbounded ' +
-  'property paths). ' +
+  'property paths). A dependency edge names a declaration as its file imported it; `deus:resolvesTo` gives the ' +
+  'declaration, so the users of D are ?user deus:implDependsOn|deus:apiDependsOn ?r . ?r deus:resolvesTo? D. ' +
   PREFIXES_NOTE;
 
 export type RunOptions = {

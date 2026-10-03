@@ -15,6 +15,7 @@ import { EffectEx } from '@dxos/effect';
 
 import * as Ontology from './Ontology.ts';
 import * as Reasoner from './Reasoner.ts';
+import * as ReferenceResolution from './ReferenceResolution.ts';
 import * as Store from './Store.ts';
 import * as TypeBinding from './TypeBinding.ts';
 import { analyze } from './worker/analyze.ts';
@@ -959,6 +960,112 @@ describe('cross-file type binding', () => {
     expect(texts.get('widenedRemote')).toBe('number');
     expect(texts.get('fromRemote')).toBe('1');
     expect(texts.get('boxedRemote')).toBe('{ value: string }');
+  });
+});
+
+describe('reference resolution pass', () => {
+  let root: string;
+
+  beforeAll(async () => {
+    root = await mkdtemp(join(tmpdir(), 'code-index-refs-'));
+  });
+
+  afterAll(async () => {
+    await rm(root, { recursive: true, force: true });
+  });
+
+  // `@test/lib` is a path alias, so its imports are members of a bare specifier that resolves in the root.
+  const sources: Record<string, string> = {
+    'tsconfig.json': JSON.stringify({ compilerOptions: { baseUrl: '.', paths: { '@test/lib': ['./lib/index.ts'] } } }),
+    'lib/impl.ts': ['/** @deprecated Use fresh. */', 'export const legacy = () => 1;', 'export const fresh = 2;'].join(
+      '\n',
+    ),
+    'lib/order.ts': 'export const natural = 1;',
+    'lib/services/source.ts': 'export const sourceLayer = 3;',
+    'lib/services/index.ts': "export { sourceLayer } from './source';",
+    'lib/index.ts': [
+      "export * from './impl';",
+      "export * as Order from './order';",
+      "export { sourceLayer as layer } from './services';",
+    ].join('\n'),
+    'app/use.ts': [
+      "import { layer, legacy, Order } from '@test/lib';",
+      'export const usesLegacy = legacy();',
+      'export const usesOrder = Order.natural;',
+      'export const usesLayer = layer;',
+    ].join('\n'),
+    'app/direct.ts': ["import { legacy } from '../lib/impl';", 'export const direct = legacy();'].join('\n'),
+    'app/barrel.ts': ["import { fresh } from '../lib/index';", 'export const viaBarrel = fresh;'].join('\n'),
+  };
+
+  const local = (iri: string) =>
+    decodeURIComponent(iri.replace(/^https:\/\/dxos\.org\/(deus\/file\/|deus\/module\/|vocab\/deus#)/, ''));
+
+  const run = (names: readonly string[]) =>
+    Effect.gen(function* () {
+      for (const [path, source] of Object.entries(sources)) {
+        yield* Effect.promise(async () => {
+          await mkdir(dirname(join(root, path)), { recursive: true });
+          await writeFile(join(root, path), source);
+        });
+      }
+      const resolve = createResolver(root);
+      const store = yield* Store.Store;
+      for (const path of Object.keys(sources).filter((path) => path.endsWith('.ts'))) {
+        yield* store.putDocument(
+          analyzeTypeScript({ root, path, source: sources[path], mtime: 1, resolve, packageOf: () => '@test/lib' }),
+        );
+      }
+      const reasoners = (yield* Reasoner.load(Reasoner.BUNDLED_DIR)).filter((reasoner) =>
+        names.includes(reasoner.name),
+      );
+      yield* Reasoner.run(reasoners);
+      return store;
+    });
+
+  test('every reference through barrels, aliases, namespaces and bare specifiers resolves', async () => {
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* run([ReferenceResolution.NAME]);
+        const quads = yield* store.match(
+          undefined,
+          undefined,
+          undefined,
+          Ontology.passGraphIri(ReferenceResolution.NAME),
+        );
+        return quads
+          .map((quad) => `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`)
+          .sort();
+      }).pipe(Effect.provide(Store.layer(join(root, '.store-pass'))), Effect.scoped),
+    );
+    expect(facts).toEqual([
+      // A namespace member under a bare specifier.
+      '@test/lib#Order.natural resolvesTo lib/order.ts#natural',
+      // An alias of an alias.
+      '@test/lib#layer resolvesTo lib/services/source.ts#sourceLayer',
+      '@test/lib#legacy resolvesTo lib/impl.ts#legacy',
+      // Through the `export *` barrel, and each alias whether or not anything references it.
+      'lib/index.ts#fresh resolvesTo lib/impl.ts#fresh',
+      'lib/index.ts#layer resolvesTo lib/services/source.ts#sourceLayer',
+      'lib/index.ts#legacy resolvesTo lib/impl.ts#legacy',
+      'lib/services/index.ts#sourceLayer resolvesTo lib/services/source.ts#sourceLayer',
+    ]);
+  });
+
+  test('a deprecated declaration used through a barrel is a use of the declaration', async () => {
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* run([ReferenceResolution.NAME, '67-usage']);
+        const quads = yield* store.derived('67-usage');
+        return quads
+          .map((quad) => `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`)
+          .sort();
+      }).pipe(Effect.provide(Store.layer(join(root, '.store-usage'))), Effect.scoped),
+    );
+    expect(facts).toEqual([
+      'app/direct.ts#direct usesDeprecated lib/impl.ts#legacy',
+      'app/use.ts#usesLegacy usesDeprecated lib/impl.ts#legacy',
+    ]);
   });
 });
 
