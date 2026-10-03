@@ -569,7 +569,12 @@ jobs:
           echo "$IOS_CERTIFICATE" | base64 --decode > "$work/certificate.p12"
           security import "$work/certificate.p12" -k "$keychain" -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" > /dev/null
-          identity="$(security find-identity -v -p codesigning "$keychain" | awk -F'"' '/Apple Distribution/ { print $2; exit }')"
+          # codesign only finds identities in keychains on the search list, `--keychain` notwithstanding.
+          searched="$(security list-keychains -d user | tr -d '"')"
+          security list-keychains -d user -s "$keychain" $searched
+          trap 'security list-keychains -d user -s $searched; security delete-keychain "$keychain"' EXIT
+          identity="$(security find-identity -v -p codesigning "$keychain" | awk '/Apple Distribution/ { print $2; exit }')"
+          test -n "$identity" || { echo "::error::No Apple Distribution identity in IOS_CERTIFICATE"; exit 1; }
 
           codesign -d --entitlements - --xml "$app" > "$work/entitlements.plist"
           python3 - "$work/entitlements.plist" app_iOS/app_iOS.entitlements <<'EOF'
@@ -583,7 +588,6 @@ jobs:
 
           codesign --force --sign "$identity" --keychain "$keychain" --generate-entitlement-der \
             --entitlements "$work/entitlements.plist" "$app"
-          security delete-keychain "$keychain"
           codesign -d --entitlements - --xml "$app" | plutil -p - > "$work/signed.txt"
           cat "$work/signed.txt"
           grep -q 'webcredentials:composer.space' "$work/signed.txt"
