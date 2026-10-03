@@ -1,0 +1,38 @@
+# Rules run over the WHOLE graph at the end of every indexing pass that changed something, and
+# their conclusions replace `graph:derived` wholesale. Two consequences worth internalizing before
+# adding a rule here:
+#
+#   1. DO NOT write transitive-closure rules for a relation a query can already walk. SPARQL 1.1
+#      property paths do reachability natively and lazily: `deus:imports+` answers "everything this
+#      file transitively imports" in ~0.2s over this repo, materializing nothing. The equivalent
+#      closure rule
+#
+#          { ?a deus:dependsOn ?b. ?b deus:dependsOn ?c } => { ?a deus:dependsOn ?c }.
+#
+#      cost 147s per pass and 123,692 stored quads for the same answers. It was removed for exactly
+#      that reason. Inverse (`^deus:imports`), alternative (`deus:imports|deus:importsModule`) and
+#      bounded-length paths are all queries too.
+#
+#   1a. The reasoner is fed only the facts whose predicate a rule actually names (that narrowing is
+#      dropped if any rule leaves a predicate unbound, `{ ?s ?p ?o }`). Naming your predicates keeps
+#      the phase cheap: over this repo it is the difference between 30s and 4s per pass.
+#
+#   2. Rules earn their place where a query cannot go: recursion over a *pattern* rather than a
+#      single predicate, joins that introduce new vocabulary, and conclusions other rules build on.
+#      Keep the output small — it is recomputed from scratch every pass.
+#
+# The rule below is a linear scan with a handful of conclusions: which non-test files pull in a
+# test file, which is a lint the import graph cannot express as a path.
+
+@prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix string: <http://www.w3.org/2000/10/swap/string#>.
+
+{
+  ?importer deus:imports ?imported .
+  ?imported deus:path ?path .
+  ?path string:matches "^.*\\.(test|spec)\\.[tj]sx?$" .
+  ?importer deus:path ?importerPath .
+  ?importerPath string:notMatches "^.*\\.(test|spec)\\.[tj]sx?$" .
+} => {
+  ?importer deus:importsTestFile ?imported .
+}.

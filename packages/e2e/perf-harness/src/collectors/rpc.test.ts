@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { type RpcReading, diffRpc } from './rpc.ts';
+import { type RpcReading, diffRpc, diffRpcByMethod } from './rpc.ts';
 
 const reading = (overrides: Partial<RpcReading> = {}): RpcReading => ({
   name: 'worker:dedicated.js',
@@ -12,6 +12,7 @@ const reading = (overrides: Partial<RpcReading> = {}): RpcReading => ({
   readAt: 1_000,
   calls: 0,
   clientCalls: 0,
+  callsByMethod: {},
   samples: [],
   clientSamples: [],
   ...overrides,
@@ -75,5 +76,20 @@ describe('diffRpc', () => {
     expect(realm.queueWaitMaxMs).toBe(0);
     expect(realm.serviceMaxMs).toBe(50);
     expect(realm.samples).toBe(1);
+  });
+});
+
+describe('diffRpcByMethod', () => {
+  test('counts the calls each method served during the stage, across realms', ({ expect }) => {
+    const before = [reading({ callsByMethod: { 'QueryService.execQuery': 3 } })];
+    const after = [
+      reading({ callsByMethod: { 'QueryService.execQuery': 5, 'DataService.update': 2 } }),
+      reading({
+        name: 'shared_worker:coordinator.js',
+        kind: 'shared_worker',
+        callsByMethod: { 'DataService.update': 1 },
+      }),
+    ];
+    expect(diffRpcByMethod(before, after)).toEqual({ 'QueryService.execQuery': 2, 'DataService.update': 3 });
   });
 });
