@@ -1,0 +1,39 @@
+{
+  "name": "@dxos/permission",
+  "version": "0.11.1",
+  "private": true,
+  "description": "Permission DSL: subjects, commands, policies, grants, requirements, and the pure check evaluator.",
+  "homepage": "https://dxos.org",
+  "bugs": "https://github.com/dxos/dxos/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dxos/dxos"
+  },
+  "license": "FSL-1.1-Apache-2.0",
+  "author": "DXOS.org",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "source": "./src/index.ts",
+      "types": "./dist/types/src/index.d.ts",
+      "default": "./dist/lib/index.mjs"
+    }
+  },
+  "types": "dist/types/src/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "dependencies": {
+    "@dxos/errors": "workspace:*",
+    "@dxos/keys": "workspace:*"
+  },
+  "devDependencies": {
+    "@dxos/effect": "workspace:*",
+    "effect": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "catalog:"
+  }
+}

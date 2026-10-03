@@ -121,6 +121,7 @@
       "@dxos/observability",
       "@dxos/operation",
       "@dxos/perf-harness",
+      "@dxos/permission",
       "@dxos/phoenix",
       "@dxos/pipeline",
       "@dxos/pipeline-discord",
