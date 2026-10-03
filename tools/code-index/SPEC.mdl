@@ -40,7 +40,7 @@ The following extension dialects are used in this document.
 | Reasoning          | `eyereasoner` (EYE, N3)                 | Forward-chaining rules over an N3 serialization of the asserted facts; conclusions land in one replaceable graph. Reachability is left to SPARQL property paths. |
 | Parsing            | `oxc-parser`, `oxc-resolver`            | Real module records and real resolution, not regex. |
 | Manifests          | `yaml`, `JSON.parse`                    | `moon.yml` layers and `package.json` identity, entries and workspace deps. |
-| Concurrency        | `effect/rpc` over worker threads | Batches of paths in, JSON-LD documents out. |
+| Concurrency        | `effect/rpc` over worker threads | Batches of paths in, N-Triples documents out. |
 | CLI                | `effect/cli`, `@effect/platform-bun` | Subcommands, flags and help from the same Effect runtime as the library. |
 
 ## Layout
@@ -62,11 +62,12 @@ containing the working directory, so any command run anywhere inside the repo fi
 2. **Diff** — compare against `files.mtime` in the ledger. Unchanged files are skipped entirely;
    files gone from the working tree have their graph and row removed.
 3. **Dispatch** — changed paths are batched (64 by default) and sent to the worker pool.
-4. **Analyze** (worker) — an analyzer chosen by filename reads the file and returns its JSON-LD
-   document plus the mtime actually read: TypeScript (declarations, references, snippets),
+4. **Analyze** (worker) — an analyzer chosen by filename reads the file, builds its JSON-LD
+   document and returns it encoded as N-Triples, plus the mtime actually read: TypeScript (declarations, references, snippets),
    `package.json` (the `Package` node), `moon.yml` (its layer), `.mdl` (spec blocks).
-5. **Upsert** (main thread) — one commit per worker batch: announce every file's new graph, swap
-   each file's named graph, then advance every ledger row (see the commit protocol below).
+5. **Upsert** (main thread) — one commit per 512 files, gathered from several worker batches:
+   announce every file's new graph, swap the files' named graphs in one backend write, then advance
+   every ledger row (see the commit protocol below).
 6. **Reason** — the N3 rules run over the asserted facts and each reasoner's graph is replaced with
    the result. The phase is skipped only when the ledger records that this exact set of reasoners
    (a signature over their names and rules) already ran over the store's current write generation:
@@ -199,7 +200,7 @@ module worker/Protocol
   desc: The RPC contract between the main thread and the parsing workers.
   api:
     FileRef: { path, mtime }
-    AnalyzedFile: { path, mtime, document }   # document is JSON-LD text on the wire.
+    AnalyzedFile: { path, mtime, language, size, hash, triples }   # the document as N-Triples.
     SkippedFile: { path, reason }
     Rpcs: RpcGroup                            # AnalyzeBatch(root, files) -> { analyzed, skipped }.
 ```
@@ -359,7 +360,7 @@ feat F-3: Incremental by mtime
 ```mdl
 feat F-4: Off-thread parsing
   desc: |
-    Workers receive batches of paths and return JSON-LD documents; they never open a database. The
+    Workers receive batches of paths and return N-Triples documents; they never open a database. The
     mtime returned is the one actually read, so a file written mid-crawl is reindexed next pass
     rather than recorded as current.
   req F-4.1: A file that cannot be read is reported as skipped, not as a failure of the pass.

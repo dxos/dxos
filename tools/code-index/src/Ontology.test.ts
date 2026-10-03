@@ -19,6 +19,7 @@ describe('IRI escaping', () => {
 
   test('reserved characters are percent-encoded', () => {
     expect(escapePath('a%b#c?d e<f>g"h{i}j|k^l`m')).toEqual('a%25b%23c%3Fd%20e%3Cf%3Eg%22h%7Bi%7Dj%7Ck%5El%60m');
+    expect(escapePath('docs/blog/[...slug].astro')).toEqual('docs/blog/%5B...slug%5D.astro');
     expect(escapeFragment('tab\tnew\nline\u0000nul\u007fdel')).toEqual('tab%09new%0Aline%00nul%7Fdel');
   });
 

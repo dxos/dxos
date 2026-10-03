@@ -12,6 +12,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
 
+import { encodeDocument } from './internal/ntriples.ts';
 import * as Ontology from './Ontology.ts';
 import * as Store from './Store.ts';
 
@@ -217,6 +218,14 @@ describe('Store', () => {
     expect(derived[0].subject.value).toEqual(Ontology.fileIri('src/a.ts').value);
   });
 
+  test('a path with brackets is stored as written', async () => {
+    // Route segments such as `[id]` are legal in an IRI the index mints but not in strict N-Triples.
+    await withStore((store) => store.putDocument(document('src/[id]/page.ts', 1)));
+    const graph = Ontology.graphIri('src/[id]/page.ts', 1);
+    expect((await withStore((store) => store.match(undefined, undefined, undefined, graph))).length).toBeGreaterThan(0);
+    await withStore((store) => store.removeFile('src/[id]/page.ts'));
+  });
+
   test('a dotfile path survives serialization', async () => {
     // `.agents/x.ts` under a `file:` prefix would serialize as an illegal prefixed name; both the
     // dump and the reasoner's input have to stay parseable.
@@ -314,7 +323,9 @@ describe('Store', () => {
 
   test('a batch commits every document in it', async () => {
     await withStore((store) =>
-      store.putDocuments([document('src/one.ts', 1), document('src/two.ts', 1), document('src/one.ts', 2)]),
+      store.putDocuments(
+        [document('src/one.ts', 1), document('src/two.ts', 1), document('src/one.ts', 2)].map(encodeDocument),
+      ),
     );
     const states = await withStore((store) => store.fileStates());
     // The later revision of a path in the same batch wins, and no graph is left pending.
