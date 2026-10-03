@@ -34,23 +34,19 @@ const SizeContext = createContext<Size>('md');
 type SectionProps = PropsWithChildren<{
   id: string;
   title: string;
-  /** Caps the section at a form's width, where full-width fields would read poorly. */
-  narrow?: boolean;
 }>;
 
 /** One component family: a heading over a rail-gutter Container at the frame's size. */
-const Section = ({ id, title, narrow, children }: SectionProps) => {
+const Section = ({ id, title, children }: SectionProps) => {
   const size = useContext(SizeContext);
   return (
     <section id={id} data-section={id} className='flex flex-col gap-2 m-4 py-4 border border-separator rounded-md'>
       <Next.Typography asChild tone='description' classNames='px-4 font-medium'>
         <h2>{title}</h2>
       </Next.Typography>
-      <div className={narrow ? 'max-w-[32rem]' : undefined}>
-        <Next.Container size={size} gutter='rail' gap='md' level='base'>
-          {children}
-        </Next.Container>
-      </div>
+      <Next.Container size={size} gutter='rail' gap='md' level='base'>
+        {children}
+      </Next.Container>
     </section>
   );
 };
@@ -281,7 +277,7 @@ const MenuButtonDemo = () => {
 };
 
 const InputSection = () => (
-  <Section id='input' title='Input' narrow>
+  <Section id='input' title='Input'>
     <Next.Field.Root>
       <Next.Field.Label>Name</Next.Field.Label>
       <Next.Input placeholder='Ada Lovelace' />
@@ -390,7 +386,7 @@ const PEOPLE: Next.ComboboxOption[] = [
 ];
 
 const SelectSection = () => (
-  <Section id='select' title='Select, combobox' narrow>
+  <Section id='select' title='Select, combobox'>
     <Next.Field.Root>
       <Next.Select.Root items={COLORS}>
         <Next.Select.Label>Color</Next.Select.Label>
@@ -448,7 +444,7 @@ const SelectSection = () => (
 const SliderSection = () => {
   const [value, setValue] = useState([40]);
   return (
-    <Section id='slider' title='Slider' narrow>
+    <Section id='slider' title='Slider'>
       <Next.Slider value={value} onValueChange={setValue} max={100} label='Volume' />
       <Next.Slider defaultValue={[25, 75]} max={100} thumbLabels={['Minimum', 'Maximum']} label='Price' />
       <Next.Slider defaultValue={[50]} max={100} disabled aria-label='Disabled value' />
@@ -459,7 +455,7 @@ const SliderSection = () => {
 const STEPS = ['Plan', 'Build', 'Verify', 'Ship'].map((label) => ({ id: label, label }));
 
 const ProgressSection = () => (
-  <Section id='progress' title='Progress, steps' narrow>
+  <Section id='progress' title='Progress, steps'>
     <Next.Progress value={0.35} label='Upload' />
     <Next.Progress indeterminate label='Indexing' />
     <Next.Progress indeterminate error label='Failed' />
@@ -492,7 +488,7 @@ const AvatarSection = () => (
 );
 
 const SkeletonSection = () => (
-  <Section id='skeleton' title='Skeleton' narrow>
+  <Section id='skeleton' title='Skeleton'>
     <div className='flex gap-2'>
       <Next.Skeleton variant='circle' />
       <div className='flex flex-col grow'>
@@ -542,7 +538,7 @@ const NavigationSection = () => (
 );
 
 const TabsSection = () => (
-  <Section id='tabs' title='Tabs' narrow>
+  <Section id='tabs' title='Tabs'>
     <Next.Tabs.Root defaultValue='overview' classNames='h-40'>
       <Next.Tabs.List aria-label='Project'>
         <Next.Tabs.Trigger value='overview' label='Overview' />
@@ -590,7 +586,7 @@ const ToolbarSection = () => (
 const EditableSection = () => {
   const [value, setValue] = useState('Ship the spring release');
   return (
-    <Section id='editable' title='Editable' narrow>
+    <Section id='editable' title='Editable'>
       <Next.Editable.Root value={value} onValueChange={setValue} placeholder='Untitled'>
         <Next.Editable.Preview aria-label='Title' />
         <Next.Editable.Input />
@@ -605,7 +601,7 @@ const ACCORDION_ITEMS = [
 ];
 
 const CollapsibleSection = () => (
-  <Section id='collapsible' title='Collapsible, accordion' narrow>
+  <Section id='collapsible' title='Collapsible, accordion'>
     <Next.Collapsible.Root>
       <Next.Collapsible.Trigger>Advanced settings</Next.Collapsible.Trigger>
       <Next.Collapsible.Content>
@@ -665,7 +661,7 @@ const CardSection = () => (
 );
 
 const BannerSection = () => (
-  <Section id='banner' title='Banner' narrow>
+  <Section id='banner' title='Banner'>
     <Next.Container gap='md'>
       {VALENCES.map((valence) => (
         <Next.Banner.Root key={valence} valence={valence}>
@@ -686,7 +682,7 @@ const SLIDES = SLIDE_COLORS.map(
 );
 
 const CarouselSection = () => (
-  <Section id='carousel' title='Carousel' narrow>
+  <Section id='carousel' title='Carousel'>
     <Next.Carousel.Root count={SLIDES.length} continuous>
       <Next.Carousel.PrevTrigger />
       <Next.Carousel.ItemGroup>
@@ -921,7 +917,7 @@ const DialogsSection = () => {
 };
 
 const EmptySection = () => (
-  <Section id='empty' title='Empty' narrow>
+  <Section id='empty' title='Empty'>
     <Next.Empty />
     <Next.Empty icon='ph--tray--regular'>No documents yet</Next.Empty>
   </Section>
