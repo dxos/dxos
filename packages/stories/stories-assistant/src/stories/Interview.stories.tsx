@@ -14,8 +14,7 @@ import * as Goal from '@dxos/plugin-agent/Goal';
 import * as Memory from '@dxos/plugin-agent/Memory';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
-import { HasSubject, Organization, Person } from '@dxos/types';
+import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import { ModuleContainer, createDecorators, storyParameters, submitPrompt } from '../testing/index.ts';

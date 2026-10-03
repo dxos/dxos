@@ -253,7 +253,6 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/pipeline-rdf": "workspace:*",
-    "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
     "@dxos/protocols": "workspace:*",

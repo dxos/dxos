@@ -15,8 +15,7 @@ import * as Memory from '@dxos/plugin-agent/Memory';
 import * as Mode from '@dxos/plugin-agent/Mode';
 import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
-import { HasSubject, Message, Organization, Person } from '@dxos/types';
+import { HasSubject, Message, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import {

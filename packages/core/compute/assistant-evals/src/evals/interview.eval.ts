@@ -17,10 +17,9 @@ import * as Goal from '@dxos/plugin-agent/Goal';
 import * as InterviewSkill from '@dxos/plugin-agent/InterviewSkill';
 import * as Memory from '@dxos/plugin-agent/Memory';
 import * as Profile from '@dxos/plugin-agent/Profile';
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as MarkdownPlugin from '@dxos/plugin-markdown/MarkdownPlugin';
-import { HasSubject, Organization, Person } from '@dxos/types';
+import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 import { trim } from '@dxos/util';
 
 import { createEvalRunner } from '../runner.ts';

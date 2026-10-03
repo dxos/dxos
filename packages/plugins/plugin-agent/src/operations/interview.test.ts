@@ -16,10 +16,9 @@ import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Query, Relation } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId } from '@dxos/keys';
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
-import { HasSubject, Organization, Person } from '@dxos/types';
+import { HasSubject, Organization, Person, ProfileOf } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
 import { Goal, Memory, MemoryOperation } from '#types';

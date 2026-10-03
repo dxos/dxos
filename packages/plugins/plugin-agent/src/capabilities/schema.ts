@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
+import { ProfileOf } from '@dxos/types';
 
 import { DiscordBinding, FactEntry, Goal, Memory, Mode, Relay } from '#types';
 

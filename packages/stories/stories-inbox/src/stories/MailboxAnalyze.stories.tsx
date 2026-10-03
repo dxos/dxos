@@ -31,7 +31,6 @@ import * as ConnectorPlugin from '@dxos/plugin-connector/ConnectorPlugin';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import * as CrmOperation from '@dxos/plugin-crm/CrmOperation';
 import * as CrmPlugin from '@dxos/plugin-crm/CrmPlugin';
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import * as ExtractedFrom from '@dxos/plugin-inbox/ExtractedFrom';
 import * as InboxOperation from '@dxos/plugin-inbox/InboxOperation';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -63,7 +62,7 @@ import {
   createStoryDecorators,
 } from '@dxos/storybook-testing';
 import { ModuleRole, moduleSurfaces } from '@dxos/storybook-testing/modules';
-import { Message, Organization, Person, Task } from '@dxos/types';
+import { Message, Organization, Person, ProfileOf, Task } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import {

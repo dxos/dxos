@@ -6,10 +6,9 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query, Ref, Relation } from '@dxos/echo';
-import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
-import { HasSubject } from '@dxos/types';
+import { HasSubject, ProfileOf } from '@dxos/types';
 
 import { Goal, Memory, MemoryOperation, Profile } from '#types';
 

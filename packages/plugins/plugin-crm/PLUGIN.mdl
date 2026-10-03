@@ -107,7 +107,7 @@ skill CrmSkill
     - plugin-crm/process-mailbox
     - plugin-crm/research-person
     - plugin-crm/research-organization
-    - plugin-crm/ProfileOf (schema registration)
+    - @dxos/types ProfileOf (schema registration)
     - tools from registered ResearchSource contracts (v1: none)
   instructions: >
     Authored inline in `src/skills/crm/skill.ts`, deliberately thin: entity
