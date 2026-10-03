@@ -274,8 +274,10 @@ export const TaskSetArticle = ({
     </TaskFilter>
   );
 
+  // Grows to fill a host that gives it height (the panel body, a section in a full-height tab), so the editor below it
+  // sits at the bottom; in a host sized to its content it stays as tall as its rows.
   const viewport = (
-    <TaskList.Viewport>
+    <TaskList.Viewport classNames='dx-grow'>
       <TaskList.Content />
     </TaskList.Viewport>
   );

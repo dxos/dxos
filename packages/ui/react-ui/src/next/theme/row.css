@@ -13,9 +13,10 @@
   .dx-row[data-selectable] {
     cursor: pointer;
   }
+  /* A row is a large target, so it takes the subtle region hover rather than a control's. */
   .dx-row[data-selectable]:hover,
   .dx-row[data-highlighted] {
-    background: var(--color-hover-surface);
+    background: var(--color-hover-surface-subtle);
   }
   /* `data-selected` too: a tree branch's `aria-selected` lands on its `display: contents` wrapper, not the row. */
   .dx-row:is([aria-selected='true'], [data-selected]) {

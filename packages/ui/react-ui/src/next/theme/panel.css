@@ -4,6 +4,11 @@
  */
 
 @layer dx-components {
+  /* A pane hosted by a popup (a form in a popover) is part of the popup's surface, not a base-level plank inside it. */
+  .dx-popup .dx-panel[data-surface='base'] {
+    --surface-bg: var(--dx-surface-popup);
+  }
+
   /* Header and footer rows size to their content, so a missing or empty one takes no space. */
   .dx-panel {
     display: grid;

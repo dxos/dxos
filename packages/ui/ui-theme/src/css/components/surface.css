@@ -162,14 +162,17 @@
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
     );
     --color-hover-surface-subtle: oklch(
-      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.025) c h
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.04) c h
     );
     --color-current-surface: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.06) c h
     );
     --color-current-surface-hover: oklch(
-      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.12) c h
+      from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
     );
+    /* Re-pointed here so selection follows this zone's current tint rather than the root's resolved value. */
+    --color-selected-surface: var(--color-current-surface);
+    --color-selected-surface-hover: var(--color-current-surface-hover);
     --color-placeholder: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-placeholder) * 0.3) c h
     );
