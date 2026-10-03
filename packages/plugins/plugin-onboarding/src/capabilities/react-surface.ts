@@ -10,7 +10,7 @@ import { Surface } from '@dxos/app-framework/ui';
 import { AppSurface } from '@dxos/app-toolkit/ui';
 import { ABOUT_DIALOG } from '@dxos/plugin-support';
 
-import { AboutDialog, AuthorizingDeviceDialog, NativeRedirectDialog } from '../components/index.ts';
+import { AboutDialog, AuthorizingDeviceDialog, NativeRedirectDialog, withGateContent } from '../components/index.ts';
 import { AUTHORIZING_DEVICE_DIALOG, NATIVE_REDIRECT_DIALOG, WELCOME_SCREEN } from '../constants.ts';
 import { WelcomeContainer } from '../containers/index.ts';
 
@@ -20,17 +20,17 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'welcome',
         filter: AppSurface.component(AppSurface.Dialog, WELCOME_SCREEN),
-        component: WelcomeContainer,
+        component: withGateContent(WelcomeContainer),
       }),
       Surface.create({
         id: 'authorizingDevice',
         filter: AppSurface.component(AppSurface.Dialog, AUTHORIZING_DEVICE_DIALOG),
-        component: AuthorizingDeviceDialog,
+        component: withGateContent(AuthorizingDeviceDialog),
       }),
       Surface.create({
         id: 'nativeRedirect',
         filter: AppSurface.component<{ onOpenHere: () => void }>(AppSurface.Dialog, NATIVE_REDIRECT_DIALOG),
-        component: NativeRedirectDialog,
+        component: withGateContent(NativeRedirectDialog),
         props: ({ data: { props } }) => ({ ...props }),
       }),
       Surface.create({

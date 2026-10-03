@@ -4,4 +4,5 @@
 
 export * from './AboutDialog/index.ts';
 export * from './AuthorizingDeviceDialog/index.ts';
+export * from './GateContent/index.ts';
 export * from './NativeRedirectDialog/index.ts';

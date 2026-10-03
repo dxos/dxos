@@ -6,6 +6,7 @@ import { Dialog as DialogPrimitive, useDialogContext } from '@ark-ui/react/dialo
 import { Portal } from '@ark-ui/react/portal';
 import React, {
   type ComponentPropsWithoutRef,
+  type CSSProperties,
   type ReactNode,
   type RefObject,
   createContext,
@@ -16,7 +17,7 @@ import React, {
 } from 'react';
 
 import { mx } from '@dxos/ui-theme';
-import { type ThemedClassName } from '@dxos/ui-types';
+import { type ClassNameValue, type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
@@ -38,12 +39,17 @@ export const DIALOG_AUTOFOCUS_ATTRIBUTE = 'data-autofocus';
 
 type DialogPlacement = 'start' | 'center' | 'end';
 
+/** Styles the Content's scrim, e.g. a full-screen backdrop for a gate the app sits behind. */
+type DialogBackdrop = { classNames?: ClassNameValue; style?: CSSProperties };
+
 type DialogRootProps = DialogPrimitive.RootProps & {
   /**
    * Where the Content sits unless it says otherwise: a host that opens dialogs it does not render (a layout showing
    * a surface's Content) places them here.
    */
   placement?: DialogPlacement;
+  /** The scrim's styling, set by a host that opens dialogs it does not render, as with `placement`. */
+  backdrop?: DialogBackdrop;
 };
 
 /** Lets the Content keep the dialog open on an outside click, since a surface often renders the Content alone. */
@@ -51,25 +57,30 @@ const OutsideDismissContext = createContext<((dismissable: boolean) => void) | u
 
 const PlacementContext = createContext<DialogPlacement | undefined>(undefined);
 
+const BackdropContext = createContext<DialogBackdrop | undefined>(undefined);
+
 /** Ark dialog; content mounts on first open and unmounts on close unless the caller opts out. */
 const DialogRoot = ({
   lazyMount = true,
   unmountOnExit = true,
   closeOnInteractOutside = true,
   placement,
+  backdrop,
   ...props
 }: DialogRootProps) => {
   const [contentDismissable, setContentDismissable] = useState(true);
   return (
     <PlacementContext.Provider value={placement}>
-      <OutsideDismissContext.Provider value={setContentDismissable}>
-        <DialogPrimitive.Root
-          {...props}
-          closeOnInteractOutside={closeOnInteractOutside && contentDismissable}
-          lazyMount={lazyMount}
-          unmountOnExit={unmountOnExit}
-        />
-      </OutsideDismissContext.Provider>
+      <BackdropContext.Provider value={backdrop}>
+        <OutsideDismissContext.Provider value={setContentDismissable}>
+          <DialogPrimitive.Root
+            {...props}
+            closeOnInteractOutside={closeOnInteractOutside && contentDismissable}
+            lazyMount={lazyMount}
+            unmountOnExit={unmountOnExit}
+          />
+        </OutsideDismissContext.Provider>
+      </BackdropContext.Provider>
     </PlacementContext.Provider>
   );
 };
@@ -120,6 +131,7 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   ) => {
     const dialog = useDialogContext();
     const rootPlacement = useContext(PlacementContext);
+    const backdrop = useContext(BackdropContext);
     const placement = placementProp ?? rootPlacement ?? 'center';
     const setDismissable = useContext(OutsideDismissContext);
     useEffect(() => {
@@ -132,22 +144,30 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     const dialogSize = usePopupSize(size, dialog.open, [dialog.getTriggerProps().id], 'md');
     return (
       <Portal container={container}>
-        {scrim && <DialogPrimitive.Backdrop className={recipes.dialogBackdrop()} />}
-        <DialogPrimitive.Positioner
-          className={recipes.dialogPositioner()}
-          data-placement={placement}
-          data-scrim={scrim ? undefined : 'none'}
-        >
-          <DialogPrimitive.Content
-            {...props}
-            data-surface='raised'
-            data-size={dialogSize}
-            className={mx(recipes.dialogContent(), classNames)}
-            ref={forwardedRef}
+        {/* One portal keeps the backdrop below the positioner; Ark portals each child on its own. */}
+        <>
+          {scrim && (
+            <DialogPrimitive.Backdrop
+              className={mx(recipes.dialogBackdrop(), backdrop?.classNames)}
+              style={backdrop?.style}
+            />
+          )}
+          <DialogPrimitive.Positioner
+            className={recipes.dialogPositioner()}
+            data-placement={placement}
+            data-scrim={scrim ? undefined : 'none'}
           >
-            {children}
-          </DialogPrimitive.Content>
-        </DialogPrimitive.Positioner>
+            <DialogPrimitive.Content
+              {...props}
+              data-surface='raised'
+              data-size={dialogSize}
+              className={mx(recipes.dialogContent(), classNames)}
+              ref={forwardedRef}
+            >
+              {children}
+            </DialogPrimitive.Content>
+          </DialogPrimitive.Positioner>
+        </>
       </Portal>
     );
   },
@@ -304,6 +324,7 @@ export const Dialog = {
 };
 
 export type {
+  DialogBackdrop,
   DialogBodyProps,
   DialogCloseTriggerProps,
   DialogContentProps,
