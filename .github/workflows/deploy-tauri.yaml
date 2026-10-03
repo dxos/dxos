@@ -515,7 +515,9 @@ jobs:
       - name: Set environment variables from secrets and env files
         run: .github/workflows/scripts/populate-env.sh "$ENVIRONMENT" >> $GITHUB_ENV
         env:
-          ENVIRONMENT: ${{ inputs.environment }}
+          # TestFlight testers use production accounts, so the iOS app talks to production EDGE, hub and
+          # telemetry whichever environment shipped it; the CrabNebula channel still follows the deploy.
+          ENVIRONMENT: production
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
@@ -546,8 +548,9 @@ jobs:
           IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
           NODE_ENV: production
 
-      # With API-key credentials the Tauri CLI archives unsigned, and its export signs the app with the profile's
-      # entitlements only, dropping the app's own (tauri-apps/tauri#15663). Re-sign with both before uploading.
+      # With API-key credentials the Tauri CLI archives unsigned and carries entitlements into the export through
+      # app_iOS.entitlements, which is empty on the runner by then, so the IPA gets only the profile's
+      # (tauri-apps/tauri#15663). Re-sign with the profile's and the committed declaration before uploading.
       - name: Restore the app's entitlements in the IPA
         working-directory: ./packages/apps/composer-app/src-tauri/gen/apple
         env:
@@ -576,11 +579,6 @@ jobs:
           identity="$(security find-identity -v -p codesigning "$keychain" | awk '/Apple Distribution/ { print $2; exit }')"
           test -n "$identity" || { echo "::error::No Apple Distribution identity in IOS_CERTIFICATE"; exit 1; }
 
-          # The build leaves app_iOS.entitlements empty on this runner; sign with the committed declaration.
-          echo "::group::Entitlements on disk after the build"
-          cat app_iOS/app_iOS.entitlements
-          git status --short .
-          echo "::endgroup::"
           git show HEAD:./app_iOS/app_iOS.entitlements > "$work/declared.plist"
 
           codesign -d --entitlements - --xml "$app" > "$work/entitlements.plist"
