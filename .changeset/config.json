@@ -32,6 +32,7 @@
       "@dxos/client-e2e",
       "@dxos/client-protocol",
       "@dxos/client-services",
+      "@dxos/code-index",
       "@dxos/codemorph",
       "@dxos/composer-e2e",
       "@dxos/composer-forensics",
