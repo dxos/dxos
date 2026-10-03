@@ -4,10 +4,10 @@
 
 export * from './database.ts';
 export * from './errors.ts';
-export * from './local.ts';
+export { localDatabaseFactory, localSpaceId, makeLocalDatabaseFactory } from './local.ts';
 export * from './object-store.ts';
 export * from './query-result.ts';
 export * from './registry.ts';
-export * from './remote.ts';
+export { RemoteStoreDriver, type StorePort, serveStore } from './remote.ts';
 export * from './sql/compile.ts';
-export * from './store-driver.ts';
+export { type Run, type StoreDriver, makeLocalDriver, runWith } from './store-driver.ts';
