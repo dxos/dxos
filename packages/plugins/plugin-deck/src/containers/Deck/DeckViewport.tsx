@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import './deck.css';
+
 import React, {
   type CSSProperties,
   type MouseEvent,

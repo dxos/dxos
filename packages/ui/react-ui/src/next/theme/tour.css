@@ -74,4 +74,9 @@
   .nx-tour-control > .nx-group {
     padding-block: 0;
   }
+
+  /* A step's target shows the controls its row otherwise reveals only on hover. */
+  [data-tour-highlighted] {
+    --controls-opacity: 1;
+  }
 }

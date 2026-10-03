@@ -43,10 +43,8 @@
 @import './css/components/surface.css';
 @import './css/components/tag.css';
 @import './css/components/text.css';
-@import './css/components/tour.css';
 
 /* @layer dx-components (layout) */
-@import './css/layout/main.css';
 @import './css/layout/native.css';
 @import './css/layout/positioning.css';
 @import './css/layout/size.css';
@@ -56,7 +54,6 @@
 
 /* Third-party integrations */
 @import './css/integrations/codemirror.css';
-@import './css/integrations/tldraw.css';
 
 /**
  * With `source(none)` on the Tailwind import above, these are the *only*
