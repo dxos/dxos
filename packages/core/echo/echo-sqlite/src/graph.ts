@@ -3,7 +3,7 @@
 //
 
 import { type CleanupFn, Event } from '@dxos/async';
-import { Blob, type Database, type Entity, type Hypergraph, type Ref, Type } from '@dxos/echo';
+import { Blob, type Database, type Entity, Hypergraph, type Ref, Type } from '@dxos/echo';
 import { type RefResolverRequest, type RefSource, makeSettledRequest } from '@dxos/echo/internal';
 import { type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -131,6 +131,11 @@ export class SqliteHypergraph implements Hypergraph.Hypergraph {
 
   getDatabase(spaceId: SpaceId): Database.Database | undefined {
     return spaceId === this._db.spaceId ? this._db : undefined;
+  }
+
+  /** A standalone database is not connected to a host, so it has no local spaces. */
+  async localDatabase(name: string): Promise<Database.Database> {
+    throw new Hypergraph.LocalDatabaseNotAvailableError({ context: { name } });
   }
 
   registerBlobBackend(): CleanupFn {

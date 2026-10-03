@@ -97,7 +97,8 @@ export type EntityManagerProps = {
   queryService: QueryService.Client;
   runtime: EffectContext.Context<never>;
   spaceId: SpaceId;
-  spaceKey: PublicKey;
+  /** Absent for a local space, which has no key. */
+  spaceKey?: PublicKey;
   /** Device-local persistence for the current-branch selection (non-synced). In-memory if omitted. */
   branchStore?: BranchStore;
 
@@ -112,7 +113,7 @@ export type EntityManagerProps = {
  * object-core operations here.
  */
 export class EntityManager implements IDatabaseBinding {
-  private readonly _spaceKey: PublicKey;
+  private readonly _spaceKey: PublicKey | undefined;
   private readonly _spaceId: SpaceId;
   private readonly _hypergraph: HypergraphImpl;
   private _dataService: DataService.Client;
@@ -250,6 +251,7 @@ export class EntityManager implements IDatabaseBinding {
 
   /** @deprecated Use spaceId. */
   get spaceKey(): PublicKey {
+    invariant(this._spaceKey, 'A local space has no space key.');
     return this._spaceKey;
   }
 
@@ -1516,7 +1518,7 @@ export class EntityManager implements IDatabaseBinding {
     const doc = existingDocHandle.doc();
     invariant(doc);
     invariant(doc.version === SpaceDocVersion.CURRENT);
-    if (doc.access?.spaceId == null || doc.access?.spaceKey == null) {
+    if (doc.access?.spaceId == null || (this._spaceKey && doc.access?.spaceKey == null)) {
       this._initDocAccess(existingDocHandle);
     }
     this._spaceRootDocHandle = existingDocHandle;
@@ -1635,7 +1637,7 @@ export class EntityManager implements IDatabaseBinding {
     const spaceDocHandle = this._repoProxy.create<DatabaseDirectory>({
       version: SpaceDocVersion.CURRENT,
       // spaceKey is deprecated but still written so older clients can resolve the owning space.
-      access: { spaceId: this._spaceId, spaceKey: this._spaceKey.toHex() },
+      access: { spaceId: this._spaceId, ...(this._spaceKey && { spaceKey: this._spaceKey.toHex() }) },
     });
     const creationPromise = spaceDocHandle
       .whenReady()
@@ -1748,7 +1750,9 @@ export class EntityManager implements IDatabaseBinding {
       newDoc.access ??= {};
       newDoc.access.spaceId = this._spaceId;
       // spaceKey is deprecated but still written so older clients can resolve the owning space.
-      newDoc.access.spaceKey = this._spaceKey.toHex();
+      if (this._spaceKey) {
+        newDoc.access.spaceKey = this._spaceKey.toHex();
+      }
     });
   }
 

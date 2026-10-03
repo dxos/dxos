@@ -15,14 +15,14 @@ import isEqual from 'fast-deep-equal';
 
 import { type Context, Resource } from '@dxos/context';
 import { type Entity, Filter, Obj, Query, type Type } from '@dxos/echo';
-import { EchoHost, type QueryDebounceOptions, type QueryExecutorMode } from '@dxos/echo-host';
+import { EchoHost, type QueryDebounceOptions, type QueryExecutorMode, createLocalSpace } from '@dxos/echo-host';
 import { createIdFromSpaceKey } from '@dxos/echo-protocol';
 import { TestSchema } from '@dxos/echo/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 import { PublicKey } from '@dxos/keys';
 import { makeInProcessClient } from '@dxos/protocols';
-import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';
+import { DataService, FeedService, QueryService, SpacesService } from '@dxos/protocols/rpc';
 import { layerFile, layerMemory } from '@dxos/sql-sqlite/platform';
 import * as SqlExport from '@dxos/sql-sqlite/SqlExport';
 import { range } from '@dxos/util';
@@ -48,6 +48,22 @@ type PeerOptions = {
   /** Host live-query debounce; see {@link QueryDebounceOptions}. */
   queryDebounce?: Partial<QueryDebounceOptions>;
 };
+
+/** `SpacesService` as a test peer serves it: a peer has no identity or credentials, so only local spaces. */
+const LocalSpacesRpcs = SpacesService.Rpcs.omit(
+  'SpacesService.updateSpace',
+  'SpacesService.querySpaces',
+  'SpacesService.updateMemberRole',
+  'SpacesService.admitContact',
+  'SpacesService.joinBySpaceKey',
+  'SpacesService.postMessage',
+  'SpacesService.subscribeMessages',
+  'SpacesService.writeCredentials',
+  'SpacesService.queryCredentials',
+  'SpacesService.createEpoch',
+  'SpacesService.exportSpace',
+  'SpacesService.importSpace',
+);
 
 export class EchoTestBuilder extends Resource {
   private readonly _peers: EchoTestPeer[] = [];
@@ -199,14 +215,21 @@ export class EchoTestPeer extends Resource {
    */
   private async _connectServices(client: EchoClient): Promise<void> {
     invariant(this._serviceScope, 'Service scope not initialized');
-    const [dataService, queryService, feedService] = await EffectEx.runPromise(
+    const host = this._echoHost;
+    const [dataService, queryService, feedService, spacesService] = await EffectEx.runPromise(
       Effect.all([
-        makeInProcessClient(DataService.Rpcs, this._echoHost.dataService),
-        makeInProcessClient(QueryService.Rpcs, this._echoHost.queryService),
-        makeInProcessClient(FeedService.Rpcs, this._echoHost.feedService),
+        makeInProcessClient(DataService.Rpcs, host.dataService),
+        makeInProcessClient(QueryService.Rpcs, host.queryService),
+        makeInProcessClient(FeedService.Rpcs, host.feedService),
+        makeInProcessClient(LocalSpacesRpcs, {
+          'SpacesService.createSpace': (request: SpacesService.CreateSpaceRequest) =>
+            request.localName === undefined
+              ? Effect.die(new Error('Test peers create only local spaces.'))
+              : createLocalSpace(host, request.localName),
+        }),
       ]).pipe(Effect.provideService(Scope.Scope, this._serviceScope)),
     );
-    client.connectToService({ dataService, queryService, feedService });
+    client.connectToService({ dataService, queryService, feedService, spacesService });
   }
 
   protected override async _close(ctx: Context): Promise<void> {

@@ -1,0 +1,7 @@
+---
+'@dxos/echo': minor
+---
+
+`await Hypergraph.localDatabase(name)` opens a device-local database that never replicates; the same name reopens the same objects. It is a space hosted like any other, opened through `SpacesService.createSpace` with the new `localName` field, so it lives in the ECHO host's storage, is indexed by the host and is queried through `QueryService`. Its id is a local one — `SpaceId.local` makes one and `SpaceId.isLocal` recognises it (local ids start with `BLOCALDB`, and `SpaceId.random` never produces one) — and the host never announces, serves or syncs its documents, whatever a replicator's own share policy allows. It joins the graph: `graph.getDatabase` finds it, graph queries scan, filter, order and traverse across it and the spaces, and local objects may reference any space. Replicated objects may not reference local ones: writing such a ref or relation endpoint throws `Error.LocalReferenceError`, and one already in replicated data resolves to nothing and is not followed by queries. A local space has no space key, so `DatabaseImpl.spaceKey` throws for it. Implementers of `Hypergraph.Hypergraph` must add the method.
+
+Fixed along the way, for every space: a ref set before an object was added, pointing at an object in another database, was stored relative and so resolved in the wrong space; and a space-scoped query whose traversal ends in another space no longer fails with `Result spaceId mismatch`.

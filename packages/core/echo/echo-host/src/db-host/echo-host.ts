@@ -24,6 +24,7 @@ import {
   SpaceDocVersion,
   type SpaceRoot,
   createIdFromSpaceKey,
+  createLocalSpaceId,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
 import { EffectEx, RuntimeProvider } from '@dxos/effect';
@@ -183,6 +184,9 @@ export class EchoHost extends Resource {
 
   /** When the oldest unflushed write stops being allowed to wait for an idle moment. */
   #ftsFlushDeadline: number | undefined;
+
+  /** Opens in flight by name, so concurrent first opens share one directory instead of each creating one. */
+  readonly #localSpaceOpens = new Map<string, Promise<{ spaceId: SpaceId; root: DatabaseRoot }>>();
 
   /** Last known document set per space, to detect what left the directory. */
   private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
@@ -549,6 +553,38 @@ export class EchoHost extends Resource {
     await this._automergeHost.flush(ctx, { documentIds: [automergeRoot.documentId] });
 
     return await this.updateSpaceRoot(ctx, spaceId, automergeRoot.url);
+  }
+
+  /**
+   * Opens the device-local space named `name`, creating it on first use. A local space is a database
+   * directory like any other but has no space key, credentials or members, and its local id
+   * (`SpaceId.isLocal`) is what keeps every replicator from announcing or syncing its documents.
+   */
+  openLocalSpace(ctx: Context, name: string): Promise<{ spaceId: SpaceId; root: DatabaseRoot }> {
+    invariant(this._lifecycleState === LifecycleState.OPEN);
+    let open = this.#localSpaceOpens.get(name);
+    if (!open) {
+      open = this.#openLocalSpace(ctx, name).finally(() => this.#localSpaceOpens.delete(name));
+      this.#localSpaceOpens.set(name, open);
+    }
+    return open;
+  }
+
+  async #openLocalSpace(ctx: Context, name: string): Promise<{ spaceId: SpaceId; root: DatabaseRoot }> {
+    const spaceId = await createLocalSpaceId(name);
+    if (this._spaceStateManager.getSpaceRootDocumentId(spaceId)) {
+      return { spaceId, root: await this.#ensureSpaceRootLoaded(spaceId) };
+    }
+
+    // Released once the root is assigned: `updateSpaceRoot` takes the lease the space keeps.
+    using directory = await this._automergeHost.createDoc<DatabaseDirectory>({
+      version: SpaceDocVersion.CURRENT,
+      access: { spaceId },
+      objects: {},
+      links: {},
+    });
+    await this._automergeHost.flush(ctx, { documentIds: [directory.documentId] });
+    return { spaceId, root: await this.updateSpaceRoot(ctx, spaceId, directory.url) };
   }
 
   /**

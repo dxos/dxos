@@ -90,6 +90,18 @@ export interface Hypergraph extends Database.Queryable {
   getDatabase(spaceId: Key.SpaceId): Database.Database | undefined;
 
   /**
+   * The device-local database named `name`: a space hosted like any other, created on first use and
+   * reopened with its objects after, except that it never replicates. Its `spaceId` is a local id (see
+   * `SpaceId.isLocal`), {@link getDatabase} finds it, graph queries scan and traverse into and out of it,
+   * and its objects may reference any space. References from replicated data into it are refused:
+   * writing one throws `Error.LocalReferenceError`, and one already in replicated data resolves to
+   * nothing. Fails when the graph is not connected to a host that can open local spaces.
+   *
+   * @performance One host round trip on first use per name; later calls return the open database.
+   */
+  localDatabase(name: string): Promise<Database.Database>;
+
+  /**
    * Registers a pluggable blob storage backend under `name`, claiming its declared URI schemes.
    * Registering a scheme already claimed by another backend is an error.
    *
@@ -107,6 +119,12 @@ export interface Hypergraph extends Database.Queryable {
    */
   get defaultBlobStorage(): string;
 }
+
+/** The graph is not connected to a host that can open local spaces. */
+export class LocalDatabaseNotAvailableError extends BaseError.extend(
+  'LocalDatabaseNotAvailableError',
+  'Local databases are not available.',
+) {}
 
 /**
  * Effect service tag for Hypergraph dependency injection.

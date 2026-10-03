@@ -8,7 +8,7 @@ import * as EffectContext from 'effect/Context';
 import { type CleanupFn, Event, type ReadOnlyEvent, TimeoutError, asyncTimeout, yieldOrContinue } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { Entity, Feed, type Hypergraph, Obj, Query } from '@dxos/echo';
-import { type QueryAST } from '@dxos/echo-protocol';
+import { QueryAST } from '@dxos/echo-protocol';
 import { ATTR_TYPE, makeDecodedEntityLive } from '@dxos/echo/internal';
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId, SpaceId } from '@dxos/keys';
@@ -542,7 +542,8 @@ export class IndexQuerySource implements QuerySource {
 
   private _assertResultSpaces(query: QueryAST.Query, response: QueryService.QueryResponse): void {
     const targetSpaces = getTargetSpacesForQuery(query);
-    if (targetSpaces.length > 0) {
+    // A scope bounds where the query starts; a traversal may end in any space a reference names.
+    if (targetSpaces.length > 0 && !queryTraverses(query)) {
       invariant(
         response.results?.every((r) => targetSpaces.includes(SpaceId.make(r.spaceId))),
         'Result spaceId mismatch',
@@ -765,3 +766,20 @@ const _groupFromRemoteResult = (result: QueryService.QueryResult): SourceEntry['
         ...(result.aggregates !== undefined ? { aggregates: JSON.parse(result.aggregates) } : {}),
       }
     : undefined;
+
+const TRAVERSAL_NODES: ReadonlySet<QueryAST.Query['type']> = new Set([
+  'reference-traversal',
+  'incoming-references',
+  'relation',
+  'relation-traversal',
+  'hierarchy-traversal',
+]);
+
+/** Whether the query follows references, relations or the hierarchy out of its selection. */
+const queryTraverses = (query: QueryAST.Query): boolean => {
+  let traverses = false;
+  QueryAST.visit(query, (node) => {
+    traverses ||= TRAVERSAL_NODES.has(node.type);
+  });
+  return traverses;
+};

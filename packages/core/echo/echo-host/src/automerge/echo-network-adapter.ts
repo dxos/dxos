@@ -13,7 +13,7 @@ import {
 import { Event, Trigger, synchronized } from '@dxos/async';
 import { type Context, LifecycleState } from '@dxos/context';
 import { invariant } from '@dxos/invariant';
-import { type PublicKey, type SpaceId } from '@dxos/keys';
+import { type PublicKey, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { isNonNullable } from '@dxos/util';
 
@@ -32,6 +32,7 @@ import {
   isCollectionQueryMessage,
   isCollectionStateMessage,
 } from './network-protocol.ts';
+import { isLocalCollectionId } from './space-collection.ts';
 
 export interface NetworkDataMonitor {
   recordPeerConnected(peerId: string): void;
@@ -173,6 +174,13 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   async shouldAdvertise(peerId: PeerId, params: ShouldAdvertiseProps): Promise<boolean> {
+    // Checked ahead of the connection, whose own policy may be disabled (edge `disableSharePolicy`).
+    const spaceId = await this._params.getContainingSpaceIdForDocument(params.documentId);
+    if (spaceId !== null && SpaceId.isLocal(spaceId)) {
+      log.verbose('share policy probe: local space document', { peerId, documentId: params.documentId });
+      return false;
+    }
+
     const connection = this._connections.get(peerId);
     if (!connection) {
       // Denies every document for the peer, so a stale peerId reads as a share-policy refusal.
@@ -184,6 +192,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
   }
 
   shouldSyncCollection(peerId: PeerId, params: ShouldSyncCollectionProps): boolean {
+    if (isLocalCollectionId(params.collectionId)) {
+      return false;
+    }
     const connection = this._connections.get(peerId);
     if (!connection) {
       return false;
@@ -215,6 +226,9 @@ export class EchoNetworkAdapter extends NetworkAdapter {
 
   // TODO(dmaretskyi): Remove.
   getPeersInterestedInCollection(collectionId: string): PeerId[] {
+    if (isLocalCollectionId(collectionId)) {
+      return [];
+    }
     return Array.from(this._connections.values())
       .map((connection) => {
         return connection.connection.shouldSyncCollection({ collectionId })
