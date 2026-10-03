@@ -607,7 +607,7 @@ catalog:
   storybook: ^10.6.0
   storybook-solidjs-vite: ^10.7.1
   streamx: ^2.12.5
-  style-mod: ^4.1.0
+  style-mod: ^4.1.4
   tailwind-merge: ^3.5.0
   tailwind-scrollbar: ^4.0.0
   tailwind-variants: ^3.2.2
@@ -757,6 +757,7 @@ overrides:
   qs: '>=6.14.1'
   react: 'catalog:'
   react-dom: 'catalog:'
+  style-mod: 'catalog:'
   tar: '>=7.5.7'
   tar-fs: '>=3.1.1'
   undici: '>=7.18.2'

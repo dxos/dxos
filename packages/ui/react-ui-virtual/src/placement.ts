@@ -134,6 +134,15 @@ export class Placement {
     this.#reserve = reserve;
   }
 
+  get overscan(): number {
+    return this.#overscan;
+  }
+
+  /** Narrowed by the binding while a jump settles, so the rows the reader can see mount first. */
+  setOverscan(overscan: number): void {
+    this.#overscan = overscan;
+  }
+
   /**
    * The host's identity function, which is a closure over the host's own list.
    *
@@ -288,7 +297,7 @@ export class Placement {
       return { first: 0, last: -1, visible: { first: 0, last: -1 }, offset: 0, sizerExtent: 0 };
     }
 
-    const { first, last, visible } = this.#range();
+    const { first, last, visible } = this.range();
     const offset = this.positionOf(first);
     let windowExtent = 0;
     for (let row = first; row <= last; row++) {
@@ -344,7 +353,7 @@ export class Placement {
       return undefined;
     }
 
-    const { first, last } = this.#range();
+    const { first, last } = this.range();
     if (first === 0 && this.positionOf(0) !== 0) {
       return { edge: 'start', delta: this.positionOf(0) };
     }
@@ -363,8 +372,8 @@ export class Placement {
     return undefined;
   }
 
-  /** Visible rows, plus overscan, clamped to the model. */
-  #range(): { first: number; last: number; visible: { first: number; last: number } } {
+  /** Visible rows, plus overscan, clamped to the model — {@link layout} without the extents. */
+  range(): { first: number; last: number; visible: { first: number; last: number } } {
     let first = this.#anchor.index;
     // Walk out from the anchor rather than searching from zero: the anchor is the only position
     // known exactly, so it is the only sound place to start.
@@ -405,7 +414,7 @@ export class Placement {
       return;
     }
 
-    const { visible } = this.#range();
+    const { visible } = this.range();
     if (this.#anchor.index === visible.first) {
       return;
     }
