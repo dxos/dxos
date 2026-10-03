@@ -18,7 +18,7 @@ import { EntityId } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
+import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
 import { AgentOperation, Mode } from '#types';
 
 import { findBound, openBinder } from './agent-skills.ts';
@@ -34,6 +34,7 @@ const TestLayer = AssistantTestLayer({
     RelaySkill.make(),
     ModesSkill.make(),
     NoteTakerSkill.make(),
+    GoalsSkill.make(),
   ],
   disableLlmMemoization: true,
 });
@@ -122,6 +123,7 @@ describe('CustomizeSkill', () => {
         expect(instructions.skills.map((ref) => ref.uri)).toEqual([
           Skill.registryURI(ModesSkill.key),
           Skill.registryURI(RelaySkill.key),
+          Skill.registryURI(GoalsSkill.key),
         ]);
         expect(yield* Database.load(Ref.make(copy)).pipe(Effect.option)).toMatchObject({ _tag: 'None' });
       },

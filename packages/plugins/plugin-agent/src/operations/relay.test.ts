@@ -20,7 +20,7 @@ import { Text } from '@dxos/schema';
 import { Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, InterviewSkill, ModesSkill, RelaySkill } from '#skills';
+import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, RelaySkill } from '#skills';
 import {
   AgentOperation,
   ChatParticipant,
@@ -55,7 +55,7 @@ const TestLayer = AssistantTestLayer({
     Relay.Relay,
     Mode.Mode,
   ],
-  skills: [ConversationSkill.make(), InterviewSkill.make(), RelaySkill.make(), ModesSkill.make()],
+  skills: [ConversationSkill.make(), InterviewSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make()],
   disableLlmMemoization: true,
 });
 

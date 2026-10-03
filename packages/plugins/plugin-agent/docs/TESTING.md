@@ -43,6 +43,12 @@ direct pipeline-rdf extraction, no chat) into facts in the transcript's annotati
 panel counts them and the knowledge panel's Facts tab lists them. Try "tell Dima the fix landed", Dima's reply, "take notes", "interview me".
 Tagged `!test`.
 
+**Agent goals** (`stories-stories-assistant-agentplayground--goals`): the same panels without the
+transcript. As Rich, "let me know when Dima's indexer PR is up" — Kai records a goal Rich owns and a
+watch, both listed in the knowledge panel's Goals tab. As Dima, "still working on it" (nothing reaches
+Rich), then "the indexer PR is up" — the end-of-turn read records the fact, the watch fires, Rich is
+told and the goal is achieved. Tagged `!test`.
+
 ## 2. Tests and stories (CI)
 
 - **Operations** — deterministic, no model: `moon run plugin-agent:test`. `interview.test.ts` drives
@@ -59,6 +65,11 @@ Tagged `!test`.
   facts read (count, Dima's attributed directive, no extra conversation), a relay from Rich's panel
   into Dima's and back, and a switch to Note-taker that records a note. `modes.test.ts` covers modes,
   notes and participant chats; `read-source.test.ts` covers `readSource` and fact recall (scripted model).
+- **Scripted goals** — **AgentPlayground › GoalsScripted** (`stories-stories-assistant-agentplayground--goals-scripted`):
+  Rich's request registers a watch under a goal he owns (one watch listed); Dima's "still working on it"
+  is read into a negative fact that must not fire it; "the indexer PR is up" fires it — Rich's panel
+  shows the notification, the goal is achieved and the watch list is empty. `triggers.test.ts` covers
+  pattern matching, the registry and the same three turns through real agent processes (scripted model).
 - **Components** — `moon run plugin-agent:test-storybook` renders the `AgentActivity`, `ProfileGraph`
   and `DiscordBindingForm` stories.
 - **Freezing a regression** — when an eval or a live run finds a bug, record that conversation as a

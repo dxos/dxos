@@ -22,7 +22,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
+import { ConversationSkill, GoalsSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
 import { AgentOperation, ChatParticipant, Goal, Memory, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
@@ -58,6 +58,7 @@ const SKILLS = [
   RelaySkill.make(),
   ModesSkill.make(),
   NoteTakerSkill.make(),
+  GoalsSkill.make(),
 ];
 
 const TestLayer = AssistantTestLayer({

@@ -179,6 +179,7 @@ export const EnsureParticipantChat = Operation.make({
 /**
  * Reads a source — a markdown document, text, chat transcript or web page — and appends the RDF facts
  * it states to that source's annotation feed in the agent's space. A direct model call: no chat is created.
+ * A chat is read incrementally: only the messages after the last read.
  */
 export const ReadSource = Operation.make({
   meta: {
@@ -200,7 +201,11 @@ export const ReadSource = Operation.make({
     ),
   }),
   output: Schema.Struct({
-    entry: Ref.Ref(FactEntry.FactEntry).annotate({ description: 'The annotation entry appended.' }),
+    entry: Schema.optional(
+      Ref.Ref(FactEntry.FactEntry).annotate({
+        description: 'The annotation entry appended; absent when a chat has no messages since the last read.',
+      }),
+    ),
     facts: Schema.Number.annotate({ description: 'Facts recorded.' }),
   }),
 });

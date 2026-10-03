@@ -15,3 +15,5 @@ export * as ModeOperation from './ModeOperation.ts';
 export * as Profile from './Profile.ts';
 export * as Relay from './Relay.ts';
 export * as RelayOperation from './RelayOperation.ts';
+export * as Trigger from './Trigger.ts';
+export * as TriggerOperation from './TriggerOperation.ts';

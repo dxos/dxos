@@ -21,7 +21,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, ModesSkill, RelaySkill } from '#skills';
+import { ConversationSkill, GoalsSkill, ModesSkill, RelaySkill } from '#skills';
 import { AgentOperation, FactEntry, Goal, Memory, MemoryOperation, Mode, Relay } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
@@ -81,7 +81,7 @@ const TestLayer = AssistantTestLayer({
     Markdown.Document,
     FactEntry.FactEntry,
   ],
-  skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make()],
+  skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make()],
   aiService: ScriptedLanguageModel.scriptedAiService(script),
 });
 
@@ -175,6 +175,30 @@ describe('ReadSource', () => {
           source: Obj.getURI(message),
           generatedAtTime: message.created,
         });
+        expect(entry.through).toBe(Obj.getURI(message));
+
+        // A chat is read incrementally: nothing new appends nothing, and a new message adds only its facts.
+        const unchanged = yield* Operation.invoke(AgentOperation.ReadSource, {
+          agent: agentRef,
+          source: Ref.make<Obj.Unknown>(chat),
+        });
+        expect(unchanged).toEqual({ facts: 0 });
+        const next = Message.make({
+          sender: { role: 'user', name: 'Josiah' },
+          blocks: [{ _tag: 'text', text: 'I will review the fix.' }],
+        });
+        yield* Feed.append(feed, [next]);
+        yield* Database.flush();
+        const added = yield* Operation.invoke(AgentOperation.ReadSource, {
+          agent: agentRef,
+          source: Ref.make<Obj.Unknown>(chat),
+        });
+        expect(added.facts).toBe(1);
+        const entries = yield* Feed.query(annotations, Filter.type(FactEntry.FactEntry)).run;
+        expect(entries.flatMap(({ facts }) => facts.map(({ assertion }) => assertion.predicate)).sort()).toEqual([
+          'owns',
+          'reviews',
+        ]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,

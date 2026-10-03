@@ -5,11 +5,13 @@
 import * as Effect from 'effect/Effect';
 import * as Order from 'effect/Order';
 
+import type { AiService } from '@dxos/ai';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
-import { type RDF, extractDocFacts, normalizeEntityId } from '@dxos/pipeline-rdf';
+import { type EntityNotFoundError } from '@dxos/echo/Error';
+import { type RDF, type SemanticIndexError, extractDocFacts, normalizeEntityId } from '@dxos/pipeline-rdf';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Text } from '@dxos/schema';
 import { Message } from '@dxos/types';
@@ -58,14 +60,20 @@ const speakerOf = Effect.fnUntraced(function* (agent: Agent.Agent, message: Mess
   return message.sender.role === 'assistant' ? (agent.name ?? 'Agent') : 'User';
 });
 
-/** The chat's messages in append order, each as a `[time] speaker: text` line. */
-const readChat = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat) {
+/** Feed items in append order. */
+const inAppendOrder = <T extends Obj.Unknown>(items: readonly T[]): T[] =>
+  [...items].sort(Order.mapInput(Order.Number, Feed.getPosition));
+
+/**
+ * The chat's messages after `after` (a message URI) in append order, each as a `[time] speaker: text`
+ * line; `through` is the last message, read or not, so the next read starts after it.
+ */
+const readChat = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Chat, after?: string) {
   const feed = yield* Database.load(chat.feed);
-  const messages = [...(yield* Feed.query(feed, Filter.type(Message.Message)).run)].sort(
-    Order.mapInput(Order.Number, Feed.getPosition),
-  );
+  const messages = inAppendOrder(yield* Feed.query(feed, Filter.type(Message.Message)).run);
+  const start = after === undefined ? 0 : messages.findIndex((message) => Obj.getURI(message) === after) + 1;
   const segments: Segment[] = [];
-  for (const message of messages) {
+  for (const message of messages.slice(start)) {
     const text = Message.extractText(message).trim();
     if (message.sender.role === 'tool' || text.length === 0) {
       continue;
@@ -77,10 +85,12 @@ const readChat = Effect.fnUntraced(function* (agent: Agent.Agent, chat: Chat.Cha
       at: message.created,
     });
   }
+  const last = messages.at(-1);
   return {
     name: chat.name ?? 'Conversation',
     text: segments.map(({ text, speaker, at }) => `[${at}] ${speaker}: ${text}`).join('\n'),
     segments,
+    through: last && Obj.getURI(last),
   };
 });
 
@@ -125,6 +135,74 @@ const attribute = (fact: RDF.Fact, segments: readonly Segment[]): RDF.Fact => {
   };
 };
 
+export type ReadSourceResult = { entry?: FactEntry.FactEntry; facts: readonly FactEntry.Fact[] };
+
+export type ReadSourceProps = {
+  source?: Obj.Unknown;
+  url?: string;
+  /** The text to read in place of the source's own. */
+  text?: string;
+};
+
+/**
+ * Reads a source into its annotation feed and returns the entry appended with the facts it holds. A
+ * chat is read from the message after the last entry's cursor, so re-reading it never repeats a fact;
+ * nothing is appended when no message was added since.
+ */
+export const readSource: (
+  agent: Agent.Agent,
+  props: ReadSourceProps,
+) => Effect.Effect<
+  ReadSourceResult,
+  AgentOperationError | EntityNotFoundError | SemanticIndexError,
+  Database.Service | AiService.AiService
+> = Effect.fnUntraced(function* (agent, { source, url, text }) {
+  if (source && Obj.instanceOf(Chat.Chat, source) && text === undefined) {
+    const feed = yield* ensureAnnotationFeed(agent, { id: source.id, name: source.name ?? 'Conversation' });
+    const entries = inAppendOrder(yield* Feed.query(feed, Filter.type(FactEntry.FactEntry)).run);
+    const cursor = entries.findLast((entry) => entry.through !== undefined)?.through;
+    const { through, ...read } = yield* readChat(agent, source, cursor);
+    if (through === cursor) {
+      return { entry: undefined, facts: [] };
+    }
+    return yield* record(feed, { source, name: read.name, through }, yield* extract(read, Obj.getURI(source)));
+  }
+
+  const read: SourceText = source
+    ? { uri: Obj.getURI(source), ...(yield* readObject(agent, source)) }
+    : { uri: url ?? '', name: url ?? '', text: '', segments: [] };
+  const body = text === undefined ? read : { ...read, text, segments: segmentMarkdown(text) };
+  const feed = yield* ensureAnnotationFeed(agent, { id: source?.id ?? body.uri, name: body.name });
+  return yield* record(feed, { source, url, name: body.name }, yield* extract(body, body.uri));
+});
+
+// A direct model call rather than a chat turn: extraction is a pure derivation of the text.
+const extract = (body: Pick<SourceText, 'text' | 'segments'>, uri: string) =>
+  body.segments.length === 0 && body.text.trim().length === 0
+    ? Effect.succeed([])
+    : extractDocFacts({ text: body.text, source: uri }).pipe(
+        Effect.map((facts) => facts.map((fact) => attribute(fact, body.segments))),
+      );
+
+const record = Effect.fnUntraced(function* (
+  feed: Feed.Feed,
+  { source, url, name, through }: { source?: Obj.Unknown; url?: string; name: string; through?: string },
+  facts: RDF.Fact[],
+) {
+  const entry = Obj.make(FactEntry.FactEntry, {
+    ...(source ? { source: Ref.make(source) } : {}),
+    ...(url ? { url } : {}),
+    ...(through ? { through } : {}),
+    name,
+    recordedAt: new Date().toISOString(),
+    extractor: facts[0]?.extractor ?? EXTRACTOR,
+    facts,
+  });
+  yield* Feed.append(feed, [entry]);
+  yield* Database.flush();
+  return { entry, facts: entry.facts };
+});
+
 const handler: Operation.WithHandler<typeof AgentOperation.ReadSource> = AgentOperation.ReadSource.pipe(
   Operation.withHandler(
     Effect.fnUntraced(function* ({ agent: agentRef, source: sourceRef, url, text }) {
@@ -136,29 +214,8 @@ const handler: Operation.WithHandler<typeof AgentOperation.ReadSource> = AgentOp
 
       const agent = yield* Database.load(agentRef);
       const source = sourceRef ? yield* Database.load(sourceRef) : undefined;
-      const read: SourceText = source
-        ? { uri: Obj.getURI(source), ...(yield* readObject(agent, source)) }
-        : { uri: url ?? '', name: url ?? '', text: '', segments: [] };
-      const body = text === undefined ? read : { ...read, text, segments: segmentMarkdown(text) };
-
-      // A direct model call rather than a chat turn: extraction is a pure derivation of the text.
-      const facts = (yield* extractDocFacts({ text: body.text, source: body.uri })).map((fact) =>
-        attribute(fact, body.segments),
-      );
-
-      const feed = yield* ensureAnnotationFeed(agent, { id: source?.id ?? body.uri, name: body.name });
-      const entry = Obj.make(FactEntry.FactEntry, {
-        ...(source ? { source: Ref.make(source) } : {}),
-        ...(url ? { url } : {}),
-        name: body.name,
-        recordedAt: new Date().toISOString(),
-        extractor: facts[0]?.extractor ?? EXTRACTOR,
-        facts,
-      });
-      yield* Feed.append(feed, [entry]);
-      yield* Database.flush();
-
-      return { entry: Ref.make(entry), facts: facts.length };
+      const { entry, facts } = yield* readSource(agent, { source, url, text });
+      return { ...(entry ? { entry: Ref.make(entry) } : {}), facts: facts.length };
     }),
   ),
 );

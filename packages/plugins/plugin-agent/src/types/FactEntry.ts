@@ -57,6 +57,12 @@ export class FactEntry extends Type.makeObject<FactEntry>(DXN.make('org.dxos.typ
     url: Schema.optional(Schema.String.annotate({ title: 'URL', description: 'The web page read.' })),
     name: Schema.optional(Schema.String.annotate({ title: 'Name', description: "The source's display name." })),
     recordedAt: Format.DateTime.annotate({ title: 'Recorded' }),
+    through: Schema.optional(
+      Schema.String.annotate({
+        title: 'Read through',
+        description: 'The URI of the last chat message read; the next read of the chat starts after it.',
+      }),
+    ),
     extractor: Extractor,
     facts: Schema.Array(Fact),
   }).pipe(

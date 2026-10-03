@@ -5,7 +5,15 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { AgentOperation, DiscordOperation, MemoryOperation, ModeOperation, RelayOperation } from '#types';
+import { GoalsSkill } from '#skills';
+import {
+  AgentOperation,
+  DiscordOperation,
+  MemoryOperation,
+  ModeOperation,
+  RelayOperation,
+  TriggerOperation,
+} from '#types';
 
 export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent.ts'))),
@@ -29,6 +37,10 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   RelayOperation.ListRelays.pipe(Operation.lazyHandler(() => import('./list-relays.ts'))),
   RelayOperation.SendMessage.pipe(Operation.lazyHandler(() => import('./send-message.ts'))),
   RelayOperation.AssignChatParticipant.pipe(Operation.lazyHandler(() => import('./assign-chat-participant.ts'))),
+  TriggerOperation.WatchFacts.pipe(Operation.lazyHandler(() => import('./watch-facts.ts'))),
+  TriggerOperation.ListTriggers.pipe(Operation.lazyHandler(() => import('./list-triggers.ts'))),
+  TriggerOperation.CancelTrigger.pipe(Operation.lazyHandler(() => import('./cancel-trigger.ts'))),
+  GoalsSkill.RunTriggers.pipe(Operation.lazyHandler(() => import('./run-triggers.ts'))),
   // Plain REST with the binding's token, so it runs on EDGE too, unlike the gateway verbs below.
   DiscordOperation.SendMessage.pipe(Operation.lazyHandler(() => import('./send-discord-message.ts'))),
 ]);

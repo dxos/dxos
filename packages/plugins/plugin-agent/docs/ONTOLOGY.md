@@ -175,6 +175,31 @@ the end of each turn, after that turn's facts have been written**. Consequence: 
 survive a process restart (an EDGE agent eviction); deadline triggers in particular need a durable
 home before they can be relied on. Promote them to objects once the shape settles.
 
+**As built (v1).**
+
+- `Trigger` (`src/types/Trigger.ts`): `{ id, agent, goal?, when: FactPattern, then: notify, createdAt }`.
+  `FactPattern` matches on `speaker` (the fact's attributed speaker, by name or first name), `force`
+  (a fact without an illocution is assertive), `polarity`, `subject` and `about` (words, matched as
+  word prefixes anywhere in the fact or its quote), `text` (in the quote) and an `after`/`before`
+  window. Facts said before the trigger was created never match: "let me know when" means from now on.
+- The registry (`src/triggers.ts`) is a module singleton in the process's memory, shared by the
+  operations and the Goals tab of the knowledge panel. Triggers are lost on restart, and on EDGE they
+  are visible only to agent processes in the same isolate — a watch set from one chat may not see
+  turns of another chat served elsewhere.
+- `watchFacts` (the `GoalsSkill`, bound as a base skill) records the outcome as a `Goal` the requester
+  owns (status `active`) and registers the trigger; `listTriggers` and `cancelTrigger` (optionally
+  dropping the goal) manage them.
+- **The hook is the skill's `end-request` hook** (`Skill.Hook`), which the agent process
+  (`agent-runtime/agent-process.ts`) already fires once a request completes — in the browser and on
+  EDGE alike, with the conversation in the harness. Its operation, `runTriggers`, reads the chat's
+  messages since the last read into the chat's annotation feed (`readSource` keeps a `through` cursor
+  on each entry, so no fact is extracted twice), then fires the agent's triggers those facts match:
+  the trigger is removed, the message is delivered with `sendMessage` (into the recipient's chat with
+  the agent), and the goal is marked achieved. Triggers whose goal closed meanwhile are dropped.
+- A turn is read only while the agent has a trigger: extraction is a model call per turn, and with no
+  watch nothing would use it. Messages from turns before the first watch are read on the next turn
+  that has one; the time window keeps them from firing it.
+
 ## 6. Per-transcript state — modes
 
 How the agent is working in one conversation — conversation, note-taker, interviewer, relay; later

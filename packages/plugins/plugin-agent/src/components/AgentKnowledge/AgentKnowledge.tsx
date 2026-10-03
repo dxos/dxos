@@ -11,7 +11,7 @@ import { Listbox } from '@dxos/react-ui-list';
 import { type SpaceGraphEdge, SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 
 import { meta } from '#meta';
-import { type Memory } from '#types';
+import { type Goal, type Memory } from '#types';
 
 import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
 
@@ -19,7 +19,7 @@ import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
 // Root
 //
 
-const VIEWS = ['memories', 'facts', 'graph'] as const;
+const VIEWS = ['memories', 'facts', 'goals', 'graph'] as const;
 
 type AgentKnowledgeView = (typeof VIEWS)[number];
 
@@ -32,7 +32,7 @@ type AgentKnowledgeRootProps = PropsWithChildren<{
   defaultView?: AgentKnowledgeView;
 }>;
 
-/** What the agent knows, one view at a time: its memories, the facts it read and its knowledge graph. */
+/** What the agent knows, one view at a time: its memories, the facts it read, the goals it serves and its knowledge graph. */
 const AgentKnowledgeRoot = ({ role, defaultView = 'memories', children }: AgentKnowledgeRootProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [view, setView] = useState<AgentKnowledgeView>(defaultView);
@@ -47,6 +47,9 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'memories', children }: AgentK
               </Tabs.Button>
               <Tabs.Button value='facts' data-testid='agent-knowledge-tab-facts'>
                 {t('agent-knowledge-facts.label')}
+              </Tabs.Button>
+              <Tabs.Button value='goals' data-testid='agent-knowledge-tab-goals'>
+                {t('agent-knowledge-goals.label')}
               </Tabs.Button>
               <Tabs.Button value='graph' data-testid='agent-knowledge-tab-graph'>
                 {t('agent-knowledge-graph.label')}
@@ -179,6 +182,81 @@ const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
 AgentKnowledgeFacts.displayName = 'AgentKnowledge.Facts';
 
 //
+// Goals
+//
+
+type AgentKnowledgeWatch = {
+  id: string;
+  /** The pattern a fact must match, as one line. */
+  when: string;
+  /** The name of who is told when it fires. */
+  recipient?: string;
+  message: string;
+};
+
+type AgentKnowledgeGoal = {
+  id: string;
+  title: string;
+  status: Goal.Status;
+  /** The names of who holds it. */
+  owners?: string;
+  /** What the agent is waiting for on the goal's behalf. */
+  watches: readonly AgentKnowledgeWatch[];
+};
+
+type AgentKnowledgeGoalsProps = {
+  goals: readonly AgentKnowledgeGoal[];
+};
+
+/** The goals the agent serves, each followed by the facts it is watching for. */
+const AgentKnowledgeGoals = ({ goals }: AgentKnowledgeGoalsProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  if (useContext(AgentKnowledgeContext) !== 'goals') {
+    return null;
+  }
+
+  return goals.length === 0 ? (
+    <Flex center classNames='p-2 text-description' role='status'>
+      {t('agent-knowledge-goals-empty.message')}
+    </Flex>
+  ) : (
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
+        <Listbox.Root>
+          <Listbox.Content>
+            {goals.flatMap((goal) => [
+              <Listbox.Item key={goal.id} id={goal.id} data-testid='agent-knowledge-goal' data-status={goal.status}>
+                <Listbox.ItemContent
+                  icon='ph--target--regular'
+                  title={goal.title}
+                  description={[t(`goal-status-${goal.status}.label`), goal.owners]
+                    .filter((part) => part !== undefined)
+                    .join(' · ')}
+                />
+              </Listbox.Item>,
+              ...goal.watches.map((watch) => (
+                <Listbox.Item key={watch.id} id={watch.id} data-testid='agent-knowledge-watch' classNames='ps-6'>
+                  <Listbox.ItemContent
+                    icon='ph--binoculars--regular'
+                    title={t('agent-knowledge-watch.label', {
+                      recipient: watch.recipient ?? t('agent-knowledge-watch-unnamed.label'),
+                      message: watch.message,
+                    })}
+                    description={watch.when}
+                  />
+                </Listbox.Item>
+              )),
+            ])}
+          </Listbox.Content>
+        </Listbox.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+};
+
+AgentKnowledgeGoals.displayName = 'AgentKnowledge.Goals';
+
+//
 // Graph
 //
 
@@ -245,6 +323,7 @@ export const AgentKnowledge = {
   Root: AgentKnowledgeRoot,
   Memories: AgentKnowledgeMemories,
   Facts: AgentKnowledgeFacts,
+  Goals: AgentKnowledgeGoals,
   Graph: AgentKnowledgeGraph,
 };
 
@@ -252,10 +331,13 @@ export type {
   AgentKnowledgeEdge,
   AgentKnowledgeFact,
   AgentKnowledgeFactsProps,
+  AgentKnowledgeGoal,
+  AgentKnowledgeGoalsProps,
   AgentKnowledgeGraphProps,
   AgentKnowledgeMemoriesProps,
   AgentKnowledgeMemory,
   AgentKnowledgeNode,
   AgentKnowledgeRootProps,
   AgentKnowledgeView,
+  AgentKnowledgeWatch,
 };

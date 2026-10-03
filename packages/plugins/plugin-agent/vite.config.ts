@@ -32,6 +32,8 @@ export default defineConfig({
     Profile: 'src/types/Profile.ts',
     Relay: 'src/types/Relay.ts',
     RelayOperation: 'src/types/RelayOperation.ts',
+    Trigger: 'src/types/Trigger.ts',
+    TriggerOperation: 'src/types/TriggerOperation.ts',
     types: 'src/types/index.ts',
   },
   jsx: 'react',

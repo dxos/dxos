@@ -13,6 +13,7 @@ import * as AgentOperation from '@dxos/plugin-agent/AgentOperation';
 import * as MemoryOperation from '@dxos/plugin-agent/MemoryOperation';
 import * as ModeOperation from '@dxos/plugin-agent/ModeOperation';
 import * as RelayOperation from '@dxos/plugin-agent/RelayOperation';
+import * as TriggerOperation from '@dxos/plugin-agent/TriggerOperation';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { Organization, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
@@ -203,6 +204,9 @@ export const SCRIPTED_PROMPTS = {
   reply: 'Great, I will verify it on staging this afternoon.',
   noteTaker: 'Kai, switch to note-taker.',
   note: 'Note: the indexer migration must take the write lock before the worker starts.',
+  watch: "Kai, let me know when Dima's indexer PR is up.",
+  stillWorking: 'Still working on the indexer PR, it should be up tomorrow.',
+  prUp: 'The indexer PR is up.',
 } as const;
 
 export const SCRIPTED_REPLIES = {
@@ -212,7 +216,44 @@ export const SCRIPTED_REPLIES = {
   thanked: 'Thanks, I let Rich know.',
   switched: 'Switched to Note-taker mode.',
   noted: 'Noted.',
+  watching: "I'll let you know.",
+  acknowledged: 'Thanks, noted.',
+  // Distinct from Rich's request, which quotes the outcome, so his panel shows it only once it fires.
+  notified: 'Heads up: Dima says the indexer PR is up.',
 } as const;
+
+/**
+ * What the scripted extractor finds in the goals scenario's turns; each quote is verbatim from one
+ * message, so the end-of-turn read attributes it to its sender. Only the last matches Rich's watch:
+ * his own request is a directive by Rich, and Dima's first update denies the PR is up.
+ */
+export const GOAL_FACTS = [
+  {
+    subject: "Dima's indexer PR",
+    predicate: 'is',
+    object: 'up',
+    quote: SCRIPTED_PROMPTS.watch,
+    force: 'directive',
+    factuality: 'Uu',
+    polarity: '+',
+  },
+  {
+    subject: 'indexer PR',
+    predicate: 'is',
+    object: 'up',
+    quote: SCRIPTED_PROMPTS.stillWorking,
+    factuality: 'CT-',
+    polarity: '-',
+  },
+  {
+    subject: 'indexer PR',
+    predicate: 'is',
+    object: 'up',
+    quote: SCRIPTED_PROMPTS.prUp,
+    factuality: 'CT+',
+    polarity: '+',
+  },
+] as const;
 
 /** The first line of pipeline-rdf's extraction prompt, which is how the script tells `readSource` calls apart. */
 const EXTRACTION_PROMPT = 'You extract atomic propositions';
@@ -293,11 +334,14 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
   return (request) => {
     if (request.text.includes(EXTRACTION_PROMPT)) {
       // Extraction runs per chunk, so each chunk reports only the facts it quotes.
-      const facts = TRANSCRIPT_FACTS.filter(({ quote }) => request.text.includes(quote)).map((fact) => ({
-        ...fact,
-        factuality: 'CT+',
-        polarity: '+',
-      }));
+      const facts = [
+        ...TRANSCRIPT_FACTS.filter(({ quote }) => request.text.includes(quote)).map((fact) => ({
+          ...fact,
+          factuality: 'CT+',
+          polarity: '+',
+        })),
+        ...GOAL_FACTS.filter(({ quote }) => request.text.includes(quote)),
+      ];
       return { parts: [text(JSON.stringify({ facts }))] };
     }
     if (request.text.includes('Suggest a name for this chat')) {
@@ -331,6 +375,8 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
           return { parts: [text(SCRIPTED_REPLIES.switched)] };
         case tool(MemoryOperation.Remember):
           return { parts: [text(SCRIPTED_REPLIES.noted)] };
+        case tool(TriggerOperation.WatchFacts):
+          return { parts: [text(SCRIPTED_REPLIES.watching)] };
         default:
           return { parts: [text('Done.')] };
       }
@@ -378,6 +424,23 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
           }),
         ],
       };
+    }
+    if (said.includes(SCRIPTED_PROMPTS.watch) && said.includes('[From: Rich]')) {
+      return {
+        parts: [
+          toolCall(tool(TriggerOperation.WatchFacts), {
+            agent: refs.agent,
+            requester: refs.Rich,
+            outcome: "Dima's indexer PR is up",
+            when: { speaker: 'Dima', about: 'indexer PR', force: 'assertive', polarity: '+' },
+            message: SCRIPTED_REPLIES.notified,
+          }),
+        ],
+      };
+    }
+    // Dima's updates need no tool: the end-of-turn read records them and fires the watch.
+    if (said.includes(SCRIPTED_PROMPTS.stillWorking) || said.includes(SCRIPTED_PROMPTS.prUp)) {
+      return { parts: [text(SCRIPTED_REPLIES.acknowledged)] };
     }
     return { parts: [text('OK.')] };
   };

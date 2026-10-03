@@ -7,7 +7,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import type * as Agent from '@dxos/assistant/Agent';
-import { Filter, Obj, Relation } from '@dxos/echo';
+import { Filter, Obj, type Ref, Relation } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { EID } from '@dxos/keys';
 import { HasSubject, Organization, Person } from '@dxos/types';
@@ -16,11 +16,16 @@ import {
   AgentKnowledge as AgentKnowledgeComponent,
   type AgentKnowledgeEdge,
   type AgentKnowledgeFact,
+  type AgentKnowledgeGoal,
   type AgentKnowledgeNode,
 } from '#components';
-import { FactEntry, Goal, Memory, Profile } from '#types';
+import { FactEntry, Goal, Memory, Profile, Trigger } from '#types';
 
 import { useFactEntries } from '../useFactEntries.ts';
+import { useTriggers } from '../useTriggers.ts';
+
+/** Live goals first, then the ones that ran their course. */
+const GOAL_ORDER: readonly Goal.Status[] = ['active', 'confirmed', 'proposed', 'achieved', 'dropped'];
 
 /** A memory past its `expiresAt`; memories without one never expire. */
 const isExpired = (memory: Memory.Memory, now: string): boolean =>
@@ -31,7 +36,7 @@ export type AgentKnowledgeProps = {
   agent: Agent.Agent;
 };
 
-/** What the agent knows: its active memories, the facts it read and its knowledge graph. */
+/** What the agent knows: its active memories, the facts it read, the goals it watches for and its knowledge graph. */
 export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
   const db = Obj.getDatabase(agent);
   const [name] = useObject(agent, 'name');
@@ -41,6 +46,7 @@ export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
   const people = useQuery(db, Filter.type(Person.Person));
   const organizations = useQuery(db, Filter.type(Organization.Organization));
   const subjects = useQuery(db, Filter.type(HasSubject.HasSubject));
+  const triggers = useTriggers(agent);
 
   // A query re-emits on membership only, so status and title changes need per-object subscriptions.
   const graphAtom = useMemo(
@@ -84,11 +90,36 @@ export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
           }),
         ];
 
-        return { memories: active, nodes, edges };
+        const nameOf = (ref: Ref.Unknown): string | undefined => {
+          const entity = entities.find((entity) => Profile.refersTo(ref, entity.id));
+          return entity && Profile.displayName(entity);
+        };
+        const goalItems: AgentKnowledgeGoal[] = [...goals]
+          .sort((left, right) => GOAL_ORDER.indexOf(left.status) - GOAL_ORDER.indexOf(right.status))
+          .map((goal) => ({
+            id: goal.id,
+            title: goal.title,
+            status: goal.status,
+            owners:
+              goal.owners
+                .map(nameOf)
+                .filter((owner) => owner !== undefined)
+                .join(', ') || undefined,
+            watches: triggers
+              .filter((trigger) => trigger.goal && Profile.refersTo(trigger.goal, goal.id))
+              .map(({ id, when, then }) => ({
+                id,
+                when: Trigger.describePattern(when),
+                recipient: nameOf(then.recipient),
+                message: then.message,
+              })),
+          }));
+
+        return { memories: active, nodes, edges, goals: goalItems };
       }),
-    [agent, name, memories, goals, people, organizations, subjects],
+    [agent, name, memories, goals, people, organizations, subjects, triggers],
   );
-  const { memories: active, nodes, edges } = useAtomValue(graphAtom);
+  const { memories: active, nodes, edges, goals: goalItems } = useAtomValue(graphAtom);
 
   // Feed items are immutable, so the entries query alone tracks every change.
   const { entries } = useFactEntries(agent);
@@ -112,6 +143,7 @@ export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
     <AgentKnowledgeComponent.Root role={role}>
       <AgentKnowledgeComponent.Memories memories={active} />
       <AgentKnowledgeComponent.Facts facts={facts} />
+      <AgentKnowledgeComponent.Goals goals={goalItems} />
       <AgentKnowledgeComponent.Graph nodes={nodes} edges={edges} />
     </AgentKnowledgeComponent.Root>
   );

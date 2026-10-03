@@ -3,9 +3,10 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { type Database, Feed, Filter, Query } from '@dxos/echo';
+import * as Chat from '@dxos/assistant/Chat';
+import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as FactEntry from '@dxos/plugin-agent/FactEntry';
 import * as Goal from '@dxos/plugin-agent/Goal';
@@ -14,10 +15,11 @@ import * as Mode from '@dxos/plugin-agent/Mode';
 import * as Relay from '@dxos/plugin-agent/Relay';
 import { translations as agentTranslations } from '@dxos/plugin-agent/translations';
 import * as ProfileOf from '@dxos/plugin-crm/ProfileOf';
-import { HasSubject, Organization, Person } from '@dxos/types';
+import { HasSubject, Message, Organization, Person } from '@dxos/types';
 
 import { StoryRole } from '../modules/index.ts';
 import {
+  GOAL_FACTS,
   ModuleContainer,
   PARTICIPANTS,
   PLAYGROUND_MODEL,
@@ -199,6 +201,125 @@ export const PlaygroundScripted: Story = {
     await waitForSpace(
       (db) => db.query(Filter.type(Memory.Memory)).run(),
       (memories) => memories.some(({ kind, body }) => kind === 'note' && body !== undefined),
+    );
+  },
+};
+
+/**
+ * Rich asks Kai to tell him when Dima's indexer PR is up: Kai records a goal Rich owns and watches
+ * the facts it reads at the end of every turn. Live AI, so excluded from CI.
+ *
+ * Try:
+ * 1. As Rich: "Let me know when Dima's indexer PR is up." — a goal and its watch appear under Goals.
+ * 2. As Dima: "Still working on the indexer PR." — nothing reaches Rich.
+ * 3. As Dima: "The indexer PR is up." — Rich is told, and the goal is achieved.
+ */
+export const Goals: Story = {
+  decorators: createDecorators({
+    plugins: [AgentPlugin.make()],
+    types: TYPES,
+    onReady: ({ db, invoker }) => setupPlayground({ db, invoker, model: PLAYGROUND_MODEL }),
+  }),
+  args: { layout: LAYOUT },
+  tags: ['!test'],
+};
+
+/** The goals the space holds, with their status and owners' names. */
+const readGoals = async (db: Database.Database) =>
+  (await db.query(Filter.type(Goal.Goal)).run()).map(({ title, status, owners }) => ({
+    title,
+    status,
+    owners: owners.map(({ target }) => (Obj.instanceOf(Person.Person, target) ? target.preferredName : undefined)),
+  }));
+
+/** The quotes of every fact the agent recorded. */
+const readQuotes = async (db: Database.Database) => {
+  const feeds = await db.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run();
+  if (feeds.length === 0) {
+    return [];
+  }
+  const entries = await db.query(Query.select(Filter.type(FactEntry.FactEntry)).from(feeds)).run();
+  return entries.flatMap(({ facts }) => facts.map(({ assertion }) => assertion.quote));
+};
+
+/** The text of every message the agent posted in Rich's chat; tool calls, which quote the watch's message, are left out. */
+const readRichReplies = async (db: Database.Database) => {
+  const chat = (await db.query(Filter.type(Chat.Chat)).run()).find((chat) => Obj.getURI(chat) === refs.chats.Rich);
+  const feed = await chat?.feed.load();
+  if (!feed) {
+    return [];
+  }
+  const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
+  return messages
+    .filter(({ sender }) => sender.role === 'assistant')
+    .flatMap(({ blocks }) => blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])));
+};
+
+/** How often `text` appears in a panel. */
+const occurrences = (element: HTMLElement, text: string) => (element.textContent ?? '').split(text).length - 1;
+
+/** Waits until the knowledge panel lists `count` watches. */
+const expectWatches = (canvasElement: HTMLElement, count: number) =>
+  waitFor(() => expect(within(canvasElement).queryAllByTestId('agent-knowledge-watch')).toHaveLength(count), {
+    timeout: 30_000,
+  });
+
+/**
+ * The goals scenario on a scripted model: a watch registered from Rich's chat fires only when a
+ * fact recorded at the end of one of Dima's turns matches it.
+ */
+export const GoalsScripted: Story = {
+  decorators: createDecorators({
+    plugins: [AgentPlugin.make()],
+    types: TYPES,
+    scripted: makePlaygroundScript(refs),
+    onReady: async ({ db, invoker }) => {
+      storyDb = db;
+      await setupPlayground({ db, invoker, refs });
+    },
+  }),
+  args: { layout: LAYOUT },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const rich = await panel(canvasElement, 'Rich');
+    const dima = await panel(canvasElement, 'Dima');
+    const [watchFact, stillWorkingFact] = GOAL_FACTS;
+
+    // 1. Rich asks to be told; Kai records a goal Rich owns, not yet achieved, with one watch listed.
+    await submitPrompt(rich, SCRIPTED_PROMPTS.watch);
+    await findInPanel(rich, SCRIPTED_REPLIES.watching);
+    await waitForSpace(readGoals, (goals) =>
+      goals.some(
+        ({ title, status, owners }) => title.includes('indexer PR') && status !== 'achieved' && owners.includes('Rich'),
+      ),
+    );
+    await userEvent.click(canvas.getByTestId('agent-knowledge-tab-goals'));
+    await expectWatches(canvasElement, 1);
+    // Rich's own request was read at the end of his turn, and did not fire the watch.
+    await waitForSpace(readQuotes, (quotes) => quotes.includes(watchFact.quote));
+    // The panel shows the message once already, inside the watch's tool call.
+    const quoted = occurrences(rich, SCRIPTED_REPLIES.notified);
+    await waitForSpace(readRichReplies, (replies) => !replies.includes(SCRIPTED_REPLIES.notified));
+
+    // 2. Dima says she is still working on it; the turn's fact is recorded but denies it, so nothing fires.
+    await submitPrompt(dima, SCRIPTED_PROMPTS.stillWorking);
+    await findInPanel(dima, SCRIPTED_REPLIES.acknowledged);
+    await waitForSpace(readQuotes, (quotes) => quotes.includes(stillWorkingFact.quote));
+    // The watch is evaluated right after the facts are written; give a wrongly-fired notification time to land.
+    await new Promise((resolve) => setTimeout(resolve, 1_000));
+    await waitForSpace(readRichReplies, (replies) => !replies.includes(SCRIPTED_REPLIES.notified));
+    await expect(occurrences(rich, SCRIPTED_REPLIES.notified)).toBe(quoted);
+    await expectWatches(canvasElement, 1);
+    await waitForSpace(readGoals, (goals) => goals.length === 1 && goals[0].status === 'active');
+
+    // 3. Dima says the PR is up; Rich is told, the goal is achieved and the watch is gone.
+    await submitPrompt(dima, SCRIPTED_PROMPTS.prUp);
+    await waitForSpace(readRichReplies, (replies) => replies.includes(SCRIPTED_REPLIES.notified));
+    await waitFor(() => expect(occurrences(rich, SCRIPTED_REPLIES.notified)).toBe(quoted + 1), { timeout: 30_000 });
+    await waitForSpace(readGoals, (goals) => goals.length === 1 && goals[0].status === 'achieved');
+    await expectWatches(canvasElement, 0);
+    await waitFor(() =>
+      expect(canvas.getByTestId('agent-knowledge-goal').getAttribute('data-status')).toBe('achieved'),
     );
   },
 };

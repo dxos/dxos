@@ -159,6 +159,16 @@
       "types": "./dist/types/src/types/RelayOperation.d.ts",
       "import": "./dist/lib/RelayOperation.mjs"
     },
+    "./Trigger": {
+      "source": "./src/types/Trigger.ts",
+      "types": "./dist/types/src/types/Trigger.d.ts",
+      "import": "./dist/lib/Trigger.mjs"
+    },
+    "./TriggerOperation": {
+      "source": "./src/types/TriggerOperation.ts",
+      "types": "./dist/types/src/types/TriggerOperation.d.ts",
+      "import": "./dist/lib/TriggerOperation.mjs"
+    },
     "./translations": {
       "source": "./src/translations.ts",
       "types": "./dist/types/src/translations.d.ts",
