@@ -7,7 +7,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use oxigraph::model::Term;
+use oxigraph::model::{Literal, NamedNode, Term};
 use rustc_hash::{FxHashMap, FxHashSet};
 
 pub type Id = u32;
@@ -23,9 +23,43 @@ pub struct Dict {
 struct DictInner {
     terms: Vec<Term>,
     ids: FxHashMap<Term, Id>,
+    /// The members of each list term; a list exists only inside one run and is never stored.
+    lists: FxHashMap<Id, Vec<Id>>,
 }
 
+/// The datatype a list term is encoded with, so it interns like any other term.
+pub const LIST_DATATYPE: &str = "urn:code-index:list";
+
 impl Dict {
+    /// The list term holding `items`.
+    pub fn list(&self, items: &[Id]) -> Id {
+        let lexical = items
+            .iter()
+            .map(Id::to_string)
+            .collect::<Vec<_>>()
+            .join(" ");
+        let term = Term::Literal(Literal::new_typed_literal(
+            lexical,
+            NamedNode::new_unchecked(LIST_DATATYPE),
+        ));
+        let id = self.intern(&term);
+        self.inner
+            .borrow_mut()
+            .lists
+            .entry(id)
+            .or_insert_with(|| items.to_vec());
+        id
+    }
+
+    /// A list term's members; `None` for any other term.
+    pub fn items(&self, id: Id) -> Option<Vec<Id>> {
+        self.inner.borrow().lists.get(&id).cloned()
+    }
+
+    pub fn is_list(&self, id: Id) -> bool {
+        self.inner.borrow().lists.contains_key(&id)
+    }
+
     pub fn intern(&self, term: &Term) -> Id {
         let mut inner = self.inner.borrow_mut();
         if let Some(id) = inner.ids.get(term) {
@@ -70,6 +104,8 @@ pub fn matches(pattern: &Pattern, triple: &Triple) -> bool {
 pub trait Facts {
     fn scan(&self, pattern: &Pattern, sink: &mut dyn FnMut(Triple));
     fn contains(&self, triple: &Triple) -> bool;
+    /// About how many triples match, counting no further than `cap`.
+    fn estimate(&self, pattern: &Pattern, cap: usize) -> usize;
 }
 
 /// Scans with neither subject nor object bound, kept for as long as the wrapper lives. Premises do
@@ -111,10 +147,14 @@ impl Facts for Cached<'_> {
     fn contains(&self, triple: &Triple) -> bool {
         self.inner.contains(triple)
     }
+
+    fn estimate(&self, pattern: &Pattern, cap: usize) -> usize {
+        self.inner.estimate(pattern, cap)
+    }
 }
 
 /// An in-memory triple set indexed on each position, for materialisations and deltas.
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug)]
 pub struct TripleSet {
     all: FxHashSet<Triple>,
     by: [FxHashMap<Id, FxHashSet<Triple>>; 3],
@@ -185,6 +225,16 @@ impl Facts for TripleSet {
     fn contains(&self, triple: &Triple) -> bool {
         self.all.contains(triple)
     }
+
+    fn estimate(&self, pattern: &Pattern, cap: usize) -> usize {
+        let mut smallest = self.all.len();
+        for (position, slot) in pattern.iter().enumerate() {
+            if let Some(id) = slot {
+                smallest = smallest.min(self.by[position].get(id).map_or(0, FxHashSet::len));
+            }
+        }
+        smallest.min(cap)
+    }
 }
 
 /// The state before a change, given the state after it: `after − plus + minus`.
@@ -206,6 +256,10 @@ impl Facts for Before<'_> {
 
     fn contains(&self, triple: &Triple) -> bool {
         self.minus.contains(triple) || (!self.plus.contains(triple) && self.after.contains(triple))
+    }
+
+    fn estimate(&self, pattern: &Pattern, cap: usize) -> usize {
+        (self.after.estimate(pattern, cap) + self.minus.estimate(pattern, cap)).min(cap)
     }
 }
 
@@ -235,5 +289,9 @@ impl Facts for Union<'_> {
                 && self
                     .excluded
                     .is_none_or(|excluded| !excluded.contains(triple)))
+    }
+
+    fn estimate(&self, pattern: &Pattern, cap: usize) -> usize {
+        (self.premises.estimate(pattern, cap) + self.derived.estimate(pattern, cap)).min(cap)
     }
 }

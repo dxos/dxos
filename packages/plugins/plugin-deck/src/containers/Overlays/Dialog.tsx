@@ -13,6 +13,13 @@ import { useDeckState } from '#hooks';
 
 import { PlankErrorFallback } from '../Deck/PlankFallback.tsx';
 
+/** A full-screen overlay that centres the surface, as `Dialog.Overlay` did before the Ark cut-over. */
+const overlayClasses = [
+  'dx-fill max-w-none max-h-none grid place-items-center rounded-none border-0 shadow-none',
+  'py-[env(safe-area-inset-top)] sm:p-[calc(env(safe-area-inset-top)+.6rem)]',
+  'md:p-[calc(env(safe-area-inset-top)+1.2rem)] lg:p-[calc(env(safe-area-inset-top)+2.4rem)]',
+];
+
 /** The surface's suspense placeholder: reports while the dialog's lazily loaded content is still loading. */
 const Pending = ({ onPendingChange }: { onPendingChange: (pending: boolean) => void }) => {
   useLayoutEffect(() => {
@@ -25,7 +32,7 @@ const Pending = ({ onPendingChange }: { onPendingChange: (pending: boolean) => v
 export const Dialog = () => {
   const { invokePromise } = useOperationInvoker();
   const { state } = useDeckState();
-  const { dialogOpen, dialogType, dialogBlockAlign, dialogContent } = state;
+  const { dialogOpen, dialogType, dialogBlockAlign, dialogOverlayClasses, dialogOverlayStyle, dialogContent } = state;
   const Root = dialogType === 'alert' ? AlertDialog.Root : UiDialog.Root;
   // zag's dismiss layer looks for the content once on open, so the Root opens only after a lazily loaded content mounts.
   const [pending, setPending] = useState(false);
@@ -39,8 +46,22 @@ export const Dialog = () => {
     [invokePromise],
   );
 
+  // The overlay is the host's own Content, mounted on open, so its surface loads inside it without holding the Root.
+  const overlay = dialogOverlayClasses !== undefined || dialogOverlayStyle !== undefined;
+  const surface = (
+    <Surface.Surface
+      type={AppSurface.Dialog}
+      data={dialogContent ?? undefined}
+      limit={1}
+      fallback={PlankErrorFallback}
+      placeholder={overlay ? <div /> : <Pending onPendingChange={setPending} />}
+    />
+  );
+
   // TODO(thure): End block alignment affecting `modal` is tailored to the needs of the ambient chat dialog. As the feature matures, consider separating concerns.
-  // The surface renders the dialog's Content, which takes its placement from the Root unless it sets its own.
+  // The surface renders the dialog's Content, which takes its placement from the Root unless it sets its own; a dialog
+  // opened with overlay classes or style instead gets the host's full-screen overlay, and the surface renders only what
+  // sits on it (e.g. the login gate).
   return (
     <Root
       modal={dialogBlockAlign !== 'end'}
@@ -48,13 +69,13 @@ export const Dialog = () => {
       open={dialogOpen && !pending}
       onOpenChange={handleOpenChange}
     >
-      <Surface.Surface
-        type={AppSurface.Dialog}
-        data={dialogContent ?? undefined}
-        limit={1}
-        fallback={PlankErrorFallback}
-        placeholder={<Pending onPendingChange={setPending} />}
-      />
+      {overlay ? (
+        <UiDialog.Content scrim={false} classNames={[overlayClasses, dialogOverlayClasses]} style={dialogOverlayStyle}>
+          {surface}
+        </UiDialog.Content>
+      ) : (
+        surface
+      )}
     </Root>
   );
 };
