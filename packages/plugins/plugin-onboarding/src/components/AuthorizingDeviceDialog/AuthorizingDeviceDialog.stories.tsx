@@ -11,11 +11,14 @@ import { AlertDialog } from '@dxos/react-ui';
 import { withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '../../translations.ts';
+import { GateContent } from '../GateContent/index.ts';
 import { AuthorizingDeviceDialog } from './AuthorizingDeviceDialog.tsx';
 
 const DefaultStory = () => (
   <AlertDialog.Root defaultOpen>
-    <AuthorizingDeviceDialog />
+    <GateContent>
+      <AuthorizingDeviceDialog />
+    </GateContent>
   </AlertDialog.Root>
 );
 

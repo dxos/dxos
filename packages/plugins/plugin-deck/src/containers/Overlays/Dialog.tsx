@@ -25,7 +25,7 @@ const Pending = ({ onPendingChange }: { onPendingChange: (pending: boolean) => v
 export const Dialog = () => {
   const { invokePromise } = useOperationInvoker();
   const { state } = useDeckState();
-  const { dialogOpen, dialogType, dialogBlockAlign, dialogContent } = state;
+  const { dialogOpen, dialogType, dialogBlockAlign, dialogOverlayClasses, dialogOverlayStyle, dialogContent } = state;
   const Root = dialogType === 'alert' ? AlertDialog.Root : UiDialog.Root;
   // zag's dismiss layer looks for the content once on open, so the Root opens only after a lazily loaded content mounts.
   const [pending, setPending] = useState(false);
@@ -45,6 +45,7 @@ export const Dialog = () => {
     <Root
       modal={dialogBlockAlign !== 'end'}
       placement={dialogBlockAlign}
+      backdrop={{ classNames: dialogOverlayClasses, style: dialogOverlayStyle }}
       open={dialogOpen && !pending}
       onOpenChange={handleOpenChange}
     >

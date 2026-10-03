@@ -30,8 +30,9 @@ derived graph with the result, so a conclusion never outlives the fact that enta
 Reachability is **not** among those rules — `deus:imports+` walks the import graph as a query, in a
 fraction of the time a materialized closure costs; `rules/50-example.n3` explains when a rule is the
 wrong tool. That phase is whole-graph and by
-far the most expensive one, so it is skipped when a pass changed nothing, and `--no-reason` skips it
-outright (leaving the derived graph as stale as the last pass that did run it).
+far the most expensive one, so it is skipped when the store records that the same rules already ran
+over the facts it holds now. `--no-reason` skips it outright, leaving the derived graph stale until
+the next pass that reasons, which catches up even if no file changed in between.
 
 ## Reasoning about it in a browser
 
@@ -61,6 +62,10 @@ snippet.
 (`src/workspace/Fold.ts`, shared by the server and the browser), so a reload replays exactly what a
 live session saw and there is no second copy to keep in step. The project id is in the URL
 (`/p/<id>`); a bare load adopts the last one that browser opened.
+
+**The index stays current.** The server holds the store, so it indexes on its own: an incremental
+pass at startup, then one after every burst of changes to a directory the index covers
+(`src/Watch.ts`). `--no-watch` serves the store as it is.
 
 **No build step.** Vite runs inside the server process in middleware mode and resolves `@dxos/*`
 through the `source` condition, so the UI — Solid, with `@dxos/react-ui-thread` mounted as a React
