@@ -2,7 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-// Scores the chat perf flow's `measure` rows against `src/playwright/perf/budgets.json`.
+// Scores the chat perf flow's `measure` rows — the blank space and the busy one together — against
+// `src/playwright/perf/budgets.json`.
 //
 //   node scripts/score-perf.ts score [--dir test-results/perf] [--publish] [--summary <file>]
 //
@@ -14,6 +15,8 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { parseBudgets, scoreStageRun } from '@dxos/perf-harness/score';
+
+import { BUSY_SCALE } from '../src/playwright/perf/suite.ts';
 
 const PACKAGE_ROOT = path.resolve(import.meta.dirname, '..');
 const WORKSPACE_ROOT = path.resolve(PACKAGE_ROOT, '../../../..');
@@ -35,8 +38,8 @@ if (command === 'score') {
     workspaceRoot: WORKSPACE_ROOT,
     dir: path.resolve(values.dir),
     flow: 'assistant-chat',
-    // The budgets are calibrated on the blank space; the busy one is not run nightly.
     scale: 'blank',
+    extraScales: [BUSY_SCALE],
     suite: 'chat',
     title: 'Chat performance',
     budgets: parseBudgets(JSON.parse(readFileSync(BUDGETS_FILE, 'utf8'))),
