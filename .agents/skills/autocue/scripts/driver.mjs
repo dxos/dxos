@@ -27,8 +27,9 @@
  * a persistent profile (`--profile`, default `~/.local/state/dxos/autocue/profile`).
  *
  * `--target tauri` drives the native desktop app instead of Chromium: `--app` names its binary (the release
- * build under `packages/apps/composer-app/src-tauri/target/release/app` by default), which runs under
- * `tauri-driver` on its own Xvfb screen (`--headed on` uses `$DISPLAY`), recorded by `tauri/recorder.mjs`.
+ * build under `packages/apps/composer-app/src-tauri/target/release/app` by default). On Linux it runs under
+ * `tauri-driver` on its own Xvfb screen (`--headed on` uses `$DISPLAY`); on macOS a test build serves WebDriver
+ * itself and records from webview snapshots. Either way `tauri/recorder.mjs` records it.
  * The ops, the overlay and flow scripts are the same; `page` is `tauri/page.mjs`'s Playwright-shaped adapter.
  *
  * `--theme` sets the emulated color scheme (`dark` by default, `light`). `--action-timeout` (5000 ms)
@@ -50,7 +51,6 @@ import { startLogTap, startPolledLogTap } from './logs.mjs';
 import { createOverlay } from './overlay.mjs';
 import { hasFullFfmpeg, startRecorder } from './recorder.mjs';
 import { launchTauri } from './tauri/launch.mjs';
-import { startX11Recorder } from './tauri/recorder.mjs';
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -87,14 +87,17 @@ const parseArgs = () => {
     'cadence': 600,
     // NDJSON of the app's `@dxos/log` output, `app.log`-shaped; `<out>/app.log` when unset, `off` to skip.
     'log': undefined,
-    // `browser` (Chromium through Playwright) or `tauri` (the native desktop app through tauri-driver).
+    // `browser` (Chromium through Playwright) or `tauri` (the native desktop app through WebDriver).
     'target': 'browser',
-    // Tauri only: the app binary, and the port tauri-driver listens on (its native driver takes the next).
+    // Tauri only: the app binary, and the WebDriver port: tauri-driver's on Linux (its native driver takes the
+    // next), the app's own on macOS.
     'app': fileURLToPath(
       new URL('../../../../packages/apps/composer-app/src-tauri/target/release/app', import.meta.url),
     ),
     'driver-port': 4444,
     'headed': 'off',
+    // Tauri on macOS: `on` deletes the test build's profile before launch, for a first-run take.
+    'fresh': 'off',
   };
   for (let index = 0; index < args.length; index += 2) {
     const key = args[index].replace(/^--/, '');
@@ -173,6 +176,8 @@ const native = tauri
       port: options['driver-port'],
       headed: manual || options.headed === 'on',
       proxy: sandbox,
+      log: path.join(options.out, 'native.log'),
+      fresh: options.fresh === 'on',
       onExit: (reason) => {
         console.error(`${reason}; the driver is exiting`);
         process.exit(1);
@@ -230,8 +235,7 @@ if (manual && !native) {
 const recorder = !hires
   ? undefined
   : native
-    ? await startX11Recorder({
-        display: native.display,
+    ? await native.record({
         dir: options.out,
         file: path.join(options.out, 'session.webm'),
         size: { width: viewport.width * scale, height: viewport.height * scale },
@@ -424,7 +428,13 @@ const cut = async () => {
   // The banner is page DOM, so it would outlive the timeline entry it belongs to; the page is repainted
   // before the cut so the frame the recorder keeps does not carry it either.
   await page.evaluate((id) => document.getElementById(id)?.remove(), CAPTION_ID).catch(() => {});
-  await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  // Bounded: a hidden native window renders no frames.
+  await page.evaluate(() =>
+    Promise.race([
+      new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))),
+      new Promise((resolve) => setTimeout(resolve, 200)),
+    ]),
+  );
   // The repainted frame reaches the recorder over CDP a beat after the paint itself.
   await page.waitForTimeout(150);
   started = recorder.cut();

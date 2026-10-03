@@ -173,6 +173,10 @@ const blockToMarkdown = (
       // Only meaningful inside a tool run (grouped by the caller); bare stats render nothing.
       return undefined;
 
+    case 'request':
+      // The card answers on behalf of this message, so it carries the message's id.
+      return `<request message="${escapeAttribute(message.id)}">${escapeXml(JSON.stringify(block))}</request>`;
+
     case 'surface':
       return block.pending
         ? undefined

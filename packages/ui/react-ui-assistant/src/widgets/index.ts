@@ -5,6 +5,7 @@
 export * from './FallbackWidget.tsx';
 export * from './ReasoningWidget.ts';
 export * from './ReferenceWidget.ts';
+export * from './RequestWidget.tsx';
 export * from './SelectWidget.ts';
 export * from './StatsWidget.ts';
 export * from './StatusWidget.ts';
