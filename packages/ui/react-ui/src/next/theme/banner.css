@@ -13,6 +13,9 @@
     background: var(--dx-banner-surface);
     color: var(--dx-banner-fg);
   }
+  .dx-banner[data-inset] {
+    margin: var(--dx-gutter-sm, 0.5rem);
+  }
   .dx-banner[data-valence='success'] {
     --dx-banner-surface: var(--color-success-surface);
     --dx-banner-fg: var(--color-success-fg);

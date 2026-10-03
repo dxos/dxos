@@ -143,6 +143,7 @@
     --surface-bg: var(--color-r1-surface);
     view-transition-name: dx-main-complementary-sidebar;
     inset-inline-end: -100vw;
+    /* Kept at every width: the companion plank beside it wears the same tone, so only the line separates them. */
     border-inline-start: var(--dx-main-line) solid var(--color-r1-separator, var(--color-separator));
   }
   .dx-main-sidebar[data-side='end'][data-state='collapsed'] {
@@ -171,9 +172,6 @@
     }
     .dx-main-sidebar[data-side='start'] {
       border-inline-end-width: 0;
-    }
-    .dx-main-sidebar[data-side='end'] {
-      border-inline-start-width: 0;
     }
     .dx-main-sidebar[data-side='start']:is([data-state='collapsed'], [data-state='expanded']) {
       inset-inline-start: 0;

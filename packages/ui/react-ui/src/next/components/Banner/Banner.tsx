@@ -15,7 +15,7 @@ import { composable, composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { Block } from '../Block/index.ts';
 import { Button } from '../Button/index.ts';
-import { DefaultGutterProvider, containerAttributes } from '../Container/index.ts';
+import { DefaultGutterProvider, containerAttributes, useInGrid } from '../Container/index.ts';
 import { Icon } from '../Icon/index.ts';
 import { Typography } from '../Typography/index.ts';
 
@@ -50,6 +50,8 @@ const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
   ({ children, valence = 'neutral', icon, ...props }, forwardedRef) => {
     const titleId = useId();
     const descriptionId = useId();
+    // Outside a Container (a pane's body) there is no gutter to sit in, so the banner insets itself as a form's would be.
+    const inset = !useInGrid();
     const { style, ...attributes } = containerAttributes({ gutter: 'rail' });
     const {
       className,
@@ -68,6 +70,7 @@ const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
         data-scope='banner'
         data-part='root'
         data-valence={valence}
+        data-inset={inset ? '' : undefined}
         style={{ ...style, ...propsStyle }}
         className={className}
         ref={forwardedRef}

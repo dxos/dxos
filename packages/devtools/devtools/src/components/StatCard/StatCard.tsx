@@ -192,6 +192,9 @@ const StatCardRow = ({
 /** Runs a row's content through the end rail when it has no trailing cell of its own. */
 const SPAN_TRAILING = '[&>[data-part=row-main]]:[grid-column:content-start/full-end]';
 
+/** Runs a row's content through both rails. */
+const SPAN_FULL = '[&>[data-part=row-main]]:[grid-column:full-start/full-end]';
+
 StatCardRow.displayName = 'StatCard.Row';
 
 //
@@ -211,11 +214,16 @@ StatCardSection.displayName = 'StatCard.Section';
 // Content
 //
 
-type StatCardContentProps = PropsWithChildren<ThemedClassName>;
+type StatCardContentProps = PropsWithChildren<
+  ThemedClassName<{
+    /** Run across all three tracks (both rails), for content with no label to align with, such as a chart. */
+    full?: boolean;
+  }>
+>;
 
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
-const StatCardContent = ({ classNames, children }: StatCardContentProps) => (
-  <Card.Row leading={<span />} classNames={SPAN_TRAILING}>
+const StatCardContent = ({ classNames, full, children }: StatCardContentProps) => (
+  <Card.Row leading={full ? undefined : <span />} classNames={full ? SPAN_FULL : SPAN_TRAILING}>
     <Flex column grow={false} classNames={['min-w-0 text-xs', classNames]}>
       {children}
     </Flex>

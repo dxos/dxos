@@ -34,15 +34,15 @@
     box-shadow: inset 0 0 0 var(--dx-focus-ring-width) var(--dx-focus-ring-color);
   }
   /*
-   * Tailwind's forms plugin paints a blue ring and border on every focused field from the base layer; a Next field
+   * Tailwind's forms plugin paints a blue ring and border on every focused field from the base layer; a dx field
    * either draws its own ring (`.dx-focus-ring`) or delegates it to its wrapper (DateInput, Combobox), so neither
    * may show the plugin's.
    */
-  :is(input, textarea, select)[class*='nx-']:focus {
+  :is(input, textarea, select)[class*='dx-']:focus {
     border-color: transparent;
     outline: none;
   }
-  :is(input, textarea, select)[class*='nx-']:focus:not(.dx-focus-ring:focus-visible) {
+  :is(input, textarea, select)[class*='dx-']:focus:not(.dx-focus-ring:focus-visible) {
     box-shadow: none;
   }
 

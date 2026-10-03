@@ -12,7 +12,7 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space } from '@dxos/react-client/echo';
-import { Empty, Panel, Tabs, useTranslation } from '@dxos/react-ui';
+import { Empty, Panel, Tabs, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Selection, useSelection, useSelectionActions, useViewStateActions } from '@dxos/react-ui-attention';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
@@ -282,7 +282,11 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
       <Tabs.Root asChild value={layout} onValueChange={(value) => setLayout(value as Layout)} orientation='vertical'>
         <Panel.Root role={role}>
           <Panel.Header classNames={mx('grid', layout !== 'duplicates' && 'grid-cols-[1fr_auto]')}>
-            {layout !== 'duplicates' && <SearchList.Input placeholder={t('search-placeholder.label')} />}
+            {layout !== 'duplicates' && (
+              <Toolbar.Root>
+                <SearchList.Input placeholder={t('search-placeholder.label')} />
+              </Toolbar.Root>
+            )}
             <ActionToolbar {...menuActions} attendableId={attendableId} alwaysActive />
           </Panel.Header>
           <Panel.Body>
