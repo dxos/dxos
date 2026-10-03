@@ -238,4 +238,4 @@ export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
   },
 );
 
-DateInput.displayName = 'Next.DateInput';
+DateInput.displayName = 'DateInput';

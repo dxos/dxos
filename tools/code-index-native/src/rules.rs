@@ -5,9 +5,10 @@
 //! Compiles the N3 subset `rules/*.n3` uses into Datalog rules over interned triples.
 //!
 //! Supported (see `design/NATIVE-BACKEND.md`): `{ body } => { head }` with triple patterns,
-//! `string:matches` / `string:notMatches`, `string:concatenation` over a list, and scoped negation
-//! written as `(?x { pattern } ?list) log:collectAllIn ?scope. ?list list:length 0.` Anything else
-//! is rejected with the rule it occurs in.
+//! `string:matches` / `string:notMatches` (constant or bound pattern), `string:scrape`,
+//! `string:startsWith` / `endsWith` / `contains`, `log:notEqualTo`, `string:concatenation` over a
+//! list, and scoped negation written as `(?x { pattern } ?list) log:collectAllIn ?scope. ?list
+//! list:length 0.` Anything else is rejected with the rule it occurs in.
 
 use std::collections::BTreeMap;
 
@@ -45,6 +46,22 @@ pub enum Slot {
 #[derive(Clone, Debug)]
 pub struct Atom(pub [Slot; 3]);
 
+/// A regular expression written in the rule, or one read from the data at evaluation time.
+#[derive(Clone, Debug)]
+pub enum RegexSlot {
+    Fixed(Regex),
+    Bound(Slot),
+}
+
+/// A two-argument string test whose arguments must both be bound.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Compare {
+    StartsWith,
+    EndsWith,
+    Contains,
+    NotEqual,
+}
+
 #[derive(Clone, Debug)]
 pub enum Literal {
     Pos(Atom),
@@ -55,8 +72,19 @@ pub enum Literal {
     },
     Matches {
         arg: Slot,
-        regex: Regex,
+        regex: RegexSlot,
         negate: bool,
+    },
+    /// `(?text ?regex) string:scrape ?out`: the first capture group; no match, no binding.
+    Scrape {
+        text: Slot,
+        regex: RegexSlot,
+        out: Slot,
+    },
+    Compare {
+        left: Slot,
+        right: Slot,
+        op: Compare,
     },
     Concat {
         parts: Vec<Slot>,
@@ -104,7 +132,15 @@ impl Literal {
         match self {
             Literal::Pos(_) => Vec::new(),
             Literal::Neg { outer, .. } => outer.clone(),
-            Literal::Matches { arg, .. } => slot_vars(&[*arg]),
+            Literal::Matches { arg, regex, .. } => match regex {
+                RegexSlot::Fixed(_) => slot_vars(&[*arg]),
+                RegexSlot::Bound(pattern) => slot_vars(&[*arg, *pattern]),
+            },
+            Literal::Scrape { text, regex, .. } => match regex {
+                RegexSlot::Fixed(_) => slot_vars(&[*text]),
+                RegexSlot::Bound(pattern) => slot_vars(&[*text, *pattern]),
+            },
+            Literal::Compare { left, right, .. } => slot_vars(&[*left, *right]),
             Literal::Concat { parts, .. } => slot_vars(parts),
         }
     }
@@ -217,6 +253,21 @@ impl Compiler<'_> {
         }
     }
 
+    /// A literal pattern is compiled once, here; a variable one when the data binds it.
+    fn regex(&mut self, term: &N3Term) -> Result<RegexSlot, RuleError> {
+        match term {
+            N3Term::Variable(_) => Ok(RegexSlot::Bound(self.slot(term)?)),
+            _ => {
+                let pattern = self
+                    .constant_text(term)
+                    .ok_or_else(|| self.error("a regex must be a literal or a variable"))?;
+                Regex::new(&pattern)
+                    .map(RegexSlot::Fixed)
+                    .map_err(|error| self.error(format!("bad regex: {error}")))
+            }
+        }
+    }
+
     fn body(&mut self, quads: &[N3Quad], formulas: &Formulas) -> Result<Vec<Literal>, RuleError> {
         let mut literals = Vec::new();
         // `?list list:length 0` triples, consumed by the `log:collectAllIn` that produced the list.
@@ -246,17 +297,35 @@ impl Compiler<'_> {
             if predicate == format!("{LIST}length") {
                 continue;
             }
+            let compare = match predicate.strip_prefix(STRING) {
+                Some("startsWith") => Some(Compare::StartsWith),
+                Some("endsWith") => Some(Compare::EndsWith),
+                Some("contains") => Some(Compare::Contains),
+                _ if predicate == format!("{LOG}notEqualTo") => Some(Compare::NotEqual),
+                _ => None,
+            };
             if predicate == format!("{STRING}matches") || predicate == format!("{STRING}notMatches")
             {
-                let pattern = self
-                    .constant_text(&quad.object)
-                    .ok_or_else(|| self.error("string:matches needs a literal pattern"))?;
-                let regex = Regex::new(&pattern)
-                    .map_err(|error| self.error(format!("bad regex: {error}")))?;
                 literals.push(Literal::Matches {
                     arg: self.slot(&quad.subject)?,
-                    regex,
+                    regex: self.regex(&quad.object)?,
                     negate: predicate.ends_with("notMatches"),
+                });
+            } else if let Some(op) = compare {
+                literals.push(Literal::Compare {
+                    left: self.slot(&quad.subject)?,
+                    right: self.slot(&quad.object)?,
+                    op,
+                });
+            } else if predicate == format!("{STRING}scrape") {
+                let parts = formulas
+                    .list(&quad.subject)
+                    .filter(|parts| parts.len() == 2)
+                    .ok_or_else(|| self.error("string:scrape needs a (text regex) subject"))?;
+                literals.push(Literal::Scrape {
+                    text: self.slot(&parts[0])?,
+                    regex: self.regex(&parts[1])?,
+                    out: self.slot(&quad.object)?,
                 });
             } else if predicate == format!("{STRING}concatenation") {
                 let parts = formulas
@@ -355,6 +424,10 @@ fn outputs(literal: &Literal) -> Vec<usize> {
     match literal {
         Literal::Pos(atom) => atom.vars().collect(),
         Literal::Concat {
+            out: Slot::Var(var),
+            ..
+        }
+        | Literal::Scrape {
             out: Slot::Var(var),
             ..
         } => vec![*var],

@@ -1,32 +1,51 @@
 /*
- * Combobox: a control-sized row holding a text input and a trailing caret trigger; its listbox reuses Select's popup
- * and item rules.
+ * Combobox: a control-sized row holding a text input and a trailing caret trigger, or Select's trigger button with the
+ * input in the popup; its listbox reuses Select's popup and item rules.
  */
 
 @layer dx-components {
   /* The root takes no box, so its label and control are laid out as the parent's children. */
-  .nx-combobox {
+  .dx-combobox {
     display: contents;
   }
-  :is(.nx-field, .nx-grid[data-layout='stack']) > .nx-combobox > .nx-control {
-    margin-block: var(--nx-control-inset);
+  :is(.dx-field, .dx-container[data-layout='stack']) > .dx-combobox > .dx-control {
+    margin-block: var(--dx-control-inset);
   }
 
-  .nx-combobox-control {
+  .dx-combobox-control {
     display: flex;
     align-items: center;
     width: 100%;
     min-width: 0;
     padding-inline-end: 0;
-    background: var(--color-input-surface);
+    background: var(--color-input-bg);
+  }
+  /*
+   * A wrapping row (a multiple selection's chips): one inset of padding round lines one tag tall, so a single line is
+   * control-tall; the caret takes a tag-tall cell at the end of the last line.
+   */
+  .dx-combobox-control[data-wrap] {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--dx-control-size);
+    padding-block: var(--dx-control-inset);
+    gap: var(--dx-control-inset) var(--dx-gap-size);
+  }
+  /* Text in the row (a placeholder) is one tag tall, not a block, so an empty control is as tall as an Input. */
+  .dx-combobox-control > .dx-typography {
+    padding-block: 0;
+  }
+  .dx-combobox-control[data-wrap] > .dx-combobox-trigger {
+    height: calc(var(--dx-control-size) - 2 * var(--dx-control-inset));
+    margin-inline-start: auto;
   }
   /* An outline, not an inset shadow: it paints above the trigger's own fill instead of under it. */
-  .nx-combobox-control:has(> .nx-combobox-input:focus-visible) {
-    outline: var(--nx-focus-ring-width) solid var(--nx-focus-ring-color);
-    outline-offset: calc(-1 * var(--nx-focus-ring-width));
+  .dx-combobox-control:has(> .dx-combobox-input:focus-visible) {
+    outline: var(--dx-focus-ring-width) solid var(--dx-focus-ring-color);
+    outline-offset: calc(-1 * var(--dx-focus-ring-width));
   }
 
-  .nx-combobox-input {
+  .dx-combobox-input {
     flex: 1;
     min-width: 0;
     height: 100%;
@@ -38,12 +57,12 @@
     color: inherit;
   }
 
-  /* A control-sized square, so the caret sits where an icon-only Button's icon would. */
-  .nx-combobox-trigger {
+  /* A block-wide end cell, so the caret centres on the column of the row's trailing actions. */
+  .dx-combobox-trigger {
     display: grid;
     place-items: center;
     flex-shrink: 0;
-    width: var(--nx-control-size);
+    width: var(--dx-block-size);
     height: 100%;
     padding: 0;
     border: none;
@@ -53,18 +72,77 @@
     cursor: pointer;
   }
   /* The clear trigger is `hidden` while there is no value, which the grid display above would otherwise override. */
-  .nx-combobox-trigger[hidden] {
+  .dx-combobox-trigger[hidden] {
     display: none;
   }
-  .nx-combobox-trigger:hover:not(:disabled) {
+  .dx-combobox-trigger:hover:not(:disabled) {
     background: var(--color-hover-surface);
   }
 
-  .nx-combobox-empty {
+  /* The empty state and the loading row. */
+  .dx-combobox-empty {
     display: flex;
     align-items: center;
-    height: var(--nx-block-size);
-    padding-inline: var(--nx-gap-size);
-    color: var(--color-description);
+    gap: var(--dx-gap-size);
+    height: var(--dx-block-size);
+    padding-inline: var(--dx-gap-size);
+    color: var(--color-fg-muted);
+  }
+
+  /* The popup's search field stays above the options as they scroll, which the viewport's scroll padding keeps clear. */
+  .dx-combobox-search {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    display: block;
+    width: 100%;
+    height: var(--dx-block-size);
+    padding-inline: var(--dx-gap-size);
+    border: none;
+    border-block-end: 1px solid var(--color-separator);
+    border-radius: 0;
+    outline: none;
+    background: var(--surface-bg);
+    font: inherit;
+    color: inherit;
+  }
+  .dx-scroll-viewport:has(> .dx-combobox-search) {
+    scroll-padding-block-start: var(--dx-block-size);
+  }
+
+  /*
+   * A row with a description is a grid: the icon cell, the text over its description in the growing column, then the
+   * indicator; it grows by the description's line.
+   */
+  .dx-combobox-item:has(> .dx-combobox-item-description) {
+    --dx-combobox-text-column: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    column-gap: var(--dx-gap-size);
+    align-items: center;
+    height: auto;
+    min-height: var(--dx-block-size);
+    padding-block: calc((var(--dx-block-size) - var(--dx-line-height)) / 2);
+  }
+  .dx-combobox-item:has(> .dx-combobox-item-description):has(> .dx-icon:first-child) {
+    --dx-combobox-text-column: 2;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+  .dx-combobox-item:has(> .dx-combobox-item-description) > * {
+    grid-row: 1 / -1;
+  }
+  .dx-combobox-item:has(> .dx-combobox-item-description) > [data-part='item-text'] {
+    grid-row: 1;
+    grid-column: var(--dx-combobox-text-column);
+  }
+  .dx-combobox-item > .dx-combobox-item-description {
+    grid-row: 2;
+    grid-column: var(--dx-combobox-text-column);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--color-fg-muted);
   }
 }

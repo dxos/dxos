@@ -8,8 +8,15 @@ import { expect, userEvent, waitFor } from 'storybook/test';
 
 import { LogLevel } from '@dxos/log';
 import { random } from '@dxos/random';
-import { Button, Panel, ScrollArea, ScrollContainer, Toolbar, useInterval } from '@dxos/react-ui';
-import { type ScrollController } from '@dxos/react-ui';
+import {
+  Button,
+  Panel,
+  ScrollArea,
+  ScrollContainer,
+  type ScrollController,
+  Toolbar,
+  useInterval,
+} from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { defaultOptions } from './timeline-options.ts';
@@ -382,24 +389,24 @@ export const Streaming: Story = {
 
     return (
       <Panel.Root>
-        <Panel.Toolbar asChild>
+        <Panel.Header>
           <Toolbar.Root>
             <Button onClick={() => setRunning(true)}>Start</Button>
             <Button onClick={() => setRunning(false)}>Stop</Button>
             <Button onClick={() => scrollerRef.current?.scrollToTop()}>Top</Button>
             <Button onClick={() => scrollerRef.current?.scrollToBottom()}>Bottom</Button>
           </Toolbar.Root>
-        </Panel.Toolbar>
-        <Panel.Content>
+        </Panel.Header>
+        <Panel.Body>
           <ScrollContainer.Root pin ref={scrollerRef}>
-            <ScrollContainer.Content thin>
+            <ScrollContainer.Content width='thin'>
               <ScrollContainer.Viewport ref={setViewport}>
                 <Timeline branches={branches} commits={commits} showTimestamp scroller={viewport} />
               </ScrollContainer.Viewport>
               <ScrollContainer.ScrollDownButton />
             </ScrollContainer.Content>
           </ScrollContainer.Root>
-        </Panel.Content>
+        </Panel.Body>
       </Panel.Root>
     );
   },

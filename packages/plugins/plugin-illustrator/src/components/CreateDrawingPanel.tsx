@@ -7,7 +7,7 @@ import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities } from '@dxos/app-framework/ui';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
-import { Column, useTranslation } from '@dxos/react-ui';
+import { useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
 
@@ -52,31 +52,29 @@ export const CreateDrawingPanel = ({ onCreateObject, onCancel, variants: variant
 
   return (
     <Form.Root schema={VariantSelection} values={values} onSave={handleSave} onCancel={onCancel}>
-      <Column.Center>
-        <Form.Content>
-          <SearchList.Root onSearch={handleSearch}>
-            <SearchList.Input
-              classNames='mb-form-gap'
-              autoFocus
-              data-testid='create-drawing-panel.variant-input'
-              placeholder={t('create-panel.variant.placeholder')}
-            />
-            <SearchList.Viewport>
-              {results.map((variant) => (
-                <SearchList.Item
-                  key={variant.id}
-                  value={variant.id}
-                  label={variant.label}
-                  icon={variant.icon ?? 'ph--compass-tool--regular'}
-                  checked={variant.id === variantId}
-                  onSelect={() => setSelectedId(variant.id)}
-                />
-              ))}
-            </SearchList.Viewport>
-          </SearchList.Root>
-          <Form.Actions />
-        </Form.Content>
-      </Column.Center>
+      <Form.Content>
+        <SearchList.Root onSearch={handleSearch}>
+          <SearchList.Input
+            classNames='mb-form-gap'
+            autoFocus
+            data-testid='create-drawing-panel.variant-input'
+            placeholder={t('create-panel.variant.placeholder')}
+          />
+          <SearchList.Viewport>
+            {results.map((variant) => (
+              <SearchList.Item
+                key={variant.id}
+                value={variant.id}
+                label={variant.label}
+                icon={variant.icon ?? 'ph--compass-tool--regular'}
+                checked={variant.id === variantId}
+                onSelect={() => setSelectedId(variant.id)}
+              />
+            ))}
+          </SearchList.Viewport>
+        </SearchList.Root>
+        <Form.Actions />
+      </Form.Content>
     </Form.Root>
   );
 };

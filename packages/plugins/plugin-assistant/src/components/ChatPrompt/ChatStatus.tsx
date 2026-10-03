@@ -146,7 +146,7 @@ export const ChatStatusView = ({
                   className='flex items-center gap-1'
                   title={alarm.message}
                 >
-                  <Icon icon='ph--alarm--regular' size={4} />
+                  <Icon icon='ph--alarm--regular' size='md' />
                   {formatWakeAt(alarm.wakeAt)}
                 </span>
               </NaturalChatStatus.Text>

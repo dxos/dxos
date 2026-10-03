@@ -8,7 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { Blob, Obj, Ref, Tag } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover } from '@dxos/react-ui';
+import { Block, Card, DX_ANCHOR_ACTIVATE, DxAnchorActivate, Icon, Popover, virtualAnchor } from '@dxos/react-ui';
 import { createMenuAction } from '@dxos/react-ui-menu';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { File, PullRequest, Task, TaskSet } from '@dxos/types';
@@ -396,12 +396,12 @@ const iconFor = (artifact: Obj.Unknown): string =>
 const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequest }) => (
   <>
     <Card.Row>
-      <Card.Text variant='description'>
+      <Card.Text variant='muted'>
         {PullRequest.reference(pullRequest)} · {pullRequest.state} · {pullRequest.headBranch} → {pullRequest.baseBranch}
       </Card.Text>
     </Card.Row>
     <Card.Row>
-      <Card.Text variant='description' data-testid='artifact-preview.pullRequest'>
+      <Card.Text variant='muted' data-testid='artifact-preview.pullRequest'>
         +{pullRequest.additions ?? 0} −{pullRequest.deletions ?? 0}
       </Card.Text>
     </Card.Row>
@@ -451,34 +451,35 @@ const ArtifactPreviewHost = ({ artifacts, children }: PropsWithChildren<{ artifa
   }, [handleActivate]);
 
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.VirtualTrigger virtualRef={triggerRef} />
+    <Popover.Root
+      open={open}
+      onOpenChange={({ open }) => setOpen(open)}
+      positioning={virtualAnchor(triggerRef)}
+      autoFocus={false}
+    >
       {children}
       <output className='sr-only' data-testid='artifact-opened'>
         {opened}
       </output>
       {artifact && (
-        <Popover.Portal>
-          <Popover.Content onOpenAutoFocus={(event) => event.preventDefault()}>
-            <Popover.Viewport classNames='dx-card-popover-width'>
-              <Card.Root border={false} data-testid='artifact-preview'>
-                <Card.Header>
-                  <Card.Block>
-                    <Icon icon={iconFor(artifact)} />
-                  </Card.Block>
-                  <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
-                </Card.Header>
-                {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
-                {Obj.instanceOf(File.File, artifact) && (
-                  <Card.Row>
-                    <FilePreview file={artifact} />
-                  </Card.Row>
-                )}
-              </Card.Root>
-            </Popover.Viewport>
-            <Popover.Arrow />
-          </Popover.Content>
-        </Popover.Portal>
+        <Popover.Content>
+          <Popover.Body classNames='dx-card-popover-width'>
+            <Card.Root border={false} data-testid='artifact-preview'>
+              <Card.Header>
+                <Block>
+                  <Icon icon={iconFor(artifact)} />
+                </Block>
+                <Card.Title>{Obj.getLabel(artifact)}</Card.Title>
+              </Card.Header>
+              {PullRequest.instanceOf(artifact) && <PullRequestPreview pullRequest={artifact} />}
+              {Obj.instanceOf(File.File, artifact) && (
+                <Card.Row>
+                  <FilePreview file={artifact} />
+                </Card.Row>
+              )}
+            </Card.Root>
+          </Popover.Body>
+        </Popover.Content>
       )}
     </Popover.Root>
   );
@@ -541,7 +542,6 @@ const DefaultStory = ({
   showOrdinals,
   showDescription = true,
   showEstimates,
-  debug,
   framed = true,
   acceptFiles = false,
 }: {
@@ -563,8 +563,6 @@ const DefaultStory = ({
   showOrdinals?: boolean;
   showDescription?: boolean;
   showEstimates?: boolean;
-  /** Paint every row's drop bands, so the zones are visible without holding a drag. */
-  debug?: boolean;
   /** Insets the pane in a card, as an article does. Off for the tests that measure the pane's own
       columns against a row's, which the inset would offset. */
   framed?: boolean;
@@ -654,7 +652,6 @@ const DefaultStory = ({
 
   return (
     <TaskList.Root
-      debug={debug}
       tasks={tasks}
       selected={selected}
       hierarchical={hierarchical}
@@ -730,7 +727,7 @@ const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] })
             <TaskList.Editor showDescription classNames='p-2' />
           </TaskList.Root>
         ) : (
-          <p className='p-4 text-subdued'>No task selected.</p>
+          <p className='p-4 text-fg-subtle'>No task selected.</p>
         )}
       </div>
     </div>
@@ -979,22 +976,8 @@ export const HierarchicalDraggable: Story = {
   },
 };
 
-/** The drop bands painted on every row, so the zones can be seen without holding a drag. */
-export const DragDebug: Story = {
-  args: {
-    seed: seedHierarchy,
-    hierarchical: true,
-    draggable: true,
-    showOrdinals: true,
-    showDescription: true,
-    debug: true,
-    framed: false,
-  },
-};
-
 /**
- * The minimal `A > B, C` shape TREE.md reasons the six landing places about, with the bands painted.
- * Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
+ * The minimal `A > B, C` shape TREE.md reasons the six landing places about. Small enough that every zone is reachable without scrolling, which is what makes it the fixture to
  * check a hitbox change against.
  */
 export const DropZones: Story = {
@@ -1003,7 +986,6 @@ export const DropZones: Story = {
     hierarchical: true,
     draggable: true,
     showDescription: false,
-    debug: true,
     framed: false,
   },
 };
@@ -1873,7 +1855,7 @@ export const TestHierarchy: Story = {
           ordinal: row.querySelector('[data-testid="taskList.item.ordinal"]')?.textContent ?? '',
         }));
     const shape = () => rows().map(({ title, level }) => `${title}:${level}`);
-    const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]')!;
+    const toggle = (row: HTMLElement) => row.querySelector<HTMLElement>('[data-part="branch-trigger"]')!;
     const press = (row: HTMLElement, key: string) => {
       row.focus();
       row.dispatchEvent(new KeyboardEvent('keydown', { key, shiftKey: true, bubbles: true }));
@@ -1990,7 +1972,7 @@ export const TestHierarchy: Story = {
 
     // The disclosure toggle sits on the title's centreline whether or not a description follows.
     for (const { row } of rows()) {
-      const toggle = row.querySelector<HTMLElement>('[data-testid="treeItem.toggle"]');
+      const toggle = row.querySelector<HTMLElement>('[data-part="branch-trigger"]');
       const rowTitle = row.querySelector<HTMLElement>('.truncate');
       if (toggle && rowTitle) {
         const centre = (element: HTMLElement) => {

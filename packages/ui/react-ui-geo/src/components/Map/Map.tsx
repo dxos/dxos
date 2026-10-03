@@ -27,7 +27,7 @@ import {
 } from 'react-leaflet';
 
 import { createContext } from '@dxos/react-hooks';
-import { type ThemedClassName, ThemeProvider, Tooltip } from '@dxos/react-ui';
+import { type ThemedClassName, ThemeProvider } from '@dxos/react-ui';
 import { composable, composableProps, defaultTx } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
@@ -473,11 +473,7 @@ const CustomControl = ({
       rootRef.current = root;
       // Initial render — covers mount and any map/position remount; the effect below
       // handles subsequent children-only updates.
-      root.render(
-        <ThemeProvider tx={defaultTx}>
-          <Tooltip.Provider>{children}</Tooltip.Provider>
-        </ThemeProvider>,
-      );
+      root.render(<ThemeProvider tx={defaultTx}>{children}</ThemeProvider>);
       return container;
     };
 
@@ -493,11 +489,7 @@ const CustomControl = ({
 
   // Re-render children into the persistent root whenever they change.
   useEffect(() => {
-    rootRef.current?.render(
-      <ThemeProvider tx={defaultTx}>
-        <Tooltip.Provider>{children}</Tooltip.Provider>
-      </ThemeProvider>,
-    );
+    rootRef.current?.render(<ThemeProvider tx={defaultTx}>{children}</ThemeProvider>);
   }, [children]);
 
   return null;

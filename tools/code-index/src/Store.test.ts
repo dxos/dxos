@@ -365,11 +365,15 @@ describe('Store', () => {
       withStore((store) =>
         Effect.gen(function* () {
           const generation = yield* store.generation();
-          yield* store.reasonAll(reasoners);
-          yield* store.recordReasoned('rules', generation);
+          const derived = yield* store.reasonAll(reasoners);
+          yield* store.recordReasoned(
+            'rules',
+            generation,
+            derived.reduce((total, outcome) => total + outcome.derived, 0),
+          );
         }),
       );
-    const current = () => withStore((store) => store.isReasoned('rules'));
+    const current = () => withStore((store) => Effect.map(store.reasoned('rules'), (derived) => derived !== undefined));
 
     await withStore((store) => store.putDocument(document('src/a.ts', 6, ['src/b.ts'])));
     expect(await current()).toBe(false);
@@ -377,8 +381,10 @@ describe('Store', () => {
     await reason();
     expect(await current()).toBe(true);
     expect(await withStore((store) => store.derivedCount())).toEqual(1);
+    // The count the pass recorded, read back without counting.
+    expect(await withStore((store) => store.reasoned('rules'))).toEqual(1);
     // Another rule set did not compute these graphs.
-    expect(await withStore((store) => store.isReasoned('other rules'))).toBe(false);
+    expect(await withStore((store) => store.reasoned('other rules'))).toBeUndefined();
 
     await withStore((store) => store.putDocument(document('src/c.ts', 1)));
     expect(await current()).toBe(false);

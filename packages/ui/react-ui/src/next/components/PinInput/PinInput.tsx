@@ -106,4 +106,4 @@ export const PinInput = forwardRef<HTMLDivElement, PinInputProps>(
   },
 );
 
-PinInput.displayName = 'Next.PinInput';
+PinInput.displayName = 'PinInput';

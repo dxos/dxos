@@ -88,7 +88,7 @@ export const signature = (reasoners: readonly Reasoner[]): string =>
 
 /**
  * Run each reasoner in order, replacing (or, natively, maintaining) its graph, and record the facts
- * they ran over (`Store.isReasoned`). Returns what each concluded.
+ * they ran over (`Store.reasoned`). Returns what each concluded.
  */
 export const run = (reasoners: readonly Reasoner[]): Effect.Effect<Outcome[], Store.StoreError, Store.Store> =>
   Effect.gen(function* () {
@@ -119,6 +119,11 @@ export const run = (reasoners: readonly Reasoner[]): Effect.Effect<Outcome[], St
     yield* store.setMeta(PASSES_KEY, ran.join('\n'));
     const rules = reasoners.filter((reasoner): reasoner is RuleFile => 'rules' in reasoner);
     const ruled = yield* store.reasonAll(rules);
-    yield* store.recordReasoned(signature(reasoners), generation);
-    return [...outcomes, ...ruled];
+    const all = [...outcomes, ...ruled];
+    yield* store.recordReasoned(
+      signature(reasoners),
+      generation,
+      all.reduce((total, outcome) => total + outcome.derived, 0),
+    );
+    return all;
   });

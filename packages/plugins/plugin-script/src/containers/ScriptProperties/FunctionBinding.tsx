@@ -11,7 +11,7 @@ import type * as Script from '@dxos/compute/Script';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClient } from '@dxos/react-client';
-import { Field, SystemIconButton, useControlledState, useTranslation } from '@dxos/react-ui';
+import { Field, Input, SystemButton, useControlledState, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
 import { meta } from '#meta';
@@ -54,7 +54,7 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
       {functionUrl && (
         <Field.Root>
           <Field.Label>{t('function-url.label')}</Field.Label>
-          <Field.Input
+          <Input
             disabled
             value={functionUrl}
             onChange={(event) => {
@@ -63,13 +63,13 @@ export const FunctionBinding = ({ object }: FunctionBindingProps) => {
               });
             }}
           />
-          <SystemIconButton.Clipboard iconOnly value={functionUrl} />
+          <SystemButton.Clipboard iconOnly value={functionUrl} />
         </Field.Root>
       )}
 
       <Field.Root>
         <Field.Label>{t('function-binding.label')}</Field.Label>
-        <Field.Input
+        <Input
           placeholder={t('function-binding.placeholder')}
           value={binding}
           onChange={handleBindingChange}

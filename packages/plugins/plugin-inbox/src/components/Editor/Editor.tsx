@@ -4,7 +4,7 @@
 
 import React, { useMemo } from 'react';
 
-import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode } from '@dxos/react-ui';
 import { type EditorViewProps, Editor as TextEditor } from '@dxos/react-ui-editor';
 import {
   type Extension,
@@ -45,7 +45,7 @@ export const Editor = ({
   compact,
   classNames,
 }: EditorProps) => {
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const extensions = useMemo(
     () =>
       [
@@ -60,7 +60,7 @@ export const Editor = ({
   return (
     <TextEditor.Root>
       <TextEditor.View
-        classNames={mx('dx-expand dx-input', classNames)}
+        classNames={mx('dx-expand dx-input-box', classNames)}
         extensions={extensions}
         value={value}
         onChange={onChange}

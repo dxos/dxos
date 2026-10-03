@@ -19,9 +19,9 @@ export const DayAhead = ({ summary }: DayAheadProps) => {
   return (
     <Section title={t('day-ahead.title')}>
       {summary ? (
-        <p className='text-sm text-description whitespace-pre-wrap'>{summary}</p>
+        <p className='text-sm text-fg-muted whitespace-pre-wrap'>{summary}</p>
       ) : (
-        <p className='text-sm text-description italic'>{t('no-entry.label')}</p>
+        <p className='text-sm text-fg-muted italic'>{t('no-entry.label')}</p>
       )}
     </Section>
   );

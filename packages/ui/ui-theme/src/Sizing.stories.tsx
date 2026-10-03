@@ -56,7 +56,7 @@ const Tall = () => (
 const Frame = ({ title, note, children }: PropsWithChildren<{ title: string; note?: string }>) => (
   <div className='flex flex-col gap-1'>
     <div className='text-sm font-medium'>{title}</div>
-    {note && <div className='text-xs text-description'>{note}</div>}
+    {note && <div className='text-xs text-fg-muted'>{note}</div>}
     {/*
       The clip belongs here, on the frame, and never on the measured element: a non-visible
       overflow zeroes an item's own automatic minimum size, so clipping the subject would
@@ -84,7 +84,7 @@ export default meta;
 export const ParentTypes = {
   render: () => (
     <div className='p-4 flex flex-col gap-6'>
-      <p className='max-w-2xl text-sm text-description'>
+      <p className='max-w-2xl text-sm text-fg-muted'>
         Each parent is 260px tall with a 40px header and a 900px child. Green means the element stayed inside its
         parent; red means it grew to its content and blew the box out.
       </p>
@@ -126,7 +126,7 @@ export const ParentTypes = {
 export const WhichPropertyFires = {
   render: () => (
     <div className='p-4 flex flex-col gap-6'>
-      <p className='max-w-2xl text-sm text-description'>
+      <p className='max-w-2xl text-sm text-fg-muted'>
         Identical grid parents, varying only the child. This is why `dx-expand` works without the author knowing the
         parent's display type — and why `flex-1` next to `grid` is not a bug.
       </p>
@@ -165,7 +165,7 @@ export const ShrinkingVersusShoving = {
     const footer = <div className='h-10 shrink-0 grid place-items-center text-xs bg-emerald-500/20'>footer</div>;
     return (
       <div className='p-4 flex flex-col gap-6'>
-        <p className='max-w-2xl text-sm text-description'>
+        <p className='max-w-2xl text-sm text-fg-muted'>
           Identical 260px columns: a body holding 900px of content, then a 40px footer. Watch the footer, not the
           scrollbar — the failure on the left is a displaced sibling, and nothing scrolls in either box.
         </p>
@@ -210,7 +210,7 @@ export const ShrinkingVersusShoving = {
 export const ClippingIsSeparate = {
   render: () => (
     <div className='p-4 flex flex-col gap-6'>
-      <p className='max-w-2xl text-sm text-description'>
+      <p className='max-w-2xl text-sm text-fg-muted'>
         Both boxes are constrained to 260px. Only the second one clips — the constraint and the clip are independent
         decisions.
       </p>
@@ -241,9 +241,7 @@ export const ClippingIsSeparate = {
 export const Fullscreen = {
   render: () => (
     <div className='p-4 flex flex-col gap-6'>
-      <p className='max-w-2xl text-sm text-description'>
-        Use `dx-fullscreen` instead of `dx-expand`, not alongside it.
-      </p>
+      <p className='max-w-2xl text-sm text-fg-muted'>Use `dx-fullscreen` instead of `dx-expand`, not alongside it.</p>
       <Frame title='dx-fullscreen' note='dx-fullscreen against a positioned ancestor'>
         <div className='relative h-full'>
           <Measured label='dx-fullscreen' classNames='dx-fullscreen'>

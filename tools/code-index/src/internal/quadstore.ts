@@ -237,7 +237,19 @@ export const make = <E>(
 
       count: () => Effect.map(match(), (quads) => quads.length),
 
-      countGraph: (name) => Effect.map(ofGraph(name), (quads) => quads.length),
+      countGraph: (name) =>
+        attempt('Failed to count quads', async () => {
+          const { iterator } = await quadstore.getStream({ graph: DataFactory.namedNode(name) });
+          // Counted as they stream past, so a large graph is never held in memory.
+          return new Promise<number>((resolve, reject) => {
+            let count = 0;
+            iterator.on('data', () => {
+              count += 1;
+            });
+            iterator.on('error', reject);
+            iterator.on('end', () => resolve(count));
+          });
+        }),
 
       clear: () => attempt('Failed to clear graph', () => quadstore.clear()),
     };

@@ -91,9 +91,9 @@ const DefaultStory = ({ source, scale = 2, grid }: StoryArgs) => {
 
   return (
     <Panel.Root>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <CanvasComponent classNames='dx-attention-surface' canvas={canvas} assetsBaseUrl={null} autoCenter />
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

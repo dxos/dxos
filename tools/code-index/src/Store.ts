@@ -16,6 +16,7 @@ import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import { type Schema as LdkitSchema, type Lens } from 'ldkit';
 import { DataFactory, Parser, Writer } from 'n3';
+import { existsSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -72,6 +73,14 @@ export type Backend = 'js' | 'native';
 
 /** `CODE_INDEX_BACKEND=native` selects the native backend wherever a store is opened without one. */
 export const defaultBackend = (): Backend => (process.env.CODE_INDEX_BACKEND === 'native' ? 'native' : 'js');
+
+export type LayerOptions = {
+  /**
+   * Open an existing store for reading only: no migration, version reset or reconcile, since each
+   * of those writes and a reader must not race the process indexing into the same store.
+   */
+  readonly readOnly?: boolean;
+};
 
 export type ReasonOptions = {
   /** Replace the reasoner's graph with this pass's conclusions (default false — derivations are returned only). */
@@ -139,13 +148,13 @@ export interface Api {
   readonly derivedCount: () => Effect.Effect<number, StoreError>;
   /** Advanced by every write to the facts; what a reasoning pass records it ran over. */
   readonly generation: () => Effect.Effect<number, StoreError>;
-  /** Records that the reasoners `signature` names ran over the facts as of `generation`. */
-  readonly recordReasoned: (signature: string, generation: number) => Effect.Effect<void, StoreError>;
+  /** Records that the reasoners `signature` names ran over the facts as of `generation`, deriving `derived` quads. */
+  readonly recordReasoned: (signature: string, generation: number, derived: number) => Effect.Effect<void, StoreError>;
   /**
-   * Whether the conclusions are what the reasoners `signature` names would leave: those reasoners
-   * last ran over the facts the store holds now. False after any write since.
+   * How many quads the reasoners `signature` names derived, if their conclusions are current: they
+   * last ran over the facts the store holds now. `undefined` after any write since.
    */
-  readonly isReasoned: (signature: string) => Effect.Effect<boolean, StoreError>;
+  readonly reasoned: (signature: string) => Effect.Effect<number | undefined, StoreError>;
 
   readonly stats: () => Effect.Effect<Stats, StoreError>;
   readonly clear: () => Effect.Effect<void, StoreError>;
@@ -168,7 +177,9 @@ const GENERATION_KEY = 'generation';
 /** {@link Reasoned} of the last completed reasoning pass — see {@link Api.isReasoned}. */
 const REASONED_KEY = 'reasoned';
 
-const Reasoned = Schema.fromJsonString(Schema.Struct({ signature: Schema.String, generation: Schema.Number }));
+const Reasoned = Schema.fromJsonString(
+  Schema.Struct({ signature: Schema.String, generation: Schema.Number, derived: Schema.Number }),
+);
 
 /** The derived graphs any reasoning has written, so they are counted without scanning the store. */
 const DERIVED_GRAPHS_KEY = 'derivedGraphs';
@@ -204,18 +215,42 @@ const resetIfStale = (dir: string): Effect.Effect<void, StoreError, SqlClient.Sq
     );
   });
 
-const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
+/** A reader cannot reset a stale store, so it refuses one rather than answering from old graphs. */
+const requireCurrent = (dir: string): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
-    // WAL with FULL fsyncs every commit; NORMAL fsyncs at checkpoints and still survives a process
-    // crash at any point. Only an OS crash can lose the last commits, and the quad stores (RocksDB,
-    // LevelDB) never fsync their own writes, so FULL bought no durability the graphs had.
-    yield* sql`PRAGMA synchronous = NORMAL`.pipe(Effect.mapError(fail('Failed to configure ledger')));
-    yield* Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      // A schema the store cannot create is a construction failure, not something a caller recovers from.
-      Effect.orDie,
+    const [row] = yield* sql<{ value: string }>`SELECT value FROM meta WHERE key = ${VERSION_KEY}`.pipe(
+      Effect.mapError(fail('Failed to read store version')),
     );
-    yield* resetIfStale(dir);
+    if (row?.value !== String(Ontology.VERSION)) {
+      return yield* Effect.fail(
+        new StoreError({
+          message: `The store at ${dir} was written by ontology version ${row?.value ?? 'unknown'}, not ${Ontology.VERSION}; run \`code-index index\` to rebuild it.`,
+        }),
+      );
+    }
+  });
+
+const make = (
+  dir: string,
+  backend: Backend,
+  readOnly: boolean,
+): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    if (readOnly) {
+      yield* requireCurrent(dir);
+    } else {
+      // WAL with FULL fsyncs every commit; NORMAL fsyncs at checkpoints and still survives a process
+      // crash at any point. Only an OS crash can lose the last commits, and the quad stores (RocksDB,
+      // LevelDB) never fsync their own writes, so FULL bought no durability the graphs had.
+      yield* sql`PRAGMA synchronous = NORMAL`.pipe(Effect.mapError(fail('Failed to configure ledger')));
+      yield* Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+        // A schema the store cannot create is a construction failure, not something a caller recovers from.
+        Effect.orDie,
+      );
+      yield* resetIfStale(dir);
+    }
 
     const graphs: Graph.Graph<StoreError> = yield* backend === 'native'
       ? Native.make(dir, fail)
@@ -331,7 +366,9 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
         return pending.length;
       });
 
-    yield* reconcile();
+    if (!readOnly) {
+      yield* reconcile();
+    }
 
     const putDocuments: Api['putDocuments'] = (documents) =>
       documents.length === 0
@@ -528,20 +565,23 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
 
       generation,
 
-      recordReasoned: (signature, generation) =>
+      recordReasoned: (signature, generation, derived) =>
         Effect.flatMap(
-          Schema.encodeEffect(Reasoned)({ signature, generation }).pipe(
+          Schema.encodeEffect(Reasoned)({ signature, generation, derived }).pipe(
             Effect.mapError(fail('Failed to record the reasoning pass')),
           ),
           (reasoned) => setMeta(REASONED_KEY, reasoned),
         ),
 
-      isReasoned: (signature) =>
+      reasoned: (signature) =>
         Effect.gen(function* () {
-          const reasoned = yield* readMeta(REASONED_KEY, Reasoned);
-          return (
-            reasoned !== undefined && reasoned.generation === (yield* generation()) && reasoned.signature === signature
-          );
+          // A marker from before it recorded a count, or one that no longer decodes, is just stale.
+          const reasoned = yield* readMeta(REASONED_KEY, Reasoned).pipe(Effect.orElseSucceed(() => undefined));
+          return reasoned !== undefined &&
+            reasoned.generation === (yield* generation()) &&
+            reasoned.signature === signature
+            ? reasoned.derived
+            : undefined;
         }),
 
       stats: () =>
@@ -565,16 +605,28 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
   });
 
 /**
- * Opens (creating if absent) the store rooted at `dir`; each database is a file or directory inside
- * it. Scoped — both databases close when the enclosing scope ends.
+ * Opens (creating if absent, unless `readOnly`) the store rooted at `dir`; each database is a file
+ * or directory inside it. Scoped — both databases close when the enclosing scope ends.
  */
-export const layer = (dir: string, backend: Backend = defaultBackend()): Layer.Layer<Store, StoreError> =>
-  Layer.unwrap(
-    Effect.map(
-      Effect.tryPromise({
+export const layer = (
+  dir: string,
+  backend: Backend = defaultBackend(),
+  options: LayerOptions = {},
+): Layer.Layer<Store, StoreError> => {
+  const readOnly = options.readOnly ?? false;
+  const prepare = readOnly
+    ? existsSync(join(dir, SQLITE_FILE))
+      ? Effect.void
+      : Effect.fail(new StoreError({ message: `No index at ${dir}; run \`code-index index\` first.` }))
+    : Effect.tryPromise({
         try: () => mkdir(dir, { recursive: true }),
         catch: fail('Failed to create store directory'),
-      }),
-      () => Layer.effect(Store, make(dir, backend)).pipe(Layer.provide(clientLayer(join(dir, SQLITE_FILE)))),
+      }).pipe(Effect.asVoid);
+  return Layer.unwrap(
+    Effect.map(prepare, () =>
+      Layer.effect(Store, make(dir, backend, readOnly)).pipe(
+        Layer.provide(clientLayer(join(dir, SQLITE_FILE), { readonly: readOnly })),
+      ),
     ),
   );
+};
