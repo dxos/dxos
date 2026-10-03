@@ -43,7 +43,6 @@
   }
 
   [data-surface='chrome'],
-  .dx-sidebar-surface,
   .dx-header-surface {
     --surface-bg: var(--dx-surface-chrome);
   }
@@ -71,11 +70,6 @@
     --surface-bg: var(--color-card-surface);
   }
 
-  /* Not a level: a tinted zone (a tour card, a callout) whose controls derive their states from the tint. */
-  .dx-primary-surface {
-    --surface-bg: var(--color-primary-surface);
-  }
-
   [data-surface='raised'],
   .dx-modal-surface {
     --surface-bg: var(--dx-surface-raised);
@@ -85,15 +79,13 @@
     --surface-bg: var(--dx-surface-overlay);
   }
 
-  [data-surface='popup'],
-  .dx-popover-surface {
+  [data-surface='popup'] {
     --surface-bg: var(--dx-surface-popup);
   }
 
   /* Every zone paints its published surface and takes the default ink. */
   [data-surface],
   .dx-deck-surface,
-  .dx-sidebar-surface,
   .dx-header-surface,
   .dx-l0-surface,
   .dx-l1-surface,
@@ -101,10 +93,8 @@
   .dx-r1-surface,
   .dx-base-surface,
   .dx-attention-surface,
-  .dx-primary-surface,
   .dx-card-surface,
   .dx-modal-surface,
-  .dx-popover-surface,
   .dx-toolbar-surface,
   .dx-group-surface,
   .dx-input-surface {
@@ -115,8 +105,7 @@
   /* Floating levels frost whatever passes beneath them. */
   [data-surface='overlay'],
   [data-surface='popup'],
-  .dx-modal-surface,
-  .dx-popover-surface {
+  .dx-modal-surface {
     @apply backdrop-blur-md;
   }
 
@@ -147,7 +136,6 @@
    */
   [data-surface],
   .dx-deck-surface,
-  .dx-sidebar-surface,
   .dx-header-surface,
   .dx-l0-surface,
   .dx-l1-surface,
@@ -155,10 +143,8 @@
   .dx-r1-surface,
   .dx-base-surface,
   .dx-attention-surface,
-  .dx-primary-surface,
   .dx-card-surface,
   .dx-modal-surface,
-  .dx-popover-surface,
   .dx-toolbar-surface,
   .dx-group-surface,
   .dx-input-surface,
@@ -222,7 +208,6 @@
   [data-surface='overlay'],
   [data-surface='popup'],
   .dx-deck-surface,
-  .dx-sidebar-surface,
   .dx-header-surface,
   .dx-l0-surface,
   .dx-l1-surface,
@@ -230,10 +215,8 @@
   .dx-r1-surface,
   .dx-base-surface,
   .dx-attention-surface,
-  .dx-primary-surface,
   .dx-card-surface,
   .dx-modal-surface,
-  .dx-popover-surface,
   .dx-main-sidebar {
     --color-toolbar-surface: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-bar) * 0.025) c h

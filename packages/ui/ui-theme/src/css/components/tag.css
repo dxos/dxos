@@ -45,23 +45,19 @@
     @apply bg-red-surface text-red-fg;
   }
 
-  .dx-tag[data-hue='orange'],
-  .dx-tag--orange {
+  .dx-tag[data-hue='orange'] {
     @apply bg-orange-surface text-orange-fg;
   }
 
-  .dx-tag[data-hue='amber'],
-  .dx-tag--amber {
+  .dx-tag[data-hue='amber'] {
     @apply bg-amber-surface text-amber-fg;
   }
 
-  .dx-tag[data-hue='yellow'],
-  .dx-tag--yellow {
+  .dx-tag[data-hue='yellow'] {
     @apply bg-yellow-surface text-yellow-fg;
   }
 
-  .dx-tag[data-hue='lime'],
-  .dx-tag--lime {
+  .dx-tag[data-hue='lime'] {
     @apply bg-lime-surface text-lime-fg;
   }
 
@@ -70,23 +66,19 @@
     @apply bg-green-surface text-green-fg;
   }
 
-  .dx-tag[data-hue='emerald'],
-  .dx-tag--emerald {
+  .dx-tag[data-hue='emerald'] {
     @apply bg-emerald-surface text-emerald-fg;
   }
 
-  .dx-tag[data-hue='teal'],
-  .dx-tag--teal {
+  .dx-tag[data-hue='teal'] {
     @apply bg-teal-surface text-teal-fg;
   }
 
-  .dx-tag[data-hue='cyan'],
-  .dx-tag--cyan {
+  .dx-tag[data-hue='cyan'] {
     @apply bg-cyan-surface text-cyan-fg;
   }
 
-  .dx-tag[data-hue='sky'],
-  .dx-tag--sky {
+  .dx-tag[data-hue='sky'] {
     @apply bg-sky-surface text-sky-fg;
   }
 
@@ -100,28 +92,23 @@
     @apply bg-indigo-surface text-indigo-fg;
   }
 
-  .dx-tag[data-hue='violet'],
-  .dx-tag--violet {
+  .dx-tag[data-hue='violet'] {
     @apply bg-violet-surface text-violet-fg;
   }
 
-  .dx-tag[data-hue='purple'],
-  .dx-tag--purple {
+  .dx-tag[data-hue='purple'] {
     @apply bg-purple-surface text-purple-fg;
   }
 
-  .dx-tag[data-hue='fuchsia'],
-  .dx-tag--fuchsia {
+  .dx-tag[data-hue='fuchsia'] {
     @apply bg-fuchsia-surface text-fuchsia-fg;
   }
 
-  .dx-tag[data-hue='pink'],
-  .dx-tag--pink {
+  .dx-tag[data-hue='pink'] {
     @apply bg-pink-surface text-pink-fg;
   }
 
-  .dx-tag[data-hue='rose'],
-  .dx-tag--rose {
+  .dx-tag[data-hue='rose'] {
     @apply bg-rose-surface text-rose-fg;
   }
 
@@ -130,18 +117,15 @@
     @apply bg-cyan-surface text-cyan-fg;
   }
 
-  .dx-tag[data-hue='success'],
-  .dx-tag--success {
+  .dx-tag[data-hue='success'] {
     @apply bg-emerald-surface text-emerald-fg;
   }
 
-  .dx-tag[data-hue='warning'],
-  .dx-tag--warning {
+  .dx-tag[data-hue='warning'] {
     @apply bg-amber-surface text-amber-fg;
   }
 
-  .dx-tag[data-hue='error'],
-  .dx-tag--error {
+  .dx-tag[data-hue='error'] {
     @apply bg-rose-surface text-rose-fg;
   }
 }
