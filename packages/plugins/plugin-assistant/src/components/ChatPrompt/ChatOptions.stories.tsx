@@ -136,7 +136,7 @@ export const _ObjectsPanel: Story = {
     }
 
     return (
-      <div className='grid w-[300px] h-[300px] border border-separator'>
+      <div className='border border-separator'>
         <ObjectsPanel db={space.db} context={binder} />
       </div>
     );

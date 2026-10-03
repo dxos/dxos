@@ -49,7 +49,6 @@ import { resolveProvider } from '../../processor/index.ts';
 
 const styles = {
   panel: 'w-[calc(100dvw-.5rem)] sm:w-max max-w-document-width',
-  toolbar: 'px-1 gap-1 border-t border-separator',
 };
 
 export type ChatOptionsProps = AssistantPreset.ChatPresetProps & {
@@ -66,7 +65,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
   const { t } = useTranslation(meta.profile.key);
 
   return (
-    <div className='flex'>
+    <Flex>
       <Popover.Root positioning={{ placement: 'top' }}>
         <Popover.Trigger asChild>
           <Button
@@ -112,7 +111,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             <Tabs.Content tabIndex={-1} classNames='dx-focus-ring-inset overflow-hidden' value='environment'>
               <EnvironmentPanel chat={chat} />
             </Tabs.Content>
-            <Tabs.List classNames={styles.toolbar}>
+            <Tabs.List classNames='p-1 gap-1 border-t border-separator'>
               <Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
               <Tabs.Trigger value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
               <Tabs.Trigger value='mcp-servers' icon='ph--plugs-connected--regular' label={t('options.mcp.title')} />
@@ -131,7 +130,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
           </Tabs.Root>
         </Popover.Content>
       </Popover.Root>
-    </div>
+    </Flex>
   );
 };
 
@@ -599,52 +598,57 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
   });
 
   return (
-    <SearchList.Root onSearch={handleSearch}>
-      {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
+    <Flex column classNames='min-h-0 divide-y divide-separator'>
+      {/* Shrinks to the popover's height, so the list scrolls rather than pushing the filter out of it. */}
+      <SearchList.Root onSearch={handleSearch}>
+        {/* No chrome padding: the rows align with the toolbar below, which is a sibling of
           `Content` and so sits flush against the panel edge. */}
-      <SearchList.Content classNames='flex flex-col'>
-        <SearchList.Viewport padding={false} classNames='dx-grow'>
-          {results.length ? (
-            results.map((object) => {
-              const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
-              const { icon, hue } = Obj.getIcon(object) ?? { icon: 'ph--cube--regular', hue: undefined };
-              const styles = hue ? getStyles(hue) : undefined;
-              return (
-                <SearchList.Item
-                  classNames='flex items-center overflow-hidden'
-                  key={object.id}
-                  value={object.id}
-                  icon={icon}
-                  iconClassNames={styles?.text}
-                  label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
-                  checked={isActive}
-                  onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
-                />
-              );
-            })
-          ) : (
-            <SearchList.Item value='__empty__' label={t('no-results.message')} />
-          )}
-        </SearchList.Viewport>
-      </SearchList.Content>
+        <SearchList.Content classNames='flex flex-col'>
+          <SearchList.Viewport padding={false} classNames='min-h-0 flex-auto'>
+            {results.length ? (
+              results.map((object) => {
+                const isActive = contextObjects.findIndex((obj) => obj.id === object.id) !== -1;
+                const { icon, hue } = Obj.getIcon(object) ?? { icon: 'ph--cube--regular', hue: undefined };
+                const styles = hue ? getStyles(hue) : undefined;
+                return (
+                  <SearchList.Item
+                    classNames='flex items-center overflow-hidden'
+                    key={object.id}
+                    value={object.id}
+                    icon={icon}
+                    iconClassNames={styles?.text}
+                    label={Obj.getLabel(object) ?? Obj.getTypename(object) ?? object.id}
+                    checked={isActive}
+                    onSelect={() => onUpdateObject?.(Obj.getURI(object), !isActive)}
+                  />
+                );
+              })
+            ) : (
+              <SearchList.Item value='__empty__' label={t('no-results.message')} />
+            )}
+          </SearchList.Viewport>
+        </SearchList.Content>
 
-      <div className={mx('flex flex-col', styles.toolbar)}>
-        <Select.Root
-          items={typeItems}
-          value={selectedUri === ANY ? [] : [selectedUri]}
-          onValueChange={({ value: [value] }) =>
-            setSelectedUri(typeOptions.find(({ uri }) => uri === value)?.uri ?? ANY)
-          }
-        >
-          <Select.Trigger placeholder={t('type-filter.placeholder')} />
-          <Select.Content>
-            {typeItems.map((item) => (
-              <Select.Item key={item.value} item={item} />
-            ))}
-          </Select.Content>
-        </Select.Root>
-        <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
-      </div>
-    </SearchList.Root>
+        <Flex column>
+          <Flex classNames='p-1'>
+            <Select.Root
+              items={typeItems}
+              value={selectedUri === ANY ? [] : [selectedUri]}
+              onValueChange={({ value: [value] }) =>
+                setSelectedUri(typeOptions.find(({ uri }) => uri === value)?.uri ?? ANY)
+              }
+            >
+              <Select.Trigger placeholder={t('type-filter.placeholder')} />
+              <Select.Content>
+                {typeItems.map((item) => (
+                  <Select.Item key={item.value} item={item} />
+                ))}
+              </Select.Content>
+            </Select.Root>
+          </Flex>
+          <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
+        </Flex>
+      </SearchList.Root>
+    </Flex>
   );
 };
