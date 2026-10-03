@@ -91,6 +91,11 @@
       "source": "./src/skills/websearch/WebSearchSkill.ts",
       "types": "./dist/types/src/skills/websearch/WebSearchSkill.d.ts",
       "import": "./dist/lib/ns/WebSearchSkill.mjs"
+    },
+    "./DelegationStrategy": {
+      "source": "./src/DelegationStrategy.ts",
+      "types": "./dist/types/src/DelegationStrategy.d.ts",
+      "import": "./dist/lib/ns/DelegationStrategy.mjs"
     }
   },
   "files": [

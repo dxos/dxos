@@ -33,4 +33,3 @@ export const make = () =>
 
 export { DelegationSkillHandlers as Handlers } from './operations/index.ts';
 export * as Operations from './operations/definitions.ts';
-export { makeDelegationStrategy } from '../../supervisor/delegation-strategy.ts';
