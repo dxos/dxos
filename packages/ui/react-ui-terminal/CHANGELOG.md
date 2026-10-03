@@ -1,5 +1,14 @@
 # @dxos/react-ui-terminal
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/effect@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

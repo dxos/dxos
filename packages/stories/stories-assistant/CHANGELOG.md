@@ -1,5 +1,54 @@
 # @dxos/stories-assistant
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [1b2e9f3]
+- Updated dependencies [32f32a0]
+- Updated dependencies [66727e3]
+- Updated dependencies [c7cc480]
+- Updated dependencies [87785d9]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [0347f09]
+- Updated dependencies [1737cad]
+- Updated dependencies [fcbb5c4]
+  - @dxos/echo@0.13.0
+  - @dxos/ai@0.13.0
+  - @dxos/plugin-space@0.13.0
+  - @dxos/plugin-markdown@0.13.0
+  - @dxos/client-services@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/plugin-assistant@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/assistant@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/echo-query@0.13.0
+  - @dxos/plugin-explorer@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/storybook-testing@0.13.0
+  - @dxos/react-ui-components@0.13.0
+  - @dxos/react-ui-editor@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-chat@0.13.0
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/react-ui-syntax-highlighter@0.13.0
+  - @dxos/sql-sqlite@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/react-ui-masonry@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

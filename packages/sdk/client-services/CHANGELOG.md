@@ -1,5 +1,54 @@
 # @dxos/client-services
 
+## 0.13.0
+
+### Patch Changes
+
+- 87785d9: Opening a space now brings this identity's member profile in the space up to date with the identity's own profile. A display name set before joining, or changed while a space was not open, never reached that space, so other members (and the comment thread) showed a generated name such as "cool snake" until the name was edited again.
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8d0cdd5]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+  - @dxos/echo@0.13.0
+  - @dxos/echo-host@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/compute-runtime@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/echo-doc@0.13.0
+  - @dxos/client-protocol@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/context@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/feed-store@0.13.0
+  - @dxos/hypercore@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/random-access-storage@0.13.0
+  - @dxos/timeframe@0.13.0
+  - @dxos/tracing@0.13.0
+  - @dxos/echo-protocol@0.13.0
+  - @dxos/feed@0.13.0
+  - @dxos/credentials@0.13.0
+  - @dxos/keyring@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/messaging@0.13.0
+  - @dxos/network-manager@0.13.0
+  - @dxos/rpc@0.13.0
+  - @dxos/teleport@0.13.0
+  - @dxos/teleport-extension-gossip@0.13.0
+  - @dxos/teleport-extension-replicator@0.13.0
+  - @dxos/protocols@0.13.0
+  - @dxos/config@0.13.0
+  - @dxos/sql-sqlite@0.13.0
+  - @dxos/crypto@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

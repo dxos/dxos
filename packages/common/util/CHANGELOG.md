@@ -1,5 +1,18 @@
 # @dxos/util
 
+## 0.13.0
+
+### Minor Changes
+
+- 1894fc1: Add `countWork`, always-on work counters published on `__dxosWorkCounters`, and count automerge storage, ECHO query and SQLite statement work with it, plus per-method served calls in `RpcTiming`'s readout, so a perf harness can budget on counts rather than timings.
+
+### Patch Changes
+
+- @dxos/debug@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/node-std@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

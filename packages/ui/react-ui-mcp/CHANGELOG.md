@@ -1,5 +1,14 @@
 # @dxos/react-ui-mcp
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/react-ui-form@0.13.0
+  - @dxos/react-ui-list@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

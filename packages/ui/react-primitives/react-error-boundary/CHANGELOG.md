@@ -1,5 +1,11 @@
 # @dxos/react-error-boundary
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/async@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

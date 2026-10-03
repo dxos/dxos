@@ -1,5 +1,49 @@
 # @dxos/plugin-support
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1ef899b]
+- Updated dependencies [32f32a0]
+- Updated dependencies [66727e3]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [0347f09]
+- Updated dependencies [1737cad]
+- Updated dependencies [8412f8b]
+  - @dxos/echo@0.13.0
+  - @dxos/plugin-space@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/plugin-observability@0.13.0
+  - @dxos/plugin-deck@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/react-ui-markdown@0.13.0
+  - @dxos/plugin-attention@0.13.0
+  - @dxos/plugin-status-bar@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/config@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/brand@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/halo-react@0.13.0
+  - @dxos/debug@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui-theme@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

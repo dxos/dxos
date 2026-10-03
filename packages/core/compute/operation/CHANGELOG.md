@@ -1,5 +1,14 @@
 # @dxos/operation
 
+## 0.13.0
+
+### Patch Changes
+
+- @dxos/compute@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/keys@0.13.0
+
 ## 0.12.0
 
 ### Patch Changes

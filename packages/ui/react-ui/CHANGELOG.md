@@ -1,5 +1,23 @@
 # @dxos/react-ui
 
+## 0.13.0
+
+### Patch Changes
+
+- Updated dependencies [1894fc1]
+  - @dxos/util@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/react-focus@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/react-error-boundary@0.13.0
+  - @dxos/lit-ui@0.13.0
+  - @dxos/i18n@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

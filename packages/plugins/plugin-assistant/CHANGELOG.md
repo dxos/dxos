@@ -1,5 +1,83 @@
 # @dxos/plugin-assistant
 
+## 0.13.0
+
+### Patch Changes
+
+- 0347f09: Plugin state no longer shares a localStorage key with plugin settings, so changing a setting no longer wipes state on the next reload, and saving state no longer wipes settings. Assistant keeps each object's current chat, Maps keeps the globe/map choice and API keys, and the telemetry toggle stays off after an opt-out. State moves to `<plugin id>.state`; the old values are not migrated.
+- Updated dependencies [1ef899b]
+- Updated dependencies [1b2e9f3]
+- Updated dependencies [32f32a0]
+- Updated dependencies [66727e3]
+- Updated dependencies [c7cc480]
+- Updated dependencies [8fc641a]
+- Updated dependencies [1894fc1]
+- Updated dependencies [1737cad]
+- Updated dependencies [fcbb5c4]
+- Updated dependencies [8412f8b]
+  - @dxos/echo@0.13.0
+  - @dxos/ai@0.13.0
+  - @dxos/plugin-space@0.13.0
+  - @dxos/plugin-markdown@0.13.0
+  - @dxos/app-toolkit@0.13.0
+  - @dxos/util@0.13.0
+  - @dxos/types@0.13.0
+  - @dxos/plugin-tasks@0.13.0
+  - @dxos/plugin-deck@0.13.0
+  - @dxos/agent-runtime@0.13.0
+  - @dxos/assistant@0.13.0
+  - @dxos/assistant-toolkit@0.13.0
+  - @dxos/compute@0.13.0
+  - @dxos/compute-runtime@0.13.0
+  - @dxos/conductor@0.13.0
+  - @dxos/link@0.13.0
+  - @dxos/echo-client@0.13.0
+  - @dxos/echo-react@0.13.0
+  - @dxos/devtools@0.13.0
+  - @dxos/plugin-client@0.13.0
+  - @dxos/plugin-connector@0.13.0
+  - @dxos/plugin-registry@0.13.0
+  - @dxos/plugin-routine@0.13.0
+  - @dxos/plugin-transcription@0.13.0
+  - @dxos/app-framework@0.13.0
+  - @dxos/app-graph@0.13.0
+  - @dxos/client@0.13.0
+  - @dxos/react-client@0.13.0
+  - @dxos/schema@0.13.0
+  - @dxos/react-ui-assistant@0.13.0
+  - @dxos/react-ui-components@0.13.0
+  - @dxos/react-ui-form@0.13.0
+  - @dxos/react-ui-list@0.13.0
+  - @dxos/react-ui-search@0.13.0
+  - @dxos/react-ui-task@0.13.0
+  - @dxos/react-ui-trace@0.13.0
+  - @dxos/react-ui-transcription@0.13.0
+  - @dxos/ui-editor@0.13.0
+  - @dxos/mcp-client@0.13.0
+  - @dxos/plugin-attention@0.13.0
+  - @dxos/plugin-graph@0.13.0
+  - @dxos/plugin-status-bar@0.13.0
+  - @dxos/async@0.13.0
+  - @dxos/effect@0.13.0
+  - @dxos/graph@0.13.0
+  - @dxos/log@0.13.0
+  - @dxos/edge-client@0.13.0
+  - @dxos/config@0.13.0
+  - @dxos/react-hooks@0.13.0
+  - @dxos/react-ui@0.13.0
+  - @dxos/react-ui-chat@0.13.0
+  - @dxos/react-ui-feed@0.13.0
+  - @dxos/react-ui-menu@0.13.0
+  - @dxos/react-ui-attention@0.13.0
+  - @dxos/react-list@0.13.0
+  - @dxos/halo-react@0.13.0
+  - @dxos/errors@0.13.0
+  - @dxos/invariant@0.13.0
+  - @dxos/keys@0.13.0
+  - @dxos/ui@0.13.0
+  - @dxos/ui-theme@0.13.0
+  - @dxos/ui-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes
