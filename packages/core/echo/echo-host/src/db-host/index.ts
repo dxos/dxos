@@ -10,5 +10,6 @@ export * from './index-scheduler.ts';
 export * from './sqlite-health-check.ts';
 export * from './database-root.ts';
 export * from './invalidation-hint.ts';
+export * from './local-space.ts';
 export * from './query-service.ts';
 export * from './space-state-manager.ts';

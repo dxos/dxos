@@ -6,7 +6,7 @@ import { type CleanupFn, Event } from '@dxos/async';
 import { type BlobBackend } from '@dxos/blob';
 import { Context } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
-import { type Database, Entity, Feed, Filter, Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
+import { type Database, type Entity, Feed, Filter, Hypergraph, Query, Ref, type Registry, Type } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
@@ -20,7 +20,6 @@ import {
   resolveMergeRedirect,
   setRefResolver,
 } from '@dxos/echo/internal';
-import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -33,8 +32,6 @@ import { RequestImpl } from './core-db/ref-resolver-request.ts';
 import { getObjectCore, isEchoObject } from './echo-handler/index.ts';
 import { type DatabaseImpl } from './proxy-db/index.ts';
 import {
-  type FederatedGraph,
-  FederatedQuerySource,
   GraphQueryContext,
   type QueryContext,
   QueryResultCache,
@@ -42,7 +39,6 @@ import {
   type QuerySource,
   RegistryQuerySource,
   SpaceQuerySource,
-  queryTouchesLocal,
 } from './query/index.ts';
 import { makeRegistry } from './registry/index.ts';
 
@@ -78,13 +74,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   readonly #loadOpTable = new LoadOpTable((uri) => this.#routeBackend(uri));
   readonly #spaceBackends = new Map<SpaceId, LoadBackend>();
   readonly #blobManager = new BlobManager();
-
-  #localDatabaseFactory: Hypergraph.LocalDatabaseFactory | undefined;
-  readonly #localDatabases = new Map<string, Hypergraph.LocalDatabase>();
-  /** The same databases by the space id their rows live under, which is how URIs and scopes name them. */
-  readonly #localBySpace = new Map<SpaceId, Hypergraph.LocalDatabase>();
-  /** Fires when a local database opens or the set closes, so live graph queries re-subscribe to it. */
-  readonly #localDatabasesChanged = new Event<void>();
+  #localDatabaseOpener: ((name: string) => Promise<DatabaseImpl>) | undefined;
 
   constructor() {
     this._registry = makeRegistry();
@@ -152,59 +142,10 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   private _query(queryOrFilter: Query.Any | Filter.Any) {
     const selected = Filter.is(queryOrFilter) ? Query.select(queryOrFilter) : queryOrFilter;
     const query = this.#bindAllSpacesScope(selected);
-    if (queryTouchesLocal(query.ast, this.#federated.isLocal)) {
-      return this.#queryResultCache.getOrCreate(
-        query,
-        () => new QueryResultImpl(this.#createFederatedQueryContext(), query),
-      );
-    }
-    return this.#queryReplicated(query);
-  }
-
-  #queryReplicated(query: Query.Any) {
     return this.#queryResultCache.getOrCreate(
       query,
       () => new QueryResultImpl(this._createLiveObjectQueryContext(), query),
     );
-  }
-
-  /** The graph as federated execution sees it: replicated spaces through this engine, local databases directly. */
-  readonly #federated: FederatedGraph = {
-    isLocal: (spaceId): spaceId is SpaceId => SpaceId.isValid(spaceId) && this.#localBySpace.has(spaceId),
-    queryLocal: async (spaceId, query) => {
-      const db = this.#localBySpace.get(spaceId);
-      return db ? db.query(Query.fromAst(query)).run() : [];
-    },
-    queryReplicated: (query) => this.#queryReplicated(Query.fromAst(query)).run(),
-    resolve: async (uri) => {
-      const resolved = await this.createRefResolver({}).resolveLegacy(uri);
-      return Entity.isEntity(resolved) ? resolved : undefined;
-    },
-    subscribe: (callback) => {
-      const subscribeLocal = () => [...this.#localBySpace.values()].map((db) => db.subscribeChanges(callback));
-      let localCleanups = subscribeLocal();
-      const offTopology = this.#localDatabasesChanged.on(() => {
-        localCleanups.forEach((cleanup) => cleanup());
-        localCleanups = subscribeLocal();
-        callback();
-      });
-      const offUpdate = this._updateEvent.on(() => callback());
-      return () => {
-        offUpdate();
-        offTopology();
-        localCleanups.forEach((cleanup) => cleanup());
-      };
-    },
-  };
-
-  /**
-   * A context answered by federated execution alone. Deliberately not tracked in `_queryContexts`:
-   * the space sources added there on registration would answer the same query a second time.
-   */
-  #createFederatedQueryContext(): QueryContext {
-    const context = new GraphQueryContext({ onStart: () => {}, onStop: () => {} });
-    context.addQuerySource(new FederatedQuerySource(this.#federated));
-    return context;
   }
 
   /**
@@ -216,7 +157,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    * contributes no results at all, silently.
    */
   #bindAllSpacesScope(query: Query.Any): Query.Any {
-    const spaceIds = [...this._databases.keys(), ...this.#localBySpace.keys()];
+    const spaceIds = [...this._databases.keys()];
     if (spaceIds.length === 0 || !isAllSpacesScope(query.ast)) {
       return query;
     }
@@ -260,61 +201,23 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     return this.#blobManager.defaultStorage;
   }
 
-  getDatabase(spaceId: SpaceId): Database.Database | undefined {
-    return this._databases.get(spaceId) ?? this.#localBySpace.get(spaceId);
+  async localDatabase(name: string): Promise<Database.Database> {
+    if (!this.#localDatabaseOpener) {
+      throw new Hypergraph.LocalDatabaseNotAvailableError({ context: { name } });
+    }
+    return this.#localDatabaseOpener(name);
   }
 
   /**
-   * The replicated space database for an id; never a local database.
+   * Sets how {@link localDatabase} opens a local space; the ECHO client supplies it.
    * @internal
    */
-  _getSpaceDatabase(spaceId: SpaceId): DatabaseImpl | undefined {
+  _setLocalDatabaseOpener(opener: ((name: string) => Promise<DatabaseImpl>) | undefined): void {
+    this.#localDatabaseOpener = opener;
+  }
+
+  getDatabase(spaceId: SpaceId): DatabaseImpl | undefined {
     return this._databases.get(spaceId);
-  }
-
-  localDatabase(name: string): Database.Database {
-    let db = this.#localDatabases.get(name);
-    if (!db) {
-      if (!this.#localDatabaseFactory) {
-        throw new Hypergraph.LocalDatabaseNotAvailableError({ context: { name } });
-      }
-      // Static types registered so far; types added to the registry later are not seen by an open database.
-      db = this.#localDatabaseFactory(name, { types: this._registry.list().filter(Type.isType), graph: this });
-      // Replicated data is checked against the id to keep local references out of it.
-      invariant(SpaceId.isLocal(db.spaceId), 'Local database factory must use a local space id (SpaceId.local).');
-      this.#localDatabases.set(name, db);
-      this.#localBySpace.set(db.spaceId, db);
-      // Cached results were built for the previous set of databases.
-      this.#queryResultCache = new QueryResultCache();
-      this.#localDatabasesChanged.emit();
-    }
-    return db;
-  }
-
-  /**
-   * Sets the storage backend {@link localDatabase} opens databases with.
-   * @internal
-   */
-  _setLocalDatabaseFactory(factory: Hypergraph.LocalDatabaseFactory | undefined): void {
-    this.#localDatabaseFactory = factory;
-  }
-
-  /**
-   * Closes every open local database; a later {@link localDatabase} call reopens it.
-   * @internal
-   */
-  async _closeLocalDatabases(): Promise<void> {
-    const databases = [...this.#localDatabases.values()];
-    this.#localDatabases.clear();
-    this.#localBySpace.clear();
-    this.#queryResultCache = new QueryResultCache();
-    this.#localDatabasesChanged.emit();
-    // Settled, so one failed close cannot abandon the others' pending flushes.
-    const results = await Promise.allSettled(databases.map((db) => db.close()));
-    const failure = results.find((result) => result.status === 'rejected');
-    if (failure) {
-      throw failure.reason;
-    }
   }
 
   /**
@@ -330,7 +233,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     // type entity. Other entities pass through unchanged.
     const materializeStoredSchema = (obj: AnyProperties): AnyProperties => {
       if (context.space != null && isInstanceOf(TypeSchema, obj) && Type.getDatabase(obj) != null) {
-        return this._getSpaceDatabase(context.space)?._getOrRegisterPersistentSchema(obj) ?? obj;
+        return this.getDatabase(context.space)?._getOrRegisterPersistentSchema(obj) ?? obj;
       }
       return obj;
     };
@@ -355,10 +258,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
           return undefined;
         }
         if (EID.isEID(uri)) {
-          const local = this.#resolveLocalSync(uri, context, load, onLoad);
-          if (local) {
-            return local.entity;
-          }
           const res = this._resolveSync(uri, context, onLoad);
           return res ? materializeStoredSchema(res) : undefined;
         }
@@ -416,33 +315,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   }
 
   /**
-   * Resolves a URI that names a local database from its working set, reading the row in the
-   * background when `load` is set. Undefined when the URI is not in a local database.
-   */
-  #resolveLocalSync(
-    uri: URI.URI,
-    context: Hypergraph.RefResolutionContext,
-    load: boolean,
-    onLoad?: () => void,
-  ): { entity: AnyProperties | undefined } | undefined {
-    const qualified = this.#qualifyToContext(uri, context);
-    const eid = EID.tryParse(qualified);
-    const spaceId = eid ? EID.getSpaceId(eid) : undefined;
-    const local = spaceId ? this.#localBySpace.get(spaceId) : undefined;
-    if (!local) {
-      return undefined;
-    }
-    const entity = local.peek(qualified);
-    if (!entity && load) {
-      void local
-        .load(qualified)
-        .then((loaded) => loaded && onLoad?.())
-        .catch((error) => log.catch(error));
-    }
-    return { entity };
-  }
-
-  /**
    * Qualifies a space-less (relative) `echo:` URI with the resolving context's space. Same-space
    * references are persisted relative; cross-space references are persisted absolute (stamped at
    * write time). Routing is by fully-qualified URI, so a relative URI is resolved against the
@@ -497,44 +369,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
    */
   #entityBackend(spaceId: SpaceId): LoadBackend {
     return entry(this.#spaceBackends, spaceId).orInsert({
-      probe: (uri) => this.#probeLocal(uri, spaceId) ?? this.#probeEntity(uri, spaceId),
-      load: (uri, source, set) =>
-        this.#localBySpace.has(spaceId)
-          ? this.#loadLocal(uri, set, spaceId)
-          : this.#loadEntity(uri, source, set, spaceId),
+      probe: (uri) => this.#probeEntity(uri, spaceId),
+      load: (uri, source, set) => this.#loadEntity(uri, source, set, spaceId),
     }).value;
-  }
-
-  /** Working-set probe of a local database; its objects carry no strong dependencies. */
-  #probeLocal(uri: URI.URI, spaceId: SpaceId): LoadResult | undefined {
-    const result = this.#localBySpace.get(spaceId)?.peek(uri);
-    return result ? { result, strongDeps: [] } : undefined;
-  }
-
-  /** Reads one row of a local database, which is authoritative: a miss is final. */
-  #loadLocal(
-    uri: URI.URI,
-    set: (state: 'pending' | 'requesting' | 'ready' | 'unavailable', result: LoadResult | undefined) => void,
-    spaceId: SpaceId,
-  ): () => void {
-    let cancelled = false;
-    const db = this.#localBySpace.get(spaceId);
-    void (db ? db.load(uri) : Promise.resolve(undefined)).then(
-      (result) => {
-        if (!cancelled) {
-          set(result ? 'ready' : 'unavailable', result && { result, strongDeps: [] });
-        }
-      },
-      (error) => {
-        log.catch(error);
-        if (!cancelled) {
-          set('unavailable', undefined);
-        }
-      },
-    );
-    return () => {
-      cancelled = true;
-    };
   }
 
   /**
@@ -931,10 +768,6 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     objectId: EntityId,
     options?: Ref.LoadOptions,
   ): Promise<Entity.Unknown | undefined> {
-    const local = this.#localBySpace.get(spaceId);
-    if (local) {
-      return local.load(EID.make({ spaceId, entityId: objectId }));
-    }
     const db = this._databases.get(spaceId);
     if (!db) {
       return undefined;

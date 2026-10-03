@@ -29,7 +29,6 @@
     "@dxos/async": "workspace:*",
     "@dxos/echo": "workspace:*",
     "@dxos/echo-protocol": "workspace:*",
-    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
@@ -39,7 +38,6 @@
   "devDependencies": {
     "@dxos/effect": "workspace:*",
     "@effect/sql-sqlite-node": "catalog:",
-    "@effect/sql-sqlite-wasm": "catalog:",
     "@effect/vitest": "catalog:"
   }
 }

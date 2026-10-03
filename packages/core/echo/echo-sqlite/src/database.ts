@@ -48,7 +48,6 @@ import { LiveQueryResult } from './query-result.ts';
 import { localEntityId, toRecord } from './record.ts';
 import { SimpleRegistry, matchRegistry } from './registry.ts';
 import { type CompiledQuery, compileQuery } from './sql/compile.ts';
-import { type StoreDriver, makeLocalDriver, runWith } from './store-driver.ts';
 
 export type OpenOptions = {
   /**
@@ -79,14 +78,7 @@ export type Diagnostics = {
   readonly tracked: number;
 };
 
-export type MakeOptions = {
-  spaceId: SpaceId;
-  /** Storage for {@link spaceId}; in this process, or across an RPC boundary. */
-  driver: StoreDriver;
-  types?: readonly Type.AnyEntity[];
-  /** The graph the database joins: it resolves references to other spaces and is `db.graph`. */
-  graph?: Hypergraph.Hypergraph;
-};
+type Run = <A>(effect: Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>) => Promise<A>;
 
 /**
  * ECHO {@link Database.Database} backed by SQLite, which is the source of truth: the space is never
@@ -95,16 +87,15 @@ export type MakeOptions = {
  * is garbage-collected; mutations are observed with `Entity.subscribe` and written behind, batched per
  * microtask, and held strongly until durable.
  */
-export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
+export class SqliteDatabase implements Database.Database, EntitySource {
   readonly [Database.TypeId]: Database.TypeId = Database.TypeId;
 
   readonly #spaceId: SpaceId;
-  readonly #driver: StoreDriver;
-  /** Settles once migrations ran and persisted types are registered; every storage call waits on it. */
-  #ready: Promise<void> = Promise.resolve();
+  readonly #store: ObjectStore;
+  readonly #run: Run;
   readonly #registry: SimpleRegistry;
   readonly #resolver: DatabaseRefResolver;
-  readonly #graph: Hypergraph.Hypergraph;
+  readonly #graph: SqliteHypergraph;
 
   /** The working set: one live instance per id while anything outside holds it. */
   readonly #live = new Map<string, WeakRef<Entity.Unknown>>();
@@ -133,20 +124,14 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
   readonly #committed = new Event<ReadonlySet<string>>();
   readonly #counters = { hydrated: 0, queries: 0, loads: 0 };
 
-  private constructor(
-    spaceId: SpaceId,
-    driver: StoreDriver,
-    types: readonly Type.AnyEntity[],
-    graph?: Hypergraph.Hypergraph,
-  ) {
+  private constructor(spaceId: SpaceId, run: Run, types: readonly Type.AnyEntity[]) {
     this.#spaceId = spaceId;
-    this.#driver = driver;
+    this.#store = new ObjectStore(spaceId);
+    this.#run = run;
     // The meta-type is registered so persisted `Type.Type` rows decode.
     this.#registry = new SimpleRegistry([Type.Type, ...types]);
-    // Created on first use: the graph may still be wiring this database in when it is constructed.
-    let outside: Ref.Resolver | undefined;
-    this.#resolver = new DatabaseRefResolver(this, graph && (() => (outside ??= graph.createRefResolver({}))));
-    this.#graph = graph ?? new SqliteHypergraph(this, this.#resolver);
+    this.#resolver = new DatabaseRefResolver(this);
+    this.#graph = new SqliteHypergraph(this, this.#resolver);
   }
 
   /**
@@ -159,28 +144,18 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
     return Effect.acquireRelease(
       Effect.gen(function* () {
         const context = yield* Effect.context<SqlClient.SqlClient>();
-        const spaceId = options.spaceId ?? SpaceId.random();
-        // Initialized here rather than through the driver so failures keep their `SqlError` type.
-        const store = new ObjectStore(spaceId);
-        yield* store.migrate();
-        const types = yield* store.loadTypes();
-        const db = new SqliteDatabase(spaceId, makeLocalDriver(spaceId, runWith(context)), options.types ?? []);
+        const db = new SqliteDatabase(
+          options.spaceId ?? SpaceId.random(),
+          Effect.runPromiseWith(context),
+          options.types ?? [],
+        );
+        yield* db.#store.migrate();
+        const types = yield* db.#store.loadTypes();
         yield* Effect.promise(() => db.#registerTypes(types));
         return db;
       }),
       (db) => Effect.promise(() => db.close()),
     ).pipe(Effect.withSpan('SqliteDatabase.open'));
-  }
-
-  /**
-   * Returns the database at once and opens storage in the background; reads and writes wait for it.
-   * The caller owns the database and must {@link close} it. A failed open fails every later storage call.
-   */
-  static make({ spaceId, driver, types = [], graph }: MakeOptions): SqliteDatabase {
-    const db = new SqliteDatabase(spaceId, driver, types, graph);
-    db.#ready = driver.open().then((rows) => db.#registerTypes(rows));
-    db.#ready.catch((error) => log.catch(error));
-    return db;
   }
 
   /**
@@ -207,13 +182,6 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
   }
 
   /**
-   * Calls `callback` after each batch of writes is durable.
-   */
-  subscribeChanges(callback: () => void): CleanupFn {
-    return this.#committed.on(() => callback());
-  }
-
-  /**
    * How much has been read and how much is held.
    */
   diagnostics(): Diagnostics {
@@ -237,8 +205,7 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
    * `EXPLAIN QUERY PLAN` detail lines for a query's compiled statement.
    */
   explain(query: Query.Any | Filter.Any): Promise<string[]> {
-    const compiled = this.compile(query);
-    return this.#storage().then((driver) => driver.explain(compiled));
+    return this.#run(this.#store.explain(this.compile(query)));
   }
 
   /**
@@ -249,9 +216,6 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
       return;
     }
     try {
-      // An open still in flight would register types and subscriptions after the cleanup below; a
-      // failed open is already logged and must not block closing.
-      await this.#ready.catch(() => undefined);
       await this.flush();
     } finally {
       this.#closed = true;
@@ -294,8 +258,6 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
 
   async addType<T extends Type.AnyEntity>(type: T): Promise<T> {
     invariant(Type.isType(type), 'addType expects a Type entity');
-    // Persisted types are not known until open has read them.
-    await this.#ready;
     const typename = Type.getTypename(type);
     const version = Type.getVersion(type);
     for (const existing of this.#types.values()) {
@@ -386,7 +348,7 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
 
   async stats(): Promise<Database.DatabaseStats> {
     await this.flush();
-    const objects = await (await this.#storage()).counts();
+    const objects = await this.#run(this.#store.counts());
     const { resident } = this.diagnostics();
     return {
       objects,
@@ -412,7 +374,7 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
    */
   async runGarbageCollection(_options?: Database.GarbageCollectionOptions): Promise<Database.GarbageCollectionReport> {
     await this.flush();
-    const ids = await (await this.#storage()).deletedIds();
+    const ids = await this.#run(this.#store.deletedIds());
     for (const id of ids) {
       const entity = this.#live.get(id)?.deref();
       if (entity) {
@@ -599,13 +561,8 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
       return hydrating;
     }
     this.#counters.loads++;
-    const stored = await (await this.#storage()).load(id);
+    const stored = await this.#run(this.#store.load(id));
     return stored ? this.#hydrate(stored) : undefined;
-  }
-
-  async #storage(): Promise<StoreDriver> {
-    await this.#ready;
-    return this.#driver;
   }
 
   #entityIdOf(uri: string): string | undefined {
@@ -619,7 +576,7 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
   async #execute(compiled: CompiledQuery): Promise<Entity.Unknown[]> {
     await this.flush();
     this.#counters.queries++;
-    const rows = await (await this.#storage()).query(compiled);
+    const rows = await this.#run(this.#store.query(compiled));
     const entities = await Promise.all(rows.map((row) => this.#hydrate(row)));
     return entities.filter((entity): entity is Entity.Unknown => entity !== undefined);
   }
@@ -646,7 +603,7 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
     if (!hydrating) {
       hydrating = (async () => {
         try {
-          const snapshot = await objectFromJSON(JSON.parse(stored.body), {
+          const snapshot = await objectFromJSON(stored.body, {
             refResolver: this.#resolver,
             uri: EID.make({ spaceId: this.#spaceId, entityId: stored.id }),
             database: this,
@@ -784,7 +741,7 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
       const records = [...batch.values()].map((entity) => toRecord(entity, this.#spaceId));
       this.#writes = this.#writes.then(async () => {
         try {
-          await (await this.#storage()).write(records, purged);
+          await this.#run(this.#store.write(records, purged));
           // Deletion cascades and purges reach rows of any type, so they invalidate every query.
           const everything = deletionChanged || purged.length > 0;
           this.#committed.emit(new Set(everything ? [ANY_TYPE] : records.map((record) => record.typeDxn)));

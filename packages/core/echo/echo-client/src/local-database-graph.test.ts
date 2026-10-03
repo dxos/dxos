@@ -2,22 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Layer from 'effect/Layer';
-import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { describe, test } from 'vitest';
 
 import { type Database, Error as EchoError, Filter, Obj, Order, Query, Ref, Relation } from '@dxos/echo';
 import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
-import { localDatabaseFactory } from '@dxos/echo-sqlite';
 import { TestSchema } from '@dxos/echo/testing';
+import { invariant } from '@dxos/invariant';
 import { SpaceId } from '@dxos/keys';
-import { layerMemory } from '@dxos/sql-sqlite/platform';
 
 import { getObjectCore } from './echo-handler/index.ts';
 import { EchoTestBuilder } from './testing/index.ts';
 
-// End to end over a real peer: one replicated space and local databases on one graph, so every
-// assertion crosses the boundary between the two storage engines.
+// End to end over a real peer: one replicated space and two local spaces on one graph, all hosted by the
+// same ECHO host and reached through the same services.
 
 const TYPES = [TestSchema.Person, TestSchema.Organization, TestSchema.Task, TestSchema.EmployedBy];
 
@@ -27,25 +24,28 @@ const setup = async () => {
   const builder = await new EchoTestBuilder().open();
   const peer = await builder.createPeer({ types: TYPES });
   const space = await peer.createDatabase();
-  const runtime = ManagedRuntime.make(layerMemory.pipe(Layer.orDie));
   const graph = peer.client.graph;
-  graph._setLocalDatabaseFactory(await runtime.runPromise(localDatabaseFactory));
-  return {
+  const env = {
     graph,
     space,
-    local: graph.localDatabase('settings'),
-    other: graph.localDatabase('drafts'),
-    /** Drops every local database instance, so the next access hydrates from storage. */
+    local: await graph.localDatabase('settings'),
+    other: await graph.localDatabase('drafts'),
+    /** Closes both local databases in the client and opens them again, so they hydrate from the host. */
     reopen: async () => {
-      await graph._closeLocalDatabases();
-      return { local: graph.localDatabase('settings'), other: graph.localDatabase('drafts') };
+      for (const db of [env.local, env.other]) {
+        const impl = graph.getDatabase(db.spaceId);
+        invariant(impl);
+        await peer.client.removeDatabase(impl);
+      }
+      env.local = await graph.localDatabase('settings');
+      env.other = await graph.localDatabase('drafts');
+      return { local: env.local, other: env.other };
     },
     [Symbol.asyncDispose]: async () => {
-      await graph._closeLocalDatabases();
-      await runtime.dispose();
       await builder.close();
     },
   };
+  return env;
 };
 
 const flushAll = async (...dbs: Database.Database[]) => {
@@ -327,7 +327,9 @@ describe('local databases on the graph', () => {
       expect(names(orgs)).toEqual(['Space Org']);
     });
 
-    test('relations between databases are found from either endpoint', async ({ expect }) => {
+    // Relations are found from an endpoint in their own space; from the far endpoint they are not, as between
+    // any two spaces, since the host seeks relations by endpoint within one space.
+    test('a relation into another database is found from its source and reaches its target', async ({ expect }) => {
       await using env = await setup();
       const person = env.local.add(Obj.make(TestSchema.Person, { name: 'Ada' }));
       const org = env.space.add(Obj.make(TestSchema.Organization, { name: 'Acme' }));
@@ -344,11 +346,6 @@ describe('local databases on the graph', () => {
         .query(Query.select(Filter.id(person.id)).from(ALL).sourceOf(TestSchema.EmployedBy))
         .run();
       expect(outgoing).toEqual([relation]);
-
-      const incoming = await env.graph
-        .query(Query.select(Filter.id(org.id)).from(ALL).targetOf(TestSchema.EmployedBy))
-        .run();
-      expect(incoming).toEqual([relation]);
 
       const employers = await env.graph
         .query(Query.select(Filter.id(person.id)).from(ALL).sourceOf(TestSchema.EmployedBy).target())
@@ -428,18 +425,17 @@ describe('local databases on the graph', () => {
       }
     });
 
-    test('full-text search merges the local match with the space engine answer', async ({ expect }) => {
+    test('full-text search matches in the space and in local databases', async ({ expect }) => {
       await using env = await setup();
       env.space.add(Obj.make(TestSchema.Person, { name: 'Space Zebra' }));
       env.local.add(Obj.make(TestSchema.Person, { name: 'Local Zebra' }));
       env.local.add(Obj.make(TestSchema.Person, { name: 'Local Horse' }));
-      await flushAll(env.space, env.local);
+      for (const db of [env.space, env.local]) {
+        await db.flush({ indexes: true, secondaryIndexes: true });
+      }
 
-      // Text search over a space is the replicated engine's own answer (index-backed), which the
-      // graph must pass through unchanged next to the local database's match.
-      const spaceZebras = await env.graph.query(Query.select(Filter.text('Zebra')).from(env.space)).run();
       const zebras = await env.graph.query(Query.select(Filter.text('Zebra')).from(ALL)).run();
-      expect(names(zebras)).toEqual([...names(spaceZebras), 'Local Zebra'].sort());
+      expect(names(zebras)).toEqual(['Local Zebra', 'Space Zebra']);
     });
 
     test('lookup by id finds an object whichever database holds it', async ({ expect }) => {
@@ -556,10 +552,6 @@ describe('local databases on the graph', () => {
         .query(Query.select(Filter.type(TestSchema.Person)).from(ALL).sourceOf(TestSchema.EmployedBy).target())
         .run();
       expect(employers).toEqual([org]);
-      const staff = await env.graph
-        .query(Query.select(Filter.id(org.id)).from(ALL).targetOf(TestSchema.EmployedBy).source())
-        .run();
-      expect(names(staff)).toEqual(['Ada']);
     });
 
     test('a subscribed traversal updates when a cross-database ref changes', async ({ expect }) => {
@@ -607,7 +599,7 @@ describe('local databases on the graph', () => {
         'Ada',
       ]);
 
-      const late = env.graph.localDatabase('late');
+      const late = await env.graph.localDatabase('late');
       late.add(Obj.make(TestSchema.Person, { name: 'Late' }));
       await late.flush();
       expect(names(await env.graph.query(Query.select(Filter.type(TestSchema.Person)).from(ALL)).run())).toEqual([

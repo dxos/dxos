@@ -14,45 +14,6 @@ query, running the one SQL statement and hydrating the returned rows into live o
 
 ---
 
-## RPC boundary
-
-2026-10-03, `src/testing/rpc.bench.ts`. Node 22.22.0, 4 × Intel Xeon @ 2.10 GHz (cloud sandbox), same
-10,000-person space. One file, three placements of SQLite:
-
-- **in-process** — `makeLocalDriver`: statements run on the calling thread.
-- **rpc: op** — `RemoteStoreDriver` → `serveStore` on a worker thread: one `MessagePort` round trip per
-  driver call (query, row load, write batch). Hydration stays on the calling thread.
-- **rpc: statement** — the `@effect/sql-sqlite-wasm` worker protocol, which is what the browser's OPFS
-  worker speaks: one round trip per SQL statement, including `BEGIN` / `COMMIT`.
-
-| operation (mean)                       | in-process |  rpc: op | rpc: statement |
-| -------------------------------------- | ---------: | -------: | -------------: |
-| store: load 1 row (no hydration)       |   0.021 ms | 0.085 ms |       0.084 ms |
-| store: query 100 rows (no hydration)   |   0.065 ms | 0.215 ms |       0.239 ms |
-| open + first page (`limit(10)`)        |    2.19 ms |  2.57 ms |        2.92 ms |
-| query: type, `limit(10)`               |    0.31 ms |  0.50 ms |        0.58 ms |
-| query: property `eq` (1 match of 10k)  |    10.7 ms |  10.6 ms |        11.7 ms |
-| query: reference traversal (10 → orgs) |    0.49 ms |  0.66 ms |        0.96 ms |
-| query: hydrate all 10,000 people       |    24.2 ms |  35.5 ms |        37.7 ms |
-| insert 1 object + flush                |    1.23 ms |  1.42 ms |        1.71 ms |
-| insert 100 objects + flush (one batch) |    20.7 ms |  19.9 ms |        43.8 ms |
-
-- **A crossing costs about 65 µs.** That is the fixed price of a round trip between threads
-  (`load 1 row`: 21 → 85 µs). Everything else follows from how many crossings an operation makes and how
-  many bytes it clones.
-- **Reads cross once in both shapes,** so they pay the same fixed cost: +0.2–0.5 ms on small queries
-  (+40–100 %), nothing visible on a query that spends 10 ms in SQLite.
-- **Large results pay for the clone.** Hydrating 10,000 rows adds 11–13 ms (+47–56 %), roughly 1 µs per
-  row. Rows cross as unparsed JSON text: a measured run that parsed on the worker and cloned the object
-  graph made the op-level path the _slower_ of the two on this row (5.7 vs 4.5 ms at 1,000 rows).
-- **Writes decide the shape.** A write batch runs four statements per object, plus one per reference. Op-level sends the batch once
-  and costs the same as in-process; statement-level crosses per statement and is 2.2× slower at
-  100 objects, and the gap grows with the batch.
-- **Not measured: the main thread.** These are latencies. In-process, a 10 ms query blocks the calling
-  thread for 10 ms; behind either boundary it blocks only the worker. In the browser that choice is not
-  available — OPFS sync access handles exist only in workers — so a main-thread `localDatabase` needs a
-  boundary, and the numbers argue for the op-level one.
-
 ## 2026-09-26 — SQL-compiled queries, weak working set
 
 Node 22.22.2, 4 × Intel Xeon @ 2.10 GHz (cloud sandbox), SQLite 3.51. Dirty tree on top of `7fa01e89`.

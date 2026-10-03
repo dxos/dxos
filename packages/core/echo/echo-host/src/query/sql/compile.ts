@@ -18,7 +18,7 @@ import {
   normalizePropPath,
   referenceIndexKey,
 } from '@dxos/index-core';
-import { DXN, EID, EntityId, type SpaceId } from '@dxos/keys';
+import { DXN, EID, EntityId, SpaceId } from '@dxos/keys';
 
 import { QueryError } from '../errors.ts';
 import { QueryPlan } from '../plan.ts';
@@ -757,7 +757,7 @@ export class SqlPlanCompiler {
               JOIN objectSnapshot d ON d.recordId = w.recordId
               JOIN ${refs} ref
               JOIN ${target} ON t.spaceId = COALESCE(${spaceIdOfUri(sql, uri)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, uri)} AND ${targetKind}
-              WHERE ${uri} LIKE 'echo:%'
+              WHERE ${uri} LIKE 'echo:%' AND ${reachable(sql, sql`m.spaceId`, sql`t.spaceId`)}
               GROUP BY t.recordId`,
           );
         }
@@ -769,7 +769,7 @@ export class SqlPlanCompiler {
           sql`${project(sql`t`)} FROM ${wsRef} w
             JOIN reverseRef r ON r.targetDXN = 'echo:///' || w.objectId
             JOIN objectMeta t ON t.recordId = r.recordId
-            WHERE ${pathCondition}
+            WHERE ${pathCondition} AND ${reachable(sql, sql`t.spaceId`, sql`w.spaceId`)}
             GROUP BY t.recordId`,
         );
       }
@@ -783,7 +783,7 @@ export class SqlPlanCompiler {
               sql`${project(sql`t`)} FROM ${wsRef} w
                 JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
                 JOIN ${docRow(sql, 't')} ON t.spaceId = COALESCE(${spaceIdOfUri(sql, column)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, column)} AND t.queueId = ''
-                WHERE ${column} IS NOT NULL
+                WHERE ${column} IS NOT NULL AND ${reachable(sql, sql`m.spaceId`, sql`t.spaceId`)}
                 GROUP BY t.recordId`,
             );
           }
@@ -809,7 +809,7 @@ export class SqlPlanCompiler {
             sql`${project(sql`t`)} FROM ${wsRef} w
               JOIN objectMeta m NOT INDEXED ON m.recordId = w.recordId
               JOIN ${docRow(sql, 't')} ON t.spaceId = COALESCE(${spaceIdOfUri(sql, sql`m.parent`)}, m.spaceId) AND t.objectId = ${localIdOfUri(sql, sql`m.parent`)} AND t.queueId = ''
-              WHERE m.queueId = '' AND m.parent IS NOT NULL
+              WHERE m.queueId = '' AND m.parent IS NOT NULL AND ${reachable(sql, sql`m.spaceId`, sql`t.spaceId`)}
               GROUP BY t.recordId`,
           );
         }
@@ -1403,6 +1403,15 @@ const localIdOfLocalUri = (sql: SqlClient.SqlClient, uri: Fragment): Fragment =>
   sql`CASE WHEN ${uri} LIKE 'echo:///%' THEN substr(${uri}, 9) WHEN ${uri} LIKE 'echo:/%' AND ${uri} NOT LIKE 'echo://%' THEN substr(${uri}, 7) END`;
 
 /** The space id of a space-qualified `echo://<space>/<id>` URI, `NULL` for a local one. */
+const LOCAL_SPACE_PATTERN = `${SpaceId.localPrefix}%`;
+
+/**
+ * Whether a reference held in space `from` may reach space `to`: anything may, except replicated data
+ * reaching a local space, which must behave as if the reference were not there.
+ */
+const reachable = (sql: SqlClient.SqlClient, from: Fragment, to: Fragment): Fragment =>
+  sql`(${from} LIKE ${LOCAL_SPACE_PATTERN} OR ${to} NOT LIKE ${LOCAL_SPACE_PATTERN})`;
+
 const spaceIdOfUri = (sql: SqlClient.SqlClient, uri: Fragment): Fragment =>
   sql`CASE WHEN ${uri} LIKE 'echo://%' AND ${uri} NOT LIKE 'echo:///%' AND instr(substr(${uri}, 8), '/') > 0 THEN substr(${uri}, 8, instr(substr(${uri}, 8), '/') - 1) END`;
 

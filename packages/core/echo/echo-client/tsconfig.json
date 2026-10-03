@@ -65,9 +65,6 @@
       "path": "../echo-protocol"
     },
     {
-      "path": "../echo-sqlite"
-    },
-    {
       "path": "../index-core"
     }
   ]

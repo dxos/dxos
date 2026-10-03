@@ -16,7 +16,6 @@ import type * as Entity from './Entity.ts';
 import type * as Key from './Key.ts';
 import type * as Ref from './Ref.ts';
 import type * as Registry from './Registry.ts';
-import type * as Type from './Type.ts';
 
 /**
  * Resolution context.
@@ -91,19 +90,16 @@ export interface Hypergraph extends Database.Queryable {
   getDatabase(spaceId: Key.SpaceId): Database.Database | undefined;
 
   /**
-   * The device-local database named `name`, opened on first use. Nothing in it replicates, but it is
-   * part of the graph like a space: {@link getDatabase} finds it by its `spaceId` (a local id, see
-   * `SpaceId.isLocal`), graph queries scan and traverse into and out of it, and its objects may reference
-   * any space. References from replicated data into it are refused: writing one throws
-   * `Error.LocalReferenceError`, and one already in replicated data resolves to nothing. The same name
-   * reopens the same objects. Fails when the graph was built without a {@link LocalDatabaseFactory}.
+   * The device-local database named `name`: a space hosted like any other, created on first use and
+   * reopened with its objects after, except that it never replicates. Its `spaceId` is a local id (see
+   * `SpaceId.isLocal`), {@link getDatabase} finds it, graph queries scan and traverse into and out of it,
+   * and its objects may reference any space. References from replicated data into it are refused:
+   * writing one throws `Error.LocalReferenceError`, and one already in replicated data resolves to
+   * nothing. Fails when the graph is not connected to a host that can open local spaces.
    *
-   * @performance O(1); returns at once and opens storage on the database's first read or write. A
-   * graph query whose scope includes a local database is evaluated across databases by the graph:
-   * incoming references, relations and children are found by scanning candidates in every database in
-   * scope, and the query re-runs on any database change.
+   * @performance One host round trip on first use per name; later calls return the open database.
    */
-  localDatabase(name: string): Database.Database;
+  localDatabase(name: string): Promise<Database.Database>;
 
   /**
    * Registers a pluggable blob storage backend under `name`, claiming its declared URI schemes.
@@ -124,38 +120,7 @@ export interface Hypergraph extends Database.Queryable {
   get defaultBlobStorage(): string;
 }
 
-/**
- * A database opened by {@link LocalDatabaseFactory}; its owner closes it.
- */
-export interface LocalDatabase extends Database.Database {
-  /** Flushes pending writes and releases the database. */
-  close(): Promise<void>;
-
-  /** The resident entity for an `echo:` URI in this database, without reading storage. */
-  peek(uri: URI.URI): Entity.Unknown | undefined;
-
-  /** The entity for an `echo:` URI in this database, reading storage when it is not resident. */
-  load(uri: URI.URI): Promise<Entity.Unknown | undefined>;
-
-  /** Calls `callback` after each batch of writes is durable; graph queries over the database re-run on it. */
-  subscribeChanges(callback: () => void): CleanupFn;
-}
-
-export type LocalDatabaseOptions = {
-  /** Static types to hydrate stored objects with. */
-  readonly types: readonly Type.AnyEntity[];
-
-  /** The graph the database joins: it resolves references that leave the database, and is its `db.graph`. */
-  readonly graph: Hypergraph;
-};
-
-/**
- * Opens the local database for a name; supplied by the storage backend (e.g. `@dxos/echo-sqlite`). The
- * database's `spaceId` must be a local id (`SpaceId.local`), stable per name.
- */
-export type LocalDatabaseFactory = (name: string, options: LocalDatabaseOptions) => LocalDatabase;
-
-/** The graph has no {@link LocalDatabaseFactory}, so it cannot open local databases. */
+/** The graph is not connected to a host that can open local spaces. */
 export class LocalDatabaseNotAvailableError extends BaseError.extend(
   'LocalDatabaseNotAvailableError',
   'Local databases are not available.',

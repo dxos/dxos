@@ -21,6 +21,12 @@ export const tryGetSpaceIdFromCollectionId = (collectionId: string): SpaceId | n
   return SpaceId.isValid(spaceId) ? spaceId : null;
 };
 
+/** Whether a collection belongs to a local space, whose state must never leave this device. */
+export const isLocalCollectionId = (collectionId: string): boolean => {
+  const spaceId = tryGetSpaceIdFromCollectionId(collectionId);
+  return spaceId !== null && SpaceId.isLocal(spaceId);
+};
+
 export const getSpaceIdFromCollectionId = (collectionId: CollectionId): SpaceId => {
   const spaceId = tryGetSpaceIdFromCollectionId(collectionId);
   invariant(spaceId);

@@ -46,6 +46,7 @@ export const SpaceId: Schema.Codec<SpaceId, string> & {
   decode: (value: SpaceId) => Uint8Array;
   isValid: (value: unknown) => value is SpaceId;
   isLocal: (value: SpaceId) => boolean;
+  localPrefix: string;
   local: (seed: Uint8Array) => SpaceId;
   make: (value: string) => SpaceId;
   random: () => SpaceId;
@@ -70,6 +71,9 @@ export const SpaceId: Schema.Codec<SpaceId, string> & {
    * from replicated data.
    */
   isLocal: (value: SpaceId): boolean => value.startsWith(LOCAL_PREFIX),
+
+  /** What every local space id starts with, for matching them where {@link SpaceId.isLocal} cannot run (SQL). */
+  localPrefix: LOCAL_PREFIX,
 
   /**
    * A local space id derived from 20 bytes of `seed`: the encoding with its leading characters replaced by

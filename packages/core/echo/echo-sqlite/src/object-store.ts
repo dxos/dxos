@@ -14,10 +14,11 @@ import { type EntityRecord } from './record.ts';
 import { type CompiledQuery } from './sql/compile.ts';
 
 /**
- * A stored entity as the store returns it: its id and its ECHO JSON, unparsed so that a row whose entity
- * is already resident is never parsed and a row crossing an RPC boundary is cloned as one string.
+ * A stored entity as the store returns it: its id and its ECHO JSON.
  */
-export type StoredEntity = { readonly id: string; readonly body: string };
+export type StoredEntity = { readonly id: string; readonly body: Record<string, unknown> };
+
+type BodyRow = { id: string; body: string };
 
 type Store<A> = Effect.Effect<A, SqlError.SqlError, SqlClient.SqlClient>;
 
@@ -47,15 +48,15 @@ export class ObjectStore {
   /**
    * Reads the persisted type entities, which must be registered before any object can hydrate.
    */
-  loadTypes(): Store<readonly StoredEntity[]> {
+  loadTypes(): Store<StoredEntity[]> {
     const spaceId = this.#spaceId;
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql<StoredEntity>`
+      const rows = yield* sql<BodyRow>`
         SELECT id, body FROM echo_entities INDEXED BY echo_entities_kind
         WHERE space_id = ${spaceId} AND kind = 'type' AND deleted = 0
       `;
-      return rows;
+      return rows.map(parseRow);
     }).pipe(Effect.withSpan('ObjectStore.loadTypes'));
   }
 
@@ -66,20 +67,19 @@ export class ObjectStore {
     const spaceId = this.#spaceId;
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows =
-        yield* sql<StoredEntity>`SELECT id, body FROM echo_entities WHERE space_id = ${spaceId} AND id = ${id}`;
-      return rows.length > 0 ? rows[0] : undefined;
+      const rows = yield* sql<BodyRow>`SELECT id, body FROM echo_entities WHERE space_id = ${spaceId} AND id = ${id}`;
+      return rows.length > 0 ? parseRow(rows[0]) : undefined;
     }).pipe(Effect.withSpan('ObjectStore.load'));
   }
 
   /**
    * Runs a compiled query.
    */
-  query(compiled: CompiledQuery): Store<readonly StoredEntity[]> {
+  query(compiled: CompiledQuery): Store<StoredEntity[]> {
     return Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient;
-      const rows = yield* sql.unsafe<StoredEntity>(compiled.sql, compiled.params);
-      return rows;
+      const rows = yield* sql.unsafe<BodyRow>(compiled.sql, compiled.params);
+      return rows.map(parseRow);
     }).pipe(Effect.withSpan('ObjectStore.query'));
   }
 
@@ -178,3 +178,5 @@ export class ObjectStore {
     });
   }
 }
+
+const parseRow = (row: BodyRow): StoredEntity => ({ id: row.id, body: JSON.parse(row.body) });

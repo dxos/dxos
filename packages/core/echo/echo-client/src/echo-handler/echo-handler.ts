@@ -501,7 +501,7 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
         return EncodedReference.fromURI(
-          assertReplicable(savedTarget ? this.createRef(target, savedTarget) : value.uri),
+          assertReplicable(target, savedTarget ? this.createRef(target, savedTarget) : value.uri),
         );
       } else if (value instanceof Uint8Array) {
         return value;
@@ -714,26 +714,52 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
 
     // Note: If the object is in a different database, return a reference to a foreign database.
     if (foreignDatabase !== database) {
-      return EID.make({ spaceId: foreignDatabase.spaceId, entityId: otherObjId });
+      // Checked here too because `saveRefs` binds a cached link through this path and discards the result.
+      return assertReplicable(target, EID.make({ spaceId: foreignDatabase.spaceId, entityId: otherObjId }));
     }
 
     return EID.make({ entityId: otherObjId });
   }
 
   /**
-   *
+   * Binds the links an object cached before it had a database: unpersisted targets join this database,
+   * and the relative refs written for targets that live in another database are made absolute, since
+   * relative refs resolve in this one.
    */
   saveRefs(target: ProxyTarget): void {
-    if (!target[symbolInternals].linkCache) {
+    const linkCache = target[symbolInternals].linkCache;
+    if (!linkCache) {
       return;
     }
 
-    if (target[symbolInternals].linkCache) {
-      for (const obj of target[symbolInternals].linkCache.values()) {
-        this.createRef(target, obj);
+    const foreign = new Map<string, URI.URI>();
+    for (const [objectId, obj] of linkCache) {
+      const uri = this.createRef(target, obj);
+      const eid = EID.tryParse(uri);
+      if (eid && EID.getSpaceId(eid) !== undefined) {
+        foreign.set(objectId, uri);
       }
+    }
+    target[symbolInternals].linkCache = undefined;
 
-      target[symbolInternals].linkCache = undefined;
+    if (foreign.size > 0) {
+      // Each ref is replaced in place: rewriting the whole tree would re-insert objects the document already holds.
+      const core = target[symbolInternals];
+      const visit = (value: DecodedAutomergePrimaryValue, path: Doc.KeyPath): void => {
+        if (isEncodedReference(value)) {
+          const eid = EID.tryParse(EncodedReference.toURI(value));
+          const entityId = eid && EID.getSpaceId(eid) === undefined ? EID.getEntityId(eid) : undefined;
+          const qualified = entityId ? foreign.get(entityId) : undefined;
+          if (qualified) {
+            core.setDecoded(path, EncodedReference.fromURI(qualified));
+          }
+        } else if (Array.isArray(value)) {
+          value.forEach((entry, index) => visit(entry, [...path, index]));
+        } else if (value !== null && typeof value === 'object' && !(value instanceof Uint8Array)) {
+          Object.entries(value).forEach(([key, entry]) => visit(entry, [...path, key]));
+        }
+      };
+      visit(core.getDecoded([DATA_NAMESPACE]), [DATA_NAMESPACE]);
     }
   }
 
@@ -753,10 +779,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const sourceRef = Reflect.get(target, RelationSourceId);
     const targetRef = Reflect.get(target, RelationTargetId);
     if (isProxy(sourceRef)) {
-      core.setSource(EncodedReference.fromURI(assertReplicable(this.createRef(target, sourceRef))));
+      core.setSource(EncodedReference.fromURI(assertReplicable(target, this.createRef(target, sourceRef))));
     }
     if (isProxy(targetRef)) {
-      core.setTarget(EncodedReference.fromURI(assertReplicable(this.createRef(target, targetRef))));
+      core.setTarget(EncodedReference.fromURI(assertReplicable(target, this.createRef(target, targetRef))));
     }
   }
 
@@ -1117,10 +1143,10 @@ const setRelationSourceAndTarget = (target: ProxyTarget, core: ObjectCore, schem
     }
 
     core.setSource(
-      EncodedReference.fromURI(assertReplicable(EchoReactiveHandler.instance.createRef(target, sourceRef))),
+      EncodedReference.fromURI(assertReplicable(target, EchoReactiveHandler.instance.createRef(target, sourceRef))),
     );
     core.setTarget(
-      EncodedReference.fromURI(assertReplicable(EchoReactiveHandler.instance.createRef(target, targetRef))),
+      EncodedReference.fromURI(assertReplicable(target, EchoReactiveHandler.instance.createRef(target, targetRef))),
     );
   }
 };
@@ -1184,15 +1210,20 @@ const linkMetaRefs = (target: ProxyTarget, meta: EntityMeta): EntityMeta =>
 const refToEncodedReference = (target: ProxyTarget, ref: Ref<any>): EncodedReference => {
   const savedTarget = getRefSavedTarget(ref);
   return EncodedReference.fromURI(
-    assertReplicable(savedTarget ? EchoReactiveHandler.instance.createRef(target, savedTarget) : ref.uri),
+    assertReplicable(target, savedTarget ? EchoReactiveHandler.instance.createRef(target, savedTarget) : ref.uri),
   );
 };
 
 /**
- * Every object this handler serves is replicated, so a reference written into it must not name a local
- * space: other peers could never resolve it, and the local entity's id would leak off the device.
+ * A reference written into an object of a replicated space must not name a local space: other peers could
+ * never resolve it, and the local entity's id would leak off the device. Objects of a local space, and
+ * objects not yet in any database, may reference anything.
  */
-const assertReplicable = (uri: URI.URI): URI.URI => {
+const assertReplicable = (target: ProxyTarget, uri: URI.URI): URI.URI => {
+  const database = getEchoDatabase(target[symbolInternals]);
+  if (database === undefined || SpaceId.isLocal(database.spaceId)) {
+    return uri;
+  }
   const eid = EID.tryParse(uri);
   const spaceId = eid ? EID.getSpaceId(eid) : undefined;
   if (spaceId !== undefined && SpaceId.isLocal(spaceId)) {

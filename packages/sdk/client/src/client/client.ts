@@ -503,6 +503,7 @@ export class Client {
       dataService: this._services.rpc,
       queryService: this._services.rpc,
       feedService: this._services.rpc,
+      spacesService: this._services.rpc,
       runtime: this._effectRuntime,
     });
     log('client._open: opening echo client...');
