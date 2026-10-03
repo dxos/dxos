@@ -62,7 +62,7 @@ export const DebugObjectPanel = ({ role, companionTo, onOpen, canOpen }: DebugOb
           >
             <Panel.Root>
               <Panel.Header>
-                <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+                <Toolbar.Root classNames='grid grid-cols-[1fr_6rem]'>
                   <Syntax.Filter />
                   <Syntax.Depth />
                 </Toolbar.Root>

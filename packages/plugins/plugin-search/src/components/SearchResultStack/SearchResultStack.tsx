@@ -5,12 +5,13 @@
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
 import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
-import { Entity } from '@dxos/echo';
-import { Block, Button, Card, Focus, ScrollArea, composable, composableProps } from '@dxos/react-ui';
+import { AppSurface, CardIconSlot, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import { Entity, Obj } from '@dxos/echo';
+import { Block, Button, Card, Focus, Icon, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps, useMosaicContainer } from '@dxos/react-ui-mosaic';
 import { Highlighted, type SearchResult } from '@dxos/react-ui-search';
+import { getStyles } from '@dxos/ui-theme';
 
 //
 // SearchResultStack
@@ -75,6 +76,9 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
   ({ data, location, current }, forwardedRef) => {
     const { result, query } = data;
     const label = result.label ?? (result.object && Entity.getLabel(result.object)) ?? '';
+    const iconAnnotation = result.object && Obj.getIcon(result.object);
+    const icon = iconAnnotation?.icon ?? 'ph--circle-dashed--regular';
+    const iconStyles = iconAnnotation?.hue ? getStyles(iconAnnotation.hue) : undefined;
     // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
     const [cardRef, pivotId] = useCardPivot();
     const menuItems = useObjectMenuItems(result.object, pivotId);
@@ -89,7 +93,11 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
         <Focus.Item asChild current={current} onCurrentChange={handleCurrentChange}>
           <Card.Root grid ref={forwardedRef} role='button' classNames='cursor-pointer'>
             <Card.Header ref={cardRef}>
-              <Block />
+              <Block>
+                <CardIconSlot subject={result.object}>
+                  <Icon icon={icon} classNames={iconStyles?.text} />
+                </CardIconSlot>
+              </Block>
               <Card.Title>
                 <Highlighted text={label} query={query} />
               </Card.Title>

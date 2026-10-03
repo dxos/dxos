@@ -133,7 +133,7 @@ const JsonView = ({ data, db }: { data: unknown; db?: ReturnType<typeof Obj.getD
   >
     <Panel.Root>
       <Panel.Header>
-        <Toolbar.Root classNames='grid grid-cols-[1fr_3rem]'>
+        <Toolbar.Root classNames='grid grid-cols-[1fr_6rem]'>
           <Syntax.Filter />
           <Syntax.Depth />
         </Toolbar.Root>

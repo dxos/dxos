@@ -191,4 +191,7 @@ The cut-over verification ledger is archived ([VERIFICATION.md](../../docs/archi
 
 ### Tasks
 
-- [ ] **Re-check the ledger's open entries against the current build** — V013–V022, V024–V051 (except fixed/verified), V064; close each with its commit or move it here as its own task.
+- [x] **Re-check the ledger's open entries against the current build** — V013–V022, V024–V051 (except fixed/verified), V064; close each with its commit or move it here as its own task. — 40 re-checked (app headless + storybook): 34 already fixed, 1 fixed now (V038 depth column), V049 half fixed now (search result icon), 2 n/a (V015, V025), 3 open below.
+- [ ] **V014 Form width** — `Form.Content` caps only the `settings` variant at the document width; main's `FormContent` gave every form `dx-document` (the one main site not yet covered). Likely `react-ui-form/src/components/Form.tsx`.
+- [ ] **V023 Esc on a lazily loaded dialog** — the first open of Create Object ignores Escape (later opens close): the surface's Content is a `lazy()` chunk, so zag's dismissable layer finds no content node within its microtask + one frame and never tracks Escape. Likely `plugin-deck/src/containers/Overlays/Dialog.tsx` (hold `open` until the surface Content mounts, or preload dialog surfaces).
+- [ ] **V049 Object-card grid at one place** — every object card seen (search, preview popover, masonry, record) sets `Card.Root grid` itself (15 call sites); give object cards one surface/wrapper that owns `grid` and the `CardIconSlot` header. Likely `sdk/app-toolkit/src/ui/components/`.
