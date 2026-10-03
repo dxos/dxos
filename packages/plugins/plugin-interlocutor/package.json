@@ -172,6 +172,7 @@
     "@dxos/link": "workspace:*",
     "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
+    "@dxos/react-hooks": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-list": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",

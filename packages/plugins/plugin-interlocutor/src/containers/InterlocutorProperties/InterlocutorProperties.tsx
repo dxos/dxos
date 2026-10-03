@@ -10,12 +10,16 @@ import type * as Agent from '@dxos/assistant/Agent';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type SpaceId } from '@dxos/keys';
+import { useInterval } from '@dxos/react-hooks';
 import { useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { DiscordBindingForm, DiscordBotStatus } from '#components';
 import { meta } from '#meta';
 import { DiscordBinding, DiscordOperation } from '#types';
+
+/** How often the bot status is re-read; the gateway changes state on EDGE without notifying Composer. */
+const STATUS_POLL_MS = 5_000;
 
 export type InterlocutorPropertiesProps = AppSurface.ObjectPropertiesProps<Agent.Agent>;
 
@@ -88,6 +92,7 @@ const DiscordBotControls = ({ binding, spaceId }: DiscordBotControlsProps) => {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+  useInterval(refresh, STATUS_POLL_MS, [refresh]);
 
   const handleStart = useCallback(async () => {
     setBusy(true);
