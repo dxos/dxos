@@ -9,8 +9,8 @@ import * as Option from 'effect/Option';
 import * as RpcTest from 'effect/rpc/RpcTest';
 
 import { Chat } from '@dxos/assistant';
-import { Process } from '@dxos/compute';
 import { type RemoteProcessManager } from '@dxos/compute-runtime';
+import * as Process from '@dxos/compute/Process';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { TestDatabaseLayer } from '@dxos/echo-client/testing';
