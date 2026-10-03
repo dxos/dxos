@@ -29,7 +29,7 @@ export type UseBasicMarkdownExtensionsOptions = {
 
 /**
  * Returns the standard CodeMirror extension stack for an inline markdown editor:
- * basic editor behaviors, themed syntax highlighting (theme mode read from {@link useThemeContext}),
+ * basic editor behaviors, themed syntax highlighting (theme mode read from {@link useThemeMode}),
  * markdown parsing, and visual decorations.
  *
  * Used by surfaces such as `AgentProperties` and `MagazineProperties` to render the

@@ -8,7 +8,7 @@ import { type ForwardedRef, useCallback, useEffect, useMemo, useRef } from 'reac
 
 import { type Database, Filter, Obj, type Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { type ThemedClassName, useThemeContext, useTranslation } from '@dxos/react-ui';
+import { type ThemedClassName, useThemeMode, useTranslation } from '@dxos/react-ui';
 import {
   type EditorController,
   type EditorMenuProviderProps,
@@ -90,7 +90,7 @@ export const useRefEditor = (
   forwardedRef: ForwardedRef<EditorController>,
 ) => {
   const { t } = useTranslation(translationKey);
-  const { themeMode } = useThemeContext();
+  const themeMode = useThemeMode();
   const getObjectLabel = useCallback(
     (object: Obj.Unknown) => getLabel?.(object) ?? Obj.getLabel(object) ?? object.id,
     [getLabel],
