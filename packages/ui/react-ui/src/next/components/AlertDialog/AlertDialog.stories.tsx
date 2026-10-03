@@ -107,7 +107,7 @@ export const Test: Story = {
     await fireEvent.pointerUp(outside);
     await fireEvent.click(outside);
     await new Promise((resolve) => setTimeout(resolve, 100));
-    await expect(body.getByRole('alertdialog')).toBe(dialog);
+    await waitFor(() => expect(body.getByRole('alertdialog')).toBe(dialog));
 
     await userEvent.click(cancel);
     await waitFor(() => expect(body.queryByRole('alertdialog')).toBeNull());

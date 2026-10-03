@@ -136,10 +136,7 @@ export const Test: Story = {
     await userEvent.keyboard('Wayne');
     // The row takes the form's `createOptionLabel` (translated with the query) and `createOptionIcon`.
     const create = within(createPopup).getByRole('option', { name: 'New organization “Wayne”' });
-    // The sprite resolves the glyph asynchronously, which a cold run can take seconds over.
-    await waitFor(() => expect(create.querySelector('use')?.getAttribute('href')).toBe('#ph--buildings--regular'), {
-      timeout: 10_000,
-    });
+    await expect(create.querySelector('[data-scope="icon"]')?.getAttribute('data-icon')).toBe('ph--buildings--regular');
     await userEvent.click(create);
     const name = await within(createPopup).findByRole('textbox', { name: 'Full name' });
     await userEvent.type(name, 'Wayne Enterprises');

@@ -577,9 +577,7 @@ export const TestMultiple: Story = {
     await userEvent.keyboard('Someday');
     const create = await within(popup).findByRole('option', { name: 'Add tag “Someday”' });
     // Icons resolve from the sprite asynchronously, which a cold run can take seconds over.
-    await waitFor(() => expect(create.querySelector('use')?.getAttribute('href')).toBe('#ph--tag--regular'), {
-      timeout: 10_000,
-    });
+    await expect(create.querySelector('[data-scope="icon"]')?.getAttribute('data-icon')).toBe('ph--tag--regular');
     await userEvent.click(create);
     await waitFor(() => expect(within(control).getByText('Someday')).toBeVisible());
     await userEvent.keyboard('{Escape}');

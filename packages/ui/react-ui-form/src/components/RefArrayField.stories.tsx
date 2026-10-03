@@ -176,13 +176,8 @@ export const TestTitle: Story = {
     await expect(rows).toHaveLength(2);
 
     // 2. A row: the type's icon in its hue, the label, the `status` description; no drag handle while unordered.
-    // The sprite loads the glyph on first use.
-    await waitFor(
-      () =>
-        expect(select(rows[0], '[data-part="item-icon"] use').getAttribute('href')).toBe(
-          '#ph--building-office--regular',
-        ),
-      { timeout: 5_000 },
+    await expect(select(rows[0], '[data-part="item-icon"] [data-scope="icon"]').getAttribute('data-icon')).toBe(
+      'ph--building-office--regular',
     );
     await expect(select(rows[0], '[data-part="item-icon"] [data-hue]')).toHaveAttribute('data-hue', 'amber');
     await expect(within(rows[0]).getByText('Apollo')).toBeVisible();

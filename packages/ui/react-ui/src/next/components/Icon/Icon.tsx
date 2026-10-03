@@ -49,6 +49,7 @@ export const Icon = forwardRef<SVGSVGElement, IconProps>(
         {...(label ? { 'role': 'img', 'aria-label': label } : { 'aria-hidden': true })}
         data-scope='icon'
         data-part='root'
+        data-icon={icon}
         data-hue={hue}
         data-valence={valence}
         data-tone={tone}

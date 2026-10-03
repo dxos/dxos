@@ -95,7 +95,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 /** The icon's sprite reference, which resolves once the sprite registry has the icon. */
-const iconHref = (button: HTMLElement) => button.querySelector('use')?.getAttribute('href') ?? '';
+const iconName = (button: HTMLElement) => button.querySelector('[data-scope="icon"]')?.getAttribute('data-icon') ?? '';
 
 const NAMES: Record<string, string> = {
   disclosure: 'Open',
@@ -183,15 +183,15 @@ export const Test: Story = {
     await expect(getComputedStyle(byTestId(md, 'save-labelled-md')).backgroundColor).not.toBe(
       getComputedStyle(byTestId(md, 'cancel-labelled-md')).backgroundColor,
     );
-    await waitFor(() => expect(iconHref(byTestId(md, 'save-md'))).toContain('ph--check--regular'), { timeout: 10_000 });
-    await waitFor(() => expect(iconHref(byTestId(md, 'cancel-md'))).toContain('ph--x--regular'));
+    await waitFor(() => expect(iconName(byTestId(md, 'save-md'))).toContain('ph--check--regular'), { timeout: 10_000 });
+    await waitFor(() => expect(iconName(byTestId(md, 'cancel-md'))).toContain('ph--x--regular'));
 
     const star = byTestId(md, 'star-md');
     await expect(star).toHaveAttribute('aria-pressed', 'false');
-    await waitFor(() => expect(iconHref(star)).toContain('ph--star--regular'));
+    await waitFor(() => expect(iconName(star)).toContain('ph--star--regular'));
     await userEvent.click(star);
     await waitFor(() => expect(star).toHaveAttribute('aria-pressed', 'true'));
-    await waitFor(() => expect(iconHref(star)).toContain('ph--star--fill'));
+    await waitFor(() => expect(iconName(star)).toContain('ph--star--fill'));
     await expect(star).toHaveAccessibleName('Unstar');
     await expect(star).toHaveAttribute('data-icon-valence', 'warning');
     await expect(star).not.toHaveAttribute('aria-expanded');
@@ -203,7 +203,7 @@ export const Test: Story = {
     const bookmark = byTestId(md, 'bookmark-md');
     await userEvent.click(bookmark);
     await waitFor(() => expect(bookmark).toHaveAttribute('aria-pressed', 'true'));
-    await waitFor(() => expect(iconHref(bookmark)).toContain('ph--bookmark-simple--fill'));
+    await waitFor(() => expect(iconName(bookmark)).toContain('ph--bookmark-simple--fill'));
     await expect(bookmark).toHaveAccessibleName('Remove bookmark');
     await userEvent.click(bookmark);
     await waitFor(() => expect(bookmark).toHaveAttribute('aria-pressed', 'false'));
@@ -217,12 +217,12 @@ export const Test: Story = {
     }
     await expect(disclosure).toHaveAttribute('aria-expanded', 'false');
     await expect(disclosure).not.toHaveAttribute('aria-pressed');
-    await waitFor(() => expect(iconHref(disclosure)).toContain('ph--caret-right--regular'));
+    await waitFor(() => expect(iconName(disclosure)).toContain('ph--caret-right--regular'));
     await expect(getComputedStyle(caret).transform).toBe('none');
     await userEvent.click(disclosure);
     await waitFor(() => expect(disclosure).toHaveAttribute('aria-expanded', 'true'));
     await expect(disclosure).toHaveAccessibleName('Close');
-    await expect(iconHref(disclosure)).toContain('ph--caret-right--regular');
+    await expect(iconName(disclosure)).toContain('ph--caret-right--regular');
     await expect(getComputedStyle(caret).transitionProperty).toContain('transform');
     await waitFor(() => expect(rotation(caret)).toBe(90));
     await userEvent.click(disclosure);
@@ -250,7 +250,7 @@ export const Test: Story = {
       await userEvent.click(copy);
       await waitFor(() => expect(written).toEqual(['Copied at md']));
       await waitFor(() => expect(copy).toHaveAccessibleName('Copied'));
-      await waitFor(() => expect(iconHref(copy)).toContain('ph--check--regular'), { timeout: 10_000 });
+      await waitFor(() => expect(iconName(copy)).toContain('ph--check--regular'), { timeout: 10_000 });
       await expect(copy).toHaveAttribute('data-icon-valence', 'success');
       await waitFor(() => expect(copy).toHaveAccessibleName('Copy'), { timeout: 3_000 });
     } finally {

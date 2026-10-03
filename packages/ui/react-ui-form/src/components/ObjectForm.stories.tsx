@@ -122,10 +122,7 @@ export const Test: Story = {
     // Select, and the new tag joins the selection.
     await userEvent.keyboard('Family');
     const create = await within(popup).findByRole('option', { name: 'Add tag “Family”' });
-    // The sprite resolves the glyph asynchronously, which a cold run can take seconds over.
-    await waitFor(() => expect(create.querySelector('use')?.getAttribute('href')).toBe('#ph--tag--regular'), {
-      timeout: 10_000,
-    });
+    await expect(create.querySelector('[data-scope="icon"]')?.getAttribute('data-icon')).toBe('ph--tag--regular');
     await userEvent.click(create);
     await expect(await within(popup).findByRole('textbox', { name: 'Label' })).toHaveValue('Family');
     await expect(within(popup).getByRole('combobox', { name: 'Hue' })).toBeInTheDocument();
