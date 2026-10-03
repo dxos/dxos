@@ -8,7 +8,7 @@ import React, { type PropsWithChildren, useCallback, useMemo } from 'react';
 
 import { Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { useQuery, useType } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import { composable, composableProps } from '@dxos/react-ui';
 import { HuePicker } from '@dxos/react-ui-pickers';

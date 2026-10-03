@@ -10,7 +10,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as Surface from '@dxos/app-framework/Surface';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { IconButton } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 

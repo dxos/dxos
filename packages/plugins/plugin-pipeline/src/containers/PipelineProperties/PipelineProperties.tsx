@@ -12,7 +12,7 @@ import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, FormFieldHeader, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';

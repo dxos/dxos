@@ -15,7 +15,7 @@ import * as Tracer from 'effect/Tracer';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { makeRecordingTracer } from '@dxos/effect/testing';
 import { SpaceId } from '@dxos/keys';
 

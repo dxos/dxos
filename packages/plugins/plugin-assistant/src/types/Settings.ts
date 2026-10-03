@@ -8,7 +8,7 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 
 import { Provider } from '@dxos/ai';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 import { ChatView } from '@dxos/react-ui-assistant/types';
 

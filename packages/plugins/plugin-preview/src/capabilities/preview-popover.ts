@@ -13,7 +13,7 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { addEventListener } from '@dxos/async';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
 import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';

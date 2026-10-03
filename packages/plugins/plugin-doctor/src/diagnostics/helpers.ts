@@ -7,7 +7,7 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 
 import { type Database, Filter, type Hypergraph, Obj, Query } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Space } from '@dxos/halo';
 import { isNonNullable } from '@dxos/util';
 

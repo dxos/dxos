@@ -8,7 +8,7 @@ import '@dxos/lit-ui/dx-tag-picker.pcss';
 import { Entity, Filter, Obj, Query, Ref, Scope, Tag, Type } from '@dxos/echo';
 import { useType as defaultUseType, useQuery } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN, URI } from '@dxos/keys';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import { Button, Field, Icon, useTranslation } from '@dxos/react-ui';

@@ -11,7 +11,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Collection, Obj, Type } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { type Space, isSpace } from '@dxos/react-client/echo';
 import { Position } from '@dxos/util';
 

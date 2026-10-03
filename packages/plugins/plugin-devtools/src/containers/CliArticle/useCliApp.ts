@@ -17,7 +17,7 @@ import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvide
 import { CommandConfig, type CommandServices } from '@dxos/cli-util';
 import { type Client, fromClient, fromConfig } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 const OPERATIONS_UNAVAILABLE = 'Operations are not available in the devtools terminal.';
 

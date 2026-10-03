@@ -9,7 +9,7 @@ import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvide
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Banner, Button, Dialog, Field, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';

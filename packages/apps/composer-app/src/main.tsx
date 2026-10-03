@@ -25,7 +25,7 @@ import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 // Narrow entry: the barrel also re-exports auth and the ws muxer, neither of which the
 // boot path uses.
 import { EdgeHttpClient } from '@dxos/edge-client/http';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { LogLevel, log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import * as Observability from '@dxos/observability/Observability';

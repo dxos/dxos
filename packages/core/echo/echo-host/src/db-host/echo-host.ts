@@ -26,7 +26,8 @@ import {
   createIdFromSpaceKey,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
-import { EffectEx, RuntimeProvider } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';

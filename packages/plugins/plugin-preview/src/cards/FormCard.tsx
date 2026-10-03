@@ -9,7 +9,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Type } from '@dxos/echo';
 import { useType } from '@dxos/echo-react';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Card, useTranslation } from '@dxos/react-ui';
 import { Form, type FormPresentation, type FormUpdateMeta, getFormProperties, omitId } from '@dxos/react-ui-form';
 import { type ProjectionModel } from '@dxos/schema';

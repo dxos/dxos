@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { FibonacciHandler, ReplyHandler } from '@dxos/compute/testing';
 import { Database, Filter, Hypergraph, Query, Ref, Registry, Type } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EntityId, SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, type FunctionProtocol, makeInProcessClient } from '@dxos/protocols';
 import { DataService, FeedService, QueryService } from '@dxos/protocols/rpc';

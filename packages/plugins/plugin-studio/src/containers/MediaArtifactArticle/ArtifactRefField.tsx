@@ -9,7 +9,7 @@ import React from 'react';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { type Database, type Entity, Filter, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 import { type FormFieldRendererProps, FormFieldRow, RefField } from '@dxos/react-ui-form';
 

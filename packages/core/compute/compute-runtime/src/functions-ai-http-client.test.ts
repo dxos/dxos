@@ -10,7 +10,7 @@ import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import { describe, test } from 'vitest';
 
 import * as FunctionsAiError from '@dxos/compute/FunctionsAiError';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
 import { FunctionsAiHttpClient } from './functions-ai-http-client.ts';

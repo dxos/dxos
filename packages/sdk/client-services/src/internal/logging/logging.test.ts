@@ -9,7 +9,7 @@ import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
 import { afterEach, beforeEach, describe, expect, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { LogLevel, log } from '@dxos/log';
 import { QueryLogsRequestSchema } from '@dxos/protocols/buf/dxos/client/logging_pb';
 

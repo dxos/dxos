@@ -20,7 +20,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Project from '@dxos/compute/Project';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useObject, useResolveRef } from '@dxos/echo-react';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as InstructionsEditor from '@dxos/plugin-routine/InstructionsEditor';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';

@@ -15,7 +15,7 @@ import { describe, test } from 'vitest';
 
 import * as Process from '@dxos/compute/Process';
 import { Annotation } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { SpaceId } from '@dxos/keys';
 
 import * as RemoteProcessManager from './RemoteProcessManager.ts';

@@ -28,7 +28,7 @@ import type * as Skill from '@dxos/compute/Skill';
 import { createDidFromIdentityKey } from '@dxos/credentials';
 import { Blob, Database, Tag, type Type } from '@dxos/echo';
 import { isEdgePeerId } from '@dxos/echo-protocol';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, type SpaceId } from '@dxos/keys';
 import * as LocalUpload from '@dxos/mcp-server/LocalUpload';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';

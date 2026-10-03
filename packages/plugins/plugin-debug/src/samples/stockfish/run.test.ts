@@ -18,7 +18,7 @@ import { getSession } from '@dxos/compute/AgentService';
 import * as Project from '@dxos/compute/Project';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Obj, Query, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { TestHelpers } from '@dxos/effect/testing';
 import { invariant } from '@dxos/invariant';
 import { DXN, EntityId } from '@dxos/keys';

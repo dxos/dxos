@@ -7,7 +7,7 @@ import { type RefObject, type SyntheticEvent, useEffect, useMemo, useRef, useSta
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';

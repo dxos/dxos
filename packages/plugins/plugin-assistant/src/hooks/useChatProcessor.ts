@@ -17,7 +17,7 @@ import * as Credential from '@dxos/compute/Credential';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import { Database, Obj, Ref, Registry } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { useAsyncEffect } from '@dxos/react-ui';
 

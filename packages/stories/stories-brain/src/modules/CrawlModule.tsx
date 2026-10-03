@@ -10,7 +10,7 @@ import { AiServiceTestingPreset } from '@dxos/ai/testing';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { AgentRegistry, type ChannelInfo, Source } from '@dxos/crawler';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DiscordPipeline, MessageStore } from '@dxos/pipeline-discord';
 import { FactPipeline } from '@dxos/pipeline-rdf';
 import * as BrainCapabilities from '@dxos/plugin-brain/BrainCapabilities';

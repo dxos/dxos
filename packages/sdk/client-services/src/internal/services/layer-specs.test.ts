@@ -15,7 +15,8 @@ import { makeClientServicesRpcFromRouter } from '@dxos/client-protocol';
 import { LayerStack } from '@dxos/compute-runtime';
 import { Config, ConfigService } from '@dxos/config';
 import { EchoHostService } from '@dxos/echo-host';
-import { EffectEx, Hook } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
 import {
   MemorySignalManager,
   MemorySignalManagerContext,

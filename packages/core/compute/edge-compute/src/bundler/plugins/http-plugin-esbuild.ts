@@ -9,7 +9,7 @@ import * as HttpClient from 'effect/http/HttpClient';
 import * as Schedule from 'effect/Schedule';
 import { type Loader, type Plugin } from 'esbuild';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { BaseError } from '@dxos/errors';
 
 const MAX_RETRIES = 5;

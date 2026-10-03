@@ -19,7 +19,7 @@ import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import * as Operation from '@dxos/compute/Operation';
 import { Annotation, Collection, Database, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button, Dialog, toLocalizedString, useTranslation } from '@dxos/react-ui';

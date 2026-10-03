@@ -8,7 +8,8 @@ import * as Str from 'effect/String';
 import React, { Component, type PropsWithChildren, type ReactNode, type Ref, useMemo } from 'react';
 
 import { Format } from '@dxos/echo';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Field, Icon, type ThemedClassName, Tooltip } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 

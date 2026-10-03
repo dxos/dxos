@@ -12,7 +12,7 @@ import { SubscriptionList, type Trigger } from '@dxos/async';
 import { type Client } from '@dxos/client';
 import { type Credential, DeviceType, type Identity } from '@dxos/client/halo';
 import { Context } from '@dxos/context';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as Account from '@dxos/plugin-client/Account';

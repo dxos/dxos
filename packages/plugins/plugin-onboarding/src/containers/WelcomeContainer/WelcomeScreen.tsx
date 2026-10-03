@@ -9,7 +9,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Account from '@dxos/app-toolkit/Account';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { createDidFromIdentityKey } from '@dxos/credentials';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import * as ClientOperation from '@dxos/plugin-client/ClientOperation';

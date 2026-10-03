@@ -11,7 +11,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Annotation, Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';

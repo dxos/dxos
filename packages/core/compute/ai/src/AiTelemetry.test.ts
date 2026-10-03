@@ -11,7 +11,7 @@ import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
 import * as Tracer from 'effect/Tracer';
 
-import { makeTracer } from '@dxos/effect';
+import * as OtelTracer from '@dxos/effect/OtelTracer';
 import { DXN } from '@dxos/keys';
 
 import * as AiModelResolver from './AiModelResolver.ts';
@@ -167,7 +167,7 @@ describe('AiTelemetry', () => {
       const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
       yield* LanguageModel.generateText({ prompt: 'hi' }).pipe(
         Effect.provide(Layer.effect(LanguageModel.LanguageModel, stubModel)),
-        Effect.provideService(Tracer.Tracer, makeTracer(provider, 'test')),
+        Effect.provideService(Tracer.Tracer, OtelTracer.make(provider, 'test')),
       );
       yield* Effect.promise(() => provider.forceFlush());
 
@@ -181,7 +181,7 @@ const setup = (options?: AiTelemetry.SpanTransformerOptions, model = stubModel) 
   const provider = new BasicTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
   const layer = Layer.mergeAll(
     Layer.effect(LanguageModel.LanguageModel, model),
-    Layer.succeed(Tracer.Tracer, makeTracer(provider, 'test')),
+    Layer.succeed(Tracer.Tracer, OtelTracer.make(provider, 'test')),
     Layer.succeed(Telemetry.CurrentSpanTransformer, AiTelemetry.makeSpanTransformer(options)),
   );
   return { exporter, provider, layer };

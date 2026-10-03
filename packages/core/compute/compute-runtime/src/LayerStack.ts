@@ -17,7 +17,7 @@ import * as Tracer from 'effect/Tracer';
 
 import type * as LayerSpec from '@dxos/compute/LayerSpec';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 

@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken, Connection } from '@dxos/link';
 import { useQuery } from '@dxos/react-client/echo';
 import { Button, Card, Field, Flex, Icon, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';

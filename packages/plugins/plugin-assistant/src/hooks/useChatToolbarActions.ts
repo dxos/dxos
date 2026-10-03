@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Chat from '@dxos/assistant/Chat';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 

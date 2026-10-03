@@ -10,7 +10,7 @@ import * as Option from 'effect/Option';
 import * as Order from 'effect/Order';
 import * as Record from 'effect/Record';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';

@@ -12,7 +12,7 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Database, Filter, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as Binding from '@dxos/plugin-connector/Binding';
 import { Flex, Panel, Tabs, useTranslation } from '@dxos/react-ui';

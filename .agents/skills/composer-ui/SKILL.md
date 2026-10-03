@@ -316,7 +316,7 @@ Two app-level homes for atom state — don't conflate them (full detail:
 `packages/ui/react-ui-attention/AUDIT.md`):
 
 - **Settings** — a user preference, _set infrequently_, applies globally, shown in the Settings UI.
-  Built with `createKvsStore` (one schema-validated blob per plugin, keyed by `meta.profile.key`);
+  Built with `KvsStore.make` (`@dxos/effect/KvsStore`) (one schema-validated blob per plugin, keyed by `meta.profile.key`);
   read/write via `useAtomCapabilityState(XCapabilities.Settings)`. Idiom `org.dxos.effect.kvsStore`.
 - **ViewState** — the _current, sticky UI state that survives navigation_ (selection, scroll, split,
   view mode). Per-context: keyed by `(aspect, contextId)`. Declare once with

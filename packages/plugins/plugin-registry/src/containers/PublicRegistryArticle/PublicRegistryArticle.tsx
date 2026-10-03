@@ -12,7 +12,7 @@ import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvide
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
 import * as AppSettings from '@dxos/app-toolkit/AppSettings';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { useTranslation } from '@dxos/react-ui';

@@ -7,7 +7,7 @@ import * as Exit from 'effect/Exit';
 import * as Fiber from 'effect/Fiber';
 import { afterEach, describe, expect, test, vi } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { withViewTransition } from './view-transition.ts';
 

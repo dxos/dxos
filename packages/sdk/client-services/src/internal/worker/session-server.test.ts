@@ -13,7 +13,7 @@ import { describe, test } from 'vitest';
 
 import { Rpc, makeClientServicesRpc } from '@dxos/client-protocol';
 import { Config } from '@dxos/config';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { RTCService } from '@dxos/protocols/rpc';
 import { layerMemory as sqliteLayerMemory } from '@dxos/sql-sqlite/Platform';
 

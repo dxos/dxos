@@ -13,7 +13,7 @@ import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { AssistantOperationHandlerSet } from '#operations';
 

@@ -4,7 +4,7 @@
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useAsyncEffect } from '@dxos/react-ui';
 
 import { ScriptCapabilities, ScriptEvents } from '#types';

@@ -15,7 +15,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as UrlResolution from '@dxos/app-toolkit/UrlResolution';
 import { Obj } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useIdentity } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';

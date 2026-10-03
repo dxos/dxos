@@ -12,7 +12,7 @@ import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvide
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
 import { Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';

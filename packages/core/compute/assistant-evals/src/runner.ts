@@ -32,7 +32,7 @@ import type * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { EDGE_URLS } from '@dxos/config';
 import { Database, Feed, Filter, Obj, Ref, Registry, Tag, type Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, type SpaceId } from '@dxos/keys';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 import * as AssistantPlugin from '@dxos/plugin-assistant/AssistantPlugin';

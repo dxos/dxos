@@ -22,7 +22,8 @@
       "source": "./src/test-stream.ts",
       "types": "./dist/types/src/test-stream.d.ts",
       "import": "./dist/lib/testing.mjs"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "types": "dist/types/src/index.d.ts",
   "files": [

@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
 import * as Hooks from '@dxos/app-framework/Hooks';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { List, ListItem } from '@dxos/react-list';
 import { Flex, IconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';

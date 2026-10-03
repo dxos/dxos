@@ -15,7 +15,7 @@ import { AiContext } from '@dxos/assistant';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
 import { Database, DXN, Filter, Ref } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
 import * as Frame from '@dxos/plugin-studio/Frame';
 import type * as GenerationService from '@dxos/plugin-studio/GenerationService';

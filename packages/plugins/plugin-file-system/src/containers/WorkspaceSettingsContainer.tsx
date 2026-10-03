@@ -10,7 +10,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppSpace from '@dxos/app-toolkit/AppSpace';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { Button, useTranslation } from '@dxos/react-ui';

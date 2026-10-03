@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Blob, Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Field, IconButton, SystemIconButton, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { File } from '@dxos/types';

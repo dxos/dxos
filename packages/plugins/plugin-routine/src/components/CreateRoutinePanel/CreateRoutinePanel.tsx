@@ -10,7 +10,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Routine from '@dxos/compute/Routine';
 import { Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { useTranslation } from '@dxos/react-ui';

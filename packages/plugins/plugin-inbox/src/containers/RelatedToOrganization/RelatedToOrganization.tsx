@@ -12,7 +12,7 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Card } from '@dxos/react-ui';
 import { Table } from '@dxos/react-ui-table/types';
 import { getTypeURIFromQuery } from '@dxos/schema';

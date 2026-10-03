@@ -15,7 +15,7 @@ import * as Redacted from 'effect/Redacted';
 import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as AiModelResolver from '../../AiModelResolver.ts';
 import * as AiService from '../../AiService.ts';

@@ -41,7 +41,7 @@ import { ExampleHandlers } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Collection, Database, Filter, Obj, Ref } from '@dxos/echo';
 import { makeRegistry } from '@dxos/echo-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { AccessToken } from '@dxos/link';

@@ -5,7 +5,7 @@
 import React, { type PropsWithChildren, useCallback } from 'react';
 
 import { type Database, Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { buildContactFromActor } from '@dxos/extractor-lib';
 import { EID } from '@dxos/keys';
 import { Card, Icon, Popover } from '@dxos/react-ui';

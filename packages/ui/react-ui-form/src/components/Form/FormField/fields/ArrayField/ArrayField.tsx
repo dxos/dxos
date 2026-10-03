@@ -7,7 +7,8 @@ import React, { type ReactNode, useCallback, useRef } from 'react';
 
 import { Annotation, Ref } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { useTranslation } from '@dxos/react-ui';

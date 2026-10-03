@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
 import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';

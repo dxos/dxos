@@ -20,7 +20,7 @@ import React, {
   useRef,
 } from 'react';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import { ErrorBoundary } from '@dxos/react-error-boundary';
 import { useStable } from '@dxos/react-hooks';

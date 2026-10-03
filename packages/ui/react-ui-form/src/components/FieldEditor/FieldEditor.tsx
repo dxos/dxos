@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Filter, Obj, type Registry, Type, type View } from '@dxos/echo';
 import { Format, FormatEnums, formatToType } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { log } from '@dxos/log';
 import { useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import {

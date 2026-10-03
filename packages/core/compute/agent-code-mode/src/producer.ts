@@ -14,7 +14,7 @@ import { AiRequest, AiSession, createToolkit, formatSystemPrompt, getOperationFr
 import * as Operation from '@dxos/compute/Operation';
 import type * as Skill from '@dxos/compute/Skill';
 import { Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import type { ContentBlock, Message } from '@dxos/types';
 
 import { PlainDialect } from './dialect-plain.ts';

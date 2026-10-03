@@ -8,7 +8,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection } from '@dxos/link';
 import { useObject, useQuery } from '@dxos/react-client/echo';
 import { Banner, Button, Flex, Panel, ScrollArea, Tag, useTranslation } from '@dxos/react-ui';

@@ -9,7 +9,7 @@ import * as Instructions from '@dxos/compute/Instructions';
 import * as Routine from '@dxos/compute/Routine';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { dailyDigest } from './daily-digest.ts';
 import { researchBrief } from './research-brief.ts';

@@ -10,7 +10,7 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
 

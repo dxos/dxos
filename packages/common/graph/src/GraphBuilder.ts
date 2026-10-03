@@ -13,7 +13,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Record from 'effect/Record';
 
 import { type CleanupFn } from '@dxos/async';
-import { AtomEx } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import { log } from '@dxos/log';
 import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
 

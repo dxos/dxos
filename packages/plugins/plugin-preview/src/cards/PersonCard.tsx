@@ -10,7 +10,7 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Avatar, Card, Icon } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention/types';
 import { type Person } from '@dxos/types';

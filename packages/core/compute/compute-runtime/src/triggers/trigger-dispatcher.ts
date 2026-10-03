@@ -38,7 +38,8 @@ import {
   QueryResult,
   Ref,
 } from '@dxos/echo';
-import { EffectEx, SpanAttributes } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { failedInvariant, invariant } from '@dxos/invariant';
 import { EntityId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';

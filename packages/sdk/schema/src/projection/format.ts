@@ -8,7 +8,7 @@ import type * as Types from 'effect/Types';
 
 import { Format, JsonSchema } from '@dxos/echo';
 import { DecimalPrecision, SelectOption, TypeEnum } from '@dxos/echo/Format';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 /**
  * Base schema.

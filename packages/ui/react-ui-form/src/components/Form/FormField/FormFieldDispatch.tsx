@@ -9,7 +9,8 @@ import * as String from 'effect/String';
 import React, { type ReactNode, useMemo } from 'react';
 
 import { Annotation, Format } from '@dxos/echo';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { Field, IconButton, IconButtonProps, useTranslation } from '@dxos/react-ui';
 
 import { translationKey } from '#translations';

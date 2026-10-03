@@ -7,7 +7,7 @@ import React, { useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { useClient } from '@dxos/react-client';
 import { Dialog, useTranslation } from '@dxos/react-ui';
 import { ConfirmReset, type ConfirmResetProps } from '@dxos/shell/react';

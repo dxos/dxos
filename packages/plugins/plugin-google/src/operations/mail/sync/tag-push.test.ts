@@ -11,7 +11,7 @@ import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Filter, Obj, Query, Ref, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Cursor } from '@dxos/link';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
 import * as SystemTags from '@dxos/plugin-inbox/SystemTags';
