@@ -10,4 +10,3 @@ const { getSectionPath: getAgentsPath, getObjectPath: getAgentPath } = GraphPath
 });
 
 export { getAgentPath, getAgentsPath };
-

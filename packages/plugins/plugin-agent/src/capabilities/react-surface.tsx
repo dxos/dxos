@@ -14,7 +14,6 @@ import { Position } from '@dxos/util';
 
 import { AgentActivity, ProfileProperties } from '#containers';
 
-
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [

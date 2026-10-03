@@ -14,7 +14,6 @@ import * as Operation from '@dxos/compute/Operation';
 
 import { AgentOperation } from '#types';
 
-
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     const extensions = yield* Effect.all([

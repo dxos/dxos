@@ -5,9 +5,10 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, waitFor, within } from 'storybook/test';
 
+import { Model } from '@dxos/ai';
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
 import * as Operation from '@dxos/compute/Operation';
-import { type Database, Filter } from '@dxos/echo';
+import { type Database, Filter, Obj } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
 import * as Goal from '@dxos/plugin-agent/Goal';
 import * as Memory from '@dxos/plugin-agent/Memory';
@@ -183,20 +184,24 @@ const interviewerTurns: ScriptedLanguageModel.ScriptedTurn[] = [
   { parts: [text('Thanks, Rich. I confirmed both goals, recorded three memories and updated your profile.')] },
 ];
 
+const INTERVIEW_TYPES = [
+  Person.Person,
+  Organization.Organization,
+  HasSubject.HasSubject,
+  Memory.Memory,
+  Goal.Goal,
+  ProfileOf.ProfileOf,
+];
+
+const INTERLOCUTOR = {
+  name: 'Interlocutor',
+  instructions: 'You interview the people you talk to and remember what you learn about them.',
+};
+
 const decorators = createDecorators({
-  createAgent: {
-    name: 'Interlocutor',
-    instructions: 'You interview the people you talk to and remember what you learn about them.',
-  },
+  createAgent: INTERLOCUTOR,
   plugins: [AgentPlugin.make()],
-  types: [
-    Person.Person,
-    Organization.Organization,
-    HasSubject.HasSubject,
-    Memory.Memory,
-    Goal.Goal,
-    ProfileOf.ProfileOf,
-  ],
+  types: INTERVIEW_TYPES,
   skills: [INTERVIEW_SKILL_KEY],
   onChatCreated: captureDatabase,
   scripted: [
@@ -319,4 +324,33 @@ export const TestInterviewScripted: Story = {
         memories >= 3,
     );
   },
+};
+
+/**
+ * The same agent and layout on a real model: DeepSeek V4 Pro, served through EDGE with the story's
+ * identity, so no key reaches the browser. Live AI, so excluded from CI.
+ *
+ * Steps:
+ * 1. Enter "Hi, I am Rich." — the agent states its purpose, resolves you (the panel title becomes your name) and asks one open question.
+ * 2. Describe a goal with a deadline (e.g. "Get the interlocutor demo working end to end by the end of October.") — a proposed goal and memories appear in the panel.
+ * 3. Answer its follow-ups (why, obstacles, who is involved) — each answer adds memories.
+ * 4. When it reads your goals back, confirm them — the goals become Confirmed and the agent summarizes.
+ */
+export const Live: Story = {
+  decorators: createDecorators({
+    createAgent: INTERLOCUTOR,
+    plugins: [AgentPlugin.make()],
+    types: INTERVIEW_TYPES,
+    skills: [INTERVIEW_SKILL_KEY],
+    // Set before the first turn so the interview runs on the model it is evaluated on.
+    onChatCreated: async ({ chat }) => {
+      Obj.update(chat, (chat) => {
+        chat.session = { ...chat.session, model: Model.deepseekV4Pro.id };
+      });
+    },
+  }),
+  args: {
+    layout: [[StoryRole.Chat], [StoryRole.Profile]],
+  },
+  tags: ['!test'],
 };
