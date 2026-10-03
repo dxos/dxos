@@ -4508,6 +4508,9 @@ importers:
       '@dxos/mcp-server':
         specifier: workspace:*
         version: link:../mcp-server
+      '@dxos/plugin-agent':
+        specifier: workspace:*
+        version: link:../../../plugins/plugin-agent
       '@dxos/plugin-assistant':
         specifier: workspace:*
         version: link:../../../plugins/plugin-assistant
@@ -7745,9 +7748,6 @@ importers:
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
-      '@dxos/app-graph':
-        specifier: workspace:*
-        version: link:../../sdk/app-graph
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit

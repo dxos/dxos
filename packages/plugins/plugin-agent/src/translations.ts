@@ -34,7 +34,6 @@ export const translations = [
       },
       [meta.profile.key]: {
         'plugin.name': 'Agent',
-        'activity-companion.label': 'Activity',
         'conversations.heading': 'Conversations',
         'conversations-empty.message': 'No Discord threads yet.',
         'conversation-untitled.label': 'Untitled thread',

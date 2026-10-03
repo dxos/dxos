@@ -11,5 +11,3 @@ const { getSectionPath: getAgentsPath, getObjectPath: getAgentPath } = GraphPath
 
 export { getAgentPath, getAgentsPath };
 
-/** Companion variant of an Agent's activity panel; the graph node and its surface both key on it. */
-export const AGENT_ACTIVITY_VARIANT = 'activity';

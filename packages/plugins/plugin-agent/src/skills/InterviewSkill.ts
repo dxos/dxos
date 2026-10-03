@@ -43,10 +43,14 @@ export const make = (): Skill.Skill =>
           3. Team and collaborators.
           4. Working preferences.
 
+        - Do not narrate lookups or tool calls; greet them once.
+
         During the interview:
-        - Ask ONE open question at a time, then wait for the answer.
+        - Ask ONE open question at a time, then wait for the answer: every message contains exactly one question mark.
         - Reflect back what you heard in a sentence before moving on, so they can correct you.
-        - For each goal, probe why it matters, by when, what is in the way, and who else is involved.
+        - For each goal, probe why it matters, by when, what is in the way, and who else is involved; skip what they already said, and move on when they have nothing to add.
+        - Keep it short: read the goals back within about eight questions, sooner if the answers are brief.
+        - Before leaving the topic of goals, ask whether there is anything else they are working toward; people rarely list every goal unprompted.
         - As you go, call ${tool(MemoryOperation.Remember)} once per atomic third-person claim (e.g. "Rich leads the Composer team.").
           Use origin "stated" for what they told you and "inferred" for your own conclusions.
           List every entity the claim is about as a subject; resolve other people and teams with ${tool(MemoryOperation.ResolveEntity)} first.
@@ -54,7 +58,7 @@ export const make = (): Skill.Skill =>
         - Call ${tool(MemoryOperation.ProposeGoal)} for each goal they describe, owned by the people or teams who hold it.
 
         End of the interview:
-        - Read the proposed goals back and ask them to confirm, correct or drop each one.
+        - Read the proposed goals back and ask once whether they are right, or what to correct or drop.
         - Call ${tool(MemoryOperation.ConfirmGoal)} for each answer (status "dropped" for goals they reject).
         - Call ${tool(MemoryOperation.UpdateProfile)} for the person, and for any team you learned about.
         - Close with a short summary of what you recorded.

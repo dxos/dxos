@@ -125,8 +125,9 @@ const AgentActivityDiscord = ({ db, values, bound = false, status, error, onSave
           values={values}
           autoSave={bound}
           onSave={onSave}
-        />
-        {bound && <DiscordBotStatus status={status} error={error} />}
+        >
+          {bound && <DiscordBotStatus status={status} error={error} />}
+        </DiscordBindingForm>
       </section>
     </Flex>
   );

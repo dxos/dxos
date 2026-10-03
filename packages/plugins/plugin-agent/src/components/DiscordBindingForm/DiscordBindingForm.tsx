@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import React from 'react';
+import React, { type PropsWithChildren } from 'react';
 
 import { type Database } from '@dxos/echo';
 import { Form } from '@dxos/react-ui-form';
 
 import { DiscordBinding } from '#types';
 
-export type DiscordBindingFormProps = {
+export type DiscordBindingFormProps = PropsWithChildren<{
   /** Database the bot-token picker queries. */
   db?: Database.Database;
   label?: string;
@@ -18,10 +18,18 @@ export type DiscordBindingFormProps = {
   /** Saves on blur when editing an existing binding; otherwise saves on explicit submit. */
   autoSave?: boolean;
   onSave?: (values: DiscordBinding.Properties) => void;
-};
+}>;
 
 /** Edits the connection settings of an agent's Discord binding. */
-export const DiscordBindingForm = ({ db, label, description, values, autoSave, onSave }: DiscordBindingFormProps) => (
+export const DiscordBindingForm = ({
+  db,
+  label,
+  description,
+  values,
+  autoSave,
+  onSave,
+  children,
+}: DiscordBindingFormProps) => (
   <Form.Root<DiscordBinding.Properties>
     schema={DiscordBinding.Properties}
     db={db}
@@ -35,6 +43,8 @@ export const DiscordBindingForm = ({ db, label, description, values, autoSave, o
           <Form.Fields />
         </Form.FieldSet>
         {!autoSave && <Form.Actions />}
+        {/* Inside the form's content so status banners share its gutter and scroll. */}
+        {children}
       </Form.Content>
     </Form.Viewport>
   </Form.Root>

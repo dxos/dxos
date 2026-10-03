@@ -20,6 +20,7 @@ export default defineConfig({
     DiscordBinding: 'src/types/DiscordBinding.ts',
     DiscordOperation: 'src/types/DiscordOperation.ts',
     Goal: 'src/types/Goal.ts',
+    InterviewSkill: 'src/skills/InterviewSkill.ts',
     Memory: 'src/types/Memory.ts',
     MemoryOperation: 'src/types/MemoryOperation.ts',
     Profile: 'src/types/Profile.ts',

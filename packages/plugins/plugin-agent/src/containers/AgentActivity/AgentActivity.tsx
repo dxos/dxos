@@ -27,7 +27,7 @@ export type AgentActivityProps = {
   agent: Agent.Agent;
 };
 
-/** Companion to an Agent: its Discord binding and bot, and the conversations bridged from Discord threads. */
+/** The Agent's main article: its Discord binding and bot, and the conversations bridged from Discord threads. */
 export const AgentActivity = ({ role, attendableId, agent }: AgentActivityProps) => {
   const { invokePromise } = useOperationInvoker();
   const db = Obj.getDatabase(agent);

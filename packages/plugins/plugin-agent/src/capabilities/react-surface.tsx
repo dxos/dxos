@@ -14,19 +14,18 @@ import { Position } from '@dxos/util';
 
 import { AgentActivity, ProfileProperties } from '#containers';
 
-import { AGENT_ACTIVITY_VARIANT } from '../paths.ts';
 
 export default Capability.makeModule(() =>
   Effect.succeed(
     Capability.contribute(Capabilities.ReactSurface, [
+      // The Agent's main article; first so it outranks plugin-assistant's instructions-only AgentArticle,
+      // whose fields are edited in the Properties panel.
       Surface.create({
         id: 'agentActivity',
-        filter: AppSurface.allOf(
-          AppSurface.literal(AppSurface.Article, AGENT_ACTIVITY_VARIANT),
-          AppSurface.companion(AppSurface.Article, Agent.Agent),
-        ),
+        filter: AppSurface.object(AppSurface.Article, Agent.Agent),
+        position: Position.first,
         component: AgentActivity,
-        props: ({ role, data: { companionTo, attendableId } }) => ({ role, attendableId, agent: companionTo }),
+        props: ({ role, data: { subject, attendableId } }) => ({ role, attendableId, agent: subject }),
       }),
       // Appended to the Person/Organization properties panel; plugin-crm contributes no surface there.
       Surface.create({
