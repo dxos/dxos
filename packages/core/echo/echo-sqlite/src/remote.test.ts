@@ -26,6 +26,18 @@ describe('RemoteStoreDriver', () => {
     }
   });
 
+  test('a call whose arguments cannot be posted rejects', async ({ expect }) => {
+    const { port1, port2 } = new MessageChannel();
+    try {
+      const driver = new RemoteStoreDriver(port1, SpaceId.random());
+      // A function is not structured-cloneable, so posting it throws synchronously.
+      await expect(driver.query({ sql: 'SELECT 1', params: [() => undefined] })).rejects.toThrow();
+    } finally {
+      port1.close();
+      port2.close();
+    }
+  });
+
   test('a database whose host is gone still closes', async ({ expect }) => {
     const { port1, port2 } = new MessageChannel();
     try {

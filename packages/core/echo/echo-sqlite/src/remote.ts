@@ -180,7 +180,13 @@ class PendingCalls {
     const id = this.#nextId++;
     return new Promise((resolve, reject) => {
       this.#calls.set(id, { resolve, reject });
-      port.postMessage({ id, spaceId, call } satisfies StoreRequest);
+      try {
+        port.postMessage({ id, spaceId, call } satisfies StoreRequest);
+      } catch (error) {
+        // An argument structured clone cannot copy throws here, and no response will ever come.
+        this.#calls.delete(id);
+        reject(error);
+      }
     });
   }
 
