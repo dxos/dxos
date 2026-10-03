@@ -25,7 +25,7 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
   const isImportIntoExisting = !!spaceName;
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={(nextOpen) => setIsOpen(nextOpen)}>
+    <Dialog.Root open={isOpen} onOpenChange={({ open: nextOpen }) => setIsOpen(nextOpen)}>
       <Toolbar.Root>
         {!isControlled && (
           <Dialog.Trigger asChild>
@@ -33,36 +33,34 @@ export const DialogRestoreSpace = ({ handleFile, open, onOpenChange, spaceName }
           </Dialog.Trigger>
         )}
       </Toolbar.Root>
-      <Dialog.Overlay>
-        <Dialog.Content>
-          <Dialog.Header>
-            <Dialog.Title>{isImportIntoExisting ? 'Import into space' : 'Import space'}</Dialog.Title>
-          </Dialog.Header>
-          <Dialog.Body>
-            <p className='my-4'>
-              {isImportIntoExisting
-                ? `Import data into ${spaceName}. Only JSON snapshots are supported.`
-                : 'Importing from a backup will create new space from.'}
-            </p>
-            <FileUploader
-              types={isImportIntoExisting ? ['json'] : ['json', 'tar']}
-              classes='block my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm flex items-center justify-center gap-2 cursor-pointer'
-              dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
-              handleChange={(backupFile: File) => handleFile(backupFile).finally(() => setIsOpen(false))}
-            >
-              <Icon icon='ph--file-plus--duotone' size={8} />
-              <span>
-                {isImportIntoExisting ? 'Drag JSON file here or click to browse' : 'Drag file here or click to browse'}
-              </span>
-            </FileUploader>
-          </Dialog.Body>
-          <Dialog.ActionBar>
-            <Dialog.Close asChild>
-              <Button variant='primary'>{'Cancel'}</Button>
-            </Dialog.Close>
-          </Dialog.ActionBar>
-        </Dialog.Content>
-      </Dialog.Overlay>
+      <Dialog.Content>
+        <Dialog.Header>
+          <Dialog.Title>{isImportIntoExisting ? 'Import into space' : 'Import space'}</Dialog.Title>
+        </Dialog.Header>
+        <Dialog.Body>
+          <p className='my-4'>
+            {isImportIntoExisting
+              ? `Import data into ${spaceName}. Only JSON snapshots are supported.`
+              : 'Importing from a backup will create new space from.'}
+          </p>
+          <FileUploader
+            types={isImportIntoExisting ? ['json'] : ['json', 'tar']}
+            classes='block my-4 p-8 border-2 border-dashed border-neutral-500/50 rounded-sm flex items-center justify-center gap-2 cursor-pointer'
+            dropMessageStyle={{ border: 'none', backgroundColor: '#EEE' }}
+            handleChange={(backupFile: File) => handleFile(backupFile).finally(() => setIsOpen(false))}
+          >
+            <Icon icon='ph--file-plus--duotone' size='xl' />
+            <span>
+              {isImportIntoExisting ? 'Drag JSON file here or click to browse' : 'Drag file here or click to browse'}
+            </span>
+          </FileUploader>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.CloseTrigger asChild>
+            <Button variant='primary'>{'Cancel'}</Button>
+          </Dialog.CloseTrigger>
+        </Dialog.Footer>
+      </Dialog.Content>
     </Dialog.Root>
   );
 };

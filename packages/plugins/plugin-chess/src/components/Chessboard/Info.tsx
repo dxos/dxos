@@ -5,7 +5,7 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type JSX, type PropsWithChildren, useEffect, useMemo, useRef } from 'react';
 
-import { Grid, Icon, IconButton, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { Button, Grid, Icon, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { type Player, useGameboardContext } from '@dxos/react-ui-gameboard';
 import { mx } from '@dxos/ui-theme';
 
@@ -39,12 +39,12 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         player={orientation === 'white' ? 'black' : 'white'}
         icon={
           onClose && (
-            <IconButton
+            <Button
               variant='ghost'
               icon='ph--x--regular'
               iconOnly
               label={t('close-info.button')}
-              size={4}
+              iconSize='md'
               onClick={onClose}
             />
           )
@@ -58,12 +58,12 @@ export const Info = ({ classNames, orientation = 'white', onOrientationChange, o
         player={orientation}
         icon={
           onOrientationChange && (
-            <IconButton
+            <Button
               classNames={mx('transition duration-200 ease-linear', orientation === 'white' && 'rotate-180')}
               icon='ph--arrows-clockwise--regular'
               iconOnly
               label={t('flip-board.button')}
-              size={4}
+              iconSize='md'
               onClick={() => onOrientationChange(orientation === 'white' ? 'black' : 'white')}
             />
           )
@@ -141,7 +141,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
     >
       {moves.map(([a, b], index) => (
         <Grid key={index} cols={['3rem', '1fr', '1fr', '1rem']} grow={false} gap='sm' classNames='ps-4'>
-          <div className='content-center text-xs text-subdued'>{index + 1}</div>
+          <div className='content-center text-xs text-fg-subtle'>{index + 1}</div>
           {a && (
             <div
               data-index={a.index}
@@ -190,7 +190,7 @@ const PlayerIndicator = ({ children, model, player, icon }: PlayerIndicatorProps
       <div className='place-items-center'>
         <Icon
           icon={turn ? 'ph--circle--fill' : 'ph--circle--thin'}
-          size={6}
+          size='xl'
           classNames={mx(turn && (model.game.isCheckmate() ? 'text-error-text' : 'text-success-text'))}
         />
       </div>

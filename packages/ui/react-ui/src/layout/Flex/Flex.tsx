@@ -40,7 +40,7 @@ export type FlexProps = {
  * ```tsx
  * <Flex column gap='sm'>…</Flex>
  * <Flex gap='sm' justify='end'>…</Flex>
- * <Flex center classNames='h-full text-subdued' role='status'>{t('empty.message')}</Flex>
+ * <Flex center classNames='h-full text-fg-subtle' role='status'>{t('empty.message')}</Flex>
  * ```
  */
 export const Flex = slottable<HTMLDivElement, FlexProps>(

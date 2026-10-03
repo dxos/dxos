@@ -21,7 +21,7 @@ import {
   ChatStatusIndicator,
   commands,
 } from '@dxos/react-ui-chat';
-import { type ActionGraphProps } from '@dxos/react-ui-menu';
+import type { ActionGraphProps } from '@dxos/react-ui-menu';
 import { pendingText } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 import { type Merge } from '@dxos/util';
@@ -191,7 +191,7 @@ export const ChatPrompt = ({
       className={mx(
         'flex flex-col w-full dx-density-md',
         outline &&
-          'dx-group-surface rounded-sm border border-subdued-separator transition transition-border [&:has(.cm-content:focus)]:border-separator',
+          'dx-group-surface rounded-sm border border-separator-subtle transition transition-border [&:has(.cm-content:focus)]:border-separator',
         classNames,
       )}
     >

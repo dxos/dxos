@@ -5,7 +5,7 @@
 import React, { useCallback, useMemo } from 'react';
 import { I18nProvider } from 'react-aria-components';
 
-import { ThemeProvider, Tooltip, defaultTx } from '@dxos/react-ui';
+import { ThemeProvider, defaultTx } from '@dxos/react-ui';
 import { ChatThread } from '@dxos/react-ui-assistant';
 import { translations as assistantTranslations } from '@dxos/react-ui-assistant/translations';
 import { ChatEditor, ChatStatusIndicator } from '@dxos/react-ui-chat';
@@ -63,7 +63,7 @@ const Transcript = ({ turns, busy, onSend }: ThreadIslandProps) => {
     <ChatThread.Root model={model} viewType='thinking'>
       <div className='flex flex-col dx-grow overflow-hidden'>
         <div className='dx-expand relative'>
-          <ChatThread.Viewport classNames='dx-fullscreen' padding />
+          <ChatThread.Viewport classNames='dx-fullscreen' />
         </div>
         {/* The composer needs a testid of its own: the feed renders every message through
             codemirror as well, so `.cm-content` alone matches message bodies too. */}
@@ -89,9 +89,7 @@ const Transcript = ({ turns, busy, onSend }: ThreadIslandProps) => {
 export const ThreadIsland = (props: ThreadIslandProps) => (
   <I18nProvider locale='en-US'>
     <ThemeProvider tx={defaultTx} themeMode='dark' resourceExtensions={[...assistantTranslations, ...chatTranslations]}>
-      <Tooltip.Provider>
-        <Transcript {...props} />
-      </Tooltip.Provider>
+      <Transcript {...props} />
     </ThemeProvider>
   </I18nProvider>
 );

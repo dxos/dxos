@@ -20,7 +20,7 @@ export const FeedComponent = ({ shape }: ShapeComponentProps<FeedShape>) => {
   return (
     <Box shape={shape} status={`${items.length} items`}>
       <ScrollArea.Root orientation='vertical'>
-        <ScrollArea.Viewport classNames='divide-y divide-subdued-separator'>
+        <ScrollArea.Viewport classNames='divide-y divide-separator-subtle'>
           {[...items].map((item, i) => (
             <FeedItem key={i} classNames='p-1 px-2' item={item} />
           ))}
@@ -39,7 +39,7 @@ export const FeedItem = ({ classNames, item }: ThemedClassName<{ item: any }>) =
     <div className={mx('grid grid-cols-[80px_1fr]', classNames)}>
       {Object.entries(item).map(([key, value]) => (
         <Fragment key={key}>
-          <div className='p-1 text-xs text-subdued'>{key}</div>
+          <div className='p-1 text-xs text-fg-subtle'>{key}</div>
           <div>{typeof value === 'string' ? value : JSON.stringify(value)}</div>
         </Fragment>
       ))}

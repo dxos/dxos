@@ -44,7 +44,7 @@ export const Default: Story = {
               <div className='px-1'>
                 <NumericTabs length={content.length} selected={selected} onSelect={setSelected} />
               </div>
-              <ScrollArea.Root orientation='vertical' thin padding>
+              <ScrollArea.Root orientation='vertical'>
                 <ScrollArea.Viewport>{content[selected].content}</ScrollArea.Viewport>
               </ScrollArea.Root>
             </TogglePanel.Body>

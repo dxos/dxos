@@ -13,7 +13,7 @@ import { HomeSection } from './HomeSection.tsx';
 const DefaultStory = () => (
   <HomeSection.Root>
     <HomeSection.Header title='Recent' onClose={() => {}} />
-    <div className='rounded-sm bg-group-surface p-4 text-description'>Section content.</div>
+    <div className='rounded-sm bg-group-surface p-4 text-fg-muted'>Section content.</div>
   </HomeSection.Root>
 );
 
@@ -23,7 +23,7 @@ const WithActionsStory = () => (
       <Button variant='ghost'>All</Button>
       <Button variant='ghost'>30d</Button>
     </HomeSection.Header>
-    <div className='rounded-sm bg-group-surface p-4 text-description'>Section content.</div>
+    <div className='rounded-sm bg-group-surface p-4 text-fg-muted'>Section content.</div>
   </HomeSection.Root>
 );
 

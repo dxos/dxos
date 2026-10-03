@@ -14,8 +14,7 @@ import { Client, ClientProvider } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import { ConnectionState } from '@dxos/react-client/mesh';
 import { TestBuilder, performInvitation } from '@dxos/react-client/testing';
-import { Field, Icon, Progress, ThemeProvider, Tooltip } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import { Icon, Progress, Switch, ThemeProvider, Tooltip, defaultTx } from '@dxos/react-ui';
 import { Text } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 import { type MaybePromise } from '@dxos/util';
@@ -82,34 +81,32 @@ const main = async () => {
     return (
       <ThemeProvider tx={defaultTx} themeMode='light'>
         <div className='demo'>
-          <Tooltip.Provider>
-            <div className='buttons'>
-              <Tooltip.Trigger asChild content='Offline mode' className='flex'>
-                <Field.Switch
-                  data-testid='airplane-mode'
-                  classNames='mr-2'
-                  onCheckedChange={(e) => {
-                    setOffline(!offline);
-                    return handleToggleNetwork(e);
-                  }}
-                >
-                  <Icon icon='ph--airplane--regular' size={28} classNames={mx(offline && 'active')} />
-                </Field.Switch>
-              </Tooltip.Trigger>
-              <Tooltip.Trigger content='Write batching' className='flex'>
-                <Field.Switch
-                  data-testid='batching'
-                  classNames='mr-2'
-                  onCheckedChange={(e) => {
-                    setBatching(!batching);
-                    return handleToggleBatching(e);
-                  }}
-                >
-                  <Icon icon='ph--stack--regular' size={28} classNames={mx(batching && 'active')} />
-                </Field.Switch>
-              </Tooltip.Trigger>
-            </div>
-          </Tooltip.Provider>
+          <div className='buttons'>
+            <Tooltip.Trigger content='Offline mode' className='flex'>
+              <Switch
+                data-testid='airplane-mode'
+                classNames='mr-2'
+                onCheckedChange={({ checked: e }) => {
+                  setOffline(!offline);
+                  return handleToggleNetwork(e);
+                }}
+                label='Offline mode'
+              />
+              <Icon icon='ph--airplane--regular' size='xl' classNames={mx(offline && 'active')} />
+            </Tooltip.Trigger>
+            <Tooltip.Trigger content='Write batching' className='flex'>
+              <Switch
+                data-testid='batching'
+                classNames='mr-2'
+                onCheckedChange={({ checked: e }) => {
+                  setBatching(!batching);
+                  return handleToggleBatching(e);
+                }}
+                label='Write batching'
+              />
+              <Icon icon='ph--stack--regular' size='xl' classNames={mx(batching && 'active')} />
+            </Tooltip.Trigger>
+          </div>
           {clients.map((client, index) => (
             <ClientProvider key={index} client={client}>
               <TaskList id={index} spaceId={spaceId} />
@@ -127,7 +124,7 @@ const fallback = () => {
   root.render(
     <ThemeProvider tx={defaultTx}>
       <div className='flex h-[100dvh] justify-center items-center'>
-        <Progress indeterminate aria-label='Initializing' />
+        <Progress indeterminate label='Initializing' />
       </div>
     </ThemeProvider>,
   );

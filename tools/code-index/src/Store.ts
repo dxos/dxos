@@ -14,6 +14,7 @@ import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
 import { type Lens, type Schema } from 'ldkit';
 import { DataFactory, Parser, Writer } from 'n3';
+import { existsSync } from 'node:fs';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -71,6 +72,14 @@ export type Backend = 'js' | 'native';
 /** `CODE_INDEX_BACKEND=native` selects the native backend wherever a store is opened without one. */
 export const defaultBackend = (): Backend => (process.env.CODE_INDEX_BACKEND === 'native' ? 'native' : 'js');
 
+export type LayerOptions = {
+  /**
+   * Open an existing store for reading only: no migration, version reset or reconcile, since each
+   * of those writes and a reader must not race the process indexing into the same store.
+   */
+  readonly readOnly?: boolean;
+};
+
 export type ReasonOptions = {
   /** Replace the reasoner's graph with this pass's conclusions (default false — derivations are returned only). */
   readonly materialize?: boolean;
@@ -124,6 +133,8 @@ export interface Api {
    * is the one they were computed with; see `design/NATIVE-BACKEND.md`.
    */
   readonly reasonAll: (reasoners: readonly Graph.ReasonerInput[]) => Effect.Effect<ReasonOutcome[], StoreError>;
+  /** Replace a JS pass's graph with these conclusions; see `Ontology.passGraphIri`. */
+  readonly writePass: (pass: string, quads: readonly Quad[]) => Effect.Effect<void, StoreError>;
   /** Every quad a reasoner concluded, as its graph currently stands. */
   readonly derived: (reasoner?: string) => Effect.Effect<Quad[], StoreError>;
 
@@ -171,14 +182,38 @@ const resetIfStale = (dir: string): Effect.Effect<void, StoreError, SqlClient.Sq
     );
   });
 
-const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
+/** A reader cannot reset a stale store, so it refuses one rather than answering from old graphs. */
+const requireCurrent = (dir: string): Effect.Effect<void, StoreError, SqlClient.SqlClient> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
-    yield* Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
-      // A schema the store cannot create is a construction failure, not something a caller recovers from.
-      Effect.orDie,
+    const [row] = yield* sql<{ value: string }>`SELECT value FROM meta WHERE key = ${VERSION_KEY}`.pipe(
+      Effect.mapError(fail('Failed to read store version')),
     );
-    yield* resetIfStale(dir);
+    if (row?.value !== String(Ontology.VERSION)) {
+      return yield* Effect.fail(
+        new StoreError({
+          message: `The store at ${dir} was written by ontology version ${row?.value ?? 'unknown'}, not ${Ontology.VERSION}; run \`code-index index\` to rebuild it.`,
+        }),
+      );
+    }
+  });
+
+const make = (
+  dir: string,
+  backend: Backend,
+  readOnly: boolean,
+): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
+  Effect.gen(function* () {
+    const sql = yield* SqlClient.SqlClient;
+    if (readOnly) {
+      yield* requireCurrent(dir);
+    } else {
+      yield* Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
+        // A schema the store cannot create is a construction failure, not something a caller recovers from.
+        Effect.orDie,
+      );
+      yield* resetIfStale(dir);
+    }
 
     const graphs: Graph.Graph<StoreError> = yield* backend === 'native'
       ? Native.make(dir, fail)
@@ -229,7 +264,9 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
         return pending.length;
       });
 
-    yield* reconcile();
+    if (!readOnly) {
+      yield* reconcile();
+    }
 
     const putDocument: Api['putDocument'] = (document) =>
       Effect.gen(function* () {
@@ -347,6 +384,26 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
 
       reasonAll: graphs.reasonAll,
 
+      writePass: (pass, quads) =>
+        Effect.gen(function* () {
+          const graph = Ontology.passGraphIri(pass);
+          const stale = yield* match(undefined, undefined, undefined, graph);
+          const next = quads.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, graph));
+          // Only the difference is written, so the native journal sees what actually changed.
+          const key = (quad: Quad) =>
+            JSON.stringify([
+              quad.subject.value,
+              quad.predicate.value,
+              quad.object.termType,
+              quad.object.value,
+              quad.object.termType === 'Literal' ? [quad.object.datatype.value, quad.object.language] : [],
+            ]);
+          const kept = new Set(next.map(key));
+          const had = new Set(stale.map(key));
+          yield* graphs.delQuads(stale.filter((quad) => !kept.has(key(quad))));
+          yield* graphs.putQuads(next.filter((quad) => !had.has(key(quad))));
+        }),
+
       derived: (reasoner) =>
         reasoner === undefined
           ? Effect.map(match(), (quads) => quads.filter((quad) => Ontology.isDerivedGraph(quad.graph.value)))
@@ -370,16 +427,28 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
   });
 
 /**
- * Opens (creating if absent) the store rooted at `dir`; each database is a file or directory inside
- * it. Scoped — both databases close when the enclosing scope ends.
+ * Opens (creating if absent, unless `readOnly`) the store rooted at `dir`; each database is a file
+ * or directory inside it. Scoped — both databases close when the enclosing scope ends.
  */
-export const layer = (dir: string, backend: Backend = defaultBackend()): Layer.Layer<Store, StoreError> =>
-  Layer.unwrap(
-    Effect.map(
-      Effect.tryPromise({
+export const layer = (
+  dir: string,
+  backend: Backend = defaultBackend(),
+  options: LayerOptions = {},
+): Layer.Layer<Store, StoreError> => {
+  const readOnly = options.readOnly ?? false;
+  const prepare = readOnly
+    ? existsSync(join(dir, SQLITE_FILE))
+      ? Effect.void
+      : Effect.fail(new StoreError({ message: `No index at ${dir}; run \`code-index index\` first.` }))
+    : Effect.tryPromise({
         try: () => mkdir(dir, { recursive: true }),
         catch: fail('Failed to create store directory'),
-      }),
-      () => Layer.effect(Store, make(dir, backend)).pipe(Layer.provide(clientLayer(join(dir, SQLITE_FILE)))),
+      }).pipe(Effect.asVoid);
+  return Layer.unwrap(
+    Effect.map(prepare, () =>
+      Layer.effect(Store, make(dir, backend, readOnly)).pipe(
+        Layer.provide(clientLayer(join(dir, SQLITE_FILE), { readonly: readOnly })),
+      ),
     ),
   );
+};

@@ -4,25 +4,25 @@
  */
 
 @layer dx-components {
-  .nx-button:is([aria-pressed='true'], [aria-checked='true']) {
+  .dx-button:is([aria-pressed='true'], [aria-checked='true']) {
     background: var(--color-accent-bg);
     color: var(--color-accent-fg);
   }
-  .nx-button:is([aria-pressed='true'], [aria-checked='true']):hover:not(:disabled) {
+  .dx-button:is([aria-pressed='true'], [aria-checked='true']):hover:not(:disabled) {
     background: var(--color-accent-bg-hover, var(--color-accent-bg));
   }
 
   /* A flex run like Group, spaced like toolbar items; roles and roving focus come from the zag machine. */
-  .nx-toggle-group {
+  .dx-toggle-group {
     display: inline-flex;
     align-items: center;
-    gap: var(--nx-control-inset);
+    gap: var(--dx-control-inset);
   }
-  .nx-toggle-group[data-orientation='vertical'] {
+  .dx-toggle-group[data-orientation='vertical'] {
     flex-direction: column;
     align-items: stretch;
   }
-  .nx-toolbar > .nx-toggle-group > .nx-control:not([data-square]) {
-    margin-inline: var(--nx-control-inset);
+  .dx-toolbar > .dx-toggle-group > .dx-control:not([data-square]) {
+    margin-inline: var(--dx-control-inset);
   }
 }

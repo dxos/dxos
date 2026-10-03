@@ -7,7 +7,7 @@ import React, { useMemo } from 'react';
 
 import { Obj } from '@dxos/echo';
 import { random } from '@dxos/random';
-import { Card } from '@dxos/react-ui';
+import { Card, DragHandle } from '@dxos/react-ui';
 import { IntrinsicCardContainer } from '@dxos/react-ui-mosaic/testing';
 import { withTheme } from '@dxos/react-ui/testing';
 import { Message } from '@dxos/types';
@@ -40,7 +40,7 @@ const MessageCardStory = () => {
     <IntrinsicCardContainer>
       <Card.Root>
         <Card.Header>
-          <Card.DragHandle />
+          <DragHandle />
           <Card.Title>{Obj.getLabel(subject)}</Card.Title>
         </Card.Header>
         <MessageCard role='card--content' subject={subject} />

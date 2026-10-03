@@ -13,13 +13,13 @@ export type DebugGraphProps = { role?: string; graph: AppGraph.Graph; root: stri
 export const DebugGraph = ({ role, graph, root }: DebugGraphProps) => {
   return (
     <Panel.Root role={role}>
-      <Panel.Content asChild>
+      <Panel.Body asChild>
         <ScrollArea.Root orientation='all'>
           <ScrollArea.Viewport>
             <Tree data={AppGraph.toJSON(graph, root)} />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
-      </Panel.Content>
+      </Panel.Body>
     </Panel.Root>
   );
 };

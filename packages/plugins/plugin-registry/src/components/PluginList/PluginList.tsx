@@ -6,7 +6,7 @@ import React from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
 import type * as PluginManager from '@dxos/app-framework/PluginManager';
-import { Listbox } from '@dxos/react-ui-list';
+import { Container } from '@dxos/react-ui';
 
 import { PluginItem, type PluginItemProps } from './PluginItem.tsx';
 
@@ -40,23 +40,25 @@ export const PluginList = ({
   ...props
 }: PluginListProps) => {
   return (
-    <Listbox.Root>
-      <Listbox.Content
-        aria-label='plugins'
-        classNames='grid grid-cols-[repeat(auto-fill,minmax(18rem,1fr))] auto-rows-[max-content] gap-4 p-4'
-      >
-        {plugins.map((plugin) => (
-          <PluginItem
-            key={plugin.meta.profile.key}
-            plugin={plugin}
-            extraTags={extraTagsById?.[plugin.meta.profile.key]}
-            hasUpdate={updateAvailableIds?.has(plugin.meta.profile.key)}
-            failure={failuresById?.[plugin.meta.profile.key]}
-            deviceOnly={deviceOnlyIds?.has(plugin.meta.profile.key)}
-            {...props}
-          />
-        ))}
-      </Listbox.Content>
-    </Listbox.Root>
+    <Container
+      layout='row'
+      columns='repeat(auto-fill, minmax(18rem, 1fr))'
+      gap='lg'
+      align='stretch'
+      role='list'
+      aria-label='plugins'
+    >
+      {plugins.map((plugin) => (
+        <PluginItem
+          key={plugin.meta.profile.key}
+          plugin={plugin}
+          extraTags={extraTagsById?.[plugin.meta.profile.key]}
+          hasUpdate={updateAvailableIds?.has(plugin.meta.profile.key)}
+          failure={failuresById?.[plugin.meta.profile.key]}
+          deviceOnly={deviceOnlyIds?.has(plugin.meta.profile.key)}
+          {...props}
+        />
+      ))}
+    </Container>
   );
 };

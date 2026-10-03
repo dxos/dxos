@@ -11,7 +11,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Button, Field, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Button, Field, Textarea, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
 
@@ -83,7 +83,7 @@ export const SkillEditor = ({ object }: SkillEditorProps) => {
     <Form.FieldSet label={t('skill-editor.label')} description={t('skill-editor.description')}>
       <Field.Root>
         <Field.Label>{t('skill-instructions.label')}</Field.Label>
-        <Field.Textarea
+        <Textarea
           placeholder={t('skill-instructions.placeholder')}
           rows={6}
           value={instructions}

@@ -42,11 +42,11 @@ const MediaQueryDemo = ({ query }: MediaQueryDemoProps) => {
     <div className='dx-fullscreen grid place-items-center'>
       <div className='flex flex-col gap-4 p-4 border border-separator rounded'>
         <div className='grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 max-w-md'>
-          <span className='text-description'>query</span>
+          <span className='text-fg-muted'>query</span>
           <span>{query}</span>
-          <span className='text-description'>window width</span>
+          <span className='text-fg-muted'>window width</span>
           <span>{width}px</span>
-          <span className='text-description'>matches</span>
+          <span className='text-fg-muted'>matches</span>
           <span data-testid='matches'>{String(matches)}</span>
         </div>
         <AllBreakpoints />

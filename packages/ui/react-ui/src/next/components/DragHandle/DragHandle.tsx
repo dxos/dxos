@@ -24,8 +24,8 @@ export type DragMoveDirection = 'up' | 'down';
 //
 
 type DragHandleProps = {
-  /** Names the handle for assistive tech (e.g. "Drag to rearrange"). */
-  'label': string;
+  /** Names the handle for assistive tech; the translated "Drag to rearrange" by default. */
+  'label'?: string;
   /**
    * Moves the item one place; makes the handle a tab stop with a keyboard contract: Alt+ArrowUp/Down move at once,
    * Space or Enter grabs so ArrowUp/Down move, and Space, Enter, Escape or leaving the handle drops. Without it the
@@ -94,7 +94,7 @@ export const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
       <ToolbarContext.Provider value={undefined}>
         <Button
           icon='ph--dots-six-vertical--regular'
-          label={label}
+          label={label ?? t('drag-handle.label')}
           iconOnly
           showTooltip={false}
           variant='ghost'
@@ -118,7 +118,7 @@ export const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
   },
 );
 
-DragHandle.displayName = 'Next.DragHandle';
+DragHandle.displayName = 'DragHandle';
 
 //
 // DropIndicator
@@ -130,7 +130,7 @@ type DropIndicatorProps = ThemedClassName<{
 }>;
 
 /**
- * A line on one edge of a drop target, drawn in the focus-ring colour (`--nx-drop-indicator-color`), absolutely placed
+ * A line on one edge of a drop target, drawn in the focus-ring colour (`--dx-drop-indicator-color`), absolutely placed
  * so it takes no grid track in a row Container; the row must be positioned (Listbox rows are).
  */
 export const DropIndicator = ({ classNames, edge }: DropIndicatorProps) => (
@@ -144,7 +144,7 @@ export const DropIndicator = ({ classNames, edge }: DropIndicatorProps) => (
   />
 );
 
-DropIndicator.displayName = 'Next.DropIndicator';
+DropIndicator.displayName = 'DropIndicator';
 
 //
 // DragPreview
@@ -180,6 +180,6 @@ export const DragPreview = forwardRef<HTMLDivElement, DragPreviewProps>(
   },
 );
 
-DragPreview.displayName = 'Next.DragPreview';
+DragPreview.displayName = 'DragPreview';
 
 export type { DragHandleProps, DragPreviewProps, DropIndicatorProps };

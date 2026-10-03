@@ -33,12 +33,10 @@
 { ?file deus:declaresBlock ?b. ?b deus:inPackage ?package } => { ?package deus:hasSpec ?file }.
 
 # ---------------------------------------------------------------------------------------------------
-# Operations: `Operation.make({ meta: { key: DXN.make('org.dxos.operation.x') } })`.
+# Operations.
 
-{ ?op rdf:type deus:Operation. ?op deus:literal ?literal. (?literal "^meta\\.key=(.+)$") string:scrape ?key }
-  => { ?op deus:operationKey ?key }.
-
-# An `op` block names its operation by key, wherever the operation is declared.
+# An `op` block names its operation by key (`deus:operationKey`, from `30-compute.n3`), wherever the
+# operation is declared.
 { ?b deus:blockType "op". ?b deus:hasField ?f. ?f deus:key "key". ?f deus:value ?key. ?op deus:operationKey ?key }
   => { ?b deus:specifies ?op }.
 

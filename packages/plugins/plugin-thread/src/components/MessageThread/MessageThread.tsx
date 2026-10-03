@@ -103,7 +103,7 @@ export const MessageThread = composable<HTMLDivElement, MessageThreadProps>(
  * referenced subject via an app-framework `Surface` (the card role).
  */
 const ObjectTile: ObjectTileComponent = ({ subject }) => {
-  const Fallback = useCallback(() => <span className='p-1 text-sm text-description'>{subject.id}</span>, [subject]);
+  const Fallback = useCallback(() => <span className='p-1 text-sm text-fg-muted'>{subject.id}</span>, [subject]);
   return (
     <Card.Root classNames={mx('grid col-span-3 py-1 pr-4', hoverableControls, hoverableFocusedWithinControls)}>
       <Surface.Surface

@@ -79,7 +79,7 @@ const SelectRoot = forwardRef<HTMLDivElement, SelectRootProps>(
         // Ark's 8px default reads as detached from the trigger.
         positioning={popupPositioning(POPUP_GUTTER, positioning)}
         collection={collection}
-        className={mx('nx-select', classNames)}
+        className={mx('dx-select', classNames)}
         ref={forwardedRef}
       >
         {children}
@@ -89,7 +89,7 @@ const SelectRoot = forwardRef<HTMLDivElement, SelectRootProps>(
   },
 );
 
-SelectRoot.displayName = 'Next.Select.Root';
+SelectRoot.displayName = 'Select.Root';
 
 //
 // Label
@@ -101,7 +101,7 @@ const SelectLabel = forwardRef<HTMLLabelElement, SelectLabelProps>(({ classNames
   <SelectPrimitive.Label {...props} className={mx(recipes.label(), classNames)} ref={forwardedRef} />
 ));
 
-SelectLabel.displayName = 'Next.Select.Label';
+SelectLabel.displayName = 'Select.Label';
 
 //
 // Trigger
@@ -155,14 +155,14 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
           </span>
         )}
         <SelectPrimitive.Indicator>
-          {loading ? <Icon icon='ph--spinner-gap--regular' data-spin='' /> : <Icon icon='ph--caret-up-down--regular' />}
+          {loading ? <Icon icon='ph--spinner-gap--regular' spin /> : <Icon icon='ph--caret-up-down--regular' />}
         </SelectPrimitive.Indicator>
       </SelectPrimitive.Trigger>
     );
   },
 );
 
-SelectTrigger.displayName = 'Next.Select.Trigger';
+SelectTrigger.displayName = 'Select.Trigger';
 
 //
 // Content
@@ -202,7 +202,7 @@ const SelectContent = forwardRef<HTMLDivElement, SelectContentProps>(
   },
 );
 
-SelectContent.displayName = 'Next.Select.Content';
+SelectContent.displayName = 'Select.Content';
 
 //
 // Item
@@ -214,7 +214,7 @@ const ItemContext = createContext<SelectOption | undefined>(undefined);
 const useItem = (part: string) => {
   const item = useContext(ItemContext);
   if (!item) {
-    throw new Error(`Next.Select.${part} must be inside Next.Select.Item`);
+    throw new Error(`Select.${part} must be inside Select.Item`);
   }
   return item;
 };
@@ -242,7 +242,7 @@ const SelectItem = forwardRef<HTMLDivElement, SelectItemProps>(
   ),
 );
 
-SelectItem.displayName = 'Next.Select.Item';
+SelectItem.displayName = 'Select.Item';
 
 //
 // ItemIcon
@@ -260,7 +260,7 @@ const SelectItemIcon = forwardRef<SVGSVGElement, SelectItemIconProps>(({ icon, h
   return glyph ? <Icon {...props} icon={glyph} hue={hue ?? item.iconHue} ref={forwardedRef} /> : null;
 });
 
-SelectItemIcon.displayName = 'Next.Select.ItemIcon';
+SelectItemIcon.displayName = 'Select.ItemIcon';
 
 //
 // ItemText
@@ -280,7 +280,7 @@ const SelectItemText = forwardRef<HTMLDivElement, SelectItemTextProps>(
   },
 );
 
-SelectItemText.displayName = 'Next.Select.ItemText';
+SelectItemText.displayName = 'Select.ItemText';
 
 //
 // ItemIndicator
@@ -297,7 +297,7 @@ const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>
   ),
 );
 
-SelectItemIndicator.displayName = 'Next.Select.ItemIndicator';
+SelectItemIndicator.displayName = 'Select.ItemIndicator';
 
 //
 // ItemGroup
@@ -310,7 +310,7 @@ const SelectItemGroup = forwardRef<HTMLDivElement, SelectItemGroupProps>(({ clas
   <SelectPrimitive.ItemGroup {...props} className={mx(classNames)} ref={forwardedRef} />
 ));
 
-SelectItemGroup.displayName = 'Next.Select.ItemGroup';
+SelectItemGroup.displayName = 'Select.ItemGroup';
 
 //
 // ItemGroupLabel
@@ -329,7 +329,7 @@ const SelectItemGroupLabel = forwardRef<HTMLDivElement, SelectItemGroupLabelProp
   ),
 );
 
-SelectItemGroupLabel.displayName = 'Next.Select.ItemGroupLabel';
+SelectItemGroupLabel.displayName = 'Select.ItemGroupLabel';
 
 //
 // Separator
@@ -342,7 +342,7 @@ const SelectSeparator = composable<HTMLDivElement, SelectSeparatorProps>((props,
   <Separator {...props} decorative ref={forwardedRef} />
 ));
 
-SelectSeparator.displayName = 'Next.Select.Separator';
+SelectSeparator.displayName = 'Select.Separator';
 
 export const Select = {
   Root: SelectRoot,

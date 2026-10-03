@@ -255,12 +255,21 @@ const types = Command.make(
       const Agreement = yield* Effect.promise(() => import('./worker/types/agreement.ts'));
       const { createResolver } = yield* Effect.promise(() => import('./worker/analyzers/resolver.ts'));
       const started = Date.now();
-      const { score, findings } = Agreement.compareFiles(targets, { root: repo, resolve: createResolver(repo) });
+      const { score, findings, bound, reasons } = Agreement.compareFiles(targets, {
+        root: repo,
+        resolve: createResolver(repo),
+      });
       const listed = new Set(Option.getOrElse(show, () => 'disagree').split(','));
       const scored = score.agree + score.partial + score.disagree;
       yield* emit(
         json,
-        { files: targets.length, score, findings: findings.filter((entry) => listed.has(entry.verdict)) },
+        {
+          files: targets.length,
+          score,
+          bound,
+          reasons,
+          findings: findings.filter((entry) => listed.has(entry.verdict)),
+        },
         () =>
           [
             ...findings
@@ -269,7 +278,11 @@ const types = Command.make(
                 (entry) =>
                   `${entry.verdict.padEnd(9)} ${entry.path}:${entry.line} ${entry.name}\n  mine:   ${entry.mine}\n  tsc:    ${entry.theirs}`,
               ),
-            `${targets.length} files in ${seconds(Date.now() - started)}: ${score.agree} agree, ${score.partial} partial, ${score.unknown} unknown, ${score.disagree} disagree, ${score.skipped} skipped` +
+            `unresolved reasons: ${reasons
+              .slice(0, 20)
+              .map(([reason, count]) => `${reason} ${count}`)
+              .join(', ')}`,
+            `${targets.length} files in ${seconds(Date.now() - started)}: ${score.agree} agree, ${score.partial} partial, ${score.unresolved} unresolved, ${score.deferred} deferred, ${score.disagree} disagree, ${score.skipped} skipped; ${bound} bound across files` +
               (scored > 0
                 ? ` — ${((100 * (score.agree + score.partial)) / scored).toFixed(1)}% of answered agree`
                 : ''),
@@ -401,6 +414,20 @@ const serve = Command.make('serve', serveFlags, serveHandler).pipe(
   Command.withDescription('Start the web UI (also what a bare `code-index` does).'),
 );
 
+const VERSION = '0.11.1';
+
+const mcp = Command.make('mcp', { root: rootFlag, store: storeFlag }, ({ root, store }) =>
+  Effect.gen(function* () {
+    const repo = yield* resolveRoot(root);
+    // Imported here: only this command needs the MCP server and its protocol schemas.
+    const Server = yield* Effect.promise(() => import('./mcp/Server.ts'));
+    return yield* Server.run({
+      dir: Option.match(store, { onNone: () => Crawler.storeDir(repo), onSome: resolve }),
+      version: VERSION,
+    });
+  }),
+).pipe(Command.withDescription('Serve the index read-only over MCP on stdio (Claude Code, Claude Desktop).'));
+
 /**
  * The root command carries `serve`'s flags and handler, which is what makes the webserver the
  * default: `code-index` with no subcommand starts it, and `code-index serve` is the same thing
@@ -408,8 +435,8 @@ const serve = Command.make('serve', serveFlags, serveHandler).pipe(
  */
 export const command = Command.make('code-index', serveFlags, serveHandler).pipe(
   Command.withDescription('Index a codebase into SQLite + RDF (DEUS ontology), and reason about it in a browser.'),
-  Command.withSubcommands([serve, chat, index, files, query, ask, dump, stats, clear, ontology, types]),
+  Command.withSubcommands([serve, chat, index, files, query, ask, dump, stats, clear, ontology, types, mcp]),
 );
 
 /** Runs one command; `Layer.launch` is not involved — every command opens and closes its own store. */
-export const run = Command.runWith(command, { version: '0.11.1' });
+export const run = Command.runWith(command, { version: VERSION });

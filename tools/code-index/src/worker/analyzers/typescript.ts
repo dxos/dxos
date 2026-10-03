@@ -5,13 +5,14 @@
 import { dirname, isAbsolute, relative, resolve as resolvePath } from 'node:path';
 import { parseSync } from 'oxc-parser';
 
+import { escapeFragment } from '../../internal/iri.ts';
 import * as Ontology from '../../Ontology.ts';
 import { type ImportBinding, importBindings } from '../types/Boundary.ts';
 import { infer } from '../types/Infer.ts';
 import * as TypeRdf from '../types/Rdf.ts';
+import * as Term from '../types/Term.ts';
 import { type Comment, type Node, type Statement, isNode, nameOf, walk } from './ast.ts';
 import { type AnalyzeContext, fileNode } from './common.ts';
-import { literalsOf } from './literals.ts';
 
 /**
  * TypeScript/JavaScript files: declarations, what constructs them, what they reference and from
@@ -557,6 +558,167 @@ const constructionOf = (initializer: Node): Construction => {
   };
 };
 
+/** An expression without the wrappers that do not change its value (`as const`, `!`, parentheses). */
+const unwrapped = (node: Node): Node => {
+  const { callee, call } = headCallee(node);
+  return call ? node : callee;
+};
+
+/** One reference passed into a call: `f(a, { k: [b] })` → `(f, "0", a)`, `(f, "1.k", b)`. */
+type PassedRef = { readonly callee: ExpressionRef; readonly slot: string; readonly ref: ExpressionRef };
+
+/** A reference written as an argument, through the wrappers that do not change what it denotes. */
+const passedRef = (node: Node): ExpressionRef | undefined => {
+  const { callee, call } = headCallee(node);
+  return call ? undefined : expressionRef(callee);
+};
+
+/**
+ * Every reference a call inside `node` receives at a shallow slot: a positional argument, an element
+ * of an array argument, or a property (or property's array element) of an object-literal argument.
+ * Deeper literals are not followed, which bounds the facts to what an argument list spells out.
+ */
+const passedRefsOf = (node: Node): PassedRef[] => {
+  const found: PassedRef[] = [];
+  /** `const spec = { provides: [X] } as const; make(name, spec)` reads as `make(name, { provides: [X] })`. */
+  const literals = new Map<string, Node>();
+  walk(node, [], (current) => {
+    if (current.type === 'VariableDeclarator' && isNode(current.id) && isNode(current.init)) {
+      const name = nameOf(current.id);
+      const init = unwrapped(current.init);
+      if (name && (init.type === 'ObjectExpression' || init.type === 'ArrayExpression')) {
+        literals.set(name, init);
+      }
+    }
+    return undefined;
+  });
+  const literalOf = (value: Node): Node => {
+    const bare = unwrapped(value);
+    const name = bare.type === 'Identifier' ? nameOf(bare) : undefined;
+    return (name && literals.get(name)) || bare;
+  };
+  const add = (callee: ExpressionRef, slot: string, value: Node) => {
+    const ref = passedRef(value);
+    if (ref) {
+      found.push({ callee, slot, ref });
+    }
+  };
+  const addAll = (callee: ExpressionRef, slot: string, value: Node) => {
+    const literal = literalOf(value);
+    if (literal.type === 'ArrayExpression' && Array.isArray(literal.elements)) {
+      for (const element of literal.elements.filter(isNode)) {
+        // `[...xs]` passes what `xs` holds, so the spread list is the reference at that slot.
+        add(callee, slot, element.type === 'SpreadElement' && isNode(element.argument) ? element.argument : element);
+      }
+    } else {
+      add(callee, slot, value);
+    }
+  };
+  walk(node, [], (current) => {
+    if (current.type !== 'CallExpression' && current.type !== 'NewExpression') {
+      return undefined;
+    }
+    const callee = isNode(current.callee) ? expressionRef(headCallee(current.callee).callee) : undefined;
+    if (!callee || !Array.isArray(current.arguments)) {
+      return undefined;
+    }
+    current.arguments.filter(isNode).forEach((argument, index) => {
+      const value = literalOf(argument);
+      if (value.type === 'ObjectExpression' && Array.isArray(value.properties)) {
+        for (const property of value.properties.filter(isNode)) {
+          const key =
+            property.type === 'Property' && property.computed !== true && isNode(property.key)
+              ? (nameOf(property.key) ?? (typeof property.key.value === 'string' ? property.key.value : undefined))
+              : undefined;
+          if (key !== undefined && isNode(property.value)) {
+            addAll(callee, `${index}.${key}`, property.value);
+          }
+        }
+      } else {
+        addAll(callee, String(index), argument);
+      }
+    });
+    return undefined;
+  });
+  return found;
+};
+
+/** One string literal passed positionally into a call: `DXN.make('a', '0.1.0')` → `(DXN.make, "1", "0.1.0")`. */
+type PassedLiteral = {
+  readonly callee: ExpressionRef;
+  readonly slot: string;
+  readonly value: string;
+  readonly start: number;
+};
+
+/** Longer strings are prose (messages, templates), not identifiers a rule would join on. */
+const LITERAL_MAX = 256;
+
+/** How many object-literal keys a literal argument is followed through: `"0.plugin.key"` is two. */
+const LITERAL_KEY_DEPTH = 2;
+
+const FUNCTION_NODES = new Set(['ArrowFunctionExpression', 'FunctionExpression', 'FunctionDeclaration']);
+
+const stringLiteralOf = (node: Node): string | undefined => {
+  if ((node.type === 'Literal' || node.type === 'StringLiteral') && typeof node.value === 'string') {
+    return node.value;
+  }
+  if (node.type === 'TemplateLiteral' && Array.isArray(node.expressions) && node.expressions.length === 0) {
+    const [quasi] = Array.isArray(node.quasis) ? node.quasis.filter(isNode) : [];
+    const value = quasi && typeof quasi.value === 'object' && quasi.value !== null ? quasi.value : {};
+    return 'cooked' in value && typeof value.cooked === 'string' ? value.cooked : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * String literals passed into calls of a declaration's definition, as arguments or under an
+ * object-literal argument's keys — never inside a function body, where literals are messages rather
+ * than the identity (`DXN.make`, a service key) a declaration is built from.
+ */
+const passedLiteralsOf = (node: Node): PassedLiteral[] => {
+  const found: PassedLiteral[] = [];
+  walk(node, [], (current) => {
+    if (FUNCTION_NODES.has(current.type)) {
+      return false;
+    }
+    if (current.type !== 'CallExpression' && current.type !== 'NewExpression') {
+      return undefined;
+    }
+    const callee = isNode(current.callee) ? expressionRef(headCallee(current.callee).callee) : undefined;
+    if (!callee || !Array.isArray(current.arguments)) {
+      return undefined;
+    }
+    // Object-literal arguments are followed a bounded number of keys deep, because identity often
+    // sits there: `Config2.make({ plugin: { key: 'org.dxos.plugin.chess' } })` → slot `"0.plugin.key"`.
+    const visit = (argument: Node, slot: string, depth: number) => {
+      const value = stringLiteralOf(argument);
+      if (value !== undefined) {
+        if (value.length <= LITERAL_MAX) {
+          found.push({ callee, slot, value, start: argument.start });
+        }
+      } else if (
+        depth < LITERAL_KEY_DEPTH &&
+        argument.type === 'ObjectExpression' &&
+        Array.isArray(argument.properties)
+      ) {
+        for (const property of argument.properties.filter(isNode)) {
+          const key =
+            property.type === 'Property' && property.computed !== true && isNode(property.key)
+              ? (nameOf(property.key) ?? (typeof property.key.value === 'string' ? property.key.value : undefined))
+              : undefined;
+          if (key !== undefined && /^[\w$-]+$/.test(key) && isNode(property.value)) {
+            visit(property.value, `${slot}.${key}`, depth + 1);
+          }
+        }
+      }
+    };
+    current.arguments.filter(isNode).forEach((argument, index) => visit(argument, String(index), 0));
+    return undefined;
+  });
+  return found;
+};
+
 // ---------------------------------------------------------------------------------------------------
 // Snippets
 // ---------------------------------------------------------------------------------------------------
@@ -764,6 +926,15 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
 
   // Import bindings, and per-specifier bookkeeping for the file-level edges.
   const bindings = new Map<string, ImportBinding>();
+  /** Bare specifiers that resolved inside the repository: how the cross-file pass reaches a member's declaration. */
+  const modules = new Map<string, string>();
+  const resolveModule = (specifier: string): Resolution => {
+    const resolution = resolveSpecifier(context, specifier);
+    if (resolution.bare && resolution.file) {
+      modules.set(specifier, resolution.file);
+    }
+    return resolution;
+  };
   const specifiers = new Map<string, { resolution: Resolution; typeOnly: boolean; usedAsValue: boolean }>();
   const specifierOf = (specifier: string, typeOnly: boolean) => {
     const existing = specifiers.get(specifier);
@@ -771,7 +942,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       existing.typeOnly &&= typeOnly;
       return existing;
     }
-    const created = { resolution: resolveSpecifier(context, specifier), typeOnly, usedAsValue: false };
+    const created = { resolution: resolveModule(specifier), typeOnly, usedAsValue: false };
     specifiers.set(specifier, created);
     return created;
   };
@@ -811,7 +982,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       isNode(statement.source) &&
       typeof statement.source.value === 'string'
     ) {
-      const resolution = resolveSpecifier(context, statement.source.value);
+      const resolution = resolveModule(statement.source.value);
       if (resolution.file) {
         reexports.add(Ontology.fileIri(resolution.file).value);
       } else {
@@ -855,25 +1026,49 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     }
   }
 
-  // Dynamic imports are file-level edges only; they bind nothing.
+  // Dynamic imports bind nothing; besides the file-level edge, the declaration enclosing one `loads` it.
+  const dynamicImports: Array<{ readonly start: number; readonly specifier: string }> = [];
   for (const entry of parsed.module.dynamicImports) {
     const literal = source.slice(entry.moduleRequest.start, entry.moduleRequest.end).replace(/^['"`]|['"`]$/g, '');
     if (!literal.includes('${')) {
       specifierOf(literal, false).usedAsValue = true;
+      dynamicImports.push({ start: entry.start, specifier: literal });
     }
   }
 
   const declared = declarations(body);
   const inference = infer({ path, program: programNode(parsed), imports: bindings });
   const types = TypeRdf.collector();
+  /** `hasType`, and the term as JSON with literal freshness intact, for the cross-file pass to bind. */
+  const typeFacts = (declaration: Declaration): { hasType?: string; typeTerm?: string } => {
+    if (declaration.kind !== 'variable' && declaration.kind !== 'function') {
+      return {};
+    }
+    const type = inference.declaration(declaration.node);
+    const iri = types.add(type);
+    return iri ? { hasType: iri, typeTerm: JSON.stringify(Term.toJson(type)) } : {};
+  };
   const locals = new Map(
     declared.map((declaration) => [declaration.name, Ontology.symbolIri(path, declaration.name).value]),
   );
 
   let unresolved = 0;
 
+  const namespaceNames = new Set(
+    declared.filter((declaration) => declaration.kind === 'namespace').map((declaration) => declaration.name),
+  );
+  /** The namespaces enclosing the declaration being analyzed, innermost first; set per declaration. */
+  let scope: readonly string[] = [];
+  /** A name declared in an enclosing `namespace` shadows imports and top-level declarations. */
+  const scopedLocal = (name: string): string | undefined =>
+    scope.map((namespace) => locals.get(`${namespace}.${name}`)).find((iri) => iri !== undefined);
+
   /** IRIs a reference stands for, marking the binding's value use on the way. */
   const targetsOf = (reference: Reference): string[] => {
+    const inner = scopedLocal(reference.name);
+    if (inner) {
+      return [inner];
+    }
     const binding = bindings.get(reference.name);
     if (binding) {
       if (!reference.type) {
@@ -894,7 +1089,68 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     return [];
   };
 
+  /**
+   * Where a reference lands, without the bookkeeping of {@link targetsOf}, plus the part of its path
+   * the symbol IRI did not consume: `import { NS } from '#types'` lands `NS.Cap` on `NS`, leaving `Cap`.
+   */
+  const landingOf = (ref: ExpressionRef): { targets: string[]; rest: readonly string[] } => {
+    const inner = scopedLocal(ref.name);
+    if (inner) {
+      return { targets: [inner], rest: ref.path };
+    }
+    const binding = bindings.get(ref.name);
+    if (binding) {
+      const rest = !binding.file ? [] : binding.imported === '*' ? ref.path.slice(1) : ref.path;
+      return { targets: bindingTargets(binding, ref.path), rest };
+    }
+    const local = locals.get(ref.name);
+    return local ? { targets: [local], rest: ref.path } : { targets: [], rest: [] };
+  };
+
+  const passesOf = (self: string, node: Node): Ontology.ArgumentNode[] => {
+    const nodes = new Map<string, Ontology.ArgumentNode>();
+    for (const { callee, slot, ref } of passedRefsOf(node)) {
+      const to = landingOf(callee);
+      const from = landingOf(ref);
+      if (to.targets.length === 0 || from.targets.length === 0) {
+        continue;
+      }
+      const key = [callee.name, ...callee.path].join('.') + `/${slot}/` + [ref.name, ...ref.path].join('.');
+      nodes.set(key, {
+        '@id': `${self}~${escapeFragment(key)}`,
+        '@type': 'Argument',
+        'callee': to.targets,
+        ...(to.rest.length > 0 ? { calleePath: to.rest.join('.') } : {}),
+        'slot': slot,
+        'reference': from.targets,
+        ...(from.rest.length > 0 ? { referencePath: from.rest.join('.') } : {}),
+      });
+    }
+    return [...nodes.values()];
+  };
+
+  const passesLiteralOf = (self: string, node: Node): Ontology.LiteralArgumentNode[] =>
+    passedLiteralsOf(node).flatMap(({ callee, slot, value, start }) => {
+      const to = landingOf(callee);
+      return to.targets.length === 0
+        ? []
+        : [
+            {
+              '@id': `${self}~${escapeFragment([callee.name, ...callee.path].join('.'))}/${slot}@${start}`,
+              '@type': 'Argument' as const,
+              'callee': to.targets,
+              ...(to.rest.length > 0 ? { calleePath: to.rest.join('.') } : {}),
+              'slot': slot,
+              'literal': value,
+            },
+          ];
+    });
+
   const symbols: Ontology.SymbolNode[] = declared.map((declaration) => {
+    const segments = declaration.name.split('.');
+    scope = segments
+      .map((_, index) => segments.slice(0, segments.length - index).join('.'))
+      .filter((prefix) => namespaceNames.has(prefix));
     const api = new Set<string>();
     const impl = new Set<string>();
     const self = Ontology.symbolIri(path, declaration.name).value;
@@ -975,22 +1231,32 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       'line': lineOf(source, declaration.offset),
       'extends': refsToIris(extendsRefs),
       'constructedBy': refsToIris(construction.constructedBy),
+      ...((rest) => (rest.length === 0 ? {} : { constructedByPath: rest.join('.') }))(
+        construction.constructedBy.flatMap((ref) => landingOf(ref).rest),
+      ),
       'pipedThrough': refsToIris(construction.pipedThrough),
       'derivedFrom': refsToIris(construction.derivedFrom),
       'argument': refsToIris(construction.argument),
       'apiDependsOn': [...api],
       'implDependsOn': [...impl],
       'aliasOf': [],
-      ...((literals) => (literals.length === 0 ? {} : { literal: literals }))(
-        initializer ? literalsOf(initializer) : [],
+      ...((passes) => (passes.length === 0 ? {} : { passes }))(passesOf(self, declaration.node)),
+      ...((literals) => (literals.length === 0 ? {} : { passesLiteral: literals }))(
+        passesLiteralOf(self, declaration.node),
+      ),
+      ...((loads) => (loads.length === 0 ? {} : { loads }))(
+        unique(
+          dynamicImports
+            .filter(({ start }) => start >= declaration.node.start && start < declaration.node.end)
+            .flatMap(({ specifier }) => {
+              const file = specifiers.get(specifier)?.resolution.file;
+              return file ? [Ontology.fileIri(file).value] : [];
+            }),
+        ),
       ),
       ...((value) => (value === undefined ? {} : { snippet: value }))(snippetOf(source, declaration, parsed.comments)),
       ...docOf(source, declaration.statement, parsed.comments),
-      ...((value) => (value === undefined ? {} : { hasType: value }))(
-        declaration.kind === 'variable' || declaration.kind === 'function'
-          ? types.add(inference.declaration(declaration.node))
-          : undefined,
-      ),
+      ...typeFacts(declaration),
     };
   });
 
@@ -1064,7 +1330,14 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     reexports: [...reexports],
     unresolvedReferences: unresolved,
     declares: [...symbols, ...aliasSymbols, ...namespaceSymbols],
-    ...((nodes) => (nodes.length > 0 ? { '@included': nodes } : {}))(types.nodes()),
+    ...((nodes) => (nodes.length > 0 ? { '@included': nodes } : {}))([
+      ...types.nodes(),
+      ...[...modules].map(([specifier, file]): Ontology.ModuleNode => ({
+        '@id': Ontology.moduleIri(specifier).value,
+        '@type': 'Module',
+        'moduleFile': Ontology.fileIri(file).value,
+      })),
+    ]),
     ...(errors.length > 0 ? { parseError: errors } : {}),
   };
 };

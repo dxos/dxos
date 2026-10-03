@@ -47,28 +47,24 @@ export const DataSpaceSelector = () => {
     return space?.isOpen ? (space?.properties.name ?? 'New space') : '(closed)';
   };
 
+  const items = spaces.map((space) => ({ value: space.id, label: `${space.id.slice(0, 6)} ${getLabel(space)}` }));
   return (
     <Select.Root
-      value={space?.id}
-      onValueChange={(id) => {
-        id && handleSelect?.(id as SpaceId);
+      items={items}
+      value={space ? [space.id] : []}
+      onValueChange={({ value: [id] }) => {
+        const selected = spaces.find((candidate) => candidate.id === id);
+        if (selected) {
+          handleSelect?.(selected.id);
+        }
       }}
     >
-      <Select.TriggerButton placeholder='Select space' />
-      <Select.Portal>
-        <Select.Content>
-          <Select.Viewport>
-            {spaces.map((space) => (
-              <Select.Option key={space.id} value={space.id}>
-                <div className='flex items-center gap-2'>
-                  <span className='font-mono text-neutral-250'>{space.id.slice(0, 6)}</span>
-                  {getLabel(space)}
-                </div>
-              </Select.Option>
-            ))}
-          </Select.Viewport>
-        </Select.Content>
-      </Select.Portal>
+      <Select.Trigger placeholder='Select space' />
+      <Select.Content>
+        {items.map((item) => (
+          <Select.Item key={item.value} item={item} />
+        ))}
+      </Select.Content>
     </Select.Root>
   );
 };

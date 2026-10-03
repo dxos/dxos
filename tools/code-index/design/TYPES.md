@@ -23,19 +23,20 @@ harness (`src/worker/types/agreement.ts`, `code-index types`) is how that claim 
 
 A `Type` is a small algebraic data type (`src/worker/types/Term.ts`):
 
-| Kind           | Meaning                                                                            | Canonical text                       |
-| -------------- | ---------------------------------------------------------------------------------- | ------------------------------------ |
-| `unknown`      | Inference gave up here. Never emitted as a fact.                                   | `?`                                  |
-| `primitive`    | `string number boolean bigint symbol null undefined void never any unknown object` | `string`                             |
-| `literal`      | String, number, boolean, or bigint literal type.                                   | `"a"`, `1`, `true`, `1n`             |
-| `ref`          | A named type, possibly applied: `Effect<A, E, R>`.                                 | `<iri><A, E, R>`                     |
-| `typeof`       | The type of a named _value_: `typeof Store`.                                       | `typeof <iri>`                       |
-| `union`        | Flattened, deduplicated, sorted by canonical text.                                 | `A \| B`                             |
-| `intersection` | Flattened, deduplicated, order kept (it is significant).                           | `A & B`                              |
-| `object`       | Properties (name, optional, readonly, type) + index signatures.                    | `{ readonly a: string; b?: number }` |
-| `tuple`        | Elements (optional, rest), readonly flag.                                          | `readonly [string, number]`          |
-| `function`     | Type parameters, parameters (optional, rest), return.                              | `<T>(T, number?) => T`               |
-| `param`        | A reference to a type parameter, by name.                                          | `T`                                  |
+| Kind           | Meaning                                                                                  | Canonical text                       |
+| -------------- | ---------------------------------------------------------------------------------------- | ------------------------------------ |
+| `unresolved`   | Inference gave up here, with a reason code — not TypeScript's `unknown` (a `primitive`). | `?<reason>`                          |
+| `primitive`    | `string number boolean bigint symbol null undefined void never any unknown object`       | `string`                             |
+| `literal`      | String, number, boolean, or bigint literal type.                                         | `"a"`, `1`, `true`, `1n`             |
+| `ref`          | A named type, possibly applied: `Effect<A, E, R>`.                                       | `<iri><A, E, R>`                     |
+| `typeof`       | The type of a named _value_: `typeof Store`. Deferred.                                   | `typeof <iri>`                       |
+| `returnOf`     | What calling a callee with these argument types returns. Deferred.                       | `returnOf(<callee>)(<args>)`         |
+| `union`        | Flattened, deduplicated, sorted by canonical text.                                       | `A \| B`                             |
+| `intersection` | Flattened, deduplicated, order kept (it is significant).                                 | `A & B`                              |
+| `object`       | Properties (name, optional, readonly, type) + index signatures.                          | `{ readonly a: string; b?: number }` |
+| `tuple`        | Elements (optional, rest), readonly flag.                                                | `readonly [string, number]`          |
+| `function`     | Type parameters, parameters (optional, rest), return.                                    | `<T>(T, number?) => T`               |
+| `param`        | A reference to a type parameter, by name.                                                | `T`                                  |
 
 **Symbols are IRIs**, chosen so a rule can match a type head with the same IRI it already uses for
 `deus:constructedBy`:
@@ -61,6 +62,40 @@ agreement when the alias's declared type is what `tsc` reports.
 `typeof X` for an imported value is likewise exact but unevaluated: the analyzer cannot know the
 declared type of a value in another file, but it can name it. Rules can evaluate it across files
 (the importer's `typeof X` joined with X's own `deus:hasType`).
+
+### Gaps and deferred terms
+
+Two different things stand in for "not known here", and neither is TypeScript's `unknown`:
+
+- **`unresolved(reason)`** — inference gave up. Every bail site names its reason (`flow-sensitive`,
+  `callee-unresolved`, `expression:JSXElement`, `type-syntax:TSMappedType`, `generic-inference`,
+  `model:Layer.provide`, …). The reasons are emitted (`deus:unresolvedReason`) and the harness counts
+  them, so each is a bucket an analyzer improvement can be measured against. A union of nothing but
+  gaps is a single gap.
+- **Deferred** — `typeof X` and `returnOf(callee)(args)` name something declared in another file.
+  They are exact but unevaluated, and carry the operations inference would have applied had the type
+  been known (`widen` for a `let`, `nonNullish` for `x!`, …) as `pending`, applied on binding. A call
+  whose callee is deferred records its argument types; a function argument is typed only where
+  context cannot change it (fully annotated), otherwise it is `unresolved`.
+
+### Binding: the cross-file pass
+
+`src/worker/types/Bind.ts`, run as the built-in JS pass `bind-types` (`src/TypeBinding.ts`). A pass
+runs before every rule file and writes a graph outside the derived prefix (`graph/pass/<name>`), so
+both backends take it as a premise — the native engine journals it like a file graph and stays
+incremental — and `15-types` sees bound terms. It reads every symbol's term
+(`deus:typeTerm`, JSON with literal freshness) plus `aliasOf`, `namespaceOf`, `reexports` and
+`deus:moduleFile` (a bare specifier that resolves inside the repository), and binds:
+
+- `typeof X` → X's own term (recursively bound), then the pending operations. A name resolves by its
+  longest declared prefix, then through namespace barrels, aliases, `export *`, or a property of a
+  known object type. A class or namespace has no term; its declaration IRI becomes the name.
+- `returnOf(callee)(args)` → the bound callee's return, through the same `applyTypes` the call site
+  would use (`Call.ts`): arity, generic inference, TypeScript's literal-widening rule.
+
+The bound term is a further `deus:hasType` on the symbol in the reasoner's derived graph; the
+per-file one stays. What cannot be bound (a callee in an external package, an overloaded or
+unresolved declaration) stays deferred.
 
 ### Normalization (so equal types have equal text)
 
@@ -113,6 +148,7 @@ model has a fixture in the harness, checked against `tsc` on the installed `effe
 | `Layer.succeed(S, …)` / `Layer.sync(S, …)`                                               | `Layer<S, never, never>` for a local service class `S`.                                                                                                                                     |
 | `Layer.effect(S, eff)`                                                                   | `Layer<S, E, Exclude<R, Scope>>`, the exclusion evaluated over named members.                                                                                                               |
 | `Layer.mergeAll(…)` / `Layer.merge(a, b)` / `Layer.provide(a, b)` and their `pipe` forms | Unions of the parts; `provide` removes the provided outputs from the inputs.                                                                                                                |
+| `Layer.provideMerge(a, b)` and its `pipe` form, `Layer.effectDiscard(eff)`               | `provide` keeping the provided outputs; `Layer<never, E, Exclude<R, Scope>>`.                                                                                                               |
 | `Schema.String` / `Number` / `Boolean` …, `Schema.Struct({…})`                           | The schema interface; `Struct<{ readonly …: … }>` (the `const` type parameter makes the fields readonly).                                                                                   |
 
 A service tag imported from another file has an unknown `Key`, so a layer built from it gets an
@@ -150,6 +186,10 @@ flow analysis, so it refuses every case where narrowing could apply:
 - A term larger than 64 nodes is not emitted (it is still scored).
 
 ## Agreement harness
+
+The harness binds too: it analyzes every repository file the `tsc` program loaded and builds the same
+environment, so its numbers are the graph's final answer. A symbol two files name differently is
+matched through a registry of every program file's import routes.
 
 `code-index types [--sample N] [files…]` and `src/worker/types/agreement.test.ts`:
 
