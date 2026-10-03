@@ -41,6 +41,19 @@ describe('Summary', () => {
     expect(recorded?.vocabulary).toContainEqual({ term: 'File', kind: 'class', count: 5 });
   });
 
+  test('the vocabulary is in a total order: classes first, then by count descending, then by name', async () => {
+    const live = await withStore((store) => Summary.compute(store));
+    const outOfOrder = live.vocabulary.slice(1).filter((entry, index) => {
+      const previous = live.vocabulary[index];
+      return previous.kind !== entry.kind
+        ? previous.kind > entry.kind
+        : previous.count !== entry.count
+          ? previous.count < entry.count
+          : previous.term >= entry.term;
+    });
+    expect(outOfOrder).toEqual([]);
+  });
+
   test('a write since the pass makes the recorded summary stale until it is refreshed', async () => {
     const quad = DataFactory.quad(
       Ontology.fileIri('src/a.ts'),
