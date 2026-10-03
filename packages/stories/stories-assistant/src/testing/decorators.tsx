@@ -27,6 +27,7 @@ import { AiContext } from '@dxos/assistant';
 import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
 import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
 import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
+import * as DelegationStrategy from '@dxos/assistant-toolkit/DelegationStrategy';
 import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
@@ -296,7 +297,7 @@ const StoryPlugin = Plugin.define<StoryPluginOptions>(
         // Supervisor behaviour, so a delegating story spawns its sub-agent. The app's copy rides
         // plugin-assistant's `AssistantStart`-gated skill-definition module, which loses the race
         // against `AgentService`'s layer — that layer reads this capability once, at build time.
-        Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, DelegationSkill.makeDelegationStrategy()),
+        Capability.contribute(RoutineCapabilities.AgentDelegationStrategy, DelegationStrategy.make()),
         Capability.contributeAll(Capabilities.OperationHandler, [
           MarkdownOperationHandlerSet.handlers,
           PlanningSkill.Handlers,
