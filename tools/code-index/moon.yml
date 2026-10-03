@@ -27,3 +27,10 @@ tasks:
     options:
       cache: false
       runInCI: false
+  # The design pipeline against plugin-illustrator's hand-drawn diagrams. Live and billed: System One
+  # (TYPESAFE_API_KEY) and, with `-- --llm`, Anthropic for the LLM explorer — never in CI.
+  design-eval:
+    command: node --experimental-transform-types --no-warnings scripts/design-eval.ts
+    options:
+      cache: false
+      runInCI: false

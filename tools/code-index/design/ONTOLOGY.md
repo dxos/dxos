@@ -174,6 +174,7 @@ Any other block type stays a plain `deus:SpecBlock`.
 | `deus:mtime`                | `xsd:integer`  | Modification time, epoch milliseconds — the incremental-indexing key.                          |
 | `deus:hash`                 | `xsd:string`   | SHA-256 of the contents, hex.                                                                  |
 | `deus:inPackage`            | `deus:Package` | Nearest enclosing `package.json`.                                                              |
+| `deus:testFile`             | `xsd:boolean`  | `true` on a `*.test.*` / `*.spec.*` script; absent otherwise, so rules join on it.             |
 | `deus:imports`              | `deus:File`    | Resolved import used at runtime (value position).                                              |
 | `deus:importsType`          | `deus:File`    | Resolved import used **only** in type positions, or written `import type` — erased at runtime. |
 | `deus:importsModule`        | `xsd:string`   | Unresolved specifier, verbatim (bare package, virtual module, missing file).                   |
@@ -339,7 +340,7 @@ type.
 | `deus:layerRequires`         | A layer's `RIn`: each service its inferred `Layer<ROut, E, RIn>` type still needs. Exact where the type is known.                                                                                                                                                                                                                                                           | `rules/15-types.n3`        |
 | `deus:resolvesTo`            | A reference IRI as an importer wrote it (`file:<barrel>#X` through `export *` barrels and named re-exports, `module:<specifier>#X` paired with the import's `file:` reference) and the declaration it denotes; concluded only for the service keys the layer facts name.                                                                                                    | `rules/effect.n3`          |
 | `deus:importsTestFile`       | A non-test file importing a test file.                                                                                                                                                                                                                                                                                                                                      | `rules/50-example.n3`      |
-| `deus:canonicalName`         | **The name an external importer writes**: the identifier alone, or `<Namespace>.<identifier>` when the declaring module is published whole via `export * as N`. Exactly one per exported symbol.                                                                                                                                                                            | `rules/60-canonical.n3`    |
+| `deus:canonicalName`         | **The name an external importer writes**, stated only when it differs from `deus:name`: `<Namespace>.<identifier>` when the declaring module is published whole via `export * as N`. Elsewhere the canonical name is `deus:name`; a query reads `COALESCE(?canonical, ?name)`.                                                                                              | `rules/60-canonical.n3`    |
 | `deus:publishedBy`           | File → `Package`: the file is a `deus:entry` of the package, or reachable from one through `deus:reexports` or a namespace's `deus:namespaceOf`.                                                                                                                                                                                                                            | `rules/65-packages.n3`     |
 | `deus:packagePublic`         | **Package-public**: an exported symbol of a file the package publishes. Distinct from `deus:exported`, which is module-public. Over-approximates `export { x } from`, which publishes only `x`.                                                                                                                                                                             | `rules/65-packages.n3`     |
 | `deus:usesPackage`           | Package `p` has a file importing (value or type) or re-exporting a file of package `q`, `p ≠ q`, `q` not the workspace root.                                                                                                                                                                                                                                                | `rules/65-packages.n3`     |
@@ -348,7 +349,7 @@ type.
 | `deus:violatesLayering`      | `usesPackage` across moon layers the wrong way: a `library` using an `application`, `automation` or `tool` package, or anything using an `application`.                                                                                                                                                                                                                     | `rules/65-packages.n3`     |
 | spec classes                 | `deus:OpSpec`, `deus:Requirement`, … — see Classes.                                                                                                                                                                                                                                                                                                                         | `rules/70-specs.n3`        |
 | `deus:specifies`             | Spec block → the code it defines: an `op` block's `key` → the `Operation` with that `operationKey` (or, keyless, the `Operation` of its name); a `type` → an `EchoType`/`EchoRelation`/`Schema`/type alias/interface/enum; a `service` → an `EffectService`/`Capability`; a `component`/`surface`/`module` → any exported symbol — each by name within the block's package. | `rules/70-specs.n3`        |
-| `deus:describes`             | Spec block → symbol: everything it `specifies`, plus every symbol of its package whose `deus:canonicalName` the block `deus:mentions`.                                                                                                                                                                                                                                      | `rules/70-specs.n3`        |
+| `deus:describes`             | Spec block → symbol: everything it `specifies`, plus every symbol of its package whose canonical name (`deus:canonicalName`, else `deus:name`) the block `deus:mentions`.                                                                                                                                                                                                   | `rules/70-specs.n3`        |
 | `deus:covers`                | A `scenario`'s `tags` or a `test`'s `covers` → the block of that id in the same document (`feat`, `req`, `scenario`).                                                                                                                                                                                                                                                       | `rules/70-specs.n3`        |
 | `deus:includesTest`          | A `suite`'s `tests` → the `test` block: `QA-1` in the same document, `markdown:QA-1` in the document whose `deus:specId` ends `.markdown` (or contains `.app.` for `app:`).                                                                                                                                                                                                 | `rules/70-specs.n3`        |
 | `deus:automatedBy`           | A `test`'s `automated` entry `composer-e2e:basic.spec.ts#…` → the file `…/basic.spec.ts` of the package at `…/composer-e2e`. The test name stays on the field (`deus:refFragment`): the index has no facts for individual test cases.                                                                                                                                       | `rules/70-specs.n3`        |
@@ -368,23 +369,6 @@ type.
 | `deus:unspecified`           | `true` on an `Operation` no spec block specifies.                                                                                                                                                                                                                                                                                                                           | `rules/80-gaps.n3`         |
 | `deus:unusedDependency`      | `declaresDep` without `usesPackage`. Deps used only from config, CSS or scripts the index does not parse show up here too.                                                                                                                                                                                                                                                  | `rules/80-gaps.n3`         |
 | classes in the table above   | `deus:EffectService`, `deus:EchoType`, …                                                                                                                                                                                                                                                                                                                                    | per framework              |
-
-A `rule` block → each `FileGlob` of its `files`, resolved by its `scope`: `repo` → `deus:repoGlob`, otherwise `deus:dirGlob`. | `rules/70-specs.n3` |
-| `deus:SelectedGlob` | A `FileGlob` some `rule` block selects — the only globs worth matching against every path. | `rules/70-specs.n3` |
-| `deus:matchesGlob` | File → `SelectedGlob` whose `deus:pathPattern` its `deus:path` matches. | `rules/70-specs.n3` |
-| `deus:hasSpec` | Package → a `.mdl` file with a block in that package. | `rules/70-specs.n3` |
-| `deus:schema` | Spec block → what defines its type: an `ext` block in the same document or in one the frontmatter `extends`, or the `Extension` the document's Extensions table names for the type. | `rules/70-specs.n3` |
-| `deus:declaresField` | `ext` block → each field name of its `fields`/`adds-fields`, plus those of the `ext` it `extends` in the same document. `Extension` → the union over every `ext` block whose `uri` it is. | `rules/70-specs.n3` |
-| `deus:requiresField` | `ext` block → each field name it declares without `?`; `Extension` → each one any `ext` of its URI requires. | `rules/70-specs.n3` |
-| `deus:hasKey` | Spec block → each top-level field key, and the type of each nested block (`feat` → `req`). | `rules/70-specs.n3` |
-| `deus:unknownField` | A key the block has that no `ext` in its `deus:schema` declares. | `rules/80-gaps.n3` |
-| `deus:missingField` | A field an `ext` in its `deus:schema` requires that the block lacks. | `rules/80-gaps.n3` |
-| `deus:violatesSchema` | Spec block → the schema (`ext` block or `Extension`) it has an unknown or missing field against. | `rules/80-gaps.n3` |
-| `deus:undocumented` | `true` on a package-public symbol no spec block describes, in a package that has a spec. Aliases and namespace barrels are skipped: their origin is what is reported. | `rules/80-gaps.n3` |
-| `deus:phantom` | `true` on a `type`/`service`/`component`/`surface`/`module` block naming no symbol of its package, and on an `op` block whose `key` no `Operation` carries. | `rules/80-gaps.n3` |
-| `deus:unspecified` | `true` on an `Operation` no spec block specifies. | `rules/80-gaps.n3` |
-| `deus:unusedDependency` | `declaresDep` without `usesPackage`. Deps used only from config, CSS or scripts the index does not parse show up here too. | `rules/80-gaps.n3` |
-| classes in the table above | `deus:EffectService`, `deus:EchoType`, … | per framework |
 
 A `rule` block's reviewed files are deliberately **not** materialized as `deus:reviews`: on this
 repository that is 841,129 pairs, because 98 rules share a few repo-wide globs. They are the path
@@ -421,7 +405,7 @@ and, by kind:
 | `deus:typeHead`                        | `ref`, `typeof`         | The named type (`ref`) or value (`typeof`): a symbol, member, or `lib:` IRI — the same IRIs `deus:constructedBy` uses. |
 | `deus:typeArg0` … `typeArg7`           | `ref`                   | Type arguments, positional; defaults are filled in where `tsc` would report them.                                      |
 | `deus:typeMember`                      | `union`, `intersection` | Each member.                                                                                                           |
-| `deus:typeProperty`                    | `object`                | A `deus:TypeProperty` node: `deus:name`, `deus:hasType`, `deus:optional`, `deus:readonly`.                             |
+| `deus:typeProperty`                    | `object`                | A `deus:TypeProperty` node: `deus:name`, `deus:hasType`, and `deus:optional` / `deus:readonly` when true.              |
 | `deus:typeElement0` …                  | `tuple`                 | Element types, positional.                                                                                             |
 | `deus:typeParam0` …, `deus:returnType` | `function`              | Parameter types, positional, and the return type.                                                                      |
 | `deus:literalValue`                    | `literal`               | The literal as written in the canonical text (`"a"`, `1`, `true`).                                                     |
@@ -508,9 +492,12 @@ Two kinds, one contract:
   with `deus:reexports+` in a query rather than a closure rule), string and path manipulation,
   anything needing a set, a sort, or a lookup table.
 
-Reasoners run in filename order after every indexing pass that changed something; each sees the
-file graphs plus the derived graphs of reasoners before it, never its own previous output. A pass
-that changed nothing runs none of them. Each reasoner's graph is replaced wholesale when it runs.
+Reasoners run in filename order at the end of an indexing pass; each sees the file graphs plus the
+derived graphs of reasoners before it, never its own previous output. A pass runs none of them when
+the ledger records that this exact rule set already ran over the facts the store holds (a rule-set
+signature and the store's write generation, in SQLite `meta`), so a pass run with `--no-reason`, or
+interrupted before reasoning, is caught up by the next one. Each reasoner's graph is replaced
+wholesale when it runs.
 The ordering is the only dependency mechanism — `80-gaps.n3` negates `deus:describes`, so it sorts
 after `70-specs.n3`, which concludes it.
 

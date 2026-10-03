@@ -6,6 +6,7 @@
 import { For, Show, createEffect, createSignal, onMount } from 'solid-js';
 
 import type * as Fold from '../workspace/Fold.ts';
+import { ForceGraph } from './ForceGraph.tsx';
 
 /**
  * The canvas: everything the agent published through the sandbox's `display` API, newest last.
@@ -117,6 +118,9 @@ const Panel = (props: { presentation: Fold.Presentation }) => (
     </header>
     <Show when={props.presentation.kind === 'mermaid'}>
       <Mermaid source={props.presentation.content} />
+    </Show>
+    <Show when={props.presentation.kind === 'graph'}>
+      <ForceGraph content={props.presentation.content} />
     </Show>
     <Show when={props.presentation.kind === 'table'}>
       <Table content={props.presentation.content} />

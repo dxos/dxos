@@ -30,8 +30,9 @@ derived graph with the result, so a conclusion never outlives the fact that enta
 Reachability is **not** among those rules — `deus:imports+` walks the import graph as a query, in a
 fraction of the time a materialized closure costs; `rules/50-example.n3` explains when a rule is the
 wrong tool. That phase is whole-graph and by
-far the most expensive one, so it is skipped when a pass changed nothing, and `--no-reason` skips it
-outright (leaving the derived graph as stale as the last pass that did run it).
+far the most expensive one, so it is skipped when the store records that the same rules already ran
+over the facts it holds now. `--no-reason` skips it outright, leaving the derived graph stale until
+the next pass that reasons, which catches up even if no file changed in between.
 
 ## Reasoning about it in a browser
 
@@ -49,9 +50,9 @@ cheapest way to exercise a turn without a browser. Anthropic needs `DX_ANTHROPIC
 `ANTHROPIC_API_KEY`) and is there for hosts that cannot run a 20B model locally.
 
 **One tool.** The agent's only action is `exec`, which runs TypeScript in a Bun child process whose
-sole capabilities are four namespaces bridged over stdio: `rdf` (SPARQL over this index), `storage`
-(per-project memory), `display` (the only channel to the screen — Mermaid, tables, markdown) and
-`print` (the model's own return channel). The tool's documentation *is*
+sole capabilities are namespaces bridged over stdio: `rdf` (SPARQL over this index), `storage`
+(per-project memory), `display` (the only channel to the screen — Mermaid, tables, markdown, force
+graphs), `design` (scored subgraphs for design questions) and `print` (the model's own return channel). The tool's documentation *is*
 [`src/workspace/sandbox/api.d.ts`](./src/workspace/sandbox/api.d.ts), so the surface cannot drift
 from what the model is told. The isolation is process-level — fresh interpreter, scrubbed
 environment, temporary cwd, wall-clock deadline — which bounds accidents rather than a hostile
@@ -61,6 +62,10 @@ snippet.
 (`src/workspace/Fold.ts`, shared by the server and the browser), so a reload replays exactly what a
 live session saw and there is no second copy to keep in step. The project id is in the URL
 (`/p/<id>`); a bare load adopts the last one that browser opened.
+
+**The index stays current.** The server holds the store, so it indexes on its own: an incremental
+pass at startup, then one after every burst of changes to a directory the index covers
+(`src/Watch.ts`). `--no-watch` serves the store as it is.
 
 **No build step.** Vite runs inside the server process in middleware mode and resolves `@dxos/*`
 through the `source` condition, so the UI — Solid, with `@dxos/react-ui-thread` mounted as a React
@@ -105,6 +110,37 @@ single-writer and neither backend can be read beside a live writer — LevelDB h
 and oxigraph documents a read-only RocksDB open next to a writer as undefined behaviour — so `mcp`
 cannot run while `serve` or `index` holds the store. It fails at startup naming the process that
 does; stop it, or point `--store` at a copy of the store directory.
+
+## Design questions
+
+`code-index design "<prompt>"` answers a question like "how does the agent runtime wire its
+services?" with a compact diagram, in three stages (`src/design/`):
+
+1. **Explore** (recall) — a few hundred candidate _files_, each with a card (primary declaration,
+   kind, package, doc, snippet, degree, why it was included), and typed edges: imports plus the
+   framework relations (`providesService`, `implementsOperation`, `contributesCapability`, …) lifted
+   from symbols to their files. `--explorer bfs` (default, no model) seeds by text match and walks a
+   fixed relation set; `--explorer llm` lets a workspace-agent turn choose seeds and relations
+   (`--provider anthropic --model claude-haiku-4-5-20251001`).
+2. **Zoom** (precision) — System One judges each card, each relation kind and the grouping level, 16
+   calls at a time, cached in `<store>/design-cache.jsonl` so a rerun bills nothing it already asked.
+   Pruning keeps `--budget` nodes over `--threshold`, and a dropped node between two survivors becomes
+   a relay edge. `--scorer baseline` scores by text match, degree and hop distance instead.
+3. **Draw** — four compact variants (≲ 14 nodes, ≤ 3 groups, `%% ref` per node, no caption), each
+   laid out by `MermaidEngine` and scored by the layout objective plus `Architecture.judge()` and
+   `Aesthetics.judge()`; the best is written as `diagram.mmd` and `diagram.svg`. Layout runs in a Node
+   child (`src/design/draw-main.ts`) because Bun cannot load ELK.
+
+```bash
+op run --env-file tools/code-index/design.env.tpl -- \
+  bun tools/code-index/bin/code-index.ts design "how does the agent runtime wire its services?"
+```
+
+Every stage's JSON lands in `--out` (default `<store>/design/<slug>`). In the chat, the agent calls
+`design.subgraph(prompt)` and shows the result with `display.graph(...)` — a force view where size and
+opacity are relevance, groups collapse on click, a click opens a node's card, and the low-relevance
+nodes are one click away. `moon run code-index:design-eval` measures all of it against the
+hand-drawn diagrams in `plugin-illustrator/docs/diagrams`.
 
 Tests run on Node under vitest (the CLI runs on Bun; the SQLite driver and the worker platform are
 chosen from the ambient runtime). The sandbox tests spawn the real child process and skip where Bun

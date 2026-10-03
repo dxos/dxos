@@ -172,6 +172,17 @@ describe.skipIf(Sandbox.interpreter() === undefined)('Sandbox', () => {
     expect(result.presented.map((event) => event.kind)).toEqual(['markdown', 'json', 'table']);
   });
 
+  test('`design.subgraph` scores the index with no decision model, and `display.graph` publishes it', async () => {
+    const result = await run(`
+      const graph = await design.subgraph('what does the package index export?');
+      await display.graph(graph, 'Design');
+      return { scorer: graph.scorer, labels: graph.nodes.map((node) => node.label) };
+    `);
+    expect(result.ok).toBe(true);
+    expect(JSON.parse(result.output)).toEqual({ scorer: 'baseline', labels: ['a'] });
+    expect(result.presented.map((event) => [event.kind, event.title])).toEqual([['graph', 'Design']]);
+  });
+
   test('an unrecognised kind renders as text rather than being dropped', () => {
     // The snippet is model-authored, so a typo must not lose a result the user was promised.
     expect(Events.toKind('diagramme')).toEqual('text');

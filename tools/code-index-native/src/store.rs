@@ -5,11 +5,12 @@
 //! The quad store (oxigraph over RocksDB) with journalled graph swaps, and the reasoning driver that
 //! keeps each rule file's derived graph up to date from the journal.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Instant;
 
-use oxigraph::io::{JsonLdProfileSet, RdfFormat, RdfParser, RdfSerializer};
+use oxigraph::io::{RdfFormat, RdfParser, RdfSerializer};
 use oxigraph::model::{
     GraphName, GraphNameRef, Literal, NamedNode, NamedNodeRef, NamedOrBlankNode, Quad, QuadRef,
     Term, Triple,
@@ -17,17 +18,20 @@ use oxigraph::model::{
 use oxigraph::sparql::results::{QueryResultsFormat, QueryResultsSerializer};
 use oxigraph::sparql::{QueryResults, SparqlEvaluator};
 use oxigraph::store::Store;
-use rustc_hash::FxHashSet;
+use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::eval::{self, Change};
 use crate::facts::{self, Dict, Facts, Id, Pattern, TripleSet};
 use crate::rules::{self, RuleSet};
+use crate::snapshot;
 
 pub const DERIVED_PREFIX: &str = "https://dxos.org/deus/graph/derived/";
 
 const ENGINE: &str = "urn:code-index:engine";
 const SIGNATURE: &str = "urn:code-index:signature";
 const OVERFLOW: &str = "urn:code-index:overflow";
+/// The token the premises file was written under, recorded only once the run that wrote it commits.
+const SNAPSHOT: &str = "urn:code-index:snapshot";
 /// Journal entries record a triple's presence in the base *before* the first change since the last
 /// reasoning pass: `(s, <prefix + p>, o)` in the journal store.
 const WAS_PRESENT: &str = "urn:code-index:journal:present:";
@@ -111,6 +115,14 @@ pub struct Stratum {
     pub rules: String,
 }
 
+/// One file's graph swap: `drop` is cleared and `triples` (N-Triples) land in `graph`.
+#[derive(Debug, Clone)]
+pub struct DocumentWrite {
+    pub graph: String,
+    pub drop: Vec<String>,
+    pub triples: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct Outcome {
     pub graph: String,
@@ -121,6 +133,26 @@ pub struct Outcome {
     pub incremental: bool,
 }
 
+/// One snapshot thread's triples, over a dictionary of its own.
+#[derive(Default)]
+struct Part {
+    ids: FxHashMap<Term, u32>,
+    terms: Vec<Term>,
+    triples: Vec<(u32, Id, u32)>,
+}
+
+impl Part {
+    fn intern(&mut self, term: Term) -> u32 {
+        if let Some(id) = self.ids.get(&term) {
+            return *id;
+        }
+        let id = u32::try_from(self.terms.len()).expect("snapshot dictionary overflow");
+        self.terms.push(term.clone());
+        self.ids.insert(term, id);
+        id
+    }
+}
+
 pub struct NativeStore {
     store: Store,
     /// Engine bookkeeping, kept out of the main store so no query can see it: the journal, the rule
@@ -129,6 +161,8 @@ pub struct NativeStore {
     meta: Store,
     journal: Mutex<JournalState>,
     journal_limit: usize,
+    /// Where the premises of the last reasoning run are kept (`snapshot.rs`); none in memory.
+    snapshot_path: Option<PathBuf>,
 }
 
 /// The file graphs, read through oxigraph's indexes and interned on the way out.
@@ -138,6 +172,46 @@ struct BaseFacts<'a> {
 }
 
 impl BaseFacts<'_> {
+    /// The base quads matching the pattern; `None` when no quad can (a literal subject).
+    fn lookup(&self, pattern: &Pattern) -> Option<impl Iterator<Item = Quad>> {
+        let subject = self.subject(pattern[0]);
+        let predicate = match pattern[1].map(|id| self.dict.term(id)) {
+            Some(Term::NamedNode(node)) => Some(node),
+            Some(_) => return None,
+            None => None,
+        };
+        if pattern[0].is_some() && subject.is_none() {
+            return None;
+        }
+        let object = pattern[2].map(|id| self.dict.term(id));
+        let quads = self.store.quads_for_pattern(
+            subject.as_ref().map(Into::into),
+            predicate.as_ref().map(Into::into),
+            object.as_ref().map(Into::into),
+            None,
+        );
+        Some(
+            quads
+                .flatten()
+                .filter(|quad| is_base_graph(quad.graph_name.as_ref())),
+        )
+    }
+
+    /// Every matching triple until `sink` returns false.
+    fn each(&self, pattern: &Pattern, sink: &mut dyn FnMut(facts::Triple) -> bool) {
+        let Some(quads) = self.lookup(pattern) else {
+            return;
+        };
+        for quad in quads {
+            let s = pattern[0].unwrap_or_else(|| self.dict.intern(&quad.subject.into()));
+            let p = pattern[1].unwrap_or_else(|| self.dict.intern(&quad.predicate.into()));
+            let o = pattern[2].unwrap_or_else(|| self.dict.intern(&quad.object));
+            if !sink([s, p, o]) {
+                return;
+            }
+        }
+    }
+
     fn subject(&self, id: Option<Id>) -> Option<NamedOrBlankNode> {
         id.and_then(|id| match self.dict.term(id) {
             Term::NamedNode(node) => Some(NamedOrBlankNode::NamedNode(node)),
@@ -149,40 +223,20 @@ impl BaseFacts<'_> {
 
 impl Facts for BaseFacts<'_> {
     fn scan(&self, pattern: &Pattern, sink: &mut dyn FnMut(facts::Triple)) {
-        let subject = self.subject(pattern[0]);
-        let predicate = match pattern[1].map(|id| self.dict.term(id)) {
-            Some(Term::NamedNode(node)) => Some(node),
-            Some(_) => return,
-            None => None,
-        };
-        if pattern[0].is_some() && subject.is_none() {
-            return;
-        }
-        let object = pattern[2].map(|id| self.dict.term(id));
-        let quads = self.store.quads_for_pattern(
-            subject.as_ref().map(Into::into),
-            predicate.as_ref().map(Into::into),
-            object.as_ref().map(Into::into),
-            None,
-        );
-        for quad in quads.flatten() {
-            if !is_base_graph(quad.graph_name.as_ref()) {
-                continue;
-            }
-            let s = pattern[0].unwrap_or_else(|| self.dict.intern(&quad.subject.into()));
-            let p = pattern[1].unwrap_or_else(|| self.dict.intern(&quad.predicate.into()));
-            let o = pattern[2].unwrap_or_else(|| self.dict.intern(&quad.object));
-            sink([s, p, o]);
-        }
+        self.each(pattern, &mut |triple| {
+            sink(triple);
+            true
+        });
+    }
+
+    fn estimate(&self, pattern: &Pattern, cap: usize) -> usize {
+        self.lookup(pattern)
+            .map_or(0, |quads| quads.take(cap).count())
     }
 
     fn contains(&self, triple: &facts::Triple) -> bool {
-        let mut found = false;
-        self.scan(
-            &[Some(triple[0]), Some(triple[1]), Some(triple[2])],
-            &mut |_| found = true,
-        );
-        found
+        self.lookup(&[Some(triple[0]), Some(triple[1]), Some(triple[2])])
+            .is_some_and(|mut quads| quads.next().is_some())
     }
 }
 
@@ -200,6 +254,14 @@ impl Facts for Layered<'_> {
 
     fn contains(&self, triple: &facts::Triple) -> bool {
         self.layers.iter().any(|layer| layer.contains(triple))
+    }
+
+    fn estimate(&self, pattern: &Pattern, cap: usize) -> usize {
+        self.layers
+            .iter()
+            .map(|layer| layer.estimate(pattern, cap))
+            .sum::<usize>()
+            .min(cap)
     }
 }
 
@@ -245,19 +307,26 @@ impl NativeStore {
             Store::open(path.join("oxigraph"))?,
             Store::open(path.join("journal"))?,
             DEFAULT_JOURNAL_LIMIT,
+            Some(path.join("premises.bin")),
         )
     }
 
     pub fn in_memory(journal_limit: usize) -> Result<Self> {
-        Self::from_stores(Store::new()?, Store::new()?, journal_limit)
+        Self::from_stores(Store::new()?, Store::new()?, journal_limit, None)
     }
 
-    fn from_stores(store: Store, meta: Store, journal_limit: usize) -> Result<Self> {
+    fn from_stores(
+        store: Store,
+        meta: Store,
+        journal_limit: usize,
+        snapshot_path: Option<PathBuf>,
+    ) -> Result<Self> {
         let native = Self {
             store,
             meta,
             journal: Mutex::new(JournalState::default()),
             journal_limit,
+            snapshot_path,
         };
         native.reload_journal_state()?;
         Ok(native)
@@ -314,11 +383,16 @@ impl NativeStore {
         Ok(quads)
     }
 
-    /// Replaces the contents of `drop` (any number of base graphs) with `quads` in one transaction.
-    /// Before it commits, every triple whose presence in the base it changes is journalled with its
-    /// presence beforehand — unless the journal already has it, since the oldest entry is the one
-    /// that describes the state the derived graphs were computed from. A journal entry for a swap
-    /// that never commits is harmless: reasoning compares it with the triple's actual presence.
+    /// Replaces the contents of `drop` (any number of base graphs) with `quads`. Before anything is
+    /// written, every triple whose presence in the base it changes is journalled with its presence
+    /// beforehand — unless the journal already has it, since the oldest entry is the one that
+    /// describes the state the derived graphs were computed from. A journal entry for a swap that
+    /// never completes is harmless: reasoning compares it with the triple's actual presence.
+    ///
+    /// The new quads go in through the bulk loader, an order of magnitude faster than a transaction,
+    /// and only then are the stale ones removed, in one transaction: a reader may see both revisions
+    /// for a moment, never neither. Atomicity is the ledger's job (`pending_graph`): a swap cut
+    /// short leaves graphs that `reconcile` drops.
     fn swap(&self, drop: &[GraphName], quads: Vec<Quad>) -> Result<()> {
         let mut journal = self
             .journal
@@ -376,45 +450,24 @@ impl NativeStore {
             transaction.commit()?;
             journal.entries += written;
         }
-        let mut transaction = self.store.start_transaction()?;
-        for quad in &old {
-            transaction.remove(quad);
+        if !quads.is_empty() {
+            let mut loader = self.store.bulk_loader().with_num_threads(1);
+            loader.load_quads(quads.iter().cloned())?;
+            loader.commit()?;
         }
-        for quad in &quads {
-            transaction.insert(quad);
+        let kept: FxHashSet<&Quad> = quads.iter().collect();
+        let stale: Vec<&Quad> = old.iter().filter(|quad| !kept.contains(quad)).collect();
+        if !stale.is_empty() {
+            let mut transaction = self.store.start_transaction()?;
+            for quad in stale {
+                transaction.remove(quad);
+            }
+            transaction.commit()?;
         }
-        transaction.commit()?;
         Ok(())
     }
 
-    /// Replaces `drop` with the document's quads, homed in `graph`.
-    pub fn put_document(&self, graph: &str, drop: &[String], json_ld: &str) -> Result<usize> {
-        let graph = NamedNode::new(graph).map_err(|error| Error(error.to_string()))?;
-        let mut quads = Vec::new();
-        for quad in RdfParser::from_format(RdfFormat::JsonLd {
-            profile: JsonLdProfileSet::empty(),
-        })
-        .for_slice(json_ld)
-        {
-            let quad = quad?;
-            quads.push(Quad::new(
-                quad.subject,
-                quad.predicate,
-                quad.object,
-                graph.clone(),
-            ));
-        }
-        let count = quads.len();
-        let mut graphs: Vec<GraphName> = drop
-            .iter()
-            .map(|name| NamedNode::new_unchecked(name.as_str()).into())
-            .collect();
-        graphs.push(graph.into());
-        self.swap(&graphs, quads)?;
-        Ok(count)
-    }
-
-    /// `put_document` for quads already in N-Quads form (their graph is replaced by `graph`).
+    /// Replaces `drop` with quads in N-Quads form, homed in `graph` (their own graph is ignored).
     pub fn put_document_nquads(&self, graph: &str, drop: &[String], nquads: &str) -> Result<usize> {
         let graph = NamedNode::new(graph).map_err(|error| Error(error.to_string()))?;
         let quads: Vec<Quad> = Self::parse_nquads(nquads)?
@@ -427,6 +480,41 @@ impl NativeStore {
             .map(|name| NamedNode::new_unchecked(name.as_str()).into())
             .collect();
         graphs.push(graph.into());
+        self.swap(&graphs, quads)?;
+        Ok(count)
+    }
+
+    /// Several documents' swaps as one write: the bulk loader's cost per quad falls with the size
+    /// of the load, so the indexer hands over hundreds of files at a time.
+    pub fn put_documents(&self, writes: &[DocumentWrite]) -> Result<usize> {
+        let mut graphs: Vec<GraphName> = Vec::new();
+        let mut quads = Vec::new();
+        for write in writes {
+            let graph =
+                NamedNode::new(write.graph.as_str()).map_err(|error| Error(error.to_string()))?;
+            // Lenient: the indexer minted and escaped these terms (`internal/iri.ts`), and validating
+            // every IRI again would cost the commit time for nothing.
+            for quad in RdfParser::from_format(RdfFormat::NTriples)
+                .lenient()
+                .for_slice(&write.triples)
+            {
+                let quad = quad?;
+                quads.push(Quad::new(
+                    quad.subject,
+                    quad.predicate,
+                    quad.object,
+                    graph.clone(),
+                ));
+            }
+            graphs.extend(
+                write
+                    .drop
+                    .iter()
+                    .map(|name| GraphName::from(NamedNode::new_unchecked(name.as_str()))),
+            );
+            graphs.push(graph.into());
+        }
+        let count = quads.len();
         self.swap(&graphs, quads)?;
         Ok(count)
     }
@@ -530,6 +618,20 @@ impl NativeStore {
         Ok(self.store.len()?)
     }
 
+    /// Quads in one named graph, counted here so none is serialised across the binding.
+    pub fn graph_len(&self, graph: &str) -> Result<usize> {
+        let graph = NamedNode::new(graph).map_err(|error| Error(error.to_string()))?;
+        let mut count = 0;
+        for quad in self
+            .store
+            .quads_for_pattern(None, None, None, Some(graph.as_ref().into()))
+        {
+            quad?;
+            count += 1;
+        }
+        Ok(count)
+    }
+
     pub fn clear(&self) -> Result<()> {
         self.store.clear()?;
         self.meta.clear()?;
@@ -577,6 +679,61 @@ impl NativeStore {
         }
     }
 
+    /// The base triples with these predicates.
+    ///
+    /// Decoding a quad is a RocksDB read per non-inline term, which made this load most of a warm
+    /// pass; so predicates are decoded on every core, each thread interning into a dictionary of its
+    /// own that is merged into `dict` once per distinct term.
+    fn snapshot(&self, predicates: &FxHashSet<Id>, dict: &Dict) -> Result<TripleSet> {
+        let predicates: Vec<(Id, NamedNode)> = predicates
+            .iter()
+            .filter_map(|id| match dict.term(*id) {
+                Term::NamedNode(node) => Some((*id, node)),
+                _ => None,
+            })
+            .collect();
+        let next = AtomicUsize::new(0);
+        let threads = std::thread::available_parallelism().map_or(1, |count| count.get());
+        let parts: Vec<Result<Part>> = std::thread::scope(|scope| {
+            let workers: Vec<_> = (0..threads.min(predicates.len()))
+                .map(|_| {
+                    scope.spawn(|| {
+                        let mut part = Part::default();
+                        while let Some((predicate, node)) =
+                            predicates.get(next.fetch_add(1, Ordering::Relaxed))
+                        {
+                            for quad in
+                                self.store
+                                    .quads_for_pattern(None, Some(node.as_ref()), None, None)
+                            {
+                                let quad = quad?;
+                                if is_base_graph(quad.graph_name.as_ref()) {
+                                    let subject = part.intern(quad.subject.into());
+                                    let object = part.intern(quad.object);
+                                    part.triples.push((subject, *predicate, object));
+                                }
+                            }
+                        }
+                        Ok(part)
+                    })
+                })
+                .collect();
+            workers
+                .into_iter()
+                .map(|worker| worker.join().expect("snapshot thread panicked"))
+                .collect()
+        });
+        let mut set = TripleSet::default();
+        for part in parts {
+            let part = part?;
+            let ids: Vec<Id> = part.terms.iter().map(|term| dict.intern(term)).collect();
+            for (subject, predicate, object) in part.triples {
+                set.insert([ids[subject as usize], predicate, ids[object as usize]]);
+            }
+        }
+        Ok(set)
+    }
+
     fn graph_set(&self, graph: &str, dict: &Dict) -> Result<TripleSet> {
         let mut set = TripleSet::default();
         for quad in self.store.quads_for_pattern(
@@ -596,6 +753,10 @@ impl NativeStore {
     }
 
     fn quad_of(dict: &Dict, triple: &facts::Triple, graph: &NamedNode) -> Option<Quad> {
+        // A list term lives only inside one engine run.
+        if triple.iter().any(|id| dict.is_list(*id)) {
+            return None;
+        }
         let subject = match dict.term(triple[0]) {
             Term::NamedNode(node) => NamedOrBlankNode::NamedNode(node),
             Term::BlankNode(node) => NamedOrBlankNode::BlankNode(node),
@@ -632,8 +793,9 @@ impl NativeStore {
                 }
             }
         }
+        let base = facts::Cached::new(&base);
         let premises = Layered {
-            layers: vec![&base, &others],
+            layers: vec![&base, &others, &rules.axioms],
         };
         let derived = eval::full(&rules, &premises, &dict);
         let graph_node = NamedNode::new_unchecked(graph);
@@ -706,12 +868,49 @@ impl NativeStore {
             }
         }
 
-        let base = BaseFacts {
+        let stored_base = BaseFacts {
             store: &self.store,
             dict: &dict,
         };
+        // Every base fact the rules can read, loaded once: a join then probes a hash index rather
+        // than seeking RocksDB and re-interning what it finds, which dominated reasoning.
+        let snapshot = match compiled
+            .iter()
+            .map(|rules| rules.predicates.as_ref())
+            .collect::<Option<Vec<_>>>()
+        {
+            Some(sets) => {
+                let predicates: FxHashSet<Id> = sets.into_iter().flatten().copied().collect();
+                let kept = if incremental {
+                    self.kept_premises(&dict)
+                } else {
+                    None
+                };
+                Some(match kept {
+                    // The kept premises plus the journal's changes are the base now: every base
+                    // write since that run is journalled, or the run would not be incremental.
+                    Some(mut kept) => {
+                        for triple in plus.iter().filter(|triple| predicates.contains(&triple[1])) {
+                            kept.insert(*triple);
+                        }
+                        for triple in minus.iter() {
+                            kept.remove(triple);
+                        }
+                        kept
+                    }
+                    None => self.snapshot(&predicates, &dict)?,
+                })
+            }
+            None => None,
+        };
+        // Without a snapshot, an unbound scan is still decoded from the store only once.
+        let cached_base = facts::Cached::new(&stored_base);
+        let base: &dyn Facts = match &snapshot {
+            Some(snapshot) => snapshot,
+            None => &cached_base,
+        };
         let before_base = facts::Before {
-            after: &base,
+            after: base,
             plus: &plus,
             minus: &minus,
         };
@@ -723,15 +922,20 @@ impl NativeStore {
         for (stratum, rules) in strata.iter().zip(&compiled) {
             let started = Instant::now();
             let stored = self.graph_set(&stratum.graph, &dict)?;
-            let mut layers: Vec<&dyn Facts> = vec![&base];
+            let mut layers: Vec<&dyn Facts> = vec![base];
             layers.extend(materialised.iter().map(|set| set as &dyn Facts));
+            // The file's own ground facts are its premises alone, never its output.
+            layers.push(&rules.axioms);
             let premises = Layered { layers };
+            // A stratum that proves on demand or aggregates is recomputed: DRed cannot see through it.
+            let maintained = incremental && rules.maintainable;
 
-            let (derived, change) = if incremental {
+            let (derived, change) = if maintained {
                 // This stratum's premises changed where the base or an earlier stratum did, unless
                 // another layer still (or already) asserts the triple.
                 let mut before_layers: Vec<&dyn Facts> = vec![&before_base];
                 before_layers.extend(previous.iter().map(|set| set as &dyn Facts));
+                before_layers.push(&rules.axioms);
                 let before = Layered {
                     layers: before_layers,
                 };
@@ -790,7 +994,7 @@ impl NativeStore {
                 added: change.added.len(),
                 removed: change.removed.len(),
                 duration_ms: started.elapsed().as_secs_f64() * 1000.0,
-                incremental,
+                incremental: maintained,
             });
             previous.push(stored);
             materialised.push(derived);
@@ -816,13 +1020,46 @@ impl NativeStore {
             }
         }
         transaction.commit()?;
+        let kept = snapshot
+            .as_ref()
+            .and_then(|snapshot| self.keep_premises(snapshot, &signature, &dict));
         self.meta.clear()?;
         self.set_engine_value(
             SIGNATURE,
             Some(Literal::new_simple_literal(signature).into()),
         )?;
+        if let Some(token) = kept {
+            self.set_engine_value(SNAPSHOT, Some(Literal::new_simple_literal(token).into()))?;
+        }
         self.reload_journal_state()?;
         Ok(outcomes)
+    }
+
+    /// The premises the last run kept, if the engine state still vouches for them. A file that cannot
+    /// be read is only a lost shortcut: the caller decodes the premises from the store instead.
+    fn kept_premises(&self, dict: &Dict) -> Option<TripleSet> {
+        let path = self.snapshot_path.as_ref()?;
+        let Ok(Some(Term::Literal(token))) = self.engine_value(SNAPSHOT) else {
+            return None;
+        };
+        snapshot::read(path, token.value(), dict).ok().flatten()
+    }
+
+    /// Writes `premises` for the next run and returns the token to record once this run commits;
+    /// `None` if there is nowhere to write or the write failed, which costs the next run a decode.
+    fn keep_premises(&self, premises: &TripleSet, signature: &str, dict: &Dict) -> Option<String> {
+        let path = self.snapshot_path.as_ref()?;
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |elapsed| elapsed.as_nanos());
+        let token = format!("{signature}:{nanos}");
+        match snapshot::write(path, &token, premises, dict) {
+            Ok(()) => Some(token),
+            Err(_) => {
+                let _ = std::fs::remove_file(path);
+                None
+            }
+        }
     }
 
     /// Serialises quads as N-Quads.

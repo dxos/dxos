@@ -47,6 +47,13 @@ fn shipped() -> Vec<Stratum> {
         .collect()
 }
 
+/// Whether DRed maintains the stratum, rather than recomputing it each pass.
+fn maintainable(stratum: &Stratum) -> bool {
+    rules::compile(&stratum.rules, &Dict::default())
+        .unwrap()
+        .maintainable
+}
+
 fn derived(store: &NativeStore, graph: &str) -> Vec<String> {
     let mut quads: Vec<String> = store
         .match_quads(
@@ -84,11 +91,11 @@ fn unsupported_builtins_are_rejected_by_name() {
         "a non-builtin namespace is an ordinary predicate"
     );
     let error = rules::compile(
-        "@prefix log: <http://www.w3.org/2000/10/swap/log#>. { ?a <urn:p> ?b. ?b log:uri ?c } => { ?a <urn:q> ?c }.",
+        "@prefix log: <http://www.w3.org/2000/10/swap/log#>. { ?a <urn:p> ?b. ?b log:semantics ?c } => { ?a <urn:q> ?c }.",
         &dict,
     )
     .unwrap_err();
-    assert!(error.to_string().contains("log#uri"), "{error}");
+    assert!(error.to_string().contains("log#semantics"), "{error}");
     let error = rules::compile(
         "@prefix log: <http://www.w3.org/2000/10/swap/log#>. @prefix list: <http://www.w3.org/2000/10/swap/list#>.
          { ?a <urn:p> ?b. (?x { ?x <urn:q> ?b } ?l) log:collectAllIn ?s. ?l list:length 0 } => { ?a <urn:q> ?b }.",
@@ -153,18 +160,11 @@ fn canonical_names_follow_the_namespace_barrel() {
         .collect();
     store.reason_all(&strata).unwrap();
     let graph = &strata[0].graph;
-    assert_eq!(
-        derived(&store, graph),
-        vec![
-            format!("<{}> <{DEUS}canonicalName> \"iri\"", symbol(module, "iri")),
-            format!(
-                "<{}> <{DEUS}canonicalName> \"helper\"",
-                symbol("src/plain.ts", "helper")
-            ),
-        ]
-    );
+    // A name equal to the declared one is not restated.
+    assert_eq!(derived(&store, graph), Vec::<String>::new());
 
-    // The barrel arrives: the bare name is retracted (negation flips) and the qualified one concluded.
+    // The barrel arrives: the qualified name is concluded (the negation flips); the barrel's own
+    // name is its declared one.
     store
         .insert_quads(&nquads(
             "urn:graph:b",
@@ -182,27 +182,16 @@ fn canonical_names_follow_the_namespace_barrel() {
     assert!(outcomes[0].incremental);
     assert_eq!(
         derived(&store, graph),
-        vec![
-            format!(
-                "<{}> <{DEUS}canonicalName> \"Ontology.iri\"",
-                symbol(module, "iri")
-            ),
-            format!(
-                "<{}> <{DEUS}canonicalName> \"Ontology\"",
-                symbol(barrel, "Ontology")
-            ),
-            format!(
-                "<{}> <{DEUS}canonicalName> \"helper\"",
-                symbol("src/plain.ts", "helper")
-            ),
-        ]
+        vec![format!(
+            "<{}> <{DEUS}canonicalName> \"Ontology.iri\"",
+            symbol(module, "iri")
+        )]
     );
 
     // And leaves again.
     store.drop_graphs(&["urn:graph:b".into()]).unwrap();
     store.reason_all(&strata).unwrap();
-    assert_eq!(derived(&store, graph).len(), 2);
-    assert!(derived(&store, graph)[0].ends_with("\"iri\""));
+    assert_eq!(derived(&store, graph), Vec::<String>::new());
 }
 
 #[test]
@@ -309,6 +298,21 @@ fn random_quad(rng: &mut Rng, constants: &[String], graphs: &[String]) -> Quad {
 
 #[test]
 fn incremental_maintenance_matches_recomputation() {
+    maintenance_matches_recomputation(|_| NativeStore::in_memory(100_000).unwrap());
+}
+
+/// On disk, each run after the first starts from the premises the previous one kept, plus the
+/// journal: a premise it got wrong shows up as a recomputed stratum that diverges.
+#[test]
+fn kept_premises_match_recomputation() {
+    let dir = tempfile::tempdir().unwrap();
+    maintenance_matches_recomputation(|seed| {
+        NativeStore::open(dir.path().join(seed.to_string())).unwrap()
+    });
+    assert!(dir.path().join("1").join("premises.bin").exists());
+}
+
+fn maintenance_matches_recomputation(open: impl Fn(u64) -> NativeStore) {
     let strata = shipped();
     // Every IRI the rules name (prefixed or not) as the parser resolves it, plus the classes the
     // rules conclude, so random premises hit the rules' constants.
@@ -335,7 +339,7 @@ fn incremental_maintenance_matches_recomputation() {
 
     for seed in 1..=40u64 {
         let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15));
-        let store = NativeStore::in_memory(100_000).unwrap();
+        let store = open(seed);
         let initial: Vec<Quad> = (0..120)
             .map(|_| random_quad(&mut rng, &constants, &graphs))
             .collect();
@@ -366,10 +370,14 @@ fn incremental_maintenance_matches_recomputation() {
             }
 
             let outcomes = store.reason_all(&strata).unwrap();
-            assert!(
-                outcomes.iter().all(|outcome| outcome.incremental),
-                "seed {seed}: expected the incremental path"
-            );
+            for (stratum, outcome) in strata.iter().zip(&outcomes) {
+                assert_eq!(
+                    outcome.incremental,
+                    maintainable(stratum),
+                    "seed {seed}: {} took the wrong path",
+                    stratum.graph
+                );
+            }
             let incremental: Vec<Vec<String>> = strata
                 .iter()
                 .map(|stratum| derived(&store, &stratum.graph))
@@ -416,12 +424,90 @@ fn an_overflowing_journal_falls_back_to_recomputation() {
             &[(file("c.ts"), "path", "\"c.ts\"".into())],
         ))
         .unwrap();
+    let outcomes = store.reason_all(&strata).unwrap();
     assert!(
-        store
-            .reason_all(&strata)
-            .unwrap()
+        strata
             .iter()
-            .all(|outcome| outcome.incremental)
+            .zip(&outcomes)
+            .all(|(stratum, outcome)| outcome.incremental == maintainable(stratum))
+    );
+}
+
+/// Reasons one rule file over N-Quads premises and returns its conclusions, sorted.
+fn conclude(premises: &str, rules: &str) -> Vec<String> {
+    let store = NativeStore::in_memory(1000).unwrap();
+    store.insert_quads(premises).unwrap();
+    let graph = format!("{DERIVED}test");
+    store
+        .reason_all(&[Stratum {
+            graph: graph.clone(),
+            rules: rules.into(),
+        }])
+        .unwrap();
+    derived(&store, &graph)
+}
+
+const PREFIXES: &str = "@prefix : <urn:>. @prefix list: <http://www.w3.org/2000/10/swap/list#>.
+    @prefix log: <http://www.w3.org/2000/10/swap/log#>. @prefix string: <http://www.w3.org/2000/10/swap/string#>.";
+
+#[test]
+fn backward_rules_are_proved_for_their_caller_and_never_stored() {
+    let premises = "<urn:a> <urn:alias> <urn:b> <urn:g> .\n<urn:b> <urn:alias> <urn:c> <urn:g> .\n<urn:c> <urn:kind> \"decl\" <urn:g> .\n";
+    // `?x :origin ?x` binds its object only from its subject, which the caller supplies; the alias
+    // chain recurses through the same predicate.
+    let rules = format!(
+        "{PREFIXES}
+        {{ ?x :origin ?x }} <= {{ ?x :kind \"decl\" }}.
+        {{ ?x :origin ?d }} <= {{ ?x :alias ?y. ?y :origin ?d }}.
+        {{ ?x :alias ?y. ?x :origin ?d }} => {{ ?x :resolves ?d }}."
+    );
+    assert_eq!(
+        conclude(premises, &rules),
+        vec![
+            "<urn:a> <urn:resolves> <urn:c>",
+            "<urn:b> <urn:resolves> <urn:c>"
+        ]
+    );
+}
+
+#[test]
+fn a_call_waits_for_the_atoms_written_before_it() {
+    // Proved with `?s` unbound, the counts would be over every symbol's stages and never agree.
+    let premises = "<urn:a> <urn:stage> <urn:keep> <urn:g> .\n<urn:b> <urn:stage> <urn:drop> <urn:g> .\n<urn:a> <urn:type> <urn:Layer> <urn:g> .\n";
+    let rules = format!(
+        "{PREFIXES}
+        {{ ?s :keeps true }} <= {{
+          (?x {{ ?s :stage ?x }} ?all) log:collectAllIn ?scope.
+          (?x {{ ?s :stage ?x. ?x list:in (:keep) }} ?kept) log:collectAllIn ?scope.
+          ?all list:length ?n. ?kept list:length ?n.
+        }}.
+        {{ ?s :type :Layer. ?s :keeps true }} => {{ ?s :kept true }}."
+    );
+    assert_eq!(
+        conclude(premises, &rules),
+        vec!["<urn:a> <urn:kept> \"true\"^^<http://www.w3.org/2001/XMLSchema#boolean>"]
+    );
+}
+
+#[test]
+fn ground_facts_lists_and_string_builtins() {
+    let premises = "<https://x.org/file/a.ts#make> <urn:calls> <urn:Type.makeObject> <urn:g> .\n";
+    let rules = format!(
+        "{PREFIXES}
+        :Type.makeObject :factoryOf :EchoType.
+        {{ (?s ?f) :pair ?f }} <= {{ ?s :calls ?f }}.
+        {{ ?s :calls ?f. (?s ?f) :pair ?g. ?g :factoryOf ?class }} => {{ ?s :a ?class }}.
+        {{ ?s :calls ?f. ?s log:uri ?text. ?text string:startsWith \"https://x.org/\".
+           (\"/\" \"file\" \"/(.*)#\") string:concatenation ?pattern. (?text ?pattern) string:scrape ?path.
+           ?f log:notEqualTo ?s }} => {{ ?s :path ?path }}."
+    );
+    // The ground fact is a premise of the file, not one of its conclusions; nor is the pair.
+    assert_eq!(
+        conclude(premises, &rules),
+        vec![
+            "<https://x.org/file/a.ts#make> <urn:a> <urn:EchoType>",
+            "<https://x.org/file/a.ts#make> <urn:path> \"a.ts\""
+        ]
     );
 }
 
@@ -498,4 +584,136 @@ fn string_builtins_read_patterns_from_the_data() {
             ),
         ]
     );
+}
+
+const U: &str = "urn:u#";
+
+/// The two synthetic rule files: one using every construct, one reading its output.
+fn constructs() -> Vec<Stratum> {
+    ["a", "b"]
+        .iter()
+        .map(|name| Stratum {
+            graph: format!("{DERIVED}constructs-{name}"),
+            rules: fixture(&format!("constructs-{name}.n3")),
+        })
+        .collect()
+}
+
+fn node(index: usize) -> String {
+    format!("<urn:node:{index}>")
+}
+
+fn edges(graph: &str, edges: &[(String, &str, String)]) -> String {
+    edges
+        .iter()
+        .map(|(s, p, o)| format!("{s} <{U}{p}> {o} <{graph}> .\n"))
+        .collect()
+}
+
+fn fixture(name: &str) -> String {
+    fs::read_to_string(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("tests/fixtures")
+            .join(name),
+    )
+    .unwrap()
+}
+
+/// A Turtle/N3 fixture's triples, formatted as `derived` formats them.
+fn fixture_triples(name: &str) -> Vec<String> {
+    let mut triples: Vec<String> = oxttl::n3::N3Parser::new()
+        .for_slice(&fixture(name))
+        .map(|quad| {
+            let quad = quad.unwrap();
+            format!("{} {} {}", quad.subject, quad.predicate, quad.object)
+        })
+        .collect();
+    triples.sort();
+    triples
+}
+
+#[test]
+fn constructs_derive_what_eye_derives() {
+    let store = NativeStore::in_memory(1000).unwrap();
+    let data: String = oxttl::n3::N3Parser::new()
+        .for_slice(&fixture("constructs.data.n3"))
+        .map(|quad| {
+            let quad = quad.unwrap();
+            format!(
+                "{} {} {} <urn:graph:a> .\n",
+                quad.subject, quad.predicate, quad.object
+            )
+        })
+        .collect();
+    store.insert_quads(&data).unwrap();
+    let strata = constructs();
+    store.reason_all(&strata).unwrap();
+    assert_eq!(
+        derived(&store, &strata[0].graph),
+        fixture_triples("constructs-a.expected.n3")
+    );
+    // The reading file sees the output only: no backward conclusion, no fact of the first file.
+    assert_eq!(
+        derived(&store, &strata[1].graph),
+        fixture_triples("constructs-b.expected.n3")
+    );
+}
+
+#[test]
+fn constructs_maintain_like_recomputation() {
+    let strata = constructs();
+    let objects: Vec<String> = (0..6)
+        .map(node)
+        .chain(["k1", "k2", "k3"].iter().map(|name| format!("<{U}{name}>")))
+        .collect();
+    let graphs: Vec<String> = (0..3).map(|index| format!("urn:graph:{index}")).collect();
+    let random = |rng: &mut Rng| {
+        let predicate = *rng.pick(&["p", "q"]);
+        let subject = node((rng.next() % 6) as usize);
+        edges(
+            rng.pick(&graphs),
+            &[(subject, predicate, rng.pick(&objects).clone())],
+        )
+    };
+    for seed in 1..=60u64 {
+        let mut rng = Rng(seed.wrapping_mul(0x9e37_79b9_7f4a_7c15));
+        let store = NativeStore::in_memory(100_000).unwrap();
+        let initial: String = (0..14).map(|_| random(&mut rng)).collect();
+        store.insert_quads(&initial).unwrap();
+        store.reason_all(&strata).unwrap();
+        for round in 0..6 {
+            let added: String = (0..4).map(|_| random(&mut rng)).collect();
+            store.insert_quads(&added).unwrap();
+            let base: Vec<Quad> = store
+                .match_quads(None, None, None, None)
+                .unwrap()
+                .into_iter()
+                .filter(|quad| !quad.graph_name.to_string().contains("derived"))
+                .collect();
+            if !base.is_empty() {
+                let removed: Vec<Quad> = (0..3).map(|_| rng.pick(&base).clone()).collect();
+                store
+                    .remove_quads(&NativeStore::to_nquads(&removed).unwrap())
+                    .unwrap();
+            }
+            if round % 3 == 2 {
+                store.drop_graphs(&[rng.pick(&graphs).clone()]).unwrap();
+            }
+            store.reason_all(&strata).unwrap();
+            let incremental: Vec<Vec<String>> = strata
+                .iter()
+                .map(|stratum| derived(&store, &stratum.graph))
+                .collect();
+            store.invalidate().unwrap();
+            store.reason_all(&strata).unwrap();
+            for (stratum, incremental) in strata.iter().zip(&incremental) {
+                assert_eq!(
+                    incremental,
+                    &derived(&store, &stratum.graph),
+                    "seed {seed} round {round}: {} diverged",
+                    stratum.graph
+                );
+            }
+        }
+    }
 }
