@@ -27,6 +27,8 @@ export type BusyScale = {
   /** Repeated-binding counts for the feeds that kept re-binding; the rest hold one or two entries. */
   hotBindingFeeds: readonly number[];
   tasks: number;
+  /** Tasks the one populated task set links to; the rest belong to no set. */
+  linkedTasks: number;
   emptyTaskSets: number;
   documents: number;
   /** Message counts of the space's other chats; the measured chat is fresh. */
@@ -46,6 +48,7 @@ export const OBSERVED_BUSY_SCALE: BusyScale = {
   bindingFeeds: 317,
   hotBindingFeeds: [1087, 1073, 980, 860, 720, 610, 480, 390, 300, 221],
   tasks: 334,
+  linkedTasks: 55,
   emptyTaskSets: 189,
   documents: 66,
   chatHistories: [446, 309, 176, 134, 115, 93, 75, 70, 69, 68],
@@ -66,6 +69,7 @@ export const scaleBusy = (scale: BusyScale, fraction: number): BusyScale => {
     bindingFeeds: count(scale.bindingFeeds),
     hotBindingFeeds: scale.hotBindingFeeds.map(count),
     tasks: count(scale.tasks),
+    linkedTasks: count(scale.linkedTasks),
     emptyTaskSets: count(scale.emptyTaskSets),
     documents: count(scale.documents),
     chatHistories: scale.chatHistories.map(count),
@@ -226,7 +230,7 @@ export const seedBusySpace = async ({
     ),
   );
   Obj.update(taskSets[0], (taskSet) => {
-    taskSet.tasks = tasks.slice(0, 55).map((task) => Ref.make(task));
+    taskSet.tasks = tasks.slice(0, scale.linkedTasks).map((task) => Ref.make(task));
   });
   for (let index = 0; index < scale.documents; index++) {
     db.add(Markdown.make({ name: `Notes ${index + 1}`, content: filler(index % 13 === 0 ? 40_000 : 1_300, index) }));

@@ -82,10 +82,11 @@ The busy space (`PerfScriptedBusy`) is seeded in the browser by `stories-assista
 feed appends run at tens of entries a second on OPFS, so the full volume cannot be seeded once per
 iteration. The `seed` stage logs each seeding phase's wall time.
 
-The `chat-bench` job in `.depot/workflows/perf-nightly.yml` runs both spaces nightly and scores the
-median of each one's iterations against its own budgets, publishing `ci.perf-score` with
-`ciSuite = 'chat'` (blank, `src/playwright/perf/budgets.json`) and `ciSuite = 'chat-busy'` (busy,
-`src/playwright/perf/budgets-busy.json`):
+The `chat-bench` job in `.depot/workflows/perf-nightly.yml` runs both spaces nightly, publishing
+their stage rows. Each space is scored on the median of its iterations against its own budgets, as
+`ci.perf-score` with its own `ciSuite`: blank as `chat` against `src/playwright/perf/budgets.json`,
+busy as `chat-busy` against `src/playwright/perf/budgets-busy.json`. A space with no budgets file
+is not scored — busy runs unscored until its budgets are calibrated from its own rows.
 
 ```bash
 node scripts/score-perf.ts score [--scale blank|busy] [--dir test-results/perf] [--publish]
