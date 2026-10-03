@@ -152,7 +152,8 @@ const DiscordBotControls = ({ binding, spaceId }: DiscordBotControlsProps) => {
 
   return (
     <>
-      <ActionToolbar {...menuActions} />
+      {/* No attendable id in the properties panel, so attention would leave the toolbar permanently disabled. */}
+      <ActionToolbar {...menuActions} alwaysActive />
       <DiscordBotStatus status={status} error={error} />
     </>
   );
