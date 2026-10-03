@@ -18,6 +18,13 @@
     flex: 1 1 auto;
     min-height: 0;
     margin-inline: calc(-1 * var(--dx-gap-size));
+    /* Clipped to the panel's corners: in an unpadded panel the body's content meets the rounded border. */
+    border-radius: inherit;
+    overflow: hidden;
+  }
+  /* A body whose content has not mounted yet (a lazily loaded surface) would show the panel collapsed to its border. */
+  .dx-popover:has(> .dx-popover-body .dx-scroll-viewport:empty) {
+    visibility: hidden;
   }
 
   /* A trailing CloseTrigger's inset cell ends at the panel's padding edge, like `Field.Header`'s trailing icon-only Button. */
