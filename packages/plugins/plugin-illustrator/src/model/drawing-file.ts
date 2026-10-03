@@ -106,17 +106,15 @@ export const importDxSvg = Effect.fn('DrawingFile.importDxSvg')(function* (svg: 
   const { db } = yield* Database.Service;
   const { root, objects } = remapIds(payload);
   const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
-  let drawing: Drawing.Drawing | undefined;
-  for (const json of objects) {
-    const object = yield* Effect.promise(() => Obj.fromJSON(json, { refResolver: resolver }));
-    db.add(object);
-    if (json.id === root && Drawing.isDrawing(object)) {
-      drawing = object;
-    }
-  }
-  yield* Effect.promise(() => db.flush());
-  if (!drawing) {
+  // Decode everything before adding anything, so a bad payload leaves the space untouched.
+  const decoded = yield* Effect.forEach(objects, (json) =>
+    Effect.promise(() => Obj.fromJSON(json, { refResolver: resolver })),
+  );
+  const drawing = decoded.find((object) => object.id === root);
+  if (!drawing || !Drawing.isDrawing(drawing)) {
     return yield* Effect.fail(new ImportError({ message: 'The .dx.svg payload has no drawing at its root.' }));
   }
+  decoded.forEach((object) => db.add(object));
+  yield* Effect.promise(() => db.flush());
   return drawing;
 });

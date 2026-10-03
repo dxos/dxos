@@ -74,6 +74,20 @@ describe('.dx.svg', () => {
     );
   });
 
+  test('a payload whose root is not a drawing imports nothing', async ({ expect }) => {
+    const commands = await MermaidEngine.compile(SOURCE);
+    const canvas = Drawing.makeCanvas({ schema: SVG_SCHEMA });
+    SvgBuilder.apply(canvas, commands);
+    const drawing = Drawing.make({ name: 'Request path', canvas });
+    const svg = toDxSvg(toSvgFile(objectsOf(commands)), { ...toPayload({ drawing, canvas }), root: canvas.id });
+
+    const { db, graph } = await builder.createDatabase();
+    graph.registry.add([Drawing.Drawing, Drawing.Canvas]);
+    const exit = await Effect.runPromiseExit(importDxSvg(svg).pipe(Effect.provide(Database.layer(db))));
+    expect(exit._tag).toBe('Failure');
+    expect(await db.query(Filter.type(Drawing.Canvas)).run()).toHaveLength(0);
+  });
+
   test('a plain SVG has no payload, and importing one fails', async ({ expect }) => {
     const svg = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
     expect(await EffectEx.runPromise(fromDxSvg(svg))).toBeUndefined();

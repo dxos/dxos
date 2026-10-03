@@ -270,7 +270,7 @@ diagram-rule balanced-whitespace: Ink is spread evenly across the page
   evaluator: code
   weight: 2
   A crowded half next to an empty one looks unbalanced and suggests a grouping that is not there.
-  Code: split the drawing into a 3 × 3 grid; 1 − the coefficient of variation of box area per cell.
+  Code: split the drawing into a 3 × 3 grid; 1 − min(1, CV / 1.5), with CV the coefficient of variation of box area per cell.
   Source: HOLA participant comments; Ngo, Teo & Byrne 2003 (balance).
 ```
 

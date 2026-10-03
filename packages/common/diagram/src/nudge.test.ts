@@ -11,6 +11,26 @@ import { type Rect } from './uml-grid.ts';
 const orthogonal = (points: readonly Scene.Point[]) =>
   points.slice(1).every((point, index) => point.x === points[index].x || point.y === points[index].y);
 
+/** Whether two orthogonal polylines share a collinear stretch of positive length. */
+const overlapping = (first: readonly Scene.Point[], second: readonly Scene.Point[]) => {
+  const segments = (points: readonly Scene.Point[]) => points.slice(1).map((end, index) => [points[index], end] as const);
+  return segments(first).some(([a0, a1]) =>
+    segments(second).some(([b0, b1]) => {
+      if (a0.x === a1.x && b0.x === b1.x && a0.x === b0.x) {
+        const lo = Math.max(Math.min(a0.y, a1.y), Math.min(b0.y, b1.y));
+        const hi = Math.min(Math.max(a0.y, a1.y), Math.max(b0.y, b1.y));
+        return hi - lo > 0;
+      }
+      if (a0.y === a1.y && b0.y === b1.y && a0.y === b0.y) {
+        const lo = Math.max(Math.min(a0.x, a1.x), Math.min(b0.x, b1.x));
+        const hi = Math.min(Math.max(a0.x, a1.x), Math.max(b0.x, b1.x));
+        return hi - lo > 0;
+      }
+      return false;
+    }),
+  );
+};
+
 const onBorder = (point: Scene.Point, rect: Rect) =>
   ((point.y === rect.y || point.y === rect.y + rect.h) && point.x >= rect.x && point.x <= rect.x + rect.w) ||
   ((point.x === rect.x || point.x === rect.x + rect.w) && point.y >= rect.y && point.y <= rect.y + rect.h);
@@ -49,6 +69,33 @@ describe('nudge', () => {
     expect(onBorder(first[0], source) && onBorder(second[0], source)).toBe(true);
     expect(first[first.length - 1]).toEqual({ x: first[0].x, y: 200 });
     expect(second[second.length - 1]).toEqual({ x: 264, y: 200 });
+  });
+
+  test('a fork sharing a vertical run and then a horizontal run is fully separated', ({ expect }) => {
+    const far: Rect = { x: 400, y: 200, w: 128, h: 64 };
+    const near = {
+      points: [
+        { x: 64, y: 64 },
+        { x: 64, y: 132 },
+        { x: 264, y: 132 },
+        { x: 264, y: 200 },
+      ],
+      source,
+      target: right,
+    };
+    const away = {
+      points: [
+        { x: 64, y: 64 },
+        { x: 64, y: 132 },
+        { x: 464, y: 132 },
+        { x: 464, y: 200 },
+      ],
+      source,
+      target: far,
+    };
+    const [first, second] = nudge([near, away], { obstacles: [source, right, far] });
+    expect(orthogonal(first) && orthogonal(second)).toBe(true);
+    expect(overlapping(first, second)).toBe(false);
   });
 
   test('a fixed bus never moves; the edge lying on it is pushed off', ({ expect }) => {

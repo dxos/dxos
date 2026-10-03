@@ -97,8 +97,16 @@ const interiorRun = (run: Run, rect: Rect): number => {
   return Math.max(0, Math.min(run.hi, alongHi - EPSILON) - Math.max(run.lo, alongLo + EPSILON));
 };
 
-/** Pairs `{changed, other}` of lines related by `related`, counted once each. */
-const pairCount = (lines: readonly Point[][], changed: ReadonlySet<number>, related: (a: Run, b: Run) => boolean) => {
+/**
+ * Pairs `{changed, other}` related by `related`: per line pair, or per run pair with `perRun`, which
+ * overlaps need so that separating one of two channels two lines share still lowers the count.
+ */
+const pairCount = (
+  lines: readonly Point[][],
+  changed: ReadonlySet<number>,
+  related: (a: Run, b: Run) => boolean,
+  perRun = false,
+) => {
   const runs = lines.map((points, owner) => runsOf(points, owner));
   let count = 0;
   for (const owner of changed) {
@@ -106,7 +114,11 @@ const pairCount = (lines: readonly Point[][], changed: ReadonlySet<number>, rela
       if (other === owner || (changed.has(other) && other < owner)) {
         return;
       }
-      if (runs[owner].some((run) => others.some((candidate) => related(run, candidate)))) {
+      if (perRun) {
+        for (const run of runs[owner]) {
+          count += others.filter((candidate) => related(run, candidate)).length;
+        }
+      } else if (runs[owner].some((run) => others.some((candidate) => related(run, candidate)))) {
         count++;
       }
     });
@@ -316,10 +328,10 @@ const separate = (
     if (!valid) {
       continue;
     }
-    const overlaps = pairCount(candidate, changed, shared);
+    const overlaps = pairCount(candidate, changed, shared, true);
     const crossings = pairCount(candidate, changed, crosses);
     if (
-      overlaps >= pairCount(lines, changed, shared) ||
+      overlaps >= pairCount(lines, changed, shared, true) ||
       crossings > pairCount(lines, changed, crosses) ||
       obstructed(candidate, changed) > obstructed(lines, changed)
     ) {
