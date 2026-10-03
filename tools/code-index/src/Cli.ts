@@ -11,7 +11,7 @@ import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { readFile } from 'node:fs/promises';
-import { extname, resolve } from 'node:path';
+import { extname, relative, resolve } from 'node:path';
 
 import * as Crawler from './Crawler.ts';
 import * as Indexer from './Indexer.ts';
@@ -200,6 +200,84 @@ const clear = Command.make('clear', { root: rootFlag, store: storeFlag }, ({ roo
   withStore(root, store, (api) => Effect.flatMap(api.clear(), () => Console.log('Store cleared'))),
 ).pipe(Command.withDescription('Empty the store.'));
 
+/** A deterministic shuffle, so a `--sample` run is repeatable by its seed. */
+const sampleOf = <T>(items: readonly T[], count: number, seed: number): T[] => {
+  let state = seed >>> 0 || 1;
+  const random = () => {
+    state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+    return state / 2 ** 32;
+  };
+  const shuffled = [...items];
+  for (let index = shuffled.length - 1; index > 0; index--) {
+    const other = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[other]] = [shuffled[other], shuffled[index]];
+  }
+  return shuffled.slice(0, count);
+};
+
+const types = Command.make(
+  'types',
+  {
+    files: Argument.String('file').pipe(Argument.variadic()),
+    root: rootFlag,
+    json: jsonFlag,
+    sample: Flag.Int('sample').pipe(
+      Flag.withDescription('Score a random sample of this many TypeScript files from the repository.'),
+      Flag.optional,
+    ),
+    seed: Flag.Int('seed').pipe(Flag.withDescription('Seed for --sample (default: 1).'), Flag.optional),
+    show: Flag.String('show').pipe(
+      Flag.withDescription(
+        'Comma-separated verdicts to list: agree, partial, unknown, disagree, skipped (default: disagree).',
+      ),
+      Flag.optional,
+    ),
+  },
+  ({ files, root, json, sample, seed, show }) =>
+    Effect.gen(function* () {
+      const repo = yield* resolveRoot(root);
+      const sampled = yield* Option.match(sample, {
+        onNone: () => Effect.succeed<string[]>([]),
+        onSome: (count) =>
+          Effect.map(Crawler.crawl(repo), (entries) =>
+            sampleOf(
+              entries
+                .map((entry) => entry.path)
+                .filter((path) => /\.(m|c)?tsx?$/.test(path) && !path.endsWith('.d.ts'))
+                .sort(),
+              count,
+              Option.getOrElse(seed, () => 1),
+            ),
+          ),
+      });
+      const targets = [...files.map((file) => relative(repo, resolve(file))), ...sampled];
+      // Imported here: the TypeScript compiler is only for scoring, never for indexing.
+      const Agreement = yield* Effect.promise(() => import('./worker/types/agreement.ts'));
+      const { createResolver } = yield* Effect.promise(() => import('./worker/analyzers/resolver.ts'));
+      const started = Date.now();
+      const { score, findings } = Agreement.compareFiles(targets, { root: repo, resolve: createResolver(repo) });
+      const listed = new Set(Option.getOrElse(show, () => 'disagree').split(','));
+      const scored = score.agree + score.partial + score.disagree;
+      yield* emit(
+        json,
+        { files: targets.length, score, findings: findings.filter((entry) => listed.has(entry.verdict)) },
+        () =>
+          [
+            ...findings
+              .filter((entry) => listed.has(entry.verdict))
+              .map(
+                (entry) =>
+                  `${entry.verdict.padEnd(9)} ${entry.path}:${entry.line} ${entry.name}\n  mine:   ${entry.mine}\n  tsc:    ${entry.theirs}`,
+              ),
+            `${targets.length} files in ${seconds(Date.now() - started)}: ${score.agree} agree, ${score.partial} partial, ${score.unknown} unknown, ${score.disagree} disagree, ${score.skipped} skipped` +
+              (scored > 0
+                ? ` — ${((100 * (score.agree + score.partial)) / scored).toFixed(1)}% of answered agree`
+                : ''),
+          ].join('\n'),
+      );
+    }),
+).pipe(Command.withDescription('Score the type propagator against tsc (design/TYPES.md, "Agreement harness").'));
+
 const ontology = Command.make('ontology', { json: jsonFlag }, ({ json }) =>
   emit(json, Ontology.CONTEXT, () => JSON.stringify(Ontology.CONTEXT, null, 2)),
 ).pipe(Command.withDescription('Print the JSON-LD context the indexer emits.'));
@@ -330,7 +408,7 @@ const serve = Command.make('serve', serveFlags, serveHandler).pipe(
  */
 export const command = Command.make('code-index', serveFlags, serveHandler).pipe(
   Command.withDescription('Index a codebase into SQLite + RDF (DEUS ontology), and reason about it in a browser.'),
-  Command.withSubcommands([serve, chat, index, files, query, ask, dump, stats, clear, ontology]),
+  Command.withSubcommands([serve, chat, index, files, query, ask, dump, stats, clear, ontology, types]),
 );
 
 /** Runs one command; `Layer.launch` is not involved — every command opens and closes its own store. */

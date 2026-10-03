@@ -4,9 +4,10 @@
 
 import * as Effect from 'effect/Effect';
 import { DataFactory } from 'n3';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { afterAll, beforeAll, describe, expect, test } from 'vitest';
 
 import { EffectEx } from '@dxos/effect';
@@ -14,6 +15,8 @@ import { EffectEx } from '@dxos/effect';
 import * as Ontology from './Ontology.ts';
 import * as Reasoner from './Reasoner.ts';
 import * as Store from './Store.ts';
+import { createResolver } from './worker/analyzers/resolver.ts';
+import { analyzeTypeScript } from './worker/analyzers/typescript.ts';
 
 /**
  * The rule files as shipped, run against a real store — a paraphrase of a rule in a test proves the
@@ -117,6 +120,60 @@ describe('bundled rules', () => {
       document('src/private.ts', [symbol('src/private.ts', 'internal', { exported: false })]),
     ]);
     expect(names).toEqual([]);
+  });
+});
+
+describe('type rules', () => {
+  let dir: string;
+
+  beforeAll(async () => {
+    dir = await mkdtemp(join(tmpdir(), 'code-index-types-'));
+  });
+
+  afterAll(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  test('a layer provides and requires what its inferred type says', async () => {
+    // The real analyzer over the agreement fixture, whose types are checked against `tsc`.
+    const root = join(fileURLToPath(new URL('.', import.meta.url)), '..');
+    const path = 'src/worker/types/fixtures/effect.ts';
+    const document = analyzeTypeScript({
+      root,
+      path,
+      source: await readFile(join(root, path), 'utf8'),
+      mtime: 1,
+      resolve: createResolver(root),
+      packageOf: () => '@dxos/code-index',
+    });
+    const facts = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        yield* store.putDocument(document);
+        const [reasoner] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '15-types.n3'));
+        const derived = yield* store.reason(reasoner.name, reasoner.rules);
+        const local = (iri: string) => iri.slice(iri.lastIndexOf('#') + 1);
+        return derived
+          .filter((quad) => quad.predicate.value !== Ontology.type.value)
+          .map((quad) => `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`)
+          .sort();
+      }).pipe(Effect.provide(Store.layer(join(dir, 'store'))), Effect.scoped),
+    );
+    expect(facts).toEqual([
+      'clockLayer providesService Clock',
+      'loggerLayer providesService Logger',
+      'merged layerRequires Clock',
+      'merged providesService Logger',
+      'merged providesService Store',
+      'mergedTwo layerRequires Clock',
+      'mergedTwo providesService Clock',
+      'mergedTwo providesService Store',
+      // `Layer.provide` discharged the requirement: nothing left to require.
+      'provided providesService Store',
+      'providedDirect providesService Store',
+      'storeLayer layerRequires Clock',
+      'storeLayer providesService Store',
+    ]);
   });
 });
 

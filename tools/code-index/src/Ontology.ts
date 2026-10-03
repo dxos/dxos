@@ -27,6 +27,9 @@ export const MODULE_BASE = 'https://dxos.org/deus/module/';
 
 export const GRAPH_BASE = 'https://dxos.org/deus/graph/';
 
+/** Type terms are content-addressed: the same type is one node, whichever file asserts it. */
+export const TYPE_BASE = 'https://dxos.org/deus/type/';
+
 export const iri = (term: string): NamedNode => DataFactory.namedNode(`${PREFIX}${term}`);
 
 /**
@@ -85,6 +88,8 @@ export const Package = iri('Package');
 export const Symbol = iri('Symbol');
 export const Member = iri('Member');
 export const SpecBlock = iri('SpecBlock');
+export const Type = iri('Type');
+export const TypeProperty = iri('TypeProperty');
 
 // File properties.
 export const path = iri('path');
@@ -136,6 +141,28 @@ export const namespaceOf = iri('namespaceOf');
 export const snippet = iri('snippet');
 export const doc = iri('doc');
 export const deprecated = iri('deprecated');
+/** The type of the value a symbol declares — `design/TYPES.md`. */
+export const hasType = iri('hasType');
+
+// Type term properties (`design/TYPES.md`).
+export const typeKind = iri('typeKind');
+export const typeText = iri('typeText');
+/** A `ref` term's named type, or a `typeof` term's named value. */
+export const typeHead = iri('typeHead');
+export const typeMember = iri('typeMember');
+export const typeProperty = iri('typeProperty');
+export const returnType = iri('returnType');
+export const literalValue = iri('literalValue');
+/** The term has an unknown position; its structure facts are then incomplete. */
+export const typePartial = iri('typePartial');
+export const optional = iri('optional');
+export const readonly = iri('readonly');
+
+/** Positional slots are numbered predicates, so a rule matches `deus:typeArg0` directly. */
+export const POSITIONS = 8;
+export const typeArg = (index: number) => iri(`typeArg${index}`);
+export const typeElement = (index: number) => iri(`typeElement${index}`);
+export const typeParam = (index: number) => iri(`typeParam${index}`);
 
 // SpecBlock properties.
 export const blockType = iri('blockType');
@@ -156,6 +183,8 @@ export const packagePublic = iri('packagePublic');
 export const violatesLayering = iri('violatesLayering');
 export const providesService = iri('providesService');
 export const requiresService = iri('requiresService');
+/** A layer's `RIn`, read off its inferred type — exact, where `requiresService` is a heuristic. */
+export const layerRequires = iri('layerRequires');
 export const implementsOperation = iri('implementsOperation');
 export const bundlesHandler = iri('bundlesHandler');
 export const exposesOperation = iri('exposesOperation');
@@ -176,6 +205,9 @@ export const type = DataFactory.namedNode(rdf.type);
 const id = (term: string) => ({ '@id': `deus:${term}`, '@type': '@id' }) as const;
 const integer = (term: string) => ({ '@id': `deus:${term}`, '@type': 'xsd:integer' }) as const;
 const boolean = (term: string) => ({ '@id': `deus:${term}`, '@type': 'xsd:boolean' }) as const;
+
+const positional = (prefix: string) =>
+  Object.fromEntries(Array.from({ length: POSITIONS }, (_, index) => [`${prefix}${index}`, id(`${prefix}${index}`)]));
 
 /** The `@context` of every document the indexer emits. */
 export const CONTEXT = {
@@ -227,6 +259,23 @@ export const CONTEXT = {
   implDependsOn: id('implDependsOn'),
   aliasOf: id('aliasOf'),
   namespaceOf: id('namespaceOf'),
+  hasType: id('hasType'),
+  // Type terms.
+  Type: 'deus:Type',
+  TypeProperty: 'deus:TypeProperty',
+  typeKind: 'deus:typeKind',
+  typeText: 'deus:typeText',
+  literalValue: 'deus:literalValue',
+  typeHead: id('typeHead'),
+  typeMember: id('typeMember'),
+  typeProperty: id('typeProperty'),
+  returnType: id('returnType'),
+  typePartial: boolean('typePartial'),
+  optional: boolean('optional'),
+  readonly: boolean('readonly'),
+  ...positional('typeArg'),
+  ...positional('typeElement'),
+  ...positional('typeParam'),
   // SpecBlock.
   blockType: 'deus:blockType',
   blockId: 'deus:blockId',
@@ -254,9 +303,46 @@ export const SymbolNode = Schema.Struct({
   'snippet': Schema.optional(Schema.String),
   'doc': Schema.optional(Schema.String),
   'deprecated': Schema.optional(Schema.Boolean),
+  'hasType': Schema.optional(Schema.String),
 });
 
 export type SymbolNode = typeof SymbolNode.Type;
+
+const positionalFields = (prefix: string) =>
+  Object.fromEntries(
+    Array.from({ length: POSITIONS }, (_, index) => [`${prefix}${index}`, Schema.optional(Schema.String)]),
+  );
+
+/** One type term node; structure is spelled out with IRIs of other nodes (`design/TYPES.md`). */
+export const TypeNode = Schema.Struct({
+  '@id': Schema.String,
+  '@type': Schema.Literal('Type'),
+  'typeKind': Schema.String,
+  'typeText': Schema.String,
+  'typeHead': Schema.optional(Schema.String),
+  'typeMember': Schema.optional(Schema.Array(Schema.String)),
+  'typeProperty': Schema.optional(Schema.Array(Schema.String)),
+  'returnType': Schema.optional(Schema.String),
+  'literalValue': Schema.optional(Schema.String),
+  'typePartial': Schema.optional(Schema.Boolean),
+  ...positionalFields('typeArg'),
+  ...positionalFields('typeElement'),
+  ...positionalFields('typeParam'),
+});
+
+export type TypeNode = typeof TypeNode.Type;
+
+/** A property of an object type term: its own node, so its name and type are matchable. */
+export const TypePropertyNode = Schema.Struct({
+  '@id': Schema.String,
+  '@type': Schema.Literal('TypeProperty'),
+  'name': Schema.String,
+  'hasType': Schema.optional(Schema.String),
+  'optional': Schema.Boolean,
+  'readonly': Schema.Boolean,
+});
+
+export type TypePropertyNode = typeof TypePropertyNode.Type;
 
 export const PackageNode = Schema.Struct({
   '@id': Schema.String,
@@ -308,6 +394,8 @@ export const FileDocument = Schema.Struct({
   'describesPackage': Schema.optional(PackageNode),
   'declaresBlock': Schema.optional(Schema.Array(SpecBlockNode)),
   'parseError': Schema.optional(Schema.Array(Schema.String)),
+  // Type terms the symbols' `hasType` point at: graph content with no edge from the file itself.
+  '@included': Schema.optional(Schema.Array(Schema.Union([TypeNode, TypePropertyNode]))),
 });
 
 export type FileDocument = typeof FileDocument.Type;
