@@ -4,8 +4,8 @@
 # provided and piped layers, and layers whose type is only written in an annotation.
 #
 # A type names a service as its file imported it (`file:<barrel>#Store`, `module:@dxos/x#Store`);
-# `deus:resolvesTo`, concluded by `rules/10-effect.n3` for exactly these names, gives the
-# declaration, which is what is stated when there is one.
+# `deus:resolvesTo`, from the `resolve-refs` pass and `rules/10-effect.n3`, gives the declaration,
+# which is what is stated when there is one.
 
 @prefix deus: <https://dxos.org/vocab/deus#>.
 @prefix rule: <https://dxos.org/vocab/deus/rule#>.
@@ -88,13 +88,11 @@
 { ?s rule:input ?at } <= { ?s rule:factoryLayerType ?t. ?t deus:typeArg2 ?at }.
 
 # A layer built by a repo factory provides what the factory's layer does, where the call's own type
-# is unknown (`layerOpfs(…).pipe(…)`). Barrel aliases are spelled out two deep, because a recursive
-# call bound like its caller proves nothing; the output chain is restated, because reading
-# `deus:providesService` would make this file cyclic and re-run it every round.
+# is unknown (`layerOpfs(…).pipe(…)`): the callee is the declaration, or resolves to it (barrels and
+# aliases included). The output chain is restated, because reading `deus:providesService` would make
+# this file cyclic and re-run it every round.
 { ?f rule:declaredFactory ?f } <= { ?f deus:kind ?kind }.
 { ?f rule:declaredFactory ?d } <= { ?f deus:resolvesTo ?d }.
-{ ?f rule:declaredFactory ?d } <= { ?f deus:aliasOf ?d }.
-{ ?f rule:declaredFactory ?d } <= { ?barrel deus:aliasOf ?d. ?f deus:aliasOf ?barrel }.
 {
   ?d rule:factoryLayerType ?t. ?f rule:declaredFactory ?d. ?s deus:constructedBy ?f. ?s rule:keepsPipeline true.
   ?t deus:typeArg0 ?at. ?at rule:service ?service. ?service rule:canonical ?canonical.

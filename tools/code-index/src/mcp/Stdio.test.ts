@@ -124,6 +124,7 @@ describe.skipIf(bun === undefined)('code-index mcp over stdio', () => {
         'files',
         'query',
         'stats',
+        'usages',
         'vocabulary',
       ]);
       for (const tool of listed.result.tools) {
