@@ -45,6 +45,8 @@ export const translations = [
         'discord-bot-stop.label': 'Stop bot',
         'discord-bot-refresh.label': 'Refresh status',
         'discord-bot-unreachable.label': 'Could not reach EDGE',
+        'discord-bot-other-binding.label': 'Running another binding',
+        'discord-bot-other-binding.message': 'This bot is running a different binding. Press Start to apply this one.',
         'discord-bot-threads.label_zero': 'No threads',
         'discord-bot-threads.label_one': '{{count}} thread',
         'discord-bot-threads.label_other': '{{count}} threads',

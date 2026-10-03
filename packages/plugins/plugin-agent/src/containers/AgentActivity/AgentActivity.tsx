@@ -97,6 +97,7 @@ export const AgentActivity = ({ role, attendableId, agent }: AgentActivityProps)
         bound={binding !== undefined}
         status={bot.status}
         error={bot.error}
+        bindingId={binding?.id}
         onSave={handleSave}
       />
       <AgentActivityComponent.Conversations>

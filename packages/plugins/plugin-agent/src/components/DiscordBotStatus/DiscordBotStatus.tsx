@@ -23,10 +23,12 @@ export type DiscordBotStatusProps = {
   status?: DiscordOperation.BotStatus;
   /** A failure to reach EDGE, as distinct from the gateway's own `lastError`. */
   error?: string;
+  /** Id of this agent's binding; a status configured from another binding is not this agent's bot. */
+  bindingId?: string;
 };
 
 /** Reports the EDGE gateway state of an agent's Discord bot. */
-export const DiscordBotStatus = ({ status, error }: DiscordBotStatusProps) => {
+export const DiscordBotStatus = ({ status, error, bindingId }: DiscordBotStatusProps) => {
   const { t } = useTranslation(meta.profile.key);
   // The last status read stays visible beside a failed refresh, so a transient EDGE outage does not hide it.
   const unreachable = error && (
@@ -47,6 +49,22 @@ export const DiscordBotStatus = ({ status, error }: DiscordBotStatusProps) => {
           </Banner.Content>
         </Banner.Root>
       )
+    );
+  }
+
+  // EDGE keys the bot by application id, so a binding saved but never started still reads the old config.
+  const configuredId = status.config?.binding?.split('/').at(-1);
+  if (bindingId && configuredId && configuredId !== bindingId) {
+    return (
+      <>
+        {unreachable}
+        <Banner.Root valence='warning'>
+          <Banner.Content>
+            <Banner.Title>{t('discord-bot-other-binding.label')}</Banner.Title>
+            <Banner.Body>{t('discord-bot-other-binding.message')}</Banner.Body>
+          </Banner.Content>
+        </Banner.Root>
+      </>
     );
   }
 

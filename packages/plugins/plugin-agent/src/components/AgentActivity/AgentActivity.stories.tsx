@@ -33,12 +33,13 @@ type StoryProps = {
   values?: Partial<DiscordBinding.Properties>;
   status?: DiscordOperation.BotStatus;
   error?: string;
+  bindingId?: string;
   conversations: Conversation[];
 };
 
-const DefaultStory = ({ bound, values, status, error, conversations }: StoryProps) => (
+const DefaultStory = ({ bound, values, status, error, bindingId, conversations }: StoryProps) => (
   <AgentActivity.Root bound={bound} running={status?.running}>
-    <AgentActivity.Discord bound={bound} values={values} status={status} error={error} />
+    <AgentActivity.Discord bound={bound} values={values} status={status} error={error} bindingId={bindingId} />
     <AgentActivity.Conversations>
       {conversations.map((conversation) => (
         <AgentActivity.Conversation key={conversation.id} {...conversation} now={NOW} />
@@ -93,6 +94,28 @@ export const Connecting: Story = {
     bound: true,
     values: BINDING,
     status: { running: true, gateway: 'connecting', threads: 0 },
+    conversations: [],
+  },
+};
+
+export const OtherBinding: Story = {
+  args: {
+    bound: true,
+    values: BINDING,
+    bindingId: 'binding-new',
+    status: {
+      running: true,
+      gateway: 'ready',
+      threads: 2,
+      config: {
+        spaceId: 'space',
+        agent: 'echo:///agent-old',
+        applicationId: '1234567890',
+        accessTokenId: 'token',
+        channels: ['1122334455'],
+        binding: 'echo://space/binding-old',
+      },
+    },
     conversations: [],
   },
 };

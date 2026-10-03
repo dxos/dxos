@@ -109,11 +109,21 @@ type AgentActivityDiscordProps = {
   status?: DiscordOperation.BotStatus;
   /** A failure to reach EDGE. */
   error?: string;
+  /** Id of the saved binding, to tell this agent's bot from one EDGE runs for another binding. */
+  bindingId?: string;
   onSave?: (values: DiscordBinding.Properties) => void;
 };
 
 /** The agent's Discord binding and its bot's gateway status. */
-const AgentActivityDiscord = ({ db, values, bound = false, status, error, onSave }: AgentActivityDiscordProps) => {
+const AgentActivityDiscord = ({
+  db,
+  values,
+  bound = false,
+  status,
+  error,
+  bindingId,
+  onSave,
+}: AgentActivityDiscordProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
     <Flex asChild column gap='sm'>
@@ -126,7 +136,7 @@ const AgentActivityDiscord = ({ db, values, bound = false, status, error, onSave
           autoSave={bound}
           onSave={onSave}
         >
-          {bound && <DiscordBotStatus status={status} error={error} />}
+          {bound && <DiscordBotStatus status={status} error={error} bindingId={bindingId} />}
         </DiscordBindingForm>
       </section>
     </Flex>
