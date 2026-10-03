@@ -7,7 +7,7 @@ import React, { useCallback, useState } from 'react';
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Icon } from '@dxos/react-ui';
+import { Button, Icon } from '@dxos/react-ui';
 
 import { QaOperation, type TestCase, TestRun } from '#types';
 
@@ -86,12 +86,12 @@ export const RunResults = ({ run }: RunResultsProps) => {
           <span className='grow text-subdued text-sm'>unreported</span>
           {snapshot.status === 'running' && (
             <>
-              <button className='dx-button' onClick={() => handlePush(caseKey, 'passed')} data-testid='qa.run.pass'>
+              <Button onClick={() => handlePush(caseKey, 'passed')} data-testid='qa.run.pass'>
                 Pass
-              </button>
-              <button className='dx-button' onClick={() => handlePush(caseKey, 'failed')} data-testid='qa.run.fail'>
+              </Button>
+              <Button onClick={() => handlePush(caseKey, 'failed')} data-testid='qa.run.fail'>
                 Fail
-              </button>
+              </Button>
             </>
           )}
         </div>
@@ -99,10 +99,10 @@ export const RunResults = ({ run }: RunResultsProps) => {
 
       {snapshot.status === 'running' && (
         <div className='flex justify-end pt-1'>
-          <button className='dx-button' disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
+          <Button disabled={completing} onClick={handleComplete} data-testid='qa.run.complete'>
             <Icon icon='ph--flag-checkered--regular' size='md' />
             <span>Finish run</span>
-          </button>
+          </Button>
         </div>
       )}
 

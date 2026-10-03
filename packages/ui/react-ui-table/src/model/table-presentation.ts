@@ -208,7 +208,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const targetObj = SchemaEx.getValue(obj, field.path)?.target;
       if (targetObj) {
         const uri = Obj.getURI(targetObj);
-        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><dx-anchor eid=${uri} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><dx-anchor eid=${uri} class="nx-control nx-button nx-button-square" data-size="sm" data-variant="ghost" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 
@@ -217,7 +217,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const value = SchemaEx.getValue(obj, field.path);
       const href = typeof value === 'string' ? safeHttpUrl(value) : undefined;
       if (href) {
-        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><a href="${escapeHtmlAttribute(href)}" target="_blank" rel="noopener noreferrer" class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--arrow-square-out--regular"/></a></div>`;
+        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><a href="${escapeHtmlAttribute(href)}" target="_blank" rel="noopener noreferrer" class="nx-control nx-button nx-button-square" data-size="sm" data-variant="ghost" data-dx-grid-action="accessory"><dx-icon icon="ph--arrow-square-out--regular"/></a></div>`;
       }
     }
 

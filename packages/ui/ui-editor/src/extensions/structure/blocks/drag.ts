@@ -106,9 +106,8 @@ const GRIP_ICON = 'ph--dots-six-vertical--regular';
 
 // A grip's target placement — the POINT it centres on, not its top-left corner — computed in the measure
 // read phase and applied in the write phase. The element is centred on it by a CSS
-// `translate(-50%, -50%)` rather than by subtracting half of a hard-coded size here: the grip is a
-// `dx-button`, so its rendered box follows the theme (it grew from 24px to 32px, which left every grip
-// sitting 4px below its row).
+// `translate(-50%, -50%)` rather than by subtracting half of a hard-coded size here, so the grip's box can follow
+// the theme without the grip drifting off its row.
 type GripPosition = { index: number; anchor: number; left: number; top: number };
 
 // The `from` of the block under the pointer (a hovered block shows its grip), or null.
@@ -184,8 +183,6 @@ const activeBlockIndex = (state: EditorState, getBlocks: BlockDragOptions['getBl
   return cursorIndex >= 0 ? cursorIndex : null;
 };
 
-// Builds a grip element (outer `dx-button` + inner phosphor glyph). Shared by the floating overlay and the
-// drag preview; callers attach behavior and position it.
 // Builds a grip element: a control-sized box (the row's hit area, as `Field.Block` centres a control in a
 // row) around a 24px button holding the glyph, the shape of a form's disclosure button. Shared by the floating overlay and the drag preview;
 // callers attach behavior and position the box.
@@ -789,7 +786,7 @@ const createDragPlugin = (
 const dragTheme = EditorView.theme({
   // The grip is a floating overlay (see `createGripOverlay`) pinned just left of the content, so it tracks
   // a centered content column — a CodeMirror gutter is stuck at the scroller edge and can't. Positioned
-  // via fixed coordinates (viewport space), refreshed on layout/scroll. `dx-button` supplies the hover
+  // via fixed coordinates (viewport space), refreshed on layout/scroll. The inner box supplies the hover
   // affordance; this only pins/sizes it.
   '.cm-blockDragHandle': {
     position: 'fixed',

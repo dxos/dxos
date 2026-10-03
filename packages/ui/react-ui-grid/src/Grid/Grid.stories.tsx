@@ -167,7 +167,7 @@ export const Basic: Story = {
         '1,1': {
           value: 'Demo decoration',
           accessoryHtml: `
-            <button class="dx-button w-6 px-0.5 min-h-0 absolute inset-y-1 right-1" data-story-action="menu">
+            <button class="nx-control nx-button nx-button-square absolute inset-y-1 right-1" data-size="sm" data-story-action="menu">
               <svg><use href="/icons.svg#ph--arrow-right--regular"/></svg>
             </button>
           `,

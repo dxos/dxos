@@ -212,8 +212,8 @@ export const autoScroll = ({ scrollOnResize = true }: AutoScrollProps = {}) => {
       class {
         constructor(view: EditorView) {
           const button = Domino.of('button')
-            .classNames('dx-button bg-accent-bg aspect-square')
-            .attributes({ 'data-density': 'sm' })
+            .classNames('nx-control nx-button nx-button-square')
+            .attributes({ 'data-size': 'sm', 'data-variant': 'primary' })
             .append(Domino.of('dx-icon').classNames(getSize(4)).attributes({ icon: 'ph--arrow-down--regular' }))
             .on('click', () => {
               setPinned(true);

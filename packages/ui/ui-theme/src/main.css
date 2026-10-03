@@ -31,7 +31,6 @@
 @import './css/base/typography.css';
 
 /* @layer dx-components (components) */
-@import './css/components/button.css';
 @import './css/components/checkbox.css';
 @import './css/components/focus.css';
 @import './css/components/icon.css';

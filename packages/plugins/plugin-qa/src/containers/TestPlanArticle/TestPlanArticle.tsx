@@ -10,7 +10,7 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { Field, Icon, Input, Panel } from '@dxos/react-ui';
+import { Button, Field, Icon, Input, Panel } from '@dxos/react-ui';
 
 import { RunRow } from '#components';
 import { QaOperation, type TestCase, TestPlan, TestRun } from '#types';
@@ -88,10 +88,10 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         <header className='flex items-center gap-2'>
           <Icon icon='ph--check-square-offset--regular' size='lg' />
           <h1 className='grow text-lg'>{plan.name}</h1>
-          <button className='dx-button' disabled={starting} onClick={handleStartRun} data-testid='qa.plan.start-run'>
+          <Button disabled={starting} onClick={handleStartRun} data-testid='qa.plan.start-run'>
             <Icon icon='ph--play--regular' size='md' />
             <span>Run</span>
-          </button>
+          </Button>
         </header>
 
         {error && (
@@ -117,15 +117,10 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
               onChange={(event) => setCaseTitle(event.target.value)}
               data-testid='qa.plan.case-title'
             />
-            <button
-              className='dx-button'
-              disabled={caseKey.trim().length === 0}
-              onClick={handleAddCase}
-              data-testid='qa.plan.add-case'
-            >
+            <Button disabled={caseKey.trim().length === 0} onClick={handleAddCase} data-testid='qa.plan.add-case'>
               <Icon icon='ph--plus--regular' size='md' />
               <span>Add case</span>
-            </button>
+            </Button>
           </div>
           {cases.length === 0 ? (
             <p className='text-subdued' data-testid='qa.plan.no-cases'>
