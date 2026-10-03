@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { DXN } from '@dxos/keys';
@@ -9,11 +11,11 @@ import { trim } from '@dxos/util';
 
 import { EnableSkills, QuerySkills } from './operations/definitions.ts';
 
-const SKILL_KEY = 'org.dxos.skill.skillManager';
+export const key = 'org.dxos.skill.skillManager';
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Skill Manager',
     description: 'Query and enable skills in the current conversation.',
     instructions: Template.make({
@@ -44,9 +46,5 @@ const make = () =>
     tools: Skill.toolDefinitions({ operations: [QuerySkills, EnableSkills] }),
   });
 
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;
+export { SkillManagerHandlers as Handlers } from './operations/index.ts';
+export * as Operations from './operations/definitions.ts';

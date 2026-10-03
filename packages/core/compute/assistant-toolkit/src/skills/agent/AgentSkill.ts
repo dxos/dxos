@@ -2,18 +2,20 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-const SKILL_KEY = 'org.dxos.skill.agent';
+export const key = 'org.dxos.skill.agent';
 
 /**
  * Creates the Agent skill. This is a function to avoid circular dependency issues.
  */
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Agent skill',
     instructions: Template.make({
       source: trim`
@@ -41,9 +43,5 @@ const make = () =>
     }),
   });
 
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;
+export { AgentSkillHandlers as Handlers } from './operations/index.ts';
+export * as Operations from './operations/definitions.ts';

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
@@ -10,11 +12,11 @@ import { trim } from '@dxos/util';
 
 import { AskQuestion, PlanReminder, UpdateTasks } from './operations/definitions.ts';
 
-const SKILL_KEY = 'org.dxos.skill.planning';
+export const key = 'org.dxos.skill.planning';
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Planning',
     description: 'Plans and tracks complex tasks using artifacts.',
     agentCanEnable: true,
@@ -48,9 +50,5 @@ const make = () =>
     ],
   });
 
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;
+export { PlanningHandlers as Handlers } from './operations/index.ts';
+export * as Operations from './operations/definitions.ts';

@@ -15,9 +15,9 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 
 import * as Memory from '../../types/Memory.ts';
-import { WebSearchToolkit } from '../websearch/index.ts';
+import { WebSearchToolkit } from '../websearch/toolkit.ts';
+import * as MemorySkill from './MemorySkill.ts';
 import { MemoryHandlers } from './operations/index.ts';
-import MemorySkill from './skill.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

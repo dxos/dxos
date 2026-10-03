@@ -2,21 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
 import { trim } from '@dxos/util';
 
-const SKILL_KEY = 'org.dxos.skill.browser';
+export const key = 'org.dxos.skill.browser';
 
 const instructions = trim`
   You are able to connect and use a virtual browser with persistent session.
   Browser tools are provided via MCP.
 `;
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Browser',
     description: 'Access to a real isolated browser.',
     agentCanEnable: true,
@@ -31,10 +33,3 @@ const make = () =>
       },
     ],
   });
-
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;

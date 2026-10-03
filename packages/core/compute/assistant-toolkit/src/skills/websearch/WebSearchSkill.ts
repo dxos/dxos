@@ -2,6 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Skill from '@dxos/compute/Skill';
 import { Ref } from '@dxos/echo';
 import { Text } from '@dxos/schema';
@@ -9,11 +11,11 @@ import { Text } from '@dxos/schema';
 import { Fetch } from './operations/definitions.ts';
 import { WebSearchToolkit } from './toolkit.ts';
 
-const SKILL_KEY = 'org.dxos.skill.webSearch';
+export const key = 'org.dxos.skill.webSearch';
 
-const make = () =>
+export const make = () =>
   Skill.make({
-    key: SKILL_KEY,
+    key,
     name: 'Web Search',
     description: 'Search the web.',
     agentCanEnable: true,
@@ -23,9 +25,6 @@ const make = () =>
     tools: Skill.toolDefinitions({ operations: [Fetch], tools: [WebSearchToolkit.tools.AnthropicWebSearch.name] }),
   });
 
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make,
-};
-
-export default skill;
+export { WebSearchHandlers as Handlers } from './operations/index.ts';
+export * as Operations from './operations/definitions.ts';
+export { WebSearchToolkit as Toolkit, WebSearchToolkitOpaque as ToolkitOpaque } from './toolkit.ts';

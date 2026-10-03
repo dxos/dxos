@@ -5,4 +5,4 @@
 export * as SandboxPlugin from './SandboxPlugin.ts';
 export * from '#types';
 export * from './services/index.ts';
-export * as SandboxSkill from './SandboxSkill.ts';
+export * from '#skills';

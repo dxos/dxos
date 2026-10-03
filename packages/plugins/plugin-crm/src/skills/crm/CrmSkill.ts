@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
@@ -63,9 +65,5 @@ export const makeCrmSkill = (researchSources: ReadonlyArray<ResearchSource> = de
     }),
   });
 
-const skill: Skill.Definition = {
-  key: SKILL_KEY,
-  make: makeCrmSkill,
-};
-
-export default skill;
+export const key = SKILL_KEY;
+export const make = makeCrmSkill;

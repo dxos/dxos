@@ -102,8 +102,8 @@
       "import": "./dist/lib/ProfileOf.mjs"
     },
     "./CrmSkill": {
-      "source": "./src/CrmSkill.ts",
-      "types": "./dist/types/src/CrmSkill.d.ts",
+      "source": "./src/skills/crm/CrmSkill.ts",
+      "types": "./dist/types/src/skills/crm/CrmSkill.d.ts",
       "import": "./dist/lib/ns/CrmSkill.mjs"
     }
   },

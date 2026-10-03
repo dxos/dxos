@@ -6,7 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
-    'ns/CrmSkill': 'src/CrmSkill.ts',
+    'ns/CrmSkill': 'src/skills/crm/CrmSkill.ts',
     'index': 'src/index.ts',
     'CrmPlugin': 'src/CrmPlugin.ts',
     'skills': 'src/skills/index.ts',
