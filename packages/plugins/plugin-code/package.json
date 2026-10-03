@@ -81,6 +81,11 @@
       "import": "./dist/lib/translations.mjs"
     },
     "./package.json": "./package.json",
+    "./CodeAgent": {
+      "source": "./src/agents/CodeAgent.ts",
+      "types": "./dist/types/src/agents/CodeAgent.d.ts",
+      "import": "./dist/lib/CodeAgent.mjs"
+    },
     "./CodeCapabilities": {
       "source": "./src/types/CodeCapabilities.ts",
       "types": "./dist/types/src/types/CodeCapabilities.d.ts",
@@ -120,6 +125,11 @@
       "source": "./src/types/Spec.ts",
       "types": "./dist/types/src/types/Spec.d.ts",
       "import": "./dist/lib/Spec.mjs"
+    },
+    "./State": {
+      "source": "./src/types/State.ts",
+      "types": "./dist/types/src/types/State.d.ts",
+      "import": "./dist/lib/State.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",
@@ -145,6 +155,9 @@
       ],
       "Spec": [
         "dist/types/src/types/Spec.d.ts"
+      ],
+      "State": [
+        "dist/types/src/types/State.d.ts"
       ]
     }
   },
@@ -155,11 +168,14 @@
     "PLUGIN.mdl"
   ],
   "dependencies": {
+    "@agentclientprotocol/sdk": "catalog:",
     "@codemirror/lang-javascript": "catalog:",
     "@codemirror/lang-markdown": "catalog:",
+    "@dxos/agent-runtime": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-graph": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
+    "@dxos/assistant": "workspace:*",
     "@dxos/client": "workspace:*",
     "@dxos/compute": "workspace:*",
     "@dxos/deus": "workspace:*",
@@ -174,28 +190,40 @@
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
     "@dxos/log": "workspace:*",
+    "@dxos/mcp-server": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-projects": "workspace:*",
     "@dxos/plugin-space": "workspace:*",
+    "@dxos/protocols": "workspace:*",
     "@dxos/react-client": "workspace:*",
     "@dxos/react-ui": "workspace:*",
     "@dxos/react-ui-editor": "workspace:*",
     "@dxos/react-ui-form": "workspace:*",
     "@dxos/react-ui-menu": "workspace:*",
     "@dxos/schema": "workspace:*",
+    "@dxos/types": "workspace:*",
     "@dxos/ui-editor": "workspace:*",
     "@dxos/ui-theme": "workspace:*",
     "@dxos/util": "workspace:*",
+    "@tauri-apps/api": "catalog:",
+    "@tauri-apps/plugin-dialog": "catalog:",
+    "@tauri-apps/plugin-shell": "catalog:",
     "@typescript/typescript6": "catalog:",
     "@typescript/vfs": "catalog:",
     "effect": "catalog:",
-    "esbuild-wasm": "catalog:"
+    "esbuild-wasm": "catalog:",
+    "ws": "catalog:"
   },
   "devDependencies": {
+    "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@effect/atom-react": "catalog:",
+    "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@types/ws": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "vite": "catalog:"

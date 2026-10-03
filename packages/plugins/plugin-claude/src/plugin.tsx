@@ -4,10 +4,11 @@
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 
-import { OperationHandler, PluginAsset, Schema, SkillDefinition, Translations } from '#capabilities';
+import { ClaudeCodeAgent, OperationHandler, PluginAsset, Schema, SkillDefinition, Translations } from '#capabilities';
 import { meta } from '#meta';
 
 export const ClaudePlugin = Plugin.define(meta).pipe(
+  Plugin.addModule(ClaudeCodeAgent),
   Plugin.addModule(PluginAsset),
   Plugin.addModule(Schema),
   Plugin.addModule(OperationHandler),

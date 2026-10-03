@@ -138,6 +138,8 @@
     "@dxos/edge-client": "workspace:*",
     "@dxos/errors": "workspace:*",
     "@dxos/link": "workspace:*",
+    "@dxos/plugin-assistant": "workspace:*",
+    "@dxos/plugin-code": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:"
   },

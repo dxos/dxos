@@ -36,6 +36,11 @@ export const AgentHydrator = Capability.lazyModule(
 export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-service.ts'), {
   name: 'AgentRuntime',
 });
+export const Agents = Capability.lazyModule(
+  'Agents',
+  { provides: [AssistantCapabilities.Agent], activatesOn: ActivationEvents.Startup },
+  () => import('./agents.ts'),
+);
 export const AiContext = AppCapability.layerSpec(() => import('./ai-context.ts'), {
   name: 'AiContext',
 });

@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@agentclientprotocol/sdk':
+      specifier: ^1.6.0
+      version: 1.7.0
     '@ai-sdk/react':
       specifier: ^3.0.99
       version: 3.0.99
@@ -9089,6 +9092,12 @@ importers:
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../plugin-assistant
+      '@dxos/plugin-code':
+        specifier: workspace:*
+        version: link:../plugin-code
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
@@ -9287,12 +9296,18 @@ importers:
 
   packages/plugins/plugin-code:
     dependencies:
+      '@agentclientprotocol/sdk':
+        specifier: 'catalog:'
+        version: 1.7.0(zod@4.3.6)
       '@codemirror/lang-javascript':
         specifier: 'catalog:'
         version: 6.2.5
       '@codemirror/lang-markdown':
         specifier: 'catalog:'
         version: 6.5.2
+      '@dxos/agent-runtime':
+        specifier: workspace:*
+        version: link:../../core/compute/agent-runtime
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -9302,6 +9317,9 @@ importers:
       '@dxos/app-toolkit':
         specifier: workspace:*
         version: link:../../sdk/app-toolkit
+      '@dxos/assistant':
+        specifier: workspace:*
+        version: link:../../core/compute/assistant
       '@dxos/client':
         specifier: workspace:*
         version: link:../../sdk/client
@@ -9344,9 +9362,21 @@ importers:
       '@dxos/log':
         specifier: workspace:*
         version: link:../../common/log
+      '@dxos/mcp-server':
+        specifier: workspace:*
+        version: link:../../core/compute/mcp-server
+      '@dxos/plugin-assistant':
+        specifier: workspace:*
+        version: link:../plugin-assistant
+      '@dxos/plugin-projects':
+        specifier: workspace:*
+        version: link:../plugin-projects
       '@dxos/plugin-space':
         specifier: workspace:*
         version: link:../plugin-space
+      '@dxos/protocols':
+        specifier: workspace:*
+        version: link:../../core/protocols
       '@dxos/react-client':
         specifier: workspace:*
         version: link:../../sdk/react-client
@@ -9365,6 +9395,9 @@ importers:
       '@dxos/schema':
         specifier: workspace:*
         version: link:../../sdk/schema
+      '@dxos/types':
+        specifier: workspace:*
+        version: link:../../sdk/types
       '@dxos/ui-editor':
         specifier: workspace:*
         version: link:../../ui/ui-editor
@@ -9374,6 +9407,15 @@ importers:
       '@dxos/util':
         specifier: workspace:*
         version: link:../../common/util
+      '@tauri-apps/api':
+        specifier: 'catalog:'
+        version: 2.11.1
+      '@tauri-apps/plugin-dialog':
+        specifier: 'catalog:'
+        version: 2.8.0
+      '@tauri-apps/plugin-shell':
+        specifier: 'catalog:'
+        version: 2.4.0
       '@typescript/typescript6':
         specifier: 'catalog:'
         version: 6.0.2
@@ -9386,7 +9428,13 @@ importers:
       esbuild-wasm:
         specifier: 'catalog:'
         version: 0.28.0
+      ws:
+        specifier: '>=8.17.1'
+        version: 8.18.3
     devDependencies:
+      '@dxos/echo-client':
+        specifier: workspace:*
+        version: link:../../core/echo/echo-client
       '@dxos/plugin-client':
         specifier: workspace:*
         version: link:../plugin-client
@@ -9396,6 +9444,9 @@ importers:
       '@effect/atom-react':
         specifier: 'catalog:'
         version: 4.0.0(effect@4.0.0)(react@19.2.7)(scheduler@0.27.0)
+      '@effect/vitest':
+        specifier: 'catalog:'
+        version: 4.0.0(effect@4.0.0)(vitest@4.1.10)
       '@storybook/react-vite':
         specifier: 'catalog:'
         version: 10.6.1(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@3.30.0)(storybook@10.6.1(@types/react@19.2.17)(prettier@3.6.2)(react@19.2.7))(vite@8.2.1(@types/node@22.10.2)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.9.0))
@@ -9405,6 +9456,9 @@ importers:
       '@types/react-dom':
         specifier: ~19.2.3
         version: 19.2.3(@types/react@19.2.17)
+      '@types/ws':
+        specifier: 'catalog:'
+        version: 8.18.1
       react:
         specifier: ~19.2.7
         version: 19.2.7
@@ -24972,6 +25026,11 @@ packages:
 
   '@adraffy/ens-normalize@1.11.1':
     resolution: {integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==}
+
+  '@agentclientprotocol/sdk@1.7.0':
+    resolution: {integrity: sha512-ZORuxsuEnLjRly7t6Ad7zAsWitjWsyprswyPUHz/yycPb+tTm3DGa8XheaHhRXqX8LS9snuxaYavXSRA50TlHw==}
+    peerDependencies:
+      zod: ^3.25.0 || ^4.0.0
 
   '@ai-sdk/gateway@3.0.53':
     resolution: {integrity: sha512-QT3FEoNARMRlk8JJVR7L98exiK9C8AGfrEJVbRxBT1yIXKs/N19o/+PsjTRVsARgDJNcy9JbJp1FspKucEat0Q==}
@@ -44117,6 +44176,10 @@ snapshots:
 
   '@adraffy/ens-normalize@1.11.1': {}
 
+  '@agentclientprotocol/sdk@1.7.0(zod@4.3.6)':
+    dependencies:
+      zod: 4.3.6
+
   '@ai-sdk/gateway@3.0.53(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
@@ -53772,7 +53835,7 @@ snapshots:
 
   '@tauri-apps/plugin-process@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.11.1
+      '@tauri-apps/api': 2.12.0
 
   '@tauri-apps/plugin-shell@2.4.0':
     dependencies:

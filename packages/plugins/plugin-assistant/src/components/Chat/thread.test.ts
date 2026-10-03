@@ -263,6 +263,25 @@ describe('collapseToolRuns', () => {
     ]);
   });
 
+  // An agent that asks before a call reveals the call, then the request card, then the result.
+  test("a result held apart by a request card joins its call's panel", ({ expect }) => {
+    const call = toolCall('tc-1');
+    const card = request('tc-1');
+    const collapsed = collapseToolRuns([
+      message('prompt'),
+      call,
+      card,
+      toolResult('tc-1'),
+      message('answer', 'assistant'),
+    ]);
+
+    expect(collapsed).toHaveLength(4);
+    expect(collapsed[1].id).toBe(call.id);
+    expect(collapsed[1].blocks.map((block) => block._tag)).toEqual(['toolCall', 'toolResult']);
+    expect(collapsed[2]).toBe(card);
+    expect(text([collapsed[3]])).toEqual(['answer']);
+  });
+
   test('two runs separated by prose stay separate', ({ expect }) => {
     const collapsed = collapseToolRuns([
       toolCall('tc-1'),
@@ -282,6 +301,13 @@ const toolCall = (toolCallId: string) =>
     created: new Date(clock++).toISOString(),
     sender: 'assistant',
     blocks: [{ _tag: 'toolCall', toolCallId, name: 'search', input: '{}', providerExecuted: false }],
+  });
+
+const request = (toolCallId: string) =>
+  Message.make({
+    created: new Date(clock++).toISOString(),
+    sender: 'assistant',
+    blocks: [{ _tag: 'request', requestId: toolCallId, title: 'Run search', toolCallId, options: [] }],
   });
 
 const status = () =>
