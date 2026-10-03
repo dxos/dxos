@@ -14,6 +14,7 @@ import {
   attachAll,
   installProbes,
   launchInstrumentedBrowser,
+  listTargets,
   publishPosthogBatch,
   readProcessFootprint,
   startProfiling,
@@ -67,7 +68,7 @@ const chatPrompt = (page: Page): Locator =>
     .locator('xpath=ancestor::*[contains(@class,"cm-editor")]//*[contains(@class,"cm-content")]');
 
 /**
- * Seeds the space, then reloads and measures the reopened profile: a busy space is one somebody
+ * Seeds the space, then reopens it and measures the returning profile: a busy space is one somebody
  * returns to, and seeding inside the measured boot would charge the writes to it.
  */
 const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
@@ -119,8 +120,19 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
       await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
     });
 
+    // Unloaded with every session closed, and only once the old workers are gone: a shared worker a
+    // debugger held across the unload is reused by the next load, which then renders nothing, and a
+    // worker still listed while it shuts down would be attached at boot's opening boundary.
+    runner.detach();
+    await page.goto('about:blank');
+    await expect
+      .poll(async () => (await listTargets(debugPort)).filter((target) => target.type !== 'page').length, {
+        timeout: BUDGET_MS,
+      })
+      .toBe(0);
+
     await runner.stage('boot', async () => {
-      await page.reload({ timeout: BUDGET_MS });
+      await page.goto(storyUrl(storyId), { timeout: BUDGET_MS });
       await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
     });
 

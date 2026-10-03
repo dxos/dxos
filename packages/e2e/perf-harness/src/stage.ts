@@ -319,8 +319,18 @@ export class StageRunner {
   }
 
   /** Closes every CDP session the run opened. */
-  dispose(): void {
+  /**
+   * Closes every target session; the next stage boundary re-attaches what is live.
+   *
+   * Required before navigating away: a debugger session held on a shared worker keeps it alive
+   * across the unload, and the page that loads next connects to it and renders nothing.
+   */
+  detach(): void {
     detachAll(this.#targets);
     this.#targets = [];
+  }
+
+  dispose(): void {
+    this.detach();
   }
 }
