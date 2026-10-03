@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import type { Term } from '@rdfjs/types';
+import type { Quad, Term } from '@rdfjs/types';
 import * as Effect from 'effect/Effect';
 import { DataFactory } from 'n3';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
@@ -205,6 +205,58 @@ describe('type rules', () => {
       'providedMergeDirect providesService Store',
       'storeLayer layerRequires Clock',
       'storeLayer providesService Store',
+    ]);
+  });
+
+  test('both backends conclude the same once restated premises are set aside', async () => {
+    const root = join(fileURLToPath(new URL('.', import.meta.url)), '..');
+    const path = 'src/worker/types/fixtures/effect.ts';
+    const document = analyzeTypeScript({
+      root,
+      path,
+      source: await readFile(join(root, path), 'utf8'),
+      mtime: 1,
+      resolve: createResolver(root),
+      packageOf: () => '@dxos/code-index',
+    });
+    const { backend, restated, concluded } = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        yield* store.putDocument(document);
+        const effect = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '10-effect.n3'));
+        const types = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '15-types.n3'));
+        yield* Reasoner.run([...effect, ...types]);
+        const local = (iri: string) => iri.slice(iri.lastIndexOf('#') + 1);
+        const key = (quad: Quad) =>
+          `${local(quad.subject.value)} ${local(quad.predicate.value)} ${local(quad.object.value)}`;
+        // `15-types` sees the file graph and `10-effect`'s graph; a head matching either restates a premise.
+        const files = (yield* store.match()).filter((quad) => !Ontology.isDerivedGraph(quad.graph.value));
+        const premises = new Set([...files, ...(yield* store.derived(effect[0].name))].map(key));
+        const derived = (yield* store.derived(types[0].name)).map(key);
+        return {
+          backend: store.backend,
+          restated: derived.filter((fact) => premises.has(fact)),
+          concluded: derived.filter((fact) => !premises.has(fact)).sort(),
+        };
+      }).pipe(Effect.provide(Store.layer(join(dir, 'restated'))), Effect.scoped),
+    );
+    // EYE's `derivations` output drops a restated premise and the native engine keeps it (NATIVE-BACKEND.md).
+    expect(restated).toEqual(backend === 'native' ? expect.arrayContaining(['clockLayer providesService Clock']) : []);
+    expect(concluded).toEqual([
+      'discarded layerRequires Clock',
+      'merged layerRequires Clock',
+      'merged providesService Logger',
+      'merged providesService Store',
+      'mergedTwo layerRequires Clock',
+      'mergedTwo providesService Clock',
+      'mergedTwo providesService Store',
+      'provided providesService Store',
+      'providedDirect providesService Store',
+      'providedMerge providesService Clock',
+      'providedMerge providesService Store',
+      'providedMergeDirect providesService Clock',
+      'providedMergeDirect providesService Store',
+      'storeLayer layerRequires Clock',
     ]);
   });
 });
