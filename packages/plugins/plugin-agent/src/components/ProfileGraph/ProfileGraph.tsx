@@ -35,6 +35,8 @@ export const MEMORY_ICONS: Record<Memory.Kind, string> = {
   commitment: 'ph--handshake--regular',
   relationship: 'ph--users--regular',
   event: 'ph--calendar--regular',
+  note: 'ph--note--regular',
+  directive: 'ph--gavel--regular',
 };
 
 /** What an agent knows about a person or team: their goals and the active memories about them. */

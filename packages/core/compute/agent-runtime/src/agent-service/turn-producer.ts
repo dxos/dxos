@@ -39,6 +39,8 @@ export interface TurnProducer {
 
 export type TurnRequest = {
   prompt: Parameters<AiSession.Session['createRequest']>[0]['prompt'];
+  /** Who the queued prompt is from; carried onto the turn's user message. */
+  sender?: Parameters<AiSession.Session['createRequest']>[0]['sender'];
   system?: string;
   mcpServers?: Parameters<AiSession.Session['createRequest']>[0]['mcpServers'];
 };

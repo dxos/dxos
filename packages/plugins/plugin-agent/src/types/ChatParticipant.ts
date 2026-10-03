@@ -19,6 +19,12 @@ export const ParticipantAnnotation = Annotation.make({
   schema: Schema.String,
 });
 
+/**
+ * `Obj.Meta` key source of a Composer chat an agent keeps with one person (id = the person's entity
+ * id); keyed so `Agent.loadChat` never takes it for the agent's primary chat.
+ */
+export const PARTICIPANT_SOURCE = 'org.dxos.agent/participant';
+
 /** The entity id of the person the chat is with, if one was assigned. */
 export const get = (chat: Chat.Chat): string | undefined =>
   Annotation.get(chat, ParticipantAnnotation).pipe(Option.getOrUndefined);

@@ -6,6 +6,7 @@ import * as Effect from 'effect/Effect';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Obj, Ref, Relation } from '@dxos/echo';
+import { Text } from '@dxos/schema';
 import { HasSubject } from '@dxos/types';
 
 import { Memory, MemoryOperation } from '#types';
@@ -14,7 +15,7 @@ import { AgentOperationError } from './errors.ts';
 
 const handler: Operation.WithHandler<typeof MemoryOperation.Remember> = MemoryOperation.Remember.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ content, kind, origin, subjects, confidence, source, supersedes }) {
+    Effect.fnUntraced(function* ({ content, kind, origin, subjects, confidence, source, supersedes, body }) {
       if (subjects.length === 0) {
         return yield* Effect.fail(new AgentOperationError({ message: 'A memory needs at least one subject.' }));
       }
@@ -33,6 +34,7 @@ const handler: Operation.WithHandler<typeof MemoryOperation.Remember> = MemoryOp
           ...(confidence !== undefined ? { confidence } : {}),
           ...(source ? { source } : {}),
           ...(previous ? { supersedes: Ref.make<Obj.Unknown>(previous) } : {}),
+          ...(body ? { body: Ref.make(Text.make({ content: body })) } : {}),
         }),
       );
       for (const entity of entities) {

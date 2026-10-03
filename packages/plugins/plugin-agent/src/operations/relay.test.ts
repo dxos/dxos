@@ -20,13 +20,14 @@ import { Text } from '@dxos/schema';
 import { Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, InterviewSkill, RelaySkill } from '#skills';
+import { ConversationSkill, InterviewSkill, ModesSkill, RelaySkill } from '#skills';
 import {
   AgentOperation,
   ChatParticipant,
   DiscordBinding,
   DiscordOperation,
   MemoryOperation,
+  Mode,
   Relay,
   RelayOperation,
 } from '#types';
@@ -52,8 +53,9 @@ const TestLayer = AssistantTestLayer({
     AccessToken.AccessToken,
     DiscordBinding.DiscordBinding,
     Relay.Relay,
+    Mode.Mode,
   ],
-  skills: [ConversationSkill.make(), InterviewSkill.make(), RelaySkill.make()],
+  skills: [ConversationSkill.make(), InterviewSkill.make(), RelaySkill.make(), ModesSkill.make()],
   disableLlmMemoization: true,
 });
 

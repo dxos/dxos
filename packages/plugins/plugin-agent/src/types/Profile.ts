@@ -42,6 +42,8 @@ const KIND_SECTIONS: { kind: Memory.Kind; heading: string }[] = [
   { kind: 'commitment', heading: 'Commitments' },
   { kind: 'relationship', heading: 'Relationships' },
   { kind: 'event', heading: 'Events' },
+  { kind: 'directive', heading: 'Rules and preferences' },
+  { kind: 'note', heading: 'Notes' },
 ];
 
 const GOAL_SECTIONS: { heading: string; statuses: Goal.Status[] }[] = [

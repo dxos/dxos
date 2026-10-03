@@ -14,9 +14,9 @@ import { openBinder } from './agent-skills.ts';
 
 const handler: Operation.WithHandler<typeof AgentOperation.ListSkills> = AgentOperation.ListSkills.pipe(
   Operation.withHandler(
-    Effect.fnUntraced(function* ({ agent: agentRef }) {
+    Effect.fnUntraced(function* ({ agent: agentRef, chat: chatRef }) {
       const agent = yield* Database.load(agentRef).pipe(Effect.orDie);
-      const chat = yield* Agent.loadChat(agent);
+      const chat = chatRef ? yield* Database.load(chatRef).pipe(Effect.orDie) : yield* Agent.loadChat(agent);
       if (!chat) {
         return { skills: [] };
       }

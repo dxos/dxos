@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import React, { type PropsWithChildren, useEffect, useMemo } from 'react';
+import React, { type PropsWithChildren, type ReactNode, useEffect, useMemo } from 'react';
 
 import { type Obj } from '@dxos/echo';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
@@ -22,16 +22,19 @@ import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
 type AgentStateRootProps = PropsWithChildren<{
   role?: string;
   name?: string;
+  /** Extra toolbar items after the name, e.g. a host's actions on the agent. */
+  actions?: ReactNode;
 }>;
 
 /** The agent's state panel: its name above a scrolling body of sections. */
-const AgentStateRoot = ({ role, name, children }: AgentStateRootProps) => {
+const AgentStateRoot = ({ role, name, actions, children }: AgentStateRootProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
     <Panel.Root role={role}>
       <Panel.Toolbar asChild>
         <Toolbar.Root>
           <Toolbar.Text>{name || t('agent-state-unnamed.label')}</Toolbar.Text>
+          {actions}
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content asChild>
@@ -116,6 +119,63 @@ const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
 };
 
 AgentStateIdentity.displayName = 'AgentState.Identity';
+
+//
+// Channels
+//
+
+type AgentStateChannel = {
+  id: string;
+  /** The chat's name, or the person it is with. */
+  name?: string;
+  /** The name of the chat's current mode. */
+  mode: string;
+  /** The skills the chat binds. */
+  skills: readonly AgentStateSkill[];
+};
+
+type AgentStateChannelsProps = { channels: readonly AgentStateChannel[] };
+
+/** Each conversation the agent holds and the mode it is in there. */
+const AgentStateChannels = ({ channels }: AgentStateChannelsProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  if (channels.length === 0) {
+    return null;
+  }
+
+  return (
+    <AgentStateSection heading={t('agent-state-channels.heading')}>
+      <Listbox.Root>
+        <Listbox.Content>
+          {channels.map((channel) => (
+            <Listbox.Item key={channel.id} id={channel.id} data-testid={`agent-state-channel-${channel.id}`}>
+              <Listbox.ItemContent
+                icon='ph--chat-circle--regular'
+                title={channel.name || t('agent-state-channel-unnamed.label')}
+                description={
+                  <Flex asChild wrap gap='xs'>
+                    <span>
+                      <Tag hue='sky' data-testid='agent-state-channel-mode'>
+                        {t('agent-state-channel-mode.label', { mode: channel.mode })}
+                      </Tag>
+                      {channel.skills.map((skill) => (
+                        <Tag key={skill.key} hue='violet'>
+                          {skill.name}
+                        </Tag>
+                      ))}
+                    </span>
+                  </Flex>
+                }
+              />
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
+    </AgentStateSection>
+  );
+};
+
+AgentStateChannels.displayName = 'AgentState.Channels';
 
 //
 // Summary
@@ -309,6 +369,7 @@ AgentStateGraph.displayName = 'AgentState.Graph';
 export const AgentState = {
   Root: AgentStateRoot,
   Identity: AgentStateIdentity,
+  Channels: AgentStateChannels,
   Summary: AgentStateSummary,
   Activity: AgentStateActivity,
   Graph: AgentStateGraph,
@@ -316,6 +377,8 @@ export const AgentState = {
 
 export type {
   AgentStateActivityProps,
+  AgentStateChannel,
+  AgentStateChannelsProps,
   AgentStateCounts,
   AgentStateEdge,
   AgentStateGraphProps,

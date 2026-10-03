@@ -8,9 +8,10 @@ import * as Schema from 'effect/Schema';
 
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
+import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
-import { Database, DXN, Feed, Ref } from '@dxos/echo';
+import { Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
 
 import * as DiscordBinding from './DiscordBinding.ts';
 
@@ -106,6 +107,9 @@ export const ListSkills = Operation.make({
   services: [Database.Service],
   input: Schema.Struct({
     agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
+    chat: Schema.optional(
+      Ref.Ref(Chat.Chat).annotate({ description: "One of the agent's chats; the primary chat if omitted." }),
+    ),
   }),
   output: Schema.Struct({
     skills: Schema.Array(AgentSkill),
@@ -148,4 +152,48 @@ export const ResetSkill = Operation.make({
     skill: Schema.String.annotate({ description: 'The registry key of the skill to reset.' }),
   }),
   output: Schema.Struct({}),
+});
+
+/**
+ * Returns the agent's chat with a person, creating it with the agent's base context on first use.
+ * The chat is keyed by the person, so it is never mistaken for the agent's primary chat.
+ */
+export const EnsureParticipantChat = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.ensureParticipantChat'),
+    name: 'Ensure participant chat',
+    description: "Returns the agent's Composer chat with a person, creating it if absent.",
+    icon: 'ph--user-circle-plus--regular',
+  },
+  services: [Database.Service],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent.' }),
+    person: Ref.Ref(Obj.Unknown).annotate({ description: 'The person the chat is with.' }),
+  }),
+  output: Schema.Struct({
+    chat: Ref.Ref(Chat.Chat),
+  }),
+});
+
+/**
+ * Has the agent read a document (e.g. a transcript of an earlier conversation) and record what it
+ * learns — people, goals, memories, rules and follow-ups — by running a model turn with its memory tools.
+ */
+export const LearnFromDocument = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.agent.learnFromDocument'),
+    name: 'Learn from document',
+    description: 'Has the agent read a document and record the people, goals, memories and rules it describes.',
+    icon: 'ph--book-open-text--regular',
+  },
+  services: [Database.Service, AgentService.AgentService],
+  input: Schema.Struct({
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that learns.' }),
+    document: Ref.Ref(Obj.Unknown).annotate({ description: 'A markdown document (or text) to learn from.' }),
+  }),
+  output: Schema.Struct({
+    chat: Ref.Ref(Chat.Chat).annotate({ description: 'The chat the learning turn ran in.' }),
+    memories: Schema.Number.annotate({ description: 'Memories recorded by the turn.' }),
+    goals: Schema.Number.annotate({ description: 'Goals recorded by the turn.' }),
+  }),
 });

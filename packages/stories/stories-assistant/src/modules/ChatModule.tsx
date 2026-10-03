@@ -4,31 +4,49 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
+import { Surface, useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import * as ChatSchema from '@dxos/assistant/Chat';
 import { Filter } from '@dxos/echo';
+import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
+import * as Profile from '@dxos/plugin-agent/Profile';
 import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
 import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
+import { Person } from '@dxos/types';
 
-export const ChatModule = () => {
+export type ChatModuleData = {
+  /**
+   * Name (preferred or full) of the person this panel speaks as: the panel shows the agent's chat with
+   * them (see plugin-agent's `ChatParticipant`) and attributes every prompt to them.
+   */
+  participant?: string;
+};
+
+export const ChatModule = ({ data }: Surface.ComponentProps<ChatModuleData>) => {
   const space = useActiveSpace();
   if (!space) {
     return null;
   }
-  return <ChatModuleContainer space={space} />;
+  return <ChatModuleContainer space={space} participant={data?.participant} />;
 };
 
-const ChatModuleContainer = ({ space }: { space: Space }) => {
+const ChatModuleContainer = ({ space, participant }: { space: Space; participant?: string }) => {
   const chats = useQuery(space.db, Filter.type(ChatSchema.Chat));
+  const people = useQuery(space.db, Filter.type(Person.Person));
+  const person = participant
+    ? people.find(({ preferredName, fullName }) => preferredName === participant || fullName === participant)
+    : undefined;
+  const participantChat = person ? chats.find((chat) => ChatParticipant.get(chat) === person.id) : undefined;
+  const sender = useMemo(() => (person ? { name: Profile.displayName(person) } : undefined), [person]);
+
   // The newest chat until the reader picks another; a template switch drops the id and lands on the
   // new space's own chat.
   const [selected, setSelected] = useState<string>();
-  const chat = chats.find(({ id }) => id === selected) ?? chats.at(-1);
+  const chat = chats.find(({ id }) => id === selected) ?? (participant ? participantChat : chats.at(-1));
 
   // The picker edits the chat's own model, so the hook needs the chat it is rendered for.
   const { preset, ...chatProps } = usePresets({}, chat);
@@ -40,7 +58,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
 
   const registry = useRegistry();
   const runtime = useProcessManagerRuntime();
-  const processor = useChatProcessor({ runtime, db: space.db, chat, preset, registry });
+  const processor = useChatProcessor({ runtime, db: space.db, chat, preset, registry, sender });
 
   // Honor the view mode selected in ChatOptions (persisted on `chat.viewType`). Subscribe via
   // `useObject` so changing the mode re-renders, and narrow the stored string to a valid ChatView.
@@ -53,10 +71,12 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
 
   return (
     <Chat.Root chat={chat} processor={processor}>
-      <Panel.Root>
+      <Panel.Root data-testid={participant ? `chat-panel-${participant}` : undefined}>
         <Panel.Toolbar asChild>
           <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher}>
-            <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
+            <Toolbar.Text classNames='text-subdued'>
+              {sender ? `${sender.name} · ${chat?.name ?? ''}` : chat?.name}
+            </Toolbar.Text>
             <Popover.Root>
               <Popover.Trigger asChild>
                 <IconButton icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />

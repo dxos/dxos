@@ -116,6 +116,8 @@ export type Options = {
 
 export type RunProps<R = never> = {
   prompt: string | ContentBlock.Any[];
+  /** Who the prompt is from, when not the session's reader (e.g. one of several people in a shared agent chat). */
+  sender?: Message.Message['sender'];
   // TODO(wittjosiah): Rename to systemPrompt.
   system?: string;
   history?: Message.Message[];
@@ -128,6 +130,7 @@ export type RunProps<R = never> = {
 
 export type BeginProps = {
   prompt: string | ContentBlock.Any[];
+  sender?: Message.Message['sender'];
   system?: string;
   history?: Message.Message[];
   objects?: Obj.Unknown[];
@@ -251,6 +254,7 @@ export class Request {
    */
   begin = ({
     prompt,
+    sender,
     system,
     history = [],
     skills = [],
@@ -281,7 +285,7 @@ export class Request {
         }
       }
 
-      yield* this._submitMessage(yield* formatUserPrompt({ prompt, history }));
+      yield* this._submitMessage(yield* formatUserPrompt({ prompt, history, sender }));
     }).pipe(Effect.withSpan('AiRequest.begin'));
 
   /**
@@ -489,6 +493,7 @@ export class Request {
    */
   run = <const R = never>({
     prompt,
+    sender,
     system: systemTemplate,
     history = [],
     objects = [],
@@ -497,7 +502,7 @@ export class Request {
     toolkit,
   }: RunProps<R>): Effect.Effect<Message.Message[], RunError, RunRequirements | R> =>
     Effect.gen({ self: this }, function* () {
-      yield* this.begin({ prompt, system: systemTemplate, history, objects, skills, instructions });
+      yield* this.begin({ prompt, sender, system: systemTemplate, history, objects, skills, instructions });
 
       const system = yield* formatSystemPrompt({ system: systemTemplate, skills, objects, instructions }).pipe(
         Effect.orDie,

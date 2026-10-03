@@ -22,7 +22,7 @@ type ContextBindings = { skills: Ref.Ref<Skill.Skill>[]; objects: Ref.Ref<Obj.Un
  * The skills and objects bound to the agent's current chat, so a thread runs with the same context
  * as the agent's own conversation; an agent without a chat contributes itself only.
  */
-const loadAgentBindings = (agent: Agent.Agent) =>
+export const loadAgentBindings = (agent: Agent.Agent) =>
   Effect.gen(function* () {
     const chat = yield* Agent.loadChat(agent);
     if (!chat) {

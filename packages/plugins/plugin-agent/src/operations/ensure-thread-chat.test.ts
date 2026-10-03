@@ -18,7 +18,7 @@ import { AccessToken } from '@dxos/link';
 import { Text } from '@dxos/schema';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { AgentOperation, DiscordBinding } from '#types';
+import { AgentOperation, DiscordBinding, Mode } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
 
@@ -33,6 +33,7 @@ const TestLayer = AssistantTestLayer({
     Instructions.Instructions,
     AccessToken.AccessToken,
     DiscordBinding.DiscordBinding,
+    Mode.Mode,
   ],
   disableLlmMemoization: true,
 });

@@ -25,6 +25,8 @@ export default defineConfig({
     InterviewSkill: 'src/skills/InterviewSkill.ts',
     Memory: 'src/types/Memory.ts',
     MemoryOperation: 'src/types/MemoryOperation.ts',
+    Mode: 'src/types/Mode.ts',
+    ModeOperation: 'src/types/ModeOperation.ts',
     Profile: 'src/types/Profile.ts',
     Relay: 'src/types/Relay.ts',
     RelayOperation: 'src/types/RelayOperation.ts',

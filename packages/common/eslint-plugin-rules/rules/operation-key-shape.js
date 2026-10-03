@@ -87,6 +87,7 @@ const VERBS = new Set([
   'invoke',
   'join',
   'label',
+  'learn',
   'link',
   'list',
   'load',

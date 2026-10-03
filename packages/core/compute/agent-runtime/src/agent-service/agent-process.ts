@@ -538,6 +538,9 @@ export const AgentProcess = (options: AgentProcessOptions) =>
               yield* session
                 .runTurn({
                   prompt,
+                  // The turn rewrites the queued message as its own, so the sender has to travel with it.
+                  sender:
+                    dequeued !== undefined && Obj.instanceOf(Message.Message, dequeued) ? dequeued.sender : undefined,
                   // TODO(dmaretskyi): Polling currently broken, agent relies on completion notifications being delivered.
                   // toolkit: AsynchronousExectionToolkit,
                   system: options.systemPrompt,

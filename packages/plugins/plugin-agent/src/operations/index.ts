@@ -5,7 +5,7 @@
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 
-import { AgentOperation, DiscordOperation, MemoryOperation, RelayOperation } from '#types';
+import { AgentOperation, DiscordOperation, MemoryOperation, ModeOperation, RelayOperation } from '#types';
 
 export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.CreateAgent.pipe(Operation.lazyHandler(() => import('./create-agent.ts'))),
@@ -14,6 +14,10 @@ export const AgentOperationHandlerSet = OperationHandlerSet.lazy([
   AgentOperation.ListSkills.pipe(Operation.lazyHandler(() => import('./list-skills.ts'))),
   AgentOperation.CustomizeSkill.pipe(Operation.lazyHandler(() => import('./customize-skill.ts'))),
   AgentOperation.ResetSkill.pipe(Operation.lazyHandler(() => import('./reset-skill.ts'))),
+  AgentOperation.EnsureParticipantChat.pipe(Operation.lazyHandler(() => import('./ensure-participant-chat.ts'))),
+  AgentOperation.LearnFromDocument.pipe(Operation.lazyHandler(() => import('./learn-from-document.ts'))),
+  ModeOperation.ListModes.pipe(Operation.lazyHandler(() => import('./list-modes.ts'))),
+  ModeOperation.SwitchMode.pipe(Operation.lazyHandler(() => import('./switch-mode.ts'))),
   MemoryOperation.ResolveEntity.pipe(Operation.lazyHandler(() => import('./resolve-entity.ts'))),
   MemoryOperation.Remember.pipe(Operation.lazyHandler(() => import('./remember.ts'))),
   MemoryOperation.Recall.pipe(Operation.lazyHandler(() => import('./recall.ts'))),

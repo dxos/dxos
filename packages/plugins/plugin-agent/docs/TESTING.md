@@ -33,6 +33,16 @@ agent records them. Edit the skill's instructions
 (`packages/plugins/plugin-agent/src/skills/InterviewSkill.ts`), let the story hot-reload, and talk to
 it. Tagged `!test`, so CI never runs it.
 
+**Agent playground** (`stories-stories-assistant-agentplayground--playground`): one agent, Kai, and
+three chat panels — Rich, Dima, Josiah — plus the agent state panel. Each panel is that person's chat
+with Kai (`ensureParticipantChat`, `ChatParticipant`) and attributes every prompt to them: the panel
+passes a `sender` to `useChatProcessor`, the agent process records it on the user message, and the
+model sees `[From: Dima]`. On load the space holds the three people, the "DXOS Eng" team and a
+transcript of an earlier CI-triage conversation, which the agent learns from
+(`learnFromDocument`, a real model turn with the learn skill's memory tools); the Learn button in the
+state panel runs it again. Try "tell Dima the fix landed", Dima's reply, "take notes", "interview me".
+Tagged `!test`.
+
 ## 2. Tests and stories (CI)
 
 - **Operations** — deterministic, no model: `moon run plugin-agent:test`. `interview.test.ts` drives
@@ -44,6 +54,10 @@ it. Tagged `!test`, so CI never runs it.
   model plays the agent through four exchanges and the play function checks the profile panel and the
   space. `pnpm exec vitest run --project=storybook src/stories/Interview.stories.tsx` in
   `packages/stories/stories-assistant`.
+- **Scripted playground** — **AgentPlayground › PlaygroundScripted**: a turn generator plays the
+  agent across all four conversations; the play function checks the learned graph, a relay from
+  Rich's panel into Dima's and back, and a switch to Note-taker that records a note.
+  `modes.test.ts` covers modes, notes, participant chats and `learnFromDocument` (scripted model).
 - **Components** — `moon run plugin-agent:test-storybook` renders the `AgentActivity`, `ProfileGraph`
   and `DiscordBindingForm` stories.
 - **Freezing a regression** — when an eval or a live run finds a bug, record that conversation as a

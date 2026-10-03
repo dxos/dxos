@@ -70,6 +70,11 @@ export const Remember = Operation.make({
     confidence: Schema.optional(Schema.Number.annotate({ description: 'Confidence from 0 to 1.' })),
     source: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'The message or chat it came from.' })),
     supersedes: Schema.optional(Ref.Ref(Memory.Memory).annotate({ description: 'The memory this one corrects.' })),
+    body: Schema.optional(
+      Schema.String.annotate({
+        description: 'Markdown body, for kind "note": the full notes, with content as their one-line summary.',
+      }),
+    ),
   }),
   output: Schema.Struct({
     memory: Ref.Ref(Memory.Memory),

@@ -7824,6 +7824,9 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client

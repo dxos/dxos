@@ -44,6 +44,11 @@ work the same for all of them:
 
 - `content: string` holds the one-line claim; `body?: Ref<Text>` holds a note's markdown (notes may
   have both: a summary line and the body).
+- **As built (2026-10-03):** `Memory` (`org.dxos.type.agent.memory` 0.1.0) gained the `note` and
+  `directive` kinds and the optional `body`; both are additive, so the version did not change.
+  `recordMemory` takes `body` as markdown and stores it as a `Text` owned by the memory. Until `Rule`
+  and `Preference` exist, rules and preferences are recorded as `Memory(kind: 'directive')`, quoting
+  the rule and who set it (a TODO in `Memory.ts` points here). `status` is not a kind yet.
 - `Goal` (exists) stays a separate type: it has owners, a horizon and a status lifecycle, and other
   objects (tasks) point at it.
 
@@ -113,6 +118,18 @@ Mode {
 The current mode is per conversation (the chat's bound skills already express it); a `Mode` object
 names a reusable bundle so a user can say "switch to transcriber".
 
+**As built (2026-10-03):** `Mode` (`org.dxos.type.agent.mode` 0.1.0) is `{ name, description?, skills,
+records? }` — `rules` is deferred with `Rule`. Every agent owns four built-in modes (parented to it,
+created by `createAgent` or on first `listModes`/`switchMode`): **Conversation** (default, no extra
+skills), **Note-taker** (`org.dxos.skill.agentNotes`: `Memory(note)` with a markdown body attached
+to its subject; voice is the chat's existing mic transcription), **Interviewer** (the interview
+skill) and **Relay**. Every chat keeps the base skills bound — conversation, modes
+(`org.dxos.skill.agentModes`: `listModes`, `switchMode`) and relay — so "tell Dima" works in any mode.
+`switchMode {chat, mode}` unbinds the other modes' skills, binds the mode's (the agent's customized
+copy where one exists) and records the mode name on the chat as the `org.dxos.agent.chatMode`
+annotation; the agent state panel shows it per channel. A new agent therefore no longer binds the
+interview skill by default: it switches to Interviewer when asked.
+
 ## Context
 
 Every `Memory`, `Rule` and `Preference` carries:
@@ -155,4 +172,4 @@ The classification is itself measurable: the eval gets personas whose utterances
 3. Where `Concept` lives long term — plugin-agent, or `@dxos/types` beside `Person` and
    `Organization`.
 4. Mode switching: explicit only ("switch to transcriber"), or may the agent propose a mode from
-   context?
+   context? (v1: explicit; the modes skill maps phrases like "take a note" to a mode.)

@@ -124,6 +124,16 @@
       "types": "./dist/types/src/types/MemoryOperation.d.ts",
       "import": "./dist/lib/MemoryOperation.mjs"
     },
+    "./Mode": {
+      "source": "./src/types/Mode.ts",
+      "types": "./dist/types/src/types/Mode.d.ts",
+      "import": "./dist/lib/Mode.mjs"
+    },
+    "./ModeOperation": {
+      "source": "./src/types/ModeOperation.ts",
+      "types": "./dist/types/src/types/ModeOperation.d.ts",
+      "import": "./dist/lib/ModeOperation.mjs"
+    },
     "./Profile": {
       "source": "./src/types/Profile.ts",
       "types": "./dist/types/src/types/Profile.d.ts",
@@ -181,6 +191,12 @@
       "MemoryOperation": [
         "dist/types/src/types/MemoryOperation.d.ts"
       ],
+      "Mode": [
+        "dist/types/src/types/Mode.d.ts"
+      ],
+      "ModeOperation": [
+        "dist/types/src/types/ModeOperation.d.ts"
+      ],
       "Profile": [
         "dist/types/src/types/Profile.d.ts"
       ],
@@ -226,6 +242,7 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
+    "@dxos/ai": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",

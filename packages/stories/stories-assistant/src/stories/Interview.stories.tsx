@@ -61,11 +61,13 @@ const PROMPTS = [
 ] as const;
 
 // Captured from the harness that runs the agent (not `onInit`, whose space may belong to another client
-// instance) so assertions read the objects the operations write.
-let storyDb: Database.Database | undefined;
+// instance) so assertions read the objects the operations write. Every capture is kept: the file's
+// stories share this module, and a previous story's harness can finish setting up after the next
+// story's, so the latest capture is not necessarily the one under test.
+const storyDbs: Database.Database[] = [];
 
 const captureDatabase = async ({ db }: { db: Database.Database }) => {
-  storyDb = db;
+  storyDbs.push(db);
 };
 
 // The interviewer route's latest request, recorded by its `match` (which runs just before the turn
@@ -247,11 +249,13 @@ const waitForSpace = async (
   const deadline = Date.now() + timeout;
   let summary: SpaceSummary | undefined;
   while (Date.now() < deadline) {
-    if (storyDb) {
-      summary = await summarize(storyDb);
-      if (predicate(summary)) {
+    for (const db of [...storyDbs].reverse()) {
+      // A finished story's client is closed, so its database may no longer answer.
+      const candidate = await summarize(db).catch(() => undefined);
+      if (candidate && predicate(candidate)) {
         return;
       }
+      summary = candidate ?? summary;
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }

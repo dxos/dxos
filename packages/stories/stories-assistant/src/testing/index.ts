@@ -13,3 +13,4 @@ export * from './schema.ts';
 export * from './agent-claude-plugin.ts';
 export * from './helpdesk-space.ts';
 export * from './voyage-space.ts';
+export * from './playground.ts';

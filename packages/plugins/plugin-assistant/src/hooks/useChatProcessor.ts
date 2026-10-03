@@ -32,6 +32,8 @@ export type UseChatProcessorProps = {
   runtime?: Capabilities.ProcessManagerRuntime;
   registry?: Registry.Registry;
   settings?: Assistant.Settings;
+  /** Attributes the prompts submitted through this processor to a person (see `AiChatProcessorOptions.sender`). */
+  sender?: AgentService.PromptSender;
 };
 
 /**
@@ -44,6 +46,7 @@ export const useChatProcessor = ({
   runtime,
   registry,
   settings,
+  sender,
 }: UseChatProcessorProps): AiChatProcessor | undefined => {
   const observableRegistry = useContext(RegistryContext);
 
@@ -76,6 +79,9 @@ export const useChatProcessor = ({
   }, [db, chat, feed]);
 
   const serviceResolver = useCapability(Capabilities.ServiceResolver);
+  // Primitives rather than the object, so an inline `sender` literal does not rebuild the processor each render.
+  const senderName = sender?.name;
+  const senderDid = sender?.identityDid;
 
   const processor = useMemo(() => {
     if (!runtime || !session || !chat || !feed || !db) {
@@ -99,8 +105,13 @@ export const useChatProcessor = ({
       registry,
       model: preset?.model,
       provider: preset?.provider,
+      // Absent keys rather than `undefined` values: the sender crosses the process input schema.
+      sender:
+        senderName || senderDid
+          ? { ...(senderName ? { name: senderName } : {}), ...(senderDid ? { identityDid: senderDid } : {}) }
+          : undefined,
     });
-  }, [runtime, session, registry, preset, chat, feed, db?.spaceId]);
+  }, [runtime, session, registry, preset, chat, feed, db?.spaceId, senderName, senderDid]);
 
   // A remount (e.g. the user navigated to another page mid-turn) gets a fresh processor whose
   // active/streaming state starts empty, while the agent process for the feed keeps running;
