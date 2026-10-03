@@ -291,6 +291,9 @@ const isParameterBinding = (node: Node, parent: Node | undefined): boolean =>
   Array.isArray(parent.params) &&
   parent.params.includes(node);
 
+/** Statements whose identifiers name modules, which the import pass already accounts for. */
+const MODULE_STATEMENTS = new Set(['ImportDeclaration', 'ExportAllDeclaration']);
+
 const ES_GLOBALS = new Set([
   'undefined',
   'globalThis',
@@ -1259,6 +1262,56 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
       ...typeFacts(declaration),
     };
   });
+
+  // A statement declaring nothing (`describe(…)`, `registerX()`) runs at load time, so a binding it
+  // references is a value import even though no symbol carries the edge.
+  const markValueUse = (name: string): void => {
+    const binding = bindings.get(name);
+    const entry = binding && specifiers.get(binding.specifier);
+    if (entry) {
+      entry.usedAsValue = true;
+    }
+  };
+  const declaringStatements = new Set<Node>(declared.map((declaration) => declaration.statement));
+  for (const statement of (body as readonly unknown[]).filter(isNode)) {
+    if (declaringStatements.has(statement)) {
+      continue;
+    }
+    // `export { load }` re-exports a local binding, which keeps a value import alive at runtime.
+    if (statement.type === 'ExportNamedDeclaration') {
+      if (!isNode(statement.source) && statement.exportKind !== 'type' && Array.isArray(statement.specifiers)) {
+        for (const specifier of statement.specifiers.filter(isNode)) {
+          const name =
+            specifier.exportKind === 'type' ? undefined : nameOf(isNode(specifier.local) ? specifier.local : undefined);
+          if (name) {
+            markValueUse(name);
+          }
+        }
+      }
+      continue;
+    }
+    if (MODULE_STATEMENTS.has(statement.type)) {
+      continue;
+    }
+    walk(statement, [], (node, ancestors) => {
+      if (node.type !== 'Identifier' && node.type !== 'JSXIdentifier') {
+        return undefined;
+      }
+      const parent = ancestors[ancestors.length - 1];
+      const name = nameOf(node);
+      if (
+        !name ||
+        isBindingPosition(node, parent) ||
+        isParameterBinding(node, parent) ||
+        inTypePosition(ancestors, node) ||
+        !chainOf(node, ancestors)
+      ) {
+        return undefined;
+      }
+      markValueUse(name);
+      return undefined;
+    });
+  }
 
   const imports = new Set<string>();
   const importsType = new Set<string>();
