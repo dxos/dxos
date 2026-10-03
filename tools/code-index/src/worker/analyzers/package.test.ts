@@ -75,6 +75,11 @@ describe('package analyzers', () => {
     });
   });
 
+  test('moon.yml without a manifest of its own leaves the enclosing package alone', () => {
+    const document = analyzeMoonYml(base('packages/echo/native/moon.yml', 'layer: tool\n'));
+    expect(document.describesPackage).toBeUndefined();
+  });
+
   test('moon.yml outside a package asserts nothing about packages', () => {
     const document = analyzeMoonYml(base('tools/moon.yml', 'layer: tool\n'));
     expect(document.describesPackage).toBeUndefined();

@@ -4,12 +4,57 @@
 
 //! Semi-naive evaluation of one stratum, and its DRed maintenance under a change of premises.
 
-use rustc_hash::FxHashSet;
+use std::cell::RefCell;
 
-use crate::facts::{Before, Dict, Facts, Id, Pattern, Triple, TripleSet, Union};
-use crate::rules::{Atom, Literal, Rule, RuleSet, Slot, string_literal};
+use regex::Regex;
+use rustc_hash::{FxHashMap, FxHashSet};
+
+use crate::facts::{Before, Cached, Dict, Facts, Id, Pattern, Triple, TripleSet, Union};
+use crate::rules::{Atom, Compare, Literal, RegexSlot, Rule, RuleSet, Slot, string_literal};
 
 type Binding = Vec<Option<Id>>;
+
+thread_local! {
+    /// Patterns read from the data, compiled once per process; an invalid one is remembered as such.
+    static REGEXES: RefCell<FxHashMap<String, Option<Regex>>> = RefCell::default();
+}
+
+/// Applies `test` to the regex the slot names — compiled from the data if it is bound there.
+fn with_regex<T>(
+    slot: &RegexSlot,
+    binding: &Binding,
+    dict: &Dict,
+    test: impl FnOnce(&Regex) -> T,
+) -> Option<T> {
+    match slot {
+        RegexSlot::Fixed(regex) => Some(test(regex)),
+        RegexSlot::Bound(pattern) => {
+            let pattern = dict.text(resolve(pattern, binding)?);
+            REGEXES.with(|cache| {
+                let mut cache = cache.borrow_mut();
+                let regex = cache
+                    .entry(pattern)
+                    .or_insert_with_key(|pattern| Regex::new(pattern).ok());
+                regex.as_ref().map(test)
+            })
+        }
+    }
+}
+
+/// Binds `out` to `id`, or checks it already holds it; pushes what it bound onto `trail`.
+fn bind(out: &Slot, id: Id, binding: &mut Binding, trail: &mut Vec<usize>) -> bool {
+    match out {
+        Slot::Const(value) => *value == id,
+        Slot::Var(var) => match binding[*var] {
+            Some(bound) => bound == id,
+            None => {
+                binding[*var] = Some(id);
+                trail.push(*var);
+                true
+            }
+        },
+    }
+}
 
 fn resolve(slot: &Slot, binding: &Binding) -> Option<Id> {
     match slot {
@@ -146,7 +191,46 @@ impl Solver<'_> {
             }
             Literal::Matches { arg, regex, negate } => {
                 let value = resolve(arg, binding).map(|id| self.dict.text(id));
-                if value.is_some_and(|value| regex.is_match(&value) != *negate) {
+                let matched = value.and_then(|value| {
+                    with_regex(regex, binding, self.dict, |regex| regex.is_match(&value))
+                });
+                if matched.is_some_and(|matched| matched != *negate) {
+                    self.solve(literals, done, binding, trail, emit);
+                }
+            }
+            Literal::Scrape { text, regex, out } => {
+                let value = resolve(text, binding).map(|id| self.dict.text(id));
+                let captured = value.and_then(|value| {
+                    with_regex(regex, binding, self.dict, |regex| {
+                        regex
+                            .captures(&value)
+                            .and_then(|captures| captures.get(1))
+                            .map(|group| group.as_str().to_owned())
+                    })
+                    .flatten()
+                });
+                if let Some(captured) = captured {
+                    let id = self.dict.intern(&string_literal(captured));
+                    let mark = trail.len();
+                    if bind(out, id, binding, trail) {
+                        self.solve(literals, done, binding, trail, emit);
+                    }
+                    undo(binding, trail, mark);
+                }
+            }
+            Literal::Compare { left, right, op } => {
+                let holds = match (resolve(left, binding), resolve(right, binding)) {
+                    (Some(left), Some(right)) => match op {
+                        Compare::NotEqual => left != right,
+                        Compare::StartsWith => {
+                            self.dict.text(left).starts_with(&self.dict.text(right))
+                        }
+                        Compare::EndsWith => self.dict.text(left).ends_with(&self.dict.text(right)),
+                        Compare::Contains => self.dict.text(left).contains(&self.dict.text(right)),
+                    },
+                    _ => false,
+                };
+                if holds {
                     self.solve(literals, done, binding, trail, emit);
                 }
             }
@@ -158,18 +242,7 @@ impl Solver<'_> {
                     .collect();
                 let id = self.dict.intern(&string_literal(text));
                 let mark = trail.len();
-                let fits = match out {
-                    Slot::Const(value) => *value == id,
-                    Slot::Var(var) => match binding[*var] {
-                        Some(bound) => bound == id,
-                        None => {
-                            binding[*var] = Some(id);
-                            trail.push(*var);
-                            true
-                        }
-                    },
-                };
-                if fits {
+                if bind(out, id, binding, trail) {
                     self.solve(literals, done, binding, trail, emit);
                 }
                 undo(binding, trail, mark);
@@ -269,20 +342,108 @@ fn run(
     solver.solve(&literals, &mut done, &mut binding, &mut trail, emit);
 }
 
+/// Whether a triple fits an atom's constants; variables are checked when the atom is unified.
+fn fits(atom: &Atom, triple: &Triple) -> bool {
+    atom.0.iter().zip(triple).all(|(slot, value)| match slot {
+        Slot::Const(id) => id == value,
+        Slot::Var(_) => true,
+    })
+}
+
+/// A rule set's atoms, by the constant predicate each names, so a delta triple is only tried against
+/// atoms it can fit: with every premise as the delta (a full recomputation), trying each triple
+/// against every atom of every rule dominated a stratum's cost.
+struct Atoms<'a, T> {
+    by_predicate: FxHashMap<Id, Vec<T>>,
+    /// Atoms whose predicate is a variable, tried against every triple.
+    any: Vec<T>,
+    rules: &'a RuleSet,
+}
+
+impl<'a, T: Copy> Atoms<'a, T> {
+    fn new(rules: &'a RuleSet, entries: impl Iterator<Item = (Slot, T)>) -> Self {
+        let mut atoms = Atoms {
+            by_predicate: FxHashMap::default(),
+            any: Vec::new(),
+            rules,
+        };
+        for (predicate, entry) in entries {
+            match predicate {
+                Slot::Const(id) => atoms.by_predicate.entry(id).or_default().push(entry),
+                Slot::Var(_) => atoms.any.push(entry),
+            }
+        }
+        atoms
+    }
+
+    fn candidates(&self, triple: &Triple) -> impl Iterator<Item = T> + '_ {
+        self.by_predicate
+            .get(&triple[1])
+            .into_iter()
+            .flatten()
+            .chain(&self.any)
+            .copied()
+    }
+}
+
+/// `(rule, literal)` of every positive literal.
+fn positive_atoms(rules: &RuleSet) -> Atoms<'_, (usize, usize)> {
+    Atoms::new(
+        rules,
+        rules
+            .rules
+            .iter()
+            .enumerate()
+            .flat_map(|(rule_index, rule)| {
+                rule.body
+                    .iter()
+                    .enumerate()
+                    .filter_map(move |(index, literal)| match literal {
+                        Literal::Pos(atom) => Some((atom.0[1], (rule_index, index))),
+                        _ => None,
+                    })
+            }),
+    )
+}
+
+/// `(rule, literal, atom)` of every atom inside a negation.
+fn negated_atoms(rules: &RuleSet) -> Atoms<'_, (usize, usize, usize)> {
+    Atoms::new(
+        rules,
+        rules
+            .rules
+            .iter()
+            .enumerate()
+            .flat_map(|(rule_index, rule)| {
+                rule.body
+                    .iter()
+                    .enumerate()
+                    .flat_map(move |(index, literal)| match literal {
+                        Literal::Neg { atoms, .. } => atoms
+                            .iter()
+                            .enumerate()
+                            .map(|(atom_index, atom)| (atom.0[1], (rule_index, index, atom_index)))
+                            .collect::<Vec<_>>(),
+                        _ => Vec::new(),
+                    })
+            }),
+    )
+}
+
 /// Everything derivable in one step from `delta` triples: each positive literal a triple fits seeds
 /// an evaluation of the rest of its rule against `view`.
 fn step(rules: &RuleSet, delta: &[Triple], view: &dyn Facts, dict: &Dict, out: &mut Vec<Triple>) {
+    let atoms = positive_atoms(rules);
     for triple in delta {
-        for rule in &rules.rules {
-            for (index, literal) in rule.body.iter().enumerate() {
-                if let Literal::Pos(atom) = literal
-                    && crate::facts::matches(&pattern(atom, &vec![None; rule.vars]), triple)
-                {
-                    run(rule, Seed::Pos(index, triple), view, dict, &mut |binding| {
-                        heads(rule, binding, out);
-                        true
-                    });
-                }
+        for (rule_index, index) in atoms.candidates(triple) {
+            let rule = &atoms.rules.rules[rule_index];
+            if let Literal::Pos(atom) = &rule.body[index]
+                && fits(atom, triple)
+            {
+                run(rule, Seed::Pos(index, triple), view, dict, &mut |binding| {
+                    heads(rule, binding, out);
+                    true
+                });
             }
         }
     }
@@ -296,25 +457,23 @@ fn negation_step(
     dict: &Dict,
     out: &mut Vec<Triple>,
 ) {
+    let negated = negated_atoms(rules);
     for triple in delta {
-        for rule in &rules.rules {
-            for (index, literal) in rule.body.iter().enumerate() {
-                if let Literal::Neg { atoms, .. } = literal {
-                    for (atom_index, atom) in atoms.iter().enumerate() {
-                        if crate::facts::matches(&pattern(atom, &vec![None; rule.vars]), triple) {
-                            run(
-                                rule,
-                                Seed::Neg(index, atom_index, triple),
-                                view,
-                                dict,
-                                &mut |binding| {
-                                    heads(rule, binding, out);
-                                    true
-                                },
-                            );
-                        }
-                    }
-                }
+        for (rule_index, index, atom_index) in negated.candidates(triple) {
+            let rule = &negated.rules.rules[rule_index];
+            if let Literal::Neg { atoms, .. } = &rule.body[index]
+                && fits(&atoms[atom_index], triple)
+            {
+                run(
+                    rule,
+                    Seed::Neg(index, atom_index, triple),
+                    view,
+                    dict,
+                    &mut |binding| {
+                        heads(rule, binding, out);
+                        true
+                    },
+                );
             }
         }
     }
@@ -358,6 +517,7 @@ fn saturate(
 
 /// The stratum's materialisation over `premises`, computed from nothing.
 pub fn full(rules: &RuleSet, premises: &dyn Facts, dict: &Dict) -> TripleSet {
+    let premises = &Cached::new(premises);
     let mut derived = TripleSet::default();
     let mut first = Vec::new();
     {
@@ -394,6 +554,7 @@ pub fn maintain(
     derived: &mut TripleSet,
     dict: &Dict,
 ) -> Change {
+    let premises = &Cached::new(premises);
     let negates = has_negation(rules);
     let plus_list: Vec<Triple> = plus.iter().copied().collect();
     let minus_list: Vec<Triple> = minus.iter().copied().collect();
