@@ -108,7 +108,9 @@ module Store
 
     # Service
     Store: Context.Service                    # 'code-index/Store'.
-    layer: (dir) => Layer<Store, StoreError>  # migrates sqlite, opens the quad store, reconciles.
+    layer: (dir, backend?, { readOnly? }) => Layer<Store, StoreError>
+                                              # migrates sqlite, opens the quad store, reconciles;
+                                              # readOnly opens an existing, current store and writes nothing.
 
     # Ledger
     getFile / listFiles / fileStates / getMeta / setMeta
@@ -273,6 +275,21 @@ module Cli
     run: (argv) => Effect<void>
 ```
 
+```mdl
+module mcp/Server
+  desc: |
+    `code-index mcp`: effect's `McpServer` over stdio with one toolkit of read-only tools over a
+    store opened with `{ readOnly: true }`. Tool descriptions carry the namespace prefixes and an
+    example each, because a model reads them. `mcp/Lock` names the process holding a locked store.
+  api:
+    CodeIndexToolkit: Toolkit                 # query, ask, vocabulary, describe, files, stats.
+    handlers: (Store.Api) => Effect<handlers> # what the toolkit layer is built from (and tests drive).
+    open: (dir, backend?) => Effect<Store.Api, StoreError, Scope>  # read-only; names a lock holder.
+    run: ({ dir, backend?, version }) => Effect<never>             # opens, then serves until stdin closes.
+    boundQuery: (sparql, limit) => string     # caps a SELECT at the engine.
+    NAMESPACES: Record<string, string>        # the prefixes of design/ONTOLOGY.md.
+```
+
 ## Commands
 
 | Command                                | Effect |
@@ -286,6 +303,7 @@ module Cli
 | `clear`                                | Empty both databases. |
 | `ontology`                             | Print the JSON-LD context. |
 | `types [files…] [--sample N] [--seed S] [--show V]` | Score the type propagator against `tsc`. |
+| `mcp`                                  | Serve the index read-only over MCP on stdio. |
 
 `--root` defaults to the git root of the working directory, `--store` to
 `<root>/node_modules/.code-index`, and `--json` applies to every command.
@@ -398,6 +416,19 @@ feat F-6: Derived relations are rules, recomputed with the index
   req F-6.5: `--no-reason` skips the phase; the derived graph is then only as fresh as the last pass that ran it.
 ```
 
+```mdl
+feat F-11: An MCP server over the index
+  desc: |
+    `code-index mcp` serves the store to an MCP client over stdio. It opens an existing store
+    read-only and never indexes or writes; six tools cover SPARQL (`query`, `ask`), discovery
+    (`vocabulary`, `describe`) and the ledger (`files`, `stats`).
+  req F-11.1: stdout carries only JSON-RPC; every log and banner goes to stderr.
+  req F-11.2: Opening skips migration, version reset and reconcile; a missing or stale store fails with a hint.
+  req F-11.3: A store another process holds fails at startup, naming that process, rather than hanging.
+  req F-11.4: A SELECT is capped at the engine (default 200 rows, at most 2000) and reports truncation.
+  req F-11.5: `stats` counts derived graphs with a grouped SPARQL count, never by materialising quads.
+```
+
 ## Tests
 
 ```mdl
@@ -491,4 +522,23 @@ test T-6: Types
     - every fixture declaration agrees with tsc, is partial, or is unknown — none disagrees
     - Effect, Layer, Schema and Context.Service models agree with tsc on the installed effect
     - a layer provides and requires what its inferred type says (src/Reasoner.test.ts)
+```
+
+```mdl
+test T-7: MCP server
+  file: src/mcp/Server.test.ts, src/mcp/Stdio.test.ts
+  covers: F-11
+  cases:
+    - query returns vars and rows, and reports truncation
+    - a malformed query is a tool failure carrying the message
+    - boundQuery caps a query at the engine
+    - ask answers a boolean
+    - vocabulary lists asserted and derived terms with the namespace prefixes
+    - describe resolves a path and shows both directions
+    - describe resolves package names and prefixed IRIs
+    - an ambiguous name lists candidates instead of choosing one
+    - files filters by prefix and language
+    - stats counts files, quads and derived graphs
+    - a missing store fails with a hint rather than creating one
+    - initialize, tools/list and tools/call query (spawns the real server; skipped without Bun)
 ```
