@@ -505,6 +505,23 @@ describe('local databases on the graph', () => {
       }
     });
 
+    test('a subscribed graph query follows a local database that is closed and reopened', async ({ expect }) => {
+      await using env = await setup();
+      env.local.add(Obj.make(TestSchema.Person, { name: 'Ada' }));
+      await flushAll(env.local);
+
+      const result = env.graph.query(Query.select(Filter.type(TestSchema.Person)).from(ALL));
+      const unsubscribe = result.subscribe(() => {});
+      try {
+        await expect.poll(() => names(result.results)).toEqual(['Ada']);
+        const { local } = await env.reopen();
+        local.add(Obj.make(TestSchema.Person, { name: 'Bob' }));
+        await expect.poll(() => names(result.results)).toEqual(['Ada', 'Bob']);
+      } finally {
+        unsubscribe();
+      }
+    });
+
     test('graph queries reach a local database opened after the space', async ({ expect }) => {
       await using env = await setup();
       env.space.add(Obj.make(TestSchema.Person, { name: 'Ada' }));

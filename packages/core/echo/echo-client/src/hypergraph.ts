@@ -81,6 +81,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
   readonly #localDatabases = new Map<string, Hypergraph.LocalDatabase>();
   /** The same databases by the space id their rows live under, which is how URIs and scopes name them. */
   readonly #localBySpace = new Map<SpaceId, Hypergraph.LocalDatabase>();
+  /** Fires when a local database opens or the set closes, so live graph queries re-subscribe to it. */
+  readonly #localDatabasesChanged = new Event<void>();
 
   constructor() {
     this._registry = makeRegistry();
@@ -177,11 +179,19 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       return Entity.isEntity(resolved) ? resolved : undefined;
     },
     subscribe: (callback) => {
-      const cleanups = [
-        this._updateEvent.on(() => callback()),
-        ...[...this.#localBySpace.values()].map((db) => db.subscribeChanges(callback)),
-      ];
-      return () => cleanups.forEach((cleanup) => cleanup());
+      const subscribeLocal = () => [...this.#localBySpace.values()].map((db) => db.subscribeChanges(callback));
+      let localCleanups = subscribeLocal();
+      const offTopology = this.#localDatabasesChanged.on(() => {
+        localCleanups.forEach((cleanup) => cleanup());
+        localCleanups = subscribeLocal();
+        callback();
+      });
+      const offUpdate = this._updateEvent.on(() => callback());
+      return () => {
+        offUpdate();
+        offTopology();
+        localCleanups.forEach((cleanup) => cleanup());
+      };
     },
   };
 
@@ -272,6 +282,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       this.#localBySpace.set(db.spaceId, db);
       // Cached results were built for the previous set of databases.
       this.#queryResultCache = new QueryResultCache();
+      this.#localDatabasesChanged.emit();
     }
     return db;
   }
@@ -293,6 +304,7 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
     this.#localDatabases.clear();
     this.#localBySpace.clear();
     this.#queryResultCache = new QueryResultCache();
+    this.#localDatabasesChanged.emit();
     // Settled, so one failed close cannot abandon the others' pending flushes.
     const results = await Promise.allSettled(databases.map((db) => db.close()));
     const failure = results.find((result) => result.status === 'rejected');

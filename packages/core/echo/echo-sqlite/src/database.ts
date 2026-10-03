@@ -249,6 +249,9 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
       return;
     }
     try {
+      // An open still in flight would register types and subscriptions after the cleanup below; a
+      // failed open is already logged and must not block closing.
+      await this.#ready.catch(() => undefined);
       await this.flush();
     } finally {
       this.#closed = true;
