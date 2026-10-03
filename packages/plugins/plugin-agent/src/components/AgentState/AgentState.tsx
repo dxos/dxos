@@ -114,7 +114,7 @@ const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
           </Listbox.Item>
           <Listbox.Item id='skills'>
             <Listbox.ItemContent
-              icon='ph--puzzle-piece--regular'
+              icon='ph--sparkle--regular'
               title={t('agent-state-skills.label')}
               description={
                 skills.length === 0 ? (
