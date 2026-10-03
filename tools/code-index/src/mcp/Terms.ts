@@ -62,6 +62,10 @@ export const TERMS: Readonly<Record<string, Term>> = {
     'Constructed by Layer.effect/succeed/scoped/mergeAll/unwrap/provide, or typed Layer (rules/10-effect.n3, 15-types.n3).',
     'deus:Symbol',
   ),
+  EffectLayerFactory: cls(
+    'A function or static method returning a Layer; its providesService/layerRequires describe that layer (rules/15-types.n3).',
+    'deus:Symbol',
+  ),
   Schema: cls('Constructed by Schema.Struct/TaggedStruct/Class/Union/… (rules/10-effect.n3).', 'deus:Symbol'),
   DomainError: cls('extends BaseError.extend or Data.TaggedError (rules/10-effect.n3).', 'deus:Symbol'),
   Rpc: cls('Constructed by RpcGroup.make (rules/10-effect.n3).', 'deus:Symbol'),
@@ -398,7 +402,11 @@ export const TERMS: Readonly<Record<string, Term>> = {
   echoMemberString: prop('deus:Member', 'xsd:string', 'Rule-internal helper: a member IRI as a string.'),
 
   // Derived: Effect (rules/10-effect.n3, 15-types.n3).
-  providesService: prop('deus:Symbol', SYMBOL_OR_MEMBER, 'The service key a layer provides.'),
+  providesService: prop(
+    'deus:Symbol',
+    SYMBOL_OR_MEMBER,
+    'The service key a layer provides — on an EffectLayerFactory, the layer it returns. Query providers by this, whatever the class.',
+  ),
   requiresService: prop(
     'deus:Symbol',
     SYMBOL_OR_MEMBER,

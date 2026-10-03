@@ -234,7 +234,8 @@ describe('effect rules', () => {
     'layers.ts': [
       "import * as Effect from 'effect/Effect';",
       "import * as Layer from 'effect/Layer';",
-      "import * as SqlClient from 'effect/unstable/sql/SqlClient';",
+      "import * as SqliteClient from '@effect/sql-sqlite-node/SqliteClient';",
+      "import * as SqlClient from 'effect/sql/SqlClient';",
       "import { Clock, Store } from './index';",
       'export const storeLayer = Layer.succeed(Store, { n: 1 });',
       'export const clockLayer = Layer.succeed(Clock, { now: 0 });',
@@ -245,6 +246,18 @@ describe('effect rules', () => {
       'export const sql = Layer.succeed(SqlClient.SqlClient, undefined as never);',
       'export const reading = Layer.effect(Store, Effect.gen(function* () { const clock = yield* Clock; return { n: clock.now }; }));',
       'export const makeLayer = () => Layer.succeed(Store, { n: 1 });',
+      'export const makeSql = (): Layer.Layer<SqlClient.SqlClient> => Layer.succeed(SqlClient.SqlClient, undefined as never);',
+      'export const fromFactory = makeSql().pipe(Layer.provideMerge(clockLayer));',
+      "export const TestLayer = SqliteClient.layer({ filename: ':memory:' }).pipe(Layer.provideMerge(clockLayer));",
+      'export class Db {',
+      '  static layer(): Layer.Layer<Store, never, SqlClient.SqlClient> { throw new Error(); }',
+      '}',
+    ].join('\n'),
+    'reexport.ts': "export { makeSql } from './layers';",
+    'aliased.ts': [
+      "import * as Layer from 'effect/Layer';",
+      "import { makeSql } from './reexport';",
+      'export const viaAlias = makeSql().pipe(Layer.orDie);',
     ].join('\n'),
     'consumer.ts': [
       "import * as Layer from 'effect/Layer';",
@@ -293,15 +306,33 @@ describe('effect rules', () => {
       // A member under a bare specifier, paired with the import's `file:` reference.
       '@test/svc#Clock resolvesTo svc/store.ts#Clock',
       '@test/svc#Store resolvesTo svc/store.ts#Store',
+      // Built by a repo factory through a barrel's alias of it.
+      'aliased.ts#viaAlias a EffectLayer',
+      'aliased.ts#viaAlias providesService effect/sql/SqlClient#SqlClient',
       'consumer.ts#needs a EffectLayer',
       'consumer.ts#needs layerRequires svc/store.ts#Clock',
       'consumer.ts#needs providesService svc/store.ts#Store',
       // Through two `export *` barrels.
       'index.ts#Clock resolvesTo svc/store.ts#Clock',
       'index.ts#Store resolvesTo svc/store.ts#Store',
+      // A static method returning a layer: a factory, described by the layer it returns.
+      'layers.ts#Db.layer a EffectLayerFactory',
+      'layers.ts#Db.layer layerRequires effect/sql/SqlClient#SqlClient',
+      'layers.ts#Db.layer providesService svc/store.ts#Store',
+      // A listed library constructor, through a pipeline that keeps its output.
+      'layers.ts#TestLayer a EffectLayer',
+      'layers.ts#TestLayer providesService @effect/sql-sqlite-node/SqliteClient#SqliteClient',
+      'layers.ts#TestLayer providesService effect/sql/SqlClient#SqlClient',
       'layers.ts#clockLayer a EffectLayer',
       'layers.ts#clockLayer providesService svc/store.ts#Clock',
       'layers.ts#fromEffect a EffectLayer',
+      // Built by a repo factory whose own call type is not inferred.
+      'layers.ts#fromFactory a EffectLayer',
+      'layers.ts#fromFactory providesService effect/sql/SqlClient#SqlClient',
+      // A function returning a layer, whatever its type arguments say.
+      'layers.ts#makeLayer a EffectLayerFactory',
+      'layers.ts#makeSql a EffectLayerFactory',
+      'layers.ts#makeSql providesService effect/sql/SqlClient#SqlClient',
       'layers.ts#nothing a EffectLayer',
       // Carried over from the piped layer: the imported key leaves its type unknown here.
       'layers.ts#provided a EffectLayer',
@@ -311,15 +342,17 @@ describe('effect rules', () => {
       'layers.ts#reading requiresService svc/store.ts#Clock',
       // A library key, named by its member.
       'layers.ts#sql a EffectLayer',
-      'layers.ts#sql providesService effect/unstable/sql/SqlClient#SqlClient',
+      'layers.ts#sql providesService effect/sql/SqlClient#SqlClient',
       'layers.ts#storeLayer a EffectLayer',
       'layers.ts#storeLayer providesService svc/store.ts#Store',
+      // The alias carries the class (`rules/90-aliases.n3`).
+      'reexport.ts#makeSql a EffectLayerFactory',
       'svc/store.ts#Clock a EffectService',
       'svc/store.ts#Store a EffectService',
       'svc/store.ts#Verbose a EffectService',
     ]);
-    // `launched` is an `Effect` (a `Layer.launch` stage) and `makeLayer` a function returning a layer.
-    expect(facts.filter((fact) => /#(launched|makeLayer) /.test(fact))).toEqual([]);
+    // `launched` is an `Effect` (a `Layer.launch` stage).
+    expect(facts.filter((fact) => /#launched /.test(fact))).toEqual([]);
   });
 });
 

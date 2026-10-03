@@ -115,27 +115,38 @@ const keyNameOf = (node: Node): string | undefined => {
   return nameOf(key) ?? (typeof key.value === 'string' ? key.value : undefined);
 };
 
+/** The kind a static class member is indexed under, or `undefined` when it is not one. */
+const staticKindOf = (member: Node): string | undefined => {
+  if (member.static !== true || isPrivateMember(member)) {
+    return undefined;
+  }
+  if (member.type === 'PropertyDefinition') {
+    return isNode(member.value) ? 'variable' : undefined;
+  }
+  // An overload signature has no body; only the implementation is declared, as with top-level functions.
+  return member.type === 'MethodDefinition' &&
+    member.kind === 'method' &&
+    isNode(member.value) &&
+    isNode(member.value.body)
+    ? 'function'
+    : undefined;
+};
+
 /**
- * Initialized static members: the companion-object pattern (`static layerEmpty = Layer.succeed(…)`)
- * declares module-level values under a class, and they are as much API as a top-level `const`.
+ * Initialized static properties and static methods: the companion-object pattern
+ * (`static layerEmpty = Layer.succeed(…)`, `static layer() { … }`) declares module-level values under
+ * a class, and they are as much API as a top-level `const` or function.
  */
 const staticMembers = (node: Node, className: string, exported: boolean): Declaration[] => {
   const body = isNode(node.body) && Array.isArray(node.body.body) ? node.body.body.filter(isNode) : [];
   return body.flatMap((member) => {
-    if (
-      member.type !== 'PropertyDefinition' ||
-      member.static !== true ||
-      !isNode(member.value) ||
-      isPrivateMember(member)
-    ) {
-      return [];
-    }
-    const key = keyNameOf(member);
-    return key
+    const kind = staticKindOf(member);
+    const key = kind ? keyNameOf(member) : undefined;
+    return kind && key
       ? [
           {
             name: `${className}.${key}`,
-            kind: 'variable',
+            kind,
             exported,
             node: member,
             statement: member,

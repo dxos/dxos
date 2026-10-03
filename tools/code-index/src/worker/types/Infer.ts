@@ -863,6 +863,9 @@ export const infer = (context: InferContext): Inference => {
           return false;
         case 'PropertyDefinition':
           return annotationOf(parent) !== undefined;
+        case 'MethodDefinition':
+          // A method is typed by its own signature, not by where it sits.
+          return false;
         case 'CallExpression':
           // An immediately invoked function is the callee, not an argument: nothing types it.
           return child(parent, 'callee') !== current;
@@ -1724,6 +1727,10 @@ export const infer = (context: InferContext): Inference => {
         }
         case 'FunctionDeclaration':
           return binding(child(node, 'id') ?? node);
+        case 'MethodDefinition': {
+          const value = child(node, 'value');
+          return value ? functionType(value) : Term.unresolved('declaration');
+        }
         case 'PropertyDefinition': {
           const annotation = annotationOf(node);
           if (annotation) {
