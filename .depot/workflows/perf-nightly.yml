@@ -265,9 +265,8 @@ jobs:
           exit 1
 
   # The chat flow (`packages/core/compute/assistant-e2e/src/playwright/perf-chat.spec.ts`) against the
-  # Storybook chat story, scored against `src/playwright/perf/budgets.json`. Its own runner of the same
-  # fixed size, for the reason `echo-bench` has one. Only the blank space runs: seeding the busy one
-  # costs minutes per iteration in the browser.
+  # Storybook chat story, in a blank space and a busy one, scored together into the `chat` suite against
+  # `src/playwright/perf/budgets.json`. Its own runner of the same fixed size, for the reason `echo-bench` has one.
   chat-bench:
     runs-on: depot-ubuntu-24.04-8
     container:
@@ -315,7 +314,7 @@ jobs:
           DX_POSTHOG_API_KEY: ${{ secrets.COMPOSER_APP_PROD_POSTHOG_API_KEY }}
         run: |
           rm -rf test-results/perf
-          DX_PERF_SCALES=blank DX_PERF_ITERATIONS="$ITERATIONS" moon run assistant-e2e:e2e-perf
+          DX_PERF_SCALES=blank,busy DX_PERF_ITERATIONS="$ITERATIONS" moon run assistant-e2e:e2e-perf
 
       - name: Score the flow
         if: always()
@@ -326,6 +325,7 @@ jobs:
             echo "::warning::No measure batches were written; nothing to score."
             exit 0
           fi
+          # Scores blank and busy into one `chat` suite; a busy run that wrote nothing scores at the floor.
           node packages/core/compute/assistant-e2e/scripts/score-perf.ts score --publish --summary "$GITHUB_STEP_SUMMARY"
 
       - name: Upload artifacts

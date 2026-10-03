@@ -65,8 +65,8 @@ const BUDGET_MS = 120_000;
  */
 const BOOT_WRITE_BYTES_CEILING = 64 * 1024;
 
-/** Writing the busy space is minutes of feed appends in the browser. */
-const SEED_BUDGET_MS = 900_000;
+/** Seeding the busy space measured 23–25 s on a 4-core sandbox; a seed past this has stalled, not slowed. */
+const SEED_BUDGET_MS = 180_000;
 
 const chatPrompt = (page: Page): Locator =>
   page
@@ -122,6 +122,11 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
       await page.waitForFunction(seeded, undefined, {
         timeout: SEED_BUDGET_MS,
         polling: 1_000,
+      });
+      log.info('seeded', {
+        scale,
+        iteration,
+        seed: await page.evaluate(() => Reflect.get(globalThis, '__dxosPerfSeed')),
       });
       await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
     });

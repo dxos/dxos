@@ -1,69 +1,69 @@
 {
   "wall > boot": {
-    "target": 23000,
-    "limit": 34500,
+    "target": 7100,
+    "limit": 10650,
     "unit": "ms"
   },
   "wall > assistant-turns": {
-    "target": 45000,
-    "limit": 67500,
+    "target": 14500,
+    "limit": 21750,
     "unit": "ms"
   },
   "wall > scroll-thread": {
-    "target": 4100,
-    "limit": 6150,
+    "target": 2200,
+    "limit": 3300,
     "unit": "ms"
   },
   "cpu > boot": {
-    "target": 39000,
-    "limit": 58500,
+    "target": 18300,
+    "limit": 27450,
     "unit": "ms"
   },
   "cpu > assistant-turns": {
-    "target": 80000,
-    "limit": 120000,
+    "target": 22900,
+    "limit": 34350,
     "unit": "ms"
   },
   "cpu > scroll-thread": {
-    "target": 4900,
-    "limit": 7350,
+    "target": 2000,
+    "limit": 3000,
     "unit": "ms"
   },
   "cpu > idle": {
-    "target": 4800,
-    "limit": 7200,
+    "target": 1350,
+    "limit": 2025,
     "unit": "ms"
   },
   "run > total tab CPU": {
-    "target": 32000,
-    "limit": 48000,
+    "target": 11100,
+    "limit": 16650,
     "unit": "ms",
     "weight": 0.5
   },
   "run > total worker CPU": {
-    "target": 20000,
-    "limit": 30000,
+    "target": 4300,
+    "limit": 6450,
     "unit": "ms",
     "weight": 0.5
   },
   "run > SQLite read bytes": {
-    "target": 5000000,
-    "limit": 7500000,
+    "target": 4400000,
+    "limit": 6600000,
     "unit": "bytes"
   },
   "run > SQLite write bytes": {
-    "target": 38000000,
-    "limit": 57000000,
+    "target": 37600000,
+    "limit": 56400000,
     "unit": "bytes"
   },
   "run > worst tab lag p95": {
-    "target": 1500,
-    "limit": 2250,
+    "target": 510,
+    "limit": 765,
     "unit": "ms"
   },
   "run > worst worker lag p95": {
-    "target": 180,
-    "limit": 270,
+    "target": 45,
+    "limit": 68,
     "unit": "ms"
   },
   "run > peak app footprint": {
@@ -72,8 +72,85 @@
     "unit": "bytes"
   },
   "run > total blocking time": {
-    "target": 17000,
-    "limit": 25500,
+    "target": 1600,
+    "limit": 2400,
+    "unit": "ms"
+  },
+  "busy > wall > boot": {
+    "target": 7010,
+    "limit": 10515,
+    "unit": "ms"
+  },
+  "busy > wall > assistant-turns": {
+    "target": 14500,
+    "limit": 21750,
+    "unit": "ms"
+  },
+  "busy > wall > scroll-thread": {
+    "target": 2210,
+    "limit": 3315,
+    "unit": "ms"
+  },
+  "busy > cpu > boot": {
+    "target": 17400,
+    "limit": 26100,
+    "unit": "ms"
+  },
+  "busy > cpu > assistant-turns": {
+    "target": 22500,
+    "limit": 33750,
+    "unit": "ms"
+  },
+  "busy > cpu > scroll-thread": {
+    "target": 1790,
+    "limit": 2685,
+    "unit": "ms"
+  },
+  "busy > cpu > idle": {
+    "target": 1170,
+    "limit": 1755,
+    "unit": "ms"
+  },
+  "busy > run > total tab CPU": {
+    "target": 11000,
+    "limit": 16500,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "busy > run > total worker CPU": {
+    "target": 4300,
+    "limit": 6450,
+    "unit": "ms",
+    "weight": 0.5
+  },
+  "busy > run > SQLite read bytes": {
+    "target": 22200000,
+    "limit": 33300000,
+    "unit": "bytes"
+  },
+  "busy > run > SQLite write bytes": {
+    "target": 82600000,
+    "limit": 123900000,
+    "unit": "bytes"
+  },
+  "busy > run > worst tab lag p95": {
+    "target": 480,
+    "limit": 720,
+    "unit": "ms"
+  },
+  "busy > run > worst worker lag p95": {
+    "target": 38,
+    "limit": 57,
+    "unit": "ms"
+  },
+  "busy > run > peak app footprint": {
+    "target": 1200000000,
+    "limit": 1800000000,
+    "unit": "bytes"
+  },
+  "busy > run > total blocking time": {
+    "target": 1830,
+    "limit": 2745,
     "unit": "ms"
   }
 }
