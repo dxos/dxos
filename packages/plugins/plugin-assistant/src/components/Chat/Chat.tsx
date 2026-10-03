@@ -35,7 +35,7 @@ import {
 import { ActionToolbar, type ActionToolbarProps, createMenuAction } from '@dxos/react-ui-menu';
 import { TaskList, TaskQuestion } from '@dxos/react-ui-task';
 import { Message, Task } from '@dxos/types';
-import { keyToFallback } from '@dxos/util';
+import { keyToFallback, markWork } from '@dxos/util';
 
 import { type ChatSwitcher, useChatToolbarActions, useDebug, useSettled } from '#hooks';
 import { meta } from '#meta';
@@ -256,6 +256,7 @@ const ChatRoot = ({
                 });
               break;
             }
+            markWork('chat.submit');
             lastPrompt.current = ev.text;
             const context = getContext?.();
             // Await persistence (transient chat) before requesting so the agent resolves the

@@ -22,6 +22,8 @@ import {
 import { type DataReading, diffData, readData } from './collectors/data.ts';
 import { diffDisk, readDisk } from './collectors/disk.ts';
 import { type Screencast } from './collectors/frames.ts';
+import { requestLatency } from './collectors/latency.ts';
+import { readMarks } from './collectors/marks.ts';
 import { readDomCounters, readHeap, readProcessFootprint, sumAppFootprint, sumHeapUsed } from './collectors/memory.ts';
 import { diffNetwork } from './collectors/network.ts';
 import { type ProfileSession } from './collectors/profiler.ts';
@@ -258,6 +260,8 @@ export class StageRunner {
     const rpcCallsByMethod = diffRpcByMethod(before.rpc, rpcAfter);
     // After the refresh, like RPC: the worker `boot` creates holds the database and automerge.
     const data = diffData(before.data, await readData(this.#targets));
+    // After the refresh, like data: a mark is an instant, so the stage owns every one taken since it opened.
+    const latency = requestLatency(await readMarks(this.#targets, before.at));
     const closingPage = this.#targets.find((target) => target.kind === 'page');
     const reactAfter = this.#counters.react ? await readReact(closingPage) : undefined;
     const react = reactAfter
@@ -350,6 +354,7 @@ export class StageRunner {
       ...(calls ? { jsCalls: calls.calls } : {}),
       ...(react ? { react: react.counters } : {}),
       data,
+      ...(latency ? { latency } : {}),
       responsiveness: {
         ...responsiveness,
         ...(stills ? { stillFrameMaxMs: stills.maxMs, stillFrameCount: stills.count } : {}),
