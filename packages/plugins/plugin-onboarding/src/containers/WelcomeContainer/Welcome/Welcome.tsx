@@ -768,9 +768,6 @@ const LoginTab = ({
           {error?.startsWith('passkey-') && (
             <Field.Root invalid>
               <ValidationMessage>{t(passkeyErrorKey(error, moreOptions.length === 0))}</ValidationMessage>
-              <p className='px-2 pt-1 text-xs break-all text-fg-muted'>
-                {String(Reflect.get(globalThis, '__DX_PASSKEY_ERROR_DETAIL__') ?? '')}
-              </p>
             </Field.Root>
           )}
         </Container>
