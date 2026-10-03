@@ -25,7 +25,7 @@ backend batch, then advance the row. Deletion runs the other way.
 - [x] **API vs implementation as separate facts** — `apiDependsOn` / `implDependsOn`, split on the erased boundary.
 - [x] **`deus:snippet` per symbol** — declaration with implementation abbreviated, verified by re-parsing every snippet in the index.
 - [x] **Incremental crawl keyed on path + mtime** — 0.2s when nothing changed, 4.4s for two files.
-- [x] **`deus:canonicalName`** — the name an external importer writes: the bare identifier, or `<Namespace>.<identifier>` when a barrel publishes the module whole (`export * as N from './y'`). The parser asserts `namespaceOf` on the barrel's namespace symbol; `rules/60-canonical.n3` joins it to the other file's identifiers, with scoped negation so exactly one name is concluded per symbol.
+- [x] **`deus:canonicalName`** — the name an external importer writes when it is not the declared name: `<Namespace>.<identifier>` when a barrel publishes the module whole (`export * as N from './y'`). The parser asserts `namespaceOf` on the barrel's namespace symbol; `rules/60-canonical.n3` joins it to the other file's identifiers. Anything else is imported by its `deus:name`, which queries fall back to.
 
 ## Phase 2: the workspace
 

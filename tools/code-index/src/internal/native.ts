@@ -42,7 +42,8 @@ interface NativeStore {
   dropGraphs(graphs: string[]): void;
   insertQuads(nquads: string): void;
   removeQuads(nquads: string): void;
-  match(subject?: string | null, predicate?: string | null, object?: string | null, graph?: string | null): string;
+  /** Six strings per quad; see `fromRows`. */
+  match(subject?: string | null, predicate?: string | null, object?: string | null, graph?: string | null): string[];
   query(sparql: string): { kind: 'results' | 'quads'; body: string };
   reason(graph: string, rules: string, materialize: boolean): string;
   reasonAll(strata: { graph: string; rules: string }[]): Outcome[];
@@ -97,6 +98,36 @@ const toNQuads = (quads: readonly RDF.Quad[]): string =>
 
 const parseQuads = (text: string, format: 'N-Quads' | 'N-Triples'): RDF.Quad[] =>
   text.length === 0 ? [] : new Parser({ format }).parse(text);
+
+const nodeOf = (value: string): RDF.NamedNode | RDF.BlankNode =>
+  value.startsWith('_:') ? DataFactory.blankNode(value.slice(2)) : DataFactory.namedNode(value);
+
+/**
+ * `match`'s rows — subject, predicate, object kind (`I`, `B`, `L`), object value, the literal's
+ * `@language` or datatype, graph — as quads: building terms from strings is several times faster
+ * than parsing the same quads as N-Quads, which dominated every pass that reads a graph back.
+ */
+const fromRows = (rows: readonly string[]): RDF.Quad[] => {
+  const quads: RDF.Quad[] = [];
+  for (let index = 0; index + 5 < rows.length; index += 6) {
+    const [subject, predicate, kind, value, extra, graph] = rows.slice(index, index + 6);
+    const object: RDF.Quad_Object =
+      kind === 'I'
+        ? DataFactory.namedNode(value)
+        : kind === 'B'
+          ? DataFactory.blankNode(value)
+          : DataFactory.literal(value, extra.startsWith('@') ? extra.slice(1) : DataFactory.namedNode(extra));
+    quads.push(
+      DataFactory.quad(
+        nodeOf(subject),
+        DataFactory.namedNode(predicate),
+        object,
+        graph.length === 0 ? DataFactory.defaultGraph() : nodeOf(graph),
+      ),
+    );
+  }
+  return quads;
+};
 
 type JsonTerm =
   | { type: 'uri'; value: string }
@@ -285,14 +316,13 @@ export const make = <E>(
 
       match: (subject, predicate, object, graphName) =>
         attempt('Failed to match quads', () =>
-          parseQuads(
+          fromRows(
             native.match(
               subject && toNTriples(subject),
               predicate && toNTriples(predicate),
               object && toNTriples(object),
               graphName && toNTriples(graphName),
             ),
-            'N-Quads',
           ),
         ),
 
