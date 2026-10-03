@@ -5,16 +5,17 @@
 import * as Effect from 'effect/Effect';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
-import { MermaidEngine, SVG_SCHEMA, type Scene } from '@dxos/diagram';
+import { MermaidEngine, type Scene, SVG_SCHEMA } from '@dxos/diagram';
 import { Database, Filter } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { EffectEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
+import { Drawing } from '#types';
+
 import { toSvgFile } from '../components/SceneSvgFile.tsx';
-import { Drawing } from '../types/index.ts';
 import { SvgBuilder } from './builder.ts';
-import { fromDxSvg, importDxSvg, toDxSvg, toPayload } from './dx-svg.ts';
+import { fromDxSvg, importDxSvg, toDxSvg, toPayload } from './drawing-file.ts';
 
 const SOURCE = 'flowchart TB\n  A[Client] --> B[Server]\n  B --> C[(Store)]';
 

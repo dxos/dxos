@@ -219,7 +219,10 @@ const compactGroups = (
   const groups = graph.groups
     .filter((group) => group.children.some((id) => positions.has(id)))
     .map((group) => {
-      const coords = group.children.flatMap((id) => (positions.has(id) ? [positions.get(id)![axis]] : []));
+      const coords = group.children.flatMap((id) => {
+        const point = positions.get(id);
+        return point ? [point[axis]] : [];
+      });
       return { ids: group.children, start: Math.min(...coords), end: Math.max(...coords) };
     })
     .sort((left, right) => left.start - right.start);

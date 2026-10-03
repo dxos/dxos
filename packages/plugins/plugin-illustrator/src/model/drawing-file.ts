@@ -8,6 +8,7 @@
 // opened as an image anywhere and imported back as an editable drawing.
 //
 
+import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
@@ -93,27 +94,29 @@ export const fromDxSvg = (svg: string): Effect.Effect<Payload | undefined, Schem
   return payload === undefined ? Effect.succeed(undefined) : Schema.decodeUnknownEffect(Payload)(payload);
 };
 
+/** The SVG cannot be imported as a drawing. */
+export class ImportError extends Data.TaggedError('DrawingFileImportError')<{ message: string }> {}
+
 /** Adds a `.dx.svg`'s objects to the database under fresh ids and returns the drawing to open. */
-export const importDxSvg = (svg: string) =>
-  Effect.gen(function* () {
-    const payload = yield* fromDxSvg(svg);
-    if (!payload) {
-      return yield* Effect.fail(new Error('Not a .dx.svg: the SVG carries no DXOS payload.'));
+export const importDxSvg = Effect.fn('DrawingFile.importDxSvg')(function* (svg: string) {
+  const payload = yield* fromDxSvg(svg);
+  if (!payload) {
+    return yield* Effect.fail(new ImportError({ message: 'Not a .dx.svg: the SVG carries no DXOS payload.' }));
+  }
+  const { db } = yield* Database.Service;
+  const { root, objects } = remapIds(payload);
+  const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
+  let drawing: Drawing.Drawing | undefined;
+  for (const json of objects) {
+    const object = yield* Effect.promise(() => Obj.fromJSON(json, { refResolver: resolver }));
+    db.add(object);
+    if (json.id === root && Drawing.isDrawing(object)) {
+      drawing = object;
     }
-    const { db } = yield* Database.Service;
-    const { root, objects } = remapIds(payload);
-    const resolver = db.graph.createRefResolver({ context: { space: db.spaceId } });
-    let drawing: Drawing.Drawing | undefined;
-    for (const json of objects) {
-      const object = yield* Effect.promise(() => Obj.fromJSON(json, { refResolver: resolver }));
-      db.add(object);
-      if (json.id === root && Drawing.isDrawing(object)) {
-        drawing = object;
-      }
-    }
-    yield* Effect.promise(() => db.flush());
-    if (!drawing) {
-      return yield* Effect.fail(new Error('The .dx.svg payload has no drawing at its root.'));
-    }
-    return drawing;
-  });
+  }
+  yield* Effect.promise(() => db.flush());
+  if (!drawing) {
+    return yield* Effect.fail(new ImportError({ message: 'The .dx.svg payload has no drawing at its root.' }));
+  }
+  return drawing;
+});
