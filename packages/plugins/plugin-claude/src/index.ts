@@ -4,3 +4,4 @@
 
 export * as ClaudePlugin from './ClaudePlugin.ts';
 export * from '#types';
+export * from '#skills';

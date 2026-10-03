@@ -28,7 +28,7 @@ import {
   createMenuItemGroup,
   graphActions,
 } from '@dxos/react-ui-menu';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { useMobileLayout } from '#components';
 import { meta } from '#meta';

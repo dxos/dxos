@@ -6,3 +6,5 @@ export * as ScriptPlugin from './ScriptPlugin.ts';
 export * from '#types';
 export * as Templates from './Templates.ts';
 export * as ScriptFunction from './ScriptFunction.ts';
+export * from '#operations';
+export * from '#skills';

@@ -15,6 +15,7 @@ export default defineConfig({
     'components': 'src/components/index.ts',
     'containers': 'src/containers/index.ts',
     'meta': 'src/meta.ts',
+    'ClientOperation': 'src/operations/definitions.ts',
     'operations': 'src/operations/index.ts',
     'plugin': 'src/plugin.ts',
     'testing': 'src/testing/index.ts',

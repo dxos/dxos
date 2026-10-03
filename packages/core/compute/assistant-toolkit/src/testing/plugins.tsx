@@ -12,7 +12,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { DXN, Format, type Obj, Type } from '@dxos/echo';
 import { Card } from '@dxos/react-ui';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 export const MapSchema = Schema.Struct({
   coordinates: Format.GeoPoint,

@@ -28,9 +28,9 @@
       "import": "./dist/lib/Memory.mjs"
     },
     "./AgentOperation": {
-      "source": "./src/operations/definitions.ts",
-      "types": "./dist/types/src/operations/definitions.d.ts",
-      "import": "./dist/lib/AgentOperation.mjs"
+      "source": "./src/AgentOperation.ts",
+      "types": "./dist/types/src/AgentOperation.d.ts",
+      "import": "./dist/lib/ns/AgentOperation.mjs"
     },
     "./AgentOperationHandlerSet": {
       "source": "./src/AgentOperationHandlerSet.ts",

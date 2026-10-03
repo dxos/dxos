@@ -298,6 +298,8 @@ export default {
     fixable: 'code',
     schema: [],
     messages: {
+      nonNamespaceSubpath:
+        'Subpath "{{key}}" points at a module that is not a namespace. Every subpath of this package is a namespace: mark the module `// @import-as-namespace` (or point the subpath at one) and re-export it from the root as `export * as {{name}} from ...`.',
       missingNamespaceExport:
         'Subpath "{{key}}" is declared in the exports map but no namespace "{{name}}" is exported from this barrel. Add: export * as {{name}} from \'{{specifier}}\';',
       namespaceTargetMismatch:
@@ -425,9 +427,15 @@ export default {
             if (ambiguous.has(name)) {
               continue; // Reported below with the paths that collide.
             }
-            // Only a namespace module owes the barrel a re-export; a subpath onto an ordinary
-            // module is a standalone entrypoint, and hoisting it would enlarge the barrel.
-            if (!target || !isNamespaceModule(target, directiveCache)) {
+            if (!target) {
+              continue;
+            }
+            // A package whose imports `dxos-subpath-imports` rewrites exports namespaces only, so each of
+            // its PascalCase subpaths must be one the root can re-export as a namespace.
+            if (!isNamespaceModule(target, directiveCache)) {
+              if (isSubpathPackage(pkg.json.name)) {
+                context.report({ node, messageId: 'nonNamespaceSubpath', data: { key, name } });
+              }
               continue;
             }
             context.report({

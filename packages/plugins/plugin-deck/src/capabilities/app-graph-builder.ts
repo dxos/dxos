@@ -15,7 +15,7 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import * as AttentionCapabilities from '@dxos/plugin-attention/AttentionCapabilities';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 import { CompanionViewState, DeckCapabilities, DeckSchema } from '#types';

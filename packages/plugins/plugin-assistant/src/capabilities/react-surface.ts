@@ -16,7 +16,7 @@ import { Sequence } from '@dxos/conductor';
 import { Obj } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as SpaceSurface from '@dxos/plugin-space/SpaceSurface';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import {
   AgentArticle,

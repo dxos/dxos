@@ -10,7 +10,7 @@ import * as Role from '@dxos/app-framework/Role';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Outline, RemoteSession, Task, TaskSet, type TaskSet as TaskSetType } from '@dxos/types';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import {
   JournalArticle,

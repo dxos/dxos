@@ -11,7 +11,7 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { type Label } from '@dxos/ui-types/translations';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { DeckSchema } from '#types';
 

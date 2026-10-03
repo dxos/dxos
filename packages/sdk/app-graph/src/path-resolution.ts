@@ -14,7 +14,7 @@ import * as EffectEx from '@dxos/effect/EffectEx';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { EntityId, SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import * as Graph from './AppGraph.ts';
 import * as GraphBuilder from './AppGraphBuilder.ts';

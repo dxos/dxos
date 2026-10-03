@@ -13,7 +13,7 @@ import { Database, Entity, Obj, Ref, Type, View } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 import * as SettingsPath from '@dxos/plugin-settings/SettingsPath';
 import { ViewAnnotation, getTypeURIFromQuery } from '@dxos/schema';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { meta } from '#meta';
 

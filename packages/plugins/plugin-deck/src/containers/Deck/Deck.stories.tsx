@@ -44,7 +44,7 @@ import {
   decorateMarkdown,
   documentSlots,
 } from '@dxos/ui-editor';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { OperationHandler } from '#capabilities';
 import { useDeckState } from '#hooks';

@@ -4,3 +4,4 @@
 
 export * as GooglePlugin from './GooglePlugin.ts';
 export * from '#types';
+export * from '#operations';

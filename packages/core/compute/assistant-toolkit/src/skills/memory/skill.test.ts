@@ -14,7 +14,7 @@ import { Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 
-import { Memory } from '../../types/Memory.ts';
+import * as Memory from '../../types/Memory.ts';
 import { WebSearchToolkit } from '../websearch/toolkit.ts';
 import * as MemorySkill from './MemorySkill.ts';
 import { MemoryHandlers } from './operations/index.ts';
@@ -27,7 +27,7 @@ const FIXTURE_MODEL = DXN.make('com.anthropic.model.claude-sonnet-5.default');
 const TestLayer = AssistantTestLayer({
   model: FIXTURE_MODEL,
   operationHandlers: MemoryHandlers,
-  types: [Memory, Skill.Skill, Feed.Feed],
+  types: [Memory.Memory, Skill.Skill, Feed.Feed],
   skills: [MemorySkill.make()],
   tracing: 'pretty',
 });
@@ -36,7 +36,7 @@ const TestLayerWithWebSearch = AssistantTestLayer({
   model: FIXTURE_MODEL,
   operationHandlers: MemoryHandlers,
   toolkits: [OpaqueToolkit.make(WebSearchToolkit, Layer.empty)],
-  types: [Memory, Skill.Skill, Feed.Feed],
+  types: [Memory.Memory, Skill.Skill, Feed.Feed],
   skills: [MemorySkill.make()],
   tracing: 'pretty',
 });
@@ -51,7 +51,7 @@ describe('Memory Skill', { tags: ['model-fixture'] }, () => {
         });
         yield* agent.submitPrompt('Remember that my favorite programming language is TypeScript.');
         yield* agent.waitForCompletion();
-        const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
+        const memories = yield* Database.query(Query.select(Filter.type(Memory.Memory))).run;
         expect(memories.length).toBeGreaterThanOrEqual(1);
       },
       Effect.provide(TestLayer),
@@ -65,13 +65,13 @@ describe('Memory Skill', { tags: ['model-fixture'] }, () => {
     Effect.fnUntraced(
       function* (_) {
         yield* Database.add(
-          Obj.make(Memory, {
+          Obj.make(Memory.Memory, {
             title: 'Favorite color',
             content: 'The user prefers blue.',
           }),
         );
         yield* Database.add(
-          Obj.make(Memory, {
+          Obj.make(Memory.Memory, {
             title: 'Meeting notes',
             content: 'Discussed project timeline with Alice.',
           }),
@@ -95,7 +95,7 @@ describe('Memory Skill', { tags: ['model-fixture'] }, () => {
     Effect.fnUntraced(
       function* (_) {
         yield* Database.add(
-          Obj.make(Memory, {
+          Obj.make(Memory.Memory, {
             title: 'Outdated fact',
             content: 'The sky is green.',
           }),
@@ -107,7 +107,7 @@ describe('Memory Skill', { tags: ['model-fixture'] }, () => {
         });
         yield* agent.submitPrompt('Delete the memory about "Outdated fact".');
         yield* agent.waitForCompletion();
-        const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
+        const memories = yield* Database.query(Query.select(Filter.type(Memory.Memory))).run;
         const found = memories.find((memory) => memory.title === 'Outdated fact');
         expect(found).toBeUndefined();
       },
@@ -129,7 +129,7 @@ describe('Memory Skill', { tags: ['model-fixture'] }, () => {
           "I'm going to LA next week. Find me some good hotels and remember the recommendations.",
         );
         yield* agent.waitForCompletion();
-        const memories = yield* Database.query(Query.select(Filter.type(Memory))).run;
+        const memories = yield* Database.query(Query.select(Filter.type(Memory.Memory))).run;
         expect(memories.length).toBeGreaterThanOrEqual(1);
         const hasLAMemory = memories.some(
           (memory) =>

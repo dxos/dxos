@@ -28,7 +28,7 @@ import { Panel } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
 import { Loading } from '@dxos/react-ui/testing';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { OperationHandler } from '#capabilities';
 import { meta as pluginMeta } from '#meta';

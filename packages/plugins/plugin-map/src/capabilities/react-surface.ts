@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { MapSurface, MapViewEditor, WorldMapSurface } from '#containers';
 import { Map } from '#types';

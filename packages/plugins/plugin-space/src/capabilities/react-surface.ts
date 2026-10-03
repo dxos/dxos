@@ -13,7 +13,7 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Collection, Obj, Type } from '@dxos/echo';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { type Space, isSpace } from '@dxos/react-client/echo';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import {
   AddToCollectionDialog,

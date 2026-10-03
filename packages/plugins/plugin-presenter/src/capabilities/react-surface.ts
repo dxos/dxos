@@ -10,7 +10,7 @@ import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Collection, Obj } from '@dxos/echo';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { CollectionArticle, DocumentArticle, SlideArticle } from '#containers';
 import { meta } from '#meta';

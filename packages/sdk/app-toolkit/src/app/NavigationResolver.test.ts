@@ -10,7 +10,7 @@ import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { URI } from '@dxos/keys';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import * as NavigationResolver from './NavigationResolver.ts';
 

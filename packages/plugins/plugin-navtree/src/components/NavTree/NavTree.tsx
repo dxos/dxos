@@ -10,7 +10,7 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Tabs } from '@dxos/react-ui';
 import { type MenuItem } from '@dxos/react-ui-menu';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { useLoadDescendents } from '#hooks';
 

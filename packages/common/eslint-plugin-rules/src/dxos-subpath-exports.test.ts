@@ -190,6 +190,20 @@ describe('dxos-subpath-exports', () => {
     });
   });
 
+  it('requires every subpath of a listed package to be a namespace', () => {
+    const listed = fixture('subpath-reexport');
+    ruleTester.run('dxos-subpath-exports', rule, {
+      valid: [],
+      invalid: [
+        {
+          code: "export * as Alpha from './Alpha.ts';",
+          filename: listed,
+          errors: [{ messageId: 'nonNamespaceSubpath', data: { key: './Hooks', name: 'Hooks' } }],
+        },
+      ],
+    });
+  });
+
   it('allows only namespaces at the root of a subpath-linted package', () => {
     const flat = fixture('subpath-flat');
     ruleTester.run('dxos-subpath-exports', rule, {

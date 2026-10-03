@@ -15,7 +15,8 @@ import * as Record from 'effect/Record';
 import { type CleanupFn } from '@dxos/async';
 import * as AtomEx from '@dxos/effect/AtomEx';
 import { log } from '@dxos/log';
-import { type MaybePromise, Position, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
+import { type MaybePromise, type Specialize, getDebugName, isNonNullable } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import * as GraphEdge from './GraphEdge.ts';
 import * as GraphModel from './GraphModel.ts';

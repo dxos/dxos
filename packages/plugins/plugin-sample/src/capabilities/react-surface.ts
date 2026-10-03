@@ -19,7 +19,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as Surface from '@dxos/app-framework/Surface';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { SampleArticle, SampleCompanionPanel, SampleProperties } from '#containers';
 import { SampleItem } from '#types';
