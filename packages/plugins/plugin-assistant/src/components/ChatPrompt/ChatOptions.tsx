@@ -113,7 +113,7 @@ export const ChatOptions = ({ db, chat, context, registry, presets, preset, onPr
             </Tabs.Content>
             <Tabs.List classNames='p-1 gap-1 border-t border-separator'>
               <Tabs.Trigger value='view' icon='ph--eye--regular' label={t('chat-view.title')} />
-              <Tabs.Trigger value='skills' icon='ph--blueprint--regular' label={t('options.skills.title')} />
+              <Tabs.Trigger value='skills' icon='ph--student--regular' label={t('options.skills.title')} />
               <Tabs.Trigger value='mcp-servers' icon='ph--plugs-connected--regular' label={t('options.mcp.title')} />
               <Tabs.Trigger
                 value='model'
@@ -629,25 +629,23 @@ export const ObjectsPanel = ({ db, context }: Pick<ChatOptionsProps, 'db' | 'con
           </SearchList.Viewport>
         </SearchList.Content>
 
-        <Flex column>
-          <Flex classNames='p-1'>
-            <Select.Root
-              items={typeItems}
-              value={selectedUri === ANY ? [] : [selectedUri]}
-              onValueChange={({ value: [value] }) =>
-                setSelectedUri(typeOptions.find(({ uri }) => uri === value)?.uri ?? ANY)
-              }
-            >
-              <Select.Trigger placeholder={t('type-filter.placeholder')} />
-              <Select.Content>
-                {typeItems.map((item) => (
-                  <Select.Item key={item.value} item={item} />
-                ))}
-              </Select.Content>
-            </Select.Root>
-          </Flex>
+        <Toolbar.Root>
           <SearchList.Input placeholder={t('search.placeholder')} autoFocus />
-        </Flex>
+          <Select.Root
+            items={typeItems}
+            value={selectedUri === ANY ? [] : [selectedUri]}
+            onValueChange={({ value: [value] }) =>
+              setSelectedUri(typeOptions.find(({ uri }) => uri === value)?.uri ?? ANY)
+            }
+          >
+            <Select.Trigger fixed placeholder={t('type-filter.placeholder')} />
+            <Select.Content>
+              {typeItems.map((item) => (
+                <Select.Item key={item.value} item={item} />
+              ))}
+            </Select.Content>
+          </Select.Root>
+        </Toolbar.Root>
       </SearchList.Root>
     </Flex>
   );

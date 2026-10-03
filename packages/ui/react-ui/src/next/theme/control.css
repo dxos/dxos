@@ -750,30 +750,30 @@
     white-space: nowrap;
   }
   /*
-   * `fit='options'`: the value's cell (with the chosen icon's) also holds every option's icon and label, hidden and
+   * `fixed`: the value's cell (with the chosen icon's) also holds every option's icon and label, hidden and
    * zero-height, so the trigger is as wide as the widest of them whichever is chosen.
    */
-  .dx-select-trigger[data-fit='options'] {
+  .dx-select-trigger[data-fixed] {
     display: inline-grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     column-gap: 0;
     width: auto;
     justify-self: start;
   }
-  .dx-field > .dx-select > .dx-select-trigger[data-fit='options'] {
+  .dx-field > .dx-select > .dx-select-trigger[data-fixed] {
     align-self: start;
   }
-  .dx-select-trigger[data-fit='options'] > * {
+  .dx-select-trigger[data-fixed] > * {
     grid-row: 1;
   }
-  .dx-select-trigger[data-fit='options'] > .dx-icon {
+  .dx-select-trigger[data-fixed] > .dx-icon {
     grid-column: 1;
     margin-inline-end: var(--dx-gap-size);
   }
-  .dx-select-trigger[data-fit='options'] > [data-part='value-text'] {
+  .dx-select-trigger[data-fixed] > [data-part='value-text'] {
     grid-column: 2;
   }
-  .dx-select-trigger[data-fit='options'] > [data-part='indicator'] {
+  .dx-select-trigger[data-fixed] > [data-part='indicator'] {
     grid-column: 3;
     margin-inline-start: var(--dx-control-inset);
   }

@@ -41,7 +41,7 @@ const ICON_OPTIONS: SelectOption[] = [
   { value: 'table', label: 'Table', icon: 'ph--table--regular' },
 ];
 
-/** Labels of very different widths, for the `fit='options'` trigger. */
+/** Labels of very different widths, for the `fixed` trigger. */
 const DENSITY: SelectOption[] = [
   { value: 'xs', label: 'XS' },
   { value: 'comfortable', label: 'Comfortable spacing' },
@@ -66,7 +66,7 @@ const VEGETABLES: SelectOption[] = [
 
 /**
  * A plain select, one whose options have leading icons, then a grouped select with hued icons and custom item content,
- * a `multiple` select and a loading one, then a `fit='options'` trigger as wide as its widest option; `Select.Content` inherits its trigger row's size, except the grouped one, `lg` at every size.
+ * a `multiple` select and a loading one, then a `fixed` trigger as wide as its widest option; `Select.Content` inherits its trigger row's size, except the grouped one, `lg` at every size.
  */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
@@ -141,7 +141,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
     </Toolbar.Root>
     <Toolbar.Root>
       <Select.Root items={DENSITY}>
-        <Select.Trigger fit='options' placeholder='Density' aria-label='Density' data-testid={`fit-${size}`} />
+        <Select.Trigger fixed placeholder='Density' aria-label='Density' data-testid={`fixed-${size}`} />
         <Select.Content>
           {DENSITY.map((item) => (
             <Select.Item key={item.value} item={item} />
@@ -174,7 +174,7 @@ export const Default: Story = {};
  * `hue` colours an option's icon, and an Item's children replace its whole row, composed from parts. A `multiple` select stays open
  * while choosing and lists every choice; a long listbox scrolls in a thin ScrollArea with no native bar, keeping the
  * highlight in view; a `loading` trigger is busy and spins in place of its caret. A popup is at least its trigger's
- * width and grows to fit its widest option; a `fit='options'` trigger keeps the widest option's width whatever is
+ * width and grows to fit its widest option; a `fixed` trigger keeps the widest option's width whatever is
  * chosen. A listbox takes its trigger row's size unless given its own. Option icons lead each item and, once chosen, the trigger's value, at the size's icon scale. The story
  * ends with the icon listbox open.
  */
@@ -321,24 +321,26 @@ export const Test: Story = {
     const spinner = lookup.querySelector<SVGElement>('[data-spin]');
     await expect(spinner && getComputedStyle(spinner).animationName).toBe('dx-spin');
 
-    // `fit='options'`: as wide as the widest option, whichever is chosen.
+    // `fixed`: as wide as the widest option, whichever is chosen.
     for (const size of SIZES) {
-      const fit = byTestId(canvasElement, `fit-${size}`);
-      const width = fit.getBoundingClientRect().width;
-      const value = fit.querySelector<HTMLElement>('[data-part="value-text"]');
+      const fixed = byTestId(canvasElement, `fixed-${size}`);
+      const width = fixed.getBoundingClientRect().width;
+      const value = fixed.querySelector<HTMLElement>('[data-part="value-text"]');
       const widest = Math.max(
-        ...Array.from(fit.querySelectorAll<HTMLElement>('[data-part="value-sizer"] > *')).map(
+        ...Array.from(fixed.querySelectorAll<HTMLElement>('[data-part="value-sizer"] > *')).map(
           (label) => label.scrollWidth,
         ),
       );
-      await expect(value?.getBoundingClientRect().width ?? 0, `fit-${size} value`).toBeGreaterThanOrEqual(widest - 0.5);
+      await expect(value?.getBoundingClientRect().width ?? 0, `fixed-${size} value`).toBeGreaterThanOrEqual(
+        widest - 0.5,
+      );
       if (size === 'md') {
         for (const { label } of DENSITY) {
-          await userEvent.click(fit);
+          await userEvent.click(fixed);
           await userEvent.click(await body.findByRole('option', { name: label }));
           await waitFor(() => expect(value).toHaveTextContent(label));
           await waitFor(() => expect(body.queryByRole('listbox')).toBeNull());
-          await expect(fit.getBoundingClientRect().width, `fit-md with ${label}`).toBeCloseTo(width, 0);
+          await expect(fixed.getBoundingClientRect().width, `fit-md with ${label}`).toBeCloseTo(width, 0);
         }
       }
     }
