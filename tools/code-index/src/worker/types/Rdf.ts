@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+import type { Quad } from '@rdfjs/types';
+import { DataFactory } from 'n3';
 import { createHash } from 'node:crypto';
 
 import * as Ontology from '../../Ontology.ts';
@@ -26,9 +28,6 @@ export const collector = () => {
   const nodes = new Map<string, Emitted>();
 
   const emit = (type: Term.Type): string | undefined => {
-    if (type.kind === 'unknown') {
-      return undefined;
-    }
     const iri = typeIri(type);
     if (nodes.has(iri)) {
       return iri;
@@ -57,6 +56,23 @@ export const collector = () => {
         break;
       case 'typeof':
         node.typeHead = type.iri;
+        if (type.pending.length > 0) {
+          node.pending = type.pending.join(' ');
+        }
+        break;
+      case 'returnOf': {
+        const callee = emit(type.callee);
+        if (callee) {
+          node.callee = callee;
+        }
+        positions('typeArg', type.args);
+        if (type.pending.length > 0) {
+          node.pending = type.pending.join(' ');
+        }
+        break;
+      }
+      case 'unresolved':
+        node.unresolvedReason = type.reason;
         break;
       case 'literal':
         node.literalValue = Term.text(type);
@@ -105,9 +121,8 @@ export const collector = () => {
   };
 
   return {
-    /** The IRI to assert as `deus:hasType`, when the term is known and within budget. */
-    add: (type: Term.Type): string | undefined =>
-      type.kind === 'unknown' || Term.size(type) > EMISSION_BUDGET ? undefined : emit(type),
+    /** The IRI to assert as `deus:hasType`, when the term is within budget. */
+    add: (type: Term.Type): string | undefined => (Term.size(type) > EMISSION_BUDGET ? undefined : emit(type)),
     nodes: (): Emitted[] => [...nodes.values()],
   };
 };
@@ -131,9 +146,55 @@ const toTypeNode = (node: Record<string, unknown>): Ontology.TypeNode => {
     ...text('typeHead'),
     ...text('returnType'),
     ...text('literalValue'),
+    ...text('callee'),
+    ...text('pending'),
+    ...text('unresolvedReason'),
     ...list('typeMember'),
     ...list('typeProperty'),
     ...(node.typePartial === true ? { typePartial: true } : {}),
     ...positional,
   };
 };
+
+const XSD_BOOLEAN = DataFactory.namedNode('http://www.w3.org/2001/XMLSchema#boolean');
+
+/** Keys whose values are IRIs of other nodes, as the JSON-LD context declares them. */
+const REFERENCES = new Set(
+  Object.entries(Ontology.CONTEXT)
+    .filter(([, term]) => typeof term === 'object' && term !== null && '@type' in term && term['@type'] === '@id')
+    .map(([key]) => key),
+);
+
+/**
+ * The quads a set of type nodes stands for — what the JSON-LD parser would produce from them, for a
+ * reasoner that writes type terms without going through a document.
+ */
+export const toQuads = (nodes: readonly Emitted[]): Quad[] =>
+  nodes.flatMap((node) => {
+    const subject = DataFactory.namedNode(node['@id']);
+    return Object.entries(node).flatMap(([key, value]): Quad[] => {
+      if (key === '@id') {
+        return [];
+      }
+      if (key === '@type') {
+        return [DataFactory.quad(subject, Ontology.type, Ontology.iri(String(value)))];
+      }
+      const predicate = Ontology.iri(key);
+      const values: unknown[] = Array.isArray(value) ? value : [value];
+      return values.flatMap((entry): Quad[] => {
+        if (typeof entry === 'boolean') {
+          return [DataFactory.quad(subject, predicate, DataFactory.literal(String(entry), XSD_BOOLEAN))];
+        }
+        if (typeof entry !== 'string') {
+          return [];
+        }
+        return [
+          DataFactory.quad(
+            subject,
+            predicate,
+            REFERENCES.has(key) ? DataFactory.namedNode(entry) : DataFactory.literal(entry),
+          ),
+        ];
+      });
+    });
+  });

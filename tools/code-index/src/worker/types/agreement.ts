@@ -4,12 +4,13 @@
 
 import * as ts from '@typescript/typescript6';
 import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 
 import * as Ontology from '../../Ontology.ts';
 import { type Node, child, walk } from '../analyzers/ast.ts';
 import { type AnalyzeContext, type Resolve } from '../analyzers/common.ts';
-import { inferFile } from '../analyzers/typescript.ts';
+import { analyzeTypeScript, inferFile, isTypeScriptPath } from '../analyzers/typescript.ts';
+import { binder, envFromDocuments, hasDeferred } from './Bind.ts';
 import { type ImportBinding, boundaryIri } from './Boundary.ts';
 import * as Term from './Term.ts';
 
@@ -21,7 +22,7 @@ import * as Term from './Term.ts';
  * when the two sides spell the same type differently.
  */
 
-export type Verdict = 'agree' | 'partial' | 'unknown' | 'disagree' | 'skipped';
+export type Verdict = 'agree' | 'partial' | 'unresolved' | 'deferred' | 'disagree' | 'skipped';
 
 export type Finding = {
   readonly path: string;
@@ -35,7 +36,58 @@ export type Finding = {
 
 export type Score = Record<Verdict, number>;
 
-export const emptyScore = (): Score => ({ agree: 0, partial: 0, unknown: 0, disagree: 0, skipped: 0 });
+export type Result = {
+  readonly score: Score;
+  readonly findings: Finding[];
+  /** Declarations the cross-file pass changed. */
+  readonly bound: number;
+  /** `unresolved` reasons over every scored term, most frequent first. */
+  readonly reasons: ReadonlyArray<readonly [string, number]>;
+};
+
+export const emptyScore = (): Score => ({
+  agree: 0,
+  partial: 0,
+  unresolved: 0,
+  deferred: 0,
+  disagree: 0,
+  skipped: 0,
+});
+
+/** Every `unresolved` reason in a term — the buckets an analyzer improvement moves. */
+const reasonsOf = (type: Term.Type, into: Map<string, number>): void => {
+  const visit = (inner: Term.Type): void => {
+    switch (inner.kind) {
+      case 'unresolved':
+        into.set(inner.reason, (into.get(inner.reason) ?? 0) + 1);
+        return;
+      case 'returnOf':
+        visit(inner.callee);
+        inner.args.forEach(visit);
+        return;
+      case 'ref':
+        inner.args.forEach(visit);
+        return;
+      case 'union':
+      case 'intersection':
+        inner.members.forEach(visit);
+        return;
+      case 'object':
+        inner.properties.forEach((property) => visit(property.type));
+        return;
+      case 'tuple':
+        inner.elements.forEach((element) => visit(element.type));
+        return;
+      case 'function':
+        inner.params.forEach((entry) => visit(entry.type));
+        visit(inner.returns);
+        return;
+      default:
+        return;
+    }
+  };
+  visit(type);
+};
 
 /** The compiler options the repo builds with (`tsconfig.base.json`), plus source-condition resolution. */
 export const compilerOptions = (root: string): ts.CompilerOptions => ({
@@ -94,18 +146,47 @@ const isReadonlyProperty = (symbol: ts.Symbol): boolean =>
     (declaration) => (ts.getCombinedModifierFlags(declaration) & ts.ModifierFlags.Readonly) !== 0,
   );
 
+/**
+ * Every IRI any program file uses for a symbol: two files can name one declaration differently
+ * (`file:keys/src/EID.ts#EID` and `module:@dxos/keys#EID.EID`), and a bound term carries the
+ * declaring file's spelling into the importing file's comparison.
+ */
+class Registry {
+  readonly names = new Map<ts.Symbol, string[]>();
+  readonly symbols = new Map<string, ts.Symbol>();
+
+  add(symbol: ts.Symbol, iri: string): void {
+    const names = this.names.get(symbol) ?? [];
+    if (!names.includes(iri)) {
+      names.push(iri);
+    }
+    this.names.set(symbol, names);
+    if (!this.symbols.has(iri)) {
+      this.symbols.set(iri, symbol);
+    }
+  }
+}
+
 /** Everything the comparison needs to know about one file on the `tsc` side. */
 class TscFile {
   readonly #checker: ts.TypeChecker;
   readonly #program: ts.Program;
+  /** This file's own routes first: the name its source would write. */
   readonly #names = new Map<ts.Symbol, string[]>();
-  readonly #symbols = new Map<string, ts.Symbol>();
+  readonly #registry: Registry;
   /** Type syntax by span, so a named type the propagator read from source is checked against `tsc`'s reading of the same node. */
   readonly #typeNodes = new Map<string, ts.TypeReferenceNode>();
   readonly #bindings: ReadonlyMap<string, ImportBinding>;
   readonly #source: ts.SourceFile;
 
-  constructor(program: ts.Program, source: ts.SourceFile, path: string, bindings: ReadonlyMap<string, ImportBinding>) {
+  constructor(
+    program: ts.Program,
+    source: ts.SourceFile,
+    path: string,
+    bindings: ReadonlyMap<string, ImportBinding>,
+    registry: Registry,
+  ) {
+    this.#registry = registry;
     this.#program = program;
     this.#bindings = bindings;
     this.#source = source;
@@ -118,9 +199,7 @@ class TscFile {
         names.push(iri);
       }
       this.#names.set(target, names);
-      if (!this.#symbols.has(iri)) {
-        this.#symbols.set(iri, target);
-      }
+      registry.add(target, iri);
       return target;
     };
     // Local top-level declarations first: a local name wins over any route through an import.
@@ -196,8 +275,8 @@ class TscFile {
 
   /** Whether two IRIs are routes to one symbol (`React.FC` and `FC` from `react`). */
   equivalent(left: string, right: string): boolean {
-    const symbol = this.#symbols.get(left);
-    return left === right || (symbol !== undefined && (this.#names.get(symbol) ?? []).includes(right));
+    const symbol = this.#registry.symbols.get(left);
+    return left === right || (symbol !== undefined && this.#registry.symbols.get(right) === symbol);
   }
 
   /**
@@ -239,7 +318,7 @@ class TscFile {
   }
 
   symbolOf(iri: string): ts.Symbol | undefined {
-    return this.#symbols.get(iri);
+    return this.#registry.symbols.get(iri);
   }
 
   /** A `tsc` type as a term; `ignoreAlias` expands a top-level alias instead of naming it. */
@@ -465,7 +544,8 @@ class TscFile {
     const isLib =
       iri.startsWith(Term.LIB_BASE) && target?.name === iri.slice(Term.LIB_BASE.length) && this.nameOf(target) === iri;
     return (
-      isLib || (target !== undefined && (this.#names.get(target) ?? []).some((known) => this.equivalent(known, iri)))
+      isLib ||
+      (target !== undefined && (this.#registry.names.get(target) ?? []).some((known) => this.equivalent(known, iri)))
     );
   }
 
@@ -517,7 +597,7 @@ class TscFile {
 
 /** Compare the propagator's term with `tsc`'s; unknown positions in `mine` make the result partial. */
 const compare = (mine: Term.Type, theirs: Term.Type, file: TscFile, depth = 0): Verdict => {
-  if (mine.kind === 'unknown') {
+  if (mine.kind === 'unresolved' || mine.kind === 'returnOf') {
     return 'partial';
   }
   if (Term.text(mine) === Term.text(theirs)) {
@@ -556,7 +636,9 @@ const compare = (mine: Term.Type, theirs: Term.Type, file: TscFile, depth = 0): 
         }
         const theirMembers = theirs.kind === 'union' ? theirs.members : [theirs];
         if (theirMembers.length !== mine.members.length) {
-          return mine.members.some((member) => member.kind === 'unknown') ? 'partial' : 'disagree';
+          return mine.members.some((member) => member.kind === 'unresolved' || member.kind === 'returnOf')
+            ? 'partial'
+            : 'disagree';
         }
         const remaining = [...theirMembers];
         let verdict: Verdict = 'agree';
@@ -698,15 +780,49 @@ export type CompareOptions = {
 };
 
 /** Score every variable and function declaration in `files` (repo-relative). */
-export const compareFiles = (
-  files: readonly string[],
-  options: CompareOptions,
-): { score: Score; findings: Finding[] } => {
+export const compareFiles = (files: readonly string[], options: CompareOptions): Result => {
   const { root } = options;
   const absolute = files.map((file) => join(root, file));
   const program = ts.createProgram(absolute, compilerOptions(root));
   const score = emptyScore();
   const findings: Finding[] = [];
+  const reasons = new Map<string, number>();
+  let bound = 0;
+  // The cross-file pass needs the declaring files' facts: every repository file the program loaded.
+  const documents = program
+    .getSourceFiles()
+    .map((sourceFile) => relative(root, sourceFile.fileName))
+    .filter(
+      (path) =>
+        !path.startsWith('..') && !path.includes('node_modules') && !path.endsWith('.d.ts') && isTypeScriptPath(path),
+    )
+    .map((path) =>
+      analyzeTypeScript({
+        root,
+        path,
+        source: readFileSync(join(root, path), 'utf8'),
+        mtime: 0,
+        resolve: options.resolve,
+        packageOf: options.packageOf ?? (() => undefined),
+      }),
+    );
+  const { bind } = binder(envFromDocuments(documents));
+  // Every repository file's routes go into the registry before any comparison runs.
+  const registry = new Registry();
+  for (const document of documents) {
+    const sourceFile = program.getSourceFile(join(root, document.path));
+    if (sourceFile) {
+      const { bindings } = inferFile({
+        root,
+        path: document.path,
+        source: sourceFile.text,
+        mtime: 0,
+        resolve: options.resolve,
+        packageOf: options.packageOf ?? (() => undefined),
+      });
+      new TscFile(program, sourceFile, document.path, bindings, registry);
+    }
+  }
   for (const path of files) {
     const sourceFile = program.getSourceFile(join(root, path));
     if (!sourceFile) {
@@ -722,7 +838,7 @@ export const compareFiles = (
       packageOf: options.packageOf ?? (() => undefined),
     };
     const { program: ast, bindings, inference } = inferFile(context);
-    const tsc = new TscFile(program, sourceFile, path, bindings);
+    const tsc = new TscFile(program, sourceFile, path, bindings, registry);
 
     // `tsc` declaration names by offset, to pair with oxc's binding identifiers.
     const tscNames = new Map<number, ts.Identifier>();
@@ -759,7 +875,12 @@ export const compareFiles = (
       if (!symbol) {
         continue;
       }
-      const mine = inference.binding(id);
+      const local = inference.binding(id);
+      const mine = hasDeferred(local) ? bind(local) : local;
+      if (Term.text(mine) !== Term.text(local)) {
+        bound++;
+      }
+      reasonsOf(mine, reasons);
       const theirsType = tsc.checker.getTypeOfSymbol(symbol);
       const theirs = tsc.convert(theirsType);
       const theirsText = theirs === INEXPRESSIBLE ? tsc.checker.typeToString(theirsType) : Term.text(theirs);
@@ -770,8 +891,10 @@ export const compareFiles = (
       ) {
         // `tsc` has no answer we can state (or only `any`, from an import it could not resolve).
         verdict = 'skipped';
-      } else if (mine.kind === 'unknown') {
-        verdict = 'unknown';
+      } else if (mine.kind === 'unresolved') {
+        verdict = 'unresolved';
+      } else if (mine.kind === 'returnOf') {
+        verdict = 'deferred';
       } else {
         verdict = compare(mine, theirs, tsc);
       }
@@ -787,5 +910,10 @@ export const compareFiles = (
       });
     }
   }
-  return { score, findings };
+  return {
+    score,
+    findings,
+    bound,
+    reasons: [...reasons].sort(([, left], [, right]) => right - left),
+  };
 };

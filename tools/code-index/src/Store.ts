@@ -109,6 +109,8 @@ export interface Api {
    * the derived graph with this pass's conclusions — derivations never outlive their premises.
    */
   readonly reason: (reasoner: string, rules: string, options?: ReasonOptions) => Effect.Effect<Quad[], StoreError>;
+  /** Replace a JS reasoner's graph with these conclusions, in one batch — as `reason` does for rules. */
+  readonly materialize: (reasoner: string, quads: readonly Quad[]) => Effect.Effect<void, StoreError>;
   /** Every quad a reasoner concluded, as its graph currently stands. */
   readonly derived: (reasoner?: string) => Effect.Effect<Quad[], StoreError>;
 
@@ -444,6 +446,15 @@ const make = (dir: string): Effect.Effect<Api, StoreError, SqlClient.SqlClient |
             yield* patchGraph(yield* match(undefined, undefined, undefined, graph), quads);
           }
           return quads;
+        }),
+
+      materialize: (reasoner, quads) =>
+        Effect.gen(function* () {
+          const graph = Ontology.derivedGraphIri(reasoner);
+          yield* patchGraph(
+            yield* match(undefined, undefined, undefined, graph),
+            quads.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, graph)),
+          );
         }),
 
       derived: (reasoner) =>
