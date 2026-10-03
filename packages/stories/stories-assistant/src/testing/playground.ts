@@ -207,6 +207,12 @@ export const SCRIPTED_PROMPTS = {
   watch: "Kai, let me know when Dima's indexer PR is up.",
   stillWorking: 'Still working on the indexer PR, it should be up tomorrow.',
   prUp: 'The indexer PR is up.',
+  // Keep-me-posted: Josiah watches Dima, Rich asks for Dima's help, Dima agrees.
+  greet: 'Hi Kai.',
+  keepPosted: 'What is Dima working on? Keep me updated.',
+  working: "I'm working on the agent plugin.",
+  needHelp: 'Ask Dima to help me with it.',
+  agree: "OK, I'll start working on that.",
 } as const;
 
 export const SCRIPTED_REPLIES = {
@@ -222,6 +228,14 @@ export const SCRIPTED_REPLIES = {
   notified: 'Heads up: Dima says the indexer PR is up.',
   // What the composer writes when the watch fires; distinct from the template, which is only the fallback.
   composed: 'Rich, Dima just told me her indexer PR is up and ready for review.',
+  postedWatching: "Dima owns the indexer fix; I'll keep you posted on what she works on.",
+  workingNoted: "Noted, you're on the agent plugin.",
+  askedDima: 'I asked Dima to help you with the agent plugin.',
+  helpDelivered: 'Hi Dima, Kai here: Rich is working on the agent plugin and asks if you can help.',
+  helpReported: 'Dima will start helping you with the agent plugin.',
+  // What the composer writes for Josiah when it is given the conversation; the bare quote is what it would forward without it.
+  postedComposed: "Update on Dima: she's starting work on the agent plugin with Rich.",
+  postedBare: "Update on Dima: OK, I'll start working on that.",
 } as const;
 
 /**
@@ -256,6 +270,24 @@ export const GOAL_FACTS = [
     polarity: '+',
   },
 ] as const;
+
+/**
+ * What the scripted extractor finds in the keep-me-posted turns. Rich's fact is his own, so it must not
+ * reach Josiah; Dima's matches Josiah's watch on her.
+ */
+export const POSTED_FACTS = [
+  { subject: 'Rich', predicate: 'works on', object: 'agent plugin', quote: SCRIPTED_PROMPTS.working },
+  {
+    subject: 'Dima',
+    predicate: 'starts working on',
+    object: 'agent plugin',
+    quote: SCRIPTED_PROMPTS.agree,
+    force: 'commissive',
+  },
+] as const;
+
+/** Kai's scripted answer to a participant's greeting. */
+export const greeting = (name: string): string => `Hi ${name}, what can I do for you?`;
 
 /** The first line of pipeline-rdf's extraction prompt, which is how the script tells `readSource` calls apart. */
 const EXTRACTION_PROMPT = 'You extract atomic propositions';
@@ -338,6 +370,11 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
   let relay: string | undefined;
   return (request) => {
     if (request.text.startsWith(COMPOSE_PROMPT)) {
+      if (request.text.startsWith(`${COMPOSE_PROMPT} Josiah`)) {
+        // Only the conversation says what "that" is, so without it the composer can only forward the quote.
+        const resolved = request.text.includes(SCRIPTED_REPLIES.helpDelivered);
+        return { parts: [text(resolved ? SCRIPTED_REPLIES.postedComposed : SCRIPTED_REPLIES.postedBare)] };
+      }
       return { parts: [text(SCRIPTED_REPLIES.composed)] };
     }
     if (request.text.includes(EXTRACTION_PROMPT)) {
@@ -349,6 +386,11 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
           polarity: '+',
         })),
         ...GOAL_FACTS.filter(({ quote }) => request.text.includes(quote)),
+        ...POSTED_FACTS.filter(({ quote }) => request.text.includes(quote)).map((fact) => ({
+          ...fact,
+          factuality: 'CT+',
+          polarity: '+',
+        })),
       ];
       return { parts: [text(JSON.stringify({ facts }))] };
     }
@@ -369,7 +411,9 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
               toolCall(tool(RelayOperation.SendMessage), {
                 agent: refs.agent,
                 recipient: refs.Dima,
-                text: SCRIPTED_REPLIES.delivered,
+                text: said.includes(SCRIPTED_PROMPTS.needHelp)
+                  ? SCRIPTED_REPLIES.helpDelivered
+                  : SCRIPTED_REPLIES.delivered,
                 relay,
               }),
             ],
@@ -377,14 +421,30 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
         }
         case tool(RelayOperation.SendMessage):
           return {
-            parts: [text(said.includes(SCRIPTED_PROMPTS.relay) ? SCRIPTED_REPLIES.relayed : SCRIPTED_REPLIES.thanked)],
+            parts: [
+              text(
+                said.includes(SCRIPTED_PROMPTS.relay)
+                  ? SCRIPTED_REPLIES.relayed
+                  : said.includes(SCRIPTED_PROMPTS.needHelp)
+                    ? SCRIPTED_REPLIES.askedDima
+                    : SCRIPTED_REPLIES.thanked,
+              ),
+            ],
           };
         case tool(ModeOperation.SwitchMode):
           return { parts: [text(SCRIPTED_REPLIES.switched)] };
         case tool(MemoryOperation.Remember):
           return { parts: [text(SCRIPTED_REPLIES.noted)] };
         case tool(TriggerOperation.WatchFacts):
-          return { parts: [text(SCRIPTED_REPLIES.watching)] };
+          return {
+            parts: [
+              text(
+                said.includes(SCRIPTED_PROMPTS.keepPosted)
+                  ? SCRIPTED_REPLIES.postedWatching
+                  : SCRIPTED_REPLIES.watching,
+              ),
+            ],
+          };
         default:
           return { parts: [text('Done.')] };
       }
@@ -442,6 +502,52 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
             outcome: "Dima's indexer PR is up",
             when: { speaker: 'Dima', about: 'indexer PR', force: 'assertive', polarity: '+' },
             message: SCRIPTED_REPLIES.notified,
+          }),
+        ],
+      };
+    }
+    const greeted = said.includes(SCRIPTED_PROMPTS.greet) ? said.match(/\[From: ([^\]]+)\]/)?.[1] : undefined;
+    if (greeted) {
+      return { parts: [text(greeting(greeted))] };
+    }
+    if (said.includes(SCRIPTED_PROMPTS.working) && said.includes('[From: Rich]')) {
+      return { parts: [text(SCRIPTED_REPLIES.workingNoted)] };
+    }
+    if (said.includes(SCRIPTED_PROMPTS.keepPosted) && said.includes('[From: Josiah]')) {
+      return {
+        parts: [
+          toolCall(tool(TriggerOperation.WatchFacts), {
+            agent: refs.agent,
+            requester: refs.Josiah,
+            outcome: "Josiah is kept posted on Dima's work",
+            request: SCRIPTED_PROMPTS.keepPosted,
+            when: { speaker: 'Dima' },
+            message: 'Update on Dima: {fact}',
+            ongoing: true,
+          }),
+        ],
+      };
+    }
+    if (said.includes(SCRIPTED_PROMPTS.needHelp) && said.includes('[From: Rich]')) {
+      return {
+        parts: [
+          toolCall(tool(RelayOperation.CreateRelay), {
+            agent: refs.agent,
+            recipient: refs.Dima,
+            requester: refs.Rich,
+            message: 'Rich is working on the agent plugin and asks for your help.',
+          }),
+        ],
+      };
+    }
+    if (said.includes(SCRIPTED_PROMPTS.agree) && said.includes('[From: Dima]')) {
+      return {
+        parts: [
+          toolCall(tool(RelayOperation.SendMessage), {
+            agent: refs.agent,
+            recipient: refs.Rich,
+            text: SCRIPTED_REPLIES.helpReported,
+            relay,
           }),
         ],
       };

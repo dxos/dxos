@@ -8,6 +8,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import * as Chat from '@dxos/assistant/Chat';
 import { type Database, Feed, Filter, Obj, Query } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
+import * as ChatParticipant from '@dxos/plugin-agent/ChatParticipant';
 import * as FactEntry from '@dxos/plugin-agent/FactEntry';
 import * as Goal from '@dxos/plugin-agent/Goal';
 import * as Memory from '@dxos/plugin-agent/Memory';
@@ -24,10 +25,12 @@ import {
   PARTICIPANTS,
   PLAYGROUND_MODEL,
   type PlaygroundRefs,
+  POSTED_FACTS,
   SCRIPTED_PROMPTS,
   SCRIPTED_REPLIES,
   TRANSCRIPT_FACTS,
   createDecorators,
+  greeting,
   makePlaygroundScript,
   setupPlayground,
   storyParameters,
@@ -120,6 +123,25 @@ const waitForSpace = async <T,>(read: (db: Database.Database) => Promise<T>, pre
   );
 };
 
+/**
+ * Checks that `predicate` keeps holding for `duration`: a negative check ("nothing was sent") must watch
+ * for a while, since what it rules out would arrive asynchronously, after the step it follows.
+ */
+const holdsFor = async <T,>(
+  read: (db: Database.Database) => Promise<T>,
+  predicate: (value: T) => boolean,
+  duration = 2_000,
+) => {
+  const deadline = Date.now() + duration;
+  while (Date.now() < deadline) {
+    const value = storyDb ? await read(storyDb) : undefined;
+    if (value === undefined || !predicate(value)) {
+      throw new Error(`The space left the expected state; saw: ${JSON.stringify(value)}`);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+};
+
 /** Waits for `text` in a panel, reporting what the panel shows if it never appears. */
 const findInPanel = (element: HTMLElement, text: string) =>
   waitFor(
@@ -131,13 +153,33 @@ const findInPanel = (element: HTMLElement, text: string) =>
     { timeout: 60_000, interval: 250 },
   );
 
+/** The text of every message the agent posted in a participant's chat; tool calls are left out. */
+const readReplies = async (db: Database.Database, participant: string) => {
+  // By participant rather than URI: setup records participant chats by a ref URI whose form differs from `Obj.getURI`.
+  const person = (await db.query(Filter.type(Person.Person)).run()).find(
+    ({ preferredName }) => preferredName === participant,
+  );
+  const chat = (await db.query(Filter.type(Chat.Chat)).run()).find(
+    (chat) => person !== undefined && ChatParticipant.get(chat) === person.id,
+  );
+  const feed = await chat?.feed.load();
+  if (!feed) {
+    return [];
+  }
+  const messages = await db.query(Query.select(Filter.type(Message.Message)).from(feed)).run();
+  return messages
+    .filter(({ sender }) => sender.role === 'assistant')
+    .flatMap(({ blocks }) => blocks.flatMap((block) => (block._tag === 'text' ? [block.text] : [])));
+};
+
 /** The panel of one participant. */
 const panel = async (canvasElement: HTMLElement, participant: string): Promise<HTMLElement> =>
   within(canvasElement).findByTestId(`chat-panel-${participant}`, {}, { timeout: 60_000 });
 
 /**
- * The same layout on a scripted model: reads the transcript on load, relays from Rich to Dima and
- * back, and switches Rich's channel to note-taking.
+ * The same layout on a scripted model: reads the transcript on load, then plays a keep-me-posted
+ * exchange. Josiah asks what Dima is working on and to be kept updated; Rich says he is on the agent
+ * plugin and asks Kai to get Dima's help; Dima agrees, and Josiah is told what she is now working on.
  */
 export const PlaygroundScripted: Story = {
   decorators: createDecorators({
@@ -177,31 +219,72 @@ export const PlaygroundScripted: Story = {
         ),
     );
 
-    // 2. Rich asks Kai to tell Dima; the message lands in Dima's panel.
+    // 2. Each person says hi first, and waits for Kai's answer before the next one does.
     const rich = await panel(canvasElement, 'Rich');
     const dima = await panel(canvasElement, 'Dima');
-    await submitPrompt(rich, SCRIPTED_PROMPTS.relay);
-    await findInPanel(rich, SCRIPTED_REPLIES.relayed);
-    await findInPanel(dima, SCRIPTED_REPLIES.delivered);
+    const josiah = await panel(canvasElement, 'Josiah');
+    for (const [name, element] of [
+      ['Josiah', josiah],
+      ['Rich', rich],
+      ['Dima', dima],
+    ] as const) {
+      await submitPrompt(element, SCRIPTED_PROMPTS.greet);
+      await findInPanel(element, greeting(name));
+    }
 
-    // 3. Dima replies in her panel; Kai reports back in Rich's.
-    await submitPrompt(dima, SCRIPTED_PROMPTS.reply);
-    await findInPanel(rich, SCRIPTED_REPLIES.reported);
+    // 3. Josiah asks what Dima is working on and to be kept updated: Kai answers, records a goal Josiah owns and
+    // one ongoing watch, and forwards nothing yet.
+    const [richFact, dimaFact] = POSTED_FACTS;
+    const isUpdate = (reply: string) => reply.startsWith('Update on Dima');
+    const josiahReplies = (db: Database.Database) => readReplies(db, 'Josiah');
+    const postedGoal = (goals: Awaited<ReturnType<typeof readGoals>>) =>
+      goals.find(({ title, owners }) => title.includes('kept posted') && owners.includes('Josiah'));
+    await submitPrompt(josiah, SCRIPTED_PROMPTS.keepPosted);
+    await findInPanel(josiah, SCRIPTED_REPLIES.postedWatching);
+    await waitForSpace(readGoals, (goals) => postedGoal(goals)?.status === 'active');
+    await userEvent.click(canvas.getByTestId('agent-knowledge-tab-goals'));
+    await expectWatches(canvasElement, 1);
+    await holdsFor(josiahReplies, (replies) => !replies.some(isUpdate));
+
+    // 4. Rich says what he is working on, then asks for Dima's help: the request lands in Dima's panel and the relay
+    // waits for her. Rich's own fact is recorded at the end of his turn, but it is about Rich, so nothing reaches
+    // Josiah — checked over a window, since a wrongly fired update would arrive after the fact is written.
+    await submitPrompt(rich, SCRIPTED_PROMPTS.working);
+    await findInPanel(rich, SCRIPTED_REPLIES.workingNoted);
+    await submitPrompt(rich, SCRIPTED_PROMPTS.needHelp);
+    await findInPanel(rich, SCRIPTED_REPLIES.askedDima);
+    await findInPanel(dima, SCRIPTED_REPLIES.helpDelivered);
     await waitForSpace(
       (db) => db.query(Filter.type(Relay.Relay)).run(),
-      (relays) => relays.some(({ status }) => status === 'reported'),
+      (relays) => relays.length === 1 && relays[0].status === 'delivered',
     );
+    await waitForSpace(readQuotes, (quotes) => quotes.includes(richFact.quote));
+    await holdsFor(josiahReplies, (replies) => !replies.some(isUpdate));
+    // Not "Update on Dima": the panel shows the watch's tool call, whose message template starts with it.
+    await expect(occurrences(josiah, 'agent plugin')).toBe(0);
 
-    // 4. Rich switches to note-taking; his channel shows the mode and a note memory is recorded.
-    await submitPrompt(rich, SCRIPTED_PROMPTS.noteTaker);
-    await findInPanel(rich, SCRIPTED_REPLIES.switched);
-    await canvas.findByText('Mode: Note-taker', {}, { timeout: 30_000 });
-    await submitPrompt(rich, SCRIPTED_PROMPTS.note);
-    await findInPanel(rich, SCRIPTED_REPLIES.noted);
+    // 5. Dima agrees: Kai reports back to Rich and closes the relay, and Josiah gets exactly one update that says
+    // what "that" is — the conversation reached the composer — rather than the bare quote. The watch and its goal
+    // stay open for later updates.
+    await submitPrompt(dima, SCRIPTED_PROMPTS.agree);
+    await findInPanel(rich, SCRIPTED_REPLIES.helpReported);
     await waitForSpace(
-      (db) => db.query(Filter.type(Memory.Memory)).run(),
-      (memories) => memories.some(({ kind, body }) => kind === 'note' && body !== undefined),
+      (db) => db.query(Filter.type(Relay.Relay)).run(),
+      (relays) => relays.length === 1 && relays[0].status === 'reported',
     );
+    await waitForSpace(readQuotes, (quotes) => quotes.includes(dimaFact.quote));
+    await waitForSpace(josiahReplies, (replies) => replies.includes(SCRIPTED_REPLIES.postedComposed));
+    await findInPanel(josiah, SCRIPTED_REPLIES.postedComposed);
+    await holdsFor(
+      josiahReplies,
+      (replies) =>
+        replies.filter(isUpdate).length === 1 &&
+        replies.includes(SCRIPTED_REPLIES.postedComposed) &&
+        !replies.includes(SCRIPTED_REPLIES.postedBare),
+    );
+    await expect(occurrences(josiah, SCRIPTED_REPLIES.postedComposed)).toBe(1);
+    await expectWatches(canvasElement, 1);
+    await waitForSpace(readGoals, (goals) => postedGoal(goals)?.status === 'active');
   },
 };
 
@@ -303,9 +386,8 @@ export const GoalsScripted: Story = {
     await submitPrompt(dima, SCRIPTED_PROMPTS.stillWorking);
     await findInPanel(dima, SCRIPTED_REPLIES.acknowledged);
     await waitForSpace(readQuotes, (quotes) => quotes.includes(stillWorkingFact.quote));
-    // The watch is evaluated right after the facts are written; give a wrongly-fired notification time to land.
-    await new Promise((resolve) => setTimeout(resolve, 1_000));
-    await waitForSpace(readRichReplies, (replies) => !replies.includes(SCRIPTED_REPLIES.composed));
+    // A wrongly fired notification would arrive after the fact is written, so the check holds over a window.
+    await holdsFor(readRichReplies, (replies) => !replies.includes(SCRIPTED_REPLIES.composed));
     await expect(occurrences(rich, SCRIPTED_REPLIES.composed)).toBe(0);
     await expectWatches(canvasElement, 1);
     await waitForSpace(readGoals, (goals) => goals.length === 1 && goals[0].status === 'active');

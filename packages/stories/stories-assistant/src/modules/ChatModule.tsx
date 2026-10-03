@@ -14,7 +14,7 @@ import * as Assistant from '@dxos/plugin-assistant/Assistant';
 import { Chat } from '@dxos/plugin-assistant/components';
 import { useChatProcessor, usePresets } from '@dxos/plugin-assistant/hooks';
 import { type Space, useObject, useQuery, useRegistry } from '@dxos/react-client/echo';
-import { IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
+import { Flex, IconButton, Panel, Popover, Toolbar } from '@dxos/react-ui';
 import { ExecutionGraphModule } from '@dxos/storybook-testing/modules';
 import { Person } from '@dxos/types';
 
@@ -125,11 +125,11 @@ const ChatModuleContainer = ({
         <Panel.Content asChild>
           <Chat.Content>
             <Chat.Thread viewType={view} userHue={hue} />
-            <div className='flex flex-col gap-1 p-1'>
+            <Flex column classNames='relative gap-1 p-1'>
               <Chat.Queue />
               <Chat.Activity />
-              <Chat.Prompt {...chatProps} outline preset={preset?.id} />
-            </div>
+            </Flex>
+            <Chat.Prompt {...chatProps} outline preset={preset?.id} />
           </Chat.Content>
         </Panel.Content>
       </Panel.Root>
