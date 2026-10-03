@@ -4,13 +4,10 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { Flex, Panel, ScrollArea, Tag, Timestamp, type TimestampProps, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, ScrollArea, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 import { meta } from '#meta';
-import { type Memory } from '#types';
-
-import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
 
 //
 // Root
@@ -23,7 +20,7 @@ type AgentStateRootProps = PropsWithChildren<{
   actions?: ReactNode;
 }>;
 
-/** The agent's state panel: its name above a scrolling body of identity, counts and recent memories. */
+/** The agent's state panel: its name above a scrolling body of identity, counts and conversations. */
 const AgentStateRoot = ({ role, name, actions, children }: AgentStateRootProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
@@ -198,51 +195,61 @@ const AgentStateSummary = ({ counts }: AgentStateSummaryProps) => {
 AgentStateSummary.displayName = 'AgentState.Summary';
 
 //
-// Activity
+// Conversations
 //
 
-type AgentStateMemory = Pick<Memory.Memory, 'id' | 'content' | 'kind' | 'observedAt'>;
-
-type AgentStateActivityProps = {
-  /** Newest first. */
-  memories: readonly AgentStateMemory[];
-  /** Fixes the instant timestamps are measured against, so stories and tests do not drift. */
-  now?: TimestampProps['now'];
+type AgentStateChannel = {
+  id: string;
+  /** The chat's name, or the person it is with. */
+  name?: string;
+  /** The name of the chat's current mode. */
+  mode: string;
+  /** The skills the chat binds. */
+  skills: readonly AgentStateSkill[];
 };
 
-/** The memories the agent recorded most recently. */
-const AgentStateActivity = ({ memories, now }: AgentStateActivityProps) => {
+type AgentStateConversationsProps = { channels: readonly AgentStateChannel[] };
+
+/** Each conversation the agent holds and the mode it is in there. */
+const AgentStateConversations = ({ channels }: AgentStateConversationsProps) => {
   const { t } = useTranslation(meta.profile.key);
+  if (channels.length === 0) {
+    return null;
+  }
+
   return (
-    <AgentStateSection heading={t('agent-state-activity.heading')}>
-      {memories.length === 0 ? (
-        <Flex center classNames='p-2 text-description' role='status'>
-          {t('agent-state-activity-empty.message')}
-        </Flex>
-      ) : (
-        <Listbox.Root>
-          <Listbox.Content>
-            {memories.map((memory) => (
-              <Listbox.Item key={memory.id} id={memory.id}>
-                <Listbox.ItemContent
-                  icon={MEMORY_ICONS[memory.kind]}
-                  title={memory.content}
-                  description={
-                    <>
-                      {t(`memory-kind-${memory.kind}.label`)} · <Timestamp date={memory.observedAt} now={now} />
-                    </>
-                  }
-                />
-              </Listbox.Item>
-            ))}
-          </Listbox.Content>
-        </Listbox.Root>
-      )}
+    <AgentStateSection heading={t('agent-state-conversations.label')}>
+      <Listbox.Root>
+        <Listbox.Content>
+          {channels.map((channel) => (
+            <Listbox.Item key={channel.id} id={channel.id} data-testid={`agent-state-channel-${channel.id}`}>
+              <Listbox.ItemContent
+                icon='ph--chat-circle--regular'
+                title={channel.name || t('agent-state-channel-unnamed.label')}
+                description={
+                  <Flex asChild wrap gap='xs'>
+                    <span>
+                      <Tag hue='sky' data-testid='agent-state-channel-mode'>
+                        {t('agent-state-channel-mode.label', { mode: channel.mode })}
+                      </Tag>
+                      {channel.skills.map((skill) => (
+                        <Tag key={skill.key} hue='violet'>
+                          {skill.name}
+                        </Tag>
+                      ))}
+                    </span>
+                  </Flex>
+                }
+              />
+            </Listbox.Item>
+          ))}
+        </Listbox.Content>
+      </Listbox.Root>
     </AgentStateSection>
   );
 };
 
-AgentStateActivity.displayName = 'AgentState.Activity';
+AgentStateConversations.displayName = 'AgentState.Conversations';
 
 //
 // AgentState
@@ -252,14 +259,14 @@ export const AgentState = {
   Root: AgentStateRoot,
   Identity: AgentStateIdentity,
   Summary: AgentStateSummary,
-  Activity: AgentStateActivity,
+  Conversations: AgentStateConversations,
 };
 
 export type {
-  AgentStateActivityProps,
+  AgentStateChannel,
+  AgentStateConversationsProps,
   AgentStateCounts,
   AgentStateIdentityProps,
-  AgentStateMemory,
   AgentStateRootProps,
   AgentStateSkill,
   AgentStateSummaryProps,

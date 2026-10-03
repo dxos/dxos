@@ -13,11 +13,13 @@ import { DXN, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { Organization, Person, Task } from '@dxos/types';
 
-import { AgentState as AgentStateComponent, type AgentStateCounts, type AgentStateSkill } from '#components';
-import { AgentOperation, Goal, Memory, Profile } from '#types';
-
-/** How many of the newest memories the activity list shows. */
-const RECENT_MEMORIES = 5;
+import {
+  type AgentStateChannel,
+  AgentState as AgentStateComponent,
+  type AgentStateCounts,
+  type AgentStateSkill,
+} from '#components';
+import { AgentOperation, ChatParticipant, Goal, Memory, Mode, Profile } from '#types';
 
 /** Statuses after which a task no longer needs doing. */
 const CLOSED_TASK_STATUSES: readonly Task.Status[] = ['done', 'duplicate', 'cancelled', 'failed'];
@@ -39,7 +41,7 @@ export type AgentStateProps = {
   actions?: ReactNode;
 };
 
-/** What the agent is doing: its identity and mode, counts of what it tracks and its recent memories. */
+/** What the agent is doing: its identity and mode, counts of what it tracks and the conversations it holds. */
 export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
   const db = Obj.getDatabase(agent);
   const [name] = useObject(agent, 'name');
@@ -97,11 +99,11 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
               : undefined,
         };
 
-        return { counts, recent: active.slice(0, RECENT_MEMORIES) };
+        return { counts };
       }),
     [chats, memories, goals, people, organizations, tasks],
   );
-  const { counts, recent } = useAtomValue(stateAtom);
+  const { counts } = useAtomValue(stateAtom);
 
   const primary = useMemo(
     () =>
@@ -113,12 +115,13 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
     [chats],
   );
   const skills = useBoundSkills(agent, primary);
+  const channels = useChannels(agent, chats, people);
 
   return (
     <AgentStateComponent.Root role={role} name={name} actions={actions}>
       <AgentStateComponent.Identity did={did} skills={skills} />
       <AgentStateComponent.Summary counts={counts} />
-      <AgentStateComponent.Activity memories={recent} />
+      <AgentStateComponent.Conversations channels={channels} />
     </AgentStateComponent.Root>
   );
 };
@@ -158,4 +161,67 @@ const useBoundSkills = (agent: Agent.Agent, chat: Chat.Chat | undefined): AgentS
   }, [refresh, chat?.id, bindings.length]);
 
   return skills;
+};
+
+/**
+ * Each of the agent's chats with its current mode and bound skills. The skills are re-read when a
+ * chat's mode changes, which is how `switchMode` announces a rebinding.
+ */
+const useChannels = (
+  agent: Agent.Agent,
+  chats: readonly Chat.Chat[],
+  people: readonly Person.Person[],
+): AgentStateChannel[] => {
+  const { invokePromise } = useOperationInvoker();
+  const spaceId = Obj.getDatabase(agent)?.spaceId;
+
+  // Annotations are object state, so each chat is subscribed to see its mode and participant change.
+  const headersAtom = useMemo(
+    () =>
+      Atom.make((get) =>
+        [...chats]
+          .sort((left, right) => left.id.localeCompare(right.id))
+          .map((chat) => {
+            get(Obj.atom(chat));
+            const participant = ChatParticipant.get(chat);
+            const person = participant ? people.find((person) => person.id === participant) : undefined;
+            return {
+              id: chat.id,
+              name: person ? Profile.displayName(person) : chat.name,
+              mode: Mode.getCurrent(chat),
+            };
+          }),
+      ),
+    [chats, people],
+  );
+  const headers = useAtomValue(headersAtom);
+  const [skills, setSkills] = useState<Record<string, AgentStateSkill[]>>({});
+
+  const signature = headers.map(({ id, mode }) => `${id}:${mode}`).join(',');
+  useEffect(() => {
+    if (!spaceId) {
+      return;
+    }
+
+    let cancelled = false;
+    void Promise.all(
+      chats.map(async (chat) => {
+        const { data } = await invokePromise(
+          AgentOperation.ListSkills,
+          { agent: Ref.make(agent), chat: Ref.make(chat) },
+          { spaceId },
+        );
+        return [chat.id, (data?.skills ?? []).map(({ key, name }) => ({ key: key ?? name, name }))] as const;
+      }),
+    ).then((entries) => {
+      if (!cancelled) {
+        setSkills(Object.fromEntries(entries));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [invokePromise, agent, spaceId, signature]);
+
+  return useMemo(() => headers.map((header) => ({ ...header, skills: skills[header.id] ?? [] })), [headers, skills]);
 };

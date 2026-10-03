@@ -6,29 +6,30 @@ import React, { type PropsWithChildren, createContext, useContext, useEffect, us
 
 import { type Obj } from '@dxos/echo';
 import { ForceGraph } from '@dxos/plugin-explorer/components';
-import { Flex, Panel, ScrollArea, Tabs, Tag, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Flex, Panel, ScrollArea, Tabs, Timestamp, type TimestampProps, Toolbar, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { type SpaceGraphEdge, SpaceGraphModel, type SpaceGraphNode } from '@dxos/schema';
 
 import { meta } from '#meta';
+import { type Memory } from '#types';
 
-import { type AgentStateSkill } from '../AgentState/index.ts';
+import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
 
 //
 // Root
 //
 
-type AgentKnowledgeView = 'conversations' | 'graph';
+type AgentKnowledgeView = 'memories' | 'graph';
 
-const AgentKnowledgeContext = createContext<AgentKnowledgeView>('conversations');
+const AgentKnowledgeContext = createContext<AgentKnowledgeView>('memories');
 
 type AgentKnowledgeRootProps = PropsWithChildren<{
   role?: string;
   defaultView?: AgentKnowledgeView;
 }>;
 
-/** What the agent knows, one view at a time: the conversations it holds and its knowledge graph. */
-const AgentKnowledgeRoot = ({ role, defaultView = 'conversations', children }: AgentKnowledgeRootProps) => {
+/** What the agent knows, one view at a time: its memories and its knowledge graph. */
+const AgentKnowledgeRoot = ({ role, defaultView = 'memories', children }: AgentKnowledgeRootProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [view, setView] = useState<AgentKnowledgeView>(defaultView);
   return (
@@ -36,14 +37,14 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'conversations', children }: A
       asChild
       orientation='horizontal'
       value={view}
-      onValueChange={(value) => setView(value === 'graph' ? 'graph' : 'conversations')}
+      onValueChange={(value) => setView(value === 'graph' ? 'graph' : 'memories')}
     >
       <Panel.Root role={role}>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist>
-              <Tabs.Button value='conversations' data-testid='agent-knowledge-tab-conversations'>
-                {t('agent-knowledge-conversations.label')}
+              <Tabs.Button value='memories' data-testid='agent-knowledge-tab-memories'>
+                {t('agent-knowledge-memories.label')}
               </Tabs.Button>
               <Tabs.Button value='graph' data-testid='agent-knowledge-tab-graph'>
                 {t('agent-knowledge-graph.label')}
@@ -64,59 +65,43 @@ const AgentKnowledgeRoot = ({ role, defaultView = 'conversations', children }: A
 AgentKnowledgeRoot.displayName = 'AgentKnowledge.Root';
 
 //
-// Conversations
+// Memories
 //
 
-type AgentKnowledgeChannel = {
-  id: string;
-  /** The chat's name, or the person it is with. */
-  name?: string;
-  /** The name of the chat's current mode. */
-  mode: string;
-  /** The skills the chat binds. */
-  skills: readonly AgentStateSkill[];
+type AgentKnowledgeMemory = Pick<Memory.Memory, 'id' | 'content' | 'kind' | 'observedAt'>;
+
+type AgentKnowledgeMemoriesProps = {
+  /** Newest first. */
+  memories: readonly AgentKnowledgeMemory[];
+  /** Fixes the instant timestamps are measured against, so stories and tests do not drift. */
+  now?: TimestampProps['now'];
 };
 
-type AgentKnowledgeConversationsProps = { channels: readonly AgentKnowledgeChannel[] };
-
-/** Each conversation the agent holds and the mode it is in there. */
-const AgentKnowledgeConversations = ({ channels }: AgentKnowledgeConversationsProps) => {
+/** The agent's active memories, newest first. */
+const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) => {
   const { t } = useTranslation(meta.profile.key);
-  if (useContext(AgentKnowledgeContext) !== 'conversations') {
+  if (useContext(AgentKnowledgeContext) !== 'memories') {
     return null;
   }
 
-  if (channels.length === 0) {
-    return (
-      <Flex center classNames='p-2 text-description' role='status'>
-        {t('agent-knowledge-conversations-empty.message')}
-      </Flex>
-    );
-  }
-
-  return (
+  return memories.length === 0 ? (
+    <Flex center classNames='p-2 text-description' role='status'>
+      {t('agent-knowledge-memories-empty.message')}
+    </Flex>
+  ) : (
     <ScrollArea.Root orientation='vertical'>
       <ScrollArea.Viewport>
         <Listbox.Root>
           <Listbox.Content>
-            {channels.map((channel) => (
-              <Listbox.Item key={channel.id} id={channel.id} data-testid={`agent-knowledge-channel-${channel.id}`}>
+            {memories.map((memory) => (
+              <Listbox.Item key={memory.id} id={memory.id}>
                 <Listbox.ItemContent
-                  icon='ph--chat-circle--regular'
-                  title={channel.name || t('agent-knowledge-channel-unnamed.label')}
+                  icon={MEMORY_ICONS[memory.kind]}
+                  title={memory.content}
                   description={
-                    <Flex asChild wrap gap='xs'>
-                      <span>
-                        <Tag hue='sky' data-testid='agent-knowledge-channel-mode'>
-                          {t('agent-knowledge-channel-mode.label', { mode: channel.mode })}
-                        </Tag>
-                        {channel.skills.map((skill) => (
-                          <Tag key={skill.key} hue='violet'>
-                            {skill.name}
-                          </Tag>
-                        ))}
-                      </span>
-                    </Flex>
+                    <>
+                      {t(`memory-kind-${memory.kind}.label`)} · <Timestamp date={memory.observedAt} now={now} />
+                    </>
                   }
                 />
               </Listbox.Item>
@@ -128,7 +113,7 @@ const AgentKnowledgeConversations = ({ channels }: AgentKnowledgeConversationsPr
   );
 };
 
-AgentKnowledgeConversations.displayName = 'AgentKnowledge.Conversations';
+AgentKnowledgeMemories.displayName = 'AgentKnowledge.Memories';
 
 //
 // Graph
@@ -195,15 +180,15 @@ AgentKnowledgeGraph.displayName = 'AgentKnowledge.Graph';
 
 export const AgentKnowledge = {
   Root: AgentKnowledgeRoot,
-  Conversations: AgentKnowledgeConversations,
+  Memories: AgentKnowledgeMemories,
   Graph: AgentKnowledgeGraph,
 };
 
 export type {
-  AgentKnowledgeChannel,
-  AgentKnowledgeConversationsProps,
   AgentKnowledgeEdge,
   AgentKnowledgeGraphProps,
+  AgentKnowledgeMemoriesProps,
+  AgentKnowledgeMemory,
   AgentKnowledgeNode,
   AgentKnowledgeRootProps,
   AgentKnowledgeView,

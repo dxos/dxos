@@ -9,8 +9,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { AgentState, type AgentStateCounts, type AgentStateSkill } from './AgentState.tsx';
-import { type Knowledge, NOW, SCENARIOS } from './testing.ts';
+import { AgentState, type AgentStateChannel, type AgentStateCounts, type AgentStateSkill } from './AgentState.tsx';
+import { type Knowledge, SCENARIOS } from './testing.ts';
 
 const SKILLS: AgentStateSkill[] = [
   { key: 'org.dxos.skill.agentConversation', name: 'Agent conversation' },
@@ -29,6 +29,16 @@ const countsOf = ({ people, organizations, goals, memories }: Knowledge): AgentS
   tasks: { open: 1, total: 3 },
 });
 
+const CHANNELS: AgentStateChannel[] = [
+  {
+    id: 'rich',
+    name: 'Rich',
+    mode: 'Note-taker',
+    skills: [{ key: 'org.dxos.skill.agentNotes', name: 'Note-taker' }],
+  },
+  { id: 'dima', name: 'Dima', mode: 'Conversation', skills: [] },
+];
+
 type StoryProps = {
   name?: string;
   did?: string;
@@ -36,15 +46,16 @@ type StoryProps = {
   /** Named rather than passed as objects, because storybook clones args and ECHO objects reject the writes. */
   scenario: keyof typeof SCENARIOS;
   counts?: AgentStateCounts;
+  channels?: AgentStateChannel[];
 };
 
-const DefaultStory = ({ name, did, skills, scenario, counts }: StoryProps) => {
+const DefaultStory = ({ name, did, skills, scenario, counts, channels = [] }: StoryProps) => {
   const knowledge = useMemo(() => SCENARIOS[scenario](), [scenario]);
   return (
     <AgentState.Root name={name}>
       <AgentState.Identity did={did} skills={skills} />
       <AgentState.Summary counts={counts ?? countsOf(knowledge)} />
-      <AgentState.Activity memories={knowledge.memories.map(({ memory }) => memory).slice(0, 5)} now={NOW} />
+      <AgentState.Conversations channels={channels} />
     </AgentState.Root>
   );
 };
@@ -69,6 +80,7 @@ export const Default: Story = {
     did: 'did:halo:9f2c4e1a7b3d5f6e8a0c2b4d6f8e0a1c',
     skills: SKILLS,
     scenario: 'default',
+    channels: CHANNELS,
   },
 };
 

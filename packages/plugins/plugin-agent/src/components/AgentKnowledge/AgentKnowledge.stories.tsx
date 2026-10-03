@@ -9,31 +9,21 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { SCENARIOS, toGraph } from '../AgentState/testing.ts';
-import { AgentKnowledge, type AgentKnowledgeChannel, type AgentKnowledgeView } from './AgentKnowledge.tsx';
-
-const CHANNELS: AgentKnowledgeChannel[] = [
-  {
-    id: 'rich',
-    name: 'Rich',
-    mode: 'Note-taker',
-    skills: [{ key: 'org.dxos.skill.agentNotes', name: 'Note-taker' }],
-  },
-  { id: 'dima', name: 'Dima', mode: 'Conversation', skills: [] },
-];
+import { NOW, SCENARIOS, toGraph } from '../AgentState/testing.ts';
+import { AgentKnowledge, type AgentKnowledgeView } from './AgentKnowledge.tsx';
 
 type StoryProps = {
   /** Named rather than passed as objects, because storybook clones args and ECHO objects reject the writes. */
   scenario: keyof typeof SCENARIOS;
-  channels: AgentKnowledgeChannel[];
   defaultView?: AgentKnowledgeView;
 };
 
-const DefaultStory = ({ scenario, channels, defaultView }: StoryProps) => {
-  const { nodes, edges } = useMemo(() => toGraph(SCENARIOS[scenario]()), [scenario]);
+const DefaultStory = ({ scenario, defaultView }: StoryProps) => {
+  const knowledge = useMemo(() => SCENARIOS[scenario](), [scenario]);
+  const { nodes, edges } = useMemo(() => toGraph(knowledge), [knowledge]);
   return (
     <AgentKnowledge.Root defaultView={defaultView}>
-      <AgentKnowledge.Conversations channels={channels} />
+      <AgentKnowledge.Memories memories={knowledge.memories.map(({ memory }) => memory)} now={NOW} />
       <AgentKnowledge.Graph nodes={nodes} edges={edges} />
     </AgentKnowledge.Root>
   );
@@ -54,13 +44,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { scenario: 'default', channels: CHANNELS },
+  args: { scenario: 'default' },
 };
 
 export const Empty: Story = {
-  args: { scenario: 'empty', channels: [] },
+  args: { scenario: 'empty' },
 };
 
 export const LargeGraph: Story = {
-  args: { scenario: 'large', channels: CHANNELS, defaultView: 'graph' },
+  args: { scenario: 'large', defaultView: 'graph' },
 };
