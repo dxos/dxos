@@ -43,16 +43,16 @@ A `Type` is a small algebraic data type (`src/worker/types/Term.ts`):
 - A declaration in this file: its symbol IRI, `file:<path>#<name>`.
 - An import from a relative specifier: the resolved file's symbol IRI, `file:<resolved>#<path>`.
 - An import from a bare specifier: the member IRI, `module:<specifier>#<path>` — e.g.
-  `Layer.Layer` under `import * as Layer from 'effect/Layer'` is `module:effect%2FLayer#Layer`.
+  `Layer.Layer` under `import * as Layer from 'effect/Layer'` is `module:effect/Layer#Layer`.
   `import { Layer } from 'effect'` reaches the same interface as `Layer.Layer` under `effect`; the
-  canonicalizer rewrites `module:effect#Layer.Layer` to `module:effect%2FLayer#Layer` because the
+  canonicalizer rewrites `module:effect#Layer.Layer` to `module:effect/Layer#Layer` because the
   `effect` barrel publishes each module whole (`export * as Layer from './Layer.js'`). That table is
   the only package-specific knowledge in the term layer, and it is limited to `effect`.
 - A global: `lib:<name>` (`https://dxos.org/deus/lib#Array`), for the ES/DOM library types and
   utility aliases (`Array`, `Promise`, `Record`, `Partial`, …) — only names on an explicit list.
 
 A named type is **not expanded**: `Effect.Effect<number>` is
-`ref(module:effect%2FEffect#Effect, [number, never, never])` — defaults filled in, because that is
+`ref(module:effect/Effect#Effect, [number, never, never])` — defaults filled in, because that is
 what `tsc` reports — never the structure of the interface. An imported type alias is named the same
 way, even when it aliases a primitive: `x: Id` with `import type { Id } from './id.ts'` is
 `ref(file:id.ts#Id)`. That is TypeScript-equivalent but unexpanded; the harness scores it as
@@ -192,7 +192,7 @@ Judgement calls made without asking, with the reason for each.
 | Decision                                                                                              | Why                                                                                                                                                                                          |
 | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Emit `hasType` only on `variable`/`function` symbols; score every declarator                          | Types and classes are already named by their declaration; nested declarators are where the propagator's rules get exercised.                                                                 |
-| Type heads use the member IRI for bare specifiers, canonicalized through `effect`'s namespace barrels | Rules already match `module:effect%2FLayer#…`; one IRI per symbol however it was imported.                                                                                                   |
+| Type heads use the member IRI for bare specifiers, canonicalized through `effect`'s namespace barrels | Rules already match `module:effect/Layer#…`; one IRI per symbol however it was imported.                                                                                                     |
 | Unknown positions are absent in RDF, with `deus:typePartial` on the term                              | An explicit `?` node would be a fact rules could match by mistake; the flag says the structure is incomplete.                                                                                |
 | Content-addressed type node IRIs, nodes carried in JSON-LD `@included`                                | Dedup within and across file graphs with no edge from the file node, so a graph swap stays per-file.                                                                                         |
 | Positional predicates (`typeArg0…7`) rather than `rdf:List`                                           | Rule premises are narrowed by the predicates a file names; list cells would bypass that and add blank nodes per graph.                                                                       |

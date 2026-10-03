@@ -7,21 +7,21 @@
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 
 # A layer is anything typed `Layer<…>`, however it was built.
-{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect%2FLayer#Layer> }
+{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect/Layer#Layer> }
   => { ?s rdf:type deus:EffectLayer }.
 
 # What it provides: `ROut`, the first type argument — one service, or each member of a union.
-{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect%2FLayer#Layer>; deus:typeArg0 ?out.
+{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect/Layer#Layer>; deus:typeArg0 ?out.
   ?out deus:typeKind "ref"; deus:typeHead ?service }
   => { ?s deus:providesService ?service }.
-{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect%2FLayer#Layer>; deus:typeArg0 ?out.
+{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect/Layer#Layer>; deus:typeArg0 ?out.
   ?out deus:typeKind "union"; deus:typeMember ?member. ?member deus:typeKind "ref"; deus:typeHead ?service }
   => { ?s deus:providesService ?service }.
 
 # What it still needs: `RIn`, the third — exact, where `deus:requiresService` is a reference heuristic.
-{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect%2FLayer#Layer>; deus:typeArg2 ?in.
+{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect/Layer#Layer>; deus:typeArg2 ?in.
   ?in deus:typeKind "ref"; deus:typeHead ?service }
   => { ?s deus:layerRequires ?service }.
-{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect%2FLayer#Layer>; deus:typeArg2 ?in.
+{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect/Layer#Layer>; deus:typeArg2 ?in.
   ?in deus:typeKind "union"; deus:typeMember ?member. ?member deus:typeKind "ref"; deus:typeHead ?service }
   => { ?s deus:layerRequires ?service }.

@@ -256,7 +256,7 @@ and, by kind:
 | `deus:literalValue`                    | `literal`               | The literal as written in the canonical text (`"a"`, `1`, `true`).                                                     |
 
 Unknown positions are simply absent. A term over 64 nodes is not emitted. Rules match a type by its
-head: `?layer deus:hasType ?t. ?t deus:typeHead <module:effect%2FLayer#Layer>; deus:typeArg0 ?out` is
+head: `?layer deus:hasType ?t. ?t deus:typeHead <module:effect/Layer#Layer>; deus:typeArg0 ?out` is
 the layer's `ROut` (`rules/15-types.n3`).
 
 ## API vs implementation
