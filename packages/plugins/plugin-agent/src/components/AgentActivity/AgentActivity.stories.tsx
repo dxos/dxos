@@ -3,7 +3,7 @@
 //
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
-import React from 'react';
+import React, { useState } from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -28,6 +28,13 @@ const BINDING: Partial<DiscordBinding.Properties> = {
   channels: ['1122334455'],
 };
 
+type SkillRow = { id: string; name: string; customized: boolean };
+
+const SKILLS: SkillRow[] = [
+  { id: 'org.dxos.skill.agentConversation', name: 'Agent conversation', customized: false },
+  { id: 'org.dxos.skill.interview', name: 'Interview', customized: true },
+];
+
 type StoryProps = {
   bound: boolean;
   values?: Partial<DiscordBinding.Properties>;
@@ -35,11 +42,13 @@ type StoryProps = {
   error?: string;
   bindingId?: string;
   conversations: Conversation[];
+  skills?: SkillRow[];
 };
 
-const DefaultStory = ({ bound, values, status, error, bindingId, conversations }: StoryProps) => (
+const DefaultStory = ({ bound, values, status, error, bindingId, conversations, skills = [] }: StoryProps) => (
   <AgentActivity.Root bound={bound} running={status?.running}>
     <AgentActivity.Discord bound={bound} values={values} status={status} error={error} bindingId={bindingId} />
+    <SkillList initial={skills} />
     <AgentActivity.Conversations>
       {conversations.map((conversation) => (
         <AgentActivity.Conversation key={conversation.id} {...conversation} now={NOW} />
@@ -47,6 +56,25 @@ const DefaultStory = ({ bound, values, status, error, bindingId, conversations }
     </AgentActivity.Conversations>
   </AgentActivity.Root>
 );
+
+/** Customize/Reset toggle the row locally, standing in for the operations the container invokes. */
+const SkillList = ({ initial }: { initial: SkillRow[] }) => {
+  const [skills, setSkills] = useState(initial);
+  const setCustomized = (id: string, customized: boolean) =>
+    setSkills((skills) => skills.map((skill) => (skill.id === id ? { ...skill, customized } : skill)));
+  return (
+    <AgentActivity.Skills>
+      {skills.map((skill) => (
+        <AgentActivity.Skill
+          key={skill.id}
+          {...skill}
+          onCustomize={(id) => setCustomized(id, true)}
+          onReset={(id) => setCustomized(id, false)}
+        />
+      ))}
+    </AgentActivity.Skills>
+  );
+};
 
 const meta = {
   title: 'plugins/plugin-agent/components/AgentActivity',
@@ -68,6 +96,15 @@ export const Default: Story = {
     values: BINDING,
     status: { running: true, gateway: 'ready', botUserId: '42', threads: THREADS.length },
     conversations: THREADS,
+    skills: SKILLS,
+  },
+};
+
+export const Skills: Story = {
+  args: {
+    bound: false,
+    conversations: [],
+    skills: SKILLS,
   },
 };
 

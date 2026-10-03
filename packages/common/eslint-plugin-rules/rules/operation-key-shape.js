@@ -50,6 +50,7 @@ const VERBS = new Set([
   'crawl',
   'create',
   'curate',
+  'customize',
   'delegate',
   'delete',
   'deploy',

@@ -73,13 +73,8 @@ export const createSession: (
   opts?: CreateSessionOptions,
 ) => Effect.Effect<Session, never, Database.Service | Registry.Service | AgentService> = Effect.fn('createSession')(
   function* (opts) {
-    // A skill already in a database is bound as-is: it is either space-authored (no registry key at
-    // all) or a fork carrying the user's edits, and resolving it through the registry would substitute
-    // the pristine copy for the one the caller handed us. Anything else is referenced by its registry
-    // URI, so the registry stays the one copy rather than being cloned into the space.
-    const skills = (opts?.skills ?? []).map((skill) =>
-      Obj.getDatabase(skill) !== undefined ? Ref.make(skill) : Ref.fromURI(Skill.registryURI(Skill.getKey(skill))),
-    );
+    // By registry URI unless the skill is a space copy, so the registry stays the one pristine copy.
+    const skills = (opts?.skills ?? []).map(Skill.makeRef);
 
     const feed = yield* Database.add(Feed.make());
     const runtime = yield* Effect.context<Database.Service>();

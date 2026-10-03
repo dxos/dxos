@@ -9,6 +9,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
+import type * as Skill from '@dxos/compute/Skill';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { type SpaceId } from '@dxos/keys';
@@ -16,7 +17,7 @@ import { useInterval } from '@dxos/react-hooks';
 import { Message } from '@dxos/types';
 
 import { AgentActivity as AgentActivityComponent } from '#components';
-import { DiscordBinding, DiscordOperation } from '#types';
+import { AgentOperation, DiscordBinding, DiscordOperation } from '#types';
 
 /** How often the bot status is re-read; the gateway changes state on EDGE without notifying Composer. */
 const STATUS_POLL_MS = 5_000;
@@ -79,6 +80,7 @@ export const AgentActivity = ({ role, attendableId, agent }: AgentActivityProps)
   );
 
   const bot = useDiscordBot(binding, db?.spaceId);
+  const skills = useAgentSkills(agent);
 
   return (
     <AgentActivityComponent.Root
@@ -100,6 +102,20 @@ export const AgentActivity = ({ role, attendableId, agent }: AgentActivityProps)
         bindingId={binding?.id}
         onSave={handleSave}
       />
+      <AgentActivityComponent.Skills>
+        {skills.skills.map(({ key, name, customized }) => (
+          <AgentActivityComponent.Skill
+            key={key}
+            id={key}
+            name={name}
+            customized={customized}
+            busy={skills.busy}
+            onOpen={skills.open}
+            onCustomize={skills.customize}
+            onReset={skills.reset}
+          />
+        ))}
+      </AgentActivityComponent.Skills>
       <AgentActivityComponent.Conversations>
         {threads.map((chat) => (
           <ConversationTile key={chat.id} chat={chat} onSelect={handleSelect} />
@@ -197,4 +213,69 @@ const useDiscordBot = (binding: DiscordBinding.DiscordBinding | undefined, space
   }, [invokePromise, binding, spaceId, refresh]);
 
   return { status, error, busy, start, stop, refresh };
+};
+
+type ListedSkill = { key: string; name: string; customized: boolean; skill?: Ref.Ref<Skill.Skill> };
+
+/**
+ * The plugin skills the agent's conversation binds, with customize/reset/open. Bindings live in the chat's
+ * feed and are read through an operation, so the list is re-read after each change rather than subscribed.
+ */
+const useAgentSkills = (agent: Agent.Agent) => {
+  const { invokePromise } = useOperationInvoker();
+  const db = Obj.getDatabase(agent);
+  const spaceId = db?.spaceId;
+  const [skills, setSkills] = useState<ListedSkill[]>([]);
+  const [busy, setBusy] = useState(false);
+
+  const refresh = useCallback(async () => {
+    if (!spaceId) {
+      return;
+    }
+
+    const { data } = await invokePromise(AgentOperation.ListSkills, { agent: Ref.make(agent) }, { spaceId });
+    // Space-authored skills have no registry key and are edited where they live, not here.
+    setSkills(
+      (data?.skills ?? []).flatMap(({ key, name, customized, skill }) =>
+        key ? [{ key, name, customized, skill }] : [],
+      ),
+    );
+  }, [invokePromise, agent, spaceId]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const run = useCallback(
+    async (operation: typeof AgentOperation.CustomizeSkill | typeof AgentOperation.ResetSkill, key: string) => {
+      if (!spaceId) {
+        return;
+      }
+
+      setBusy(true);
+      await invokePromise(operation, { agent: Ref.make(agent), skill: key }, { spaceId });
+      await refresh();
+      setBusy(false);
+    },
+    [invokePromise, agent, spaceId, refresh],
+  );
+
+  const customize = useCallback((key: string) => void run(AgentOperation.CustomizeSkill, key), [run]);
+  const reset = useCallback((key: string) => void run(AgentOperation.ResetSkill, key), [run]);
+
+  const open = useCallback(
+    async (key: string) => {
+      const ref = skills.find((skill) => skill.key === key)?.skill;
+      if (!ref || !db) {
+        return;
+      }
+
+      // The listed ref crossed the operation boundary without a resolver, so it is re-made on the database.
+      const skill = await db.makeRef<Skill.Skill>(ref.uri).load();
+      await invokePromise(LayoutOperation.Open, { subject: [GraphPath.getObjectPathFromObject(skill)] });
+    },
+    [skills, db, invokePromise],
+  );
+
+  return { skills, busy, customize, reset, open };
 };

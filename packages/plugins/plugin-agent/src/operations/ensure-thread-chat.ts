@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
-import type * as Skill from '@dxos/compute/Skill';
+import * as Skill from '@dxos/compute/Skill';
 import { Database, Feed, Filter, Obj, Query, Ref } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
@@ -34,7 +34,7 @@ const loadAgentBindings = (agent: Agent.Agent) =>
     const AiContext = yield* Effect.promise(aiContextRuntime);
     const binder = yield* EffectEx.acquireReleaseResource(() => new AiContext.Binder({ feed, runtime }));
     return {
-      skills: binder.getSkills().map((skill) => Ref.make(skill)),
+      skills: binder.getSkills().map(Skill.makeRef),
       objects: binder
         .getObjects()
         .filter((object) => !Obj.instanceOf(Chat.Chat, object))

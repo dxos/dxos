@@ -5,7 +5,7 @@
 import React, { Children, type PropsWithChildren } from 'react';
 
 import { type Database } from '@dxos/echo';
-import { Flex, Panel, ScrollArea, Timestamp, type TimestampProps, useTranslation } from '@dxos/react-ui';
+import { Flex, IconButton, Panel, ScrollArea, Timestamp, type TimestampProps, useTranslation } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -146,6 +146,89 @@ const AgentActivityDiscord = ({
 AgentActivityDiscord.displayName = 'AgentActivity.Discord';
 
 //
+// Skills
+//
+
+type AgentActivitySkillsProps = PropsWithChildren;
+
+/** The skills bound to the agent's conversation; children are {@link AgentActivitySkill} rows. */
+const AgentActivitySkills = ({ children }: AgentActivitySkillsProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  return (
+    <Flex asChild column>
+      <section aria-label={t('skills.heading')}>
+        <h3 className='px-2 text-sm text-description'>{t('skills.heading')}</h3>
+        {Children.count(children) === 0 ? (
+          <Flex center classNames='p-2 text-description' role='status'>
+            {t('skills-empty.message')}
+          </Flex>
+        ) : (
+          <Listbox.Root>
+            <Listbox.Content>{children}</Listbox.Content>
+          </Listbox.Root>
+        )}
+      </section>
+    </Flex>
+  );
+};
+
+AgentActivitySkills.displayName = 'AgentActivity.Skills';
+
+//
+// Skill
+//
+
+type AgentActivitySkillProps = {
+  /** The skill's registry key. */
+  id: string;
+  name: string;
+  /** Whether the agent runs an editable space copy rather than the built-in skill. */
+  customized?: boolean;
+  /** Disables the row's action while a customize/reset is in flight. */
+  busy?: boolean;
+  onOpen?: (id: string) => void;
+  onCustomize?: (id: string) => void;
+  onReset?: (id: string) => void;
+};
+
+/** One skill the agent runs: a built-in one can be customized; a customized one opens for editing or resets. */
+const AgentActivitySkill = ({
+  id,
+  name,
+  customized = false,
+  busy = false,
+  onOpen,
+  onCustomize,
+  onReset,
+}: AgentActivitySkillProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  return (
+    <Listbox.Item id={id} classNames='gap-2' onClick={customized ? () => onOpen?.(id) : undefined}>
+      <Listbox.ItemContent
+        classNames='grow'
+        icon='ph--blueprint--regular'
+        title={name}
+        description={t(customized ? 'skill-customized.label' : 'skill-compiled.label')}
+      />
+      <IconButton
+        iconOnly
+        variant='ghost'
+        disabled={busy}
+        icon={customized ? 'ph--arrow-counter-clockwise--regular' : 'ph--pencil-simple--regular'}
+        label={t(customized ? 'skill-reset.label' : 'skill-customize.label')}
+        onClick={(event) => {
+          // The row itself opens the skill; the button must not also trigger that.
+          event.stopPropagation();
+          (customized ? onReset : onCustomize)?.(id);
+        }}
+      />
+    </Listbox.Item>
+  );
+};
+
+AgentActivitySkill.displayName = 'AgentActivity.Skill';
+
+//
 // Conversations
 //
 
@@ -211,6 +294,8 @@ AgentActivityConversation.displayName = 'AgentActivity.Conversation';
 export const AgentActivity = {
   Root: AgentActivityRoot,
   Discord: AgentActivityDiscord,
+  Skills: AgentActivitySkills,
+  Skill: AgentActivitySkill,
   Conversations: AgentActivityConversations,
   Conversation: AgentActivityConversation,
 };
@@ -220,4 +305,6 @@ export type {
   AgentActivityConversationsProps,
   AgentActivityDiscordProps,
   AgentActivityRootProps,
+  AgentActivitySkillProps,
+  AgentActivitySkillsProps,
 };
