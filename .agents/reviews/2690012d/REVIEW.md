@@ -33,8 +33,6 @@ _5 error(s), 11 warning(s)._
 - 2690012d-15 - ignored - no-env-vars-in-low-level-modules - packages/e2e/perf-harness/src/report.ts:552
 - 2690012d-16 - ignored - effect-fn-not-hand-wrapped-gen - packages/sdk/worker-framework/src/RpcTiming.test.ts:32
 
-Every row above was confirmed against the diff and points at code this PR does not change (pre-existing casts, wildcard barrels, env reads and naming); fixing them is outside this PR's scope.
-
 ## Issues
 
 # ERROR 2690012d-1 no-casts `packages/common/sql-sqlite/src/internal/opfs-client.ts:139`
@@ -102,6 +100,9 @@ System One judges this a likely violation of `no-env-vars-in-low-level-modules` 
 System One judges this a likely violation of `effect-fn-not-hand-wrapped-gen` (Define Effect-returning functions with Effect.fn/fnUntraced, not a hand-wrapped Effect.gen), p=0.83. The likeliest place is lines 32-43 (`const timingHandlers = RpcTiming.applyMiddleware(TimingRpcs).toLayer(`, location confidence 0.99). This is a single-shot classifier: confirm against the rule before acting.
 
 ## Appendix
+
+Every Index row was confirmed against the diff and points at code this PR does not change (pre-existing casts, wildcard barrels, env reads and naming); fixing them is outside this PR's scope.
+
 
 ### System One pass
 
