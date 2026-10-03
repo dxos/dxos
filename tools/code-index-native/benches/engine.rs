@@ -205,21 +205,45 @@ fn dir_size(path: &Path) -> u64 {
         .unwrap_or(0)
 }
 
-fn derived(store: &NativeStore, strata: &[Stratum]) -> Vec<usize> {
+/// Every stratum's conclusions as sorted N-Triples lines, so two states compare quad for quad.
+fn derived(store: &NativeStore, strata: &[Stratum]) -> Vec<Vec<String>> {
     strata
         .iter()
         .map(|stratum| {
-            store
+            let quads = store
                 .match_quads(
                     None,
                     None,
                     None,
                     Some(NamedNode::new_unchecked(stratum.graph.as_str()).into()),
                 )
-                .expect("match")
-                .len()
+                .expect("match");
+            let mut lines: Vec<String> = quads
+                .into_iter()
+                .map(|quad| format!("{} {} {}", quad.subject, quad.predicate, quad.object))
+                .collect();
+            lines.sort_unstable();
+            lines
         })
         .collect()
+}
+
+/// The check every incremental number depends on: the maintained graphs equal a recomputation,
+/// quad for quad. Leaves the store recomputed (and signed), so the next pass is incremental again.
+fn assert_matches_recomputation(store: &NativeStore, strata: &[Stratum], after: &str) {
+    let maintained = derived(store, strata);
+    store.invalidate().expect("invalidate");
+    time("reason: recomputation for comparison", || {
+        store.reason_all(strata).expect("reason")
+    });
+    let recomputed = derived(store, strata);
+    for ((stratum, maintained), recomputed) in strata.iter().zip(&maintained).zip(&recomputed) {
+        assert_eq!(
+            maintained, recomputed,
+            "after {after}: incremental maintenance of {} diverged from recomputation",
+            stratum.graph
+        );
+    }
 }
 
 fn time<T>(label: &str, work: impl FnOnce() -> T) -> T {
@@ -263,8 +287,6 @@ fn main() {
             outcome.derived
         );
     }
-    let full = derived(&store, &strata);
-
     // Journalled commits: what a warm pass pays per file once a signature exists.
     time("commit: one file, journalled", || {
         store
@@ -282,11 +304,11 @@ fn main() {
         outcomes.iter().all(|outcome| outcome.incremental),
         "expected the incremental path"
     );
-    let incremental = derived(&store, &strata);
+    assert_matches_recomputation(&store, &strata, "one file");
 
-    // Ten files, then the check every number above depends on: incremental equals recomputation.
+    // Ten files, checked the same way.
     time("commit: ten files, journalled", || {
-        for file in (0..files).step_by(files / 10).take(10) {
+        for file in (0..files).step_by((files / 10).max(1)).take(10) {
             store
                 .put_document_nquads(
                     &graph_iri(file, 2),
@@ -299,17 +321,7 @@ fn main() {
     time("reason: incremental after ten files", || {
         store.reason_all(&strata).expect("reason")
     });
-    let after_ten = derived(&store, &strata);
-    store.invalidate().expect("invalidate");
-    time("reason: recomputation for comparison", || {
-        store.reason_all(&strata).expect("reason")
-    });
-    assert_eq!(
-        after_ten,
-        derived(&store, &strata),
-        "incremental maintenance diverged from recomputation"
-    );
-    assert_eq!(full.len(), incremental.len());
+    assert_matches_recomputation(&store, &strata, "ten files");
 
     drop(store);
     println!(

@@ -5,7 +5,7 @@
 /**
  * Benchmarks both store backends on a real repository, through the CLI exactly as a user runs it:
  * a cold index into an empty store, then a warm pass after touching one file, then the store's size.
- * Prints a markdown table (and `--json` the raw results).
+ * Prints a markdown table, or with `--json` the raw results instead.
  *
  *   bun scripts/bench.ts [--root <repo>] [--backends js,native] [--touch <repo-relative file>] [--json]
  *
@@ -43,12 +43,17 @@ const { values } = parseArgs({
   options: {
     root: { type: 'string' },
     backends: { type: 'string', default: 'js,native' },
-    touch: { type: 'string', default: 'tools/code-index/src/Store.ts' },
+    touch: { type: 'string' },
     json: { type: 'boolean', default: false },
   },
 });
 
 const root = values.root ?? (await run('git', ['rev-parse', '--show-toplevel'])).stdout.trim();
+// The default file only exists in this repository; another root has to name its own.
+if (values.root !== undefined && values.touch === undefined) {
+  throw new Error('--touch <repo-relative file> is required with --root');
+}
+const touch = values.touch ?? 'tools/code-index/src/Store.ts';
 
 const cli = async (backend: string, args: string[]): Promise<string> =>
   (
@@ -77,7 +82,7 @@ for (const backend of values.backends.split(',')) {
     const index = async (): Promise<Pass> =>
       JSON.parse(await cli(backend, ['index', '--root', root, '--store', store, '--json']));
     const cold = await index();
-    const touched = join(root, values.touch);
+    const touched = join(root, touch);
     const before = await stat(touched);
     await utimes(touched, before.atime, new Date());
     let warm: Pass;
@@ -110,11 +115,12 @@ const rows: [string, (result: Result) => string][] = [
   ['derived quads', (result) => String(result.warm.derived)],
   ['store size', (result) => `${(result.bytes / 1e6).toFixed(0)} MB`],
 ];
-console.log(`| | ${results.map((result) => result.backend).join(' | ')} |`);
-console.log(`|---|${results.map(() => '---').join('|')}|`);
-for (const [label, cell] of rows) {
-  console.log(`| ${label} | ${results.map(cell).join(' | ')} |`);
-}
 if (values.json) {
   console.log(JSON.stringify(results, null, 2));
+} else {
+  console.log(`| | ${results.map((result) => result.backend).join(' | ')} |`);
+  console.log(`|---|${results.map(() => '---').join('|')}|`);
+  for (const [label, cell] of rows) {
+    console.log(`| ${label} | ${results.map(cell).join(' | ')} |`);
+  }
 }

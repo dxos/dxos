@@ -124,19 +124,27 @@ export const make = <E>(
      * rules mention. Handing EYE the whole graph made the reasoning phase cost more than the rest
      * of an indexing pass by two orders of magnitude, for facts no rule could match.
      */
-    const facts = (rules: string, ownGraph: string): Effect.Effect<Quad[], E> =>
+    const facts = (rules: string, ownGraph: string, hidden: ReadonlySet<string>): Effect.Effect<Quad[], E> =>
       Effect.map(match(), (quads) => {
         const wanted = predicatesOf(rules);
-        // A reasoner sees the file graphs and every other reasoner's conclusions, but never its own:
-        // reading its own output back would let a derivation keep itself alive.
+        // A reasoner never sees its own conclusions — reading its own output back would let a
+        // derivation keep itself alive — nor, in an ordered pass, those of reasoners after it.
         return quads.filter(
-          (quad) => quad.graph.value !== ownGraph && (wanted === undefined || wanted.has(quad.predicate.value)),
+          (quad) =>
+            quad.graph.value !== ownGraph &&
+            !hidden.has(quad.graph.value) &&
+            (wanted === undefined || wanted.has(quad.predicate.value)),
         );
       });
 
-    const reason: Graph<E>['reason'] = (graph, rules, materialize) =>
+    const reasonWith = (
+      graph: Quad['graph'],
+      rules: string,
+      materialize: boolean,
+      hidden: ReadonlySet<string>,
+    ): Effect.Effect<Quad[], E> =>
       Effect.gen(function* () {
-        const premises = yield* facts(rules, graph.value);
+        const premises = yield* facts(rules, graph.value, hidden);
         const data = yield* attempt('Failed to serialize graph', () => serialize(premises));
         const derived = yield* attempt('Reasoning failed', () =>
           n3reasoner([data, rules].join('\n'), undefined, { output: 'derivations' }),
@@ -153,6 +161,8 @@ export const make = <E>(
         }
         return quads;
       });
+
+    const reason: Graph<E>['reason'] = (graph, rules, materialize) => reasonWith(graph, rules, materialize, new Set());
 
     const graph: Graph<E> = {
       swap: (clear, target, document) =>
@@ -204,9 +214,16 @@ export const make = <E>(
       reason,
 
       reasonAll: (reasoners) =>
-        Effect.forEach(reasoners, (reasoner) =>
+        Effect.forEach(reasoners, (reasoner, index) =>
           Effect.map(
-            Effect.timed(reason(Ontology.derivedGraphIri(reasoner.name), reasoner.rules, true)),
+            Effect.timed(
+              reasonWith(
+                Ontology.derivedGraphIri(reasoner.name),
+                reasoner.rules,
+                true,
+                new Set(reasoners.slice(index + 1).map((later) => Ontology.derivedGraphIri(later.name).value)),
+              ),
+            ),
             ([duration, quads]) =>
               ({
                 name: reasoner.name,

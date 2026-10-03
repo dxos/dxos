@@ -63,7 +63,8 @@ Adding a builtin is one match arm in `rules.rs`; none was needed for the shipped
   ones from the _previous_ pass — so an earlier file could see a later file's stale
   output (`40-composer` saw `90-aliases`' types from the last run). That made the
   result depend on history. The design doc (`ONTOLOGY.md` § Reasoning) already said
-  "before it"; the native backend implements what it says.
+  "before it"; both backends now implement what it says in `reasonAll` (the JS one hides later
+  reasoners' graphs from each pass), covered by `Reasoner.test.ts` § ordered reasoners.
 - A derived graph holds every fact the stratum's rule heads produce (its
   materialisation `M_i`), including the rare head that restates a premise. EYE's
   `derivations` mode drops those. Keeping them makes the stored graph exactly the
