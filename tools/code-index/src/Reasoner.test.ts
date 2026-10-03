@@ -23,8 +23,8 @@ import { analyzeTypeScript } from './worker/analyzers/typescript.ts';
 
 /**
  * The rule files as shipped, run against a real store — a paraphrase of a rule in a test proves the
- * paraphrase. `60-canonical.n3` is the one with a property worth guarding: exactly one canonical
- * name per symbol, which its scoped negation is what secures.
+ * paraphrase. `60-canonical.n3` is the one with a property worth guarding: a canonical name is
+ * stated only where it differs from the declared one.
  */
 
 const CANONICAL = join(Reasoner.BUNDLED_DIR, '60-canonical.n3');
@@ -91,9 +91,10 @@ describe('bundled rules', () => {
       }).pipe(Effect.provide(Store.layer(join(dir, `store-${documents.length}-${Math.random()}`))), Effect.scoped),
     );
 
-  test('an identifier imported directly is its own canonical name', async () => {
+  test('an identifier imported directly is not restated', async () => {
+    // Its canonical name is its `deus:name`; a query reads `COALESCE(?canonical, ?name)`.
     const names = await canonicalNames([document('src/plain.ts', [symbol('src/plain.ts', 'helper')])]);
-    expect(names).toEqual([`${Ontology.symbolIri('src/plain.ts', 'helper').value} = helper`]);
+    expect(names).toEqual([]);
   });
 
   test('a namespaced module qualifies its identifiers, and only that', async () => {
@@ -112,8 +113,6 @@ describe('bundled rules', () => {
     expect(names).toEqual([
       `${Ontology.symbolIri('src/Ontology.ts', 'fileIri').value} = Ontology.fileIri`,
       `${Ontology.symbolIri('src/Ontology.ts', 'symbolIri').value} = Ontology.symbolIri`,
-      // The namespace is imported by name from the barrel, so it is its own canonical name.
-      `${Ontology.symbolIri('src/index.ts', 'Ontology').value} = Ontology`,
     ]);
   });
 
@@ -966,7 +965,7 @@ version: 0.1.0
 \`\`\`mdl
 op create
   key: org.dxos.operation.x.create
-  desc: Creates an \`X.Document\`.
+  desc: Creates an \`X.Document\` with \`helper\`.
   bogus: not in the schema
 
 op ghost
@@ -1094,8 +1093,11 @@ ext type
       'Orphan operationKey "org.dxos.operation.x.orphan"',
     ]);
     expect(having('specifies')).toEqual(['op:create specifies Create', 'type:Document specifies Document']);
-    // The mention `X.Document` is the canonical name of `Document`, published as a namespace.
-    expect(having('describes')).toEqual(expect.arrayContaining(['op:create describes Document']));
+    // The mention `X.Document` is the canonical name of `Document`, published as a namespace; `helper`
+    // has none, so its declared name is what an importer writes.
+    expect(having('describes')).toEqual(
+      expect.arrayContaining(['op:create describes Document', 'op:create describes helper']),
+    );
     expect(having('covers')).toEqual(['scenario:T-1 covers req:F-1.1', 'test:QA-1 covers feat:F-1']);
     expect(having('includesTest')).toEqual(['suite:smoke includesTest test:QA-1']);
     expect(having('automatedBy')).toEqual(['test:QA-1 automatedBy basic.spec.ts']);
@@ -1103,11 +1105,7 @@ ext type
 
     expect(having('phantom')).toEqual(['op:ghost phantom true', 'type:Phantom phantom true']);
     expect(having('unspecified')).toEqual(['Orphan unspecified true']);
-    expect(having('undocumented')).toEqual([
-      'Orphan undocumented true',
-      'helper undocumented true',
-      'view undocumented true',
-    ]);
+    expect(having('undocumented')).toEqual(['Orphan undocumented true', 'view undocumented true']);
     expect(having('unknownField')).toEqual(['op:create unknownField "bogus"']);
     expect(having('missingField')).toEqual(['type:Phantom missingField "fields"']);
 
