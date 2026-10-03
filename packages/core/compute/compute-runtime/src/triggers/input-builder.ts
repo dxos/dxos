@@ -4,6 +4,7 @@
 
 import type * as Trigger from '@dxos/compute/Trigger';
 import type * as TriggerEvent from '@dxos/compute/TriggerEvent';
+import { parseTemplatePlaceholder } from '@dxos/util';
 
 export const createInvocationPayload = (trigger: Trigger.Trigger, event: TriggerEvent.TriggerEvent): any => {
   if (!trigger.input) {
@@ -12,12 +13,12 @@ export const createInvocationPayload = (trigger: Trigger.Trigger, event: Trigger
 
   const payload: any = {};
   for (const [key, value] of Object.entries(trigger.input)) {
-    if (typeof value !== 'string' || !(value.startsWith('{{') && value.endsWith('}}'))) {
+    const propertyPath = typeof value === 'string' ? parseTemplatePlaceholder(value) : undefined;
+    if (propertyPath === undefined) {
       payload[key] = value;
       continue;
     }
 
-    const propertyPath = value.slice(2, -2);
     let valueSubstitution: any = propertyPath.startsWith('trigger')
       ? trigger
       : propertyPath.startsWith('event')

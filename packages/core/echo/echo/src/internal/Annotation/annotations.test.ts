@@ -12,15 +12,8 @@ import { createEchoSchema } from '../../testing/index.ts';
 import * as Type from '../../Type.ts';
 import { EntityKind } from '../common/types/index.ts';
 import { EchoObjectSchema } from '../Entity/index.ts';
-import {
-  LabelAnnotation,
-  PropertyMeta,
-  SetParentAnnotation,
-  TypenameSchema,
-  VersionSchema,
-  getLabelWithSchema,
-  getTypeAnnotation,
-} from './annotations.ts';
+import { LabelAnnotation, getLabelWithSchema } from '../Property/index.ts';
+import { PropertyMeta, SetParentAnnotation, TypenameSchema, VersionSchema, getTypeAnnotation } from './annotations.ts';
 
 // TODO(dmaretskyi): Use one of the testing schemas.
 const TestObject = Schema.Struct({
