@@ -55,7 +55,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
     <Card.Body>
       <Card.Row>
         <div className='flex justify-between items-center gap-2 text-sm'>
-          <span className='flex items-center gap-1 text-description'>
+          <span className='flex items-center gap-1 text-fg-muted'>
             {harnessIcon && <Icon icon={harnessIcon} size='md' />}
             {harness ?? 'Session'}
           </span>
@@ -73,7 +73,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
       )}
       {(repo || branch || worktreeName) && (
         <Card.Row>
-          <div className='flex items-center gap-2 text-sm text-description min-w-0'>
+          <div className='flex items-center gap-2 text-sm text-fg-muted min-w-0'>
             {repo && <span className='truncate'>{repo}</span>}
             {branch && (
               <span className='dx-tag dx-tag-inline' data-hue='neutral'>
@@ -85,7 +85,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
         </Card.Row>
       )}
       <Card.Row>
-        <div className='flex items-center gap-2 text-sm text-subdued'>
+        <div className='flex items-center gap-2 text-sm text-fg-subtle'>
           <span>started {since(started)}</span>
           {/* Only meaningful while the session might still be working; a closed one has an end. */}
           {lastCheckedIn && !RemoteSession.isTerminal(subject) && <span>· seen {since(lastCheckedIn)}</span>}
@@ -93,7 +93,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
       </Card.Row>
       {lastMessage && (
         <Card.Row>
-          <Card.Text classNames='line-clamp-3' variant='description'>
+          <Card.Text classNames='line-clamp-3' variant='muted'>
             {lastMessage}
           </Card.Text>
         </Card.Row>
@@ -103,7 +103,7 @@ export const RemoteSessionCard = ({ subject }: RemoteSessionCardProps) => {
           {/* The only reliable way back into a session: `claude-cli://open` takes no session id, and
               the web URL needs the bridge id, which the harness does not put in the hook payload. */}
           <div className='flex items-center gap-1 min-w-0'>
-            <code className='text-xs text-subdued select-all truncate'>{resumeCommand(sessionId)}</code>
+            <code className='text-xs text-fg-subtle select-all truncate'>{resumeCommand(sessionId)}</code>
             <SystemButton.Clipboard iconOnly variant='ghost' value={resumeCommand(sessionId)} />
           </div>
         </Card.Row>

@@ -29,14 +29,14 @@ export const Flashcard = ({ word, revealed, onReveal, onAnswer, classNames }: Fl
     <div className={mx('flex flex-col items-center justify-center gap-6 p-8', classNames)}>
       <div className='flex flex-col items-center gap-2 text-center'>
         <span className='text-3xl'>{word.term}</span>
-        {word.reading && <span className='text-description'>{word.reading}</span>}
+        {word.reading && <span className='text-fg-muted'>{word.reading}</span>}
       </div>
 
       {revealed ? (
         <div className='flex flex-col items-center gap-2 text-center'>
           <span className='text-2xl text-accent-text'>{word.translation}</span>
-          {word.partOfSpeech && <span className='text-sm text-description'>{word.partOfSpeech}</span>}
-          {word.examples?.[0] && <span className='text-sm text-description italic'>{word.examples[0]}</span>}
+          {word.partOfSpeech && <span className='text-sm text-fg-muted'>{word.partOfSpeech}</span>}
+          {word.examples?.[0] && <span className='text-sm text-fg-muted italic'>{word.examples[0]}</span>}
         </div>
       ) : (
         <Button onClick={onReveal} data-testid='lingo.flashcard.reveal'>

@@ -62,7 +62,7 @@ export const InvitationAuthenticator = ({
           ) : (
             <>
               <Field.Label>
-                <InputLabel classNames='text-description'>{t('authenticating.label')}</InputLabel>
+                <InputLabel classNames='text-fg-muted'>{t('authenticating.label')}</InputLabel>
               </Field.Label>
               <div className='grow' />
             </>

@@ -32,7 +32,7 @@ const fileType = (file: File): string => {
 };
 
 const Spinner = () => (
-  <Flex center classNames='h-full text-description'>
+  <Flex center classNames='h-full text-fg-muted'>
     <Icon icon='ph--spinner-gap--regular' size='xl' spin />
   </Flex>
 );
@@ -235,8 +235,8 @@ type UploadPromptProps = {
 
 const UploadPrompt = ({ busy, inputRef, onFile, label, message, accept }: UploadPromptProps) => (
   <Flex column gap='md' center classNames='h-full p-4 text-center'>
-    <Icon icon='ph--book-open--regular' size='xl' tone='description' />
-    <p className='text-sm text-description'>{message}</p>
+    <Icon icon='ph--book-open--regular' size='xl' tone='muted' />
+    <p className='text-sm text-fg-muted'>{message}</p>
     <input
       ref={inputRef}
       type='file'

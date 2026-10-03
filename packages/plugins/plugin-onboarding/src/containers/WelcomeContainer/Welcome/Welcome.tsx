@@ -73,7 +73,7 @@ const passkeyErrorKey = (error: WelcomeError, passkeyOnly: boolean): string =>
 // Flat, full-width tabs with a bottom border that highlights the active one.
 const tabClassNames =
   'flex-1 rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
-  'border-b-2 border-transparent text-description transition-colors hover:text-white ' +
+  'border-b-2 border-transparent text-fg-muted transition-colors hover:text-white ' +
   'aria-selected:border-white aria-selected:text-white';
 
 const ComposerLogoMark = ({ classNames }: ThemedClassName) => (
@@ -425,7 +425,7 @@ export const Welcome = ({
                 <Flex column gap='xl'>
                   <Container gap='md' gutter='none'>
                     <h2 className='text-2xl'>{t('signup-code.title')}</h2>
-                    <p className='text-description'>{t('signup-code.description')}</p>
+                    <p className='text-fg-muted'>{t('signup-code.description')}</p>
                   </Container>
                   <InlineForm
                     inputProps={{
@@ -451,7 +451,7 @@ export const Welcome = ({
                 <Flex column gap='xl'>
                   <Container gap='md' gutter='none'>
                     <h2 className='text-2xl'>{t('waitlist.title')}</h2>
-                    <p className='text-description'>{t('waitlist.description')}</p>
+                    <p className='text-fg-muted'>{t('waitlist.description')}</p>
                   </Container>
                   <InlineForm
                     inputProps={{
@@ -475,7 +475,7 @@ export const Welcome = ({
                 <Flex column gap='xl'>
                   <Container gap='md' gutter='none'>
                     <h2 className='text-2xl'>{t('signup-auth.title')}</h2>
-                    <p className='text-description'>{t('signup-auth.description')}</p>
+                    <p className='text-fg-muted'>{t('signup-auth.description')}</p>
                   </Container>
                   {onCreateAccount && (
                     <>
@@ -501,7 +501,7 @@ export const Welcome = ({
                     <>
                       {onCreateAccount && <OrDivider>{t('or-divider.label')}</OrDivider>}
                       <Container gap='md' gutter='none'>
-                        <p className='text-description'>{t('atmosphere-account-button.label')}</p>
+                        <p className='text-fg-muted'>{t('atmosphere-account-button.label')}</p>
                         <InlineForm
                           inputProps={{
                             placeholder: t('atmosphere-handle-input.placeholder'),
@@ -543,7 +543,7 @@ export const Welcome = ({
           <Flex column gap='2xl'>
             <Container gap='md' gutter='none'>
               <h1 className='text-2xl'>{t('check-email.title')}</h1>
-              <p className='text-description'>
+              <p className='text-fg-muted'>
                 {state === WelcomeState.EMAIL_SENT
                   ? t('request-access-email.description')
                   : t('check-email.description')}
@@ -556,7 +556,7 @@ export const Welcome = ({
           <Flex column gap='2xl'>
             <Container gap='md' gutter='none'>
               <h1 className='text-2xl'>{t('waitlist-submitted.title')}</h1>
-              <p className='text-description'>{t('waitlist-submitted.description')}</p>
+              <p className='text-fg-muted'>{t('waitlist-submitted.description')}</p>
             </Container>
           </Flex>
         )}
@@ -564,7 +564,7 @@ export const Welcome = ({
         <Flex column classNames='z-[11] mt-auto'>
           <a href='https://dxos.org' target='_blank' rel='noreferrer'>
             <Flex gap='xs' center classNames='text-sm pr-3 pb-1 opacity-70'>
-              <span className='text-description'>Powered by</span>
+              <span className='text-fg-muted'>Powered by</span>
               <DXOSHorizontalType className='fill-white w-[80px]' />
             </Flex>
           </a>
@@ -587,7 +587,7 @@ const SwapLink = ({ onClick, children }: PropsWithChildren<{ onClick: () => void
   <button
     type='button'
     onClick={onClick}
-    className='self-center text-xs text-description hover:text-white underline underline-offset-4'
+    className='self-center text-xs text-fg-muted hover:text-white underline underline-offset-4'
   >
     {children}
   </button>
@@ -773,7 +773,7 @@ const LoginTab = ({
       )}
       {primary === 'email' && onSendSignInLink && (
         <Container gap='md' gutter='none'>
-          <p className='text-sm text-description'>{t('login-email.description')}</p>
+          <p className='text-sm text-fg-muted'>{t('login-email.description')}</p>
           <InlineForm
             inputProps={{
               ref: emailRef,
@@ -791,7 +791,7 @@ const LoginTab = ({
       )}
       {primary === 'atproto' && onRecoverWithOAuth && (
         <Container gap='md' gutter='none'>
-          <p className='text-sm text-description'>{t('login-atmosphere.description')}</p>
+          <p className='text-sm text-fg-muted'>{t('login-atmosphere.description')}</p>
           <InlineForm
             inputProps={{
               ref: atmosphereRef,
@@ -825,7 +825,7 @@ const LoginTab = ({
           <Menu.Trigger asChild>
             <button
               type='button'
-              className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4 outline-none'
+              className='flex items-center justify-center gap-1 text-sm text-fg-muted hover:text-white underline underline-offset-4 outline-none'
             >
               <span>{t('more-ways-to-sign-in.label')}</span>
               <Icon icon='ph--caret-down--regular' size='md' />
@@ -842,7 +842,7 @@ const LoginTab = ({
                 <Menu.ItemIcon size='xl' classNames={mx(opt.classNames)} />
                 <Container gap='sm' gutter='none'>
                   <Menu.ItemText />
-                  <span className='text-xs text-description font-normal'>{opt.description}</span>
+                  <span className='text-xs text-fg-muted font-normal'>{opt.description}</span>
                 </Container>
               </Menu.Item>
             ))}
@@ -915,7 +915,7 @@ const ValidationMessage = ({ children }: PropsWithChildren) => (
 
 /** Horizontal "or" separator between alternative auth methods. */
 const OrDivider = ({ children }: PropsWithChildren) => (
-  <Flex gap='md' align='center' classNames='text-xs text-description'>
+  <Flex gap='md' align='center' classNames='text-xs text-fg-muted'>
     <div className='flex-1 border-t border-neutral-700' />
     <span className='uppercase tracking-widest'>{children}</span>
     <div className='flex-1 border-t border-neutral-700' />

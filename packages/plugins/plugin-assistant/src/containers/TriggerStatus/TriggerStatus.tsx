@@ -112,7 +112,7 @@ const TriggerStatusPopover = ({
       <Container gap='sm' gutter='none'>
         <div className='text-sm'>{t(`trigger-status-${state}.label`)}</div>
         {currentFunctionName && state === 'running' && (
-          <div className='text-xs text-description'>{currentFunctionName}</div>
+          <div className='text-xs text-fg-muted'>{currentFunctionName}</div>
         )}
       </Container>
     </Flex>

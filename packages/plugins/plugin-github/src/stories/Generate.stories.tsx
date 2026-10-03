@@ -111,7 +111,7 @@ const DefaultStory = ({ url: initialUrl }: { url: string }) => {
           <span className='ms-2'>{busy ? PHASE_LABEL[phase] : 'Generate'}</span>
         </Button>
         {result && (
-          <span className='text-sm text-description whitespace-nowrap'>
+          <span className='text-sm text-fg-muted whitespace-nowrap'>
             {result.covered} of {result.total} hunks narrated
           </span>
         )}

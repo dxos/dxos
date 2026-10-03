@@ -89,7 +89,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
   return (
     <Mosaic.Tile
       asChild
-      classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-subdued-separator'
+      classNames='p-2 rounded-md dx-hover dx-current dx-selected border border-separator-subtle'
       id={segment.id}
       data={data}
       location={location}
@@ -118,7 +118,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
               <Card.Body>
                 {route && (
                   <Card.Row>
-                    <Card.Text variant='description'>{route}</Card.Text>
+                    <Card.Text variant='muted'>{route}</Card.Text>
                   </Card.Row>
                 )}
                 {date && (
@@ -126,7 +126,7 @@ export const SegmentTile = forwardRef<HTMLDivElement, SegmentTileProps>(({ data,
                     <Block>
                       <Icon icon='ph--calendar--regular' />
                     </Block>
-                    <Card.Text variant='description'>{format(date, 'PPp')}</Card.Text>
+                    <Card.Text variant='muted'>{format(date, 'PPp')}</Card.Text>
                   </Card.Row>
                 )}
               </Card.Body>

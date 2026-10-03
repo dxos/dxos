@@ -60,7 +60,7 @@
   }
 
   .dx-tour-progress-text {
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
 
   .dx-tour-control {

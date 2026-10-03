@@ -288,7 +288,7 @@ const SearchListItem = forwardRef<HTMLDivElement, SearchListItemProps>(
       >
         {icon && <Icon icon={icon} classNames={iconClassNames} />}
         <span className='w-0 grow truncate'>{label}</span>
-        {suffix && <span className='shrink-0 text-description'>{suffix}</span>}
+        {suffix && <span className='shrink-0 text-fg-muted'>{suffix}</span>}
         {checked && <Icon icon='ph--check--regular' />}
       </Picker.Item>
     );
@@ -330,7 +330,7 @@ const SearchListGroup = forwardRef<HTMLDivElement, SearchListGroupProps>(
     return (
       <div ref={forwardedRef} role='group' className={mx('flex flex-col', classNames)}>
         {heading && (
-          <div role='presentation' className='px-2 py-1 text-xs font-medium text-description'>
+          <div role='presentation' className='px-2 py-1 text-xs font-medium text-fg-muted'>
             {heading}
           </div>
         )}

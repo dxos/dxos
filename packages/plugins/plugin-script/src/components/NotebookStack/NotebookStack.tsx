@@ -138,12 +138,12 @@ const NotebookSection = ({
       data={cell}
       dragHandle={dragHandle}
       classNames={mx(
-        'grid grid-cols-[min-content_1fr] overflow-visible border border-subdued-separator',
+        'grid grid-cols-[min-content_1fr] overflow-visible border border-separator-subtle',
         resizable && minSectionHeight,
       )}
     >
       {/* Side rail */}
-      <div className='flex flex-col p-1 border-e border-subdued-separator dx-attention-surface'>
+      <div className='flex flex-col p-1 border-e border-separator-subtle dx-attention-surface'>
         <Button
           ref={setDragHandle}
           variant='ghost'

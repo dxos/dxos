@@ -396,12 +396,12 @@ const iconFor = (artifact: Obj.Unknown): string =>
 const PullRequestPreview = ({ pullRequest }: { pullRequest: PullRequest.PullRequest }) => (
   <>
     <Card.Row>
-      <Card.Text variant='description'>
+      <Card.Text variant='muted'>
         {PullRequest.reference(pullRequest)} · {pullRequest.state} · {pullRequest.headBranch} → {pullRequest.baseBranch}
       </Card.Text>
     </Card.Row>
     <Card.Row>
-      <Card.Text variant='description' data-testid='artifact-preview.pullRequest'>
+      <Card.Text variant='muted' data-testid='artifact-preview.pullRequest'>
         +{pullRequest.additions ?? 0} −{pullRequest.deletions ?? 0}
       </Card.Text>
     </Card.Row>
@@ -727,7 +727,7 @@ const ListDetailStory = ({ seed = seedQuestions }: { seed?: () => Task.Task[] })
             <TaskList.Editor showDescription classNames='p-2' />
           </TaskList.Root>
         ) : (
-          <p className='p-4 text-subdued'>No task selected.</p>
+          <p className='p-4 text-fg-subtle'>No task selected.</p>
         )}
       </div>
     </div>

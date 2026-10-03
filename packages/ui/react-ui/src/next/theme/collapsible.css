@@ -19,7 +19,7 @@
     border: none;
     border-radius: var(--radius-sm, 0.25rem);
     background: none;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
     font: inherit;
     font-size: var(--dx-font-size);
     line-height: var(--dx-line-height);

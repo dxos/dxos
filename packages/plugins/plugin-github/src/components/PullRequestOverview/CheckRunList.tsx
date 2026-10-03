@@ -14,8 +14,8 @@ const outcomeIcon: Record<GitHubOperation.CheckOutcome, { icon: string; classNam
   failure: { icon: 'ph--x-circle--fill', classNames: 'text-error-text' },
   pending: { icon: 'ph--circle-notch--regular', classNames: 'text-warning-text animate-spin' },
   success: { icon: 'ph--check-circle--fill', classNames: 'text-success-text' },
-  neutral: { icon: 'ph--minus-circle--regular', classNames: 'text-description' },
-  skipped: { icon: 'ph--prohibit--regular', classNames: 'text-description' },
+  neutral: { icon: 'ph--minus-circle--regular', classNames: 'text-fg-muted' },
+  skipped: { icon: 'ph--prohibit--regular', classNames: 'text-fg-muted' },
 };
 
 // What needs attention first: a failure is the reason to open the list, a running check the next.

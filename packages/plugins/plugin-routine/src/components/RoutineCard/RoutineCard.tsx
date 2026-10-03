@@ -36,7 +36,7 @@ export const RoutineCard = ({ subject }: RoutineCardProps) => {
       <Card.Row>
         {/* The gutter is reserved either way so the summary stays aligned across cards. */}
         <Block>{active && <Icon icon='ph--check-circle--regular' classNames='text-green-text' />}</Block>
-        <Card.Text variant='description' classNames='line-clamp-2'>
+        <Card.Text variant='muted' classNames='line-clamp-2'>
           {describeTrigger(trigger?.spec, t)}
         </Card.Text>
       </Card.Row>

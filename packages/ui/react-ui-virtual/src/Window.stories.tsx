@@ -256,7 +256,7 @@ const DefaultStory = ({
         </Window>
       </div>
 
-      <div className='px-2 py-1 flex gap-4 text-xs text-description tabular-nums' data-testid='placement.report'>
+      <div className='px-2 py-1 flex gap-4 text-xs text-fg-muted tabular-nums' data-testid='placement.report'>
         <span data-testid='window.index'>{state?.index ?? 0}</span>
         <span data-testid='window.range'>
           {state ? `${state.visible.first}–${state.visible.last}` : '—'} of {state?.count ?? 0}

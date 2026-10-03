@@ -120,7 +120,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
           <div
             className={mx(
               'flex absolute left-2 right-2 bottom-2 h-[8rem]',
-              'overflow-hidden dx-base-surface border border-subdued-separator opacity-80',
+              'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
             )}
           >
             <JsonHighlighter classNames='text-sm' data={filter} />
@@ -131,7 +131,7 @@ const DatabaseModuleContainer = ({ space }: { space: Space }) => {
             <div
               className={mx(
                 'flex absolute left-2 right-2 bottom-2 h-[8rem]',
-                'overflow-hidden dx-base-surface border border-subdued-separator opacity-80',
+                'overflow-hidden dx-base-surface border border-separator-subtle opacity-80',
               )}
             >
               <JsonHighlighter classNames='text-sm' data={selectedObject} />
@@ -218,7 +218,7 @@ const DatabaseCardsView = ({ space, filter, selectedId, onSelect }: DatabaseCard
   );
 
   if (objects.length === 0) {
-    return <div className='p-4 text-sm text-description text-center'>No objects match the query.</div>;
+    return <div className='p-4 text-sm text-fg-muted text-center'>No objects match the query.</div>;
   }
 
   return (
@@ -249,7 +249,7 @@ const DatabaseCardTile = ({ data }: { data: DatabaseCardTileData | undefined; in
     <Card.Root classNames={['cursor-pointer', current && 'ring-2 ring-focus']} onClick={() => onSelect(object.id)}>
       <Card.Header>
         <Block>
-          <Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} tone='subdued' />
+          <Icon icon={iconAnnotation?.icon ?? 'ph--circle-dashed--regular'} tone='subtle' />
         </Block>
         <Card.Title truncate>{label}</Card.Title>
       </Card.Header>

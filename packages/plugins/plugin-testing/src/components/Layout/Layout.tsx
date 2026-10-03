@@ -192,7 +192,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
                       // Matches the deck's popover, which opens a card with no subject for a link that did not resolve.
                       <Card.Body classNames='min-h-8'>
                         <Card.Row>
-                          <Card.Text variant='description'>No preview available.</Card.Text>
+                          <Card.Text variant='muted'>No preview available.</Card.Text>
                         </Card.Row>
                       </Card.Body>
                     )}

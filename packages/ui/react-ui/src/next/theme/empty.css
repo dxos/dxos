@@ -11,7 +11,7 @@
     gap: var(--dx-gap-size);
     padding: var(--dx-block-size) var(--dx-gap-size);
     text-align: center;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
     font-size: var(--dx-font-size);
     line-height: var(--dx-line-height);
   }
@@ -19,7 +19,7 @@
   .dx-empty > .dx-icon {
     width: var(--dx-block-size);
     height: var(--dx-block-size);
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
   }
   .dx-empty > p {
     margin: 0;

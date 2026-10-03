@@ -86,7 +86,7 @@
     gap: var(--dx-gap-size);
     height: var(--dx-block-size);
     padding-inline: var(--dx-gap-size);
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
 
   /* The popup's search field stays above the options as they scroll, which the viewport's scroll padding keeps clear. */
@@ -143,6 +143,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
 }

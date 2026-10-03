@@ -228,7 +228,7 @@ Added in review (DESIGN follow-ups 60–64):
 
 7. **Scrolling row viewports size rows to content** (`scroll-area.css`), and **`Container align='start'`** (also on
    `Panel.Body`) for rows of differing heights.
-8. **Label colours**: field labels, header Typography and legends use `--color-subdued`. Checkbox and Switch labels
+8. **Label colours**: field labels, header Typography and legends use `--color-fg-subtle`. Checkbox and Switch labels
    keep the base colour, since they are the control's own text. The required mark uses `--color-warning-text`, placed
    `max(0.125em, --dx-control-inset)` after the label. Covered by Field `Test`, which resolves the tokens through a probe
    element and measures the gap with a Range.
@@ -247,7 +247,7 @@ Added in review (DESIGN follow-ups 60–64):
 - **ZIP code** in the shared `Person` schema is a string (`^\d{5}(-\d{4})?$`) with a description, so both Forms render
   a text input. No fixture or test used a numeric zip.
 - **Label colours, decided: content outranks interface text.** Labels, legends, header text and help text all use
-  `--color-subdued` (neutral-600 dark, neutral-500 light); help text is one size step smaller than its label (12px
+  `--color-fg-subtle` (neutral-600 dark, neutral-500 light); help text is one size step smaller than its label (12px
   against 14px at md), so the two stay distinct at the same colour. Input values keep the base text colour; error text
   is unchanged. At xs and sm there is no smaller step, so help text matches the label's size there. The rename to an
   emphasis scale is deferred to the codebase-wide migration.

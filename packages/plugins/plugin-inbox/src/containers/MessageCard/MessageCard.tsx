@@ -21,14 +21,14 @@ export const MessageCard = ({ subject: message }: AppSurface.ObjectCardProps<Mes
         </Block>
         <Flex gap='md' align='center' justify='between' classNames='col-span-2'>
           <span className='grow truncate'>{from}</span>
-          <span className='text-xs text-description text-right whitespace-nowrap pe-2'>{date}</span>
+          <span className='text-xs text-fg-muted text-right whitespace-nowrap pe-2'>{date}</span>
         </Flex>
       </Card.Header>
       <Card.Row>
-        <p className='text-xs text-description text-info-text'>{email}</p>
+        <p className='text-xs text-fg-muted text-info-text'>{email}</p>
       </Card.Row>
       <Card.Row>
-        <Card.Text variant='description'>{snippet}</Card.Text>
+        <Card.Text variant='muted'>{snippet}</Card.Text>
       </Card.Row>
       <Card.Row>
         <Row.Tags tags={message.properties?.tags} />

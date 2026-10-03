@@ -86,7 +86,7 @@ export const NotebookCell = ({ db, graph, dragging, cell, promptResults, env }: 
       }
 
       return (
-        <div className='flex flex-col divide-y divide-subdued-separator'>
+        <div className='flex flex-col divide-y divide-separator-subtle'>
           <TypescriptEditor
             id={cell.id}
             role='section'
@@ -155,11 +155,11 @@ const NotebookCellValue = ({ cell, graph }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full bg-group-surface text-description font-mono', valueStyles)}>
+    <div className={mx('flex w-full bg-group-surface text-fg-muted font-mono', valueStyles)}>
       {name && (
         <>
           <span className='text-success-text'>{name}</span>
-          <span className='text-description'>&nbsp;=&nbsp;</span>
+          <span className='text-fg-muted'>&nbsp;=&nbsp;</span>
         </>
       )}
       <span>{value}</span>
@@ -178,7 +178,7 @@ const NotebookPromptResult = ({ cell, promptResults }: NotebookCellProps) => {
   }
 
   return (
-    <div className={mx('flex w-full dx-group-surface text-description border-y border-subdued-separator', valueStyles)}>
+    <div className={mx('flex w-full dx-group-surface text-fg-muted border-y border-separator-subtle', valueStyles)}>
       <NotebookTextEditor readOnly value={value} />
     </div>
   );

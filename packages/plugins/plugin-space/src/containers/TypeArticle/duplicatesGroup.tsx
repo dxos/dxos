@@ -209,7 +209,7 @@ export const useDuplicatesGroup = ({
                     variant: 'custom',
                     label: ['duplicates-position.label', { ns: meta.profile.key }],
                     render: () => (
-                      <span className='text-description text-sm tabular-nums'>
+                      <span className='text-fg-muted text-sm tabular-nums'>
                         {position} / {total}
                       </span>
                     ),

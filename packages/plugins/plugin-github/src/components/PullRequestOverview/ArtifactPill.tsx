@@ -64,7 +64,7 @@ export const ArtifactPill = ({ artifact, children }: ArtifactPillProps) => {
         <Button
           hue='neutral'
           size='sm'
-          classNames='bg-input-surface text-base-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border align-baseline'
+          classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border align-baseline'
           icon={artifactIcon[artifact.kind]}
           iconClassNames={artifact.kind === 'video' ? 'text-violet-500' : 'text-sky-500'}
           label={label}

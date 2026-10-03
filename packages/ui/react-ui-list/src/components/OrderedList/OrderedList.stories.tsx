@@ -206,7 +206,7 @@ const CheckboxWithRemoveStory = () => {
                     )
                   }
                 />
-                <OrderedList.ItemText tone={item.done ? 'description' : undefined} />
+                <OrderedList.ItemText tone={item.done ? 'muted' : undefined} />
                 <SystemButton.Remove onClick={() => setItems((items) => items.filter((todo) => todo.id !== item.id))} />
               </OrderedList.Item>
             ))}
@@ -258,7 +258,7 @@ const ColumnsStory = () => (
           <OrderedList.Item key={item.id} id={item.id} data-testid={`column-row-${item.id}`}>
             <OrderedList.DragHandle />
             <OrderedList.ItemText />
-            <Typography tone='description' data-testid={`column-${item.id}`}>
+            <Typography tone='muted' data-testid={`column-${item.id}`}>
               {item.label.length} letters
             </Typography>
           </OrderedList.Item>

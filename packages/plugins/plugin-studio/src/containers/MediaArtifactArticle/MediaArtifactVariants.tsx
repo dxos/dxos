@@ -190,7 +190,7 @@ export const MediaArtifactVariants = ({
         ) : (
           selectedVariant &&
           (selectedVariant.jobId ? (
-            <Flex role='status' center classNames='h-full text-subdued'>
+            <Flex role='status' center classNames='h-full text-fg-subtle'>
               {t('generating.label')}
             </Flex>
           ) : (

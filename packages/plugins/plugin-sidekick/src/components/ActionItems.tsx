@@ -28,7 +28,7 @@ export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
   return (
     <Section title={t('action-items.title')}>
       {items.length === 0 ? (
-        <p className='text-sm text-description italic'>{t('no-action-items.label')}</p>
+        <p className='text-sm text-fg-muted italic'>{t('no-action-items.label')}</p>
       ) : (
         // Non-selectable: each row carries its own `completed` checkbox state, not a
         // list-selection highlight — so this renders the plain ARIA list structure.
@@ -40,7 +40,7 @@ export const ActionItems = ({ items, onToggle }: ActionItemsProps) => {
                 onCheckedChange={() => onToggle?.(item)}
                 label={
                   <>
-                    <span className={item.completed ? 'line-through text-description' : ''}>{item.text}</span>
+                    <span className={item.completed ? 'line-through text-fg-muted' : ''}>{item.text}</span>
                   </>
                 }
               />

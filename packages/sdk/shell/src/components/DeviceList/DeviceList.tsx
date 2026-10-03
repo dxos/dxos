@@ -27,7 +27,7 @@ export const DeviceList = ({
   const { t } = useTranslation(translationKey);
   return (
     <div className='p-1'>
-      <h2 className={mx('text-description', 'text-center mt-2')}>{t('devices.heading')}</h2>
+      <h2 className={mx('text-fg-muted', 'text-center mt-2')}>{t('devices.heading')}</h2>
       {devices.length > 0 && (
         <Listbox.Root
           items={devices.map((device) => {

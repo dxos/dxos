@@ -60,7 +60,7 @@ const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeader
     </Block>
     <Flex align='center' gap='sm' classNames='min-w-0'>
       <Card.Title>{title}</Card.Title>
-      {info !== undefined && <span className='shrink-0 font-mono text-xs text-description'>{info}</span>}
+      {info !== undefined && <span className='shrink-0 font-mono text-xs text-fg-muted'>{info}</span>}
     </Flex>
     {action && <Block rail='end'>{action}</Block>}
     {menu && (
@@ -139,7 +139,7 @@ const StatCardRow = ({
   const trailing =
     action ??
     (span && !unit ? undefined : (
-      <span className='inline-block w-8 ps-1 whitespace-nowrap text-xs text-description'>{unit}</span>
+      <span className='inline-block w-8 ps-1 whitespace-nowrap text-xs text-fg-muted'>{unit}</span>
     ));
   // The leading rail is kept even when empty, so labels align across rows.
   const leading =

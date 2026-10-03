@@ -152,7 +152,7 @@ export const InputPanel = ({
             <Field.Root>
               <div className='flex items-center gap-2 px-2'>
                 <Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
-                <Field.Label classNames='text-sm text-description'>POS</Field.Label>
+                <Field.Label classNames='text-sm text-fg-muted'>POS</Field.Label>
               </div>
             </Field.Root>
           )}
@@ -209,10 +209,10 @@ export const InputPanel = ({
                     dataset.messages.map((message) => (
                       <div
                         key={message.id}
-                        className='flex flex-col min-w-0 dx-card-surface border border-subdued-separator rounded-sm px-3 py-2'
+                        className='flex flex-col min-w-0 dx-card-surface border border-separator-subtle rounded-sm px-3 py-2'
                       >
                         <div className='font-medium truncate'>{message.subject}</div>
-                        <div className='text-sm text-description truncate'>{message.from}</div>
+                        <div className='text-sm text-fg-muted truncate'>{message.from}</div>
                         <div className='text-sm line-clamp-3'>{message.body}</div>
                       </div>
                     ))

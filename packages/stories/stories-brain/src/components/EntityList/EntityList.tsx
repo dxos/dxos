@@ -75,7 +75,7 @@ export const EntityList = ({ entities, selected, onSelect, classNames }: EntityL
                   }}
                 >
                   <Listbox.ItemText>{entity.label}</Listbox.ItemText>
-                  <span className='shrink-0 text-subdued tabular-nums'>{entity.count}</span>
+                  <span className='shrink-0 text-fg-subtle tabular-nums'>{entity.count}</span>
                   <Listbox.ItemIndicator />
                 </Listbox.Item>
               ))}

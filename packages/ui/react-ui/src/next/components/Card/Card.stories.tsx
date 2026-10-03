@@ -71,7 +71,7 @@ const RowsCard = ({ size, grid, prefix = '', rows, onInvite }: RowsCardProps) =>
       </Card.Section>
       <Card.Section>
         <Card.Link label={`${name}Project site`} href='https://dxos.org' data-testid={`${prefix}link-${size}`} />
-        <Card.Text variant='description' data-testid={`${prefix}text-${size}`}>
+        <Card.Text variant='muted' data-testid={`${prefix}text-${size}`}>
           Updated today.
         </Card.Text>
       </Card.Section>
@@ -244,7 +244,7 @@ const TileGridStory = () => {
               <Card.Header>
                 <Card.Title truncate>{title}</Card.Title>
               </Card.Header>
-              <Typography tone='description' lines={3}>
+              <Typography tone='muted' lines={3}>
                 {text}
               </Typography>
               <Card.Footer justify='between' data-testid={`tile-footer-${title}`}>
@@ -396,7 +396,7 @@ export const Test: Story = {
     addRow.focus();
     await userEvent.keyboard('{Enter}');
     await waitFor(() => expect(addRow).toHaveTextContent('Invite (1)'));
-    await expect(canvas.getByTestId('text-md')).toHaveAttribute('data-tone', 'description');
+    await expect(canvas.getByTestId('text-md')).toHaveAttribute('data-tone', 'muted');
 
     // Link, drag handle, menu.
     const link = canvas.getByTestId('link-md');

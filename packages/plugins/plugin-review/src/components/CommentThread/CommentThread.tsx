@@ -203,7 +203,7 @@ export const CommentThread = ({
     >
       <Thread.Content
         id={threadUri}
-        classNames='pt-2 border-b border-subdued-separator last:border-none'
+        classNames='pt-2 border-b border-separator-subtle last:border-none'
         current={current}
         onClickCapture={handleContentClickCapture}
         onFocusCapture={handleAttend}

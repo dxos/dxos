@@ -167,8 +167,8 @@ const CalendarToolbar = composable<HTMLDivElement, CalendarToolbarProps>(({ clas
           onClick={handleToday}
         />
       </div>
-      <div className='flex justify-center p-2 text-description'>{format(selected ?? top, 'MMMM')}</div>
-      <div className='flex justify-end p-2 text-description'>{(selected ?? top).getFullYear()}</div>
+      <div className='flex justify-center p-2 text-fg-muted'>{format(selected ?? top, 'MMMM')}</div>
+      <div className='flex justify-end p-2 text-fg-muted'>{(selected ?? top).getFullYear()}</div>
     </div>
   );
 });
@@ -604,12 +604,12 @@ const CalendarGrid = composable<HTMLDivElement, CalendarGridProps>(
                     {inRange && <div className='dx-fullscreen bg-primary-500/20' />}
                     {/* Month */}
                     {!dateClassNames && date.getDate() === 1 && (
-                      <span className='absolute top-0 text-xs text-description'>{format(date, 'MMM')}</span>
+                      <span className='absolute top-0 text-xs text-fg-muted'>{format(date, 'MMM')}</span>
                     )}
                     {/* Day + Marker */}
                     <div
                       className={mx(
-                        'absolute inset-1 rounded-full flex justify-center items-center text-sm text-description',
+                        'absolute inset-1 rounded-full flex justify-center items-center text-sm text-fg-muted',
                         dateClassNames,
                       )}
                     >

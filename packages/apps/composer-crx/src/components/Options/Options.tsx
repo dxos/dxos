@@ -104,12 +104,12 @@ export const Options = composable<HTMLDivElement, OptionsProps>((props, forwarde
           </div>
           <div className='flex flex-col justify-start items-end'>
             <div className='flex items-center gap-2 mt-4'>
-              <span className='text-subdued'>Powered by</span>
+              <span className='text-fg-subtle'>Powered by</span>
               <a
                 target='_blank'
                 rel='noreferrer'
                 href='https://dxos.org'
-                className='text-base text-subdued! hover:opacity-50'
+                className='text-base text-fg-subtle! hover:opacity-50'
               >
                 <DXOSHorizontalType className='h-10 dark:fill-neutral-50' />
               </a>

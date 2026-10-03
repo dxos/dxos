@@ -111,7 +111,7 @@ export const Properties = ({
   return (
     <div className={mx('flex flex-col overflow-hidden', classNames)} data-testid='properties'>
       {!element ? (
-        <div className='p-2 text-sm text-description'>
+        <div className='p-2 text-sm text-fg-muted'>
           {ids.length === 0 ? 'Select a node or link to edit its properties.' : `${ids.length} elements selected.`}
         </div>
       ) : isLink(element) ? (

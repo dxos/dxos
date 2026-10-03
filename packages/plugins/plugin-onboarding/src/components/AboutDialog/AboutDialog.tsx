@@ -68,9 +68,7 @@ export const AboutDialog = () => {
         </Dialog.CloseTrigger>
       </Dialog.Header>
       <Dialog.Body>
-        <div className='flex items-center text-description'>
-          {t('version.label', { version: version ?? 'unknown' })}
-        </div>
+        <div className='flex items-center text-fg-muted'>{t('version.label', { version: version ?? 'unknown' })}</div>
         <div className='flex flex-col gap-3'>
           {timestamp && (
             <div className='flex items-center gap-1'>

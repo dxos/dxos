@@ -109,12 +109,10 @@ export const PluginItem = ({
             {name ?? id}
           </Card.Title>
           {failure && <PluginFailureBadge failure={failure} />}
-          {deviceOnly && (
-            <Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' tone='description' />
-          )}
+          {deviceOnly && <Icon data-testid={`pluginList.${id}.deviceOnly`} icon='ph--monitor--regular' tone='muted' />}
         </Card.Header>
         {description && (
-          <Typography tone='description' lines={4}>
+          <Typography tone='muted' lines={4}>
             {description}
           </Typography>
         )}

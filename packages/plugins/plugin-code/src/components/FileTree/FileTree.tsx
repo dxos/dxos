@@ -67,7 +67,7 @@ export const FileTree = ({ classNames, files, selectedPath, onSelect, emptyMessa
   const tree = useMemo(() => buildTree(files), [files]);
 
   if (files.length === 0) {
-    return <div className={mx('p-2 text-description text-sm', classNames)}>{emptyMessage ?? 'No files yet.'}</div>;
+    return <div className={mx('p-2 text-fg-muted text-sm', classNames)}>{emptyMessage ?? 'No files yet.'}</div>;
   }
 
   return (

@@ -111,7 +111,7 @@ export const EventDetails = ({
 
       {description && data.description && (
         <Card.Row>
-          <Card.Text variant='description'>{data.description}</Card.Text>
+          <Card.Text variant='muted'>{data.description}</Card.Text>
         </Card.Row>
       )}
 

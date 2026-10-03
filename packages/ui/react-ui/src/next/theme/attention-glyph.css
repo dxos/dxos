@@ -32,7 +32,7 @@
     height: 100%;
   }
   .dx-attention-glyph[data-syncing] > .dx-icon {
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
     animation-duration: 2s;
   }
 

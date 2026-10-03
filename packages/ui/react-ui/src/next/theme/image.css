@@ -10,7 +10,7 @@
     aspect-ratio: var(--dx-image-aspect, 16 / 9);
     min-width: 0;
     background: var(--color-input-surface);
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
   .dx-image[data-status='loaded'] {
     background: transparent;

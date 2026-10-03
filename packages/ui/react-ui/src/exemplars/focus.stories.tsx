@@ -17,7 +17,7 @@ import { Checkbox, Field, Input, ScrollArea } from '../next/components/index.ts'
 
 // `dx-focus-ring` is the app's focus affordance; without it a focusable div falls back to the
 // browser's own outline, which is what these blocks were drawing.
-const border = 'dx-focus-ring rounded-xs border border-subdued-separator';
+const border = 'dx-focus-ring rounded-xs border border-separator-subtle';
 
 /** Horizontal group over the columns; each column is one stop. */
 const Board = forwardRef<HTMLDivElement, { columns: string[][] }>(({ columns }, ref) => {
@@ -52,7 +52,7 @@ const Column = ({ items }: { items: string[] }) => {
   });
 
   return (
-    <ScrollArea.Root orientation='vertical' classNames={mx('w-[25rem]', 'rounded-xs border border-subdued-separator')}>
+    <ScrollArea.Root orientation='vertical' classNames={mx('w-[25rem]', 'rounded-xs border border-separator-subtle')}>
       <ScrollArea.Viewport classNames='p-4'>
         <div
           {...focusGroupProps}

@@ -188,7 +188,7 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
             size='sm'
             icon='ph--caret-double-right--regular'
             label={t('select-thread.label')}
-            classNames='text-description'
+            classNames='text-fg-muted'
             onClick={handleSelect}
           />
         </div>
@@ -198,7 +198,7 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
             data-testid='thread.heading'
             className={mx(
               'me-2 font-medium truncate italic',
-              current ? 'text-accent-text' : 'text-description',
+              current ? 'text-accent-text' : 'text-fg-muted',
               detached && 'line-through decoration-1',
             )}
           >
@@ -318,7 +318,7 @@ const groupMessages = (
 
 const ThreadDivider = ({ label }: { label?: string }) =>
   label ? (
-    <div className='flex items-center gap-2 px-2 py-2 text-xs text-description'>
+    <div className='flex items-center gap-2 px-2 py-2 text-xs text-fg-muted'>
       <div className='h-px grow bg-separator' />
       <span className='shrink-0'>{label}</span>
       <div className='h-px grow bg-separator' />
@@ -492,7 +492,7 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
       <div
         {...props}
         className={mx(
-          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pe-2 text-xs text-description',
+          'col-start-2 grid grid-cols-[min-content_1fr_max-content] pb-2 pe-2 text-xs text-fg-muted',
           classNames,
         )}
         ref={forwardedRef}

@@ -151,7 +151,7 @@ const FeedbackFormDownloadLogs = ({ onDownloadLogs }: FeedbackFormDownloadLogsPr
 
 FeedbackFormDownloadLogs.displayName = `${FEEDBACK_FORM}.DownloadLogs`;
 
-const noteClassNames = 'text-xs text-description text-center px-2 py-1';
+const noteClassNames = 'text-xs text-fg-muted text-center px-2 py-1';
 
 export type FeedbackFormSubmitProps = {
   disabled?: boolean;

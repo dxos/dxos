@@ -298,7 +298,7 @@ export const InboxStack = composable<HTMLDivElement, InboxStackProps>(
                     icon='ph--spinner-gap--regular'
                     size='lg'
                     classNames='[animation:spin_1s_linear_infinite]'
-                    tone='subdued'
+                    tone='subtle'
                   />
                 </div>
               )}
@@ -434,7 +434,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         title={
           <>
             <span className='grow truncate font-medium'>{subject}</span>
-            <span className='text-xs text-description whitespace-nowrap shrink-0'>{date}</span>
+            <span className='text-xs text-fg-muted whitespace-nowrap shrink-0'>{date}</span>
           </>
         }
       />
@@ -449,7 +449,7 @@ const MessageTile = forwardRef<HTMLDivElement, MessageTileProps>(({ data, locati
         {/* A message with body text always has a truthy `snippet` (`properties.snippet ?? first text block`), so gating the search snippet on `snippet` is safe. */}
         {snippet && (
           <Card.Row>
-            <Card.Text variant='description'>
+            <Card.Text variant='muted'>
               {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
             </Card.Text>
           </Card.Row>
@@ -582,7 +582,7 @@ const ConversationTile = forwardRef<HTMLDivElement, ConversationTileProps>(
           ))}
           {remaining > 0 && (
             <Card.Row>
-              <Card.Text variant='description'>{`+${remaining} more`}</Card.Text>
+              <Card.Text variant='muted'>{`+${remaining} more`}</Card.Text>
             </Card.Row>
           )}
         </Card.Body>
@@ -636,7 +636,7 @@ const ConversationMessageRow = ({
           <span className='ml-auto ps-2 text-xs text-info-text whitespace-nowrap shrink-0'>{date}</span>
         </button>
         {snippet && (
-          <button type='button' className='text-start text-sm text-description line-clamp-2 dx-link-hover'>
+          <button type='button' className='text-start text-sm text-fg-muted line-clamp-2 dx-link-hover'>
             {searchQuery && searchSnippet ? <Highlighted text={searchSnippet} query={searchQuery} /> : snippet}
           </button>
         )}

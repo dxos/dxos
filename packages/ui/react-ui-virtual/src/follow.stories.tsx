@@ -137,7 +137,7 @@ const DefaultStory = ({
                 style={{ height: ROW_HEIGHT }}
                 className={mx('flex items-center px-3', index % 2 === 0 && 'bg-input-surface')}
               >
-                <span className='text-sm text-description'>{index}</span>
+                <span className='text-sm text-fg-muted'>{index}</span>
               </div>
             ))}
           </ScrollArea.Viewport>
@@ -145,7 +145,7 @@ const DefaultStory = ({
       </Panel.Body>
 
       <Panel.Footer>
-        <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-description tabular-nums'>
+        <div className='h-6 grid grid-cols-5 items-center gap-4 px-2 text-xs text-fg-muted tabular-nums'>
           <span data-testid='follow.items'>{items.length} items</span>
           <span data-testid='follow.position'>
             {readout.top} / {readout.target}

@@ -111,7 +111,7 @@ export const RepositoryViewer = ({
               aria-label={t('file-pane.label')}
               className='dx-expand grid grid-rows-[min-content_1fr] overflow-hidden'
             >
-              <div className='px-3 py-1 text-sm text-description border-b border-separator truncate'>
+              <div className='px-3 py-1 text-sm text-fg-muted border-b border-separator truncate'>
                 {selectedPath ?? t('no-file-selected.message')}
               </div>
               {file ? <RepositoryFileView file={file} /> : <div />}
@@ -124,7 +124,7 @@ export const RepositoryViewer = ({
 };
 
 const Message = ({ children, testId }: { children: string; testId: string }) => (
-  <div className='dx-expand grid place-items-center p-4 text-description text-center' data-testid={testId}>
+  <div className='dx-expand grid place-items-center p-4 text-fg-muted text-center' data-testid={testId}>
     {children}
   </div>
 );

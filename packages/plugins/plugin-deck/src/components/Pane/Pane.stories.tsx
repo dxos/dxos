@@ -32,7 +32,7 @@ const MainPane = ({ id, label }: { id: string; label: string }) => {
         <Button iconOnly variant='ghost' icon='ph--arrows-out--regular' label='Fullscreen' />
         <Button iconOnly variant='ghost' icon='ph--x--regular' label='Close' />
       </Pane.Toolbar>
-      <Pane.Content classNames='grid place-items-center text-description'>
+      <Pane.Content classNames='grid place-items-center text-fg-muted'>
         <span>{label} content</span>
       </Pane.Content>
     </Pane.Root>
@@ -51,7 +51,7 @@ const SplitStory = () => {
           <Pane.Tabs tabs={TABS} value={tab} onValueChange={setTab} attendableId='plank-main' related />
           <Button iconOnly variant='ghost' icon='ph--x--regular' label='Close companion' />
         </Pane.Toolbar>
-        <Pane.Content classNames='grid place-items-center text-description'>
+        <Pane.Content classNames='grid place-items-center text-fg-muted'>
           <span className='flex items-center gap-1'>
             {activeTab && <Icon icon={activeTab.icon} />}
             {tab}

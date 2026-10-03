@@ -14,7 +14,7 @@ export type RelatedItemsListProps = {
 
 export const RelatedItemsList = ({ items, onNavigate }: RelatedItemsListProps) => {
   if (items.length === 0) {
-    return <p className='text-sm text-description p-2'>No other sample items in this space.</p>;
+    return <p className='text-sm text-fg-muted p-2'>No other sample items in this space.</p>;
   }
 
   // Navigate-only: the row hosts a focusable button (keyboard-accessible) rather than a

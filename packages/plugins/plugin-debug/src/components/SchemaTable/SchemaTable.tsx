@@ -54,7 +54,7 @@ export const SchemaTable = ({ classNames, types, objects = {}, label, onClick }:
         const typename = typeof type.typename === 'string' ? type.typename : Type.getTypename(type);
         return (
           <div key={typename} className='grid grid-cols-subgrid col-span-3 items-center'>
-            <div className='px-2 text-sm font-mono text-subdued'>{rowName(type, typename)}</div>
+            <div className='px-2 text-sm font-mono text-fg-subtle'>{rowName(type, typename)}</div>
             {/* A labelled row is a preset rather than a type, so it has no object count to show. */}
             <div className='px-2 text-right font-mono'>
               {typeof type.presetLabel === 'string' ? '—' : typename ? (objects[typename] ?? 0) : 0}

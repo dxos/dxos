@@ -51,7 +51,7 @@ const generatePeople = async (db: Database.Database, count: number) => {
 const PeopleGrid = ({ db }: { db?: Database.Database }) => {
   const people = useQuery(db, Filter.type(Person.Person));
   return (
-    <div className='grid grid-cols-[max-content_1fr] gap-x-4 p-2 text-xs text-description'>
+    <div className='grid grid-cols-[max-content_1fr] gap-x-4 p-2 text-xs text-fg-muted'>
       {people.flatMap((person) =>
         (person.emails ?? []).map(({ value }) => (
           <Fragment key={`${person.id}-${value}`}>

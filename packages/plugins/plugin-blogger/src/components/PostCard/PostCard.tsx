@@ -62,7 +62,7 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
       <Card.Body>
         {post.description && (
           <Card.Row>
-            <Card.Text variant='description' classNames='line-clamp-3'>
+            <Card.Text variant='muted' classNames='line-clamp-3'>
               {post.description}
             </Card.Text>
           </Card.Row>
@@ -71,7 +71,7 @@ export const PostCard = ({ post: postProp, onClick }: PostCardProps) => {
           <Block>
             <Icon icon={status === 'published' ? 'ph--cloud-check--regular' : 'ph--pencil-simple--regular'} />
           </Block>
-          <Card.Text variant='description'>{t(`post-card.status.${status}.label`)}</Card.Text>
+          <Card.Text variant='muted'>{t(`post-card.status.${status}.label`)}</Card.Text>
         </Card.Row>
       </Card.Body>
     </Card.Root>

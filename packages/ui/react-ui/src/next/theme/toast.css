@@ -79,7 +79,7 @@
   .dx-toast-description {
     grid-column: 2;
     overflow: hidden;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
 
   .dx-toast-footer {

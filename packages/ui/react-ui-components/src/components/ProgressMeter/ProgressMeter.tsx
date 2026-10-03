@@ -191,9 +191,9 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
             <div className='min-w-0 flex-1 text-error-text truncate'>{error}</div>
           ) : (
             /* What the run is and what it is doing, in its own words, crawling as it moves through its phases. */
-            <TextCrawl classNames='min-w-0 flex-1 text-xs text-description' lines={lines} greedy />
+            <TextCrawl classNames='min-w-0 flex-1 text-xs text-fg-muted' lines={lines} greedy />
           )}
-          <div className='flex items-center gap-1 shrink-0 text-description'>
+          <div className='flex items-center gap-1 shrink-0 text-fg-muted'>
             <span className='tabular-nums'>
               {indeterminate
                 ? active && elapsedMs >= SECOND_MS
@@ -202,7 +202,7 @@ export const InnerProgressMeter = composable<HTMLDivElement, InnerProgressMeterP
                 : progress(current, total)}
             </span>
             {!indeterminate && etaMs !== undefined && etaMs >= SECOND_MS && status === 'running' && (
-              <span className='text-description'>({formatDuration(etaMs)})</span>
+              <span className='text-fg-muted'>({formatDuration(etaMs)})</span>
             )}
             {onCancel && (
               <Button

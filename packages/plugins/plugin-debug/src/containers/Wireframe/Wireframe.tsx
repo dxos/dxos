@@ -31,7 +31,7 @@ export const Wireframe = ({ classNames, label, object }: WireframeProps) => {
         </Flex>
         {object && <JsonHighlighter data={object} classNames='text-xs opacity-75 rounded-sm' />}
       </Flex>
-      <svg width={width} height={height} className='bg-transparent *:text-subdued'>
+      <svg width={width} height={height} className='bg-transparent *:text-fg-subtle'>
         <rect x={0} y={0} width={width} height={height} strokeWidth={1} fill='none' />
         <line x1={0} y1={0} x2={width} y2={height} strokeWidth={1} />
         <line x1={0} y1={height} x2={width} y2={0} strokeWidth={1} />

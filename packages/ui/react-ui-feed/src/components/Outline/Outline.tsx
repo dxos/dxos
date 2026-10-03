@@ -371,7 +371,7 @@ export const Outline = ({
             <div className='px-2 py-1 max-w-[24rem] w-[24rem]'>
               <p className='truncate font-medium'>{hoveredMarker.title}</p>
               {hoveredMarker.description && (
-                <p className='mt-1 text-sm text-description line-clamp-3'>{hoveredMarker.description}</p>
+                <p className='mt-1 text-sm text-fg-muted line-clamp-3'>{hoveredMarker.description}</p>
               )}
             </div>
           </Popover.Body>

@@ -116,7 +116,7 @@ export const ConnectionView = ({
           <Form.Viewport scroll>
             <Form.Content>
               <Form.FieldSet label={title} description={source}>
-                {!hasConnector && <p className='px-trim-md text-description'>{t('no-connector.message')}</p>}
+                {!hasConnector && <p className='px-trim-md text-fg-muted'>{t('no-connector.message')}</p>}
 
                 {onRename && (
                   <Form.Field label={t('connection-name.label')}>

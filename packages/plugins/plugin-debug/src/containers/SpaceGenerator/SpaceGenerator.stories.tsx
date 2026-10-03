@@ -37,7 +37,7 @@ const ObjectList = ({ space }: { space: Parameters<typeof SpaceGenerator>[0]['sp
               <Listbox.Item key={object.id} id={object.id} classNames='px-2 gap-2'>
                 <div className='flex flex-col grow truncate'>
                   <span className='truncate'>{Obj.getLabel(object) ?? object.id}</span>
-                  <span className='text-description text-sm truncate'>{Obj.getTypename(object)}</span>
+                  <span className='text-fg-muted text-sm truncate'>{Obj.getTypename(object)}</span>
                 </div>
               </Listbox.Item>
             ))}

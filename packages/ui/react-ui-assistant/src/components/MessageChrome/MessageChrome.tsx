@@ -65,7 +65,7 @@ const MessageId = ({ message }: { message: Message.Message }) => {
   }
 
   return (
-    <span className='font-mono text-subdued' title={message.id}>
+    <span className='font-mono text-fg-subtle' title={message.id}>
       {message.id.slice(-8)}
     </span>
   );
@@ -95,7 +95,7 @@ export const PromptToolbar = ({ classNames, message }: MessageToolbarProps) => {
   const { onRewind } = useMessageChromeContext('PromptToolbar');
 
   return (
-    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-description', classNames)}>
+    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
       {onRewind && (
         <Button
@@ -119,7 +119,7 @@ PromptToolbar.displayName = 'PromptToolbar';
 /** The controls under an answer: copy, and when the answer finished. */
 export const AssistantToolbar = ({ classNames, message }: MessageToolbarProps) => {
   return (
-    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-description', classNames)}>
+    <div role='toolbar' className={mx('flex items-center gap-1 text-xs text-fg-muted', classNames)}>
       <CopyButton message={message} />
       <Time message={message} />
       <MessageId message={message} />
@@ -180,13 +180,13 @@ const SyntheticContext = ({ message }: { message: Message.Message }) => {
   return (
     <div className='pb-1 opacity-60' data-testid='chat.context'>
       <TogglePanel.Root>
-        <TogglePanel.Content classNames='border border-subdued-separator rounded-sm'>
+        <TogglePanel.Content classNames='border border-separator-subtle rounded-sm'>
           <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
-            <span className='grow text-description truncate'>{t('context.label')}</span>
-            <Icon icon='ph--brain--regular' size='md' tone='description' />
+            <span className='grow text-fg-muted truncate'>{t('context.label')}</span>
+            <Icon icon='ph--brain--regular' size='md' tone='muted' />
           </TogglePanel.Header>
           <TogglePanel.Body>
-            <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-description whitespace-pre-wrap'>
+            <TogglePanel.Viewport classNames='px-2 pb-1 max-h-40 overflow-y-auto text-sm text-fg-muted whitespace-pre-wrap'>
               {context}
             </TogglePanel.Viewport>
           </TogglePanel.Body>

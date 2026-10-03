@@ -463,7 +463,7 @@ export const MailboxArticle = ({
       </Panel.Body>
       <Panel.Footer>
         <ProgressMeter
-          classNames='border-t border-subdued-separator'
+          classNames='border-t border-separator-subtle'
           state={progress?.status === 'running' || progress?.status === 'error' ? progress : undefined}
           onCancel={progressRegistry ? () => progress && progressRegistry.cancel(progress.name) : undefined}
         />

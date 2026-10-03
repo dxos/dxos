@@ -472,7 +472,7 @@ const TaskListGroupLabel = composable<HTMLDivElement>(({ children, ...props }, f
   return (
     <div
       {...rest}
-      className={mx('col-span-full min-h-(--dx-control) flex items-center text-sm text-description', className)}
+      className={mx('col-span-full min-h-(--dx-control) flex items-center text-sm text-fg-muted', className)}
       ref={forwardedRef}
     >
       <span>{children}</span>
@@ -677,7 +677,7 @@ const ArtifactTag = ({ artifact }: { artifact: Obj.Unknown }) => {
         hue='neutral'
         size='sm'
         // The anchor chip's outlined look (`.dx-tag-anchor`), so the pill matches a PR link in a description.
-        classNames='bg-input-surface text-base-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
+        classNames='bg-input-surface text-fg font-normal ring-inset ring ring-neutral-border hover:bg-hover-surface hover:ring-info-border'
         icon='ph--git-pull-request--regular'
         iconClassNames={pullRequestStateStyle[artifact.state]}
         label={`#${artifact.number}`}
@@ -700,7 +700,7 @@ const pullRequestStateStyle: Record<PullRequest.State, string> = {
   open: 'text-green-500',
   merged: 'text-violet-500',
   closed: 'text-red-500',
-  draft: 'text-description',
+  draft: 'text-fg-muted',
 };
 
 //

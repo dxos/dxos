@@ -434,8 +434,8 @@ ListboxItemIcon.displayName = 'Next.Listbox.ItemIcon';
 //
 
 type ListboxItemTextProps = ThemedClassName<ComponentPropsWithoutRef<'p'>> & {
-  /** `description` reads as secondary text, as Typography's tone. */
-  tone?: 'default' | 'description';
+  /** `muted` reads as secondary text, as Typography's tone. */
+  tone?: 'default' | 'muted';
 };
 
 /**
@@ -453,7 +453,7 @@ const ListboxItemText = forwardRef<HTMLParagraphElement, ListboxItemTextProps>(
         data-scope='listbox'
         data-part='item-text'
         data-truncate=''
-        data-tone={tone === 'description' ? tone : undefined}
+        data-tone={tone === 'muted' ? tone : undefined}
         className={mx(recipes.typography(), recipes.listboxItemText(), classNames)}
         ref={forwardedRef}
       >
@@ -471,7 +471,7 @@ ListboxItemText.displayName = 'Next.Listbox.ItemText';
 
 type ListboxItemDescriptionProps = ThemedClassName<ComponentPropsWithoutRef<'p'>>;
 
-/** A second line under the text in `--color-description`; the option's `description` by default. */
+/** A second line under the text in `--color-fg-muted`; the option's `description` by default. */
 const ListboxItemDescription = forwardRef<HTMLParagraphElement, ListboxItemDescriptionProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     const item = useItem('ItemDescription');
@@ -481,7 +481,7 @@ const ListboxItemDescription = forwardRef<HTMLParagraphElement, ListboxItemDescr
         data-scope='listbox'
         data-part='item-description'
         data-truncate=''
-        data-tone='description'
+        data-tone='muted'
         className={mx(recipes.typography(), recipes.listboxItemDescription(), classNames)}
         ref={forwardedRef}
       >

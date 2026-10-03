@@ -25,7 +25,7 @@ const STATUS_ICON_PROPS: Record<RunStatus, Pick<IconProps, 'valence' | 'tone'>> 
   success: { valence: 'success' },
   failure: { valence: 'error' },
   incomplete: { valence: 'warning' },
-  pending: { tone: 'description' },
+  pending: { tone: 'muted' },
 };
 
 export type RoutineTraceCompanionProps = {
@@ -57,7 +57,7 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
                       <span className='flex items-center gap-2 min-w-0'>
                         <Icon icon={STATUS_ICONS[run.status]} {...STATUS_ICON_PROPS[run.status]} />
                         <span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>
-                        <span className='truncate text-description'>
+                        <span className='truncate text-fg-muted'>
                           {`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}
                         </span>
                       </span>

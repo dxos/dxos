@@ -30,7 +30,7 @@ export const VideoPlayer = composable<HTMLDivElement, VideoPlayerProps>(
       return (
         <div
           {...composableProps(props, {
-            classNames: 'flex flex-col items-center justify-center gap-2 text-description aspect-video',
+            classNames: 'flex flex-col items-center justify-center gap-2 text-fg-muted aspect-video',
           })}
           ref={forwardedRef}
         >

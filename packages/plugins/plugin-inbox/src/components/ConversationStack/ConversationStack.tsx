@@ -368,10 +368,7 @@ const ConversationMessageTile = ({ data, ...tileProps }: MosaicTileProps<Convers
     <Mosaic.Tile
       {...tileProps}
       data={data}
-      classNames={[
-        'dx-attention-surface border border-subdued-separator rounded overflow-hidden',
-        MESSAGE_TILE_COLUMNS,
-      ]}
+      classNames={['dx-attention-surface border border-separator-subtle rounded overflow-hidden', MESSAGE_TILE_COLUMNS]}
     >
       {DraftMessage.instanceOf(message) ? (
         // The composer isn't column-aligned; span the whole tile.
@@ -422,20 +419,20 @@ const ConversationSummaryTile = ({ summary }: ConversationSummaryTileProps) => {
       // Same column template and gutter width as a message tile, so the heading and text line up with
       // the senders and bodies above rather than starting at the tile edge.
       className={mx(
-        'dx-document dx-attention-surface border border-subdued-separator rounded overflow-hidden mt-2',
+        'dx-document dx-attention-surface border border-separator-subtle rounded overflow-hidden mt-2',
         MESSAGE_TILE_COLUMNS,
       )}
       data-testid='conversation.summary'
     >
       <div className='p-2'>
         <div className={mx('flex items-center justify-center', MESSAGE_AVATAR_GUTTER)}>
-          <Icon icon='ph--text-align-left--regular' size='lg' tone='subdued' />
+          <Icon icon='ph--text-align-left--regular' size='lg' tone='subtle' />
         </div>
       </div>
       <div className='col-start-2 col-span-2 flex flex-col gap-1 min-w-0 py-2 pe-3'>
-        <div className='flex items-baseline gap-2 text-sm text-description'>
+        <div className='flex items-baseline gap-2 text-sm text-fg-muted'>
           <h2 className='font-medium'>{t('conversation-summary.title')}</h2>
-          <span className='text-subdued truncate' title={summary.model} data-testid='conversation.summary.provenance'>
+          <span className='text-fg-subtle truncate' title={summary.model} data-testid='conversation.summary.provenance'>
             {summary.model ? t('summary-provenance.label', { model: modelLabel(summary.model), age }) : age}
           </span>
         </div>
@@ -598,7 +595,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
             <div
               // `leading-6` last: `text-sm` carries a line height of its own, and the two states only
               // share a baseline if the line box is 24px in both.
-              className={mx(isExpanded ? 'font-medium' : 'text-sm text-description', 'h-6 leading-6 line-clamp-1')}
+              className={mx(isExpanded ? 'font-medium' : 'text-sm text-fg-muted', 'h-6 leading-6 line-clamp-1')}
               data-testid={!isExpanded && summary ? 'message.summary' : undefined}
             >
               {isExpanded ? subject : (summary ?? snippet)}
@@ -606,7 +603,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
           </div>
 
           <div className='col-start-3 flex items-center'>
-            <span className=' p-2 whitespace-nowrap text-sm text-description'>{date}</span>
+            <span className=' p-2 whitespace-nowrap text-sm text-fg-muted'>{date}</span>
             {isExpanded && (
               <>
                 {mailbox && (
@@ -755,7 +752,7 @@ const MessageDetails = ({ message, mailbox, onContactCreate }: MessageDetailsPro
                 <Icon icon='ph--users--regular' />
               )}
             </Block>
-            <Card.Text classNames='text-sm' variant='description'>
+            <Card.Text classNames='text-sm' variant='muted'>
               {recipients.join(', ')}
             </Card.Text>
           </Card.Row>

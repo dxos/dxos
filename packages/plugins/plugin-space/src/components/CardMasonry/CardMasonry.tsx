@@ -119,7 +119,7 @@ const PendingCard = ({ label }: { label: string }) => (
       <Block>
         <Icon icon='ph--spinner-gap--regular' spin />
       </Block>
-      <Card.Title truncate tone='description'>
+      <Card.Title truncate tone='muted'>
         {label}
       </Card.Title>
     </Card.Header>

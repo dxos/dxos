@@ -136,7 +136,7 @@ export const RefArrayField = ({
   if (isStatic) {
     const selected = ids.flatMap((id) => options.find((option) => option.id === id) ?? []);
     return selected.length === 0 ? (
-      <Typography tone='description'>{t('empty-readonly-ref-field.label')}</Typography>
+      <Typography tone='muted'>{t('empty-readonly-ref-field.label')}</Typography>
     ) : (
       <Group>
         {selected.map((option) => (

@@ -387,7 +387,7 @@ export const TaskListEditor = composable<HTMLDivElement, TaskListEditorProps>(
             <span
               className={mx('flex items-center justify-center h-(--dx-control)', grid ? 'col-[status]' : 'col-start-1')}
             >
-              <Icon icon='ph--plus--regular' tone='subdued' />
+              <Icon icon='ph--plus--regular' tone='subtle' />
             </span>
           ))}
 

@@ -55,7 +55,7 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
     const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
       <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
-        {state === 'loading' && <p className='p-3 text-sm text-description'>{t('calling-tool.message')}</p>}
+        {state === 'loading' && <p className='p-3 text-sm text-fg-muted'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
           <Banner.Root valence='error'>
             {error instanceof Error && <Banner.Title>{error.name}</Banner.Title>}
@@ -189,14 +189,14 @@ const KeyValueTable = ({ record }: { record: unknown }) => {
 
   const entries = Object.entries(record as Record<string, unknown>).filter(([key]) => !SKIP_KEYS.has(key));
   if (entries.length === 0) {
-    return <div className='col-span-2 text-sm italic text-description'>{t('no-displayable-fields.message')}</div>;
+    return <div className='col-span-2 text-sm italic text-fg-muted'>{t('no-displayable-fields.message')}</div>;
   }
 
   return (
     <>
       {entries.map(([key, value]) => (
         <Fragment key={key}>
-          <div className='flex items-center justify-end font-mono text-xs text-description'>{key}</div>
+          <div className='flex items-center justify-end font-mono text-xs text-fg-muted'>{key}</div>
           <div className='text-sm truncate'>{formatValue(value)}</div>
         </Fragment>
       ))}

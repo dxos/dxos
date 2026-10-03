@@ -119,7 +119,7 @@ export const BifurcatedAction = forwardRef<HTMLButtonElement, BifurcatedActionPr
                 <div className='flex-1 min-w-0 space-b-1'>
                   <p id={`${id}__label`}>{action.label}</p>
                   {action.description && (
-                    <p id={`${id}__description`} className='text-description'>
+                    <p id={`${id}__description`} className='text-fg-muted'>
                       {action.description}
                     </p>
                   )}

@@ -51,7 +51,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
       )}
       {snippet && (
         <Card.Row>
-          <Card.Text variant='description' classNames='line-clamp-3'>
+          <Card.Text variant='muted' classNames='line-clamp-3'>
             {snippet}
           </Card.Text>
         </Card.Row>
@@ -63,7 +63,7 @@ export const PostCard = ({ subject }: PostCardProps) => {
             grow={false}
             gap='sm'
             align='center'
-            classNames='text-sm text-description overflow-hidden'
+            classNames='text-sm text-fg-muted overflow-hidden'
           >
             <span className='truncate'>{feedName ?? ''}</span>
             <span className='text-end shrink-0'>{published ?? ''}</span>

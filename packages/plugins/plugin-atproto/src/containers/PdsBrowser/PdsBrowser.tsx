@@ -276,7 +276,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
     <ScrollArea.Root orientation='vertical' classNames='dx-grow overflow-hidden'>
       <ScrollArea.Viewport classNames='p-2'>
         <Container gap='md' gutter='none'>
-          <span className='font-mono text-xs text-description truncate'>{record.uri}</span>
+          <span className='font-mono text-xs text-fg-muted truncate'>{record.uri}</span>
           {mappedForCollection ? (
             <Flex column gap='sm'>
               {preview && previewIcon && (
@@ -313,7 +313,7 @@ export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root classNames='px-2'>
-          <Icon icon='ph--at--regular' size='md' tone='description' />
+          <Icon icon='ph--at--regular' size='md' tone='muted' />
           <Field.Root>
             <Input
               classNames='grow'

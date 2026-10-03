@@ -86,7 +86,7 @@ const DefaultStory = (props: TogglePanelRootProps) => {
         <TogglePanel.Root {...props}>
           <TogglePanel.Content>
             <TogglePanel.Header
-              icon={running ? <Icon icon={'ph--circle-notch--regular'} size='md' tone='subdued' spin /> : undefined}
+              icon={running ? <Icon icon={'ph--circle-notch--regular'} size='md' tone='subtle' spin /> : undefined}
             >
               Test
             </TogglePanel.Header>

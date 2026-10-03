@@ -71,7 +71,7 @@ export const PipelinePanel = ({
             </Select.Content>
           </Select.Root>
           <div className='grow' />
-          <span className='text-sm text-description tabular-nums'>{processed} processed</span>
+          <span className='text-sm text-fg-muted tabular-nums'>{processed} processed</span>
           <Button
             icon={running ? 'ph--stop--regular' : 'ph--play--regular'}
             iconOnly
@@ -89,12 +89,12 @@ export const PipelinePanel = ({
               <div
                 key={stage.id}
                 className={mx(
-                  'flex flex-col min-w-0 dx-card-surface border border-subdued-separator rounded-sm px-3 py-2',
+                  'flex flex-col min-w-0 dx-card-surface border border-separator-subtle rounded-sm px-3 py-2',
                   !stage.enabled && 'opacity-50',
                 )}
               >
                 <span className='font-medium truncate'>{stage.id}</span>
-                {stage.description && <span className='text-sm text-description truncate'>{stage.description}</span>}
+                {stage.description && <span className='text-sm text-fg-muted truncate'>{stage.description}</span>}
               </div>
             ))}
           </ScrollArea.Viewport>

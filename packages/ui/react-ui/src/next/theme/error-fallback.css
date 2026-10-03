@@ -105,7 +105,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
   }
   a.dx-error-stack-function {
     color: inherit;
@@ -118,7 +118,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.75rem;
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
   }
   .dx-error-stack-line {
     text-align: end;

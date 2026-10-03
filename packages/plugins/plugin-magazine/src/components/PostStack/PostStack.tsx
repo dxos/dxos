@@ -120,14 +120,14 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
                 <Block>
                   <Icon icon='ph--user--regular' />
                 </Block>
-                <Card.Text variant='description'>{post.author}</Card.Text>
+                <Card.Text variant='muted'>{post.author}</Card.Text>
               </Card.Row>
             )}
             {(post.description || post.content) && (
               <Card.Row>
                 <MarkdownView
                   content={post.description ?? post.content}
-                  classNames='line-clamp-5 text-sm text-description'
+                  classNames='line-clamp-5 text-sm text-fg-muted'
                 />
               </Card.Row>
             )}
@@ -136,7 +136,7 @@ const PostTile = forwardRef<HTMLDivElement, PostTileProps>(({ data, location, cu
                 <Block>
                   <Icon icon='ph--calendar--regular' />
                 </Block>
-                <Card.Text variant='description' classNames='text-info-text'>
+                <Card.Text variant='muted' classNames='text-info-text'>
                   {published}
                 </Card.Text>
               </Card.Row>

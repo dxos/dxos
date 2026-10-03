@@ -99,7 +99,7 @@ const Section = ({ title, items, striped }: SectionProps) => {
             {subitems?.map(({ name, description }, i) => (
               <div key={i} className={mx(subGridClassNames, striped && stripeClassNames)}>
                 <div className='truncate'>{name}</div>
-                <div className='line-clamp-3 text-subdued'>{description}</div>
+                <div className='line-clamp-3 text-fg-subtle'>{description}</div>
               </div>
             ))}
           </Fragment>

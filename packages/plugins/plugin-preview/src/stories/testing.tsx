@@ -35,7 +35,7 @@ export const DefaultStory = <T extends Obj.Any, P extends {} = {}>({
       {roles.map((role, i) => (
         <div key={i} className='flex h-full justify-center overflow-hidden'>
           <div className='flex flex-col gap-4 w-full items-center'>
-            <span className='text-sm text-description'>{role}</span>
+            <span className='text-sm text-fg-muted'>{role}</span>
             <CardContainer role={role}>
               <Card.Root border={false}>
                 <Card.Header>

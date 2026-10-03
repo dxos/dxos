@@ -81,7 +81,7 @@
 
   .dx-dialog-description {
     margin: 0;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
   /* Outside the Body it has no content track, so it takes the shared gutter itself. */
   .dx-dialog > .dx-dialog-description {

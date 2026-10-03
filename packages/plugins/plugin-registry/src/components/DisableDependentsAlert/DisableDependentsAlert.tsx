@@ -45,7 +45,7 @@ export const DisableDependentsAlert = ({
         <AlertDialog.Description>
           {t('disable-dependents-dialog.description', { plugin: resolveName(pluginId) })}
         </AlertDialog.Description>
-        <ul className='mt-2 list-disc pl-6 text-sm text-description'>
+        <ul className='mt-2 list-disc pl-6 text-sm text-fg-muted'>
           {dependents.map((dependentId) => (
             <li key={dependentId} title={dependentId}>
               {resolveName(dependentId)}

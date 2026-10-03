@@ -20,7 +20,7 @@ const ShowStory = () => {
       <Toolbar.Root>
         <Button onClick={() => setTask(task ? undefined : { title: 'Task 1' })}>{task ? 'Deselect' : 'Select'}</Button>
       </Toolbar.Root>
-      <Show when={task} fallback={<p className='text-subdued'>Nothing selected.</p>}>
+      <Show when={task} fallback={<p className='text-fg-subtle'>Nothing selected.</p>}>
         {(task) => <p>Selected: {task.title}</p>}
       </Show>
     </div>
@@ -37,7 +37,7 @@ const MatchStory = () => {
         <Button onClick={() => setView('grid')}>Grid</Button>
         <Button onClick={() => setView('other')}>Other</Button>
       </Toolbar.Root>
-      <Match.Root on={view} fallback={<p className='text-subdued'>No view.</p>}>
+      <Match.Root on={view} fallback={<p className='text-fg-subtle'>No view.</p>}>
         <Match.Case when='list'>
           <ul className='list-disc ps-6'>
             <li>Item 1</li>

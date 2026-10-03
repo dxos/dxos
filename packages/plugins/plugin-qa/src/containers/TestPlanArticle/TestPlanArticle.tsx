@@ -123,7 +123,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
             </Button>
           </div>
           {cases.length === 0 ? (
-            <p className='text-subdued' data-testid='qa.plan.no-cases'>
+            <p className='text-fg-subtle' data-testid='qa.plan.no-cases'>
               No cases yet.
             </p>
           ) : (
@@ -132,7 +132,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
                 <li key={testCase.id} className='flex gap-2 py-1'>
                   <span className='font-mono text-sm w-20 shrink-0'>{testCase.key}</span>
                   <span className='grow'>{testCase.title}</span>
-                  <span className='text-subdued text-sm'>{testCase.steps.length} steps</span>
+                  <span className='text-fg-subtle text-sm'>{testCase.steps.length} steps</span>
                 </li>
               ))}
             </ul>
@@ -142,7 +142,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         <section>
           <Field.Label>Runs</Field.Label>
           {newestFirst.length === 0 ? (
-            <p className='text-subdued' data-testid='qa.plan.no-runs'>
+            <p className='text-fg-subtle' data-testid='qa.plan.no-runs'>
               No runs yet.
             </p>
           ) : (

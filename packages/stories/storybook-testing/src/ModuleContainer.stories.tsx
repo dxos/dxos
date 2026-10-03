@@ -39,7 +39,7 @@ const ExamplePanel = ({ label }: { label: string }) => {
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='p-2'>
-        <p className='text-sm text-description'>space: {space?.id ?? '…'}</p>
+        <p className='text-sm text-fg-muted'>space: {space?.id ?? '…'}</p>
       </Panel.Body>
     </Panel.Root>
   );

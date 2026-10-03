@@ -88,7 +88,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
       >
         <StoryPlankHeading attendableId={attendableId} />
         <Panel.Body classNames='grid'>
-          <Toolbar.Root classNames='border-b border-subdued-separator'>
+          <Toolbar.Root classNames='border-b border-separator-subtle'>
             <Button>Test</Button>
           </Toolbar.Root>
 

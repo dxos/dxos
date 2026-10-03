@@ -282,7 +282,7 @@ const container = (classNames: string, ...children: Domino<HTMLElement>[]) => {
 /** Trailing `x` affordance that deletes the tag it belongs to. */
 const deleteButton = (view: EditorView, remove: RemoveToken) => {
   const button = Domino.of('button')
-    .classNames('flex items-center px-1 text-description hover:text-error cursor-pointer')
+    .classNames('flex items-center px-1 text-fg-muted hover:text-error cursor-pointer')
     .attributes({ 'type': 'button', 'aria-label': 'Remove' })
     .append(Domino.svg('ph--x--bold').classNames('shrink-0 w-3.5 h-3.5'))
     // `mousedown` + preventDefault so clicking the affordance does not move the editor selection.

@@ -273,7 +273,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
     // A section of the pane's column, headed like the questions and artifacts around it.
     <Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.attachments'>
-        <Typography asChild tone='subdued'>
+        <Typography asChild tone='subtle'>
           <h2>{t('task-attachments.label')}</h2>
         </Typography>
         <div
@@ -283,7 +283,7 @@ export const TaskAttachments = ({ task, canAttach, pending = [], detailOf }: Tas
             hasCards
               ? // Outset by the border and padding so the cards sit on the column's content track.
                 '-m-1.5 p-1'
-              : 'flex items-center justify-center gap-2 p-trim-sm text-description',
+              : 'flex items-center justify-center gap-2 p-trim-sm text-fg-muted',
           )}
           {...(canAttach && { 'data-testid': 'tasksPlugin.attachments.dropArea' })}
         >

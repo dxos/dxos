@@ -94,7 +94,7 @@ const PreviewCard = () => {
             </Popover.CloseTrigger>
           </Card.Header>
           <Card.Row>
-            <Card.Text variant='description'>{target.label}</Card.Text>
+            <Card.Text variant='muted'>{target.label}</Card.Text>
           </Card.Row>
         </Card.Root>
       </Popover.Body>
@@ -132,7 +132,7 @@ const PreviewBlockCard = ({ eid, label }: ObjectLinkProps) => {
       </Card.Header>
       {text && (
         <Card.Row>
-          <Card.Text variant='description'>{text}</Card.Text>
+          <Card.Text variant='muted'>{text}</Card.Text>
         </Card.Row>
       )}
     </Card.Root>
@@ -155,7 +155,7 @@ const FixedHeightPreview = ({ label, eid }: ObjectLinkProps) => {
   return (
     <div
       style={{ height }}
-      className='grid place-items-center border border-separator rounded-md bg-base-surface text-description'
+      className='grid place-items-center border border-separator rounded-md bg-base-surface text-fg-muted'
     >
       {label} · {height}px · {eid}
     </div>
@@ -201,7 +201,7 @@ const SurfaceLikePreview = ({ label, eid }: ObjectLinkProps) => {
     <div
       ref={ref}
       style={{ height }}
-      className='grid place-items-center border border-separator rounded-md bg-base-surface text-description'
+      className='grid place-items-center border border-separator rounded-md bg-base-surface text-fg-muted'
     >
       {resolved ? `Surface ${label} · ${height}px · ${eid}` : 'resolving…'}
     </div>
@@ -278,8 +278,8 @@ const DefaultStory = ({ text, registry = NO_REGISTRY, image: imageWidget, trigge
         <Wrapper>{editor}</Wrapper>
       </div>
       <div className='dx-expand p-1'>
-        <pre className='dx-fill border border-subdued-separator rounded-sm p-3 overflow-auto'>
-          <code className='font-mono text-description text-sm'>{text}</code>
+        <pre className='dx-fill border border-separator-subtle rounded-sm p-3 overflow-auto'>
+          <code className='font-mono text-fg-muted text-sm'>{text}</code>
         </pre>
       </div>
     </div>

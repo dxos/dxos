@@ -136,7 +136,7 @@
 
   .dx-card-description {
     margin: 0;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
 
   .dx-card[data-border='false'] {
@@ -160,7 +160,7 @@
     min-height: var(--dx-control-size);
     font-size: var(--dx-label-font-size);
     line-height: var(--dx-label-line-height);
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
 
   /*

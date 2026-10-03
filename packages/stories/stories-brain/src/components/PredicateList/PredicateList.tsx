@@ -71,7 +71,7 @@ export const PredicateList = ({ predicates, selected, onSelect, classNames }: Pr
                   }}
                 >
                   <Listbox.ItemText>{item.predicate}</Listbox.ItemText>
-                  <span className='shrink-0 text-subdued tabular-nums'>{item.count}</span>
+                  <span className='shrink-0 text-fg-subtle tabular-nums'>{item.count}</span>
                   <Listbox.ItemIndicator />
                 </Listbox.Item>
               ))}

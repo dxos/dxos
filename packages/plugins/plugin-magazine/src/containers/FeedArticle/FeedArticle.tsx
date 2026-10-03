@@ -66,7 +66,7 @@ export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) =
           onAction={handleAction}
         />
       </Panel.Body>
-      <Panel.Footer classNames='border-t border-subdued-separator'>
+      <Panel.Footer classNames='border-t border-separator-subtle'>
         <ProgressMeter state={syncProgress} />
       </Panel.Footer>
     </Panel.Root>

@@ -62,7 +62,7 @@ const DefaultStory = () => {
         <Button onClick={handleEnrich} data-testid='crm.story.enrich'>
           Enrich images
         </Button>
-        <span className='text-sm text-description' data-testid='crm.story.status'>
+        <span className='text-sm text-fg-muted' data-testid='crm.story.status'>
           {status}
         </span>
       </Toolbar.Root>
@@ -77,7 +77,7 @@ const DefaultStory = () => {
           </Card.Header>
           <Card.Body>
             <Card.Row>
-              <Card.Text classNames='text-sm' data-testid={`crm.story.image.${subject.id}`} variant='description'>
+              <Card.Text classNames='text-sm' data-testid={`crm.story.image.${subject.id}`} variant='muted'>
                 {(subject as { image?: string }).image ?? 'image: none'}
               </Card.Text>
             </Card.Row>

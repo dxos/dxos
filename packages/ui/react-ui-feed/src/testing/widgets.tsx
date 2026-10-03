@@ -60,9 +60,9 @@ const Panel = ({
           frame later — a row jumping under the reader. `estimatedHeight` in the registry looks like
           the answer and is not: it sets `height` and `overflow: hidden` on the widget root, which
           pins the panel shut. */}
-        <TogglePanel.Content classNames={mx('min-h-[2.125rem] rounded border border-subdued-separator', classNames)}>
+        <TogglePanel.Content classNames={mx('min-h-[2.125rem] rounded border border-separator-subtle', classNames)}>
           <TogglePanel.Header classNames='flex items-center gap-2 px-2 py-1 text-sm'>
-            <span className='grow text-description truncate'>{title}</span>
+            <span className='grow text-fg-muted truncate'>{title}</span>
             <Block>
               <Icon icon={icon} size='md' />
             </Block>
@@ -77,10 +77,10 @@ const Panel = ({
 };
 
 const Frame = ({ icon, title, children, classNames }: WidgetProps<any> & { classNames?: string }) => (
-  <div className={mx('flex gap-2 px-2 py-1 rounded border border-subdued-separator text-sm', classNames)}>
-    {icon && <Icon icon={icon} size='md' classNames='mt-1' tone='description' />}
+  <div className={mx('flex gap-2 px-2 py-1 rounded border border-separator-subtle text-sm', classNames)}>
+    {icon && <Icon icon={icon} size='md' classNames='mt-1' tone='muted' />}
     <div className='min-w-0'>
-      {title && <p className='text-xs text-description'>{title}</p>}
+      {title && <p className='text-xs text-fg-muted'>{title}</p>}
       {children}
     </div>
   </div>
@@ -101,7 +101,7 @@ const Reasoning = ({ children, range }: WidgetProps) => {
 };
 
 const Status = ({ children }: WidgetProps) => (
-  <p className='px-2 py-1 text-sm text-description animate-pulse'>{getXmlTextChild(children ?? [])}</p>
+  <p className='px-2 py-1 text-sm text-fg-muted animate-pulse'>{getXmlTextChild(children ?? [])}</p>
 );
 
 const ToolCall = ({ name, pending, range }: WidgetProps<{ name?: string; pending?: string }>) => (

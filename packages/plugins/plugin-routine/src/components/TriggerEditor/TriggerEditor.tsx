@@ -335,7 +335,7 @@ export const TriggerSection = ({ readonly, onClear }: TriggerSectionProps) => {
       )}
 
       {/* Currently, email triggers have no configuration; surface an explanatory note instead of an empty body. */}
-      {kind === 'email' && <p className='text-sm text-description'>{t('trigger-kind.email-note.message')}</p>}
+      {kind === 'email' && <p className='text-sm text-fg-muted'>{t('trigger-kind.email-note.message')}</p>}
     </div>
   );
 };

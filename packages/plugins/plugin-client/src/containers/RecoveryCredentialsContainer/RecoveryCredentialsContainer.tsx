@@ -125,12 +125,12 @@ export const RecoveryCredentialsContainer = () => {
                     return (
                       <Listbox.Item key={credential.id ?? index} id={credential.id ?? `${index}`} classNames='gap-2'>
                         <Icon icon={KIND_ICONS[kind]} />
-                        <Listbox.ItemText classNames={revoked ? 'text-subdued line-through' : undefined}>
+                        <Listbox.ItemText classNames={revoked ? 'text-fg-subtle line-through' : undefined}>
                           {label ?? t(`recovery-kind-${kind}.label`)}
                         </Listbox.ItemText>
-                        <span className='text-description text-sm'>{credential.issuanceDate?.toLocaleString()}</span>
+                        <span className='text-fg-muted text-sm'>{credential.issuanceDate?.toLocaleString()}</span>
                         {revoked ? (
-                          <span className='text-subdued text-sm'>{t('credential-revoked.label')}</span>
+                          <span className='text-fg-subtle text-sm'>{t('credential-revoked.label')}</span>
                         ) : (
                           // Withheld on the last one: revoking it would leave no way to recover the
                           // identity, and there is no self-service way back.

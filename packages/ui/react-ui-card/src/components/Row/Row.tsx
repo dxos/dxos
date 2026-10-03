@@ -190,8 +190,8 @@ const RowDate = ({ start, end }: RowDateProps) => {
         <Icon icon='ph--calendar--regular' />
       </Block>
       <div className='flex items-center gap-2 overflow-hidden whitespace-nowrap'>
-        <div className='truncate text-description'>{format(start, 'PPp')}</div>
-        {duration.length > 0 && <div className='text-description text-xs'>({duration})</div>}
+        <div className='truncate text-fg-muted'>{format(start, 'PPp')}</div>
+        {duration.length > 0 && <div className='text-fg-muted text-xs'>({duration})</div>}
       </div>
     </Card.Row>
   );

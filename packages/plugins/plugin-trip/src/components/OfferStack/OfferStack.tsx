@@ -53,7 +53,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
   return (
     <Mosaic.Tile
       asChild
-      classNames='dx-hover dx-current border-b border-subdued-separator'
+      classNames='dx-hover dx-current border-b border-separator-subtle'
       id={offer.id}
       data={data}
       location={location}
@@ -74,7 +74,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
           <Card.Body>
             {(origin || destination) && (
               <Card.Row>
-                <Card.Text variant='description'>
+                <Card.Text variant='muted'>
                   {origin} → {destination}
                 </Card.Text>
               </Card.Row>
@@ -84,7 +84,7 @@ const OfferTile = forwardRef<HTMLDivElement, OfferTileProps>(({ data, location, 
                 <Block>
                   <Icon icon='ph--calendar--regular' />
                 </Block>
-                <Card.Text variant='description'>{format(new Date(departAt), 'PPp')}</Card.Text>
+                <Card.Text variant='muted'>{format(new Date(departAt), 'PPp')}</Card.Text>
               </Card.Row>
             )}
           </Card.Body>

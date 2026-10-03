@@ -97,7 +97,7 @@ const Section = ({ id, title, children }: SectionProps) => {
   const size = useContext(SizeContext);
   return (
     <section id={id} data-section={id} className='flex flex-col gap-2 m-4 py-4 border border-separator rounded-md'>
-      <Typography asChild tone='description' classNames='px-4 font-medium'>
+      <Typography asChild tone='muted' classNames='px-4 font-medium'>
         <h2>{title}</h2>
       </Typography>
       <Container size={size} gutter='rail' gap='md' level='base'>
@@ -111,7 +111,7 @@ const Section = ({ id, title, children }: SectionProps) => {
 const Row = ({ label, children }: PropsWithChildren<{ label?: string }>) => (
   <Group>
     {label && (
-      <Typography tone='description' classNames='w-24 shrink-0'>
+      <Typography tone='muted' classNames='w-24 shrink-0'>
         {label}
       </Typography>
     )}
@@ -135,7 +135,7 @@ const Toc = ({
     aria-label='Contents'
     className='flex flex-col gap-1 w-48 shrink-0 p-4 overflow-y-auto border-s border-separator'
   >
-    <Typography tone='subdued'>Contents</Typography>
+    <Typography tone='subtle'>Contents</Typography>
     {entries.map(({ id, title }) => (
       <Link
         key={id}
@@ -325,7 +325,7 @@ const MenuButtonDemo = () => {
   return (
     <>
       <MenuButton icon='ph--sliders--regular' iconOnly caretDown label='Options' items={items} />
-      <Typography tone='description'>
+      <Typography tone='muted'>
         {view} · extraction {extraction ? 'on' : 'off'}
       </Typography>
     </>
@@ -709,7 +709,7 @@ const CardSection = () => (
           </Card.Row>
         </Card.Section>
         <Card.Section>
-          <Card.Text variant='description'>Updated today.</Card.Text>
+          <Card.Text variant='muted'>Updated today.</Card.Text>
         </Card.Section>
       </Card.Root>
     </div>
@@ -760,13 +760,13 @@ const SplitterSection = () => {
       <div className='flex flex-col h-40 border border-separator'>
         <Splitter.Root orientation='horizontal' resizable minSize={6} size={size} onSizeChange={setSize}>
           <Splitter.Panel position='start'>
-            <Typography tone='description' classNames='p-2'>
+            <Typography tone='muted' classNames='p-2'>
               Drag the seam.
             </Typography>
           </Splitter.Panel>
           <Splitter.ResizeTrigger aria-label='Resize' />
           <Splitter.Panel position='end'>
-            <Typography tone='description' classNames='p-2'>
+            <Typography tone='muted' classNames='p-2'>
               {size.toFixed(1)}rem
             </Typography>
           </Splitter.Panel>
@@ -808,7 +808,7 @@ const ScrollAreaSection = () => (
 
 const QrCodeSection = () => (
   <Section id='qr-code' title='QR code'>
-    <div className='grid grid-cols-[repeat(2,8rem)] gap-8 text-description'>
+    <div className='grid grid-cols-[repeat(2,8rem)] gap-8 text-fg-muted'>
       <QrCode value='https://dxos.org' icon='ph--planet--regular' label='DXOS' />
       <QrCode value='https://composer.space' errorCorrection='H' label='Composer' />
     </div>
@@ -869,7 +869,7 @@ const OverlaysSection = () => {
           </HoverCard.Trigger>
           <HoverCard.Content>
             <Typography>Alice Example</Typography>
-            <Typography tone='description'>Joined in March · 12 spaces</Typography>
+            <Typography tone='muted'>Joined in March · 12 spaces</Typography>
           </HoverCard.Content>
         </HoverCard.Root>
         <Menu.Root>
@@ -896,7 +896,7 @@ const OverlaysSection = () => {
         </Menu.Root>
         <Menu.Root>
           <Menu.ContextTrigger asChild>
-            <Typography tone='description' classNames='px-3 border border-dashed border-separator rounded-sm'>
+            <Typography tone='muted' classNames='px-3 border border-dashed border-separator rounded-sm'>
               Right-click here
             </Typography>
           </Menu.ContextTrigger>

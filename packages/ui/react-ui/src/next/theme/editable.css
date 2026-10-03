@@ -31,7 +31,7 @@
     background: var(--color-hover-surface);
   }
   .dx-editable-preview[data-placeholder-shown] {
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
   }
   .dx-editable-preview[data-disabled] {
     opacity: 0.5;
@@ -48,7 +48,7 @@
 
   /* The affordance shows only on hover or keyboard focus, so a resting row is just its text. */
   .dx-editable-preview-icon {
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
     visibility: hidden;
   }
   .dx-editable-preview:is(:hover, :focus-visible):not([data-disabled]) .dx-editable-preview-icon {
@@ -56,9 +56,9 @@
   }
 
   .dx-editable-input {
-    color: var(--color-base-fg);
+    color: var(--color-fg);
   }
   .dx-editable-input::placeholder {
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
   }
 }

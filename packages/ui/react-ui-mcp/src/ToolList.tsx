@@ -157,7 +157,7 @@ const ToolListItemDescription = ({ classNames, ...props }: ToolListItemDescripti
     className={mx(
       // Subtler text + clamp to two lines so a long description doesn't
       // dominate the row.
-      'line-clamp-2 text-xs text-subdued',
+      'line-clamp-2 text-xs text-fg-subtle',
       classNames,
     )}
     {...props}

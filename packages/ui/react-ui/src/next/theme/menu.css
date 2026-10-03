@@ -57,7 +57,7 @@
     font-family: inherit;
     font-size: var(--dx-label-font-size);
     line-height: var(--dx-label-line-height);
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
 
   /* An icon-sized leading cell that keeps its place while unchecked, so option labels stay aligned. */

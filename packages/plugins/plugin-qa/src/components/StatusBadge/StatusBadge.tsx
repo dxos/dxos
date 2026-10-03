@@ -13,7 +13,7 @@ const presentation: Record<TestCase.Status, { icon: string; classNames: string }
   passed: { icon: 'ph--check-circle--regular', classNames: 'text-green-text' },
   failed: { icon: 'ph--x-circle--regular', classNames: 'text-red-text' },
   blocked: { icon: 'ph--prohibit--regular', classNames: 'text-orange-text' },
-  skipped: { icon: 'ph--minus-circle--regular', classNames: 'text-subdued' },
+  skipped: { icon: 'ph--minus-circle--regular', classNames: 'text-fg-subtle' },
   running: { icon: 'ph--spinner--regular', classNames: 'text-blue-text' },
 };
 

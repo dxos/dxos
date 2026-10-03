@@ -75,7 +75,7 @@ const createSliderField = (key: SliderKey): FormFieldMap[string] => {
         presentation={presentation}
         // A sibling of the label text (never a child) — keeps `Field.Label`'s `textContent` exactly
         // `label` and avoids re-deriving the input's accessible name on every drag frame.
-        labelEnd={<span className='text-sm text-description tabular-nums'>{current.toFixed(spec.decimals)}</span>}
+        labelEnd={<span className='text-sm text-fg-muted tabular-nums'>{current.toFixed(spec.decimals)}</span>}
         renderStatic={(value) => <p className='tabular-nums'>{(value ?? spec.min).toFixed(spec.decimals)}</p>}
       >
         <Slider

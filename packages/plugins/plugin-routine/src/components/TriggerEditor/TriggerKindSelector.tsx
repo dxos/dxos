@@ -57,7 +57,7 @@ export const TriggerKindSelector = ({ onChange }: TriggerKindSelectorProps) => {
       <Listbox.Content classNames='gap-1' aria-label={t('trigger-kind.placeholder')}>
         {OPTIONS.map(({ kind }) => (
           <Listbox.Item key={kind} id={kind} classNames='dx-input-surface rounded-sm'>
-            <Listbox.ItemIcon classNames='text-description' />
+            <Listbox.ItemIcon classNames='text-fg-muted' />
             <Listbox.ItemText classNames='font-medium' />
             <Listbox.ItemDescription />
           </Listbox.Item>

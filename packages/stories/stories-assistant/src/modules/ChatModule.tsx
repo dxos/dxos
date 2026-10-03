@@ -56,7 +56,7 @@ const ChatModuleContainer = ({ space }: { space: Space }) => {
       <Panel.Root>
         <Panel.Header>
           <Chat.Toolbar attendableId={chat.id} alwaysActive switcher={switcher}>
-            <Toolbar.Text classNames='text-subdued'>{chat?.name}</Toolbar.Text>
+            <Toolbar.Text classNames='text-fg-subtle'>{chat?.name}</Toolbar.Text>
             <Popover.Root>
               <Popover.Trigger asChild>
                 <Button icon='ph--sort-ascending--regular' label='Logs' variant='ghost' />

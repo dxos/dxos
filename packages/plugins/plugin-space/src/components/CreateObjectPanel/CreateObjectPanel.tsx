@@ -255,7 +255,7 @@ const SelectType = ({ options, onChange }: SelectTypeProps) => {
             <div className='flex flex-col min-w-0 grow gap-0.5'>
               <span className='truncate'>{option.label}</span>
               {(option.plugin || option.description) && (
-                <span className='truncate text-description text-xs'>
+                <span className='truncate text-fg-muted text-xs'>
                   {option.plugin ? t('plugin-subtitle.label', { plugin: option.plugin }) : option.description}
                 </span>
               )}

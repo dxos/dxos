@@ -249,7 +249,7 @@ export const Timeline = memo(
           ref={containerRef}
         >
           {layout.rows.length < 1 ? (
-            <p className='text-description p-trim-md'>{t('no-commits.message')}</p>
+            <p className='text-fg-muted p-trim-md'>{t('no-commits.message')}</p>
           ) : (
             scroller && (
               <TimelineWindow
@@ -429,14 +429,14 @@ const TimelineRowView = memo(
         {showIcon && <CommitIcon commit={commit} />}
         <div
           className={mx(
-            'text-sm truncate cursor-pointer text-description font-thin group-aria-current/row:text-current-fg hover:text-current-fg',
+            'text-sm truncate cursor-pointer text-fg-muted font-thin group-aria-current/row:text-current-fg hover:text-current-fg',
             hasLink && 'underline decoration-dotted underline-offset-2',
           )}
         >
           {hasShimmerEffect(commit) ? <Shimmer>{message}</Shimmer> : message}
         </div>
         {showTimestamp && (
-          <div className='text-xs tabular-nums items-center text-description font-thin'>
+          <div className='text-xs tabular-nums items-center text-fg-muted font-thin'>
             {commit.timestamp && format(commit.timestamp, TIMESTAMP_FORMAT)}
           </div>
         )}

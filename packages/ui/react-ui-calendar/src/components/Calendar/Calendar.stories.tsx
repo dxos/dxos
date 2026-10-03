@@ -45,7 +45,7 @@ export const Range: Story = {
           <Calendar.Toolbar />
           <Calendar.Grid rows={6} onSelectRange={({ range }) => setRange(range)} />
         </Calendar.Root>
-        <div className='text-sm text-description text-center'>
+        <div className='text-sm text-fg-muted text-center'>
           {range ? `${format(range.from, 'PP')} → ${format(range.to, 'PP')}` : 'Drag across days to select a range.'}
         </div>
       </div>

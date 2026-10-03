@@ -60,7 +60,7 @@ export const ContactList = ({ classNames, contacts, spaces, filter = '', onSelec
   );
 
   if (visible.length === 0) {
-    return <p className='text-description text-center my-2'>{t('empty-contacts.message')}</p>;
+    return <p className='text-fg-muted text-center my-2'>{t('empty-contacts.message')}</p>;
   }
 
   return (
@@ -114,7 +114,7 @@ const ContactListItem = ({ contact, spaces, onSelectSpace }: ContactListItemProp
           <span id={labelId} className='truncate'>
             {displayName}
           </span>
-          <div className='flex items-center gap-1 text-sm text-description'>
+          <div className='flex items-center gap-1 text-sm text-fg-muted'>
             <Tooltip.Trigger asChild content={t(contact.did ? 'identity-did.label' : 'identity-key.label')}>
               <span className='font-mono truncate max-w-48'>{contact.did ?? identityKey.truncate()}</span>
             </Tooltip.Trigger>

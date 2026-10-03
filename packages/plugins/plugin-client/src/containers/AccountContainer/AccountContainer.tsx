@@ -126,7 +126,7 @@ export const AccountContainer = () => {
                 </Banner.Root>
                 <Form.Field standalone label={t('request-access.label')} description={t('request-access.description')}>
                   {requestSubmitted ? (
-                    <span className='text-sm text-description'>{t('access-request-submitted.message')}</span>
+                    <span className='text-sm text-fg-muted'>{t('access-request-submitted.message')}</span>
                   ) : (
                     <form onSubmit={handleRequestAccess} className='flex gap-2 items-center justify-end'>
                       <Field.Root>
@@ -164,7 +164,7 @@ export const AccountContainer = () => {
                         onClick={handleResend}
                         size='sm'
                       />
-                      {resendStatus ? <span className='text-xs text-description'>{resendStatus}</span> : null}
+                      {resendStatus ? <span className='text-xs text-fg-muted'>{resendStatus}</span> : null}
                     </Flex>
                   )}
                 </Form.Field>

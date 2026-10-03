@@ -209,7 +209,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
 
     const showHeader = title != null || !!onDelete;
 
-    const labelStyles = 'shrink-0 ps-2 pe-2 text-description text-sm';
+    const labelStyles = 'shrink-0 ps-2 pe-2 text-fg-muted text-sm';
 
     return (
       <ScrollArea.Root>
@@ -258,7 +258,7 @@ export const EditMessage = composable<HTMLDivElement, EditMessageProps>(
                 onChange={(value) => updateField('to', value)}
               />
               {(!showCc || !showBcc) && (
-                <span className='shrink-0 flex items-center gap-2 ps-2 text-sm text-description'>
+                <span className='shrink-0 flex items-center gap-2 ps-2 text-sm text-fg-muted'>
                   {!showCc && (
                     <button type='button' className='dx-link-hover' onClick={revealCc}>
                       {t('draft-cc.label')}

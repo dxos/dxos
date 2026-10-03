@@ -148,7 +148,7 @@ export const Mixer = ({ classNames, dream, engine }: MixerProps) => {
             <Toolbar.Root>
               <Button icon='ph--plus--regular' iconOnly label='Add layer' onClick={handleAdd} />
               <Toolbar.Separator />
-              {playing && timed && <span className='tabular-nums text-description p-1'>{formattedTime}</span>}
+              {playing && timed && <span className='tabular-nums text-fg-muted p-1'>{formattedTime}</span>}
               <Button
                 icon={playing ? 'ph--stop--regular' : 'ph--play--regular'}
                 iconOnly

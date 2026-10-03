@@ -132,7 +132,7 @@ export const EpubReader = forwardRef<EpubReaderHandle, EpubReaderProps>(
 
     if (failed) {
       return (
-        <Flex center gap='sm' classNames='h-full p-4 text-center text-description'>
+        <Flex center gap='sm' classNames='h-full p-4 text-center text-fg-muted'>
           <Icon icon='ph--warning--regular' size='xl' />
         </Flex>
       );

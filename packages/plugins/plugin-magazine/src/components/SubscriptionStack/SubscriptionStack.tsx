@@ -154,14 +154,14 @@ const SubscriptionTile = forwardRef<HTMLDivElement, SubscriptionTileProps>(
             <Card.Body>
               {/* {feed.url && (
                 <Card.Row>
-                  <Card.Text classNames='truncate' variant='description'>
+                  <Card.Text classNames='truncate' variant='muted'>
                     {feed.url}
                   </Card.Text>
                 </Card.Row>
               )} */}
               {feed.description && (
                 <Card.Row>
-                  <Card.Text variant='description'>{feed.description}</Card.Text>
+                  <Card.Text variant='muted'>{feed.description}</Card.Text>
                 </Card.Row>
               )}
             </Card.Body>

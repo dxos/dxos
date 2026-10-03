@@ -14,7 +14,7 @@ import { QrCode, type QrCodeProps } from '../index.ts';
 type StoryArgs = Pick<QrCodeProps, 'value' | 'errorCorrection' | 'icon'>;
 
 const DefaultStory = ({ value, errorCorrection, icon }: StoryArgs) => (
-  <div className='grid grid-cols-2 gap-8 text-description'>
+  <div className='grid grid-cols-2 gap-8 text-fg-muted'>
     <QrCode value={value} errorCorrection={errorCorrection} icon={icon} label='Invitation' data-testid='code' />
     <div>
       <QrCode value={value} errorCorrection='L' aria-labelledby='qr-label' data-testid='labelled' />

@@ -176,7 +176,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                       <Breadcrumb.Item asChild>
                         <button
                           type='button'
-                          className='shrink-0 whitespace-nowrap text-description hover:text-base-fg'
+                          className='shrink-0 whitespace-nowrap text-fg-muted hover:text-fg'
                           onClick={() => onSelectBreadcrumb?.(crumb.id)}
                         >
                           {crumb.label}
@@ -189,7 +189,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
                     <Pane.Title
                       attendableId={attendableId}
                       related={related}
-                      classNames={[pending && 'text-description', 'w-auto grow-0']}
+                      classNames={[pending && 'text-fg-muted', 'w-auto grow-0']}
                     >
                       {label}
                     </Pane.Title>
@@ -200,7 +200,7 @@ export const Plank = forwardRef<HTMLDivElement, PlankProps>(
               <Pane.Title
                 attendableId={attendableId}
                 related={related}
-                classNames={pending && ['text-description', 'animate-fade-in']}
+                classNames={pending && ['text-fg-muted', 'animate-fade-in']}
                 style={pending ? pendingStyle : undefined}
               >
                 {label}

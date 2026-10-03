@@ -41,7 +41,7 @@ export const DebugSpaceObjectsPanel = ({ space, onOpen, canOpen }: DebugSpaceObj
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
-        <Grid rows={2} classNames='divide-y divide-subdued-separator'>
+        <Grid rows={2} classNames='divide-y divide-separator-subtle'>
           <ScrollArea.Root>
             <ScrollArea.Viewport>
               <ObjectsTree

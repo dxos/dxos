@@ -45,8 +45,8 @@ export const RelatedTypeFilter = ({ types, onToggle, classNames }: RelatedTypeFi
           value={typename}
           icon={icon}
           // Selection reads off the icon alone: the pressed fill is pinned to the resting one so
-          // the chip itself never changes, leaving `text-subdued` to mark a type as hidden.
-          classNames='aria-pressed:bg-input-bg aria-[pressed=false]:text-subdued'
+          // the chip itself never changes, leaving `text-fg-subtle` to mark a type as hidden.
+          classNames='aria-pressed:bg-input-bg aria-[pressed=false]:text-fg-subtle'
           // Carries the count to the tooltip; the type's label is already localized.
           label={`${label} (${count})`}
           onClick={() => onToggle(typename)}

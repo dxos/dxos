@@ -68,7 +68,7 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   };
 
   if (contacts.length === 0) {
-    return <p className='text-description'>{t('contact-picker-empty.message')}</p>;
+    return <p className='text-fg-muted'>{t('contact-picker-empty.message')}</p>;
   }
 
   return (

@@ -207,7 +207,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   />
                 </Field.Root>
               )}
-              <div className='flex items-center gap-1 pt-0.5 text-sm text-description'>
+              <div className='flex items-center gap-1 pt-0.5 text-sm text-fg-muted'>
                 {slug}
                 {author && (
                   <span className='dx-tag dx-tag-inline' data-hue='info'>
@@ -228,7 +228,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Root>
                 <Section.Heading title={t('description.label')} />
                 <Section.Body>
-                  <MarkdownView classNames='text-description' content={description} />
+                  <MarkdownView classNames='text-fg-muted' content={description} />
                 </Section.Body>
               </Section.Root>
             )}
@@ -254,7 +254,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
               <Section.Body>
                 <div className='flex gap-3 items-center'>
                   {homePage && (
-                    <Link href={homePage} classNames='text-sm text-description'>
+                    <Link href={homePage} classNames='text-sm text-fg-muted'>
                       {t('home-page.label')}
                       <Icon
                         icon='ph--arrow-square-out--regular'
@@ -265,7 +265,7 @@ export const PluginDetail = composable<HTMLDivElement, PluginDetailProps>(
                   )}
 
                   {source && (
-                    <Link href={source} classNames='text-sm text-description'>
+                    <Link href={source} classNames='text-sm text-fg-muted'>
                       {t('source.label')}
                       <Icon
                         icon='ph--arrow-square-out--regular'
@@ -374,7 +374,7 @@ PluginDetail.displayName = 'PluginDetail';
 const SectionRoot = ({ children }: PropsWithChildren<{}>) => <>{children}</>;
 
 const SectionHeading = ({ title }: { title: string }) => (
-  <h2 className='col-start-2 col-span-2 pt-6 pb-2 uppercase text-sm font-medium text-subdued'>{title}</h2>
+  <h2 className='col-start-2 col-span-2 pt-6 pb-2 uppercase text-sm font-medium text-fg-subtle'>{title}</h2>
 );
 
 const SectionBody = ({ classNames, children }: ThemedClassName<PropsWithChildren>) => (

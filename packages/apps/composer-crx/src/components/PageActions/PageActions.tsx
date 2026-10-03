@@ -135,7 +135,7 @@ export const PageActions = ({ tabId, tabUrl }: PageActionsProps) => {
         />
       ))}
       {message && (
-        <span role='status' aria-live='polite' className='self-center px-1 text-xs text-description truncate'>
+        <span role='status' aria-live='polite' className='self-center px-1 text-xs text-fg-muted truncate'>
           {message}
         </span>
       )}

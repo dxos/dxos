@@ -117,7 +117,7 @@ const ControlledStory = ({ items = defaultItems }: StoryArgs) => {
           </SearchList.Content>
         </Panel.Body>
         <Panel.Footer>
-          <div className='flex p-2 items-center text-sm text-description'>Controlled query: &quot;{query}&quot;</div>
+          <div className='flex p-2 items-center text-sm text-fg-muted'>Controlled query: &quot;{query}&quot;</div>
         </Panel.Footer>
       </Panel.Root>
     </SearchList.Root>
@@ -162,7 +162,7 @@ const CustomItem = ({ value, label, description, onSelect }: CustomItemProps) =>
       onClick={onSelect}
     >
       <div className='font-medium'>{label}</div>
-      <div className='text-xs text-description'>{description}</div>
+      <div className='text-xs text-fg-muted'>{description}</div>
     </div>
   );
 };

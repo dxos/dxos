@@ -97,7 +97,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
           // Connection-level failure has no associated model, so it shows inline as the row content.
           <p className='text-sm text-error-text'>{t('settings.ollama.failed.message', { error: state.error })}</p>
         ) : empty ? (
-          <p className='text-sm text-description'>{t('settings.ollama.empty.message')}</p>
+          <p className='text-sm text-fg-muted'>{t('settings.ollama.empty.message')}</p>
         ) : (
           // Plain `List`/`ListItem` (non-select), with the trigger editor's "fatter" two-line row
           // treatment: a name line plus a secondary meta line, on a surface-styled row. Rows are
@@ -142,7 +142,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   </Flex>
                   {(size || loadedLabel || error) && (
                     <Flex gap='sm' align='center' classNames='text-sm'>
-                      {size && <span className='text-description'>{size}</span>}
+                      {size && <span className='text-fg-muted'>{size}</span>}
                       {loadedLabel && <span className='text-success-text'>{loadedLabel}</span>}
                       {error && <span className='truncate text-error-text'>{shortError(error)}</span>}
                     </Flex>
@@ -161,7 +161,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                   className='flex flex-col gap-trim-xs rounded-sm dx-input-surface px-trim-sm py-trim-xs w-full'
                 >
                   <Flex gap='sm' align='center'>
-                    <span className='grow truncate font-medium text-description'>{name}</span>
+                    <span className='grow truncate font-medium text-fg-muted'>{name}</span>
                     <Button
                       icon='ph--x--regular'
                       iconOnly
@@ -169,7 +169,7 @@ export const OllamaModelsSection = ({ manager }: { manager: Ollama.Manager }) =>
                       onClick={() => void EffectEx.runPromise(manager.cancel(name))}
                     />
                   </Flex>
-                  <span className='text-sm text-description'>{status}</span>
+                  <span className='text-sm text-fg-muted'>{status}</span>
                 </ListItem>
               );
             })}

@@ -40,7 +40,7 @@ export const GalleryImage = ({ src, contentType, alt, classNames }: GalleryImage
           <Block>
             <Icon icon={isVideo ? 'ph--video--regular' : 'ph--image--regular'} size='lg' />
           </Block>
-          <Card.Title tone='description'>{alt}</Card.Title>
+          <Card.Title tone='muted'>{alt}</Card.Title>
         </Card.Header>
       ) : null}
     </Card.Root>

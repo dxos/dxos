@@ -99,7 +99,7 @@
   .dx-group-surface,
   .dx-input-surface {
     background-color: var(--surface-bg);
-    @apply text-base-fg;
+    @apply text-fg;
   }
 
   /* Floating levels frost whatever passes beneath them. */
@@ -179,7 +179,7 @@
     --color-input-separator: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.115) c h
     );
-    --color-subdued-separator: oklch(
+    --color-separator-subtle: oklch(
       from var(--surface-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c h
     );
     --color-primary-separator: oklch(

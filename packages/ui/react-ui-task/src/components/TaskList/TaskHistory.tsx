@@ -122,10 +122,10 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
       role='list'
       aria-label={t('task-history.label')}
       data-testid='taskList.history'
-      classNames={mx('text-sm text-description', classNames)}
+      classNames={mx('text-sm text-fg-muted', classNames)}
     >
       <section>
-        <Typography asChild tone='subdued' classNames='text-sm'>
+        <Typography asChild tone='subtle' classNames='text-sm'>
           <h2>{t('task-history.label')}</h2>
         </Typography>
         {items.map((item) => (
@@ -145,7 +145,7 @@ export const TaskHistory = ({ entries, limit = 5, classNames }: TaskHistoryProps
               <span className='grow min-w-0'>
                 {item.text}
                 {item.answer && (
-                  <span className='block text-base-fg' data-testid='taskList.history.answer'>
+                  <span className='block text-fg' data-testid='taskList.history.answer'>
                     {item.answer}
                   </span>
                 )}

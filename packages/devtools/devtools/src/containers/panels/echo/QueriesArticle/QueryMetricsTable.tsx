@@ -40,9 +40,7 @@ const COLUMNS: Column[] = [
     label: 'Live',
     title: 'Reactive queries running now.',
     value: (query) => query.active,
-    render: (query) => (
-      <span className={query.active > 0 ? 'text-success-text' : 'text-description'}>{query.active}</span>
-    ),
+    render: (query) => <span className={query.active > 0 ? 'text-success-text' : 'text-fg-muted'}>{query.active}</span>,
   },
   { id: 'updates', label: 'Updates', title: 'Reactive result recomputations.', value: (query) => query.updates },
   {
@@ -53,7 +51,7 @@ const COLUMNS: Column[] = [
     render: (query) => (
       <span>
         {query.lastCount.toLocaleString()}
-        {query.maxCount > query.lastCount && <span className='text-description'> ({query.maxCount})</span>}
+        {query.maxCount > query.lastCount && <span className='text-fg-muted'> ({query.maxCount})</span>}
       </span>
     ),
   },
@@ -128,7 +126,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
         <Toggle pressed={liveOnly} onPressedChange={setLiveOnly}>
           Live only
         </Toggle>
-        <Toolbar.Text classNames='shrink-0 font-mono text-xs text-description'>
+        <Toolbar.Text classNames='shrink-0 font-mono text-xs text-fg-muted'>
           {live} live · {queries.length} queries
         </Toolbar.Text>
         {onReset && (
@@ -145,7 +143,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
         cols={TRACKS}
         gap='sm'
         grow={false}
-        classNames='px-2 py-1 border-b border-subdued-separator text-xs text-description'
+        classNames='px-2 py-1 border-b border-separator-subtle text-xs text-fg-muted'
       >
         {COLUMNS.map((column, index) => (
           <Tooltip.Trigger key={column.id} asChild content={column.title}>
@@ -164,7 +162,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
       </Grid>
       <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
         <ScrollArea.Viewport>
-          {rows.length === 0 && <p className='p-2 text-xs text-description'>No queries.</p>}
+          {rows.length === 0 && <p className='p-2 text-xs text-fg-muted'>No queries.</p>}
           {rows.map((query) => {
             const open = expanded === query.query;
             return (
@@ -194,7 +192,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
                   </button>
                 </Grid>
                 {open && (
-                  <div className='px-2 py-1 text-xs border-y border-subdued-separator'>
+                  <div className='px-2 py-1 text-xs border-y border-separator-subtle'>
                     <JsonHighlighter data={{ ...query, avgTime: averageQueryTime(query) }} />
                   </div>
                 )}

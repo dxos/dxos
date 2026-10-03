@@ -31,7 +31,7 @@ const DEBOUNCE_DELAY = 40;
 const CardFallback = ({ error }: { error: Error }) => (
   <Card.Body>
     <Card.Row>
-      <Card.Text variant='description' role='alert' data-testid='error-boundary-fallback'>
+      <Card.Text variant='muted' role='alert' data-testid='error-boundary-fallback'>
         {error.message}
       </Card.Text>
     </Card.Row>
@@ -196,7 +196,7 @@ export const PopoverContent = () => {
           ) : (
             <Card.Body classNames='min-h-8'>
               <Card.Row>
-                <Card.Text variant='description'>{t('popover-no-preview.message')}</Card.Text>
+                <Card.Text variant='muted'>{t('popover-no-preview.message')}</Card.Text>
               </Card.Row>
             </Card.Body>
           )}

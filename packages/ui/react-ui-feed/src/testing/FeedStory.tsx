@@ -83,10 +83,10 @@ const TestChrome = ({ message, index, selected, onSelect, children }: MessageChr
       </div>
 
       <div className='min-w-0'>
-        <div className='flex items-center gap-2 text-xs text-description'>
+        <div className='flex items-center gap-2 text-xs text-fg-muted'>
           <span className='font-medium'>{message.sender.name ?? role}</span>
           <span>{time}</span>
-          <span className='text-subdued'>#{index}</span>
+          <span className='text-fg-subtle'>#{index}</span>
         </div>
         {children}
       </div>

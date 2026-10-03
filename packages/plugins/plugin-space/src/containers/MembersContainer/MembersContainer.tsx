@@ -261,9 +261,9 @@ const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel
   const emoji = hexToEmoji(id);
   return (
     <>
-      <p className='text-description'>{t('qr-code.description', { ns: meta.profile.key })}</p>
+      <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content] my-2 gap-2'>
-        <div className='w-full aspect-square relative text-description'>
+        <div className='w-full aspect-square relative text-fg-muted'>
           <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
           <Centered>
             <Emoji text={emoji} />
@@ -287,9 +287,9 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
 
   return (
     <>
-      <p className='text-description'>{t('auth-other-device-emoji.message')}</p>
+      <p className='text-fg-muted'>{t('auth-other-device-emoji.message')}</p>
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
-      <p className='text-description'>{t('auth-code.message')}</p>
+      <p className='text-fg-muted'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
       <Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}

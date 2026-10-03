@@ -61,9 +61,9 @@ export const RunResults = ({ run }: RunResultsProps) => {
         <div key={result.caseKey} className='flex items-center gap-2' data-testid='qa.run.result'>
           <span className='font-mono text-sm w-20 shrink-0'>{result.caseKey}</span>
           <StatusBadge status={result.status} />
-          <span className='grow text-subdued text-sm'>{result.note ?? ''}</span>
+          <span className='grow text-fg-subtle text-sm'>{result.note ?? ''}</span>
           {result.artifacts && result.artifacts.length > 0 && (
-            <span className='flex items-center gap-1 text-subdued text-sm'>
+            <span className='flex items-center gap-1 text-fg-subtle text-sm'>
               <Icon icon='ph--paperclip--regular' size='md' />
               {result.artifacts.length}
             </span>
@@ -76,14 +76,14 @@ export const RunResults = ({ run }: RunResultsProps) => {
           <span className='font-mono text-sm w-20 shrink-0'>{caseKey}</span>
           {/* `skipped` is a terminal outcome, and a case can still report while the run is open. */}
           {snapshot.status === 'running' ? (
-            <span className='flex items-center gap-1 text-subdued'>
+            <span className='flex items-center gap-1 text-fg-subtle'>
               <Icon icon='ph--circle-dashed--regular' size='md' />
               <span className='text-sm'>pending</span>
             </span>
           ) : (
             <StatusBadge status='skipped' />
           )}
-          <span className='grow text-subdued text-sm'>unreported</span>
+          <span className='grow text-fg-subtle text-sm'>unreported</span>
           {snapshot.status === 'running' && (
             <>
               <Button onClick={() => handlePush(caseKey, 'passed')} data-testid='qa.run.pass'>
@@ -106,7 +106,7 @@ export const RunResults = ({ run }: RunResultsProps) => {
         </div>
       )}
 
-      {snapshot.summary && <p className='text-subdued text-sm'>{snapshot.summary}</p>}
+      {snapshot.summary && <p className='text-fg-subtle text-sm'>{snapshot.summary}</p>}
 
       {error && (
         <p className='text-red-text text-sm' role='alert' data-testid='qa.run.error'>

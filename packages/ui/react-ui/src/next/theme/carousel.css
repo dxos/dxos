@@ -67,7 +67,7 @@
     height: var(--dx-icon-size);
     padding: 0;
     border-radius: 9999px;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
     cursor: pointer;
   }
   .dx-carousel-indicator::before {
@@ -92,6 +92,6 @@
     font-size: var(--dx-font-size);
     line-height: var(--dx-line-height);
     font-variant-numeric: tabular-nums;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
 }

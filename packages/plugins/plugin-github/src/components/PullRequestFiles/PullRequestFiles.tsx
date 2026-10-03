@@ -64,7 +64,7 @@ export const PullRequestFiles = ({
       ) : (
         <Empty classNames='dx-expand'>{t(file ? 'file-no-diff.message' : 'no-files.message')}</Empty>
       )}
-      <ScrollArea.Root classNames='border-s border-subdued-separator'>
+      <ScrollArea.Root classNames='border-s border-separator-subtle'>
         <ScrollArea.Viewport classNames='p-2'>
           <Field.Root>
             <Field.Label classNames='px-2'>{t('files-reviewed.label', { reviewed: reviewed.size, total })}</Field.Label>

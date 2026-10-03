@@ -103,7 +103,7 @@ export const HelpMenu = () => {
           onClick={openDialog(ABOUT_DIALOG)}
         />
         {version && (
-          <Flex column classNames='ps-8 pe-2 pb-2 text-xs text-description'>
+          <Flex column classNames='ps-8 pe-2 pb-2 text-xs text-fg-muted'>
             <a href={releaseUrl} target='_blank' rel='noopener noreferrer' className='dx-link-hover font-mono'>
               {version}
             </a>

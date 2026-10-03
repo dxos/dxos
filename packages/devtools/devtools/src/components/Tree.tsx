@@ -24,7 +24,7 @@ export const Node = ({ data }: ThemedClassName<{ data?: any; root?: boolean }>) 
     return (
       <div className='flex flex-col space-y-1'>
         {data.map((value, index) => (
-          <KeyValue key={index} label={String(index)} data={value} classNames='text-description font-thin' />
+          <KeyValue key={index} label={String(index)} data={value} classNames='text-fg-muted font-thin' />
         ))}
       </div>
     );
@@ -33,7 +33,7 @@ export const Node = ({ data }: ThemedClassName<{ data?: any; root?: boolean }>) 
   return (
     <div className='flex flex-col space-y-1'>
       {Object.entries(data).map(([key, value]) => (
-        <KeyValue key={key} label={key} data={value} classNames='dx-group-surface text-description font-thin' />
+        <KeyValue key={key} label={key} data={value} classNames='dx-group-surface text-fg-muted font-thin' />
       ))}
     </div>
   );

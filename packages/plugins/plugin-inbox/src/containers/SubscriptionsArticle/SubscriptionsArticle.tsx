@@ -41,7 +41,7 @@ const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Subscri
     return (
       <Mosaic.Tile
         asChild
-        classNames='border-b border-subdued-separator'
+        classNames='border-b border-separator-subtle'
         id={subscription.email}
         data={data}
         location={location}
@@ -61,7 +61,7 @@ const SubscriptionTile = forwardRef<HTMLDivElement, Pick<MosaicTileProps<Subscri
           </Card.Header>
           <Card.Body>
             <Card.Row>
-              <Card.Text variant='description'>
+              <Card.Text variant='muted'>
                 {t('subscriptions.count.label', { email: subscription.email, count: subscription.count })}
               </Card.Text>
             </Card.Row>

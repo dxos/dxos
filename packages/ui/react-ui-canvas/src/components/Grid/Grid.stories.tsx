@@ -108,7 +108,7 @@ const DefaultStory = ({ size, showAxes }: GridProps) => {
           />
           <Button variant='ghost' iconOnly icon='ph--crosshair--regular' label='Reset' onClick={reset} />
           <Toolbar.Separator variant='line' />
-          <Toolbar.Text classNames='text-description font-mono text-sm whitespace-nowrap'>
+          <Toolbar.Text classNames='text-fg-muted font-mono text-sm whitespace-nowrap'>
             {Math.round(camera.zoom * 100)}% · [{format(topLeft.x)}, {format(topLeft.y)}] – [{format(bottomRight.x)},{' '}
             {format(bottomRight.y)}]
           </Toolbar.Text>

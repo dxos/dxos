@@ -95,7 +95,7 @@ export const Companion = ({
       )}
       {companionsProp?.length === 0 && (
         <Pane.Content classNames='grid place-items-center'>
-          <p className='text-sm text-description'>{t('no-companions.message')}</p>
+          <p className='text-sm text-fg-muted'>{t('no-companions.message')}</p>
         </Pane.Content>
       )}
       {/* Panels stay mounted; the inactive ones are hidden so switching companions preserves their state.

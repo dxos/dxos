@@ -61,7 +61,7 @@ export const SpaceInvitationList = ({
 }: SpaceInvitationListProps) => {
   const { t } = useTranslation(translationKey);
   if (invitations.length === 0) {
-    return <p className='text-description text-center my-2'>{t('empty-space-invitations.message')}</p>;
+    return <p className='text-fg-muted text-center my-2'>{t('empty-space-invitations.message')}</p>;
   }
 
   const sorted = [...invitations].sort((a, b) => b.sentAt.getTime() - a.sentAt.getTime());
@@ -137,7 +137,7 @@ const SpaceInvitationListItem = ({ invitation, disabled, onJoin, onDismiss }: Sp
             />
           </div>
         </div>
-        <span className='text-sm text-description'>
+        <span className='text-sm text-fg-muted'>
           {t('space-invitation.description', {
             space,
             role: t(roleLabelKey(invitation.role)),

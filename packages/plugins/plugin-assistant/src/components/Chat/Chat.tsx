@@ -725,7 +725,7 @@ const ChatPrompt = ({ classNames, defaultTasksVisible = false, ...props }: ChatP
       {hasTasks && (
         <Collapsible.Content className='overflow-hidden data-[state=closed]:animate-slide-up data-[state=open]:animate-slide-down'>
           {/* The same surface and border as the prompt below, so the two read as one shell. */}
-          <ChatTaskList classNames='shrink-0 dx-group-surface border border-subdued-separator border-b-0 rounded-t-sm text-description' />
+          <ChatTaskList classNames='shrink-0 dx-group-surface border border-separator-subtle border-b-0 rounded-t-sm text-fg-muted' />
         </Collapsible.Content>
       )}
       <NaturalChatPrompt

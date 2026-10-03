@@ -147,7 +147,7 @@ export const Test: Story = {
 
     // Each row's metadata cell shows the sender's name (populated by `enrichResult`).
     const rows = canvas.getAllByRole('option');
-    const metadataCells = rows.map((row) => row.querySelector('span.text-description'));
+    const metadataCells = rows.map((row) => row.querySelector('span.text-fg-muted'));
     await expect(metadataCells.every((cell) => cell?.textContent)).toBe(true);
   },
 };

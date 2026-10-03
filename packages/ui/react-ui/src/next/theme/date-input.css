@@ -44,7 +44,7 @@
   }
   .dx-date-input-segment[data-type='literal'],
   .dx-date-input-segment[data-placeholder-shown] {
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
   .dx-date-input-segment[data-editable]:focus {
     background: var(--color-accent-bg);
@@ -84,7 +84,7 @@
     height: var(--dx-block-size);
     padding: 0;
     font-weight: normal;
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
   .dx-date-calendar-table td {
     padding: 0;
@@ -111,7 +111,7 @@
     color: var(--color-accent-text);
   }
   .dx-date-calendar-cell[data-outside-range] {
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
   .dx-date-calendar-cell[data-selected],
   .dx-date-calendar-cell[data-selected]:hover {

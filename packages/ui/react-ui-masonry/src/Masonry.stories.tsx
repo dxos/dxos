@@ -96,17 +96,17 @@ const StoryItem = ({ data: person }: { data: PersonData }) => {
       {image && <Card.Poster alt={fullName ?? ''} src={image} />}
       {role && (
         <Card.Row classNames='px-2'>
-          <Card.Text variant='description'>{role}</Card.Text>
+          <Card.Text variant='muted'>{role}</Card.Text>
         </Card.Row>
       )}
       {emails && emails.length > 0 && (
         <Card.Row classNames='px-2'>
-          <Card.Text variant='description'>{emails.map((email) => email.value).join(', ')}</Card.Text>
+          <Card.Text variant='muted'>{emails.map((email) => email.value).join(', ')}</Card.Text>
         </Card.Row>
       )}
       {notes && (
         <Card.Row classNames='px-2 pb-2'>
-          <Card.Text variant='description'>{notes}</Card.Text>
+          <Card.Text variant='muted'>{notes}</Card.Text>
         </Card.Row>
       )}
     </Card.Root>

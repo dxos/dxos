@@ -55,7 +55,7 @@ export const DocumentEditor = ({ classNames, initialValue = '', parse, busy, onR
             <Field.Root>
               <div className='flex items-center gap-2'>
                 <Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
-                <Field.Label classNames='text-sm text-description'>POS</Field.Label>
+                <Field.Label classNames='text-sm text-fg-muted'>POS</Field.Label>
               </div>
             </Field.Root>
           )}

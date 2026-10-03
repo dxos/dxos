@@ -133,7 +133,7 @@ const OpenIcon = ({
 const ItemIcon = ({
   node: { children, iconName = children?.length ? 'ph--folder--regular' : 'ph--file--regular', color },
 }: Pick<TreeNodeProps, 'node'>) => {
-  return (iconName && <IconButton iconName={iconName} classNames={color ?? 'text-subdued'} />) || <div />;
+  return (iconName && <IconButton iconName={iconName} classNames={color ?? 'text-fg-subtle'} />) || <div />;
 };
 
 const MenuItem = ({ node: { id }, onMenuAction }: Pick<TreeNodeProps, 'node' | 'onMenuAction'>) => {

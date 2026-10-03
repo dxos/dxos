@@ -112,7 +112,7 @@ const ChatDialogHeader = ({ classNames, title }: ChatDialogHeaderProps) => {
         </Dialog.CloseTrigger>
       </Endcap>
       <Dialog.Title
-        classNames='flex w-full justify-center text-sm text-subdued select-none cursor-pointer'
+        classNames='flex w-full justify-center text-sm text-fg-subtle select-none cursor-pointer'
         onClick={() => setExpanded((expanded) => !expanded)}
       >
         {title}
@@ -150,7 +150,7 @@ const ChatDialogContent = ({ children, classNames }: ChatDialogContentProps) => 
   return (
     <div
       className={mx(
-        'border-t border-b border-subdued-separator',
+        'border-t border-b border-separator-subtle',
         'transition ease-in-out duration-0 [&:not([data-dx-resizing="true"])]:duration-200',
         classNames,
       )}

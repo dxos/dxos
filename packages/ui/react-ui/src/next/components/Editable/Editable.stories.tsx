@@ -50,7 +50,7 @@ const DefaultStory = ({
         <Editable.Input data-testid='editable.input' />
       </Editable.Root>
       {/* `onValueChange` fires on commit, never per keystroke: one entry per edit. */}
-      <Typography tone='description' data-testid='editable.commits'>
+      <Typography tone='muted' data-testid='editable.commits'>
         {commits.length === 0 ? 'No commits yet' : `Commits: ${commits.join(' · ')}`}
       </Typography>
     </>

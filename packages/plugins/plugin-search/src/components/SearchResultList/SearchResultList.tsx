@@ -39,7 +39,7 @@ export const SearchResultList = ({ results, query, onSelect }: SearchResultListP
                 <Highlighted text={result.snippet} query={query} />
               </Listbox.ItemDescription>
             )}
-            {result.type && <span className='shrink-0 text-sm text-description'>{result.type}</span>}
+            {result.type && <span className='shrink-0 text-sm text-fg-muted'>{result.type}</span>}
           </Listbox.Item>
         ))}
       </Listbox.Content>

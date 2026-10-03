@@ -128,7 +128,7 @@ export const GalleryArticle = ({ role, subject: collection }: GalleryArticleProp
       </Panel.Header>
       <Panel.Body>
         {items.length === 0 ? (
-          <Flex role='status' center classNames='h-full text-subdued'>
+          <Flex role='status' center classNames='h-full text-fg-subtle'>
             {t('empty.message')}
           </Flex>
         ) : (

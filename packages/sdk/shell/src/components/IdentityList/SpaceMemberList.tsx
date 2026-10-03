@@ -76,7 +76,7 @@ export const SpaceMemberListImpl = ({ members, onSelect }: SpaceMemberListImplPr
     </Listbox.Root>
   ) : (
     <div className='grow flex items-center p-2'>
-      <p className={mx('text-description', 'text-center w-full my-2')}>{t('empty-space-members.message')}</p>
+      <p className={mx('text-fg-muted', 'text-center w-full my-2')}>{t('empty-space-members.message')}</p>
     </div>
   );
 };

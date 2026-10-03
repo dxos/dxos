@@ -690,7 +690,7 @@ ComboboxItemText.displayName = 'Next.Combobox.ItemText';
 
 type ComboboxItemDescriptionProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
-/** A second line under the text in `--color-description`; the option's `description` by default. */
+/** A second line under the text in `--color-fg-muted`; the option's `description` by default. */
 const ComboboxItemDescription = forwardRef<HTMLDivElement, ComboboxItemDescriptionProps>(
   ({ classNames, children, ...props }, forwardedRef) => {
     const item = useItem('ItemDescription');

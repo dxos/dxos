@@ -52,7 +52,7 @@ export type ToolbarActions = {
 // toolbar's own layout supplies `overflow-x-auto scrollbar-none`, leaving no bar over the diagram.
 const barClasses = 'w-fit max-w-[50%] gap-1 px-2 py-1 rounded-sm bg-modal-surface border border-separator';
 
-const readoutClasses = 'text-description font-mono text-sm whitespace-nowrap';
+const readoutClasses = 'text-fg-muted font-mono text-sm whitespace-nowrap';
 
 export type NavigationToolbarProps = ThemedClassName<{
   actions: ToolbarActions;

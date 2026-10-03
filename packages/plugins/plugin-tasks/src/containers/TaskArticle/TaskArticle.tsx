@@ -117,7 +117,7 @@ export const TaskArticle = ({ role, subject: task, attendableId, nodeId = attend
                 {openQuestions.length > 0 && (
                   <Container asChild gutter='inherit' gap='md'>
                     <section data-testid='tasksPlugin.questions'>
-                      <Typography asChild tone='subdued'>
+                      <Typography asChild tone='subtle'>
                         <h2>{t('task-questions.label')}</h2>
                       </Typography>
                       {openQuestions.map((thread) => (

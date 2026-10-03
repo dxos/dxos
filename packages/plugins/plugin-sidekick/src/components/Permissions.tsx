@@ -34,7 +34,7 @@ export const Permissions = ({ entries, onUpdate }: PermissionsProps) => {
     <Section title={t('permissions.title')}>
       <table className='w-full text-sm'>
         <thead>
-          <tr className='text-left text-description'>
+          <tr className='text-left text-fg-muted'>
             <th className='pb-1 font-normal'>{t('contact.label')}</th>
             <th className='pb-1 font-normal text-center'>{t('auto-respond.label')}</th>
             <th className='pb-1 font-normal text-center'>{t('create-draft.label')}</th>

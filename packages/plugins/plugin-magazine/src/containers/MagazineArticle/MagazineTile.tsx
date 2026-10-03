@@ -58,13 +58,13 @@ export const MagazineTile = ({ post, magazine, current, onToggleStar, onOpen }: 
         <Card.Body>
           {snippet && (
             <Card.Row>
-              <Card.Text variant='description' classNames='line-clamp-3'>
+              <Card.Text variant='muted' classNames='line-clamp-3'>
                 {snippet}
               </Card.Text>
             </Card.Row>
           )}
           <Card.Row>
-            <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-trim-sm py-trim-xs text-sm text-description overflow-hidden'>
+            <div className='grid grid-cols-[minmax(0,1fr)_auto] items-center gap-trim-sm py-trim-xs text-sm text-fg-muted overflow-hidden'>
               <span className='truncate'>{feedName ?? ''}</span>
               <span className='text-end shrink-0'>{formatPublished(snapshot) ?? ''}</span>
             </div>

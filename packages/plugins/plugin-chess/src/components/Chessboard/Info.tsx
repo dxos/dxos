@@ -141,7 +141,7 @@ const History = ({ classNames, model, min, max, onSelect }: HistoryProps) => {
     >
       {moves.map(([a, b], index) => (
         <Grid key={index} cols={['3rem', '1fr', '1fr', '1rem']} grow={false} gap='sm' classNames='ps-4'>
-          <div className='content-center text-xs text-subdued'>{index + 1}</div>
+          <div className='content-center text-xs text-fg-subtle'>{index + 1}</div>
           {a && (
             <div
               data-index={a.index}

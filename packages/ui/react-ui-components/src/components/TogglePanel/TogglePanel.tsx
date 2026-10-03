@@ -68,7 +68,7 @@ type ContentProps = ThemedClassName<PropsWithChildren>;
 const Content = composable<HTMLDivElement, ContentProps>(({ children, ...props }, forwardedRef) => (
   <div
     {...composableProps(props, {
-      classNames: 'w-full border border-subdued-separator rounded-md overflow-hidden!',
+      classNames: 'w-full border border-separator-subtle rounded-md overflow-hidden!',
     })}
     ref={forwardedRef}
   >

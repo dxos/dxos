@@ -128,7 +128,7 @@ const SelectionStateStory = () => {
     <div className='flex h-full overflow-hidden divide-x divide-separator'>
       {/* Left pane: ordered list with selection. */}
       <div className='w-56 shrink-0 flex flex-col overflow-hidden'>
-        <div className='px-3 py-2 text-sm font-medium text-subdued border-b border-separator'>Items</div>
+        <div className='px-3 py-2 text-sm font-medium text-fg-subtle border-b border-separator'>Items</div>
         <OrderedList.Root<StoryItem> items={ITEMS} getId={(item) => item.id} getLabel={(item) => item.label}>
           {({ items: resolved }) => (
             <OrderedList.Content>
@@ -154,7 +154,7 @@ const SelectionStateStory = () => {
         {selectedItem ? (
           <ItemEditor key={selectedItem.id} item={selectedItem} editorStore={editorStore} />
         ) : (
-          <div className='flex items-center justify-center h-full text-subdued text-sm'>Select an item to edit.</div>
+          <div className='flex items-center justify-center h-full text-fg-subtle text-sm'>Select an item to edit.</div>
         )}
       </div>
     </div>

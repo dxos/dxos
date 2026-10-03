@@ -149,7 +149,7 @@ const ObjectsTreeColumns = ({ item, path }: ObjectsTreeRowProps) => {
 
   return (
     <div className='flex shrink-0 items-center gap-1'>
-      {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
+      {node.role && <span className='text-fg-subtle text-xs'>{node.role}</span>}
       <Menu.Root>
         <Menu.Trigger asChild>
           <Button

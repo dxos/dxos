@@ -9,7 +9,7 @@ import { composableProps, slottable } from '../../../util/index.ts';
 import { recipes } from '../../recipes.ts';
 import { type CSSVariables } from '../Container/index.ts';
 
-export type TypographyTone = 'default' | 'description' | 'subdued';
+export type TypographyTone = 'default' | 'muted' | 'subtle';
 
 export type TypographyProps = {
   /** One line, ending in an ellipsis when it overflows. */

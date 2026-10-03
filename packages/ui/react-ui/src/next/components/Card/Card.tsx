@@ -331,7 +331,7 @@ CardRow.displayName = 'Next.Card.Row';
 type CardTextProps = ThemedClassName<ComponentPropsWithoutRef<'p'>> & {
   truncate?: boolean;
   /** `description` reads as secondary text. */
-  variant?: 'default' | 'description';
+  variant?: 'default' | 'muted';
 };
 
 /** Card text on Typography, with the current `Card.Text` variants. */

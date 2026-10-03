@@ -102,7 +102,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
           <div className='flex items-start justify-between gap-trim-md pb-form-section-gap'>
             <div className='flex min-w-0 flex-col gap-0.5'>
               <h2 className='text-lg'>{t('fundamentals.heading')}</h2>
-              {asOfDescription && <p className='text-description'>{asOfDescription}</p>}
+              {asOfDescription && <p className='text-fg-muted'>{asOfDescription}</p>}
             </div>
             {onRefresh ? (
               <Button

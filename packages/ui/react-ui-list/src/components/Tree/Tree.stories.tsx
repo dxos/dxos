@@ -193,7 +193,7 @@ const renderColumnsRow = (node: TreeNode<TestItem>) => (
       <Icon icon='ph--spinner-gap--regular' spin label='Running' />
     </Tree.ItemIcon>
     <Tree.ItemText />
-    <span className='text-description tabular-nums' data-testid='tree-figure'>
+    <span className='text-fg-muted tabular-nums' data-testid='tree-figure'>
       {node.depth}
     </span>
     <Tree.ItemActions>
@@ -210,7 +210,7 @@ const renderMultilineRow = (node: TreeNode<TestItem>) => (
     <Tree.ItemText />
     <Tree.ItemCount />
     {!node.branch && (
-      <p className='col-[3/-1] row-start-2 pb-1 text-sm text-description' data-testid='tree-description'>
+      <p className='col-[3/-1] row-start-2 pb-1 text-sm text-fg-muted' data-testid='tree-description'>
         A second line, under the label and as tall as its text.
       </p>
     )}

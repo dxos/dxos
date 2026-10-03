@@ -43,7 +43,7 @@ export const CommentComposer = ({ value, busy, target, onValueChange, onSubmit, 
   return (
     <>
       {target && (
-        <span className='text-sm text-description'>
+        <span className='text-sm text-fg-muted'>
           {t('comment-line.label', { file: target.file, line: target.line })}
         </span>
       )}

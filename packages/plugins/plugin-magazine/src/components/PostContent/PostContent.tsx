@@ -60,7 +60,7 @@ export const PostContent = composable<HTMLDivElement, PostContentProps>(
           {title && <h1 className='text-xl font-semibold'>{title}</h1>}
           {showHero && <img src={imageUrl} alt='' className='rounded w-full object-cover max-h-72' loading='lazy' />}
           {content && <MarkdownView content={content} />}
-          {meta && <div className='text-xs text-subdued'>{meta}</div>}
+          {meta && <div className='text-xs text-fg-subtle'>{meta}</div>}
         </ScrollArea.Viewport>
       </ScrollArea.Root>
     );

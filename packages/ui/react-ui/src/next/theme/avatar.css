@@ -8,7 +8,7 @@
   .dx-avatar {
     --dx-avatar-size: var(--dx-block-size);
     --dx-avatar-bg: var(--color-input-surface);
-    --dx-avatar-fg: var(--color-description);
+    --dx-avatar-fg: var(--color-fg-muted);
     --dx-avatar-ring: transparent;
     --dx-avatar-ring-width: 0px;
     position: relative;
@@ -44,7 +44,7 @@
     --dx-avatar-fg: var(--color-accent-fg);
   }
   .dx-avatar[data-hue='neutral'][data-hue-variant='fill'] {
-    --dx-avatar-fg: var(--color-description);
+    --dx-avatar-fg: var(--color-fg-muted);
   }
   .dx-avatar[data-hue][data-hue-variant='surface'] {
     --dx-avatar-bg: var(--dx-hue-bg);

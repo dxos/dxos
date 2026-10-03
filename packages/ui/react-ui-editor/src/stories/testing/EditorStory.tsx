@@ -66,7 +66,7 @@ export const EditorStory = forwardRef<EditorController, EditorStoryArgs>(
 
         {debug && (
           <div
-            className='grid h-full auto-rows-fr border-l border-separator divide-y divide-subdued-separator overflow-hidden'
+            className='grid h-full auto-rows-fr border-l border-separator divide-y divide-separator-subtle overflow-hidden'
             {...attentionAttrs}
           >
             {view && debugCustom?.(view)}

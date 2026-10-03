@@ -547,7 +547,7 @@ export const PullRequestArticle = ({ role, attendableId, subject: pullRequest }:
             )}
           </Flex>
         </Panel.Body>
-        <Panel.Footer classNames='border-t border-subdued-separator'>
+        <Panel.Footer classNames='border-t border-separator-subtle'>
           <ProgressMeter
             state={
               walkthroughProgress?.status === 'running' || walkthroughProgress?.status === 'error'

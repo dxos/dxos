@@ -129,7 +129,7 @@ export const TaskQuestion = ({
       <span className='font-medium wrap-break-word min-w-0'>{question.text}</span>
 
       {question.context && !answer && (
-        <p className={mx(TASK_GRID_CONTENT, 'text-description wrap-break-word line-clamp-3 min-w-0')}>
+        <p className={mx(TASK_GRID_CONTENT, 'text-fg-muted wrap-break-word line-clamp-3 min-w-0')}>
           {question.context}
         </p>
       )}
@@ -164,14 +164,12 @@ export const TaskQuestion = ({
                       {/* Numbered, so the options can be referred to — an agent asking again, a
                           person saying "the second one" — rather than quoted back in full. On the
                           first line and top-aligned, since an option's text wraps. */}
-                      <div className='shrink-0 tabular-nums text-description self-start'>{index + 1}.</div>
+                      <div className='shrink-0 tabular-nums text-fg-muted self-start'>{index + 1}.</div>
                       {/* `div`, not `span`: `Button` carries `[&_span]:truncate`. */}
                       <div className='grow min-w-0 flex flex-col gap-0.5 text-start'>
                         <div className='font-medium wrap-break-word'>{option.title}</div>
                         {option.description && (
-                          <div className='text-xs text-description wrap-break-word leading-snug'>
-                            {option.description}
-                          </div>
+                          <div className='text-xs text-fg-muted wrap-break-word leading-snug'>{option.description}</div>
                         )}
                       </div>
                     </Button>
@@ -209,7 +207,7 @@ export const TaskQuestion = ({
       )}
 
       {message && (
-        <p className={mx(TASK_GRID_CONTENT, 'text-description min-w-0')} data-testid='task-question.message'>
+        <p className={mx(TASK_GRID_CONTENT, 'text-fg-muted min-w-0')} data-testid='task-question.message'>
           {message}
         </p>
       )}

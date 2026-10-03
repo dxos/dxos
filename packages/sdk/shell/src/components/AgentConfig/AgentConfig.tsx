@@ -22,7 +22,7 @@ export const AgentConfig = ({
   const labelId = useId('agentConfig__label');
   return (
     <div className='p-1'>
-      <h2 className={mx('text-description', 'text-center mt-2')}>{t('agent.heading')}</h2>
+      <h2 className={mx('text-fg-muted', 'text-center mt-2')}>{t('agent.heading')}</h2>
       {validationMessage && (
         <p role='alert' className={mx(textValence('error'), 'my-2')}>
           {validationMessage}
@@ -71,7 +71,7 @@ export const AgentConfig = ({
             )}
           </div>
           {agentStatus === 'created' && (
-            <p id='devices-panel.create-agent.description' className={mx('text-description', 'my-2')}>
+            <p id='devices-panel.create-agent.description' className={mx('text-fg-muted', 'my-2')}>
               {t('agent-requested.description')}
             </p>
           )}
@@ -98,7 +98,7 @@ export const AgentConfig = ({
           </Button>
           {agentStatus === 'creatable' && (
             <div className='space-y-2' id='devices-panel.create-agent.description'>
-              <p className='text-description'>
+              <p className='text-fg-muted'>
                 <Trans
                   {...{
                     t,
@@ -109,7 +109,7 @@ export const AgentConfig = ({
                   }}
                 />
               </p>
-              <p className='text-description'>{t('create-agent.description')}</p>
+              <p className='text-fg-muted'>{t('create-agent.description')}</p>
             </div>
           )}
         </>

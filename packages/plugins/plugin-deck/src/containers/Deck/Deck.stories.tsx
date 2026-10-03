@@ -343,7 +343,7 @@ const TestPlugin = Plugin.define(pluginMeta).pipe(
                   data-testid='story.companion'
                   data-companion-to={companionTo?.title}
                 >
-                  <p className='text-sm text-description'>Story companion surface</p>
+                  <p className='text-sm text-fg-muted'>Story companion surface</p>
                   <p>
                     Companion <span className='font-mono text-xs'>{String(data.variant)}</span> of{' '}
                     <span className='font-medium'>{companionTo?.title ?? data.attendableId}</span>.

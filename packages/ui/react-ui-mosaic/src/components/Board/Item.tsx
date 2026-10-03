@@ -88,7 +88,7 @@ const BoardItemInner = forwardRef<HTMLDivElement, BoardItemProps>(
               </Block>
             </Card.Header>
             {/* TODO(burdon): Replace with surface. */}
-            <Card.Row classNames='text-description'>
+            <Card.Row classNames='text-fg-muted'>
               <Block>
                 <Icon icon='ph--note--regular' />
               </Block>

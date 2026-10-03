@@ -41,7 +41,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
 
       {result.price != null && (
         // Match ResultCard: currency-first, locale-grouped.
-        <div className='text-sm text-description'>
+        <div className='text-sm text-fg-muted'>
           {[result.currency, result.price.toLocaleString()].filter(Boolean).join(' ')}
         </div>
       )}
@@ -69,7 +69,7 @@ export const ResultDetail = ({ result: subject, starred = false, onToggleStar, o
         <dl className='grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm'>
           {properties.map(([key, value]) => (
             <Fragment key={key}>
-              <dt className='text-description'>{key}</dt>
+              <dt className='text-fg-muted'>{key}</dt>
               <dd className='truncate'>{String(value)}</dd>
             </Fragment>
           ))}

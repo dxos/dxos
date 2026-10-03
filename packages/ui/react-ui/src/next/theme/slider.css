@@ -22,7 +22,7 @@
   .dx-slider-label {
     font-size: var(--dx-font-size);
     line-height: var(--dx-line-height);
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
   }
 
   .dx-slider-control {

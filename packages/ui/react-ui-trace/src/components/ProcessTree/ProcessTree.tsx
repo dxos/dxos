@@ -161,7 +161,7 @@ const ProcessRow = ({ node, onProcessTerminate }: ProcessRowProps) => {
       <Tree.ItemIndicator />
       <Tree.ItemIcon>{process && <StatusIcon process={process} />}</Tree.ItemIcon>
       <Tree.ItemText />
-      <span className='text-end ps-1 text-xs text-description tabular-nums whitespace-nowrap'>
+      <span className='text-end ps-1 text-xs text-fg-muted tabular-nums whitespace-nowrap'>
         {process &&
           [Process.State.FAILED, Process.State.SUCCEEDED].includes(process.state) &&
           Unit.Duration(process.metrics.wallTime).toString()}

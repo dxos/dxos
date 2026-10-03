@@ -334,7 +334,7 @@ const LoggerLevels = ({ classNames }: LoggerLevelsProps) => {
               <ScrollArea.Root orientation='vertical'>
                 <ScrollArea.Viewport>
                   {visibleFiles.length === 0 && (
-                    <div className='p-2 text-xs text-subdued'>
+                    <div className='p-2 text-xs text-fg-subtle'>
                       {t(files.length === 0 ? 'levels.empty.message' : 'search.no-matches.message')}
                     </div>
                   )}
@@ -446,7 +446,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
 
   if (visible.length === 0) {
     return (
-      <div className={mx('p-2 text-subdued', classNames)}>
+      <div className={mx('p-2 text-fg-subtle', classNames)}>
         {t(rows.length === 0 ? 'empty.message' : 'search.no-matches.message')}
       </div>
     );
@@ -489,7 +489,7 @@ const LoggerList = ({ classNames }: LoggerListProps) => {
                 </div>
                 <span className={mx('justify-self-center', levelColor(entry.level))}>{record.level}</span>
                 <div
-                  className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-description')}
+                  className={mx('flex flex-col min-w-0 leading-tight', !expanded.has(id) && 'text-fg-muted')}
                   title={record.file}
                 >
                   <span className='truncate'>{record.file?.split('/').pop() ?? record.file}</span>

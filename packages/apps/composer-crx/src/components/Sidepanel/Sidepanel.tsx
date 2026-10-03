@@ -133,7 +133,7 @@ const SidepanelContent = () => {
           <ErrorBoundary
             name='sidepanel/chat'
             fallbackRender={() => (
-              <div className='grid place-items-center p-4 text-sm text-description'>{t('chat.error.label')}</div>
+              <div className='grid place-items-center p-4 text-sm text-fg-muted'>{t('chat.error.label')}</div>
             )}
           >
             <Chat host={host} url={tabUrl ?? undefined} onError={setChatError} />
@@ -149,7 +149,7 @@ const SidepanelContent = () => {
             {chatError.message}
           </span>
         ) : (
-          <span className='text-xs text-description truncate'>{tabUrl}</span>
+          <span className='text-xs text-fg-muted truncate'>{tabUrl}</span>
         )}
       </Panel.Footer>
     </Panel.Root>

@@ -68,7 +68,7 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
                     {instrument.name ? ` · ${instrument.name}` : ''}
                   </Card.Title>
                   {(instrument.exchange || instrument.sector) && (
-                    <Card.Text variant='description'>
+                    <Card.Text variant='muted'>
                       {[instrument.exchange, instrument.sector, instrument.industry].filter(Boolean).join(' · ')}
                     </Card.Text>
                   )}
@@ -80,7 +80,7 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
                   <TradingViewChart symbol={tradingViewSymbol} className='h-[480px] w-full border-0' />
                 </Card.Row>
                 <Card.Row>
-                  <Card.Text variant='description'>{t('instrument.chart-attribution.label')}</Card.Text>
+                  <Card.Text variant='muted'>{t('instrument.chart-attribution.label')}</Card.Text>
                 </Card.Row>
               </Card.Body>
             </Card.Root>

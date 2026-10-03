@@ -26,7 +26,7 @@ export const JsonCard = ({ data }: { data: unknown }) => {
         />
       </Block>
       {(open && <JsonHighlighter data={data} classNames='col-span-full max-h-[20lh] py-1.5 text-xs' />) || (
-        <Card.Text variant='description'>{collapsedLength}</Card.Text>
+        <Card.Text variant='muted'>{collapsedLength}</Card.Text>
       )}
     </Card.Row>
   );

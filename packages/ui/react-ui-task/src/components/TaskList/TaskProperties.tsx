@@ -70,7 +70,7 @@ export const TaskProperties = ({ task, members = [], onTaskUpdate, classNames }:
     // A section of the host Container: it inherits the host's tracks, so its glyphs share the pane's gutter.
     <Container asChild gutter='inherit' gap='sm' classNames={classNames} data-testid='taskList.properties'>
       <section>
-        <Typography asChild tone='subdued' classNames='text-sm'>
+        <Typography asChild tone='subtle' classNames='text-sm'>
           <h2>{t('task-properties.label')}</h2>
         </Typography>
         {createdAt !== undefined && (
@@ -219,9 +219,9 @@ const TaskProperty = ({ icon, iconClassNames, label, unset, testId, actions }: T
           greys, and with the same asterisk on both rows the mismatch read as a meaning the rows do
           not carry. A value keeps the hue its option table gives it. */}
       <div className={TASK_GRID_ICON}>
-        <Icon icon={icon} classNames={mx(unset ? 'text-description' : iconClassNames)} />
+        <Icon icon={icon} classNames={mx(unset ? 'text-fg-muted' : iconClassNames)} />
       </div>
-      <span className={mx('min-w-0 pe-1.5 text-sm truncate', unset && 'text-description')}>{label}</span>
+      <span className={mx('min-w-0 pe-1.5 text-sm truncate', unset && 'text-fg-muted')}>{label}</span>
     </>
   );
 

@@ -308,7 +308,7 @@ export const TypeArticle = ({ role, space, type, attendableId }: TypeArticleProp
               </LayoutPanel>
             )}
           </Panel.Body>
-          <Panel.Footer classNames='flex items-center p-1 border-t border-subdued-separator'>
+          <Panel.Footer classNames='flex items-center p-1 border-t border-separator-subtle'>
             {t('item-count.label', { count: tileItems.length })}
           </Panel.Footer>
         </Panel.Root>

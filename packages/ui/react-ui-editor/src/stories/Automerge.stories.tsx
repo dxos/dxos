@@ -72,10 +72,10 @@ const DefaultStory = () => {
 
   return (
     <div className='dx-expand grid grid-cols-2 gap-3 p-3'>
-      <div className='dx-expand overflow-hidden p-2 dx-base-surface rounded-md border border-subdued-separator'>
+      <div className='dx-expand overflow-hidden p-2 dx-base-surface rounded-md border border-separator-subtle'>
         <Editor source={source} autoFocus />
       </div>
-      <div className='dx-expand overflow-hidden p-2 dx-base-surface rounded-md border border-subdued-separator'>
+      <div className='dx-expand overflow-hidden p-2 dx-base-surface rounded-md border border-separator-subtle'>
         <Editor source={source} />
       </div>
     </div>
@@ -100,7 +100,7 @@ const EchoStory = () => {
 
   return (
     <div className='dx-fill flex flex-col overflow-hidden'>
-      <pre className='p-2 text-xs text-subdued'>
+      <pre className='p-2 text-xs text-fg-subtle'>
         {JSON.stringify({ index, identity: toPublicKey(identity?.identityKey)?.truncate(), spaceId, objects }, null, 2)}
       </pre>
       {identity && source ? (

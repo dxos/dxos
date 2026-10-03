@@ -174,7 +174,7 @@ export const InvocationTraceContainer = composable<HTMLDivElement, InvocationTra
         <Panel.Root role={role}>
           {showSpaceSelector && (
             <Panel.Header>
-              <Toolbar.Root classNames='border-b border-subdued-separator'>
+              <Toolbar.Root classNames='border-b border-separator-subtle'>
                 <DataSpaceSelector />
               </Toolbar.Root>
             </Panel.Header>

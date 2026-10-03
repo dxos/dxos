@@ -51,7 +51,7 @@
     line-height: var(--dx-label-line-height);
     font-weight: 500;
     /* A group's label, like a field's (see `control.css`). */
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
   }
   /* The legend text is a bare text node, so the first trailing part pushes the rest to the row's end. */
   .dx-fieldset-legend
@@ -76,13 +76,13 @@
   .dx-fieldset-legend[data-variant='section'] {
     font-size: var(--text-lg);
     line-height: var(--text-lg--line-height);
-    color: var(--color-base-fg);
+    color: var(--color-fg);
   }
   /* The section's subtitle reads at the body size in the description colour, as a settings row's description does. */
   .dx-fieldset-legend[data-variant='section'] + .dx-field-helper {
     font-size: var(--text-base);
     line-height: var(--text-base--line-height);
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
   .dx-fieldset[data-disabled] {
     opacity: 0.5;

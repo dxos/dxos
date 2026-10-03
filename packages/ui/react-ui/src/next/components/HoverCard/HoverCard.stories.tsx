@@ -22,7 +22,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
       </HoverCard.Trigger>
       <HoverCard.Content data-testid={`profile-${size}`}>
         <Typography>Alice Example</Typography>
-        <Typography tone='description'>Joined in March · 12 spaces</Typography>
+        <Typography tone='muted'>Joined in March · 12 spaces</Typography>
       </HoverCard.Content>
     </HoverCard.Root>
     <HoverCard.Root positioning={{ placement: 'bottom' }}>

@@ -29,5 +29,8 @@ The react-ui cut-over: the Next components (Ark UI primitives styled by `.nx-*` 
   namespace is removed. The standalone `Label` is no longer exported (use `Field.Label`), the `Switch`/`Match` flow
   helper is renamed `Match` (`Match.Root`/`Match.Case`), the layout `Container` is removed, and `Size` is the component
   size scale (`xs`–`xl`; the spacing `Size` stays in `@dxos/ui-types`).
+- `@dxos/ui-theme` renames the text emphasis tokens: `--color-base-fg`/`description`/`subdued` are `--color-fg`/`fg-muted`/
+  `fg-subtle` (`text-fg`, `text-fg-muted`, `text-fg-subtle`), and `--color-subdued-separator` is `--color-separator-subtle`;
+  Typography and Icon `tone` values are `muted`/`subtle`. The component CSS prefix is `dx-`.
 
 Breaking: the former `@dxos/react-ui` component APIs are gone; import the components from `@dxos/react-ui` by name.

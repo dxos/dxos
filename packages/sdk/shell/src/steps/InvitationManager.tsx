@@ -65,7 +65,7 @@ export const InvitationManager = ({
             <p className='text-sm my-1 font-normal text-center'>
               {t(multiUse ? 'invite-many-qr.label' : 'invite-one-qr.label')}
             </p>
-            <div className={mx('text-description', 'w-full max-w-[14rem] relative')}>
+            <div className={mx('text-fg-muted', 'w-full max-w-[14rem] relative')}>
               <QrCode
                 classNames={['p-2', showAuthCode && 'invisible']}
                 aria-labelledby={qrLabel}

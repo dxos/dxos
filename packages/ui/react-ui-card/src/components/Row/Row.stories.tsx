@@ -89,7 +89,7 @@ const CardPreviewHost = ({ children }: PropsWithChildren) => {
                 <Card.Title>{link.title ?? link.label}</Card.Title>
               </Card.Header>
               <Card.Row>
-                <Card.Text variant='description'>{link.eid}</Card.Text>
+                <Card.Text variant='muted'>{link.eid}</Card.Text>
               </Card.Row>
             </Card.Root>
           </Popover.Body>

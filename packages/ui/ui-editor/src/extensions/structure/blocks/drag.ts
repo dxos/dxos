@@ -805,7 +805,7 @@ const dragTheme = EditorView.theme({
     placeContent: 'center',
     // `size-3`: the glyph is 1em.
     fontSize: '0.75rem',
-    color: 'var(--color-description, currentColor)',
+    color: 'var(--color-fg-muted, currentColor)',
     opacity: '0.4',
     transition: 'opacity 0.2s',
   },

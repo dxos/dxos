@@ -9,13 +9,13 @@
 
 @theme {
   /*
-   * Text emphasis — foregrounds at decreasing emphasis, anchored on --color-base-fg (strongest):
+   * Text emphasis — foregrounds at decreasing emphasis, anchored on --color-fg (strongest):
    *   base-fg → description → subdued (weakest). `placeholder` is host-derived — see surfaces.css.
    * Tuned for legibility against the surfaces rather than mapped to the elevation ladder (which
    * governs backgrounds, not text contrast), so these stay explicit neutrals.
    */
-  --color-description: light-dark(var(--color-neutral-600), var(--color-neutral-400));
-  --color-subdued: light-dark(var(--color-neutral-500), var(--color-neutral-600));
+  --color-fg-muted: light-dark(var(--color-neutral-600), var(--color-neutral-400));
+  --color-fg-subtle: light-dark(var(--color-neutral-500), var(--color-neutral-600));
 
   /*
    * Controls — the input/control fill is a deliberate off-ladder token (cf. the grid "paper"
@@ -38,7 +38,7 @@
   --color-input-bg-hover: oklch(
     from var(--color-input-bg) calc(l + var(--dx-lift) * var(--dx-attenuate-state) * 0.08) c h
   );
-  --color-input-fg: var(--color-base-fg);
+  --color-input-fg: var(--color-fg);
 
   /* Focus indicators are a global affordance, not a per-surface property. */
   --color-focus-ring: light-dark(var(--color-blue-400), var(--color-blue-600));

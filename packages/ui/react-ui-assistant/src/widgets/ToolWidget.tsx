@@ -235,7 +235,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
   if (single && !hasDetail(single)) {
     return (
       <div
-        className='flex items-center gap-2 p-1 text-description min-h-(--dx-control)'
+        className='flex items-center gap-2 p-1 text-fg-muted min-h-(--dx-control)'
         data-testid={`assistant.tool-${single.kind}`}
       >
         <Icon icon={icon} size='md' />
@@ -265,7 +265,7 @@ const ToolPanel = ({ entries, onChangeOpen }: ToolPanelProps) => {
         data-testid={singleCall ? 'assistant.tool-call' : 'assistant.tool-run'}
         classNames='gap-1'
       >
-        <span className='flex min-w-0 items-center gap-2 text-description tabular-nums'>
+        <span className='flex min-w-0 items-center gap-2 text-fg-muted tabular-nums'>
           {/* The same glyph column as the rows the panel opens onto, so the run reads as one list
               whether it is collapsed or not. */}
           <Icon icon={icon} size='md' />
@@ -344,7 +344,7 @@ const ToolCallDetail = ({ entry, classNames }: { entry: ToolEntry; classNames?: 
     // and taking the summary row with it.
     <div className={mx('flex flex-col gap-1 min-w-0', classNames)}>
       {entry.text !== undefined && (
-        <p className='text-sm text-description whitespace-pre-wrap px-1 py-trim-sm'>{entry.text}</p>
+        <p className='text-sm text-fg-muted whitespace-pre-wrap px-1 py-trim-sm'>{entry.text}</p>
       )}
       {entry.input !== undefined && <ToolSection label={t('tool-input.label')} data={entry.input} />}
       {entry.error !== undefined && <ToolSection label={t('tool-error.label')} data={entry.error} />}
@@ -361,7 +361,7 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
     {/* No horizontal padding of its own: the containing body already insets by `trim-sm`, and a
         second inset here pushed the copy button off the column the disclosure carets sit in. */}
     <div className='flex items-center justify-between'>
-      <span className='text-sm text-description'>{label}</span>
+      <span className='text-sm text-fg-muted'>{label}</span>
       {/* `-me-1` cancels the button's own trailing inset so its glyph centres on the same column as
         the disclosure caret rather than sitting a few pixels inside it. */}
       <SystemButton.Clipboard
@@ -374,7 +374,7 @@ const ToolSection = ({ label, data }: { label: string; data: unknown }) => (
     </div>
     {multilineFields(data)?.map(([key, value], _, fields) => (
       <div key={key} className='flex flex-col'>
-        {fields.length > 1 && <span className='text-xs text-description'>{key}</span>}
+        {fields.length > 1 && <span className='text-xs text-fg-muted'>{key}</span>}
         <SyntaxHighlighter
           language={key === 'code' ? 'js' : 'text'}
           scroll='horizontal'

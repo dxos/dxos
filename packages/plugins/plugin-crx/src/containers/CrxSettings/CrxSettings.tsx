@@ -82,7 +82,7 @@ export const CrxSettings = ({ subject, readonly }: CrxSettingsProps) => {
                       ? 'text-sm text-success-text'
                       : test.kind === 'error'
                         ? 'text-sm text-error-text'
-                        : 'text-sm text-description'
+                        : 'text-sm text-fg-muted'
                   }
                 >
                   {test.kind === 'ok' || test.kind === 'error' ? test.message : ''}

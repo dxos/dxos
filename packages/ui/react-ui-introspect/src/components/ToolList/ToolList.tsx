@@ -66,7 +66,7 @@ export const ToolList = ({ tools, selected, onSelect, classNames }: ToolListProp
               <div className='font-mono text-xs text-info-text'>{name}</div>
               <div className='font-medium'>{tool.title}</div>
               {tool.description && (
-                <div className='text-sm text-description line-clamp-2 mt-1'>{tool.description.trim()}</div>
+                <div className='text-sm text-fg-muted line-clamp-2 mt-1'>{tool.description.trim()}</div>
               )}
             </div>
           </Listbox.Item>

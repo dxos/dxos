@@ -32,7 +32,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Typography truncate data-testid={`truncate-${size}`}>
         {TEXT}
       </Typography>
-      <Typography tone='description' data-testid={`description-${size}`}>
+      <Typography tone='muted' data-testid={`description-${size}`}>
         Description
       </Typography>
     </Container>
@@ -40,7 +40,7 @@ const DefaultStory = ({ size }: SizeArgs) => (
       <Typography lines={2} data-testid={`lines-${size}`}>
         {TEXT} {TEXT}
       </Typography>
-      <Typography tone='subdued' data-testid={`subdued-${size}`}>
+      <Typography tone='subtle' data-testid={`subdued-${size}`}>
         Subdued interface text
       </Typography>
       <Typography mono data-testid={`mono-${size}`}>
@@ -74,8 +74,8 @@ export const Default: Story = {};
 
 /**
  * Wrapped text keeps its first line centred in a block, so the rail icon beside it lines up at every size. `truncate`
- * keeps one block-tall line ending in an ellipsis; `lines` clamps to that many lines; `tone='description'` and
- * `tone='subdued'` take the secondary and interface text colours; `mono` the monospace font.
+ * keeps one block-tall line ending in an ellipsis; `lines` clamps to that many lines; `tone='muted'` and
+ * `tone='subtle'` take the secondary and interface text colours; `mono` the monospace font.
  */
 export const Test: Story = {
   args: { allSizes: true },

@@ -155,7 +155,7 @@ const ProviderHarness = () => {
 
       <div className='dx-expand flex flex-col gap-2 overflow-y-auto'>
         {raw?.data !== undefined && <JsonHighlighter data={raw.data} />}
-        {raw?.message && <span className='text-sm text-description'>{raw.message}</span>}
+        {raw?.message && <span className='text-sm text-fg-muted'>{raw.message}</span>}
         {outcomes.map((outcome, index) => (
           <div key={index}>
             <div>

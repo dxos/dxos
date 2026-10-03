@@ -194,7 +194,7 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     `prefers-reduced-motion`. `aria-expanded` stays true until the closing animation ends.
 16. **Menu** is Ark Menu, portalled like Select: `Menu.Content` takes an explicit `size`, sits at `level='popup'` 2px
     from its trigger and mounts only while open. Items are block rows (leading Icon, label, trailing shortcut in
-    `--color-description`); the highlight is `--color-hover-surface` under the popup's outline focus ring.
+    `--color-fg-muted`); the highlight is `--color-hover-surface` under the popup's outline focus ring.
 17. **Tooltip** is Ark Tooltip: portalled text at `level='popup'` with an explicit `size` (`sm` by default), padded by
     `--dx-gap-size`, capped at 20rem, 2px from its trigger, opening after 300ms (`openDelay`), with an arrow (follow-up 32).
     Tabbing between triggers is fixed in `Tooltip.Trigger` (follow-up 20); IconButton uses it for its label (22).
@@ -312,8 +312,8 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     listbox owns only options and groups. `Toolbar.Separator` takes the axis across the toolbar's orientation and is
     not a roving item. Toolbar therefore became a namespace (`Toolbar.Root`), like every other composite.
 
-39. **Text and layout parity.** `Typography truncate` keeps one block-tall line with an ellipsis and `tone='description'`
-    takes `--color-description` (the current `Card.Text` variants). `Label srOnly` hides the label visually but keeps
+39. **Text and layout parity.** `Typography truncate` keeps one block-tall line with an ellipsis and `tone='muted'`
+    takes `--color-fg-muted` (the current `Card.Text` variants). `Label srOnly` hides the label visually but keeps
     it naming its control. `Group fill` gives every child an equal share (`flex: 1 1 0`), which is also the stretch
     mode: a lone child (the current `Form.Submit`) spans the group, so no second prop. `Container gap` sets the row
     gap only (`none|sm|md|lg` = 0/0.25/0.5/0.75rem, the current `ColumnGap`), since columns are shared through subgrid
@@ -342,7 +342,7 @@ header, top-level rows, a nested form and a nested scroll pane — all passed (D
     takes a 1px inset line and its focus ring in `--color-<valence>-border`, the HelperText `--color-<valence>-text`,
     and `error` also sets `invalid` (unless given) so Ark's ErrorText shows and the control reports `aria-invalid`; a
     non-error message is therefore HelperText, not ErrorText. `Field.Label srOnly` matches `Label srOnly`. `Input start`
-    and `end` render a control row like DateInput's (adornments in `--color-description`, a bare input, the ring as an
+    and `end` render a control row like DateInput's (adornments in `--color-fg-muted`, a bare input, the ring as an
     outline from the input's `:focus-visible`), with `data-testid` on the row and the ref on the input; a trailing
     icon-only Button shrinks by one inset on each side so it fits the control height and ends one inset from the row's
     edge. `noAutoFill` sets `data-1p-ignore`; `variant='subdued'` drops the well.
@@ -538,7 +538,7 @@ content side` is the current shorthand: the trigger brings its own Root and Cont
     context). Covered by the DateInput and PinInput `Test`s. Range/multiple date selection stays deferred.
 56. **`Next.Panel`** (Phase 4 decision 1). `Root` is a flex column that fills its parent (`width`/`height: 100%`), sets
     `data-size` and a `level` (`base` by default, an absolute rung) and is the pane's query container. `Toolbar` is a
-    `Next.Toolbar.Root` and `Statusbar` a block-tall row in label text and `--color-description`, both on ui-theme's
+    `Next.Toolbar.Root` and `Statusbar` a block-tall row in label text and `--color-fg-muted`, both on ui-theme's
     `bar` aspect, which steps off the panel's level like the current Panel's toolbar. `Content` grows between them: a
     composed ScrollArea around a `rail` Container (`gutter`, `columns`, `gap`, `layout` pass through), whose frame
     drops its own inline-size containment so the Container collapses against the panel, as the toolbar and statusbar
@@ -612,7 +612,7 @@ From the react-ui-form Form spike (`react-ui-form/src/next/SPIKE.md`) and its us
     A scrolling row viewport uses `auto` rows. `Container align='start'` tops a row's cells of differing heights,
     such as two forms side by side, instead of centring them.
 64. **Label colours: content outranks interface text.** Field labels, header Typography, Fieldset legends and help
-    text (`Field.HelperText`) all use ui-theme's `--color-subdued`; help text is one size step smaller than its label
+    text (`Field.HelperText`) all use ui-theme's `--color-fg-subtle`; help text is one size step smaller than its label
     (`--dx-helper-font-size`, the next-smaller size's label step; xs and sm have no smaller step). Error text is
     unchanged. A Checkbox or Switch label is the control's own text and keeps the base colour. The required mark is the
     current Form's: `--color-warning-text`, `max(0.125em, --dx-control-inset)` after the label text.
@@ -723,8 +723,8 @@ Decided 2026-10-01. Text colours rank content above interface: a field's value a
 label that names the field.
 
 1. **Ranking now, on today's tokens.** Values and primary text use the base text colour; secondary content (subtitles,
-   URLs, counts, units) uses `--color-description`; interface text (field labels, help text, legends, placeholders)
-   uses `--color-subdued`, with help text one size below its label so the two stay distinct at the same colour.
+   URLs, counts, units) uses `--color-fg-muted`; interface text (field labels, help text, legends, placeholders)
+   uses `--color-fg-subtle`, with help text one size below its label so the two stay distinct at the same colour.
 2. **Emphasis names, applied last.** When the current components are deleted, the text colours are renamed across the
    whole codebase in one change to an emphasis scale: `--dx-text` (default), `--dx-text-muted` (today's description),
    `--dx-text-subtle` (today's subdued). Names state emphasis, not use, so components pick a step and a new use needs

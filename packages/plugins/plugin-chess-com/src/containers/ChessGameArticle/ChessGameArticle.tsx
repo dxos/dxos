@@ -56,7 +56,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
         <Toolbar.Root>
           <Button icon='ph--arrows-clockwise--regular' label={t('sync-games.button')} onClick={handleSync} />
           {account?.username && (
-            <span className='text-subdued text-sm px-2'>
+            <span className='text-fg-subtle text-sm px-2'>
               {account.username}
               {account.league ? ` · ${account.league}` : ''}
             </span>
@@ -66,7 +66,7 @@ export const ChessGameArticle = ({ role, subject, attendableId }: ChessGameArtic
       </Panel.Header>
       <Panel.Body>
         {empty ? (
-          <Flex center classNames='h-full text-subdued text-sm'>
+          <Flex center classNames='h-full text-fg-subtle text-sm'>
             {t('empty-games.message')}
           </Flex>
         ) : (

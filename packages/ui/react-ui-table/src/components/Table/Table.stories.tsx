@@ -124,7 +124,7 @@ const DefaultStory = () => {
         <Panel.Root>
           <Panel.Header>
             <TableComponent.Toolbar
-              classNames='border-b border-subdued-separator'
+              classNames='border-b border-separator-subtle'
               onAdd={handleInsertRow}
               onSave={handleSaveView}
             />

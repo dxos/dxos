@@ -210,7 +210,7 @@ export const TableArticle = forwardRef<HTMLDivElement, TableArticleProps>(
           </Panel.Header>
           <Panel.Body asChild>
             <TableComponent.Content
-              classNames='border-t border-subdued-separator'
+              classNames='border-t border-separator-subtle'
               key={attendableId}
               attendableId={attendableId}
               model={model}

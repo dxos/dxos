@@ -140,7 +140,7 @@ const handlebarsHighlightPlugin = ViewPlugin.fromClass(
             decorations.push({
               from: start,
               to: end,
-              decoration: Decoration.mark({ class: 'text-subdued' }),
+              decoration: Decoration.mark({ class: 'text-fg-subtle' }),
             });
           }
         }

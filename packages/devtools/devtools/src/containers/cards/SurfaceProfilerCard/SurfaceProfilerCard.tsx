@@ -151,7 +151,7 @@ export const SurfaceProfilerCard = ({
       {groups.length === 0 && <StatCard.Row span label='No surfaces mounted.' />}
       {groups.length > 0 && (
         <StatCard.Row unit='ms'>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-description'>
+          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>role</span>
             <span>×</span>
             <span>avg</span>
@@ -176,7 +176,7 @@ export const SurfaceProfilerCard = ({
             <Tooltip.Trigger asChild content={<RoleDetail group={group} />}>
               <span className='truncate text-start'>{group.role}</span>
             </Tooltip.Trigger>
-            <span className='text-description'>{group.ids.length}</span>
+            <span className='text-fg-muted'>{group.ids.length}</span>
             <span>{group.totalRenders > 0 ? group.avgActualDuration.toFixed(1) : '–'}</span>
             <span>{group.totalRenders > 0 ? group.maxActualDuration.toFixed(1) : '–'}</span>
           </Grid>

@@ -615,7 +615,7 @@ const BinaryCell = ({ data }: { data: Uint8Array }) => {
           <span className='rounded bg-neutral-500/15 px-1 text-neutral-400'>blob</span>
           <span>{bytes.format(data.length)}</span>
           {text ? (
-            <span className='text-base-fg'>"{truncateText(text, 48)}"</span>
+            <span className='text-fg'>"{truncateText(text, 48)}"</span>
           ) : (
             <span className='text-neutral-500'>{formatHexPreview(data)}</span>
           )}

@@ -75,11 +75,8 @@ const StatsView = ({ stats }: { stats: StatItem[] }) => (
     <ScrollArea.Viewport classNames='flex flex-col gap-1 py-1'>
       {stats.length === 0 && <Empty>No stats.</Empty>}
       {stats.map((stat) => (
-        <div
-          key={stat.label}
-          className='flex items-center justify-between gap-2 border-b border-subdued-separator py-1'
-        >
-          <span className='text-sm text-description truncate'>{stat.label}</span>
+        <div key={stat.label} className='flex items-center justify-between gap-2 border-b border-separator-subtle py-1'>
+          <span className='text-sm text-fg-muted truncate'>{stat.label}</span>
           <span className='font-medium tabular-nums'>{stat.value}</span>
         </div>
       ))}

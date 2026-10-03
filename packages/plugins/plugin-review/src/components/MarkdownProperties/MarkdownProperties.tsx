@@ -46,7 +46,7 @@ export const MarkdownProperties = ({ subject }: MarkdownPropertiesProps) => {
         standalone
         label={currentLabel}
         labelEnd={
-          <span className='shrink-0 text-xs text-description'>
+          <span className='shrink-0 text-xs text-fg-muted'>
             {t('branch-count.label', { count: branchCount })} · {t('checkpoint-count.label', { count: versionCount })}
           </span>
         }

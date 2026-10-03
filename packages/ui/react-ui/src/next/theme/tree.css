@@ -195,7 +195,7 @@
   .dx-tree-group-label {
     font-size: var(--dx-label-font-size);
     line-height: var(--dx-label-line-height);
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
   }
 
   /* The end strip (`dropAtEnd`): one block below the last row that takes "append at the end". */
@@ -210,7 +210,7 @@
     inset-block: 0;
     inset-inline-start: calc((var(--dx-tree-guide-level) + 0.5) * var(--dx-half-block-size));
     width: 0;
-    border-inline-start: 1px solid var(--color-subdued-separator);
+    border-inline-start: 1px solid var(--color-separator-subtle);
     pointer-events: none;
   }
 }

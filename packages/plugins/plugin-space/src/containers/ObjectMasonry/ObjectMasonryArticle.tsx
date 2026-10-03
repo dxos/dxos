@@ -103,7 +103,7 @@ export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage
         <Panel.Body>
           {empty ? <Empty classNames='h-full'>{empty}</Empty> : <ObjectMasonry cacheKey={attendableId} items={items} />}
         </Panel.Body>
-        <Panel.Footer classNames='flex items-center p-1 border-t border-subdued-separator'>
+        <Panel.Footer classNames='flex items-center p-1 border-t border-separator-subtle'>
           {t('item-count.label', { count: items.length })}
         </Panel.Footer>
       </Panel.Root>

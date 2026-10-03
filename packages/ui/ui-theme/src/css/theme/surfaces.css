@@ -88,7 +88,7 @@
    */
 
   --color-base-surface: var(--dx-surface-base);
-  --color-base-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
+  --color-fg: light-dark(var(--color-neutral-950), var(--color-neutral-150));
 
   --color-attention-surface: var(--dx-surface-base);
   --color-attention-contains: oklch(from var(--color-accent-bg) l c h / 0.3);
@@ -179,7 +179,7 @@
     from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.115) c
       h
   );
-  --color-subdued-separator: oklch(
+  --color-separator-subtle: oklch(
     from var(--surface-bg, var(--color-base-surface)) calc(l + var(--dx-lift) * var(--dx-attenuate-separator) * 0.089) c
       h
   );

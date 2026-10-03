@@ -106,7 +106,7 @@ const MasterPane = ({ title, count, children }: PropsWithChildren<{ title: strin
       <Toolbar.Root>
         <Toolbar.Text>{title}</Toolbar.Text>
         <Toolbar.Text classNames='flex-none'>
-          <Typography tone='description'>{count}</Typography>
+          <Typography tone='muted'>{count}</Typography>
         </Toolbar.Text>
       </Toolbar.Root>
     </Panel.Header>
@@ -145,7 +145,7 @@ const Fields = ({ fields }: { fields: [label: string, value: string][] }) => (
         <Container gutter='rail'>
           <Container gutter='inherit' layout='row' columns='minmax(0, 6rem) minmax(0, 1fr)' gap='sm'>
             {fields.flatMap(([label, value]) => [
-              <Typography key={`${label}-label`} tone='description'>
+              <Typography key={`${label}-label`} tone='muted'>
                 {label}
               </Typography>,
               <Typography key={`${label}-value`} truncate>

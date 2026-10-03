@@ -67,7 +67,7 @@ export type CellProps = {
 /** One titled pane in a story grid. */
 export const Cell = ({ title, children }: CellProps) => (
   <Flex column classNames='dx-expand'>
-    <div className='px-2 py-1 text-xs uppercase tracking-wide text-description border-be border-separator'>{title}</div>
+    <div className='px-2 py-1 text-xs uppercase tracking-wide text-fg-muted border-be border-separator'>{title}</div>
     <Flex column grow classNames='dx-expand'>
       {children}
     </Flex>

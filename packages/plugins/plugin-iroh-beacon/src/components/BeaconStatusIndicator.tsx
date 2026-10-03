@@ -50,20 +50,20 @@ const BeaconPopover = () => {
   const onlineCount = state?.peers.filter((peer) => peer.online).length ?? 0;
 
   if (!state) {
-    return <span className='text-sm text-description p-2'>{t('no-peers.label')}</span>;
+    return <span className='text-sm text-fg-muted p-2'>{t('no-peers.label')}</span>;
   }
 
   return (
     <div className='flex flex-col gap-2 w-[280px] p-2'>
       {/* Header. */}
       <div className='flex items-center gap-2 mb-1'>
-        <Icon icon='ph--broadcast--regular' classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-description')} />
+        <Icon icon='ph--broadcast--regular' classNames={mx(onlineCount > 0 ? 'text-green-500' : 'text-fg-muted')} />
         <span className='font-medium text-sm'>{t('beacon-title.label')}</span>
       </div>
 
       {/* Peer list. */}
       {state.peers.length === 0 ? (
-        <span className='text-sm text-description'>{t('no-peers.label')}</span>
+        <span className='text-sm text-fg-muted'>{t('no-peers.label')}</span>
       ) : (
         <div className='flex flex-col gap-1'>
           {state.peers.map((peer) => (
@@ -73,7 +73,7 @@ const BeaconPopover = () => {
       )}
 
       {/* Footer. */}
-      <div className='border-t border-separator pt-2 mt-1 text-xs text-description flex flex-col gap-0.5'>
+      <div className='border-t border-separator pt-2 mt-1 text-xs text-fg-muted flex flex-col gap-0.5'>
         <div className='flex justify-between'>
           <span>{t('transport.label')}</span>
           <span className='font-mono'>{state.transport}</span>
@@ -98,12 +98,12 @@ const PeerRow = ({ peer }: { peer: BeaconPeer }) => {
     <div className='flex items-center gap-2 text-sm'>
       <Icon
         icon={peer.online ? 'ph--circle-bg' : 'ph--circle--regular'}
-        classNames={mx(peer.online ? 'text-green-500' : 'text-description')}
+        classNames={mx(peer.online ? 'text-green-500' : 'text-fg-muted')}
         size='xs'
       />
       <span className='truncate flex-1'>{peer.displayName ?? peer.peerId.slice(0, 8)}</span>
-      <span className='font-mono text-xs text-description'>#{peer.counter}</span>
-      <span className='font-mono text-xs text-description'>{peer.transport}</span>
+      <span className='font-mono text-xs text-fg-muted'>#{peer.counter}</span>
+      <span className='font-mono text-xs text-fg-muted'>{peer.transport}</span>
     </div>
   );
 };

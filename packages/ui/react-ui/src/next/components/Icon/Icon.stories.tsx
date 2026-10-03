@@ -61,10 +61,10 @@ const DefaultStory = ({ size }: SizeArgs) => (
     <Toolbar.Root aria-label='Tone, spin and size'>
       <Toolbar.Text>Tone, spin, size</Toolbar.Text>
       <Block>
-        <Icon icon='ph--note--regular' tone='description' data-testid={`tone-description-${size}`} />
+        <Icon icon='ph--note--regular' tone='muted' data-testid={`tone-description-${size}`} />
       </Block>
       <Block>
-        <Icon icon='ph--note--regular' tone='subdued' data-testid={`tone-subdued-${size}`} />
+        <Icon icon='ph--note--regular' tone='subtle' data-testid={`tone-subdued-${size}`} />
       </Block>
       <Block>
         <Icon icon='ph--spinner-gap--regular' spin data-testid={`spin-${size}`} />

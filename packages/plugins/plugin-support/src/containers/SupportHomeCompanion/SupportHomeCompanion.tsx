@@ -69,7 +69,7 @@ const WelcomePanel = memo(() => {
   return (
     <Flex column gap='lg' align='center'>
       <h1 className='text-lg font-semibold'>{t('welcome.title')}</h1>
-      <p className='text-center text-balance text-description'>{t('welcome.description')}</p>
+      <p className='text-center text-balance text-fg-muted'>{t('welcome.description')}</p>
       {slides.length > 0 && (
         <Carousel.Root count={slides.length} continuous autoAdvance={10_000}>
           <Carousel.PrevTrigger />

@@ -16,7 +16,7 @@ export type IconHue = NeutralPalette | ChromaticPalette | MessageValence;
 export type IconValence = MessageValence;
 
 /** Text emphasis below the default, as Typography's `tone`. */
-export type IconTone = 'description' | 'subdued';
+export type IconTone = 'muted' | 'subtle';
 
 export type IconProps = ThemedClassName<Omit<SVGProps<SVGSVGElement>, 'ref'>> & {
   icon: string;
@@ -26,7 +26,7 @@ export type IconProps = ThemedClassName<Omit<SVGProps<SVGSVGElement>, 'ref'>> & 
   hue?: IconHue;
   /** Colours the glyph with a valence's semantic text colour (`--color-<valence>-text`); takes precedence over `hue`. */
   valence?: IconValence;
-  /** A lower-emphasis colour (`--color-description` or `--color-subdued`); `hue` and `valence` take precedence. */
+  /** A lower-emphasis colour (`--color-fg-muted` or `--color-fg-subtle`); `hue` and `valence` take precedence. */
   tone?: IconTone;
   /**
    * Rotates continuously, as a busy indicator; still under `prefers-reduced-motion`. Spinners share one phase (the

@@ -198,7 +198,7 @@ export const ObjectsArticle = ({ role, ...props }: ArticleProps & { space?: Spac
               className={mx(
                 'h-(--dx-statusbar-size)',
                 'flex shrink-0 justify-end items-center gap-2',
-                'dx-base-surface text-description',
+                'dx-base-surface text-fg-muted',
               )}
             >
               <div className='text-sm pe-2'>Objects: {items.length}</div>

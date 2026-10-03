@@ -328,7 +328,7 @@ const CalendarWeek = composable<HTMLDivElement, CalendarWeekProps>(
               {Array.from({ length: 24 }, (_, hour) => (
                 <div
                   key={hour}
-                  className='absolute right-1 -translate-y-1/2 text-xs text-description tabular-nums'
+                  className='absolute right-1 -translate-y-1/2 text-xs text-fg-muted tabular-nums'
                   style={{ top: minutesToY(hour * 60, HOUR_HEIGHT) }}
                 >
                   {hour === 0 ? '' : `${hour.toString().padStart(2, '0')}:00`}

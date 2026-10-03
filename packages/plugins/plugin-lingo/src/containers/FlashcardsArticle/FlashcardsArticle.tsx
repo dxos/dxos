@@ -108,7 +108,7 @@ export const FlashcardsArticle = ({ role, subject: deck, attendableId }: Flashca
             onAnswer={handleAnswer}
           />
         ) : (
-          <div className='flex flex-col items-center gap-2 p-8 text-description'>
+          <div className='flex flex-col items-center gap-2 p-8 text-fg-muted'>
             <span>{queue.length === 0 ? t('empty-deck.message') : t('session-complete.message')}</span>
             {session.answered > 0 && <span>{t('session-score.message', session)}</span>}
           </div>

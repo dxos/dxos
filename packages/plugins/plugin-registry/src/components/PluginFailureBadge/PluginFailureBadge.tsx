@@ -49,7 +49,7 @@ export const PluginFailureBadge = ({ failure, size }: PluginFailureBadgeProps) =
                   failure.reason === 'timeout' ? t('failure-reason-timeout.label') : t('failure-reason-error.label'),
               })}
             </p>
-            <p className='text-description text-sm break-words'>{failure.error.message}</p>
+            <p className='text-fg-muted text-sm break-words'>{failure.error.message}</p>
           </div>
         </Popover.Body>
       </Popover.Content>

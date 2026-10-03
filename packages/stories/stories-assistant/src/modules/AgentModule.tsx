@@ -54,10 +54,10 @@ const blockClass = (block: ContentBlock.Any): string => {
     case 'toolResult':
       return block.error ? 'text-error-text' : 'text-success-text';
     case 'toolCall':
-      return 'text-subdued';
+      return 'text-fg-subtle';
     case 'reasoning':
     case 'stats':
-      return 'text-description text-xs';
+      return 'text-fg-muted text-xs';
     default:
       return '';
   }
@@ -140,7 +140,7 @@ export const AgentModule = () => {
   return (
     <Panel.Root classNames='dx-fill flex flex-col gap-2 p-2 overflow-hidden'>
       <Panel.Header classNames='shrink-0 justify-end'>
-        <div className='flex items-center gap-1 text-xs text-description'>
+        <div className='flex items-center gap-1 text-xs text-fg-muted'>
           <Icon icon='ph--git-commit--regular' size='md' />
           {session ? `session ${session.slice(0, 8)}` : 'no session'}
         </div>
@@ -150,18 +150,15 @@ export const AgentModule = () => {
         <div className='flex flex-col gap-3'>
           {rows.map(({ role, block, superseded }, index) => (
             <div key={index} className='flex flex-col gap-1'>
-              {role && <div className='text-xs text-description uppercase'>{role}</div>}
+              {role && <div className='text-xs text-fg-muted uppercase'>{role}</div>}
               <div
-                className={mx(
-                  'whitespace-pre-wrap text-sm',
-                  superseded ? 'text-description text-xs' : blockClass(block),
-                )}
+                className={mx('whitespace-pre-wrap text-sm', superseded ? 'text-fg-muted text-xs' : blockClass(block))}
               >
                 {superseded ? `✗ ${block._tag === 'toolResult' ? block.name : ''} (retried)` : blockText(block)}
               </div>
             </div>
           ))}
-          {running && <div className='text-sm text-description'>running…</div>}
+          {running && <div className='text-sm text-fg-muted'>running…</div>}
           {error && <div className='text-sm text-error-text'>{error}</div>}
         </div>
       </div>

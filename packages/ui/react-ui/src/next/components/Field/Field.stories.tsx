@@ -341,8 +341,8 @@ export const Test: Story = {
     const emailLabel = getComputedStyle(field.getByText('Email'));
     const helper = getComputedStyle(field.getByText('We never share it.'));
     const value = getComputedStyle(field.getByRole('textbox'));
-    await expect(emailLabel.color).toBe(resolve('--color-subdued'));
-    await expect(helper.color).toBe(resolve('--color-subdued'));
+    await expect(emailLabel.color).toBe(resolve('--color-fg-subtle'));
+    await expect(helper.color).toBe(resolve('--color-fg-subtle'));
     await expect(parseFloat(helper.fontSize)).toBeLessThan(parseFloat(emailLabel.fontSize));
     await expect(emailLabel.color).not.toBe(value.color);
     await expect(helper.color).not.toBe(value.color);

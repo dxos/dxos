@@ -150,7 +150,7 @@ const styles = EditorView.theme({
     display: 'grid',
     placeContent: 'center',
     fontSize: '16px',
-    color: 'var(--color-description, currentColor)',
+    color: 'var(--color-fg-muted, currentColor)',
   },
   '&:focus-within .cm-popover-trigger': {
     opacity: '1',

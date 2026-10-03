@@ -49,7 +49,7 @@ const DefaultStory = ({
         multiline={multiline}
         editing={editing}
       />
-      <div className='text-sm text-description' data-testid='markdownEditable.commits'>
+      <div className='text-sm text-fg-muted' data-testid='markdownEditable.commits'>
         {`Commits: ${commits}`}
       </div>
     </div>

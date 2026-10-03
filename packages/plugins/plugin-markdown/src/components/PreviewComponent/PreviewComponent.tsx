@@ -349,7 +349,7 @@ export const PreviewComponent = ({
           <div
             className={mx(
               'grid grid-rows-[minmax(0,1fr)] overflow-hidden overscroll-contain border rounded-md',
-              hasAttention ? 'border-focus-ring-subtle' : 'border-subdued-separator',
+              hasAttention ? 'border-focus-ring-subtle' : 'border-separator-subtle',
             )}
             inert={hasAttention ? undefined : true}
           >

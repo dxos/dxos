@@ -43,7 +43,7 @@ export const MediaArtifactArticle = ({
         <MediaArtifactForm artifact={artifact} attendableId={attendableId} nodeId={nodeId} />
         {produced && (
           <MediaArtifactVariants
-            classNames='border-t border-subdued-separator'
+            classNames='border-t border-separator-subtle'
             artifact={artifact}
             attendableId={attendableId}
           />

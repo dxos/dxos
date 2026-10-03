@@ -65,11 +65,11 @@
     min-width: 0;
     overflow: hidden;
   }
-  .dx-typography[data-tone='description'] {
-    color: var(--color-description);
+  .dx-typography[data-tone='muted'] {
+    color: var(--color-fg-muted);
   }
-  .dx-typography[data-tone='subdued'] {
-    color: var(--color-subdued);
+  .dx-typography[data-tone='subtle'] {
+    color: var(--color-fg-subtle);
   }
   .dx-typography[data-mono] {
     font-family: var(--font-mono, ui-monospace, monospace);
@@ -80,11 +80,11 @@
     width: var(--dx-icon-size);
     height: var(--dx-icon-size);
   }
-  .dx-icon[data-tone='description'] {
-    color: var(--color-description);
+  .dx-icon[data-tone='muted'] {
+    color: var(--color-fg-muted);
   }
-  .dx-icon[data-tone='subdued'] {
-    color: var(--color-subdued);
+  .dx-icon[data-tone='subtle'] {
+    color: var(--color-fg-subtle);
   }
   /* A per-instance size outranks the scope's (and a control's) icon size. */
   .dx-icon.dx-icon[data-icon-size='xs'] {
@@ -211,7 +211,7 @@
     align-items: center;
     flex-shrink: 0;
     gap: var(--dx-control-inset);
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
   .dx-input-row:has(> .dx-input-adornment:last-child > .dx-button[data-square]:last-child) {
     padding-inline-end: 0;
@@ -425,7 +425,7 @@
   .dx-field[data-layout='row'] > .dx-field-header > :is(.dx-label, .dx-typography) {
     font-size: var(--text-lg);
     line-height: var(--text-lg--line-height);
-    color: var(--color-base-fg);
+    color: var(--color-fg);
   }
   /* A standalone title is text, not a label; it drops Typography's block padding so both kinds sit alike. */
   .dx-field[data-layout='row'] > .dx-field-header > .dx-typography {
@@ -449,7 +449,7 @@
   .dx-field[data-layout='row'] > .dx-field-helper {
     font-size: var(--text-base);
     line-height: var(--text-base--line-height);
-    color: var(--color-description);
+    color: var(--color-fg-muted);
     margin-block-end: var(--dx-gap-size);
   }
   @container (width >= 24rem) {
@@ -510,7 +510,7 @@
    * control's text, not a field label, so it keeps the base colour.
    */
   :is(.dx-field, .dx-field-header) > :is(.dx-label, .dx-typography) {
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
   }
   /* The required mark is the current Form's: a warning-coloured `*` a small gap after the label at every size. */
   .dx-field-required {
@@ -525,7 +525,7 @@
   .dx-field-helper {
     font-size: var(--dx-helper-font-size);
     line-height: var(--dx-helper-line-height);
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
   }
   .dx-field-error {
     color: var(--color-error-text);
@@ -861,7 +861,7 @@
     padding-inline: var(--dx-gap-size);
     font-size: var(--dx-label-font-size);
     line-height: var(--dx-label-line-height);
-    color: var(--color-description);
+    color: var(--color-fg-muted);
   }
   .dx-select-item {
     display: flex;

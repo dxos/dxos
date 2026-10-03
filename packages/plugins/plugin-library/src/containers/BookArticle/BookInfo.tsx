@@ -144,13 +144,13 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
               <img src={cover} alt='' className='w-[6rem] aspect-[2/3] shrink-0 self-start rounded object-cover' />
             ) : (
               <Flex center classNames='w-[8rem] aspect-[2/3] shrink-0 rounded bg-input-surface'>
-                <Icon icon='ph--book--regular' size='xl' tone='description' />
+                <Icon icon='ph--book--regular' size='xl' tone='muted' />
               </Flex>
             )}
             <Flex column gap='sm' classNames='min-w-0'>
               <h1 className='text-xl font-semibold'>{catalog?.title}</h1>
               {authors.length > 0 && (
-                <p className='text-description'>{t('by-author.label', { authors: authors.join(', ') })}</p>
+                <p className='text-fg-muted'>{t('by-author.label', { authors: authors.join(', ') })}</p>
               )}
               {/* The user's own rating (1–10) as five stars in half-star increments. */}
               {stars != null && <StarRating value={stars / STARS_PER_STAR} />}
@@ -159,7 +159,7 @@ export const BookInfo = ({ book }: { book: Book.Book }) => {
                 {live.owned && <Tag hue='neutral'>{t('owned.label')}</Tag>}
               </Flex>
               {(publication || externalLinks.length > 0) && (
-                <p className='text-sm text-description'>
+                <p className='text-sm text-fg-muted'>
                   {publication}
                   {externalLinks.map((link, index) => (
                     <Fragment key={link.label}>
@@ -238,7 +238,7 @@ const StarRating = ({ value }: { value: number }) => (
           key={index}
           icon={filled ? 'ph--star--fill' : half ? 'ph--star-half--fill' : 'ph--star--regular'}
           size='lg'
-          classNames={filled || half ? 'text-primary-500' : 'text-subdued'}
+          classNames={filled || half ? 'text-primary-500' : 'text-fg-subtle'}
         />
       );
     })}

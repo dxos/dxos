@@ -73,21 +73,21 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
       gap='sm'
       // Inline-size containment: rendered as a CodeMirror widget, whose line sizes to its widest child, the card
       // otherwise grows to the URL's unwrapped width and pushes its Load button out of the chat.
-      classNames='my-2 p-3 border border-subdued-separator rounded-sm [contain:inline-size]'
+      classNames='my-2 p-3 border border-separator-subtle rounded-sm [contain:inline-size]'
       data-testid='assistant.pluginUrlPrompt'
     >
       <Flex gap='sm' align='center'>
-        <Icon icon='ph--cloud-arrow-down--regular' size='lg' tone='subdued' />
+        <Icon icon='ph--cloud-arrow-down--regular' size='lg' tone='subtle' />
         <Flex column classNames='min-w-0'>
           <p className='text-sm font-medium truncate'>{t('plugin-url-prompt.title', { plugin: label })}</p>
-          <p className='text-sm text-subdued'>
+          <p className='text-sm text-fg-subtle'>
             {isLoaded
               ? t('plugin-url-prompt.loaded', { plugin: label })
               : t('plugin-url-prompt.description', { plugin: label })}
           </p>
         </Flex>
       </Flex>
-      <code className='text-xs text-subdued break-all'>{url}</code>
+      <code className='text-xs text-fg-subtle break-all'>{url}</code>
       {error && <p className='text-sm text-error-text'>{t('plugin-url-prompt.failed', { error })}</p>}
       {!isLoaded && (
         <Flex justify='end'>

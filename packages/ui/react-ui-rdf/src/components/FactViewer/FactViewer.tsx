@@ -262,7 +262,7 @@ const FactViewerRow = forwardRef<HTMLDivElement, FactViewerRowProps>(
           <div className={styles.rowTriple()}>
             <span className={styles.cell({ class: 'text-right' })}>{formatTerm(assertion.subject)}</span>
             <span className={styles.cellDivider()} />
-            <span className={styles.cell({ class: 'text-center text-description' })}>{assertion.predicate}</span>
+            <span className={styles.cell({ class: 'text-center text-fg-muted' })}>{assertion.predicate}</span>
             <span className={styles.cellDivider()} />
             <span className={styles.cell()}>{formatTerm(assertion.object)}</span>
           </div>

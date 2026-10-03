@@ -98,7 +98,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
       <Panel.Body>
         {noPosts ? (
           // TODO(burdon): Factor out common EmptyState component; of push into Masonry, List, etc.
-          <Flex center classNames='h-full text-subdued text-sm'>
+          <Flex center classNames='h-full text-fg-subtle text-sm'>
             {t('empty-magazine.message')}
           </Flex>
         ) : (
@@ -110,7 +110,7 @@ export const MagazineArticle = ({ role, subject, attendableId }: MagazineArticle
           </Masonry.Root>
         )}
       </Panel.Body>
-      <Panel.Footer classNames='border-t border-subdued-separator'>
+      <Panel.Footer classNames='border-t border-separator-subtle'>
         <ProgressMeter state={curateProgress} />
       </Panel.Footer>
     </Panel.Root>

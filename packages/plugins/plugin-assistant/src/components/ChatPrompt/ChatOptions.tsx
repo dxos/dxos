@@ -425,7 +425,7 @@ const McpServerRow = ({ server, onRemove }: McpServerRowProps) => {
         </Field.Root>
         <Flex column grow classNames='min-w-0'>
           <span className='truncate text-sm'>{name}</span>
-          <span className='truncate text-xs text-description'>{url}</span>
+          <span className='truncate text-xs text-fg-muted'>{url}</span>
         </Flex>
         {status.state === 'unauthorized' && (
           <Button

@@ -34,7 +34,7 @@ const ContactPreviewCard = () => {
             <Card.Title>{contact?.fullName ?? target.label}</Card.Title>
           </Card.Header>
           <Card.Row>
-            <Card.Text variant='description'>{contact?.emails?.[0]?.value}</Card.Text>
+            <Card.Text variant='muted'>{contact?.emails?.[0]?.value}</Card.Text>
           </Card.Row>
         </Card.Root>
       </Popover.Body>

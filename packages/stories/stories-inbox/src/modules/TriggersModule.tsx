@@ -92,7 +92,7 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
           }}
         />
         {activeTriggers.length === 0 ? (
-          <div className='text-description'>No active triggers in this space.</div>
+          <div className='text-fg-muted'>No active triggers in this space.</div>
         ) : (
           <ul className='flex flex-col gap-2'>
             {activeTriggers.map((trigger) => {
@@ -100,7 +100,7 @@ const TriggersModuleContainer = ({ space }: { space: Space }) => {
               return (
                 <li key={trigger.id} className='flex flex-col gap-1 rounded border border-separator p-2'>
                   <div className='font-mono text-xs truncate'>{trigger.id}</div>
-                  <div className='text-description'>{formatTriggerSpec(trigger)}</div>
+                  <div className='text-fg-muted'>{formatTriggerSpec(trigger)}</div>
                   <Switch
                     checked={trigger.remote === true}
                     onCheckedChange={({ checked }) => {

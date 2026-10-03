@@ -31,7 +31,7 @@ export const TaskArtifacts = ({ task }: TaskArtifactsProps) => {
   return (
     <Container asChild gutter='inherit' gap='md'>
       <section data-testid='tasksPlugin.artifacts'>
-        <Typography asChild tone='subdued'>
+        <Typography asChild tone='subtle'>
           <h2>{t('task-artifacts.label')}</h2>
         </Typography>
         <CardMasonry objects={artifacts} size='compact' inline />

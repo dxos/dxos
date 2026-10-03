@@ -109,9 +109,9 @@ const DefaultStory = () => {
         ) : (
           <div>
             {state.status === 'idle' && (
-              <p className='p-2 text-sm text-subdued'>Paste an article URL and press Fetch to see the extraction.</p>
+              <p className='p-2 text-sm text-fg-subtle'>Paste an article URL and press Fetch to see the extraction.</p>
             )}
-            {state.status === 'loading' && <p className='p-2 text-sm text-subdued'>Fetching and extracting…</p>}
+            {state.status === 'loading' && <p className='p-2 text-sm text-fg-subtle'>Fetching and extracting…</p>}
             {state.status === 'error' && (
               <pre className='p-2 text-sm text-error-text whitespace-pre-wrap break-all'>{state.message}</pre>
             )}

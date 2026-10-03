@@ -61,7 +61,7 @@ export const ResultCard = composable<HTMLDivElement, ResultCardProps>(
           </Block>
           <Flex column gap='xs' classNames='min-w-0 py-2'>
             <Card.Title lines={2}>{result.title}</Card.Title>
-            {price && <span className='text-sm text-description'>{price}</span>}
+            {price && <span className='text-sm text-fg-muted'>{price}</span>}
           </Flex>
           <Block rail='end' />
         </Card.Header>

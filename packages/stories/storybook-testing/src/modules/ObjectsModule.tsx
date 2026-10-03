@@ -92,7 +92,7 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
               <Listbox.Item key={object.id} id={object.id}>
                 <div className='flex flex-col gap-0.5 overflow-hidden'>
                   <div className='truncate'>{Obj.getLabel(object) ?? object.id}</div>
-                  <div className='text-xs text-description truncate'>{Obj.getTypename(object) ?? 'unknown'}</div>
+                  <div className='text-xs text-fg-muted truncate'>{Obj.getTypename(object) ?? 'unknown'}</div>
                 </div>
               </Listbox.Item>
             ))}
@@ -100,7 +100,7 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
         </Listbox.Root>
       </Panel.Body>
       <Panel.Footer>
-        <div className='p-1 text-description text-sm'>{filtered.length}</div>
+        <div className='p-1 text-fg-muted text-sm'>{filtered.length}</div>
       </Panel.Footer>
     </Panel.Root>
   );

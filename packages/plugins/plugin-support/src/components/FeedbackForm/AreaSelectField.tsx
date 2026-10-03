@@ -74,13 +74,13 @@ export const AreaSelectField = ({
             {items.map((item) =>
               item.value === CLEAR_VALUE ? (
                 <Select.Item key={item.value} item={item}>
-                  <Select.ItemText classNames='text-description italic' />
+                  <Select.ItemText classNames='text-fg-muted italic' />
                 </Select.Item>
               ) : (
                 <Select.Item key={item.value} item={item}>
                   <div className='flex flex-col w-full text-left'>
                     <Select.ItemText />
-                    <div className='text-xs text-description font-mono py-1'>{item.value}</div>
+                    <div className='text-xs text-fg-muted font-mono py-1'>{item.value}</div>
                   </div>
                   <Select.ItemIndicator />
                 </Select.Item>

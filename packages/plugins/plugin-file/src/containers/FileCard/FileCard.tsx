@@ -44,7 +44,7 @@ export const FileCard = ({ subject: file }: FileCardProps) => {
         <video src={url} muted playsInline preload='metadata' className='block w-full aspect-video object-contain' />
       ) : (
         <Card.Row>
-          <Card.Text variant='description'>
+          <Card.Text variant='muted'>
             {type}
             {size !== undefined && ` · ${t('file-size.label', { size: formatSize(size) })}`}
           </Card.Text>

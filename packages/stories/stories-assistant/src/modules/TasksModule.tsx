@@ -38,7 +38,7 @@ const TasksModuleContainer = ({ space }: { space: Space }) => {
   return (
     <Panel.Root>
       <Panel.Header>
-        <Toolbar.Root classNames='border-b border-subdued-separator'>
+        <Toolbar.Root classNames='border-b border-separator-subtle'>
           <Toolbar.Text>{Obj.getLabel(document)}</Toolbar.Text>
         </Toolbar.Root>
       </Panel.Header>

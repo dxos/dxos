@@ -112,7 +112,7 @@ export const CliLoginDialog = ({ callback, state }: CliLoginDialogProps) => {
         </AlertDialog.Description>
         {identity && (
           <div className='py-2'>
-            <p className='text-sm text-subdued'>{t('cli-login-code.label')}</p>
+            <p className='text-sm text-fg-subtle'>{t('cli-login-code.label')}</p>
             <p className='py-2 font-mono text-2xl tracking-widest text-center' data-testid='cliLogin.state'>
               {state}
             </p>

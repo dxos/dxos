@@ -126,7 +126,7 @@ const JournalEntry = ({ classNames, entryRef, onSelect, ...props }: JournalEntry
           icon={isToday ? 'ph--calendar-check--regular' : 'ph--calendar-blank--regular'}
           onClick={handleFocus}
         />
-        {isRecent && date && <div className='text-sm text-subdued'>{format(date, 'EEEE')}</div>}
+        {isRecent && date && <div className='text-sm text-fg-subtle'>{format(date, 'EEEE')}</div>}
         {isToday && <div className='text-xs'>{t('today.label')}</div>}
       </div>
       <Outline.Root

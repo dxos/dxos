@@ -384,7 +384,7 @@ const GanttLegend = composable<HTMLDivElement, GanttLegendProps>(({ children, ..
             className={mx('shrink-0 w-2 h-2 rounded-full bg-current', !lane.hue && STATUS_COLOR[lane.status].text)}
             style={lane.hue ? { color: hueColor(lane.hue) } : undefined}
           />
-          <span className='truncate text-base-fg'>{lane.label}</span>
+          <span className='truncate text-fg'>{lane.label}</span>
         </div>
       ))}
     </div>
@@ -442,7 +442,7 @@ const GanttMeta = composable<HTMLDivElement, GanttMetaProps>((props, forwardedRe
       {rows.map(({ lane }) => (
         <div
           key={lane.id}
-          className='flex items-center justify-end gap-2 px-2 text-description whitespace-nowrap'
+          className='flex items-center justify-end gap-2 px-2 text-fg-muted whitespace-nowrap'
           style={{ height: ROW_HEIGHT }}
         >
           {(lane.meta ?? []).map(({ label, title }, index) => (
@@ -736,7 +736,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                 y={HEADER_HEIGHT - 6}
                 // Anchored inward at the drawing's own edges, so no label is drawn outside it.
                 textAnchor={at <= PAD_X ? 'start' : at >= scale.width - PAD_X ? 'end' : 'middle'}
-                className='fill-current text-subdued'
+                className='fill-current text-fg-subtle'
               >
                 {label}
               </text>
@@ -990,7 +990,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                       cy={rowY(row.index)}
                       r={NODE_RADIUS}
                       className={mx(
-                        'cursor-pointer hover:stroke-[3px] hover:stroke-base-fg',
+                        'cursor-pointer hover:stroke-[3px] hover:stroke-fg',
                         // A question or an error is ringed in red; an error pulses while its lane stays
                         // failed (an unanswered question pings instead — the ring drawn behind it).
                         isAlert(marker) ? 'stroke-red-500 stroke-2' : 'stroke-base-surface',
@@ -1019,7 +1019,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                   </HoverCard.Trigger>
                   <HoverCard.Content classNames='p-2 max-w-72 text-xs'>
                     <div className='font-medium truncate'>{marker.label}</div>
-                    <div className='text-description tabular-nums'>
+                    <div className='text-fg-muted tabular-nums'>
                       {marker.kind && `${marker.kind} · `}
                       {format(marker.timestamp, 'HH:mm:ss')}
                       {/* Elapsed on the axis's own terms, so it reads against the tick labels. */}
@@ -1032,7 +1032,7 @@ const GanttChart = forwardRef<HTMLDivElement, GanttChartProps>(({ classNames }, 
                         </span>
                       )}
                     </div>
-                    <div className='text-description truncate'>{row.lane.label}</div>
+                    <div className='text-fg-muted truncate'>{row.lane.label}</div>
                   </HoverCard.Content>
                 </HoverCard.Root>
               </Fragment>

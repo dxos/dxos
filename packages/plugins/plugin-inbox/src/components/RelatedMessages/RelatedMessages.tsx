@@ -70,9 +70,7 @@ export const RelatedMessages = ({ messages, summaries, onMessageClick }: Related
           icon='ph--envelope-simple--regular'
           trailing={
             <>
-              {message.created && (
-                <Card.Text variant='description'>{formatAge(new Date(message.created), now)}</Card.Text>
-              )}
+              {message.created && <Card.Text variant='muted'>{formatAge(new Date(message.created), now)}</Card.Text>}
               <Icon icon='ph--arrow-right--regular' />
             </>
           }

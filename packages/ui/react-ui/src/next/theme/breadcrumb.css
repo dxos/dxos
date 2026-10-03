@@ -43,19 +43,19 @@
 
   .dx-breadcrumb-link {
     border-radius: var(--radius-sm, 0.25rem);
-    color: var(--color-description);
+    color: var(--color-fg-muted);
     text-decoration: none;
     cursor: pointer;
   }
   .dx-breadcrumb-link:hover {
-    color: var(--color-base-fg);
+    color: var(--color-fg);
   }
 
   .dx-breadcrumb-separator {
     display: flex;
     flex-shrink: 0;
     align-items: center;
-    color: var(--color-subdued);
+    color: var(--color-fg-subtle);
     opacity: 0.5;
   }
 }

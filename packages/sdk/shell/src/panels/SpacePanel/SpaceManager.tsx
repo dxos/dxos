@@ -146,7 +146,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
         <ScrollArea.Viewport>
           {!!visibleInvitations?.length && (
             <>
-              <h3 className={mx(headingFragment, 'text-description')}>{t('invitation-list.heading')}</h3>
+              <h3 className={mx(headingFragment, 'text-fg-muted')}>{t('invitation-list.heading')}</h3>
               <InvitationListComponent
                 className='mb-2'
                 send={send}
@@ -154,7 +154,7 @@ export const SpaceManagerImpl = (props: SpaceManagerImplProps) => {
                 onClickRemove={(invitation) => invitation.cancel()}
                 createInvitationUrl={createInvitationUrl}
               />
-              <h3 className={mx(headingFragment, 'text-description', 'mt-2')}>{t('space-member-list.heading')}</h3>
+              <h3 className={mx(headingFragment, 'text-fg-muted', 'mt-2')}>{t('space-member-list.heading')}</h3>
             </>
           )}
           <SpaceMemberListComponent spaceKey={space.key} includeSelf />

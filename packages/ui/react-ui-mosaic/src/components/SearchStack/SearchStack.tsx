@@ -120,7 +120,7 @@ const SearchTile = forwardRef<HTMLDivElement, SearchTileProps>(({ data, location
           {result.snippet && (
             <Card.Body>
               <Card.Row>
-                <Card.Text variant='description'>{result.snippet}</Card.Text>
+                <Card.Text variant='muted'>{result.snippet}</Card.Text>
               </Card.Row>
             </Card.Body>
           )}

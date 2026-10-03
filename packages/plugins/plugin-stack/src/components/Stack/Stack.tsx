@@ -176,7 +176,7 @@ type StackSectionProps = MosaicTileProps<StackSectionItem>;
 // Inline grip glyph for the drag preview. The native drag image does not rasterize external SVG sprite
 // `<use>` icons (e.g. `@dxos/react-ui` `Icon`), so the preview uses plain inline SVG circles instead.
 const DragHandleGlyph = () => (
-  <svg width={10} height={16} viewBox='0 0 10 16' aria-hidden className='shrink-0 text-description'>
+  <svg width={10} height={16} viewBox='0 0 10 16' aria-hidden className='shrink-0 text-fg-muted'>
     {[3, 8, 13].flatMap((cy) =>
       [2.5, 7.5].map((cx) => <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r={1.1} fill='currentColor' />),
     )}
@@ -268,9 +268,9 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
     <Mosaic.Tile
       {...tileProps}
       data={data}
-      classNames='grid grid-cols-[var(--dx-rail-action)_1fr] dx-attention-surface border border-subdued-separator'
+      classNames='grid grid-cols-[var(--dx-rail-action)_1fr] dx-attention-surface border border-separator-subtle'
     >
-      <div className='border-e border-subdued-separator'>
+      <div className='border-e border-separator-subtle'>
         <div className='sticky top-0 flex flex-col items-center'>{rail}</div>
       </div>
       <div {...attentionAttrs} className='min-w-0'>

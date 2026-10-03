@@ -123,7 +123,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                   return (
                     <Accordion.Item key={section.id} value={section.id}>
                       <Accordion.ItemTrigger>
-                        <span className='text-sm text-description'>{t('trace-processes.label')}</span>
+                        <span className='text-sm text-fg-muted'>{t('trace-processes.label')}</span>
                       </Accordion.ItemTrigger>
                       <Accordion.ItemContent classNames='p-0'>
                         <ProcessTreeContainer
@@ -154,7 +154,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                       )}
                     >
                       <Accordion.ItemTrigger>
-                        <span className='text-sm text-description'>{t('trace.label')}</span>
+                        <span className='text-sm text-fg-muted'>{t('trace.label')}</span>
                       </Accordion.ItemTrigger>
                       <Accordion.ItemContent classNames='dx-grow grid grid-rows-[minmax(0,1fr)]'>
                         {/* Opens at the tail and follows new entries while pinned; scrolling up unpins. */}
@@ -187,7 +187,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
                     // With nothing selected the section stays as a plain, closed row.
                     <Accordion.Item key={section.id} value={section.id} disabled={!commit}>
                       <Accordion.ItemTrigger>
-                        <span className='flex items-center truncate text-sm text-description'>
+                        <span className='flex items-center truncate text-sm text-fg-muted'>
                           {t('trace-details.label')}
                         </span>
                       </Accordion.ItemTrigger>

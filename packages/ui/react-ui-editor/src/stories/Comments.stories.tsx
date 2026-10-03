@@ -187,7 +187,7 @@ const CommentsList = ({
   };
 
   return (
-    <div className='border-bs border-subdued-separator overflow-y-auto max-h-48'>
+    <div className='border-bs border-separator-subtle overflow-y-auto max-h-48'>
       <Listbox.Root
         value={activeId}
         onValueChange={handleSelect}

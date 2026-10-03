@@ -271,7 +271,7 @@ const MenuGroup = ({ group, currentItem, onSelect }: MenuGroupProps) => {
   return (
     <>
       {group.label && (
-        <Typography tone='description' classNames='px-2'>
+        <Typography tone='muted' classNames='px-2'>
           {toLocalizedString(group.label, t)}
         </Typography>
       )}

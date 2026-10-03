@@ -256,7 +256,7 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                   publish it), Mirrored (the network sees it via a linked upstream record), or Private;
                   fields whose local value diverges from the mirrored record are flagged Diverged (not pushed). */}
               <Container gap='sm' gutter='none'>
-                <h2 className='text-xs uppercase tracking-wide text-description'>{t('network-view.label')}</h2>
+                <h2 className='text-xs uppercase tracking-wide text-fg-muted'>{t('network-view.label')}</h2>
                 {mirroredUnresolved && (
                   <Banner.Root valence='warning'>
                     <Banner.Body>{t('mirror-unresolved.label')}</Banner.Body>
@@ -300,11 +300,11 @@ export const AtprotoCompanion = ({ subject, role, attendableId }: AtprotoCompani
                           className='flex items-center'
                           style={field.depth > 0 ? { paddingInlineStart: `${field.depth * INDENT_REM}rem` } : undefined}
                         >
-                          <span className={`truncate text-sm ${field.group || visible ? '' : 'text-description'}`}>
+                          <span className={`truncate text-sm ${field.group || visible ? '' : 'text-fg-muted'}`}>
                             {field.name}
                           </span>
                         </div>
-                        <div role='cell' className='truncate text-sm text-description'>
+                        <div role='cell' className='truncate text-sm text-fg-muted'>
                           {value}
                         </div>
                         <div role='cell' className='flex shrink-0 items-center justify-end gap-1'>

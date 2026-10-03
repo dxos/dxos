@@ -33,7 +33,7 @@ export const BookmarkCard = ({ subject }: BookmarkCardProps) => {
       </Card.Row>
       {bookmark.excerpt && (
         <Card.Row>
-          <Card.Text variant='description' classNames='line-clamp-3'>
+          <Card.Text variant='muted' classNames='line-clamp-3'>
             {bookmark.excerpt}
           </Card.Text>
         </Card.Row>

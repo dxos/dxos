@@ -94,7 +94,7 @@ const DefaultStory = ({
                 );
               })}
               {controlled && visible.length === 0 && (
-                <li role='status' className='px-2 py-1 text-description italic'>
+                <li role='status' className='px-2 py-1 text-fg-muted italic'>
                   No matches
                 </li>
               )}
@@ -102,7 +102,7 @@ const DefaultStory = ({
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Picker.Root>
-      <div className='text-sm text-description'>
+      <div className='text-sm text-fg-muted'>
         Picked: <span className='font-mono'>{picked ?? '—'}</span>
       </div>
     </Container>

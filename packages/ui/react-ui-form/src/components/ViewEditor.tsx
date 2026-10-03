@@ -301,7 +301,7 @@ const FieldList = ({ type, view, projectionModel, registry, readonly, onDelete }
                   onOpenChange={(open) => setExpandedId(open ? field.id : undefined)}
                 >
                   <OrderedList.DragHandle />
-                  <OrderedList.ItemText tone={hidden ? 'description' : undefined}>{field.path}</OrderedList.ItemText>
+                  <OrderedList.ItemText tone={hidden ? 'muted' : undefined}>{field.path}</OrderedList.ItemText>
                   <Toggle
                     iconOnly
                     variant='ghost'

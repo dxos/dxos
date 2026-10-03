@@ -45,7 +45,7 @@ export const PullRequestStatus = ({ reference, title, state, review, ci }: PullR
   return (
     <div
       role='status'
-      className='flex items-center gap-2 px-3 py-1.5 border-b border-subdued-separator text-sm min-w-0'
+      className='flex items-center gap-2 px-3 py-1.5 border-b border-separator-subtle text-sm min-w-0'
       data-testid='pull-request.status'
     >
       <span className='dx-tag dx-tag-inline shrink-0' data-hue='neutral'>

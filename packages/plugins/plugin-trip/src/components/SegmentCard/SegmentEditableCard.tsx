@@ -85,7 +85,7 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
         <Card.Body>
           {route && (
             <Card.Row>
-              <Card.Text variant='description'>{route}</Card.Text>
+              <Card.Text variant='muted'>{route}</Card.Text>
             </Card.Row>
           )}
           <Card.Row>

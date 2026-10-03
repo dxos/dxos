@@ -126,15 +126,13 @@ export const DiagnosticsPanel = () => {
             </Button>
           )}
           <span className='grow' />
-          <span className='text-xs text-description'>
-            {t('providers-count.label', { count: sortedProviders.length })}
-          </span>
+          <span className='text-xs text-fg-muted'>{t('providers-count.label', { count: sortedProviders.length })}</span>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport>
-            {runState.status === 'idle' && <p className='p-2 text-sm text-description'>{t('idle.description')}</p>}
+            {runState.status === 'idle' && <p className='p-2 text-sm text-fg-muted'>{t('idle.description')}</p>}
             {runState.status === 'running' && <RunProgress state={runState} t={t} />}
             {runState.status === 'done' && <RunSummary results={runState.results} t={t} />}
           </ScrollArea.Viewport>
@@ -155,7 +153,7 @@ const RunProgress = ({
   return (
     <Flex column gap='sm' classNames='p-2'>
       <Progress value={progress} classNames='block' />
-      <span className='text-xs text-description'>
+      <span className='text-xs text-fg-muted'>
         {t('progress.label', {
           current: state.current,
           total: state.total,
@@ -203,7 +201,7 @@ const ProviderResult = ({ result, t }: { result: DiagnosticRunResult; t: TFuncti
         </Banner.Root>
       )}
       {result.issues.length > 0 && (
-        <ul className='border-t border-separator divide-y divide-subdued-separator'>
+        <ul className='border-t border-separator divide-y divide-separator-subtle'>
           {result.issues.map((issue) => (
             <IssueRow key={issue.id} issue={issue} />
           ))}
@@ -219,7 +217,7 @@ const IssueRow = ({ issue }: { issue: DiagnosticIssue }) => (
     <Flex column gap='xs' classNames='text-xs min-w-0 flex-1'>
       <span className='wrap-break-words break-all'>{issue.message}</span>
       {(issue.subjectLabel || issue.spaceId) && (
-        <span className='text-description font-mono break-all'>
+        <span className='text-fg-muted font-mono break-all'>
           {issue.subjectLabel ?? ''}
           {issue.subjectLabel && issue.spaceId ? ' · ' : ''}
           {issue.spaceId ?? ''}
@@ -236,7 +234,7 @@ const paletteToText = (severity: DiagnosticSeverity): string => {
     case 'amber':
       return 'text-amber-600';
     default:
-      return 'text-description';
+      return 'text-fg-muted';
   }
 };
 

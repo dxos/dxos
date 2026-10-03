@@ -170,7 +170,7 @@ export const createReactRenderer = ({
   },
 
   display: ({ path, props, data }) => (
-    <span key={path} className={mx(props.variant === 'title' ? 'text-lg font-medium' : 'text-description')}>
+    <span key={path} className={mx(props.variant === 'title' ? 'text-lg font-medium' : 'text-fg-muted')}>
       {asText(data.text ?? props.label)}
     </span>
   ),
