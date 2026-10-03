@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { foldBreakdown } from './memory';
+import { foldBreakdown } from './memory.ts';
 
 describe('foldBreakdown', () => {
   test('empty breakdown folds to no scopes', () => {

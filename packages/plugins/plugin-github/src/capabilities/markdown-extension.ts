@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { ViewPlugin } from '@codemirror/view';
 import * as Effect from 'effect/Effect';
 
 import * as Capability from '@dxos/app-framework/Capability';
@@ -10,15 +11,17 @@ import { type Database, Filter, Obj, Query } from '@dxos/echo';
 import * as MarkdownCapabilities from '@dxos/plugin-markdown/MarkdownCapabilities';
 import { Repo, TaskSet } from '@dxos/types';
 
-import { GITHUB_SOURCE } from '../constants';
-import { githubReferences, referenceUrl } from '../extensions';
+import { GITHUB_SOURCE } from '../constants.ts';
+import { githubLinks, githubReferences, referenceUrl } from '../extensions/index.ts';
 
 /** `owner/repo` — what `sync` writes as the name of the TaskSet mirroring a repository. */
 const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;
 
 /**
  * `#123` in a document resolves against the repository the document's project names: this plugin
- * owns that knowledge, so the decoration is contributed rather than built into the editor.
+ * owns that knowledge, so the decoration is contributed rather than built into the editor. A full
+ * pull-request or issue URL needs no repository and becomes a chip whose popover this plugin's
+ * link resolver answers.
  *
  * Ambiguity is answered by declining. A space with several repositories and no project naming one
  * has no single meaning for a bare number, so the reference is left as text rather than guessed at.
@@ -26,36 +29,41 @@ const REPO_NAME = /^[\w.-]+\/[\w.-]+$/;
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
     return Capability.contribute(MarkdownCapabilities.ExtensionProvider, [
-      ({ document: doc, viewMode }) => {
+      ({ document: doc, subject, viewMode }) => {
         // Source view shows the document's own text; a decoration there would hide what it is.
-        if (viewMode === 'source' || !doc) {
+        if (viewMode === 'source') {
           return undefined;
         }
 
-        const db = Obj.getDatabase(doc);
-        if (!db) {
-          return undefined;
+        // A full URL needs no object: a task's description or an outline gets the chip too. A bare
+        // `#123` resolves against the repository of the project owning the edited object, so it
+        // needs one — the document, or whatever else the editor edits.
+        const object = doc ?? subject;
+        const db = object && Obj.getDatabase(object);
+        if (!object || !db) {
+          return [githubLinks()];
         }
 
-        return githubReferences({
-          resolve: (number) => {
-            const repo = resolveRepo(db, doc);
-            return repo ? referenceUrl(repo, number) : undefined;
-          },
-        });
+        // Nearest binding first: the project that owns the object names its repository explicitly,
+        // and only a space with exactly one mirrored repository can answer for an object that
+        // belongs to no project.
+        const mirrored = watchMirroredRepos(db);
+        return [
+          githubLinks(),
+          githubReferences({
+            resolve: (number) => {
+              const repo = projectRepo(db, object) ?? mirrored.single();
+              return repo ? referenceUrl(repo, number) : undefined;
+            },
+          }),
+          // Held per mounted view: the provider's result can be mounted in several editors or none,
+          // so each view acquires its own hold rather than all of them releasing one subscription.
+          ViewPlugin.define(() => ({ destroy: mirrored.acquire() })),
+        ];
       },
     ]);
   }),
 );
-
-/**
- * The repository a reference in `object` belongs to, as `owner/name`.
- *
- * Nearest binding first: the project that owns the object names its repository explicitly, and only
- * a space with exactly one mirrored repository can answer for an object that belongs to no project.
- */
-const resolveRepo = (db: Database.Database, object: Obj.Unknown): string | undefined =>
-  projectRepo(db, object) ?? mirroredRepo(db);
 
 /** The `repo` of the project owning `object`, else the repository its adopted task set mirrors. */
 const projectRepo = (db: Database.Database, object: Obj.Unknown): string | undefined => {
@@ -87,16 +95,48 @@ const owningProject = (object: Obj.Unknown): Project.Project | undefined => {
   return undefined;
 };
 
-/** The single repository this space mirrors, or undefined when there is none or more than one. */
-const mirroredRepo = (db: Database.Database): string | undefined => {
-  const names = db
-    .query(Query.select(Filter.type(TaskSet.TaskSet)))
-    .runSync()
-    .filter(isMirrored)
-    .map(repoName)
-    .filter((name): name is string => !!name);
+/**
+ * The repositories this space mirrors, as `owner/name`. Read synchronously from a decoration pass,
+ * where a fresh `runSync()` would answer with whatever the tab has loaded so far; the subscription
+ * brings the set to the complete answer and keeps it there while any editor holds it.
+ */
+const watchMirroredRepos = (db: Database.Database) => {
+  const names = new Set<string>();
+  let holds = 0;
+  let stop: (() => void) | undefined;
+  return {
+    /** The one mirrored repository, or undefined when there is none or more than one. */
+    single: () => (names.size === 1 ? [...names][0] : undefined),
+    /** Starts watching on the first hold; the returned release is safe to call more than once. */
+    acquire: (): (() => void) => {
+      if (holds++ === 0) {
+        stop = db.query(Query.select(Filter.type(TaskSet.TaskSet))).subscribe(
+          (result) => {
+            names.clear();
+            for (const name of result.results.filter(isMirrored).map(repoName)) {
+              if (name) {
+                names.add(name);
+              }
+            }
+          },
+          { fire: true },
+        );
+      }
 
-  return names.length === 1 ? names[0] : undefined;
+      let released = false;
+      return () => {
+        if (released) {
+          return;
+        }
+        released = true;
+        if (--holds === 0) {
+          stop?.();
+          stop = undefined;
+          names.clear();
+        }
+      };
+    },
+  };
 };
 
 const isMirrored = (taskSet: TaskSet.TaskSet): boolean =>

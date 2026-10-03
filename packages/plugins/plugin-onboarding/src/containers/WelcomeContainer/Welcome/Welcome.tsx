@@ -21,16 +21,14 @@ import * as NativeOAuth from '@dxos/app-toolkit/NativeOAuth';
 import * as NativePasskey from '@dxos/app-toolkit/NativePasskey';
 import { DXOSHorizontalType } from '@dxos/brand';
 import { log } from '@dxos/log';
-import { Button, DropdownMenu, Flex, Icon, Input, ThemedClassName, useTranslation } from '@dxos/react-ui';
-import { Tabs } from '@dxos/react-ui-tabs';
+import { Button, Field, Flex, Icon, Menu, Tabs, ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { meta } from '../../../meta';
-import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared';
-import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types';
+import { meta } from '../../../meta.ts';
+import { OAUTH_RECOVERY_REDIRECT_PATH } from '../../../operations/shared.ts';
+import { type WelcomeError, type WelcomeScreenProps, WelcomeState, validEmail } from './types.ts';
 
-const supportsPasskeys =
-  (navigator.credentials && 'create' in navigator.credentials) || NativePasskey.supportsNativePasskeys();
+const supportsPasskeys = NativePasskey.getPasskeySupport() !== 'none';
 
 /** Ceiling on the OAuth wait, since a user who closes the provider's page reports nothing. */
 const OAUTH_PENDING_TIMEOUT = 5 * 60 * 1000;
@@ -65,7 +63,7 @@ const passkeyErrorKey = (error: WelcomeError, passkeyOnly: boolean): string =>
 const tabClassNames =
   'flex-1 rounded-none shadow-none bg-transparent hover:bg-transparent px-4 py-2 text-sm font-normal -mb-px ' +
   'border-b-2 border-transparent text-description transition-colors hover:text-white ' +
-  'data-[state=active]:border-white data-[state=active]:text-white';
+  'aria-selected:border-white aria-selected:text-white';
 
 const ComposerLogoMark = ({ classNames }: ThemedClassName) => (
   <span className={mx('font-["Poiret One"]', classNames)} style={{ fontFamily: 'Poiret One' }}>
@@ -762,9 +760,9 @@ const LoginTab = ({
             <span>{pending ? t('passkey-pending.label') : t('sign-in-with-passkey-button.label')}</span>
           </Button>
           {error?.startsWith('passkey-') && (
-            <Input.Root>
+            <Field.Root>
               <ValidationMessage>{t(passkeyErrorKey(error, moreOptions.length === 0))}</ValidationMessage>
-            </Input.Root>
+            </Field.Root>
           )}
         </Flex>
       )}
@@ -810,13 +808,13 @@ const LoginTab = ({
         </Flex>
       )}
       {!methodAvailable[primary] && moreOptions.length === 0 && (
-        <Input.Root>
+        <Field.Root>
           <ValidationMessage>{t('login-unavailable.message')}</ValidationMessage>
-        </Input.Root>
+        </Field.Root>
       )}
       {moreOptions.length > 0 && (
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
+        <Menu.Root>
+          <Menu.Trigger asChild>
             <button
               type='button'
               className='flex items-center justify-center gap-1 text-sm text-description hover:text-white underline underline-offset-4 outline-none'
@@ -824,31 +822,31 @@ const LoginTab = ({
               <span>{t('more-ways-to-sign-in.label')}</span>
               <Icon icon='ph--caret-down--regular' size={4} />
             </button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Portal>
+          </Menu.Trigger>
+          <Menu.Portal>
             {/* Raise above the dialog overlay (z-40): radix copies the content's computed z-index
                 onto the popper wrapper, and the default menu z-20 renders behind the overlay. */}
-            <DropdownMenu.Content
+            <Menu.Content
               side='bottom'
               sideOffset={8}
               collisionPadding={16}
               classNames='!w-80 !z-50'
               onCloseAutoFocus={handleMoreMenuCloseAutoFocus}
             >
-              <DropdownMenu.Viewport>
+              <Menu.Viewport>
                 {moreOptions.map((opt) => (
-                  <DropdownMenu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
+                  <Menu.Item key={opt.key} onSelect={opt.onClick} classNames='gap-3'>
                     <Icon icon={opt.icon} size={6} classNames={mx('shrink-0', opt.classNames)} />
                     <Flex column gap='xs'>
                       <span>{opt.label}</span>
                       <span className='text-xs text-description font-normal'>{opt.description}</span>
                     </Flex>
-                  </DropdownMenu.Item>
+                  </Menu.Item>
                 ))}
-              </DropdownMenu.Viewport>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
+              </Menu.Viewport>
+            </Menu.Content>
+          </Menu.Portal>
+        </Menu.Root>
       )}
     </Flex>
   );
@@ -870,7 +868,7 @@ const InlineForm = ({
   validation,
   onSubmit,
 }: {
-  inputProps: Omit<ComponentProps<typeof Input.TextInput>, 'classNames'> & {
+  inputProps: Omit<ComponentProps<typeof Field.Input>, 'classNames'> & {
     classNames?: string;
     ref?: Ref<HTMLInputElement>;
   };
@@ -883,9 +881,9 @@ const InlineForm = ({
 }) => {
   const { classNames: inputClasses, ref, ...rest } = inputProps;
   return (
-    <Input.Root>
+    <Field.Root>
       <div className='flex flex-col md:gap-1 flex-row gap-0 sm:items-stretch'>
-        <Input.TextInput
+        <Field.Input
           {...rest}
           disabled={pending || rest.disabled}
           classNames={mx('bg-deck-surface flex-1 sm:rounded-r-none', inputClasses)}
@@ -901,19 +899,17 @@ const InlineForm = ({
         </Button>
       </div>
       {validation && <ValidationMessage>{validation}</ValidationMessage>}
-    </Input.Root>
+    </Field.Root>
   );
 };
 
 /**
  * Error text under a login control. Shared with {@link InlineForm} so a failure reads the same
  * whether it came from a field (email, invitation code) or a button (passkey). Callers outside
- * `InlineForm` must supply their own `Input.Root` — it is context only and renders no markup.
+ * `InlineForm` must supply their own `Field.Root` — it is context only and renders no markup.
  */
 const ValidationMessage = ({ children }: PropsWithChildren) => (
-  <Input.DescriptionAndValidation>
-    <Input.Validation classNames='flex px-2 pt-2 text-error-text'>{children}</Input.Validation>
-  </Input.DescriptionAndValidation>
+  <Field.ErrorText classNames='flex px-2 pt-2 text-error-text'>{children}</Field.ErrorText>
 );
 
 /** Horizontal "or" separator between alternative auth methods. */

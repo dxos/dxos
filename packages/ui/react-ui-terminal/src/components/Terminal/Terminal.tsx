@@ -6,17 +6,17 @@ import '@xterm/xterm/css/xterm.css';
 
 import { FitAddon } from '@xterm/addon-fit';
 import { Terminal as Xterm } from '@xterm/xterm';
+import type * as Command from 'effect/cli/Command';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
 import type * as Layer from 'effect/Layer';
-import type * as Command from 'effect/unstable/cli/Command';
 import React, { type Ref, useEffect, useImperativeHandle, useRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { XtermBridge, XtermContext, runShell } from '../../cli';
-import { createXtermTheme } from './theme';
+import { XtermBridge, XtermContext, runShell } from '../../cli/index.ts';
+import { createXtermTheme } from './theme.ts';
 
 /** Imperative surface for hosts that render controls beside the terminal (a clear button, e.g.). */
 export type TerminalApi = {
@@ -132,6 +132,9 @@ export const Terminal = <Name extends string, Input, ContextInput, E, R>({
 
     const bridge = new XtermBridge(xterm);
     const shell = runShell(bridge, { command, name, version, prompt, banner }).pipe(
+      // `R` is generic here, so the checker can discharge `Exclude<R, XtermContext.Provided>` only
+      // one provide at a time; any combined form leaves the requirement unsolved.
+      // @effect-diagnostics-next-line multipleEffectProvide:off
       Effect.provide(XtermContext.layer(bridge)),
       Effect.provide(layer),
     );

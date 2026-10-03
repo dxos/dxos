@@ -12,9 +12,9 @@ import {
 import * as EffectContext from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
+import * as SqlClient from 'effect/sql/SqlClient';
 
-import { DeferredTask, scheduleTask, sleep } from '@dxos/async';
+import { scheduleTask, sleep } from '@dxos/async';
 import { Context, LifecycleState, Resource } from '@dxos/context';
 import { todo } from '@dxos/debug';
 import {
@@ -26,15 +26,14 @@ import {
   createIdFromSpaceKey,
   isSpaceRoot,
 } from '@dxos/echo-protocol';
-import { RuntimeProvider } from '@dxos/effect';
+import { EffectEx, RuntimeProvider } from '@dxos/effect';
 import { FeedStore } from '@dxos/feed';
 import { IndexEngine, type IndexingResult } from '@dxos/index-core';
 import { invariant } from '@dxos/invariant';
-import { type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
+import { EID, type EntityId, type PublicKey, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type FeedProtocol } from '@dxos/protocols';
 import { type DataService, type FeedService } from '@dxos/protocols/rpc';
-import type * as SqlTransaction from '@dxos/sql-sqlite/SqlTransaction';
 import { trace } from '@dxos/tracing';
 
 import {
@@ -48,16 +47,18 @@ import {
   type PeerIdProvider,
   type RootDocumentSpaceKeyProvider,
   deriveCollectionIdFromSpaceId,
-} from '../automerge';
-import { AutomergeDataSource } from './automerge-data-source';
-import { DataServiceImpl } from './data-service';
-import { type DatabaseRoot } from './database-root';
-import { DeletionResolver } from './deletion';
-import { FeedDataSource } from './feed-data-source';
-import { hintFromIndexingResult } from './invalidation-hint';
-import { LocalFeedServiceImpl } from './local-feed-service';
-import { QueryServiceImpl } from './query-service';
-import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager';
+} from '../automerge/index.ts';
+import { AutomergeDataSource } from './automerge-data-source.ts';
+import { ConvergenceKeyMerger } from './convergence-key-merge.ts';
+import { DataServiceImpl } from './data-service.ts';
+import { type DatabaseRoot } from './database-root.ts';
+import { DeletionResolver } from './deletion.ts';
+import { FeedDataSource } from './feed-data-source.ts';
+import { type IndexRequestReason, IndexScheduler } from './index-scheduler.ts';
+import { type InvalidationHint, hintFromIndexingResult, mergeHints } from './invalidation-hint.ts';
+import { LocalFeedServiceImpl } from './local-feed-service.ts';
+import { type QueryDebounceOptions, QueryServiceImpl } from './query-service.ts';
+import { type SpaceDocumentListUpdatedEvent, type SpaceRootRefs, SpaceStateManager } from './space-state-manager.ts';
 
 /**
  * Documents walked between event-loop yields during a reachability traversal. Bounds how long one
@@ -68,17 +69,45 @@ const CLOSURE_YIELD_INTERVAL = 32;
 const AUTOMATIC_GARBAGE_COLLECTION = false;
 
 /**
- * Every path that can start an indexing run. Logged on each run so an idle-churn loop is
- * attributable from `app.log` alone — the counts are otherwise indistinguishable between a
- * data-driven pass and a self-sustaining invalidation cycle.
+ * Idle window before the second indexing step re-tokenizes what the first one wrote, and the
+ * ceiling an unbroken write stream cannot push it past. A typing burst then costs one rebuild
+ * rather than one per save; nothing a query reads depends on either number, since text search
+ * flushes for itself and every other read comes from the snapshot store.
  */
-export type IndexRunReason = 'open' | 'feed-blocks' | 'documents-saved' | 'batch-continuation' | 'rpc-update-indexes';
+const FTS_FLUSH_IDLE_MS = 1_000;
+const FTS_FLUSH_MAX_DELAY_MS = 10_000;
+
+import { type QueryExecutorMode } from '../query/index.ts';
+
+/**
+ * Query evaluation path for this host: the explicit option, else `DX_ECHO_QUERY_EXECUTOR`, else the
+ * compiled SQL executor. Resolved here, where the option enters, so nothing below reads the
+ * environment — the planner and executor take the mode they are given.
+ *
+ * `memory` remains reachable so a regression can be bisected against the old path without a rebuild,
+ * and the planner still falls back to it per query for the shapes the compiler declines.
+ */
+const resolveQueryExecutorMode = (explicit?: QueryExecutorMode): QueryExecutorMode => {
+  if (explicit) {
+    return explicit;
+  }
+  const fromEnv =
+    import.meta.env?.DX_ECHO_QUERY_EXECUTOR ??
+    (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env?.DX_ECHO_QUERY_EXECUTOR;
+  return fromEnv === 'memory' ? 'memory' : 'sql';
+};
 
 export type EchoHostProps = {
+  /** Query evaluation path; defaults to `DX_ECHO_QUERY_EXECUTOR`, else the compiled SQL executor. */
+  queryExecutor?: QueryExecutorMode;
+
+  /** Overrides how live queries are debounced in proportion to their cost; see {@link QueryDebounceOptions}. */
+  queryDebounce?: Partial<QueryDebounceOptions>;
+
   peerIdProvider?: PeerIdProvider;
   getSpaceKeyByRootDocumentId?: RootDocumentSpaceKeyProvider;
 
-  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
+  runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
 
   /**
    * This peer is allowed to assign positions (global-order) to items appended to the queue.
@@ -101,11 +130,6 @@ export type FeedSyncHandlers = {
    * Callback to run blocking feed sync.
    */
   syncFeed: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
-
-  /**
-   * Callback to read feed sync backlog per namespace.
-   */
-  getSyncState: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 };
 
 /**
@@ -140,24 +164,24 @@ export class EchoHost extends Resource {
   private readonly _echoDataMonitor: EchoDataMonitor;
 
   private readonly _automergeDataSource: AutomergeDataSource;
-  private readonly _indexEngine: IndexEngine;
-  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient | SqlTransaction.SqlTransaction>;
+  /** Built in `_open`: resolving the SQL client is asynchronous on some platforms. */
+  private _indexEngine: IndexEngine | undefined;
+  /** Resolved when the host opens; the query planner builds compiled statements with it. */
+  private _sql: SqlClient.SqlClient | undefined;
+  private readonly _convergenceKeyMerger: ConvergenceKeyMerger;
+  private readonly _runtime: RuntimeProvider.RuntimeProvider<SqlClient.SqlClient>;
   private readonly _feedStore: FeedStore;
   private readonly _feedDataSource: FeedDataSource;
 
-  private _updateIndexes!: DeferredTask;
-
-  /**
-   * Why the pending index run was scheduled, counted per reason. `DeferredTask` coalesces
-   * overlapping `schedule()` calls into one run, so attributing a run needs the full multiset of
-   * reasons that accumulated before it started — a single "last caller" field would misattribute
-   * every coalesced run.
-   */
-  private readonly _pendingIndexReasons = new Map<IndexRunReason, number>();
+  private readonly _indexScheduler: IndexScheduler;
 
   private _feedService: FeedService.Handlers;
 
-  private _indexesUpToDate = false;
+  /** Invalidates a pending full-text flush that a later write has superseded. */
+  #ftsFlushGeneration = 0;
+
+  /** When the oldest unflushed write stops being allowed to wait for an idle moment. */
+  #ftsFlushDeadline: number | undefined;
 
   /** Last known document set per space, to detect what left the directory. */
   private readonly _spaceDocumentIds = new Map<SpaceId, Set<DocumentId>>();
@@ -165,12 +189,13 @@ export class EchoHost extends Resource {
   // Feed sync handlers are wired lazily via `setFeedSyncHandlers` to break the construction-time
   // cycle with the FeedSyncer, which itself depends on `this.feedStore`.
   #syncFeed?: (ctx: Context, request: FeedService.SyncFeedRequest) => Promise<void>;
-  #getSyncState?: (ctx: Context, request: FeedService.GetSyncStateRequest) => Promise<FeedService.GetSyncStateResponse>;
 
   constructor({
     peerIdProvider,
     getSpaceKeyByRootDocumentId,
     runtime,
+    queryExecutor,
+    queryDebounce,
     assignQueuePositions = false,
     useSubduction,
   }: EchoHostProps) {
@@ -187,7 +212,9 @@ export class EchoHost extends Resource {
 
     this._runtime = runtime;
     this._spaceStateManager = new SpaceStateManager({ runtime });
-    this._automergeDataSource = new AutomergeDataSource(this._automergeHost);
+    this._automergeDataSource = new AutomergeDataSource(this._automergeHost, {
+      isBranchDocument: (documentId) => this._spaceStateManager.isBranchDocument(documentId),
+    });
 
     this._feedStore = new FeedStore({ assignPositions: assignQueuePositions, localActorId: crypto.randomUUID() });
     this._feedDataSource = new FeedDataSource({
@@ -195,23 +222,44 @@ export class EchoHost extends Resource {
       runtime: this._runtime,
       getSpaceIds: () => this._spaceStateManager.spaceIds,
     });
+    this._indexScheduler = new IndexScheduler({
+      feedBlocks: this._feedStore.onNewBlocks,
+      documentsSaved: this._automergeHost.documentsSaved,
+      runPass: (ctx, reasons) => this._runIndexPass(ctx, reasons),
+    });
     this._feedService = new LocalFeedServiceImpl(runtime, this._feedStore, {
-      // Read the mutable slots lazily so handlers wired after construction take effect;
-      // fall back to no-op / empty state before they are set.
+      // Read the mutable slot lazily so a handler wired after construction takes effect;
+      // fall back to a no-op before it is set.
       syncFeed: (ctx, request) => this.#syncFeed?.(ctx, request) ?? Promise.resolve(),
-      getSyncState: (ctx, request) => this.#getSyncState?.(ctx, request) ?? Promise.resolve({ namespaces: [] }),
     });
 
-    // SQLite-based index engine for all queries.
-    this._indexEngine = new IndexEngine();
+    this._convergenceKeyMerger = new ConvergenceKeyMerger({
+      queryByConvergenceKeys: (spaceId, keys) =>
+        this.indexEngine.queryByConvergenceKeys(spaceId, keys).pipe(RuntimeProvider.runPromise(this._runtime)),
+      queryReferrers: (spaceId, targetId) =>
+        this.indexEngine
+          .queryReferrers(spaceId, EID.make({ entityId: targetId }))
+          .pipe(RuntimeProvider.runPromise(this._runtime)),
+      loadDoc: (ctx, documentId, opts) => this._automergeHost.loadDoc<DatabaseDirectory>(ctx, documentId, opts),
+      flushDoc: (ctx, documentId) => this._automergeHost.flush(ctx, { documentIds: [documentId] }),
+    });
 
     this._queryService = new QueryServiceImpl({
-      automergeHost: this._automergeHost,
-      indexEngine: this._indexEngine,
+      indexEngine: () => this.indexEngine,
       runtime: this._runtime,
+      automergeHost: this._automergeHost,
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and cooperative loop apply.
-      updateIndexes: () => this.updateIndexes(),
+      // `QueryEntry.feedScoped`, or a compiled query whose snapshot store is still filling, is what
+      // decides a query must await indexing before its first result.
+      updateIndexes: () => this.updateIndexes({ reason: 'feed-scoped-query' }),
+      executor: resolveQueryExecutorMode(queryExecutor),
+      debounce: queryDebounce,
+      sql: () => {
+        invariant(this._sql, 'EchoHost is not open.');
+        return this._sql;
+      },
+      hasCompleteSnapshots: () => RuntimeProvider.runPromise(this._runtime)(this.indexEngine.hasCompleteSnapshots()),
     });
 
     this._dataService = new DataServiceImpl({
@@ -219,7 +267,7 @@ export class EchoHost extends Resource {
       spaceStateManager: this._spaceStateManager,
       // Delegate to the public method so the closed-host early-out and
       // cooperative loop apply uniformly to the RPC handler path.
-      updateIndexes: () => this.updateIndexes(),
+      updateIndexes: (request) => this.updateIndexes({ ...request, reason: 'rpc-update-indexes' }),
       getSpaceStats: (spaceId) => this.getSpaceStats(spaceId),
       runGarbageCollection: (spaceId, options) => this.runGarbageCollection(spaceId, options),
     });
@@ -301,21 +349,25 @@ export class EchoHost extends Resource {
    */
   setFeedSyncHandlers(handlers: FeedSyncHandlers): void {
     this.#syncFeed = handlers.syncFeed;
-    this.#getSyncState = handlers.getSyncState;
   }
 
   /**
    * Index engine for queries.
    */
   get indexEngine(): IndexEngine {
+    invariant(this._indexEngine, 'EchoHost is not open.');
     return this._indexEngine;
   }
 
   protected override async _open(ctx: Context): Promise<void> {
+    // The index engine holds its SQL client, and resolving one out of the runtime may suspend --
+    // the browser's SQLite layer builds asynchronously -- so it cannot be built in the constructor.
+    this._sql = await RuntimeProvider.runPromise(this._runtime)(SqlClient.SqlClient);
+    this._indexEngine = new IndexEngine(this._sql);
+
     log('echo-host: running index engine migration...');
-    await RuntimeProvider.runPromise(this._runtime)(this._indexEngine.migrate());
+    await RuntimeProvider.runPromise(this._runtime)(this.indexEngine.migrate());
     log('echo-host: index engine migration done');
-    this._updateIndexes = new DeferredTask(this._ctx, this._runUpdateIndexes);
 
     log('echo-host: running feed store migration...');
     await RuntimeProvider.runPromise(this._runtime)(this._feedStore.migrate());
@@ -334,10 +386,6 @@ export class EchoHost extends Resource {
     log('echo-host: opening space state manager...');
     await this._spaceStateManager.open(ctx);
     log('echo-host: space state manager opened');
-    this._feedStore.onNewBlocks.on(this._ctx, () => {
-      this.#scheduleIndexRun('feed-blocks');
-    });
-
     this._spaceStateManager.spaceDocumentListUpdated.on(this._ctx, (e) => {
       const previous = this._spaceDocumentIds.get(e.spaceId);
       this._spaceDocumentIds.set(e.spaceId, new Set(e.documentIds));
@@ -367,24 +415,13 @@ export class EchoHost extends Resource {
         }
       }
     });
-    this._automergeHost.documentsSaved.on(this._ctx, () => {
-      this.#scheduleIndexRun('documents-saved');
-    });
-    this.#scheduleIndexRun('open');
+    // Opened on the host's context, so the scheduler stops subscribing the moment the host starts closing.
+    await this._indexScheduler.open(this._ctx);
     log('echo-host: open complete');
   }
 
   protected override async _close(ctx: Context): Promise<void> {
-    // Drain any in-flight indexer task before the Resource base disposes
-    // `this._ctx`. Without this, an in-flight `DataServiceImpl.updateIndexes`
-    // RPC handler's `do { await runBlocking() } while (!_indexesUpToDate)`
-    // loop can hit a disposed ctx on its next iteration and throw
-    // `ContextDisposedError` — which escapes as an unhandled rejection
-    // because the originating client `flush()` is fire-and-forget at the
-    // test layer. The cooperative `_indexesUpToDate = true` set inside
-    // `_runUpdateIndexes` lets the loop exit cleanly once the current
-    // iteration finishes.
-    await this._updateIndexes?.join();
+    await this._indexScheduler.close();
 
     await this._queryService.close(ctx);
     await this._spaceStateManager.close(ctx);
@@ -399,7 +436,8 @@ export class EchoHost extends Resource {
   }
 
   /**
-   * Perform any pending index updates.
+   * Waits until every change made before the call is indexed. Changes made during the wait are left
+   * to later passes, so a stream of writes cannot hold the caller.
    *
    * Bails as a no-op when the host has been closed: a late `db.flush()` RPC
    * (client still has an open service ref while the host is in/post-teardown)
@@ -410,17 +448,58 @@ export class EchoHost extends Resource {
    * `Resource` methods in this codebase (e.g. `SqliteStorageAdapter.load`)
    * follow the same closed-host early-out pattern.
    */
-  async updateIndexes(): Promise<void> {
+  async updateIndexes({
+    secondaryIndexes = false,
+    reason,
+  }: { secondaryIndexes?: boolean; reason?: IndexRequestReason } = {}): Promise<void> {
     if (this._ctx.disposed) {
       return;
     }
-    do {
-      this.#noteIndexRunReason('rpc-update-indexes');
-      await this._updateIndexes.runBlocking();
-      if (this._ctx.disposed) {
-        return;
+    await this._indexScheduler.waitForIndexed(reason);
+    if (this._ctx.disposed) {
+      return;
+    }
+    // A pass invalidates queries as it ends and they re-run on their own task; callers flushing the
+    // index expect those results too.
+    await this._queryService.awaitQueryUpdates();
+
+    if (secondaryIndexes) {
+      await this.updateSecondaryIndexes();
+    }
+  }
+
+  /**
+   * Indexes the secondary-index backlog to completion, which the debounced flush otherwise gets to
+   * on its own schedule (see {@link IndexEngine.updateSecondaryIndexes}).
+   *
+   * @returns Number of records indexed.
+   */
+  async updateSecondaryIndexes(): Promise<number> {
+    let records = 0;
+    let hint: InvalidationHint | undefined;
+    for (;;) {
+      if (this._ctx.disposed || !this.isOpen) {
+        break;
       }
-    } while (!this._indexesUpToDate);
+      const result = await this.indexEngine
+        .updateSecondaryIndexes(this._ctx)
+        .pipe(RuntimeProvider.runPromise(this._runtime));
+      records += result.updated;
+      const batch = hintFromIndexingResult(result);
+      if (batch) {
+        hint = hint ? mergeHints(hint, batch) : batch;
+      }
+      if (result.done) {
+        break;
+      }
+    }
+
+    // A text query issued before this catch-up matched nothing and would never re-run on its own:
+    // the indexer is the sole invalidation source, and this pass is the only writer of the rows.
+    if (hint) {
+      this._queryService.invalidateQueries(hint);
+    }
+    return records;
   }
 
   /**
@@ -710,6 +789,7 @@ export class EchoHost extends Resource {
         documents: this._automergeHost.loadedDocsCountForSpace(spaceId),
         documentsTotal: this._automergeHost.loadedDocsCount,
         queriesTotal: this._queryService.activeQueryCount,
+        leases: this._automergeHost.leasedDocsCount,
       },
     };
   }
@@ -732,7 +812,7 @@ export class EchoHost extends Resource {
     let removedIndexEntries = 0;
     if (options.index !== false && (wipedDocumentIds.length > 0 || removedInlineObjects.length > 0)) {
       removedIndexEntries = await RuntimeProvider.runPromise(this._runtime)(
-        this._indexEngine.deleteObjects({ spaceId, documentIds: wipedDocumentIds, objects: removedInlineObjects }),
+        this.indexEngine.deleteObjects({ spaceId, documentIds: wipedDocumentIds, objects: removedInlineObjects }),
       );
     }
 
@@ -817,7 +897,7 @@ export class EchoHost extends Resource {
         // and a pass landing between the wipe and this cleanup would re-load a document whose
         // bytes are gone — which re-creates it as an empty document and persists it again.
         await RuntimeProvider.runPromise(this._runtime)(
-          this._indexEngine.deleteObjects({ spaceId, documentIds: stale, objects: [] }),
+          this.indexEngine.deleteObjects({ spaceId, documentIds: stale, objects: [] }),
         );
         for (const documentId of stale) {
           await this._automergeHost.removeDocument(documentId);
@@ -1067,33 +1147,72 @@ export class EchoHost extends Resource {
     return this.openSpaceRoot(this._ctx, spaceId);
   }
 
-  /** Records why a run is wanted without scheduling it — for callers that drive the task directly. */
-  #noteIndexRunReason(reason: IndexRunReason): void {
-    this._pendingIndexReasons.set(reason, (this._pendingIndexReasons.get(reason) ?? 0) + 1);
+  /**
+   * Debounces the deferred full-text re-tokenization, bounded by {@link FTS_FLUSH_MAX_DELAY_MS} so
+   * a stream of writes that never pauses still makes progress.
+   */
+  #scheduleFtsFlush(): void {
+    const now = performance.now();
+    const deadline = (this.#ftsFlushDeadline ??= now + FTS_FLUSH_MAX_DELAY_MS);
+    const generation = ++this.#ftsFlushGeneration;
+
+    scheduleTask(
+      this._ctx,
+      async () => {
+        // A later write re-armed the timer, so its run covers this one too — unless the ceiling
+        // has passed, where waiting again is the thing being prevented.
+        if (generation !== this.#ftsFlushGeneration && performance.now() < deadline) {
+          return;
+        }
+        this.#ftsFlushDeadline = undefined;
+        if (this._ctx.disposed || !this.isOpen) {
+          return;
+        }
+
+        const records = await this.updateSecondaryIndexes();
+        if (records > 0) {
+          log.verbose('flushed deferred full-text index', { records });
+        }
+      },
+      Math.max(0, Math.min(FTS_FLUSH_IDLE_MS, deadline - now)),
+    );
   }
 
-  #scheduleIndexRun(reason: IndexRunReason): void {
-    this.#noteIndexRunReason(reason);
-    this._updateIndexes.schedule();
-  }
-
-  /** Drains the pending reasons so each run reports only the requests that produced it. */
-  #takeIndexRunReasons(): Record<string, number> {
-    const reasons = Object.fromEntries(this._pendingIndexReasons);
-    this._pendingIndexReasons.clear();
-    return reasons;
-  }
-
-  private _runUpdateIndexes = async (): Promise<void> => {
+  /**
+   * One indexing pass over both data sources.
+   *
+   * Spanned so that a pass is a single trace naming the requests that caused it, instead of one
+   * parentless `IndexEngine.update` root per data source with nothing to attribute it to. The
+   * `ctx` the decorator hands back carries the pass span, and `EffectEx.withContext` is what
+   * carries it across into the Effect world.
+   */
+  @trace.span({
+    op: 'indexer',
+    // Flattened to strings/numbers: OTel attribute values are primitives, so a histogram object
+    // would be dropped by the exporter rather than reaching SigNoz.
+    attributes: (_ctx: Context, reasons: Record<string, number>) => ({
+      reasons: Object.entries(reasons)
+        .map(([reason, count]) => `${reason}:${count}`)
+        .join(','),
+    }),
+    // The outcome rides on the span rather than a log line: the only level the OTLP log sink
+    // exports (INFO) is also one the browser console shows, and at three passes a second that
+    // buries the console it is meant to help.
+    resultAttributes: (outcome: IndexPassOutcome | undefined) => ({
+      updated: outcome?.updated ?? 0,
+      done: outcome?.done ?? false,
+      drained: outcome?.drained ?? false,
+      // A pass that indexed nothing yet still invalidates queries is the signature of a
+      // self-sustaining invalidation loop, so record whether this run re-armed its own trigger.
+      invalidates: outcome?.invalidates ?? false,
+      spaces: outcome?.spaces ?? 0,
+      documents: outcome?.documents ?? 0,
+    }),
+  })
+  private async _runIndexPass(ctx: Context, reasons: Record<string, number>): Promise<IndexPassOutcome | undefined> {
     if (this._ctx.disposed || !this.isOpen) {
-      // Signal the `updateIndexes` RPC handler's `do-while` loop to exit
-      // cooperatively. Without this, the loop sees `_indexesUpToDate === false`
-      // and calls `runBlocking` again, which throws on the disposed context.
-      this._indexesUpToDate = true;
-      return;
+      return undefined;
     }
-
-    const reasons = this.#takeIndexRunReasons();
     const startedAt = performance.now();
 
     try {
@@ -1101,10 +1220,39 @@ export class EchoHost extends Resource {
 
       {
         performance.mark('indexEngine.update.automerge:start');
-        const result = await this._indexEngine
-          .update(this._ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
-          .pipe(RuntimeProvider.runPromise(this._runtime));
+        const result = await this.indexEngine
+          .update(ctx, this._automergeDataSource, { spaceId: null, limit: 50 })
+          .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
+
+        // Convergence-key duplicates are born from replication, and a replicated write is exactly what
+        // was just indexed — so this is the earliest a duplicate can be detected on this device.
+        // The trigger is the durable intent log written in the same transaction as the index
+        // cursors: a crash or a faulted merge pass leaves the intents in place, and this pass —
+        // which also runs once at every startup — retries them, so no detected duplicate is ever
+        // silently dropped. The merge's own writes land back here via `documentsSaved`, which
+        // re-indexes the tombstones; idempotence is what makes that follow-up pass a no-op.
+        const { maxId, intents } = await this.indexEngine
+          .takeConvergenceKeyIntents()
+          .pipe(RuntimeProvider.runPromise(this._runtime));
+        if (intents.size > 0) {
+          log('servicing convergence-key intents', {
+            spaces: intents.size,
+            keys: [...intents.values()].reduce((count, keys) => count + keys.size, 0),
+            upToId: maxId,
+          });
+          const { serviced } = await this._convergenceKeyMerger.mergeDuplicates(this._ctx, intents);
+          let cleared = 0;
+          for (const [spaceId, keys] of serviced) {
+            for (const key of keys) {
+              await this.indexEngine
+                .clearConvergenceKeyIntents(spaceId, key, maxId)
+                .pipe(RuntimeProvider.runPromise(this._runtime));
+              cleared++;
+            }
+          }
+          log('cleared serviced convergence-key intents', { cleared, upToId: maxId });
+        }
         performance.measure('Index Automerge', {
           start: 'indexEngine.update.automerge:start',
           detail: {
@@ -1119,15 +1267,14 @@ export class EchoHost extends Resource {
         });
       }
       if (this._ctx.disposed || !this.isOpen) {
-        this._indexesUpToDate = true;
-        return;
+        return undefined;
       }
 
       {
         performance.mark('indexEngine.update.queue:start');
-        const result = await this._indexEngine
-          .update(this._ctx, this._feedDataSource, { spaceId: null, limit: 50 })
-          .pipe(RuntimeProvider.runPromise(this._runtime));
+        const result = await this.indexEngine
+          .update(ctx, this._feedDataSource, { spaceId: null, limit: 50 })
+          .pipe(EffectEx.withContext(ctx), RuntimeProvider.runPromise(this._runtime));
         _mergeInto(combinedResult, result);
         performance.measure('Index Queues', {
           start: 'indexEngine.update.queue:start',
@@ -1143,6 +1290,10 @@ export class EchoHost extends Resource {
         });
       }
 
+      if (combinedResult.updated > 0) {
+        this.#scheduleFtsFlush();
+      }
+
       const hint = hintFromIndexingResult(combinedResult);
       log.verbose('indexEngine update completed', {
         reasons,
@@ -1152,6 +1303,7 @@ export class EchoHost extends Resource {
         invalidates: !!hint,
         updated: combinedResult.updated,
         done: combinedResult.done,
+        drained: combinedResult.drained,
         spaces: combinedResult.spaces.size,
         queues: combinedResult.queues.size,
         documents: combinedResult.documents.size,
@@ -1159,34 +1311,47 @@ export class EchoHost extends Resource {
         objects: combinedResult.objects.size,
       });
       await sleep(1);
-      if (!combinedResult.done) {
-        this._indexesUpToDate = false;
-        this.#scheduleIndexRun('batch-continuation');
-      } else {
-        this._indexesUpToDate = true;
-      }
       // Invalidate queries after index update — the indexer is the sole invalidation source.
       if (hint) {
         this._queryService.invalidateQueries(hint);
       }
+
+      return {
+        updated: combinedResult.updated,
+        done: combinedResult.done,
+        drained: combinedResult.drained,
+        invalidates: !!hint,
+        spaces: combinedResult.spaces.size,
+        documents: combinedResult.documents.size,
+      };
     } catch (err) {
       if (this._ctx.disposed || !this.isOpen) {
-        this._indexesUpToDate = true;
-        return;
+        return undefined;
       }
       log.catch(err);
       // Failsafe: prevent queries from freezing if the indexer faults.
       this._queryService.invalidateQueries();
       throw err;
     }
-  };
+  }
 }
 
 export type { EchoDataStats };
 
+/** What one indexing pass did, as the span reports it. */
+type IndexPassOutcome = {
+  updated: number;
+  done: boolean;
+  drained: boolean;
+  invalidates: boolean;
+  spaces: number;
+  documents: number;
+};
+
 type MutableIndexingAccumulator = {
   updated: number;
   done: boolean;
+  drained: boolean;
   spaces: Set<SpaceId>;
   queues: Set<EntityId>;
   documents: Set<string>;
@@ -1197,6 +1362,7 @@ type MutableIndexingAccumulator = {
 const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({
   updated: 0,
   done: true,
+  drained: true,
   spaces: new Set(),
   queues: new Set(),
   documents: new Set(),
@@ -1207,6 +1373,7 @@ const _makeEmptyMergedResult = (): MutableIndexingAccumulator => ({
 const _mergeInto = (acc: MutableIndexingAccumulator, r: IndexingResult): void => {
   acc.updated += r.updated;
   acc.done = acc.done && r.done;
+  acc.drained = acc.drained && r.drained;
   for (const s of r.spaces) {
     acc.spaces.add(s);
   }
@@ -1241,7 +1408,12 @@ export type CreatedSpace = {
 
 export type EchoHostLayerOptions = Pick<
   EchoHostProps,
-  'peerIdProvider' | 'getSpaceKeyByRootDocumentId' | 'assignQueuePositions' | 'useSubduction'
+  | 'peerIdProvider'
+  | 'getSpaceKeyByRootDocumentId'
+  | 'assignQueuePositions'
+  | 'useSubduction'
+  | 'queryExecutor'
+  | 'queryDebounce'
 >;
 
 /**
@@ -1249,11 +1421,11 @@ export type EchoHostLayerOptions = Pick<
  */
 export const EchoHostLayer = (
   options: EchoHostLayerOptions = {},
-): Layer.Layer<EchoHostService, never, SqlClient.SqlClient | SqlTransaction.SqlTransaction> =>
+): Layer.Layer<EchoHostService, never, SqlClient.SqlClient> =>
   Layer.effect(
     EchoHostService,
     Effect.gen(function* () {
-      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient | SqlTransaction.SqlTransaction>();
+      const runtime = yield* RuntimeProvider.currentRuntime<SqlClient.SqlClient>();
       return new EchoHost({ runtime, ...options });
     }),
   );

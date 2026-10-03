@@ -17,7 +17,7 @@ import { withLayout } from '@dxos/react-ui/testing';
 import { createNotebook } from '#testing';
 import { translations } from '#translations';
 
-import { NotebookStack } from './NotebookStack';
+import { NotebookStack } from './NotebookStack.tsx';
 
 const NotebookStackStory = () => {
   const notebook = useMemo(() => createNotebook(), []);

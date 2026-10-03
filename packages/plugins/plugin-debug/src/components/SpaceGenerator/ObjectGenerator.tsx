@@ -2,13 +2,19 @@
 // Copyright 2024 DXOS.org
 //
 
+import * as Effect from 'effect/Effect';
+
+import type * as PluginManager from '@dxos/app-framework/PluginManager';
 import { addressToA1Notation } from '@dxos/compute-hyperformula/types';
+import * as Operation from '@dxos/compute/Operation';
 import { ComputeGraph, ComputeGraphModel, DEFAULT_OUTPUT, NODE_INPUT, NODE_OUTPUT } from '@dxos/conductor';
 import { EID, Filter, Key, Type, View } from '@dxos/echo';
+import { EffectEx } from '@dxos/effect';
 import { OperationInvoker } from '@dxos/operation';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
+import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import { random } from '@dxos/random';
@@ -28,7 +34,8 @@ export type ObjectGenerator<T> = (space: Space, n: number, cb?: (objects: T[]) =
 
 export const createGenerator = <S extends Type.AnyObj>(
   client: Client,
-  invokePromise: OperationInvoker.OperationInvoker['invokePromise'],
+  invoker: OperationInvoker.OperationInvoker,
+  manager: PluginManager.PluginManager,
   schema: S,
 ): ObjectGenerator<Type.InstanceType<S>> => {
   return async (space: Space, n: number): Promise<Type.InstanceType<S>[]> => {
@@ -44,7 +51,20 @@ export const createGenerator = <S extends Type.AnyObj>(
           .find((s) => Type.getTypename(s) === typename)
       : undefined;
     if (!view && !staticSchema) {
-      await invokePromise(SpaceOperation.AddType, { type: schema, show: false }, { spaceId: space.id });
+      const { data } = await invoker.invokePromise(
+        SpaceOperation.AddType,
+        { type: schema, show: false },
+        { spaceId: space.id },
+      );
+      // The operation's process cannot see the managers, so the plugins (e.g. the table for the type) are told here.
+      if (data && !data.notified) {
+        await EffectEx.runAndForwardErrors(
+          SpaceCapabilities.notifyTypeAdded(
+            { plugins: manager, capabilities: manager.capabilities },
+            { db: space.db, type: data.object, show: false },
+          ).pipe(Effect.provideService(Operation.Service, invoker)),
+        );
+      }
     }
 
     // Create objects.

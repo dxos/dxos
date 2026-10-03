@@ -28,9 +28,19 @@ Scales with document count (~1,700 docs on the reporting profile).
       `remote-heads` prefix scan at source construction. Currently 515 writes
       against 0 reads of that family per boot, and ~93% are for documents that
       never attach — so the per-attach replay cannot cover them.
-- [ ] Decide on the deferred leads: rebase the dist patch `.40` → `.47`, and
-      land the `automerge-subduction` 0.16.1 bump from
-      `origin/claude/sweet-goldberg-twtikd`.
+- [x] Decide on the deferred leads: rebase the dist patch `.40` → `.48`, and
+      land the `automerge-subduction` 0.16.1 bump. Done in
+      [#13009](https://github.com/dxos/dxos/pull/13009); the
+      `sweet-goldberg-twtikd` version of the subduction bump would have shipped
+      a dangling re-export, since 0.16.1 drops the `bundler` wasm target.
+- [ ] `#doSync`'s disconnect race releases the `#syncGate` slot while
+      `syncWithAllPeers` is still pending in wasm — nothing cancels it, so
+      repeated disconnects let concurrent rounds exceed
+      `MAX_IN_FLIGHT_DOC_SYNCS` until each abandoned call burns its own sync
+      timeout. Pre-existing since the `.40` patch, carried unchanged through the
+      `.48` rebase; raised by CodeRabbit on #13009. Fixing it needs either
+      cancellation plumbed through the wasm call or the slot held until the
+      abandoned promise settles, which changes backpressure under disconnect.
 
 ## Phase 1: Make the failure recoverable
 

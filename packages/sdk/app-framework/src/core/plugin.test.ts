@@ -8,11 +8,12 @@ import * as Effect from 'effect/Effect';
 
 import { DXN } from '@dxos/keys';
 
-import * as ActivationEvent from './activation-event';
-import * as Capability from './capability';
-import * as CapabilityManager from './capability-manager';
-import * as Plugin from './plugin';
-import * as PluginManager from './plugin-manager';
+import * as ActivationEvent from './activation-event.ts';
+import * as CapabilityManager from './capability-manager.ts';
+import * as Capability from './capability.ts';
+import { PluginManagerError } from './plugin-manager/errors.ts';
+import * as PluginManager from './plugin-manager/index.ts';
+import * as Plugin from './plugin.ts';
 
 const String = Capability.makeSingleton<{ string: string }>()('org.dxos.test.string');
 const Number = Capability.makeSingleton<{ number: number }>()('org.dxos.test.number');
@@ -25,7 +26,7 @@ const testMeta = Plugin.makeMeta({ key: DXN.make('org.dxos.plugin.test'), name: 
 
 const makeManager = () =>
   PluginManager.make({
-    pluginLoader: (id: string) => Effect.fail(new Error(`Plugin not found: ${id}`)),
+    pluginLoader: (id: string) => Effect.fail(new PluginManagerError({ message: `Plugin not found: ${id}` })),
   });
 
 describe('Plugin module authoring', () => {

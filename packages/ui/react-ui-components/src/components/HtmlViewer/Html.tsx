@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { type ThemedClassName, useThemeContext } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
-import { type ColorScheme, detectColorScheme } from './color-scheme';
+import { type ColorScheme, detectColorScheme } from './color-scheme.ts';
 
 /** What the sandbox knows about the document, handed to every transform so a dialect stays pure. */
 export type HtmlTransformContext = {
@@ -158,8 +158,11 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
   const dialectRef = useRef(dialect);
   dialectRef.current = dialect;
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    // Reset on mount: StrictMode runs the cleanup below and mounts again, and a flag left set would
+    // discard every resolved source afterwards.
+    disposedRef.current = false;
+    return () => {
       disposedRef.current = true;
       for (const url of srcCacheRef.current.values()) {
         if (url.startsWith('blob:')) {
@@ -167,9 +170,8 @@ export const Html = ({ html, loadRemoteImages = false, dialect, classNames }: Ht
         }
       }
       srcCacheRef.current.clear();
-    },
-    [],
-  );
+    };
+  }, []);
 
   const forbidTags = dialect?.forbidTags;
   const forbidTagsKey = forbidTags?.join(',') ?? '';

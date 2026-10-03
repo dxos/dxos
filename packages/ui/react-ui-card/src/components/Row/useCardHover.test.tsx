@@ -5,7 +5,7 @@
 import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { useCardHover } from './Row';
+import { useCardHover } from './Row.tsx';
 
 /**
  * The regression this guards: `useCardHover`'s cleanup depends on `open` and `enabled`, not just on

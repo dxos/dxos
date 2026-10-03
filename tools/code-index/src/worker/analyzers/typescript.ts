@@ -9,7 +9,7 @@ import * as Ontology from '../../Ontology.ts';
 import { type ImportBinding, importBindings } from '../types/Boundary.ts';
 import { infer } from '../types/Infer.ts';
 import * as TypeRdf from '../types/Rdf.ts';
-import * as TypeTerm from '../types/Term.ts';
+import * as Term from '../types/Term.ts';
 import { type Comment, type Node, type Statement, isNode, nameOf, walk } from './ast.ts';
 import { type AnalyzeContext, fileNode } from './common.ts';
 
@@ -1045,7 +1045,7 @@ export const analyzeTypeScript = (context: AnalyzeContext): Ontology.FileDocumen
     }
     const type = inference.declaration(declaration.node);
     const iri = types.add(type);
-    return iri ? { hasType: iri, typeTerm: JSON.stringify(TypeTerm.toJson(type)) } : {};
+    return iri ? { hasType: iri, typeTerm: JSON.stringify(Term.toJson(type)) } : {};
   };
   const locals = new Map(
     declared.map((declaration) => [declaration.name, Ontology.symbolIri(path, declaration.name).value]),

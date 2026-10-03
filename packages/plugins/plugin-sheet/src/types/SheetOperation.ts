@@ -11,7 +11,7 @@ import * as Operation from '@dxos/compute/Operation';
 import { Database, Ref } from '@dxos/echo';
 import { DXN } from '@dxos/keys';
 
-import * as Sheet from './Sheet';
+import * as Sheet from './Sheet.ts';
 
 // TODO(wittjosiah): Factor out. This is `DxGridAxis` from `@dxos/react-ui-grid`.
 const Axis = Schema.Union([Schema.Literal('row'), Schema.Literal('col')]);
@@ -81,7 +81,9 @@ export const Create = Operation.make({
   output: Schema.Struct({
     id: Schema.String.annotate({ description: 'The DXN of the created sheet.' }),
   }),
-  services: [Database.Service],
+  // The capability manager carries the `DefaultParent` rule that files the sheet into the root
+  // collection; an undeclared service is not provided, so without it the sheet is never filed.
+  services: [Capability.Service, Database.Service],
 });
 
 export const GetValues = Operation.make({

@@ -6,8 +6,8 @@ import { type Accessor, createSignal, onCleanup } from 'solid-js';
 
 import { ContextRequestEvent, type ContextType, type UnknownContext } from '@dxos/web-context';
 
-import { getHostElement } from './internal';
-import { getContextRequestHandler } from './provider';
+import { getHostElement } from './internal.ts';
+import { getContextRequestHandler } from './provider.tsx';
 
 /**
  * Options for useWebComponentContext hook

@@ -23,10 +23,10 @@ import { type ContentBlock, Message } from '@dxos/types';
 
 import { Mailbox, SyncStreamConfig } from '#types';
 
-import { MailSyncError } from '../errors';
-import { readBindingOptions } from './binding';
-import { diffTags } from './tag-diff';
-import { type TagPushOp, createRemoteObserver, remoteFromBase, resolvePushOps, tagsFromIndex } from './tag-push';
+import { MailSyncError } from '../errors.ts';
+import { readBindingOptions } from './binding.ts';
+import { diffTags } from './tag-diff.ts';
+import { type TagPushOp, createRemoteObserver, remoteFromBase, resolvePushOps, tagsFromIndex } from './tag-push.ts';
 
 /**
  * Provider-agnostic harness for a bidirectional, capped, resumable mail sync. The provider is an Effect
@@ -800,4 +800,7 @@ export const runMailSync = (
       taken,
     });
     return { newMessages: stats.newMessages };
-  });
+  }).pipe(
+    // Synced mail is the provider's content, not something the user wrote.
+    Effect.provideService(Database.Origin, 'system'),
+  );

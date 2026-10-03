@@ -8,8 +8,8 @@ import type * as OtelMetricsSink from '@dxos/observability/OtelMetricsSink';
 import type * as OtelSpanSink from '@dxos/observability/OtelSpanSink';
 
 // Not the `../util` barrel: it re-exports config, pulling @dxos/client into this bundle.
-import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants';
-import { type ObservabilityWorkerMessage } from '../util/worker-log-processor';
+import { LOG_STORE_DB_NAME, LOG_STORE_MAX_BYTES } from '../util/constants.ts';
+import { type ObservabilityWorkerMessage } from '../util/worker-log-processor.ts';
 
 const store = new IdbLogStore({ dbName: LOG_STORE_DB_NAME, maxBytes: LOG_STORE_MAX_BYTES });
 
@@ -72,13 +72,13 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
       }),
     (message) => typeof message === 'string',
   );
-  const metrics = lazySink<OtelMetricsSink.Init, OtelMetricsSink.Metric | Control>(
+  const metrics = lazySink<OtelMetricsSink.Init, OtelMetricsSink.Batch | Control>(
     (init) =>
       import('@dxos/observability/OtelMetricsSink').then(({ Sink }) => {
         const sink = new Sink(init);
         return (message) => {
           switch (message.type) {
-            case 'otel-metric':
+            case 'otel-metric-batch':
               return sink.append(message);
             case 'otel-tags':
               return sink.setTags(message.tags);
@@ -87,7 +87,7 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
           }
         };
       }),
-    (message) => message.type === 'otel-metric',
+    (message) => message.type === 'otel-metric-batch',
   );
   const spans = lazySink<OtelSpanSink.Init, OtelSpanSink.Span | Flush>(
     (init) =>
@@ -125,7 +125,7 @@ const createMessageHandler = (): ((event: MessageEvent<ObservabilityWorkerMessag
       case 'otel-traces-init':
         spans.init(data);
         break;
-      case 'otel-metric':
+      case 'otel-metric-batch':
         metrics.deliver(data);
         break;
       case 'otel-span':

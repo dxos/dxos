@@ -2,5 +2,5 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './Editor';
-export * from './editor-options';
+export * from './Editor.tsx';
+export * from './editor-options.ts';

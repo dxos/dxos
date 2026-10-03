@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Config } from './config';
+import { type Config } from './config.ts';
 
 /**
  * Canonical names for EDGE (Cloudflare Worker) services.

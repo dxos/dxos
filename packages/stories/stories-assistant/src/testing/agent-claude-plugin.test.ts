@@ -10,7 +10,7 @@ import * as PluginManager from '@dxos/app-framework/PluginManager';
 import { EffectEx } from '@dxos/effect';
 import * as AssistantCapabilities from '@dxos/plugin-assistant/AssistantCapabilities';
 
-import { AgentClaudePlugin } from './agent-claude-plugin';
+import { AgentClaudePlugin } from './agent-claude-plugin.ts';
 
 /**
  * Diagnostic for the `WithClaudeAgent` stall: activates the plugin in a bare manager — no story, no

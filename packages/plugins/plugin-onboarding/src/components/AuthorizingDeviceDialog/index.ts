@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './AuthorizingDeviceDialog';
+export * from './AuthorizingDeviceDialog.tsx';

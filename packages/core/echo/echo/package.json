@@ -1,6 +1,6 @@
 {
   "name": "@dxos/echo",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "ECHO API",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -42,6 +42,11 @@
       "source": "./src/Blob.ts",
       "types": "./dist/types/src/Blob.d.ts",
       "import": "./dist/lib/Blob.mjs"
+    },
+    "./Change": {
+      "source": "./src/Change.ts",
+      "types": "./dist/types/src/Change.d.ts",
+      "import": "./dist/lib/Change.mjs"
     },
     "./Collection": {
       "source": "./src/Collection.ts",

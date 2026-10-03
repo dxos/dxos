@@ -4,4 +4,4 @@
 
 import '@dxos-theme';
 
-export { runShell } from './composites';
+export { runShell } from './composites/index.ts';

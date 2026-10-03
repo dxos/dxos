@@ -10,7 +10,7 @@ import { TaskSet } from '@dxos/types';
 
 import { GitHubOperation } from '#types';
 
-import { GITHUB_SOURCE } from '../constants';
+import { GITHUB_SOURCE } from '../constants.ts';
 
 const fkFor = (id: string) => ({ source: GITHUB_SOURCE, id });
 

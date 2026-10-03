@@ -2,7 +2,7 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useCapabilities, useCapability, useOperationInvoker, useProcessManagerRuntime } from '@dxos/app-framework/ui';
@@ -14,7 +14,7 @@ import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { Panel } from '@dxos/react-ui';
-import { Attention, useManager } from '@dxos/react-ui-attention';
+import { useManager } from '@dxos/react-ui-attention';
 import { DraftMessage, Message as MessageType } from '@dxos/types';
 
 import {
@@ -27,18 +27,16 @@ import {
 } from '#components';
 import { InboxCapabilities, InboxOperation, Mailbox, Settings } from '#types';
 
-import { getMailboxAttachmentPath, getMailboxMessagePath } from '../../paths';
-import { dedupeSupersededDrafts, orderThreadItems } from '../../util';
+import { getMailboxAttachmentPath, getMailboxMessagePath } from '../../paths.ts';
+import { dedupeSupersededDrafts, orderThreadItems } from '../../util/index.ts';
 
 /** Used when the inbox Settings capability isn't installed, so the image toggle is still readable. */
 const FALLBACK_SETTINGS_ATOM = Atom.make<Settings.Settings>({ loadRemoteImages: false });
 
 /**
- * `subject` is the opened message; its whole conversation (thread) is looked up here. The companion graph node
- * assigns the thread directly (see the `mailboxMessage` connector) so the article renders it without
- * re-querying; section/other callers may pass a single message. The thread already includes any
- * inline reply/forward drafts (the connector merges synced feed messages and local drafts in one
- * combined-scope query), interleaved chronologically.
+ * `subject` is the opened message; its whole conversation (thread), synced messages and this mailbox's
+ * reply/forward drafts interleaved, is looked up here by `threadId`. Without a `mailbox` the subject
+ * renders alone.
  */
 export type MessageArticleProps = AppSurface.ArticleProps<
   MessageType.Message,
@@ -61,15 +59,11 @@ export const MessageArticle = ({
   role,
   subject,
   attendableId,
-  companionTo,
-  mailbox: mailboxProp,
+  nodeId = attendableId,
+  mailbox,
   testId,
   onOpenAttachment,
 }: MessageArticleProps) => {
-  const toolbarAttendableId =
-    attendableId && Attention.isLinkedSegment(attendableId) ? Attention.getParentId(attendableId) : attendableId;
-  const mailbox = Mailbox.instanceOf(companionTo) ? companionTo : mailboxProp;
-
   // The subject is one message; its conversation is correlated by threadId across space + feed in one
   // combined query.
   const mailboxDb = mailbox ? Obj.getDatabase(mailbox) : undefined;
@@ -139,8 +133,8 @@ export const MessageArticle = ({
   const settingsAtom = useCapability(InboxCapabilities.Settings) ?? FALLBACK_SETTINGS_ATOM;
   const viewState = useManager();
   const viewModeAtom = useMemo(
-    () => viewState.atom(messageViewModeAspect, toolbarAttendableId ?? 'default'),
-    [viewState, toolbarAttendableId],
+    () => viewState.atom(messageViewModeAspect, attendableId ?? 'default'),
+    [viewState, attendableId],
   );
   const optionsAtom = useMemo(
     () =>
@@ -151,10 +145,10 @@ export const MessageArticle = ({
         }),
         (ctx, next) => {
           ctx.set(settingsAtom, { ...ctx.get(settingsAtom), loadRemoteImages: next.loadRemoteImages });
-          viewState.set(messageViewModeAspect, toolbarAttendableId ?? 'default', next.viewMode);
+          viewState.set(messageViewModeAspect, attendableId ?? 'default', next.viewMode);
         },
       ),
-    [settingsAtom, viewModeAtom, viewState, toolbarAttendableId],
+    [settingsAtom, viewModeAtom, viewState, attendableId],
   );
 
   // Resolve capabilities here (in the container) and thread them into the presentation-only
@@ -245,7 +239,11 @@ export const MessageArticle = ({
   // Per-message delete action, backed by the space operation for removing objects.
   const handleDelete = useCallback(
     (message: MessageType.Message) => {
-      void invoker.invokePromise(SpaceOperation.RemoveObjects, { objects: [message] });
+      void invoker.invokePromise(
+        SpaceOperation.RemoveObjects,
+        { objects: [message] },
+        { spaceId: Obj.getDatabase(message)?.spaceId },
+      );
     },
     [invoker],
   );
@@ -303,10 +301,12 @@ export const MessageArticle = ({
       if (mailbox && db) {
         void invoker.invokePromise(LayoutOperation.Open, {
           subject: [getMailboxAttachmentPath(db.spaceId, mailbox.id, message.id, index)],
+          pivotId: nodeId,
+          disposition: 'detail',
         });
       }
     },
-    [onOpenAttachment, invoker, mailbox, db],
+    [onOpenAttachment, invoker, mailbox, db, nodeId],
   );
 
   const handleArchived = useCallback(
@@ -322,12 +322,13 @@ export const MessageArticle = ({
 
   return (
     <ConversationStack.Root
-      attendableId={toolbarAttendableId}
+      attendableId={attendableId}
+      nodeId={nodeId}
+      companion={nodeId !== attendableId}
       items={orderedMessages}
       summaries={summaries}
       conversationSummary={conversationSummary}
       mailbox={mailbox}
-      companion={!!companionTo}
       options={optionsAtom}
       expanded={expanded}
       graph={graph}

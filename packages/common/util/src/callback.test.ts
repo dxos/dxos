@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { createSetDispatch } from './callback';
+import { createSetDispatch } from './callback.ts';
 
 type Callback = {
   foo: (value: number) => void;

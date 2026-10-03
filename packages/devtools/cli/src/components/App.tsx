@@ -4,7 +4,7 @@
 
 import { DebugOverlayCorner, type KeyEvent, hexToRgb } from '@opentui/core';
 import { useKeyboard, useRenderer } from '@opentui/solid';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 import {
   type Accessor,
   ErrorBoundary,
@@ -20,8 +20,8 @@ import { RegistryProvider } from '@dxos/effect-atom-solid';
 import { log } from '@dxos/log';
 import { isTruthy } from '@dxos/util';
 
-import { type Theme } from '../theme';
-import { type LogBuffer } from '../util';
+import { type Theme } from '../theme.ts';
+import { type LogBuffer } from '../util/index.ts';
 
 export type KeyHandler = {
   hint: string;

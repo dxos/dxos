@@ -2,6 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './FundamentalsPanel';
-export * from './ReportSections';
-export * from './TradingViewChart';
+export * from './FundamentalsPanel/index.ts';
+export * from './ReportSections/index.ts';
+export * from './TradingViewChart/index.ts';

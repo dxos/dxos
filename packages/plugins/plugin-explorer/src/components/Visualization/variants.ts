@@ -33,7 +33,7 @@ import {
 } from '@dxos/react-ui-graph';
 import { type SpaceGraphNode } from '@dxos/schema';
 
-import { getNodeFillForObject } from '../../util';
+import { getNodeFillForObject } from '../../util/index.ts';
 
 /** Variants offered in the main `ExplorerArticle` toolbar. */
 export type ExplorerArticleVariant = 'force' | 'cluster' | 'bundle' | 'lattice' | 'swarm' | 'plexus';

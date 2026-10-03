@@ -158,8 +158,31 @@ The build script outputs to `Externals/{arch}/${CONFIGURATION}/libapp.a` where `
 Desktop builds (`build_tauri` job) support macOS, Linux, and Windows:
 
 - Build with code signing for macOS (Apple Developer certificate)
+- Sign each channel under its own App ID when it has one (see below)
 - Generate updater artifacts via CrabNebula
 - Upload to CrabNebula Cloud for auto-updates
+
+### macOS signing per channel
+
+Native passkeys only work when the app's signed `com.apple.application-identifier` names its own bundle
+ID, and `composer.space` lists that App ID under `webcredentials` (`src/functions/_worker.ts`). Each
+non-production channel installs under a suffixed bundle ID (`org.dxos.composer.preview`), so it needs
+its own App ID and provisioning profile.
+
+Dev and preview embed their own profile (the `MACOS_PROVISION_PROFILE_DEV` and
+`MACOS_PROVISION_PROFILE_PREVIEW` secrets); any other build embeds production's
+(`MACOS_PROVISION_PROFILE`). The app is signed under whichever App ID its profile grants, so production
+and staging stay signed as production, and the app turns native passkeys off at runtime wherever that App
+ID does not name its bundle. The release fails if the signature and the profile disagree, if any channel
+other than staging is not signed for its own bundle, or if the profile does not list the certificate the
+app is signed with. The channel profiles outlive that certificate, so rotating `MACOS_CERTIFICATE` means
+regenerating them and updating their secrets.
+
+To give a channel its own identity: register an explicit App ID for its bundle ID with Associated
+Domains, create a Developer ID profile for it with the certificate CI signs with, store it base64-encoded
+as a `MACOS_PROVISION_PROFILE_<CHANNEL>` secret, select it in `deploy-tauri.yaml`, and add the App ID to
+`CHANNEL_BUNDLE_IDS` in `_worker.ts`. For staging, also drop its exemption from the release check in
+`deploy-tauri.yaml`. The AASA change only takes effect once the production web app is deployed.
 
 ### Publishing
 

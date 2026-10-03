@@ -9,7 +9,7 @@
 @prefix effect: <https://dxos.org/deus/module/effect%2F>.
 @prefix Context: <https://dxos.org/deus/module/effect%2FContext#>.
 @prefix Layer: <https://dxos.org/deus/module/effect%2FLayer#>.
-@prefix RpcMiddleware: <https://dxos.org/deus/module/effect%2Funstable%2Frpc%2FRpcMiddleware#>.
+@prefix RpcMiddleware: <https://dxos.org/deus/module/effect%2Frpc%2FRpcMiddleware#>.
 @prefix errors: <https://dxos.org/deus/module/%40dxos%2Ferrors#>.
 @prefix list: <http://www.w3.org/2000/10/swap/list#>.
 @prefix log: <http://www.w3.org/2000/10/swap/log#>.
@@ -259,4 +259,4 @@
 { ?s deus:extends <https://dxos.org/deus/module/effect%2FSchema#TaggedError> } => { ?s rdf:type deus:DomainError }.
 
 # RPC groups.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2Funstable%2Frpc%2FRpcGroup#make> } => { ?s rdf:type deus:Rpc }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2Frpc%2FRpcGroup#make> } => { ?s rdf:type deus:Rpc }.

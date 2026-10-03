@@ -32,10 +32,10 @@ import {
   type CalendarScrollEvent,
   type Range,
   useCalendarContext,
-} from './context';
-import { getDate, getRowIndex, gridEpoch, isSameDay } from './util';
-import { type CalendarEvent, CalendarWeek, type CalendarWeekProps } from './Week';
-import { Weekdays } from './Weekdays';
+} from './context.ts';
+import { getDate, getRowIndex, gridEpoch, isSameDay } from './util.ts';
+import { type CalendarEvent, CalendarWeek, type CalendarWeekProps } from './Week.tsx';
+import { Weekdays } from './Weekdays.tsx';
 
 const maxRows = 50 * 100;
 const start = gridEpoch;

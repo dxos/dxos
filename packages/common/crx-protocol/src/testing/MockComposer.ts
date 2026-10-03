@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type Channel, createLoopback } from '../channel';
-import * as Message from '../Message';
-import { serve } from '../rpc';
+import { type Channel, createLoopback } from '../channel.ts';
+import * as Message from '../Message.ts';
+import { serve } from '../rpc.ts';
 
 /** The Composer end of a mock peer: binds a request handler over its channel. */
 export class MockComposer {

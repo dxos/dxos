@@ -4,7 +4,7 @@
 
 import { describe, it } from 'vitest';
 
-import { createUrl } from './url';
+import { createUrl } from './url.ts';
 
 describe('url', () => {
   it('should create a url', ({ expect }) => {

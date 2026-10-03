@@ -4,8 +4,8 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
-import { type Node } from '../model';
-import { type Dispatch } from '../render';
+import { type Node } from '../model.ts';
+import { type Dispatch } from '../render.ts';
 import {
   type CapabilityInstances,
   type LogEntry,
@@ -19,7 +19,7 @@ import {
   startCapabilities,
   dispatch as systemDispatch,
   unmountCapabilities,
-} from '../system';
+} from '../system.ts';
 
 export type UseSystemOptions<Db> = {
   registry: Registry<Db, any>;

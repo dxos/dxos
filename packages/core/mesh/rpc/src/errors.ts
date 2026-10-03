@@ -4,7 +4,7 @@
 
 import { StackTrace } from '@dxos/debug';
 import { decodeError } from '@dxos/protocols';
-import { type Error as ErrorResponse } from '@dxos/protocols/proto/dxos/error';
+import { type Error as ErrorResponse } from '@dxos/protocols/buf/dxos/error_pb';
 
 export const decodeRpcError = (err: ErrorResponse, rpcMethod: string): Error =>
   decodeError(err, {

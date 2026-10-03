@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Deferred from 'effect/Deferred';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, OpaqueToolkit } from '@dxos/ai';
 import {
@@ -27,9 +27,9 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trim } from '@dxos/util';
 
-import { PromptError } from '../errors';
-import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool';
-import { RunInstructions } from './definitions';
+import { PromptError } from '../errors.ts';
+import { makeCompleteJobParameters, makeCompleteJobTool } from './complete-job-tool.ts';
+import { RunInstructions } from './definitions.ts';
 
 const DEFAULT_MODEL: DXN.DXN = DXN.make('com.anthropic.model.claude-opus-5.default');
 
@@ -93,7 +93,7 @@ export default RunInstructions.pipe(
           systemText += `\n${data.systemInstructions}`;
         }
 
-        const modelLayer = AiService.model(DXN.getName(data.model ?? DEFAULT_MODEL));
+        const modelLayer = AiService.languageModel(DXN.getName(data.model ?? DEFAULT_MODEL));
 
         let feed: Feed.Feed;
         if (data.chat) {

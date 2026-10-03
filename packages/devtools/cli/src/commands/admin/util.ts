@@ -5,9 +5,9 @@
 import * as Config from 'effect/Config';
 import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 
 import { withRetry } from '@dxos/edge-client';
 import { BaseError } from '@dxos/errors';
@@ -24,8 +24,8 @@ export const adminRequest = <T>(
   options?: { query?: Record<string, string> },
 ) =>
   Effect.gen(function* () {
-    const adminKey = yield* Config.string('DX_HUB_API_KEY');
-    const baseUrl = yield* Config.string('DX_EDGE_BASE_URL');
+    const adminKey = yield* Config.String('DX_HUB_API_KEY');
+    const baseUrl = yield* Config.String('DX_EDGE_BASE_URL');
 
     const url = new URL(path, baseUrl);
     if (options?.query) {
@@ -57,8 +57,8 @@ export const adminRequest = <T>(
  */
 export const adminDownload = (path: string) =>
   Effect.gen(function* () {
-    const adminKey = yield* Config.string('DX_HUB_API_KEY');
-    const baseUrl = yield* Config.string('DX_EDGE_BASE_URL');
+    const adminKey = yield* Config.String('DX_HUB_API_KEY');
+    const baseUrl = yield* Config.String('DX_EDGE_BASE_URL');
 
     const url = new URL(path, baseUrl);
     const request = HttpClientRequest.get(url.toString()).pipe(HttpClientRequest.setHeader('X-Admin-Key', adminKey));

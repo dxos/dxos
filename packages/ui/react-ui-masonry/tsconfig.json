@@ -18,6 +18,9 @@
       "path": "../react-primitives/react-focus"
     },
     {
+      "path": "../react-primitives/react-hooks"
+    },
+    {
       "path": "../react-ui"
     },
     {

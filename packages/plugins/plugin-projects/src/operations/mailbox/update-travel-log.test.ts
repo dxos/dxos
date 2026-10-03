@@ -7,8 +7,8 @@ import * as Effect from 'effect/Effect';
 
 import { Ref } from '@dxos/echo';
 
-import { artifactContents, makeMessage, seed, testLayer } from './testing';
-import updateTravelLog from './update-travel-log';
+import { artifactContents, makeMessage, seed, testLayer } from './testing.ts';
+import updateTravelLog from './update-travel-log.ts';
 
 describe('update-travel-log', () => {
   it.effect('regenerates the bookings document from travel mail', () =>

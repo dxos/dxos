@@ -29,45 +29,46 @@ export const AgentHydrator = Capability.lazyModule(
     requires: [Capabilities.ProcessManagerRuntime],
     provides: [],
     activatesOn: AssistantEvents.Start,
-    environments: ['node'],
+    environments: ['browser', 'node', 'tauri'],
   },
-  () => import('./agent-hydrator'),
+  () => import('./agent-hydrator.ts'),
 );
-export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-service'), {
+export const AgentRuntime = AppCapability.layerSpec(() => import('./agent-service.ts'), {
   name: 'AgentRuntime',
 });
-export const AiContext = AppCapability.layerSpec(() => import('./ai-context'), {
+export const AiContext = AppCapability.layerSpec(() => import('./ai-context.ts'), {
   name: 'AiContext',
 });
-export const AiService = AppCapability.layerSpec(() => import('./ai-service'), {
+export const AiService = AppCapability.layerSpec(() => import('./ai-service.ts'), {
   name: 'AiService',
   requires: [AppCapabilities.AiModelResolver],
 });
 export const Connector = Capability.lazyModule(
   'AnthropicConnector',
   { provides: [ConnectorSpec.Connector], activatesOn: ConnectorEvents.Start },
-  () => import('./connector'),
+  () => import('./connector.ts'),
 );
-export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder'), {
-  environments: ['node'],
+export const AppGraphBuilder = AppCapability.appGraphBuilder(() => import('./app-graph-builder.ts'), {
+  environments: ['browser', 'node', 'tauri'],
 });
 export const AutomationTemplates = Capability.lazyModule(
   'AutomationTemplates',
   { provides: [RoutineCapabilities.Template], activatesOn: RoutineEvents.Start },
-  () => import('./automation-templates'),
+  () => import('./automation-templates.ts'),
 );
-export const Schema = AppCapability.schema(() => import('./schema-defs'));
+export const Schema = AppCapability.schema(() => import('./schema-defs.ts'));
 export const SubjectContext = Capability.lazyModule(
   'SubjectContext',
   { provides: [AssistantCapabilities.SubjectContext], activatesOn: AssistantEvents.Start },
-  () => import('./subject-context'),
+  () => import('./subject-context.ts'),
 );
-export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition'), {
+export const SkillDefinition = AppCapability.skillDefinition(() => import('./skill-definition.ts'), {
   provides: [RoutineCapabilities.AgentDelegationStrategy],
 });
 export const CompanionChatProvisioner = Capability.lazyModule(
   'CompanionChatProvisioner',
   {
+    environments: ['browser', 'tauri'],
     requires: [
       Capabilities.OperationInvoker,
       AppCapabilities.AppGraph,
@@ -82,10 +83,16 @@ export const CompanionChatProvisioner = Capability.lazyModule(
     provides: [],
     activatesOn: AssistantEvents.Start,
   },
-  () => import('./companion-chat-provisioner'),
+  () => import('./companion-chat-provisioner.ts'),
 );
-export const CreateObject = SpaceCapability.createObject(() => import('./create-object'), {
-  environments: ['node'],
+// Ungated: an agent blocked on a question is waiting whether or not any assistant UI is on screen.
+export const QuestionResumer = Capability.lazyModule(
+  'QuestionResumer',
+  { requires: [Capabilities.OperationInvoker], provides: [] },
+  () => import('./question-resumer.ts'),
+);
+export const CreateObject = SpaceCapability.createObject(() => import('./create-object.ts'), {
+  environments: ['browser', 'node', 'tauri'],
 });
 // Startup, not `AssistantEvents.Start`: `AiService` snapshots its multi-arity `AiModelResolver`
 // require once during startup, so a resolver contributed in a later round is invisible to it.
@@ -94,22 +101,22 @@ export const CreateObject = SpaceCapability.createObject(() => import('./create-
 export const EdgeModelResolver = Capability.lazyModule(
   'EdgeModelResolver',
   { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
-  () => import('./edge-model-resolver'),
+  () => import('./edge-model-resolver.ts'),
 );
 export const LocalModelResolver = Capability.lazyModule(
   'LocalModelResolver',
   { provides: [AppCapabilities.AiModelResolver], activatesOn: ActivationEvents.Startup },
-  () => import('./local-model-resolver'),
+  () => import('./local-model-resolver.ts'),
 );
 export const MarkdownExtension = Capability.lazyModule(
   'MarkdownExtension',
   { provides: [MarkdownCapabilities.ExtensionProvider], activatesOn: MarkdownEvents.Start },
-  () => import('./markdown-extension'),
+  () => import('./markdown-extension.ts'),
 );
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'), {
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'), {
   activatesOn: ActivationEvents.Idle,
 });
-export const ReactSurface = AppCapability.surface(() => import('./react-surface'), {
+export const ReactSurface = AppCapability.surface(() => import('./react-surface.ts'), {
   roles: [
     'org.dxos.plugin.assistant.role.chatSurface',
     'org.dxos.plugin.space.role.homeContent',
@@ -121,7 +128,7 @@ export const ReactSurface = AppCapability.surface(() => import('./react-surface'
     'org.dxos.role.statusIndicator',
   ],
 });
-export const Settings = AppCapability.settings(() => import('./settings'), {
+export const Settings = AppCapability.settings(() => import('./settings.ts'), {
   activatesOn: ActivationEvents.Idle,
   provides: [AssistantCapabilities.Settings],
 });
@@ -135,16 +142,16 @@ export const AssistantState = Capability.lazyModule(
     ],
     activatesOn: AssistantEvents.Start,
   },
-  () => import('./state'),
+  () => import('./state.ts'),
 );
 export const Toolkit = Capability.lazyModule(
   'Toolkit',
   {
     provides: [AppCapabilities.Toolkit],
     activatesOn: AssistantEvents.Start,
-    environments: ['node', 'workerd'],
+    environments: ['browser', 'node', 'tauri', 'workerd'],
   },
-  () => import('./toolkit'),
+  () => import('./toolkit.ts'),
 );
 export const Translations = AppCapability.translations(translations);
 export const PluginAsset = AppCapability.pluginAsset({

@@ -4,8 +4,7 @@
 
 import React from 'react';
 
-import { IconButton, Panel, ScrollArea, Select, type ThemedClassName, Toolbar } from '@dxos/react-ui';
-import { Empty } from '@dxos/react-ui-list';
+import { Banner, IconButton, Panel, ScrollArea, Select, type ThemedClassName, Toolbar } from '@dxos/react-ui';
 import { mx } from '@dxos/ui-theme';
 
 export type StageInfo = {
@@ -70,7 +69,6 @@ export const PipelinePanel = ({
                     </Select.Option>
                   ))}
                 </Select.Viewport>
-                <Select.Arrow />
               </Select.Content>
             </Select.Portal>
           </Select.Root>
@@ -88,7 +86,7 @@ export const PipelinePanel = ({
       <Panel.Content asChild>
         <ScrollArea.Root padding>
           <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
-            {stages.length === 0 && <Empty label='No stages.' />}
+            {stages.length === 0 && <Banner.Empty label='No stages.' />}
             {stages.map((stage) => (
               <div
                 key={stage.id}

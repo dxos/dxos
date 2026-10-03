@@ -12,7 +12,7 @@ import { log } from '@dxos/log';
 
 import { ConnectorSpec } from '#types';
 
-import * as Binding from '../../Binding';
+import * as Binding from '../../Binding.ts';
 
 /** A user-chosen remote target to bind. */
 export type SyncTargetSelection = { externalId: string; name?: string };

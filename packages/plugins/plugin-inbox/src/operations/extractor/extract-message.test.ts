@@ -3,7 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
@@ -17,7 +17,7 @@ import { Message } from '@dxos/types';
 
 import { ExtractedFrom, InboxCapabilities, InboxOperation } from '#types';
 
-import handler from './extract-message';
+import handler from './extract-message.ts';
 
 const runExtractMessage = (
   input: { source: Obj.Any; extractorId?: string },

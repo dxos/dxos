@@ -7,7 +7,7 @@ import * as Semaphore from 'effect/Semaphore';
 
 import { Obj } from '@dxos/echo';
 
-import type * as Mailbox from '../types/Mailbox';
+import type * as Mailbox from '../types/Mailbox.ts';
 
 /**
  * One mutex per mailbox URI, created on first use and never evicted — a mailbox is a long-lived

@@ -20,9 +20,9 @@ import { Loading, withLayout } from '@dxos/react-ui/testing';
 import { CommercePlugin } from '#plugin';
 import { Provider } from '#types';
 
-import { makeSampleProvider } from '../../testing';
-import { translations } from '../../translations';
-import { ProviderArticle } from './ProviderArticle';
+import { makeSampleProvider } from '../../testing.ts';
+import { translations } from '../../translations.ts';
+import { ProviderArticle } from './ProviderArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

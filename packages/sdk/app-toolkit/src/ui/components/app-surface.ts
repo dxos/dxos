@@ -3,16 +3,18 @@
 //
 
 import type * as Schema from 'effect/Schema';
+import { type ComponentType, type ReactNode } from 'react';
 
 import * as Role from '@dxos/app-framework/Role';
 import { Surface } from '@dxos/app-framework/ui';
-import { Entity, Obj, Type } from '@dxos/echo';
+import { Entity, Obj, type Ref, Type } from '@dxos/echo';
 import type { SchemaAST } from '@dxos/effect';
 import { log } from '@dxos/log';
-import { type Space } from '@dxos/react-client/echo';
+import { type Space, type SpaceMember_Role } from '@dxos/react-client/echo';
+import { type MenuActions } from '@dxos/react-ui-menu';
 import { type ProjectionModel } from '@dxos/schema';
 
-import { AppCapabilities } from '../../app-framework';
+import { AppCapabilities } from '../../app-framework/index.ts';
 
 //
 // Internal type helpers
@@ -337,14 +339,21 @@ export type SettingsData<Props extends {} = {}> = {
 export type SettingsProps<T extends {}, Props extends {} = {}> = {
   settings: T;
   onSettingsChange?: (cb: (current: T) => T) => void;
+  /** Controls for the panel's heading row, such as the settings-scope toggle. */
+  scope?: ReactNode;
 } & Props;
 
-/**
- * Filter: matches a plugin-settings article. When `prefix` is omitted the
- * filter matches any settings subject (used by the generic default settings
- * surface); pass a `prefix` to match a single plugin's settings.
- */
-export const settings = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
+export const settings: {
+  /** Filter: matches any plugin-settings article, for the generic settings surface. */
+  (token: Role.Role<any>): Surface.Filter<SettingsData>;
+  /**
+   * Filter: matches one plugin's settings article.
+   *
+   * @deprecated Contribute a schema and atom and let `plugin-settings`' generic surface render the
+   * panel; a bespoke article re-implements the panel chrome by hand.
+   */
+  (token: Role.Role<any>, prefix: string): Surface.Filter<SettingsData>;
+} = (token: Role.Role<any>, prefix?: string): Surface.Filter<SettingsData> => {
   const guard = (data: unknown): boolean => {
     if (typeof data !== 'object' || data === null) {
       return false;
@@ -456,6 +465,18 @@ export const CardIcon: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardI
 /** Role token for the card slot. */
 export const CardContent: Role.Role<CardData<any>> = Role.make('org.dxos.role.cardContent');
 
+/**
+ * Card header menu items a type contributes. The surface renders nothing: it registers items with the
+ * host's `menu` via `useMenuContribution`, so hosts render it through `CardMenuSlot`.
+ */
+export const CardMenu: Role.Role<CardMenuData<any>> = Role.make('org.dxos.role.cardMenu');
+
+/** Surface data for the card menu role. */
+export type CardMenuData<Subject = unknown> = {
+  subject: Subject;
+  menu: MenuActions;
+};
+
 /** Surface data for card role. */
 export type CardData<Subject = unknown, Props extends {} = {}> = {
   subject: Subject;
@@ -470,6 +491,54 @@ export type CardData<Subject = unknown, Props extends {} = {}> = {
 /** Component props for card role. */
 export type CardProps<Subject = unknown, Props extends {} = {}> = CardData<Subject, Props> & {
   role?: string;
+};
+
+/**
+ * Role token for the `cardMasonry` role: several objects laid out as cards.
+ *
+ * The host supplies the objects — a task's artifacts, a record's attachments — rather than the
+ * surface deriving them from a subject, which is what separates this from {@link Related}: the
+ * caller already knows what belongs in the grid and only wants it rendered.
+ */
+export const CardMasonry: Role.Role<CardMasonryData> = Role.make('org.dxos.role.cardMasonry');
+
+/** Surface data for the card-masonry role. */
+export type CardMasonryData = {
+  /**
+   * What to show, in reading order. Refs rather than objects: a stack renders what a host holds a
+   * link to, and resolving them is the surface's job, so a cold load fills in rather than reading
+   * empty.
+   */
+  objects: ReadonlyArray<Ref.Ref<Obj.Unknown>>;
+  /** The plank the grid renders in, so a card's actions resolve against the right node. */
+  attendableId?: string;
+  /** Clicking a card opens its object as this plank's detail rather than as a plank beside it. */
+  detailOf?: string;
+  /**
+   * `compact` renders the cards at three quarters of their size, so a companion-width host fits two
+   * columns where full-size cards would stack in one.
+   */
+  size?: 'default' | 'compact';
+  /**
+   * In the host's flow rather than in a scroller of its own: for a host that already scrolls, such
+   * as a section of an article, where a nested scroller would also pad and centre the grid.
+   */
+  inline?: boolean;
+  /**
+   * The host's items for each card's menu, alongside the object's own: rendered once per card, it
+   * renders nothing and registers its items with the card's `menu` via `useMenuContribution` — the
+   * same contract as a type's {@link CardMenu} surface, so a host adds actions such as removing the
+   * object from its list without the card knowing what they mean.
+   */
+  CardMenu?: ComponentType<CardMenuData<Obj.Unknown>>;
+  /** Placeholder cards, after the resolved ones, for objects the host is still adding. */
+  pending?: ReadonlyArray<CardMasonryPending>;
+};
+
+/** A card-masonry placeholder: a card header with a spinner, titled with what is being added. */
+export type CardMasonryPending = {
+  id: string;
+  label: string;
 };
 
 /** Surface data for card-role ECHO object. */
@@ -563,6 +632,9 @@ export const DocumentTitle: Role.Role<DocumentTitleData<unknown>> = Role.make('o
 /** Role token for the `statusIndicator` role (was `status-indicator`). */
 export const StatusIndicator: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.statusIndicator');
 
+/** The deck's bottom drawer; one contributor renders at a time. */
+export const Drawer: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.drawer');
+
 /**
  * Slot for the devtools-overview sub-surface. Defined here (not in plugin-devtools) so public
  * contributor plugins can target it without depending on the private devtools plugin.
@@ -604,6 +676,18 @@ export type NavtreeItemEndData<Subject = unknown> = {
 
 /** Role token for the `navtreeItemEnd` role (was `navtree-item-end`). */
 export const NavtreeItemEnd: Role.Role<NavtreeItemEndData> = Role.make('org.dxos.role.navtreeItemEnd');
+
+/** Data for the contact-picker slot on a space's members article. */
+export type ContactPickerData = {
+  space: Space;
+  onAdd: (
+    identityKeys: string[],
+    role: SpaceMember_Role,
+  ) => Promise<{ joinUrl: string; failed: readonly { key: string; error: string }[] }>;
+};
+
+/** Slot for choosing known contacts to admit to a space; filled by the client plugin. */
+export const ContactPicker: Role.Role<ContactPickerData> = Role.make('org.dxos.role.contactPicker');
 
 /** Role token for the `searchInput` role (was `search-input`). */
 export const SearchInput: Role.Role<Record<string, unknown>> = Role.make('org.dxos.role.searchInput');

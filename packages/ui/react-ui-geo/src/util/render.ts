@@ -7,8 +7,8 @@ import { type Feature, type Geometry } from 'geojson';
 import { feature, mesh } from 'topojson-client';
 import { type Topology } from 'topojson-specification';
 
-import { type LatLngLiteral } from '../types';
-import { geoLine, geoPoint } from './path';
+import { type LatLngLiteral } from '../types.ts';
+import { geoLine, geoPoint } from './path.ts';
 
 export type Styles = Record<string, any>;
 
@@ -20,6 +20,7 @@ export type Style =
   | 'border'
   | 'dots'
   | 'point'
+  | 'selected'
   | 'line'
   | 'cursor'
   | 'arc';
@@ -29,6 +30,8 @@ export type StyleSet = Partial<Record<Style, Styles>>;
 export type Features = {
   points?: LatLngLiteral[];
   lines?: { source: LatLngLiteral; target: LatLngLiteral }[];
+  /** Drawn last, in the `selected` style, so a highlighted point sits above the rest. */
+  selected?: LatLngLiteral[];
 };
 
 /**
@@ -152,7 +155,7 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
   //
 
   if (features) {
-    const { points, lines } = features;
+    const { points, lines, selected } = features;
 
     // Lines first so points (drawn after) sit on top — the route nodes should
     // never be occluded by an arc that passes through them.
@@ -172,6 +175,16 @@ export const createLayers = (topology: Topology, features: Features, styles: Sty
         path: {
           type: 'GeometryCollection',
           geometries: points.map((point) => geoPoint(point)),
+        },
+      });
+    }
+
+    if (selected && styles.selected) {
+      layers.push({
+        styles: styles.selected,
+        path: {
+          type: 'GeometryCollection',
+          geometries: selected.map((point) => geoPoint(point)),
         },
       });
     }

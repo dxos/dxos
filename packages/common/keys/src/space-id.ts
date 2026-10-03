@@ -8,7 +8,8 @@ import * as Schema from 'effect/Schema';
 
 import { invariant } from '@dxos/invariant';
 
-import { randomBytes } from './random-bytes';
+import { randomBytes } from './random-bytes.ts';
+import { withStatics } from './schema-statics.ts';
 
 /**
  * Denotes RFC4648 base-32 format.
@@ -40,7 +41,7 @@ export const SpaceId: Schema.Codec<SpaceId, string> & {
   isValid: (value: unknown) => value is SpaceId;
   make: (value: string) => SpaceId;
   random: () => SpaceId;
-} = Object.assign(SpaceIdSchema, {
+} = withStatics(SpaceIdSchema, {
   byteLength: 20,
 
   encode: (value: Uint8Array): SpaceId => {

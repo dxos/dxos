@@ -26,7 +26,7 @@ describe('SpaceOperation.Create', () => {
 
     const client = harness.get(ClientCapabilities.Client);
     await EffectEx.runAndForwardErrors(initializeIdentity(client));
-    await harness.waitForEvent(ClientEvents.SpacesReady);
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
 
     const create = client.spaces.create.bind(client.spaces);
     client.spaces.create = async (...args: Parameters<typeof create>) =>
@@ -39,6 +39,27 @@ describe('SpaceOperation.Create', () => {
     );
 
     expect(outcome).toMatchObject({ space: expect.anything() });
+  });
+
+  test('an explicit origin overrides the invoker origin', async ({ expect }) => {
+    const harness = await createComposerTestApp({ plugins: [ClientPlugin.make({}), SpacePlugin({})] });
+    await using _harness = harness;
+
+    const client = harness.get(ClientCapabilities.Client);
+    await EffectEx.runAndForwardErrors(initializeIdentity(client));
+    await harness.waitForEvent(ClientEvents.SpacesAvailable);
+
+    const origins: unknown[] = [];
+    const create = client.spaces.create.bind(client.spaces);
+    client.spaces.create = async (...args: Parameters<typeof create>) => {
+      origins.push(args[1]?.origin);
+      return create(...args);
+    };
+
+    await harness.runPromise(Operation.invoke(SpaceOperation.Create, { name: 'Seeded', origin: 'system' }));
+    await harness.runPromise(Operation.invoke(SpaceOperation.Create, { name: 'Default' }));
+
+    expect(origins).toEqual(['system', 'user']);
   });
 });
 

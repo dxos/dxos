@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Operation from '@dxos/compute/Operation';
 import { Identity } from '@dxos/halo';
 
-import { GrantServiceAccess } from './definitions';
+import { GrantServiceAccess } from './definitions.ts';
 
 /** An operation so a component can grant access without holding a credential-write surface. */
 const handler: Operation.WithHandler<typeof GrantServiceAccess> = GrantServiceAccess.pipe(

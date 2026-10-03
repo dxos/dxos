@@ -13,8 +13,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { Picker } from './Picker';
-import { extractTag, extractTypename } from './query';
+import { Picker } from './Picker.tsx';
+import { extractTag, extractTypename } from './query.ts';
 
 export type QueryFormProps = ThemedClassName<{
   initialQuery?: QueryAST.Query;

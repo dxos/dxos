@@ -6,8 +6,8 @@ import { describe, test } from 'vitest';
 
 import { Provider } from '#types';
 
-import { bindRequest } from '../util';
-import { buildResults } from './run-provider-search';
+import { bindRequest } from '../util/index.ts';
+import { buildResults } from './run-provider-search.ts';
 
 //
 // A representative AutoTrader UK "used cars" results page (server HTML), trimmed to 10 listing

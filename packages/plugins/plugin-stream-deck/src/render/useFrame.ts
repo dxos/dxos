@@ -6,8 +6,8 @@ import { useMemo } from 'react';
 
 import type * as Protocol from '#protocol';
 
-import { type BuildFrameOptions, buildFrame } from './frame';
-import { useIcons } from './icons';
+import { type BuildFrameOptions, buildFrame } from './frame.ts';
+import { useIcons } from './icons.ts';
 
 export type UseFrameOptions = Omit<BuildFrameOptions, 'icons'>;
 

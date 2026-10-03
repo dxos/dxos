@@ -8,13 +8,16 @@ import * as Schema from 'effect/Schema';
 
 import { Format } from '@dxos/echo';
 
-import * as Subscription from './Subscription';
+import * as Subscription from './Subscription.ts';
 
 // Structural gates (regex / URL format), used as form-field validation and to short-circuit the network
 // effects on obviously-malformed input. Handle existence is verified implicitly by the publication lookup
 // (an unresolvable handle yields no publications, and a publication is required to submit).
+const HANDLE_PATTERN = /^@?([\da-z-]+\.)+[a-z]{2,}$|^did:[a-z]+:[a-zA-Z0-9._%:-]+$/i;
+
 export const HandleSchema = Schema.String.pipe(
-  Schema.check(Schema.isPattern(/^@?([\da-z-]+\.)+[a-z]{2,}$|^did:[a-z]+:[a-zA-Z0-9._%:-]+$/i)),
+  // JSON Schema patterns take no flags, so the case-sensitive source is exported rather than dropped.
+  Schema.check(Schema.isPattern(HANDLE_PATTERN, { toJsonSchema: () => ({ pattern: HANDLE_PATTERN.source }) })),
 );
 
 export const isHandle = Schema.is(HandleSchema);
@@ -44,12 +47,12 @@ export type RssValues = Schema.Schema.Type<typeof RssCreateBase>;
 
 // Input type covers both annotated union members; the union itself is built in create-object.ts after
 // annotations are applied. The switch narrows on `type` which is common to both shapes.
-export type CreateSubscriptionInput =
+export type Input =
   | { type: 'standard-site'; handle: string; publication: string }
   | { type: 'rss'; url: string; name?: string };
 
 /** Normalizes a create-form union member into the stored {@link Subscription.Subscription} fields. */
-export const makeSubscriptionFromCreate = (input: CreateSubscriptionInput): Subscription.Subscription => {
+export const makeSubscriptionFromCreate = (input: Input): Subscription.Subscription => {
   switch (input.type) {
     case 'standard-site':
       // `url` stores the publication site reference (at:// or https://); sync derives the author DID

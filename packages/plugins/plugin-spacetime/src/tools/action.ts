@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ToolContext } from './tool-context';
+import { type ToolContext } from './tool-context.ts';
 
 /** Lifecycle interface for an action handler. */
 export interface ActionHandler {

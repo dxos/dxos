@@ -2,6 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './logging';
-export * from './plot';
-export * from './stats';
+export * from './logging.ts';
+export * from './plot.ts';
+export * from './stats.ts';

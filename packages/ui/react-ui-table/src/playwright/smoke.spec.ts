@@ -9,7 +9,7 @@ import { DxGridManager } from '@dxos/lit-grid/testing';
 import { random } from '@dxos/random';
 import { setupPage, storybookUrl } from '@dxos/test-utils/playwright';
 
-import { TableManager } from './TableManager';
+import { TableManager } from './TableManager.ts';
 
 const storyUrl = storybookUrl('ui-react-ui-table-table--default', 9004);
 const relationsStoryUrl = storybookUrl('ui-react-ui-table-relations--default', 9004);

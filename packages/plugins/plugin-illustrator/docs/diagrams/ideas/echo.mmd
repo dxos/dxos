@@ -1,0 +1,47 @@
+%% ECHO write and read paths: one owner per store, client above host above storage, RPC seams at the host services.
+flowchart TB
+  subgraph Client [Client tier: app thread]
+    ObjCore[ObjectCore]
+    RepoProxy[RepoProxy]
+    GraphCtx[GraphQueryContext]
+    IndexSrc[IndexQuerySource]
+  end
+  subgraph Host [Host tier: worker]
+    DataSvc[DataService]
+    QuerySvc[QueryService]
+    Executor[QueryExecutor]
+    AmHost[AutomergeHost]
+    IndexEngine[IndexEngine]
+    FeedStore[FeedStore]
+  end
+  subgraph Infra [Storage and sync]
+    Sqlite[SQLite]
+    NetAdapter[EchoNetAdapter]
+  end
+  ObjCore -->|doc change| RepoProxy
+  RepoProxy -->|update RPC| DataSvc
+  DataSvc -->|merge| AmHost
+  AmHost -->|owns doc chunks| Sqlite
+  AmHost -->|replicate| NetAdapter
+  GraphCtx -->|working set| ObjCore
+  GraphCtx -->|remote hits| IndexSrc
+  IndexSrc -->|execQuery RPC| QuerySvc
+  QuerySvc -->|one per query| Executor
+  Executor -->|lookup| IndexEngine
+  Executor -->|loadDoc| AmHost
+  IndexEngine -->|pull changes| AmHost
+  IndexEngine -->|pull blocks| FeedStore
+  IndexEngine -->|owns index| Sqlite
+  FeedStore -->|owns blocks| Sqlite
+%% ref ObjCore packages/core/echo/echo-client/src/core-db/object-core.ts
+%% ref RepoProxy packages/core/echo/echo-client/src/automerge/repo-proxy.ts
+%% ref GraphCtx packages/core/echo/echo-client/src/query/graph-query-context.ts
+%% ref IndexSrc packages/core/echo/echo-client/src/client/index-query-source-provider.ts
+%% ref DataSvc packages/core/echo/echo-host/src/db-host/data-service.ts
+%% ref QuerySvc packages/core/echo/echo-host/src/db-host/query-service.ts
+%% ref Executor packages/core/echo/echo-host/src/query/query-executor.ts
+%% ref AmHost packages/core/echo/echo-host/src/automerge/automerge-host.ts
+%% ref IndexEngine packages/core/echo/index-core/src/index-engine.ts
+%% ref FeedStore packages/core/echo/feed/src/feed-store.ts
+%% ref Sqlite packages/common/sql-sqlite
+%% ref NetAdapter packages/core/echo/echo-host/src/automerge/echo-network-adapter.ts

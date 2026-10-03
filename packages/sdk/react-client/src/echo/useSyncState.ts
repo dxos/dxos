@@ -8,7 +8,7 @@ import { type PeerSyncState, type Space, type SpaceSyncStateMap } from '@dxos/cl
 import { Context } from '@dxos/context';
 import { isEdgePeerId } from '@dxos/echo-protocol';
 
-import { useClient } from '../client';
+import { useClient } from '../client/index.ts';
 
 /**
  * Hook Subscribes to sync state for each space.

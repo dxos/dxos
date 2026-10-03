@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export * as RegistryPlugin from './RegistryPlugin';
+export * as RegistryPlugin from './RegistryPlugin.ts';
 export * from '#meta';
-export * from './constants';
-export * from './paths';
-export * from './storage';
-export * from './util';
+export * from './constants.ts';
+export * from './paths.ts';
+export * from './storage.ts';
+export * from './util/index.ts';

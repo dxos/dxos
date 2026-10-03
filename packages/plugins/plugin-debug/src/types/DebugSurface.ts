@@ -5,6 +5,7 @@
 // @import-as-namespace
 
 import * as Role from '@dxos/app-framework/Role';
+import type { AppSurface } from '@dxos/app-toolkit/ui';
 
 import { meta } from '#meta';
 
@@ -14,3 +15,9 @@ import { meta } from '#meta';
  * the surface reads the store directly, so it needs no subject.
  */
 export const Stats = Role.make<Record<string, unknown>>(`${meta.profile.key}.surface.stats`);
+
+/** Article data for a page of the debug panel, whose nodes have no URL for `LayoutOperation.Open`. */
+export type PageData = AppSurface.ArticleData<unknown, { onNavigate: (nodeId: string) => void }>;
+
+/** Role token for a page of the debug panel; every node under `root/debug` registers its surface on it. */
+export const Page = Role.make<PageData>(`${meta.profile.key}.surface.page`);

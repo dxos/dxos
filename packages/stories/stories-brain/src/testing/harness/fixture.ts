@@ -8,7 +8,7 @@ import { type Database, Feed } from '@dxos/echo';
 import { normalizeText } from '@dxos/markdown';
 import { Message } from '@dxos/types';
 
-import { FIXTURE, LIMIT } from './config';
+import { FIXTURE, LIMIT } from './config.ts';
 
 export const fixtureExists = (): boolean => existsSync(FIXTURE);
 

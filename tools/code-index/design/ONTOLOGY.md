@@ -118,7 +118,7 @@ matching and LDkit gets one lens per class.
 | `deus:Plugin`              | `deus:constructedBy module:%40dxos%2Fapp-framework%2FPlugin#define` — the body, with its modules                                                                                                                 | `rules/composer.n3`        |
 | `deus:LazyPlugin`          | `deus:constructedBy …Plugin#lazy` — the shim that defers loading the body                                                                                                                                        | `rules/composer.n3`        |
 | `deus:PluginMeta`          | `deus:constructedBy …Plugin#{getMetaFromConfig,makeMeta}`                                                                                                                                                        | `rules/composer.n3`        |
-| `deus:Rpc`                 | `deus:constructedBy module:effect%2Funstable%2Frpc%2FRpcGroup#make`                                                                                                                                              | `rules/effect.n3`          |
+| `deus:Rpc`                 | `deus:constructedBy module:effect%2Frpc%2FRpcGroup#make`                                                                                                                                              | `rules/effect.n3`          |
 
 Adding a framework is adding a rule file. The member IRIs above are stable because they follow the
 specifier as written in source, not the file the specifier resolves to.

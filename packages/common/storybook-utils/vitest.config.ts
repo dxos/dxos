@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { ThemePlugin } from '@dxos/ui-theme/plugin';
 
-import { createConfig } from '../../../vitest.base.config';
+import { createConfig } from '../../../vitest.base.config.ts';
 
 const dirname = typeof __dirname !== 'undefined' ? __dirname : path.dirname(fileURLToPath(import.meta.url));
 

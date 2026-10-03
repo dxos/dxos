@@ -54,11 +54,11 @@ const ContactPreviewCard = () => {
  * story that shows people gets the same behaviour rather than re-deriving it.
  */
 export const ContactPreview = ({ db, children }: PropsWithChildren<{ db?: Database.Database }>) => {
-  // Resolves the hovered row's DXN back to its Person, so the card shows the real contact.
+  // Resolves the hovered row's EID back to its Person, so the card shows the real contact.
   const handleLookup = useCallback(
-    async ({ dxn, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
-      const eid = EID.tryParse(dxn);
-      const id = eid && EID.getEntityId(eid);
+    async ({ eid, label }: PreviewLinkRef): Promise<PreviewLinkTarget> => {
+      const parsed = EID.tryParse(eid);
+      const id = parsed && EID.getEntityId(parsed);
       const object = id && db ? (await db.query(Filter.id(id)).run())[0] : undefined;
       return { label, object };
     },

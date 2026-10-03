@@ -8,11 +8,11 @@ import { pipe } from 'effect/Function';
 import * as Predicate from 'effect/Predicate';
 import * as Schema from 'effect/Schema';
 
-import * as Collection from './Collection';
-import * as Feed from './Feed';
-import * as Obj from './Obj';
-import * as Type from './Type';
-import * as View from './View';
+import * as Collection from './Collection.ts';
+import * as Feed from './Feed.ts';
+import * as Obj from './Obj.ts';
+import * as Type from './Type.ts';
+import * as View from './View.ts';
 
 /**
  * Abstract set of objects, represented by a view, feed, or collection.
@@ -27,6 +27,11 @@ export const Dataset = Schema.Union([
   Type.getSchema(View.View),
 ]);
 
+/**
+ * Type guard for datasets.
+ *
+ * @performance O(1); at most three type-URI comparisons.
+ */
 export const isDataset: (value: unknown) => value is Dataset = pipe(
   Obj.instanceOf(Feed.Feed),
   Predicate.or(Obj.instanceOf(Collection.Collection)),

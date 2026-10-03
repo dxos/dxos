@@ -3,7 +3,6 @@
 //
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
 import React, { useEffect, useMemo } from 'react';
 import {
   Navigate,
@@ -16,13 +15,14 @@ import {
 
 import { Config, defs } from '@dxos/config';
 import { Filter, Obj, Query } from '@dxos/echo';
+import { AtomEx } from '@dxos/effect';
 import { parseId } from '@dxos/keys';
 import { ClientProvider, createClientServices, useShell } from '@dxos/react-client';
 import { useQuery, useSpace, useSpaces } from '@dxos/react-client/echo';
 
-import { getConfig } from './config';
-import { TaskList } from './TaskList';
-import { Task } from './types';
+import { getConfig } from './config.ts';
+import { TaskList } from './TaskList.tsx';
+import { Task } from './types.ts';
 
 export const TaskListContainer = () => {
   const { spaceProp } = useParams<{ spaceProp: string }>();
@@ -122,7 +122,7 @@ const createServices = (config?: Config) =>
 
 export const App = () => {
   // Create a registry instance for atom reactivity
-  const registry = useMemo(() => AtomRegistry.make(), []);
+  const registry = useMemo(() => AtomEx.makeRegistry(), []);
 
   return (
     <ClientProvider

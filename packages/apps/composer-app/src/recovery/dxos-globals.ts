@@ -5,8 +5,8 @@
 import { type DevtoolsHook, mountDevtoolsHooks } from '@dxos/client/devtools';
 import { type CompactDocumentsResult } from '@dxos/migrations';
 
-import { type RecoveryDiagnosticsResult } from './diagnostics';
-import { type SqlStorageDiagnosticsResult } from './sql-storage-diagnostics';
+import { type RecoveryDiagnosticsResult } from './diagnostics.ts';
+import { type SqlStorageDiagnosticsResult } from './sql-storage-diagnostics.ts';
 
 /** Static devtools globals only — no Client until {@link bootRecoveryClient}. */
 export const installDxosGlobals = (): DevtoolsHook => {

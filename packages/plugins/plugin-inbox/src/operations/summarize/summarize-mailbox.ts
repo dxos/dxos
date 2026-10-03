@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
@@ -18,10 +18,10 @@ import { log } from '@dxos/log';
 import { Message, Person } from '@dxos/types';
 import { trim } from '@dxos/util';
 
-import * as InboxOperation from '../../types/InboxOperation';
-import * as Mailbox from '../../types/Mailbox';
-import { isAiUnavailableCause } from '../extractor/ai-gate';
-import { withMailboxLock } from '../mailbox-lock';
+import * as InboxOperation from '../../types/InboxOperation.ts';
+import * as Mailbox from '../../types/Mailbox.ts';
+import { isAiUnavailableCause } from '../extractor/ai-gate.ts';
+import { withMailboxLock } from '../mailbox-lock.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -183,7 +183,7 @@ const summarize = Effect.fnUntraced(function* (
   });
   reportStatus({ current: 0, total: batch.length });
 
-  const modelLayer = AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie);
+  const modelLayer = AiService.languageModel(model ?? DEFAULT_MODEL).pipe(Layer.orDie);
   let summarized_ = 0;
   for (const thread of batch) {
     if (signal.aborted) {
@@ -213,7 +213,9 @@ const summarize = Effect.fnUntraced(function* (
     );
     if (text.length > 0) {
       const target = Mailbox.findOrCreateAnnotations(mailbox, db);
-      yield* Feed.append(target, [Mailbox.makeSummary({ message: subject, text, model: model ?? DEFAULT_MODEL })]);
+      yield* Feed.append(target, [Mailbox.makeSummary({ message: subject, text, model: model ?? DEFAULT_MODEL })]).pipe(
+        Effect.provideService(Database.Origin, 'system'),
+      );
       summarized_ += 1;
     }
     reportStatus({ current: summarized_, message: stringProperty(subject, 'subject') });

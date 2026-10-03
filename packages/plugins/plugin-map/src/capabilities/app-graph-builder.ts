@@ -64,6 +64,7 @@ export default Capability.makeModule(
 
     const companion = yield* AppGraphBuilder.createExtension({
       id: 'mapCompanion',
+      relation: AppNode.companion,
       match: whenPlottable,
       connector: (object, get) =>
         Effect.gen(function* () {

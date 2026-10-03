@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Diagram';
-export * from './DiagramNode';
+export * from './Diagram.tsx';
+export * from './DiagramNode.tsx';

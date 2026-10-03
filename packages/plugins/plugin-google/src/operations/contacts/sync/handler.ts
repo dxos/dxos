@@ -3,10 +3,10 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Stream from 'effect/Stream';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 import { Database, Filter, Obj, Query } from '@dxos/echo';
@@ -22,8 +22,8 @@ import { GoogleContacts } from '#apis';
 import { GoogleCredentials } from '#services';
 import { GoogleOperation } from '#types';
 
-import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants';
-import { mapGooglePerson } from '../mapper';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../../constants.ts';
+import { mapGooglePerson } from '../mapper.ts';
 
 const COMMIT_PAGE_SIZE = 10;
 

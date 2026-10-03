@@ -4,19 +4,18 @@
 
 import * as Effect from 'effect/Effect';
 
-import { ClientService } from '@dxos/client';
 import * as Operation from '@dxos/compute/Operation';
 import { Context } from '@dxos/context';
 import { Obj } from '@dxos/echo';
+import { EdgeHttpClientService } from '@dxos/edge-client';
 import { FunctionsServiceClient } from '@dxos/edge-compute';
 
-import { QueryDeployedFunctions } from './definitions';
+import { QueryDeployedFunctions } from './definitions.ts';
 
 export default QueryDeployedFunctions.pipe(
   Operation.withHandler(
     Effect.fn(function* () {
-      const client = yield* ClientService;
-      const functionsService = FunctionsServiceClient.fromClient(client);
+      const functionsService = new FunctionsServiceClient(yield* EdgeHttpClientService);
       const deployed = yield* Effect.promise(() => functionsService.query(Context.default()));
       return {
         functions: deployed.map((fn) => {

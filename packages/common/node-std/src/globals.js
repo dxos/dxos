@@ -4,7 +4,7 @@
 
 import { Buffer } from 'buffer/';
 
-import { process } from './process';
+import { process } from './process.js';
 
 (() => {
   // NOTE(Zan): When running in native context `globalThis.global` is an immutable property.

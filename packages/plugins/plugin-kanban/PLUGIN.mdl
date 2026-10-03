@@ -15,10 +15,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.1`          |
-| `flow`      | `org.dxos.mdl.flow@1.0`        |
+| `test`      | `org.dxos.mdl.test@1.0`        |
 | `step`      | `org.dxos.mdl.step@1.0`        |
 
 ## Types
@@ -273,7 +273,7 @@ feat F-7: AI Skill
 ## Acceptance
 
 ```mdl
-test T-1: Create kanban board
+scenario T-1: Create kanban board
   given: a space with a custom ECHO type that has a single-select field "status"
   when: user creates a new Kanban selecting that type and "status" as the pivot column
   then:
@@ -283,7 +283,7 @@ test T-1: Create kanban board
 ```
 
 ```mdl
-test T-2: Drag card between columns
+scenario T-2: Drag card between columns
   given: a Kanban with columns "todo", "in-progress", "done" and a card in "todo"
   when: user drags the card to "in-progress"
   then:
@@ -293,7 +293,7 @@ test T-2: Drag card between columns
 ```
 
 ```mdl
-test T-3: Reorder cards within a column
+scenario T-3: Reorder cards within a column
   given: a column with cards [A, B, C] in order
   when: user drags card C above card A
   then:
@@ -302,7 +302,7 @@ test T-3: Reorder cards within a column
 ```
 
 ```mdl
-test T-4: Add card to column
+scenario T-4: Add card to column
   given: a board with a "todo" column
   when: user clicks Add Card in "todo"
   then:
@@ -311,7 +311,7 @@ test T-4: Add card to column
 ```
 
 ```mdl
-test T-5: Delete and restore card
+scenario T-5: Delete and restore card
   given: a board with card X in column "todo"
   when: user deletes card X, then undoes
   then:
@@ -320,7 +320,7 @@ test T-5: Delete and restore card
 ```
 
 ```mdl
-test T-6: Hide uncategorized column
+scenario T-6: Hide uncategorized column
   given: a board with some cards that have no pivot value (uncategorized)
   when: user enables "Hide uncategorized column" in KanbanSettings
   then:
@@ -329,7 +329,7 @@ test T-6: Hide uncategorized column
 ```
 
 ```mdl
-test T-7: Switch pivot column field
+scenario T-7: Switch pivot column field
   given: a view-variant board currently pivoting on "status"
   when: user opens settings and selects "priority" as the column field
   then:
@@ -339,11 +339,11 @@ test T-7: Switch pivot column field
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a board, add a card, delete and restore it
+test QA-1: Create a board, add a card, delete and restore it
   desc: The core kanban round-trip — create a view-variant board over a single-select field, add a
     card, then exercise the one destructive/undo op pair the plugin ships.
   actors: human
@@ -354,12 +354,12 @@ flow QA-1: Create a board, add a card, delete and restore it
     - space: a space is open
     - collection: a collection in that space, to create into
     - a custom ECHO type with a single-select field "status" (e.g. Tasks) exists in the space
-    - no Kanban named "QA Board" exists — ABORT rather than deleting one this flow did not create
-    - board: the Kanban "QA Board" this flow creates — no create op exists (human-only step), so
+    - no Kanban named "QA Board" exists — ABORT rather than deleting one this test did not create
+    - board: the Kanban "QA Board" this test creates — no create op exists (human-only step), so
       the runner binds this once that step completes
     - card: the card added to the board — no create op exists (human-only step), so the runner
       binds this once that step completes
-  test:
+  steps:
     - name: Create the board
       do: In the navtree, click + on a collection and choose Kanban. Name it "QA Board", pick the
         typename with a "status" field, and select "status" as the pivot column.
@@ -416,8 +416,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

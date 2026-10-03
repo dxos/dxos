@@ -21,7 +21,7 @@ import { log } from '@dxos/log';
 
 import { ClientCapabilities } from '#types';
 
-import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } from '../progress';
+import { type MonitorUpdate, createSpaceReplicationProgressKey, toSpaceUpdate } from '../progress/index.ts';
 
 /**
  * Reconciliation interval. The sync-state streams are the primary signal; a periodic re-read
@@ -49,11 +49,15 @@ export default Capability.makeModule(
     const registry = registryOption.value;
 
     const monitors = new Map<string, AppCapabilities.ProgressMonitor>();
+    // The absolute synced count when each monitor opened: the run's baseline, so the meter and its
+    // ETA count what this run has done rather than everything the space had synced before it.
+    const baselines = new Map<string, number>();
 
     const applyMonitor = (key: string, update: MonitorUpdate | undefined): void => {
       if (update === undefined) {
         monitors.get(key)?.remove();
         monitors.delete(key);
+        baselines.delete(key);
         return;
       }
 
@@ -61,10 +65,10 @@ export default Capability.makeModule(
       if (!monitor) {
         monitor = registry.register(key, { label: update.label, total: update.total });
         monitors.set(key, monitor);
+        baselines.set(key, update.synced);
       }
       monitor.set(update.current);
       monitor.total(update.total);
-      // monitor.note(update.note ?? '');
     };
 
     // A space that has not finished initializing throws from its `properties` getter, and the
@@ -82,7 +86,8 @@ export default Capability.makeModule(
       }
 
       const key = createSpaceReplicationProgressKey(space.id);
-      const apply = (state: Database.SyncState) => applyMonitor(key, toSpaceUpdate(getSpaceName(space), state));
+      const apply = (state: Database.SyncState) =>
+        applyMonitor(key, toSpaceUpdate(getSpaceName(space), state, baselines.get(key)));
       const provide = ServiceResolver.provide({ space: space.id }, Database.Service);
 
       subscriptions.set(space.id, [

@@ -2,18 +2,17 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createContext } from '@radix-ui/react-context';
-
 import { type Alarm } from '@dxos/assistant';
 import type * as ChatModule from '@dxos/assistant/Chat';
 import { type Event } from '@dxos/async';
 import { type Database } from '@dxos/echo';
+import { createContext } from '@dxos/react-hooks';
 import { type ChatThreadController } from '@dxos/react-ui-assistant';
 import { type MessageRange } from '@dxos/react-ui-feed';
 import { type Message } from '@dxos/types';
 
-import { type AiChatProcessor } from '../../processor';
-import { type ChatEvent } from './events';
+import { type AiChatProcessor } from '../../processor/index.ts';
+import { type ChatEvent } from './events.ts';
 
 /**
  * Wall-clock timestamps for the most-recent (or in-flight) request, lifted out of
@@ -38,7 +37,8 @@ export type ChatContextValue = {
   alarms: Alarm.Alarm[];
   /** Removes a queued message or a pending alarm from the feed. */
   onCancel: (item: Message.Message | Alarm.Alarm) => void;
-  processor: AiChatProcessor;
+  /** Undefined while the processor is still opening; the chat renders from the feed meanwhile. */
+  processor?: AiChatProcessor;
   requestTiming: ChatRequestTiming | null;
   /** The thread's controller, shared between `Chat.Thread` and `Chat.Outline`. */
   controller: ChatThreadController | null;

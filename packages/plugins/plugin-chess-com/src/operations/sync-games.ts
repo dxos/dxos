@@ -14,7 +14,7 @@ import * as Game from '@dxos/plugin-game/Game';
 
 import { ChessComAccount, ChessComOperation } from '#types';
 
-import { ChessComHttpClientLayer, type RemoteGame, fetchAllGames, fetchPlayer } from '../services';
+import { ChessComHttpClientLayer, type RemoteGame, fetchAllGames, fetchPlayer } from '../services/index.ts';
 
 const gameForeignId = (uuid: string): string => `game/${uuid}`;
 
@@ -60,7 +60,7 @@ export default ChessComOperation.SyncGames.pipe(
         gamesFeed,
         // TODO(dmaretskyi): `Feed.append` should auto-append unsaved refs.
         gameObjects.flatMap((game) => [game, game.variant.target!]),
-      );
+      ).pipe(Effect.provideService(Database.Origin, 'system'));
       return { appended: gameObjects.length };
     }, Effect.provide(ChessComHttpClientLayer)),
   ),

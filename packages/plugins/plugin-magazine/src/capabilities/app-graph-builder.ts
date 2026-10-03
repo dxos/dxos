@@ -4,7 +4,7 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppGraphBuilder from '@dxos/app-graph/AppGraphBuilder';
@@ -22,7 +22,7 @@ import { Selection } from '@dxos/react-ui-attention/types';
 import { meta } from '#meta';
 import { FeedOperation, Magazine, Subscription } from '#types';
 
-import { getMagazinesPath } from '../paths';
+import { getMagazinesPath } from '../paths.ts';
 
 export default Capability.makeModule(
   Effect.fnUntraced(function* () {
@@ -72,6 +72,7 @@ export default Capability.makeModule(
       // Companion panel: resolve the selected Post under a Magazine node.
       AppGraphBuilder.createExtension({
         id: 'magazinePost',
+        relation: AppNode.companion,
         match: (node) =>
           Magazine.instanceOf(node.data)
             ? Option.some({ magazine: node.data as Magazine.Magazine, nodeId: node.id })

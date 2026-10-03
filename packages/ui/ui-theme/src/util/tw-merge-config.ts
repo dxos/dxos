@@ -23,6 +23,11 @@ export const twMergeConfig = {
         'font-black',
       ],
       'density': ['dx-density-sm', 'dx-density-md', 'dx-density-lg'],
+      // Theme ring tokens (`--ring-width-focus-line`, `--ring-offset-width-focus-offset`) are not
+      // recognisable as widths, so tailwind-merge files them as colours and drops one of a
+      // width + colour pair.
+      'ring-w': ['ring-focus-line'],
+      'ring-offset-w': ['ring-offset-focus-offset'],
       'dx-focus-ring': [
         'dx-focus-ring',
         'dx-focus-ring-inset',

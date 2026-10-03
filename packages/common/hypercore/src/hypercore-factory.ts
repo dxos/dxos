@@ -7,12 +7,12 @@ import { type Directory, StorageType, createStorage } from '@dxos/random-access-
 import hypercore from '@dxos/vendor-hypercore/hypercore';
 import type { Hypercore, HypercoreOptions } from '@dxos/vendor-hypercore/hypercore';
 
-import { py } from './util';
+import { py } from './util.ts';
 
 /**
- * Creates feeds with default properties.
+ * Creates hypercores with default properties.
  */
-export class HypercoreFactory<T> {
+export class RawHypercoreFactory<T> {
   constructor(
     private readonly _root: Directory = createStorage({ type: StorageType.RAM }).createDirectory(),
     private readonly _options?: HypercoreOptions,
@@ -21,21 +21,21 @@ export class HypercoreFactory<T> {
   }
 
   /**
-   * Creates a feed using a storage factory prefixed with the feed's key.
+   * Creates a hypercore using a storage factory prefixed with the hypercore's key.
    * NOTE: We have to use our `random-access-storage` implementation since the native ones
    * do not behave uniformly across platforms.
    */
-  createFeed(publicKey: Buffer, options?: HypercoreOptions): Hypercore<T> {
+  createHypercore(publicKey: Buffer, options?: HypercoreOptions): Hypercore<T> {
     const directory = this._root.createDirectory(publicKey.toString('hex'));
     const storage = (filename: string) => directory.getOrCreateFile(filename).native;
     return hypercore(storage, publicKey, Object.assign({}, this._options, options));
   }
 
   /**
-   * Creates and opens a feed.
+   * Creates and opens a hypercore.
    */
-  async openFeed(publicKey: Buffer, options?: HypercoreOptions): Promise<Hypercore<T>> {
-    const feed = this.createFeed(publicKey, options);
+  async openHypercore(publicKey: Buffer, options?: HypercoreOptions): Promise<Hypercore<T>> {
+    const feed = this.createHypercore(publicKey, options);
     await py(feed, feed.open)(); // TODO(burdon): Sometimes strange bug if done inside function.
     return feed;
   }

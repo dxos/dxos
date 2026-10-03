@@ -2,9 +2,9 @@
 // Copyright 2023 DXOS.org
 //
 
-export { type BranchStore } from './branching';
-export * from './entity-manager';
-export * from './object-core';
+export { type BranchStore } from './branching.ts';
+export * from './entity-manager.ts';
+export * from './object-core.ts';
 
 // TODO(wittjosiah): Vitest fails without explicit exports here.
 export {
@@ -19,4 +19,4 @@ export {
   type LoadObjectOptions,
   type SpaceDocumentHeads,
   TargetKey,
-} from './types';
+} from './types.ts';

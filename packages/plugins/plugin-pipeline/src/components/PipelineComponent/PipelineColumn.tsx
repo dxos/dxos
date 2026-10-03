@@ -2,23 +2,23 @@
 // Copyright 2025 DXOS.org
 //
 
-import { useComposedRefs } from '@radix-ui/react-compose-refs';
 import React, { forwardRef, useMemo, useRef, useState } from 'react';
 
 import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
 import { Filter, Obj, Query, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
+import { useComposedRefs } from '@dxos/react-hooks';
 import { Panel, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Card, Icon, IconButton } from '@dxos/react-ui';
-import { Menu } from '@dxos/react-ui-menu';
+import { ActionMenu, useMenuActions } from '@dxos/react-ui-menu';
 import { Board, Focus, Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { ProjectionModel, createEchoChangeCallback } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
 import { meta } from '#meta';
 
-import { type ItemProps } from './PipelineComponent';
-import { usePipeline } from './PipelineContext';
+import { type ItemProps } from './PipelineComponent.tsx';
+import { usePipeline } from './PipelineContext.tsx';
 
 //
 // PipelineColumn
@@ -119,32 +119,31 @@ const ItemTile = forwardRef<HTMLDivElement, ItemTileProps>(
     const composedRef = useComposedRefs<HTMLDivElement>(rootRef, forwardedRef);
     const { Item } = usePipeline(ITEM_TILE_NAME);
     const icon = Obj.getIcon(data)?.icon ?? 'ph--circle-dashed--regular';
+    // The card's own menu has no items; the item contributes them.
+    const menu = useMenuActions();
 
     return (
-      <Menu.Root>
-        <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
-          <Focus.Item asChild>
-            <Card.Root classNames={classNames} ref={composedRef}>
-              <Card.Header>
-                <Card.Block>
-                  <Icon icon={icon} />
-                </Card.Block>
-                <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
-                {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
-                <Card.Block end>
-                  <Menu.Trigger asChild>
-                    <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
-                  </Menu.Trigger>
-                  <Menu.Content />
-                </Card.Block>
-              </Card.Header>
-              <Card.Body>
-                <Item {...itemProps} />
-              </Card.Body>
-            </Card.Root>
-          </Focus.Item>
-        </Mosaic.Tile>
-      </Menu.Root>
+      <Mosaic.Tile asChild id={data.id} data={data} location={location} debug={debug}>
+        <Focus.Item asChild>
+          <Card.Root classNames={classNames} ref={composedRef}>
+            <Card.Header>
+              <Card.Block>
+                <Icon icon={icon} />
+              </Card.Block>
+              <Card.Title>{Obj.getLabel(data, { fallback: 'typename' })}</Card.Title>
+              {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
+              <Card.Block end>
+                <ActionMenu>
+                  <IconButton iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label='Actions' />
+                </ActionMenu>
+              </Card.Block>
+            </Card.Header>
+            <Card.Body>
+              <Item {...itemProps} menu={menu} />
+            </Card.Body>
+          </Card.Root>
+        </Focus.Item>
+      </Mosaic.Tile>
     );
   },
 );

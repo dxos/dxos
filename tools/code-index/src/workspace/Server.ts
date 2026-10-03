@@ -8,8 +8,9 @@ import * as NodeHttpServer from '@effect/platform-node/NodeHttpServer';
 import * as Console from 'effect/Console';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
-import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
-import * as RpcServer from 'effect/unstable/rpc/RpcServer';
+import * as Layer from 'effect/Layer';
+import * as RpcSerialization from 'effect/rpc/RpcSerialization';
+import * as RpcServer from 'effect/rpc/RpcServer';
 import { createServer } from 'node:http';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -83,8 +84,7 @@ export const run = ({
     // NDJSON rather than JSON: the `Watch` stream is chunked down one response, and a client that
     // parses per line sees each event as it is appended instead of at the end of the turn.
     const rpcEffect = yield* RpcServer.toHttpEffect(Protocol.Rpcs).pipe(
-      Effect.provide(Handlers.layer({ root, model })),
-      Effect.provide(RpcSerialization.layerNdjson),
+      Effect.provide(Layer.mergeAll(Handlers.layer({ root, model }), RpcSerialization.layerNdjson)),
     );
     const rpc = yield* NodeHttpServer.makeHandler(rpcEffect, { scope });
 

@@ -5,5 +5,5 @@
 export { mx } from '@dxos/ui-theme';
 export type { ThemedClassName } from '@dxos/ui-types';
 
-export * from './device';
-export * from './domino';
+export * from './device.ts';
+export * from './domino.ts';

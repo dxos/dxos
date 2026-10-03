@@ -3,18 +3,23 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Schema from 'effect/Schema';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { Obj } from '@dxos/echo';
 import * as ThreadCapabilities from '@dxos/plugin-thread/ThreadCapabilities';
 import { Message } from '@dxos/types';
 
-import { FREEQ_BACKEND_KIND } from '../constants';
-import * as FreeqCapabilities from '../FreeqCapabilities';
-import { ConnectionManager, FreeqRestApi, type IncomingMessage, makeAppPasswordCredentialProvider } from '../services';
-import { FreeqChannel, makeFreeqChannel } from '../types';
+import { FREEQ_BACKEND_KIND } from '../constants.ts';
+import * as FreeqCapabilities from '../FreeqCapabilities.ts';
+import {
+  ConnectionManager,
+  FreeqRestApi,
+  type IncomingMessage,
+  makeAppPasswordCredentialProvider,
+} from '../services/index.ts';
+import { FreeqChannel, makeFreeqChannel } from '../types.ts';
 
 /** Resolves stored credentials for a handle, or `undefined` for a guest (read-only) connection. */
 export type LookupCredential = (handle: string) => { appPassword: string } | undefined;

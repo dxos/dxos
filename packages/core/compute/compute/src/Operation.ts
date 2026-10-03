@@ -20,8 +20,8 @@ import { invariant } from '@dxos/invariant';
 import type { URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
-import { type NoHandlerError, RunAgainError } from './errors';
-import type { Operation } from './index';
+import { type NoHandlerError, RunAgainError } from './errors.ts';
+import type { Operation } from './index.ts';
 
 /**
  * Schema type that accepts any Encoded form but requires no Context.
@@ -460,7 +460,6 @@ export class PersistentOperation extends Type.makeObject<PersistentOperation>(
   }).pipe(
     Annotation.LabelAnnotation.set(['name']),
     Annotation.IconAnnotation.set({ icon: 'ph--function--regular', hue: 'blue' }),
-    Annotation.HiddenAnnotation.set(true),
   ),
 ) {}
 
@@ -706,8 +705,8 @@ export const annotate =
  * Marks an operation as visible on user-facing operation surfaces (trigger/automation pickers,
  * manual invocation). Absent ⇒ internal: invoked programmatically by plugins and hidden from pickers.
  *
- * Polarity is inverted from the schema-level `HiddenAnnotation` (default visible): operations are
- * hidden by default, since most are internal plugin machinery and only a minority are user-facing.
+ * Same polarity as the schema-level `Annotation.UserType`: operations are hidden by default, since most
+ * are internal plugin machinery and only a minority are user-facing.
  */
 export const VisibleAnnotation = Annotation.make({
   id: 'org.dxos.operation.visible',

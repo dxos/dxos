@@ -4,8 +4,8 @@
 
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
@@ -18,7 +18,7 @@ import { Text } from '@dxos/schema';
 
 import { FileSystemCapabilities } from '#types';
 
-import { findFileById, readFileContent, updateFileInWorkspace } from '../../util';
+import { findFileById, readFileContent, updateFileInWorkspace } from '../../util.ts';
 import {
   type FileMapEntry,
   getFileXattrDXN,
@@ -26,8 +26,8 @@ import {
   setFileXattrDXN,
   watchMarkdownFile,
   writeFileMap,
-} from './disk-io';
-import { collectMarkdownFileIds, collectMarkdownFiles, relativePath } from './file-helpers';
+} from './disk-io.ts';
+import { collectMarkdownFileIds, collectMarkdownFiles, relativePath } from './file-helpers.ts';
 
 /** Yield to the event loop every N files during restore so capability init cannot wedge the UI thread. */
 const RESTORE_YIELD_EVERY_N_FILES = 25;

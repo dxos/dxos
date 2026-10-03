@@ -11,13 +11,13 @@ import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
 import { IconButton, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useViewState, useViewStateActions } from '@dxos/react-ui-attention';
-import { type Commit, Timeline } from '@dxos/react-ui-components';
+import { type Commit, Timeline } from '@dxos/react-ui-trace';
 import { Branch, type History, Version } from '@dxos/versioning';
 
 import { meta } from '#meta';
 import { ReviewCapabilities } from '#types';
 
-import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline';
+import { MAIN_BRANCH, commitToSelection, createTimelineModel } from './timeline.ts';
 
 export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.VersionedObject>;
 
@@ -83,6 +83,9 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
             })()
           : MAIN_BRANCH;
 
+  // The timeline windows its rows against this scroller.
+  const [viewport, setViewport] = useState<HTMLDivElement | null>(null);
+
   // Recomputed per render: the component subscribes to history mutations and the model is
   // cheap at panel scale (a handful of records).
   const rootText = provider?.getTarget(subject);
@@ -139,7 +142,10 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
 
   const handleSelect = useCallback(
     (commit: Commit | undefined) => {
+      // Clearing the timeline's selection (clicking the selected commit, or Enter on it) returns to
+      // the current version; otherwise the view would keep showing a version the timeline no longer marks.
       if (!commit) {
+        setSelection({ kind: 'current' });
         return;
       }
       const next = commitToSelection(subject, commit);
@@ -219,8 +225,14 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
       </Panel.Toolbar>
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
-          <ScrollArea.Viewport>
-            <Timeline branches={branches} branch={currentBranch} commits={commits} onSelect={handleSelect} />
+          <ScrollArea.Viewport ref={setViewport}>
+            <Timeline
+              branches={branches}
+              branch={currentBranch}
+              commits={commits}
+              scroller={viewport}
+              onSelect={handleSelect}
+            />
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Content>

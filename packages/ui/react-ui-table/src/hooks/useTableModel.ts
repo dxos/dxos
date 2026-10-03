@@ -15,8 +15,8 @@ import {
   type TableRow,
   type TableRowAction,
   createEchoChangeCallback,
-} from '../model';
-import { type Table } from '../types';
+} from '../model/index.ts';
+import { type Table } from '../types/index.ts';
 
 export type UseTableModelProps<T extends TableRow = TableRow> = {
   object?: Table.Table;

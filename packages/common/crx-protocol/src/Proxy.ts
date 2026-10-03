@@ -39,7 +39,7 @@ export const RENDER_READY_DATASET_KEY = 'composerProxy';
  *   - `invalidAck`      : the injected script returned an unexpected shape.
  *   - `transportError`  : an unexpected browser-API error.
  */
-export const ProxyError = Schema.Literals([
+export const Error = Schema.Literals([
   'badRequest',
   'forbiddenOrigin',
   'noTab',
@@ -47,7 +47,7 @@ export const ProxyError = Schema.Literals([
   'invalidAck',
   'transportError',
 ]);
-export type ProxyError = Schema.Schema.Type<typeof ProxyError>;
+export type Error = Schema.Schema.Type<typeof Error>;
 
 /** Request to render a URL in a background tab. */
 export const RenderRequest = Schema.Struct({
@@ -70,7 +70,7 @@ export const RenderAck = Schema.Union([
     html: Schema.String,
     finalUrl: Schema.String,
   }),
-  Schema.Struct({ version: Schema.Literal(1), id: Schema.String, ok: Schema.Literal(false), error: ProxyError }),
+  Schema.Struct({ version: Schema.Literal(1), id: Schema.String, ok: Schema.Literal(false), error: Error }),
 ]);
 export type RenderAck = Schema.Schema.Type<typeof RenderAck>;
 
@@ -87,6 +87,6 @@ export const PingAck = Schema.Union([
     extensionVersion: Schema.String,
     extensionName: Schema.String,
   }),
-  Schema.Struct({ version: Schema.Literal(1), id: Schema.String, ok: Schema.Literal(false), error: ProxyError }),
+  Schema.Struct({ version: Schema.Literal(1), id: Schema.String, ok: Schema.Literal(false), error: Error }),
 ]);
 export type PingAck = Schema.Schema.Type<typeof PingAck>;

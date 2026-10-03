@@ -37,16 +37,8 @@ export default Capability.makeModule(
                 .pipe(Effect.provideService(Database.Service, Database.makeService(options.db)))
             : Drawing.makeCanvas({ schema: variant.id });
 
-          // Add the canvas to the database. It carries HiddenAnnotation, so `CollectionModel.add`
-          // persists it without filing it into the target collection.
-          yield* Operation.invoke(
-            SpaceOperation.AddObject,
-            {
-              object: canvas,
-              target: options.target,
-            },
-            { spaceId: options.db.spaceId },
-          );
+          // The canvas is an implementation detail of the drawing, so it is persisted but filed nowhere.
+          yield* Operation.invoke(SpaceOperation.AddObject, { object: canvas }, { spaceId: options.db.spaceId });
 
           const drawing = Drawing.make({
             name: typeof input?.name === 'string' ? input.name : undefined,
@@ -65,7 +57,11 @@ export default Capability.makeModule(
             { spaceId: options.db.spaceId },
           ).pipe(
             Effect.tapError(() =>
-              Operation.invoke(SpaceOperation.RemoveObjects, { objects: [canvas] }).pipe(Effect.ignore),
+              Operation.invoke(
+                SpaceOperation.RemoveObjects,
+                { objects: [canvas] },
+                { spaceId: options.db.spaceId },
+              ).pipe(Effect.ignore),
             ),
           );
         }),

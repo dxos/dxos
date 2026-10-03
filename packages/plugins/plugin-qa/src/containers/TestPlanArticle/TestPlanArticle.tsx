@@ -3,14 +3,14 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
 import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
-import { Icon, Panel } from '@dxos/react-ui';
+import { Field, Icon, Panel } from '@dxos/react-ui';
 
 import { RunRow } from '#components';
 import { QaOperation, type TestCase, TestPlan, TestRun } from '#types';
@@ -95,23 +95,23 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         </header>
 
         {error && (
-          <p className='text-redText text-sm' role='alert' data-testid='qa.plan.error'>
+          <p className='text-red-text text-sm' role='alert' data-testid='qa.plan.error'>
             {error}
           </p>
         )}
 
         <section>
-          <h2 className='text-sm text-subdued'>Cases</h2>
+          <Field.Label>Cases</Field.Label>
           <div className='flex gap-2 py-2'>
-            <input
-              className='dx-input w-24'
+            <Field.Input
+              classNames='w-24'
               placeholder='Key'
               value={caseKey}
               onChange={(event) => setCaseKey(event.target.value)}
               data-testid='qa.plan.case-key'
             />
-            <input
-              className='dx-input grow'
+            <Field.Input
+              classNames='grow'
               placeholder='Title'
               value={caseTitle}
               onChange={(event) => setCaseTitle(event.target.value)}
@@ -145,7 +145,7 @@ export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
         </section>
 
         <section>
-          <h2 className='text-sm text-subdued'>Runs</h2>
+          <Field.Label>Runs</Field.Label>
           {newestFirst.length === 0 ? (
             <p className='text-subdued' data-testid='qa.plan.no-runs'>
               No runs yet.

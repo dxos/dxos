@@ -7,7 +7,7 @@ import { expect, test } from 'vitest';
 import { createId, createKeyPair } from '@dxos/crypto';
 import { PublicKey } from '@dxos/keys';
 
-import { humanize } from './human-hash';
+import { humanize } from './human-hash.ts';
 
 test('Hashing', () => {
   const { publicKey, secretKey } = createKeyPair();

@@ -4,7 +4,7 @@
 
 import type * as RoutineCapabilities from '@dxos/plugin-routine/RoutineCapabilities';
 
-import { makeScheduledRoutine } from './scaffold';
+import { makeScheduledRoutine } from './scaffold.ts';
 
 /** Inbox supplies new messages; database queries recent objects; markdown writes the digest document. */
 const SKILL_KEYS = ['org.dxos.skill.inbox', 'org.dxos.skill.database', 'org.dxos.skill.markdown'] as const;

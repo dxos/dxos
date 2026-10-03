@@ -2,14 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Response from 'effect/ai/Response';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as PubSub from 'effect/PubSub';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 import * as Struct from 'effect/Struct';
-import * as Response from 'effect/unstable/ai/Response';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 
 import { AiService, Model, ToolExecutionService, ToolId, ToolResolverService } from '@dxos/ai';
 import { AiRequest, GenerationObserver } from '@dxos/assistant';
@@ -20,8 +20,8 @@ import { assertArgument } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Message } from '@dxos/types';
 
-import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types';
-import { StreamSchema } from '../../util';
+import { ComputeCustomEvent, ComputeNodeContext, ValueBag, defineComputeNode } from '../../types/index.ts';
+import { StreamSchema } from '../../util/index.ts';
 
 export const GptMessage = Schema.Struct({
   role: Schema.Union([Schema.Literal('system'), Schema.Literal('user')]),
@@ -149,7 +149,7 @@ export const gptNode = defineComputeNode({
 
     // TODO(dmaretskyi): Use Effect.context() > Context.pick to pass context.
     const runDeps = Layer.mergeAll(
-      AiService.model(DXN.getName(Model.DEFAULT_EDGE)).pipe(
+      AiService.languageModel(DXN.getName(Model.DEFAULT_EDGE)).pipe(
         Layer.provide(Layer.succeed(AiService.AiService, yield* AiService.AiService)),
       ),
       // TODO(dmaretskyi): Move them out.

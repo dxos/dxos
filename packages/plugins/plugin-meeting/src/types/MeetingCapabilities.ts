@@ -4,15 +4,15 @@
 
 // @import-as-namespace
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 
 import { meta } from '#meta';
 
-import * as Meeting from './Meeting';
-import type * as Settings from './Settings';
+import * as Meeting from './Meeting.ts';
+import type * as Settings from './Settings.ts';
 
 export const SettingsAtom = Capability.makeSingleton<Atom.Writable<Settings.Settings>>()(
   `${meta.profile.key}.capability.settings`,

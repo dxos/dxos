@@ -2,9 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
-import { SqlMigrations } from '@dxos/sql-sqlite';
+import * as SqlMigrations from '@dxos/sql-sqlite/SqlMigrations';
 
 import init from './0001_init.sql?raw';
+import subductionMigrations from './0002_subduction_migrations.sql?raw';
 
 /**
  * Automerge chunk-storage migrations, keyed `<id>_<name>` as `Migrator.fromRecord` expects. Ids must only ever increase,
@@ -12,6 +13,7 @@ import init from './0001_init.sql?raw';
  */
 export const MIGRATIONS = {
   '0001_init': SqlMigrations.apply(init),
+  '0002_subduction_migrations': SqlMigrations.apply(subductionMigrations),
 };
 
 /** Own history table per store, since many stores share the client database. */

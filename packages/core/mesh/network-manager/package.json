@@ -1,6 +1,6 @@
 {
   "name": "@dxos/network-manager",
-  "version": "0.11.1",
+  "version": "0.12.0",
   "description": "Network Manager",
   "homepage": "https://dxos.org",
   "bugs": "https://github.com/dxos/dxos/issues",
@@ -68,19 +68,21 @@
     "@dxos/async": "workspace:*",
     "@dxos/context": "workspace:*",
     "@dxos/debug": "workspace:*",
+    "@dxos/effect": "workspace:*",
+    "@dxos/errors": "workspace:*",
     "@dxos/invariant": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/log": "workspace:*",
     "@dxos/messaging": "workspace:*",
     "@dxos/node-std": "workspace:*",
     "@dxos/protocols": "workspace:*",
-    "@dxos/rpc": "workspace:*",
     "@dxos/teleport": "workspace:*",
     "@dxos/util": "workspace:*",
     "effect": "catalog:",
     "node-datachannel": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-browser": "catalog:",
     "fetch-mock": "catalog:"
   },
   "publishConfig": {

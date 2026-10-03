@@ -3,9 +3,8 @@
 //
 
 import { useAtomSet, useAtomValue } from '@effect/atom-react/Hooks';
-import { createContext } from '@radix-ui/react-context';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useReducer, useRef } from 'react';
 
 import type * as Capabilities from '@dxos/app-framework/Capabilities';
@@ -13,6 +12,7 @@ import type * as AppGraph from '@dxos/app-graph/AppGraph';
 import { Database, Filter, Obj, Ref, Tag } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { normalizeText } from '@dxos/markdown';
+import { createContext } from '@dxos/react-hooks';
 import {
   Card,
   Collapsible,
@@ -25,7 +25,7 @@ import {
 } from '@dxos/react-ui';
 import { Avatar, ContactAvatar, Row } from '@dxos/react-ui-card';
 import { Html, emailDialect } from '@dxos/react-ui-components';
-import { Menu, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, type MenuActions, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
 import { TagIndex } from '@dxos/schema';
 import { type Actor, ContentBlock, DraftMessage, type Message as MessageType } from '@dxos/types';
@@ -35,15 +35,15 @@ import { useCidResolver, useEmailComposerExtensions, useMessageTags, useSendEmai
 import { meta } from '#meta';
 import { InboxCapabilities, Mailbox, SystemTags } from '#types';
 
-import { parseAddressList } from '../../operations/correspondents/correspondence';
-import { createDraftMessage, formatAge, getMessageProps } from '../../util';
-import { EditMessage } from '../EditMessage';
-import { MarkdownViewer } from '../MarkdownViewer';
-import { type ViewMode, viewModeGroup } from '../ViewMode';
-import { keyOf } from './key-of';
-import { ExtractorMenuItem } from './useExtractorActions';
-import { useMessageExtractedObjects } from './useMessageExtractedObjects';
-import { useMessageActions } from './useToolbar';
+import { parseAddressList } from '../../operations/correspondents/correspondence.ts';
+import { createDraftMessage, formatAge, getMessageProps } from '../../util/index.ts';
+import { EditMessage } from '../EditMessage/index.ts';
+import { MarkdownViewer } from '../MarkdownViewer/index.ts';
+import { type ViewMode, viewModeGroup } from '../ViewMode/index.ts';
+import { keyOf } from './key-of.ts';
+import { ExtractorMenuItem } from './useExtractorActions.tsx';
+import { useMessageExtractedObjects } from './useMessageExtractedObjects.ts';
+import { useMessageActions } from './useToolbar.tsx';
 
 //
 // Types
@@ -112,6 +112,8 @@ const CONVERSATION_STACK_NAME = 'ConversationStack';
 type ConversationStackContextValue = {
   /** Single attendable id shared by every tile so the whole conversation is attended together. */
   attendableId?: string;
+  /** The graph node the conversation renders, whose actions the tiles show; defaults to `attendableId`. */
+  nodeId?: string;
   mailbox?: Mailbox.Mailbox;
   /** Messages/refs in chronological order; drafts interleaved by the connector. */
   items: MessageOrRef[];
@@ -156,6 +158,7 @@ export type ConversationStackRootProps = PropsWithChildren<
   Pick<
     ConversationStackContextValue,
     | 'attendableId'
+    | 'nodeId'
     | 'mailbox'
     | 'items'
     | 'companion'
@@ -189,6 +192,7 @@ export type ConversationStackRootProps = PropsWithChildren<
 const ConversationStackRoot = ({
   children,
   attendableId,
+  nodeId,
   items,
   companion,
   expanded,
@@ -214,6 +218,7 @@ const ConversationStackRoot = ({
 }: ConversationStackRootProps) => (
   <ConversationStackProvider
     attendableId={attendableId}
+    nodeId={nodeId}
     items={items}
     mailbox={mailbox}
     options={options}
@@ -472,6 +477,7 @@ type MessageTileProps = {
 const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   const {
     attendableId,
+    nodeId,
     mailbox,
     options,
     expanded,
@@ -522,7 +528,7 @@ const MessageTile = ({ id, message: messageOrRef }: MessageTileProps) => {
   const menuActions = useMessageActions({
     graph,
     extractActions,
-    nodeId: attendableId,
+    nodeId: nodeId ?? attendableId,
     inInbox,
     // Without a db the toggle is a no-op, so offering an enabled action would be a dead affordance.
     onArchive: db && target ? handleArchive : undefined,
@@ -663,7 +669,7 @@ const useSystemTag = (
   const db = mailbox && Obj.getDatabase(mailbox);
   const tag = useQuery(db, Filter.foreignKeys(Tag.Tag, [SystemTags.systemTagKey(tagId)]))[0];
   const tagUri = tag && Obj.getURI(tag).toString();
-  const tagIndex = mailbox?.tags?.target;
+  const tagIndex = useResolveRef(mailbox?.tags);
   const taggedAtom = useMemo(
     () => (tagIndex && tagUri && message ? TagIndex.atom(tagIndex, message.id, tagUri) : NOT_TAGGED),
     [tagIndex, message, tagUri],
@@ -838,11 +844,7 @@ type MessageMenuProps = {
 
 /** Per-message toolbar menu (reply/forward/delete/extract), built by the tile and rendered top-right. */
 const MessageMenu = ({ attendableId, actions }: MessageMenuProps) => (
-  <Menu.Root {...(actions ?? {})} attendableId={attendableId} alwaysActive>
-    <Menu.Toolbar classNames='p-1 bg-transparent'>
-      <Menu.Items />
-    </Menu.Toolbar>
-  </Menu.Root>
+  <ActionToolbar {...(actions ?? {})} attendableId={attendableId} alwaysActive classNames='p-1 bg-transparent' />
 );
 
 MessageMenu.displayName = MESSAGE_MENU_NAME;
@@ -1052,11 +1054,13 @@ const ConversationStackToolbar = composable<HTMLDivElement, ConversationStackToo
   const menuActions = useThreadViewActions({ options, onCollapseAll, onExpandAll });
 
   return (
-    <Menu.Root {...menuActions} attendableId={attendableId} alwaysActive>
-      <Menu.Toolbar {...composableProps(props)} ref={forwardedRef}>
-        <Menu.Items />
-      </Menu.Toolbar>
-    </Menu.Root>
+    <ActionToolbar
+      {...menuActions}
+      attendableId={attendableId}
+      alwaysActive
+      {...composableProps(props)}
+      ref={forwardedRef}
+    />
   );
 });
 

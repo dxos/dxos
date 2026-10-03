@@ -2,10 +2,17 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
 import React, { useEffect, useState } from 'react';
 
 import { type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
+import { fromPublicKey, toPublicKey } from '@dxos/protocols/buf';
+import {
+  AppContextRequestSchema,
+  InvitationUrlRequestSchema,
+  LayoutRequestSchema,
+} from '@dxos/protocols/buf/dxos/iframe_pb';
 import { useClient } from '@dxos/react-client';
 import {
   type InvitationUrlRequest,
@@ -17,30 +24,34 @@ import {
 import { useSpace } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 
-import { IdentityDialog } from '../IdentityDialog';
-import { JoinDialog } from '../JoinDialog';
-import { SpaceDialog } from '../SpaceDialog';
-import { StatusDialog } from '../StatusDialog';
+import { IdentityDialog } from '../IdentityDialog/index.ts';
+import { JoinDialog } from '../JoinDialog/index.ts';
+import { SpaceDialog } from '../SpaceDialog/index.ts';
+import { StatusDialog } from '../StatusDialog/index.ts';
 
 const blurActiveElement = () => (document.activeElement as HTMLElement | undefined)?.blur?.();
 
 export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
-  const [{ layout, invitationCode, spaceKey, spaceId, target }, setLayout] = useState<LayoutRequest>({
-    layout: runtime.layout,
-    invitationCode: runtime.invitationCode,
-    spaceKey: runtime.spaceKey,
-    spaceId: runtime.spaceId,
-    target: runtime.target,
-  });
+  const [{ layout, invitationCode, spaceKey, spaceId, target }, setLayout] = useState<LayoutRequest>(
+    create(LayoutRequestSchema, {
+      layout: runtime.layout,
+      invitationCode: runtime.invitationCode,
+      spaceKey: runtime.spaceKey && fromPublicKey(runtime.spaceKey),
+      spaceId: runtime.spaceId,
+      target: runtime.target,
+    }),
+  );
   const [{ invitationUrl, deviceInvitationParam, spaceInvitationParam }, setInvitationUrl] =
-    useState<InvitationUrlRequest>({
-      invitationUrl: runtime.invitationUrl,
-      deviceInvitationParam: runtime.deviceInvitationParam,
-      spaceInvitationParam: runtime.spaceInvitationParam,
-    });
+    useState<InvitationUrlRequest>(
+      create(InvitationUrlRequestSchema, {
+        invitationUrl: runtime.invitationUrl,
+        deviceInvitationParam: runtime.deviceInvitationParam,
+        spaceInvitationParam: runtime.spaceInvitationParam,
+      }),
+    );
 
   const client = useClient();
-  const space = useSpace((spaceId as SpaceId | undefined) ?? spaceKey);
+  const space = useSpace((spaceId as SpaceId | undefined) ?? toPublicKey(spaceKey));
 
   const createDeviceInvitationUrl = (invitationCode: string) => {
     const baseUrl = new URL(invitationUrl);
@@ -52,6 +63,13 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
     const baseUrl = new URL(invitationUrl);
     baseUrl.searchParams.set(spaceInvitationParam, invitationCode);
     return baseUrl.toString();
+  };
+
+  // The client stays open across the deletion, so the next identity's flow runs in this same shell.
+  const startNewIdentity = async (next: ShellLayout) => {
+    runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.STATUS }));
+    await client.halo.deleteIdentity();
+    runtime.setLayout(create(LayoutRequestSchema, { layout: next }));
   };
 
   useEffect(() => {
@@ -67,8 +85,8 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
   useAsyncEffect(async () => {
     if (layout === ShellLayout.SPACE && !space) {
       log.warn('No space found for shell space invitations.');
-      await runtime.setAppContext({ display: ShellDisplay.NONE });
-      runtime.setLayout({ layout: ShellLayout.DEFAULT });
+      await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));
+      runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
     }
   }, [runtime, layout, space]);
 
@@ -89,11 +107,11 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
                 : 'default'
           }
           initialInvitationCode={invitationCode}
-          onCancelResetStorage={() => runtime.setLayout({ layout: ShellLayout.IDENTITY })}
+          onCancelResetStorage={() => runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.IDENTITY }))}
           onDone={async () => {
             blurActiveElement();
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout({ layout: ShellLayout.DEFAULT });
+            await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
         />
       );
@@ -104,27 +122,13 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
       return (
         <IdentityDialog
           createInvitationUrl={createDeviceInvitationUrl}
-          onResetStorage={async () => {
-            runtime.setLayout({ layout: ShellLayout.STATUS });
-            await client.reset();
-            return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true });
-          }}
-          onRecover={async () => {
-            runtime.setLayout({ layout: ShellLayout.STATUS });
-            await client.reset();
-            // TODO(wittjosiah): Enter join flow without reloading.
-            return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true, target: 'recoverIdentity' });
-          }}
-          onJoinNewIdentity={async () => {
-            runtime.setLayout({ layout: ShellLayout.STATUS });
-            await client.reset();
-            // TODO(wittjosiah): Enter join flow without reloading.
-            return runtime.setAppContext({ display: ShellDisplay.NONE, reset: true, target: 'deviceInvitation' });
-          }}
+          onResetStorage={() => startNewIdentity(ShellLayout.INITIALIZE_IDENTITY)}
+          onRecover={() => startNewIdentity(ShellLayout.INITIALIZE_IDENTITY_FROM_RECOVERY)}
+          onJoinNewIdentity={() => startNewIdentity(ShellLayout.INITIALIZE_IDENTITY_FROM_INVITATION)}
           onDone={async () => {
             blurActiveElement();
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout({ layout: ShellLayout.DEFAULT });
+            await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
           initialDisposition={layout === ShellLayout.SHARE_IDENTITY ? 'manage-device-invitation' : 'default'}
         />
@@ -138,8 +142,8 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           createInvitationUrl={createSpaceInvitationUrl}
           onDone={async () => {
             blurActiveElement();
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout({ layout: ShellLayout.DEFAULT });
+            await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
         />
       ) : null;
@@ -151,17 +155,19 @@ export const Shell = ({ runtime }: { runtime: ShellRuntime }) => {
           onDone={async (result) => {
             blurActiveElement();
             const target = result?.target ?? undefined;
-            await runtime.setAppContext({
-              display: ShellDisplay.NONE,
-              spaceKey: result?.spaceKey ?? undefined,
-              target,
-            });
-            runtime.setLayout({ layout: ShellLayout.DEFAULT });
+            await runtime.setAppContext(
+              create(AppContextRequestSchema, {
+                display: ShellDisplay.NONE,
+                spaceKey: result?.spaceKey ? fromPublicKey(result.spaceKey) : undefined,
+                target,
+              }),
+            );
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
           onExit={async () => {
             blurActiveElement();
-            await runtime.setAppContext({ display: ShellDisplay.NONE });
-            runtime.setLayout({ layout: ShellLayout.DEFAULT });
+            await runtime.setAppContext(create(AppContextRequestSchema, { display: ShellDisplay.NONE }));
+            runtime.setLayout(create(LayoutRequestSchema, { layout: ShellLayout.DEFAULT }));
           }}
         />
       );

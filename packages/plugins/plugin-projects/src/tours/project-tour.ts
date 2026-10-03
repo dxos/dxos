@@ -1,0 +1,50 @@
+//
+// Copyright 2026 DXOS.org
+//
+
+import type * as Tour from '@dxos/app-toolkit/Tour';
+
+const showTab =
+  (tab: 'overview' | 'tasks'): Tour.Step['before'] =>
+  () => {
+    document.querySelector<HTMLElement>(`[data-testid="projectsPlugin.tab.${tab}"]`)?.click();
+  };
+
+export const steps: Tour.Step[] = [
+  {
+    before: showTab('overview'),
+    target: '[data-testid="projectsPlugin.tab.overview"]',
+    title: 'Overview',
+    description: 'The brief, the standing context every session reads, and the notes work is drafted in.',
+    placement: 'bottom',
+  },
+  {
+    before: showTab('overview'),
+    target: '[data-testid="projectsPlugin.artifacts"]',
+    title: 'Artifacts',
+    description: 'What the project produces. Documents, tables and the rest are filed here as they are made.',
+    placement: 'top',
+  },
+  {
+    before: showTab('tasks'),
+    target: '[data-testid="projectsPlugin.tab.tasks"]',
+    title: 'Tasks',
+    description: 'The ledger, grouped into milestones. Tick rows to arm the actions beside this tab.',
+    placement: 'bottom',
+  },
+  {
+    before: showTab('tasks'),
+    target: '[data-testid="projectsPlugin.delegateTasks"]',
+    title: 'Hand work to an agent',
+    description: 'Ticked tasks go to one agent session, in the order they are listed.',
+    placement: 'bottom',
+  },
+  {
+    target: '[data-testid="projectsPlugin.createChat"]',
+    title: 'Sessions',
+    description: 'Start a session against the project. It reads the brief and files what it makes under Artifacts.',
+    placement: 'bottom',
+  },
+];
+
+export default steps;

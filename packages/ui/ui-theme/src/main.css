@@ -35,6 +35,7 @@
 @import './css/components/card.css';
 @import './css/components/checkbox.css';
 @import './css/components/dialog.css';
+@import './css/components/drawer.css';
 @import './css/components/focus.css';
 @import './css/components/icon.css';
 @import './css/components/input.css';
@@ -45,6 +46,8 @@
 @import './css/components/surface.css';
 @import './css/components/tag.css';
 @import './css/components/text.css';
+@import './css/components/toast.css';
+@import './css/components/tour.css';
 
 /* @layer dx-components (layout) */
 @import './css/layout/main.css';
@@ -123,7 +126,6 @@
  */
 @plugin '@tailwindcss/forms';
 @plugin 'tailwind-scrollbar';
-@plugin 'tailwindcss-radix';
 
 /**
  * Class-based dark mode.

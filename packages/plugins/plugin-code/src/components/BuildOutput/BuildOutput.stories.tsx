@@ -10,7 +10,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { CodeCapabilities } from '#types';
 
-import { BuildOutput } from './BuildOutput';
+import { BuildOutput } from './BuildOutput.tsx';
 
 type ProjectBuildState = CodeCapabilities.ProjectBuildState;
 

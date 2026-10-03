@@ -6,7 +6,7 @@ import * as Skill from '@dxos/compute/Skill';
 import * as Template from '@dxos/compute/Template';
 import { trim } from '@dxos/util';
 
-import { DelegateTask, DelegateTasks } from './operations/definitions';
+import { DelegateTask, DelegateTasks } from './operations/definitions.ts';
 
 const SKILL_KEY = 'org.dxos.skill.delegation';
 

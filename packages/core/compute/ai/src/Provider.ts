@@ -54,6 +54,16 @@ export const lmStudio = make('org.dxos.provider.lmStudio', { label: 'LM Studio',
 // TODO(wittjosiah): Remove.
 export const openai = make('org.dxos.provider.openai', { label: 'OpenAI' });
 
+//
+// Decision-model providers. Not in `all`, which lists language-model providers for pickers.
+//
+
+/** TypeSafe's own System One API (https://docs.typesafe.ai/api). */
+export const typesafe = make('ai.typesafe.provider.systemOne', { label: 'TypeSafe' });
+
+/** Cloudflare Workers AI, reached through EDGE on the platform Cloudflare account. */
+export const workersAi = make('com.cloudflare.provider.workersAi', { label: 'Cloudflare Workers AI' });
+
 /** All providers DXOS defines. The supported set is derived from this list, not a closed union. */
 export const all: readonly Provider[] = [edge, builtIn, ollama, lmStudio, openai];
 

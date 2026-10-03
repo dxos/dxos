@@ -2,6 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
+import { type Extension } from '@codemirror/state';
 import React, { forwardRef, useCallback, useImperativeHandle, useMemo, useRef, useState } from 'react';
 
 import { type ThemedClassName, type UseEditableOptions, useEditable, useThemeContext } from '@dxos/react-ui';
@@ -16,7 +17,7 @@ import {
 } from '@dxos/ui-editor';
 import { mx } from '@dxos/ui-theme';
 
-import { MarkdownView, type MarkdownViewProps } from '../MarkdownView';
+import { MarkdownView, type MarkdownViewProps } from '../MarkdownView/index.ts';
 
 /**
  * Rendered markdown that becomes a markdown editor in place.
@@ -47,6 +48,11 @@ export type MarkdownEditableProps = ThemedClassName<
      * whatever the reader is actually driving.
      */
     autoFocus?: boolean;
+    /**
+     * Editor extensions beyond the field's own — what a host's plugins contribute, such as link
+     * chips. Appended after the markdown set, so they see a parsed document.
+     */
+    extensions?: Extension[];
   }
 >;
 
@@ -67,7 +73,16 @@ export type MarkdownEditableController = {
  */
 export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownEditableProps>(
   (
-    { classNames, placeholder, components, readonly, multiline, autoFocus = true, ...options }: MarkdownEditableProps,
+    {
+      classNames,
+      placeholder,
+      components,
+      readonly,
+      multiline,
+      autoFocus = true,
+      extensions: hostExtensions,
+      ...options
+    }: MarkdownEditableProps,
     forwardedRef,
   ) => {
     const { value, draft, editing, setDraft, commit, revert, previewProps } = useEditable({
@@ -115,6 +130,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
         // its content, not a pane filling a height.
         createThemeExtensions({ themeMode, syntaxHighlighting: true, slots: fullWidth }),
         decorateMarkdown(),
+        hostExtensions ?? [],
         inlineEdit({
           // The text comes with the event: committing the draft instead would write whatever the
           // previous render captured.
@@ -128,7 +144,7 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
           submitOnEnter: !multiline,
         }),
       ],
-      [commitOnBlur, multiline, placeholder, themeMode, revertAll],
+      [commitOnBlur, multiline, placeholder, themeMode, revertAll, hostExtensions],
     );
 
     if (editing) {
@@ -136,11 +152,9 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
       // config, not to the DOM, and the preview is a box of the same kind — so the two match.
       return (
         // CodeMirror insets its own content, which would sit the text further in than the preview it
-        // replaced; the field owns its inset, so the editor's is removed.
-        <div
-          data-testid='markdownEditable.editor'
-          className={mx('w-full [&_.cm-content]:!p-0 [&_.cm-line]:!px-0', classNames)}
-        >
+        // replaced; the field owns its inset, so the editor's is removed. Lines keep theirs, since
+        // forcing it to zero would override a list item's hanging indent and hide its bullet.
+        <div data-testid='markdownEditable.editor' className={mx('w-full [&_.cm-content]:!p-0', classNames)}>
           {/* `initialValue`, not a controlled value: the editor owns its document once open, and
             feeding `draft` back in on every keystroke would fight the cursor. */}
           <TextEditor
@@ -150,13 +164,13 @@ export const MarkdownEditable = forwardRef<MarkdownEditableController, MarkdownE
             // get into — right for a document pane, wrong for a field next to a title.
             focusable={false}
             initialValue={draft}
+            extensions={extensions}
+            autoFocus={autoFocus}
+            selectionEnd
             onChange={(text) => {
               discarded.current = false;
               handlers.current.setDraft(text);
             }}
-            extensions={extensions}
-            autoFocus={autoFocus}
-            selectionEnd
           />
         </div>
       );

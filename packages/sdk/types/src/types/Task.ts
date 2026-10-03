@@ -4,37 +4,37 @@
 
 // @import-as-namespace
 
+import * as Duration from 'effect/Duration';
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
 import { Annotation, Database, DXN, EID, Filter, Format, Obj, Query, Ref, Type } from '@dxos/echo';
-import { GeneratorAnnotation, LabelAnnotation } from '@dxos/echo/Annotation';
 import { FormatAnnotation } from '@dxos/echo/Format';
 import { PropertyMetaAnnotationId } from '@dxos/echo/internal';
-import { type EntityId } from '@dxos/echo/Key';
+import { EntityId } from '@dxos/echo/Key';
+import { BaseError } from '@dxos/errors';
 import { type MakeRequired } from '@dxos/util';
 
-import * as Actor from './Actor';
-import * as Milestone from './Milestone';
+import * as Actor from './Actor.ts';
+import * as File from './File.ts';
+import * as Milestone from './Milestone.ts';
+import * as PullRequest from './PullRequest.ts';
+
+export type Option<T> = { id: T; title: string; color?: string; icon?: string };
+
+export const NullOption: Option<any> = { id: 'none', title: 'None' };
 
 //
 // Priority
 //
 
-export const Priority = Schema.Literals(['none', 'low', 'medium', 'high', 'urgent']);
+export const Priority = Schema.Literals(['low', 'medium', 'high', 'urgent']);
 export type Priority = Schema.Schema.Type<typeof Priority>;
 
-/**
- * `icon` sits beside `color` so a row, its picker and the form's select cannot name the same
- * priority with different glyphs. The ramp is neutral — shape carries the level — which is what
- * leaves `urgent` the only coloured one and so the only one findable in a long list. The extra
- * field is inert to `SelectOption`, which carries id/title/color and ignores the rest.
- */
-export const PriorityOptions: { id: Priority; title: string; color: string; icon: string }[] = [
-  { id: 'none', title: 'None', color: 'gray', icon: 'ph--dot--regular' },
-  { id: 'low', title: 'Low', color: 'gray', icon: 'px--bar-low--regular' },
-  { id: 'medium', title: 'Medium', color: 'gray', icon: 'px--bar-medium--regular' },
-  { id: 'high', title: 'High', color: 'gray', icon: 'px--bar-high--regular' },
+export const PriorityOptions: Option<Priority>[] = [
+  { id: 'low', title: 'Low', color: 'sky', icon: 'px--bar-low--regular' },
+  { id: 'medium', title: 'Medium', color: 'sky', icon: 'px--bar-medium--regular' },
+  { id: 'high', title: 'High', color: 'sky', icon: 'px--bar-high--regular' },
   { id: 'urgent', title: 'Urgent', color: 'rose', icon: 'ph--exclamation-mark--fill' },
 ];
 
@@ -45,18 +45,12 @@ export const PriorityOptions: { id: Priority; title: string; color: string; icon
 export const Estimate = Schema.Literals(['xs', 's', 'm', 'l', 'xl']);
 export type Estimate = Schema.Schema.Type<typeof Estimate>;
 
-/**
- * `none` is a row so a picker built from this table can clear the field. It is not an `Estimate` —
- * an unset estimate is the absent property, not a literal — so it is the one id a writer maps to
- * `null` rather than passing through.
- */
-export const EstimateOptions: { id: Estimate | 'none'; title: string; color: string }[] = [
-  { id: 'none', title: 'None', color: 'gray' },
-  { id: 'xs', title: 'XS', color: 'gray' },
-  { id: 's', title: 'S', color: 'gray' },
-  { id: 'm', title: 'M', color: 'gray' },
-  { id: 'l', title: 'L', color: 'gray' },
-  { id: 'xl', title: 'XL', color: 'gray' },
+export const EstimateOptions: Option<Estimate | 'none'>[] = [
+  { id: 'xs', title: 'XS', color: 'neutral' },
+  { id: 's', title: 'S', color: 'neutral' },
+  { id: 'm', title: 'M', color: 'neutral' },
+  { id: 'l', title: 'L', color: 'neutral' },
+  { id: 'xl', title: 'XL', color: 'neutral' },
 ];
 
 //
@@ -66,62 +60,148 @@ export const EstimateOptions: { id: Estimate | 'none'; title: string; color: str
 export const Status = Schema.Literals([
   'todo',
   'backlog',
-  'duplicate',
   'started',
   'review',
   'done',
+  'duplicate',
   'blocked',
   'cancelled',
   'failed',
 ]);
 export type Status = Schema.Schema.Type<typeof Status>;
 
-export const StatusOptions: { id: Status; title: string; color: string }[] = [
-  { id: 'todo', title: 'Todo', color: 'gray' },
-  { id: 'backlog', title: 'Backlog', color: 'gray' },
-  { id: 'duplicate', title: 'Duplicate', color: 'gray' },
-  { id: 'started', title: 'Started', color: 'sky' },
-  { id: 'review', title: 'In Review', color: 'cyan' },
-  { id: 'done', title: 'Done', color: 'green' },
-  { id: 'blocked', title: 'Blocked', color: 'rose' },
-  { id: 'cancelled', title: 'Cancelled', color: 'rose' },
-  { id: 'failed', title: 'Failed', color: 'rose' },
+/**
+ * `icon` beside `color`, as for {@link PriorityOptions}: the row, its picker and the form's select
+ * all draw a status from this one table. Shape carries the status; the hue is the one its title is
+ * painted in.
+ */
+export const StatusOptions: Option<Status>[] = [
+  { id: 'todo', title: 'Todo', color: 'neutral', icon: 'ph--square--regular' },
+  { id: 'backlog', title: 'Backlog', color: 'neutral', icon: 'ph--tray--regular' },
+  { id: 'started', title: 'Started', color: 'sky', icon: 'ph--hourglass--regular' },
+  { id: 'review', title: 'In Review', color: 'cyan', icon: 'ph--user-sound--regular' },
+  { id: 'done', title: 'Done', color: 'green', icon: 'ph--check--regular' },
+  { id: 'duplicate', title: 'Duplicate', color: 'orange', icon: 'ph--copy--regular' },
+  { id: 'blocked', title: 'Blocked', color: 'rose', icon: 'ph--prohibit--regular' },
+  { id: 'cancelled', title: 'Cancelled', color: 'rose', icon: 'ph--x--regular' },
+  { id: 'failed', title: 'Failed', color: 'rose', icon: 'ph--warning-diamond--regular' },
 ];
 
 /**
  * What happened to a task, as recorded in its {@link History}. Deliberately coarser than the field
  * set: an entry says a task was assigned, not which field carried it, so the log stays readable
  * when the shape of a task changes.
+ *
+ * `question` and `answer` are the exchange that blocks and unblocks a task: they live in the log
+ * rather than as separate objects so the whole story of a task reads in one place, in order.
  */
-export const Event = Schema.Literals(['created', 'updated']);
+export const Event = Schema.Literals(['created', 'updated', 'question', 'answer']);
 export type Event = Schema.Schema.Type<typeof Event>;
 
-/**
- * One line of a task's activity log. `description` is the human-readable record ("status changed
- * from todo to done"), so a reader needs nothing but the entry to understand what happened; the
- * `event` is what a filter or an icon keys on.
- */
-export const HistoryEntry = Schema.Struct({
+/** Fields every history entry carries, whatever its event. */
+const HistoryEntryBase = {
+  /**
+   * Stable within the task's log, so a later entry can point back at an earlier one (an `answer`
+   * names the `question` it answers) without depending on array position.
+   */
+  id: EntityId.annotate({ title: 'ID' }),
   date: Format.DateTime.annotate({ title: 'Date' }),
   actor: Schema.optional(Actor.Actor.annotate({ title: 'Actor' })),
-  event: Event.annotate({ title: 'Event' }),
+};
+
+/**
+ * One pre-baked answer an asker offers. `title` is the key — it is what a reader clicks and what
+ * lands in {@link AnswerEntry.answer} — so an option carries no id of its own: a question with two
+ * options reading the same is a badly written question, not a shape to model around.
+ */
+export const AnswerOption = Schema.Struct({
+  title: Schema.String.annotate({ title: 'Title' }),
+  /** Expanded rationale, shown under the option. */
   description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
-}).annotate({ title: 'History Entry' });
+}).annotate({ title: 'Answer Option' });
+export type AnswerOption = Schema.Schema.Type<typeof AnswerOption>;
+
+/**
+ * A change to the task itself. `description` is the human-readable record ("status changed from
+ * todo to done"), so a reader needs nothing but the entry to understand what happened; the `event`
+ * is what a filter or an icon keys on.
+ *
+ * One struct per event rather than one struct over both: ECHO validates a union by a single literal
+ * tag per member, and a member whose tag is itself a union of literals is ambiguous to it.
+ */
+const makeChangeEntry = <E extends 'created' | 'updated'>(event: E) =>
+  Schema.Struct({
+    ...HistoryEntryBase,
+    // Optional here only: change entries were logged before entries carried ids, and a required id
+    // would fail every task holding one. Nothing refers to a change entry by id.
+    id: Schema.optional(HistoryEntryBase.id),
+    event: Schema.Literal(event).annotate({ title: 'Event' }),
+    description: Schema.optional(Schema.String.annotate({ title: 'Description' })),
+  }).annotate({ title: event === 'created' ? 'Created Entry' : 'Updated Entry' });
+
+export const CreatedEntry = makeChangeEntry('created');
+export type CreatedEntry = Schema.Schema.Type<typeof CreatedEntry>;
+
+export const UpdatedEntry = makeChangeEntry('updated');
+export type UpdatedEntry = Schema.Schema.Type<typeof UpdatedEntry>;
+
+export type ChangeEntry = CreatedEntry | UpdatedEntry;
+
+/**
+ * A question an agent put to a person about this task. It is open until an {@link AnswerEntry}
+ * names its `id`; there is no flag on the question to fall out of step with that.
+ *
+ * `options` are a convenience, never a constraint — a surface rendering this MUST also accept
+ * free-form text, since the point of asking is that the asker did not know.
+ */
+export const QuestionEntry = Schema.Struct({
+  ...HistoryEntryBase,
+  event: Schema.Literal('question').annotate({ title: 'Event' }),
+  /** The question itself, as put to the reader. */
+  text: Schema.String.annotate({ title: 'Question' }),
+  /** Why it is being asked — what the agent is blocked on, in one or two sentences. */
+  context: Schema.optional(Schema.String.annotate({ title: 'Context' })),
+  /** Suggested answers. May be empty; free-form is always allowed. */
+  options: Schema.optional(Schema.Array(AnswerOption).annotate({ title: 'Options' })),
+  /**
+   * The conversation feed to resume once answered. Held as an unknown ref because the feed's type
+   * lives in `@dxos/assistant`, which depends on this package.
+   */
+  conversation: Schema.optional(Ref.Ref(Obj.Unknown).pipe(Annotation.FormInputAnnotation.set(false))),
+}).annotate({ title: 'Question Entry' });
+export type QuestionEntry = Schema.Schema.Type<typeof QuestionEntry>;
+
+/** A person's answer to an earlier {@link QuestionEntry} in the same log. */
+export const AnswerEntry = Schema.Struct({
+  ...HistoryEntryBase,
+  event: Schema.Literal('answer').annotate({ title: 'Event' }),
+  /** The `id` of the question entry this answers. */
+  questionId: EntityId.annotate({ title: 'Question' }),
+  /** The chosen option's `title`, or free-form text. */
+  answer: Schema.String.annotate({ title: 'Answer' }),
+}).annotate({ title: 'Answer Entry' });
+export type AnswerEntry = Schema.Schema.Type<typeof AnswerEntry>;
+
+/** One line of a task's activity log, discriminated by `event`. */
+export const HistoryEntry = Schema.Union([CreatedEntry, UpdatedEntry, QuestionEntry, AnswerEntry]).annotate({
+  title: 'History Entry',
+});
 export type HistoryEntry = Schema.Schema.Type<typeof HistoryEntry>;
 
-export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.5.0'))(
+export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '0.6.0'))(
   Schema.Struct({
     title: Schema.String.pipe(
       Schema.annotate({ title: 'Title' }),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'lorem.words',
         args: [{ min: 3, max: 10 }],
       }),
     ),
+
     description: Schema.optional(
       Schema.String.pipe(
         Schema.annotate({ title: 'Description' }),
-        GeneratorAnnotation.set({
+        Annotation.GeneratorAnnotation.set({
           generator: 'lorem.paragraphs',
           args: [{ min: 1, max: 3 }],
         }),
@@ -129,16 +209,22 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     ),
 
     /**
-     * Parent in the sub-task hierarchy (unbounded depth); unset means a root task. App-level: the
-     * ECHO parent edge means membership in the owning TaskSet, so nothing cascades through this field.
+     * Sub-tasks, in display order (unbounded depth). Each one's ECHO parent is this task, so
+     * `Filter.childOf(task)` finds them and deleting a task deletes its subtree; the parent of a task
+     * is read back with {@link getParentTask}, never stored on the child. Claims only an unparented
+     * task, as `TaskSet.tasks` does, so a stale entry cannot re-parent on an unrelated write.
      */
-    parentTask: Schema.optional(
-      Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task).annotate({ title: 'Parent Task' })),
+    subtasks: Schema.optional(
+      Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).pipe(
+        Annotation.FormInputAnnotation.set(false),
+        Annotation.SetParent.set({ override: false }),
+        Schema.annotate({ title: 'Subtasks' }),
+      ),
     ),
 
     /**
      * Execution-ordering dependencies: this task is ready to start only when every referenced
-     * task is `done`. Orthogonal to `parentTask` (hierarchy) and `milestone` (grouping).
+     * task is `done`. Orthogonal to `subtasks` (hierarchy) and `milestone` (grouping).
      */
     dependsOn: Schema.optional(
       Schema.Array(Schema.suspend((): Ref.RefSchema<Task> => Ref.Ref(Task))).annotate({ title: 'Depends On' }),
@@ -146,7 +232,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 
     status: Status.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [['todo', 'started', 'done']],
       }),
@@ -164,7 +250,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
     // TODO(burdon): Customize or opinionated?
     priority: Priority.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [Priority.literals],
       }),
@@ -181,7 +267,7 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
 
     estimate: Estimate.pipe(
       FormatAnnotation.set(Format.TypeFormat.SingleSelect),
-      GeneratorAnnotation.set({
+      Annotation.GeneratorAnnotation.set({
         generator: 'helpers.arrayElement',
         args: [Estimate.literals],
       }),
@@ -216,8 +302,13 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
      * happened, so rewriting one would be rewriting the past. It lives on the task rather than in a
      * side channel because the log is worthless if it can be separated from what it describes.
      */
+    // TODO(burdon): Rename activity.
+    // TODO(burdon): This should really be a Feed object, or as comments.
     history: Schema.optional(
-      Schema.Array(HistoryEntry).pipe(Annotation.FormInputAnnotation.set(false), Schema.annotate({ title: 'History' })),
+      Schema.Array(HistoryEntry).pipe(
+        Annotation.FormInputAnnotation.set(false),
+        Schema.annotate({ title: 'Activity' }),
+      ),
     ),
 
     /**
@@ -232,15 +323,32 @@ export class Task extends Type.makeObject<Task>(DXN.make('org.dxos.type.task', '
       ),
     ),
 
-    // Set membership is the `TaskSet.tasks` array (flat, ordered, sub-tasks included), not a
-    // backref here: enumeration stays one array read and a move stays one field write.
+    /**
+     * Files a person attached to the task (a screenshot, a log). Unlike `artifacts` these exist only
+     * for the task, so the task owns them: deleting it deletes them.
+     */
+    attachments: Schema.optional(
+      Schema.Array(Ref.Ref(File.File)).pipe(
+        Annotation.SetParent.set(),
+        Annotation.FormInputAnnotation.set(false),
+        Schema.annotate({ title: 'Attachments' }),
+      ),
+    ),
+
+    // A root task is listed in `TaskSet.tasks` and a sub-task in its parent's `subtasks`; the list
+    // that holds a task is also its ECHO parent, so membership and order are one record.
   }).pipe(
-    LabelAnnotation.set(['title']),
+    Annotation.LabelAnnotation.set(['title']),
     Annotation.IconAnnotation.set({ icon: 'ph--check-circle--regular', hue: 'neutral' }),
+    Annotation.UserType.set(),
   ),
 ) {}
 
-export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, props);
+/**
+ * Factory wrapper around `Obj.make` for {@link Task}. `subtasks` starts as an empty list rather than
+ * absent: two peers lazily creating the list would each write a fresh one, and the merge keeps only one.
+ */
+export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, { subtasks: [], ...props });
 
 //
 // Mutations. Every edit that should be remembered goes through one of these, so the log cannot
@@ -248,7 +356,7 @@ export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, 
 // entry by hand can describe something that never happened. Each one is a single `Obj.update`, so
 // the change and its note reach the database together.
 //
-// Only the fields a person edits are covered. `parentTask` and `milestone` carry ownership and set
+// Only the fields a person edits are covered. The hierarchy and `milestone` carry ownership and set
 // membership, so they move through `TaskSet` rather than here.
 //
 
@@ -257,7 +365,7 @@ export const make = (props: Obj.MakeProps<typeof Task>): Task => Obj.make(Task, 
  * `UpdateTask` operation, and the list UI, so the three cannot disagree about what an edit is.
  *
  * `null` clears an optional field, distinct from `undefined`, which means the edit does not mention
- * it at all. `parentTask` and `milestone` are absent by design: they carry ownership and set
+ * it at all. The hierarchy and `milestone` are absent by design: they carry ownership and set
  * membership, so they move through `TaskSet`.
  */
 export type Edit = {
@@ -304,7 +412,8 @@ const sameActor = (a: Actor.Actor | undefined, b: Actor.Actor | undefined): bool
     a.email === b.email &&
     a.identityDid === b.identityDid &&
     a.role === b.role &&
-    refEntityId(a.contact) === refEntityId(b.contact)
+    refEntityId(a.contact) === refEntityId(b.contact) &&
+    refEntityId(a.subject) === refEntityId(b.subject)
   );
 };
 
@@ -317,8 +426,23 @@ const quote = (value: string): string => (value.length > 60 ? `"${value.slice(0,
  */
 export const appendHistory = (task: Task, entry: HistoryEntry): void => {
   Obj.update(task, (task) => {
-    task.history = [...(task.history ?? []), entry];
+    task.history ??= [];
+    task.history.push(mutableEntry(entry));
   });
+};
+
+/**
+ * A copy of `entry` the task can own. ECHO refuses to store a record another object already owns — an
+ * actor that is also the task's assignee, say — and the stored array is mutable where the schema
+ * type is read-only, so the nested records are copied rather than shared.
+ */
+const mutableEntry = (entry: HistoryEntry) => {
+  const actor = entry.actor ? { actor: { ...entry.actor } } : {};
+  if (!isQuestionEntry(entry)) {
+    return { ...entry, ...actor };
+  }
+  const { options, ...rest } = entry;
+  return { ...rest, ...actor, ...(options ? { options: options.map((option) => ({ ...option })) } : {}) };
 };
 
 /**
@@ -344,19 +468,28 @@ const finishStatus = (task: Task, status: Status, approve: boolean): Status =>
  *
  * Fields already holding the given value are skipped, so a no-op edit writes nothing at all and
  * returns `undefined`: a log full of "status changed from done to done" is a log nobody reads.
+ *
+ * **Only a change to the WORK is logged** — its status, its priority, its size, who has it. A title
+ * or description is the task's text, and the text is edited by typing: every blur commits, so
+ * logging those filled the history with "Description updated." and buried the entries a reader
+ * opens it for. They are still written, they are simply not narrated. A caller with something to
+ * say about an edit says it through `options.description`, which is always recorded.
  */
-export const update = (task: Task, requested: Edit, options: EditOptions = {}): HistoryEntry | undefined => {
+export const update = (task: Task, requested: Edit, options: EditOptions = {}): ChangeEntry | undefined => {
   const changes: Edit =
     requested.status === undefined
       ? requested
       : { ...requested, status: finishStatus(task, requested.status, options.approve ?? false) };
   const notes: string[] = [];
+  // Whether anything at all differs, which decides if the write happens; `notes` decides whether it
+  // is narrated. The two used to be the same question.
+  let changed = false;
 
   if (changes.title !== undefined && changes.title !== task.title) {
-    notes.push(`Title changed to ${quote(changes.title)}.`);
+    changed = true;
   }
   if (changes.description !== undefined && (changes.description ?? undefined) !== task.description) {
-    notes.push(changes.description === null ? 'Description cleared.' : 'Description updated.');
+    changed = true;
   }
   if (changes.status !== undefined && changes.status !== task.status) {
     notes.push(
@@ -381,16 +514,22 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
     notes.push(changes.assignee === null ? 'Unassigned.' : `Assigned to ${actorLabel(changes.assignee)}.`);
   }
 
-  if (notes.length === 0) {
+  changed ||= notes.length > 0;
+  if (!changed) {
     return undefined;
   }
 
-  const entry: HistoryEntry = {
-    date: options.date ?? new Date().toISOString(),
-    ...(options.actor ? { actor: options.actor } : {}),
-    event: 'updated',
-    description: options.description ?? notes.join(' '),
-  };
+  // A silent edit — a title or a description — still writes its field; it just carries no entry.
+  const narrate = notes.length > 0 || options.description !== undefined;
+  const entry: UpdatedEntry | undefined = narrate
+    ? {
+        id: EntityId.random(),
+        date: options.date ?? new Date().toISOString(),
+        ...(options.actor ? { actor: options.actor } : {}),
+        event: 'updated',
+        description: options.description ?? notes.join(' '),
+      }
+    : undefined;
 
   // One transaction: the fields and the entry that explains them are never separately observable.
   Obj.update(task, (task) => {
@@ -430,21 +569,24 @@ export const update = (task: Task, requested: Edit, options: EditOptions = {}): 
         task.assignee = changes.assignee;
       }
     }
-    task.history = [...(task.history ?? []), entry];
+    if (entry) {
+      task.history ??= [];
+      task.history.push(mutableEntry(entry));
+    }
   });
 
   return entry;
 };
 
 /** Moves a task to `status`, recording the transition it actually made (see {@link finishStatus}). */
-export const setStatus = (task: Task, status: Status, options?: EditOptions): HistoryEntry | undefined =>
+export const setStatus = (task: Task, status: Status, options?: EditOptions): ChangeEntry | undefined =>
   update(task, { status }, options);
 
 /**
  * Closes a task on a reviewer's say-so — the one write that may reach `done` past named reviewers.
  * Reserved for a surface that acts for a person; never wire an agent tool to it.
  */
-export const approve = (task: Task, options?: EditOptions): HistoryEntry | undefined =>
+export const approve = (task: Task, options?: EditOptions): ChangeEntry | undefined =>
   update(task, { status: 'done' }, { ...options, approve: true });
 
 /**
@@ -458,23 +600,171 @@ export const addArtifact = (task: Task, artifact: Obj.Unknown): void => {
     return;
   }
   Obj.update(task, (task) => {
-    task.artifacts = [...(task.artifacts ?? []), Ref.make(artifact)];
+    task.artifacts ??= [];
+    task.artifacts.push(Ref.make(artifact));
   });
 };
 
-/** Assigns a task, or unassigns it with `null`. */
-export const setAssignee = (
+/** How a file reads in a note: its name, else that it is unnamed. */
+const fileLabel = (file: File.File | undefined): string => (file?.name ? quote(file.name) : 'a file');
+
+/** An `updated` entry for an attachment change, so the log says what was attached or removed. */
+const attachmentEntry = (description: string, options: EditOptions): UpdatedEntry => ({
+  id: EntityId.random(),
+  date: options.date ?? new Date().toISOString(),
+  ...(options.actor ? { actor: { ...options.actor } } : {}),
+  event: 'updated',
+  description: options.description ?? description,
+});
+
+/**
+ * Attaches a file to the task, which takes ownership of it (see {@link Task.attachments}), and logs
+ * it. Attaching the same file twice is a no-op that records nothing, compared by entity id as for
+ * {@link addArtifact}.
+ */
+export const addAttachment = (task: Task, file: File.File, options: EditOptions = {}): UpdatedEntry | undefined => {
+  const id = file.id;
+  if ((task.attachments ?? []).some((ref) => refEntityId(ref) === id)) {
+    return undefined;
+  }
+
+  const entry = attachmentEntry(`Attached ${fileLabel(file)}.`, options);
+  Obj.update(task, (task) => {
+    task.attachments ??= [];
+    task.attachments.push(Ref.make(file));
+    task.history ??= [];
+    task.history.push(entry);
+  });
+
+  return entry;
+};
+
+/**
+ * Detaches a file from the task and logs it; a file that is not attached records nothing. The file
+ * is left in the database: deleting it is the caller's decision, and needs the database this does not.
+ */
+export const removeAttachment = (
   task: Task,
-  assignee: Actor.Actor | null,
-  options?: EditOptions,
-): HistoryEntry | undefined => update(task, { assignee }, options);
+  file: File.File | Ref.Ref<File.File>,
+  options: EditOptions = {},
+): UpdatedEntry | undefined => {
+  const ref = Obj.isObject(file) ? Ref.make(file) : file;
+  const id = refEntityId(ref);
+  const index = (task.attachments ?? []).findIndex((attached) => refEntityId(attached) === id);
+  if (index === -1) {
+    return undefined;
+  }
+
+  const entry = attachmentEntry(`Removed attachment ${fileLabel(ref.target)}.`, options);
+  Obj.update(task, (task) => {
+    task.attachments?.splice(index, 1);
+    task.history ??= [];
+    task.history.push(entry);
+  });
+
+  return entry;
+};
 
 //
-// Derived views over a task list. Nothing here is stored: hierarchy, milestone grouping and
-// progress are computed from `parentTask`/`milestone`, so they cannot disagree with the refs. They
-// take a plain task array rather than a container, so every holder of an ordered list — a
-// `TaskSet`, a `Chat` — shares them, and compare by ref URI so a React snapshot (no resolver, no
-// `.target`) works too.
+// Questions. A question and its answer are two history entries joined by id, so the exchange sits
+// in the task's log in the order it happened, and "answered" is derived rather than stored.
+//
+
+/** A question entry paired with its answer, if it has one yet. */
+export type QuestionThread = { question: QuestionEntry; answer?: AnswerEntry };
+
+export const isChangeEntry = (entry: HistoryEntry): entry is ChangeEntry =>
+  entry.event === 'created' || entry.event === 'updated';
+
+export const isQuestionEntry = (entry: HistoryEntry): entry is QuestionEntry => entry.event === 'question';
+
+export const isAnswerEntry = (entry: HistoryEntry): entry is AnswerEntry => entry.event === 'answer';
+
+/**
+ * Every question in a log, oldest first, each with its answer. Takes the log rather than the task so
+ * a React snapshot — the shape a row actually renders from — answers the same way. Only the first
+ * answer to a question counts: the asker was resumed on it, so a later one describes a decision it
+ * never saw.
+ */
+export const getQuestions = (history: readonly HistoryEntry[] | undefined): QuestionThread[] => {
+  const answers = new Map<string, AnswerEntry>();
+  for (const entry of history ?? []) {
+    if (isAnswerEntry(entry) && !answers.has(entry.questionId)) {
+      answers.set(entry.questionId, entry);
+    }
+  }
+
+  return (history ?? []).filter(isQuestionEntry).map((question) => {
+    const answer = answers.get(question.id);
+    return answer ? { question, answer } : { question };
+  });
+};
+
+/** The questions in a log that nobody has answered yet. */
+export const getPendingQuestions = (history: readonly HistoryEntry[] | undefined): QuestionEntry[] =>
+  getQuestions(history).flatMap(({ question, answer }) => (answer ? [] : [question]));
+
+export type AskProps = Pick<QuestionEntry, 'text' | 'context' | 'options' | 'conversation'> &
+  Pick<EditOptions, 'actor' | 'date'>;
+
+/**
+ * Records a question on the task. Leaves the status alone: whether a question blocks the work is
+ * the asker's call, made with {@link setStatus} so the log records that transition too.
+ */
+export const ask = (task: Task, { text, context, options, conversation, actor, date }: AskProps): QuestionEntry => {
+  const entry: QuestionEntry = {
+    id: EntityId.random(),
+    date: date ?? new Date().toISOString(),
+    ...(actor ? { actor } : {}),
+    event: 'question',
+    text: text.trim(),
+    ...(context ? { context } : {}),
+    ...(options && options.length > 0 ? { options } : {}),
+    ...(conversation ? { conversation } : {}),
+  };
+  appendHistory(task, entry);
+  return entry;
+};
+
+/**
+ * Records an answer to one of the task's questions. Refused — returning `undefined` and writing
+ * nothing — when the text is blank, the question is not in this task's log, or it is already
+ * answered: a blank answer would resume an agent with nothing to go on, and a second one would
+ * resume it against a decision it never saw.
+ */
+export const answer = (
+  task: Task,
+  questionId: string,
+  text: string,
+  { actor, date }: Pick<EditOptions, 'actor' | 'date'> = {},
+): AnswerEntry | undefined => {
+  const trimmed = text.trim();
+  const thread = getQuestions(task.history).find(({ question }) => question.id === questionId);
+  if (trimmed === '' || !thread || thread.answer) {
+    return undefined;
+  }
+
+  const entry: AnswerEntry = {
+    id: EntityId.random(),
+    date: date ?? new Date().toISOString(),
+    ...(actor ? { actor } : {}),
+    event: 'answer',
+    questionId: thread.question.id,
+    answer: trimmed,
+  };
+  appendHistory(task, entry);
+  return entry;
+};
+
+/** Assigns a task, or unassigns it with `null`. */
+export const setAssignee = (task: Task, assignee: Actor.Actor | null, options?: EditOptions): ChangeEntry | undefined =>
+  update(task, { assignee }, options);
+
+//
+// Derived views over a task list. Nothing here is stored: milestone grouping and progress are
+// computed from the hierarchy and `milestone`, so they cannot disagree with the refs. They take a
+// plain task array rather than a container, so every holder of an ordered list — a `TaskSet`, a
+// `Chat` — shares them, and compare by ref URI so an unloaded ref still compares.
 //
 
 /**
@@ -507,8 +797,17 @@ export const dedupeById = <T extends Obj.Unknown>(objects: ReadonlyArray<T | und
   return result;
 };
 
-/** Entity id of a task's parent, exported so a caller walking the tree shares this module's ref-uri parse. */
-export const parentTaskId = (task: Task): string | undefined => refEntityId(task.parentTask);
+/**
+ * The task `task` is a sub-task of: its ECHO parent, when that is a task. The parent edge is the one
+ * record of the hierarchy — the parent's `subtasks` list only orders it.
+ */
+export const getParentTask = (task: Task): Task | undefined => {
+  const parent = Obj.getParent(task);
+  return Obj.instanceOf(Task, parent) ? parent : undefined;
+};
+
+/** Entity id of a task's parent task; undefined for a root. */
+export const parentTaskId = (task: Task): string | undefined => getParentTask(task)?.id;
 
 /**
  * Order query-loaded tasks by `refs` — the holder's array is canonical order; a query returns none.
@@ -527,19 +826,90 @@ export const orderTasks = (tasks: ReadonlyArray<Task>, refs: ReadonlyArray<Ref.R
   );
 };
 
-/** Tasks with no parent present in `tasks` — a dangling `parentTask` reads as a root, not a ghost. */
+/** Tasks with no parent present in `tasks` — a parent outside the list reads as a root, not a ghost. */
 export const rootTasks = (tasks: readonly Task[]): Task[] => {
   const present = new Set(tasks.map((task) => task.id));
   return tasks.filter((task) => {
-    const parent = refEntityId(task.parentTask);
+    const parent = parentTaskId(task);
     return parent === undefined || !present.has(parent);
   });
 };
 
-/** Direct sub-tasks of `task`, in the order `tasks` lists them. */
-export const subTasks = (tasks: readonly Task[], task: Task): Task[] => {
-  const parent = task.id;
-  return tasks.filter((candidate) => refEntityId(candidate.parentTask) === parent);
+/**
+ * {@link subTasks} over an index built once, for a caller walking the whole tree: each parent edge is
+ * a reactive ref resolve, so reading every task's edge per visited node makes the walk quadratic.
+ *
+ * The children of a task come in `subtasks` order. An entry whose parent edge names another task is
+ * skipped (the edge wins, so a task shows under exactly one parent), and a child whose edge names
+ * the task but that the list does not hold yet is appended rather than hidden.
+ */
+export const childIndex = (tasks: readonly Task[]): ((task: Task) => Task[]) => {
+  const byId = new Map<string, Task>();
+  const parentOf = new Map<string, string | undefined>();
+  const edged = new Map<string, Task[]>();
+  for (const task of tasks) {
+    byId.set(task.id, task);
+    const parent = parentTaskId(task);
+    parentOf.set(task.id, parent);
+    if (parent !== undefined) {
+      const siblings = edged.get(parent);
+      if (siblings) {
+        siblings.push(task);
+      } else {
+        edged.set(parent, [task]);
+      }
+    }
+  }
+
+  return (task) => {
+    const children: Task[] = [];
+    const seen = new Set<string>();
+    for (const ref of task.subtasks ?? []) {
+      const id = refEntityId(ref);
+      const child = id === undefined ? undefined : byId.get(id);
+      if (child && !seen.has(child.id) && parentOf.get(child.id) === task.id) {
+        seen.add(child.id);
+        children.push(child);
+      }
+    }
+    for (const candidate of edged.get(task.id) ?? []) {
+      if (!seen.has(candidate.id)) {
+        seen.add(candidate.id);
+        children.push(candidate);
+      }
+    }
+    return children;
+  };
+};
+
+/** Direct sub-tasks of `task` that `tasks` holds, in the parent's `subtasks` order (see {@link childIndex}). */
+export const subTasks = (tasks: readonly Task[], task: Task): Task[] => childIndex(tasks)(task);
+
+/**
+ * `tasks` in tree pre-order: the roots in `refs` order (a holder's list, e.g. `TaskSet.tasks`), each
+ * followed by its subtree in `subtasks` order. A task the walk cannot reach (a malformed cycle) is
+ * appended rather than dropped.
+ */
+export const orderTree = (tasks: readonly Task[], refs: ReadonlyArray<Ref.Ref<Task>>): Task[] => {
+  const childrenOf = childIndex(tasks);
+  const ordered: Task[] = [];
+  const seen = new Set<string>();
+  const visit = (task: Task): void => {
+    if (seen.has(task.id)) {
+      return;
+    }
+    seen.add(task.id);
+    ordered.push(task);
+    childrenOf(task).forEach(visit);
+  };
+  orderTasks(rootTasks(tasks), refs).forEach(visit);
+  for (const task of tasks) {
+    if (!seen.has(task.id)) {
+      seen.add(task.id);
+      ordered.push(task);
+    }
+  }
+  return ordered;
 };
 
 /**
@@ -567,7 +937,7 @@ export const isTaskReady = (tasks: readonly Task[], task: Task): boolean => {
 /**
  * The milestone a task is shown under: its own, else the nearest ancestor's (Linear's behavior),
  * as an entity id. Undefined for a backlog task. Walks within `tasks`, so it needs no
- * dereferencing, and is cycle-safe against a malformed `parentTask` loop.
+ * dereferencing, and is cycle-safe against a malformed parent loop.
  */
 export const effectiveMilestoneId = (tasks: readonly Task[], task: Task): string | undefined =>
   effectiveMilestoneIds(tasks).get(task.id);
@@ -584,7 +954,7 @@ export const effectiveMilestoneIds = (tasks: readonly Task[]): Map<string, strin
 
   for (const task of tasks) {
     // Walk to the nearest ancestor carrying a milestone, remembering the path so the whole chain
-    // is filled in at once; `visited` also terminates a malformed `parentTask` cycle.
+    // is filled in at once; `visited` also terminates a malformed parent cycle.
     const path: string[] = [];
     const visited = new Set<string>();
     let cursor: Task | undefined = task;
@@ -606,7 +976,7 @@ export const effectiveMilestoneIds = (tasks: readonly Task[]): Map<string, strin
         found = milestone;
         break;
       }
-      const parentId: string | undefined = refEntityId(cursor.parentTask);
+      const parentId: string | undefined = parentTaskId(cursor);
       cursor = parentId === undefined ? undefined : byId.get(parentId);
     }
 
@@ -655,6 +1025,7 @@ export const milestoneProgress = (tasks: readonly Task[], milestone: Milestone.M
  * Effect. Sees only what the list contains. Cycle-safe.
  */
 export const subtree = (tasks: readonly Task[], task: Task): Task[] => {
+  const childrenOf = childIndex(tasks);
   const collected: Task[] = [];
   const seen = new Set<string>();
   const visit = (current: Task): void => {
@@ -663,7 +1034,7 @@ export const subtree = (tasks: readonly Task[], task: Task): Task[] => {
     }
     seen.add(current.id);
     collected.push(current);
-    for (const child of subTasks(tasks, current)) {
+    for (const child of childrenOf(current)) {
       visit(child);
     }
   };
@@ -672,9 +1043,9 @@ export const subtree = (tasks: readonly Task[], task: Task): Task[] => {
 };
 
 /**
- * Every task transitively under `task` (via `parentTask`), including `task` itself. Children are
- * discovered through the reverse-ref index — space-wide, loading each as it is found — rather
- * than any one set's array, since a sub-task may be filed in a different set (or none). Cycle-safe.
+ * Every task transitively under `task`, including `task` itself: each level's `subtasks` loaded,
+ * plus any child whose parent edge names it that the list does not hold (the edge is what a delete
+ * cascades along, so a walk that missed it would disagree with the cascade). Cycle-safe.
  */
 export const collectSubtree = (task: Task): Effect.Effect<Task[], never, Database.Service> =>
   Effect.gen(function* () {
@@ -688,10 +1059,78 @@ export const collectSubtree = (task: Task): Effect.Effect<Task[], never, Databas
       }
       seen.add(current.id);
       subtree.push(current);
-      const children = yield* Database.query(
-        Query.select(Filter.id(current.id)).referencedBy(Task, 'parentTask'),
-      ).run.pipe(Effect.orElseSucceed(() => []));
-      queue.push(...children);
+      const listed = yield* Effect.forEach(current.subtasks ?? [], loadOrUndefined, { concurrency: 16 });
+      const edged = yield* Database.query(
+        Query.select(Filter.and(Filter.type(Task), Filter.childOf(current, { transitive: false }))),
+      ).run.pipe(Effect.orElseSucceed((): Task[] => []));
+      queue.push(...dedupeById([...listed, ...edged]).filter((child) => parentTaskId(child) === current.id));
     }
     return subtree;
   });
+
+/** How long one cold ref may take to resolve: an unresolvable ref waits out the resolver's own 30s timeout. */
+const REF_LOAD_TIMEOUT = Duration.seconds(5);
+
+/** The ref's target, or `undefined` when it is gone or does not resolve in time. */
+const loadOrUndefined = <T extends Obj.Unknown>(ref: Ref.Ref<T>): Effect.Effect<T | undefined> => {
+  const target = Database.peek(ref);
+  return target
+    ? Effect.succeed(target)
+    : Database.load(ref).pipe(
+        Effect.timeout(REF_LOAD_TIMEOUT),
+        Effect.orElseSucceed(() => undefined),
+      );
+};
+
+/**
+ * The top of `task`'s tree, walking parent edges up — the unit of work a claim covers. Synchronous
+ * with no load to time out: a parent edge is a strong dependency, materialized before its child is,
+ * so an unresolved hop means no parent task. A parent that is not a task (the
+ * set, or nothing) ends the walk. Cycle-safe.
+ */
+export const collectRoot = (task: Task): Effect.Effect<Task> =>
+  Effect.sync(() => {
+    const seen = new Set<string>([task.id]);
+    let current = task;
+    for (let parent = getParentTask(current); parent && !seen.has(parent.id); parent = getParentTask(current)) {
+      seen.add(parent.id);
+      current = parent;
+    }
+    return current;
+  });
+
+/** The whole tree `task` belongs to — its root first, then every descendant. */
+export const collectTree = (task: Task): Effect.Effect<Task[], never, Database.Service> =>
+  Effect.flatMap(collectRoot(task), collectSubtree);
+
+/** A task already holds a different open PR: one task lands in one PR. */
+export class PullRequestConflictError extends BaseError.extend(
+  'PullRequestConflictError',
+  'Task already has an open pull request.',
+) {}
+
+/**
+ * Checks that `artifact` may be recorded on `task` itself. A pull request is refused when `task`
+ * already holds a DIFFERENT pull request that is still open; a parent's or sibling's PR is no
+ * conflict, since a sub-task that was fixed on its own carries the PR that fixed it, while a
+ * parent's PR still reads as covering every sub-task that has none of its own.
+ */
+export const checkArtifact = Effect.fnUntraced(function* (task: Task, artifact: Obj.Unknown) {
+  if (!PullRequest.instanceOf(artifact)) {
+    return;
+  }
+  for (const ref of task.artifacts ?? []) {
+    if (refEntityId(ref) === artifact.id) {
+      continue;
+    }
+    const existing = yield* loadOrUndefined(ref);
+    if (PullRequest.instanceOf(existing) && existing.state === 'open') {
+      const url = existing.url ?? PullRequest.reference(existing);
+      return yield* Effect.fail(
+        new PullRequestConflictError({
+          message: `Task "${task.title}" already has open PR ${url}; attach another PR to the sub-task it fixes.`,
+        }),
+      );
+    }
+  }
+});

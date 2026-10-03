@@ -2,11 +2,11 @@
 // Copyright 2026 DXOS.org
 //
 
-import { EditorState } from '@codemirror/state';
+import { EditorState, StateEffect } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { describe, test } from 'vitest';
 
-import { isBusy } from '../../state/busy';
+import { isBusy } from '../../state/busy.ts';
 import {
   appendPendingText,
   cancelPending,
@@ -16,7 +16,7 @@ import {
   pendingTextState,
   setPendingAnchor,
   setPendingInterim,
-} from './pending-text';
+} from './pending-text.ts';
 
 const createView = (doc: string): EditorView =>
   new EditorView({ state: EditorState.create({ doc, extensions: [pendingText()] }) });
@@ -132,22 +132,40 @@ describe('pendingText extension', () => {
     expect(isBusy(view.state)).toBe(false);
     view.destroy();
   });
+  test('tearing the extension down cancels the queued busy update', async ({ expect }) => {
+    const view = createView('hello ');
+    const errors: unknown[] = [];
+    const onError = (error: unknown) => errors.push(error);
+    process.on('uncaughtException', onError);
+    try {
+      // Opening a session queues the busy microtask; dropping the extension before it runs leaves
+      // the callback holding a configuration that no longer has the field.
+      view.dispatch({ effects: setPendingAnchor.of({ anchor: 6 }) });
+      view.dispatch({ effects: StateEffect.reconfigure.of([]) });
+      await flush();
+      expect(errors).to.deep.equal([]);
+      expect(view.state.field(pendingTextState, false)).to.be.undefined;
+    } finally {
+      process.off('uncaughtException', onError);
+      view.destroy();
+    }
+  });
+
   // The editor's own placeholder shows whenever the document is empty, and pending text is a
   // decoration rather than document content — so without this the two are drawn over each other,
   // the hint sitting behind the words being dictated.
   test('the preview marks the content so the empty-document placeholder can stand aside', ({ expect }) => {
     const view = createView('');
-    const marked = () => view.contentDOM.hasAttribute('data-pending-text');
-    expect(marked()).to.be.false;
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.false;
 
     // Opening a session paints nothing, so the hint stays until there is something to replace it.
     view.dispatch({ effects: setPendingAnchor.of({ anchor: 0 }) });
-    expect(marked()).to.be.false;
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.false;
 
     view.dispatch({ effects: appendPendingText.of('the world is everything') });
-    expect(marked()).to.be.true;
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.true;
 
     view.dispatch({ effects: cancelPendingText.of() });
-    expect(marked()).to.be.false;
+    expect(view.contentDOM.hasAttribute('data-pending-text')).to.be.false;
   });
 });

@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 
 import { log } from '@dxos/log';
 
-import * as Stage from './Stage';
+import * as Stage from './Stage.ts';
 
 /**
  * Terminal commit for a pipeline: applies a stage's output value. Keeps stages pure — they emit

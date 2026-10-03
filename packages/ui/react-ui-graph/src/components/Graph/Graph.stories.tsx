@@ -14,11 +14,10 @@ import type * as GraphModel from '@dxos/graph/GraphModel';
 import { IconButton, Popover, Toolbar } from '@dxos/react-ui';
 import { Card } from '@dxos/react-ui';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { getHashStyles, mx } from '@dxos/ui-theme';
 
-import { Pulsar } from '../../fx';
+import { Pulsar } from '../../fx/index.ts';
 import {
   GraphForceProjector,
   type GraphForceProjectorOptions,
@@ -31,11 +30,18 @@ import {
   type GraphRadialProjectorOptions,
   GraphRelationalProjector,
   type GraphRelationalProjectorOptions,
-} from '../../graph';
-import { type SVGContext } from '../../hooks';
-import { TestGraphModel, type TestNode, convertTreeToGraph, createGraph, createNode, createTree } from '../../testing';
-import { SVG, type SVGGridProps } from '../SVG';
-import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph';
+} from '../../graph/index.ts';
+import { type SVGContext } from '../../hooks/index.ts';
+import {
+  TestGraphModel,
+  type TestNode,
+  convertTreeToGraph,
+  createGraph,
+  createNode,
+  createTree,
+} from '../../testing/index.ts';
+import { SVG, type SVGGridProps } from '../SVG/index.ts';
+import { Graph as GraphComponent, type GraphController, type GraphProps } from './Graph.tsx';
 
 type ProjectorType = 'force' | 'radial' | 'hierarchical' | 'relational';
 

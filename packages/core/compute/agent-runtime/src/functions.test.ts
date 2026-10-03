@@ -18,7 +18,7 @@ import { TestHelpers } from '@dxos/effect/testing';
 import { DXN, EntityId } from '@dxos/keys';
 import { Organization } from '@dxos/types';
 
-import { AssistantTestLayer } from './testing';
+import { AssistantTestLayer } from './testing/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

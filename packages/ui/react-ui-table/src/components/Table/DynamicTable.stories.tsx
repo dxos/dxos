@@ -11,15 +11,14 @@ import { useQuery, useType } from '@dxos/echo-react';
 import { Format } from '@dxos/echo/Format';
 import { random } from '@dxos/random';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 import { type SchemaPropertyDefinition } from '@dxos/schema';
 import { TestSchema } from '@dxos/schema/testing';
-import { withRegistry } from '@dxos/storybook-utils';
 
 import { translations } from '#translations';
 
-import { type TableFeatures } from '../../model';
-import { DynamicTable } from './DynamicTable';
+import { type TableFeatures } from '../../model/index.ts';
+import { DynamicTable } from './DynamicTable.tsx';
 
 random.seed(0);
 

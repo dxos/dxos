@@ -28,8 +28,8 @@ import { LingoPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Language, Vocabulary, Word } from '#types';
 
-import { TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing';
-import { ReaderArticle } from './ReaderArticle';
+import { TEST_PASSAGE, TEST_PASSAGE_TRANSLATION, makeTestDeck } from '../../testing.ts';
+import { ReaderArticle } from './ReaderArticle.tsx';
 
 /**
  * A scripted model, so the split view shows a real translation offline.

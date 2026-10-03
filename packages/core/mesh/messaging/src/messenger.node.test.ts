@@ -4,8 +4,8 @@
 
 import { beforeEach, describe } from 'vitest';
 
-import { messengerTests } from './messenger.blueprint-test';
-import { MemorySignalManager, MemorySignalManagerContext } from './signal-manager';
+import { messengerTests } from './messenger.blueprint-test.ts';
+import { MemorySignalManager, MemorySignalManagerContext } from './signal-manager/index.ts';
 
 // TODO(mykola): Use EDGE signal server.
 describe('Messenger with MemorySignalManager', () => {

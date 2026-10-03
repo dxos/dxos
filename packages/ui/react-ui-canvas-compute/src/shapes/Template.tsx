@@ -6,7 +6,7 @@ import * as Schema from 'effect/Schema';
 import React, { useRef } from 'react';
 
 import { ComputeValueType, getTemplateInputSchema } from '@dxos/conductor';
-import { toJsonSchema } from '@dxos/echo/JsonSchema';
+import * as JsonSchema from '@dxos/echo/JsonSchema';
 import { invariant } from '@dxos/invariant';
 import {
   type ShapeComponentProps,
@@ -15,9 +15,9 @@ import {
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { Box, TypeSelect } from './common';
-import { type TemplateShape } from './template-def';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { Box, TypeSelect } from './common/index.ts';
+import { type TemplateShape } from './template-def.ts';
 
 //
 // Component
@@ -35,7 +35,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
       const schema = getTemplateInputSchema(node);
 
       node.value = value;
-      node.inputSchema = toJsonSchema(schema);
+      node.inputSchema = JsonSchema.toJsonSchema(schema);
     }
   };
 
@@ -43,7 +43,7 @@ const TextInputComponent = ({ shape, title, ...props }: TextInputComponentProps)
     invariant(Schema.is(ComputeValueType)(newType), 'Invalid type');
 
     node.valueType = newType;
-    node.inputSchema = toJsonSchema(getTemplateInputSchema(node));
+    node.inputSchema = JsonSchema.toJsonSchema(getTemplateInputSchema(node));
   };
 
   return (

@@ -39,7 +39,7 @@ import path from 'node:path';
 const MAX_PRELOAD_ENTRIES = 25;
 
 /**
- * Total on-disk size of those chunks. 4.25 MB today.
+ * Total on-disk size of those chunks. 4.45 MB today.
  *
  * Re-baselined 2026-08-13 (was 6.00 MB) after two independent cuts: the Effect 3 -> 4 migration
  * (5.73 -> 4.97 MB) and the `./plugin` -> `XPlugin` namespace split, which evicted the operation
@@ -61,8 +61,39 @@ const MAX_PRELOAD_ENTRIES = 25;
  * chunks' sourcemaps (`.agents/projects/ark/TASKS.md` Phase 5). Measured at 4,360,490 bytes; the
  * ceiling is set to keep the same ~200 KB margin rather than to bank the whole win, since a budget
  * left where it was would silently absorb it.
+ *
+ * Re-baselined 2026-09-05 (was 4.35 MB) at Phase 3 of the Radix → Ark migration
+ * (`packages/ui/react-ui/docs/MIGRATION.md`), which put Tooltip, Popover and Menu on Zag machines.
+ * Measured at 4,565,469 bytes, 4,164 over the ceiling. Attributed through the boot chunks'
+ * sourcemaps, the Zag floating stack now in the eager graph is ~78 KB: `menu` 25,704, `focus-trap`
+ * 12,810, `tooltip` 9,740, `popover` 7,734, `popper` 6,911, `dismissable` 5,562, `presence` 3,681,
+ * `interact-outside` 3,187, `aria-hidden` 1,895, `remove-scroll` 1,143 — which is the whole delta
+ * from the Phase 2 measurement (4.28 MB). The Radix floating stack it replaces (`react-popper`
+ * 3,915, `-dismissable-layer` 3,312, `-focus-scope` 3,113, `-presence` 1,931, `react-remove-scroll`
+ * 5,506, `aria-hidden` 1,466) is still in the graph because `react-select`, `react-dialog` and
+ * `react-toast` import it; Phase 4 evicts those, and this ceiling should come back down then. The
+ * ~200 KB margin is kept. Phase 4a (Dialog, Main, Select on Ark) measured 4,547,849 — 17,620 back —
+ * with `react-toast` still holding the Radix layer. Phase 4b (Toast) measured 4,546,844 with no
+ * `@radix-ui` bytes left in the graph: the Zag machines are the new floor, ~186 KB above the
+ * 2026-08-31 figure, so the ceiling stays where the Phase 3 re-baseline put it.
+ *
+ * Re-baselined 2026-10-02 (was 4.60 MB, a same-day stopgap over 4.55 MB). `main` crossed 4.55 MB at
+ * 4,771,466 bytes, 446 over, on 735 bytes of accepted growth from the observability metric batching
+ * (#13595). Attributed through the boot chunks' sourcemaps, the real leak was older:
+ * `@dxos/index-core`'s migration modules imported `SqlMigrations` from the `@dxos/sql-sqlite`
+ * barrel, whose `OpfsWorker` re-export put wa-sqlite in the eager graph via echo-client's query
+ * planner. Moving every migration module to the `@dxos/sql-sqlite/SqlMigrations` subpath evicted
+ * `@dxos/wa-sqlite` (81,894 bytes), the `sql-sqlite` dist (16,461) and the effect
+ * `SynchronizedRef`/`ScopedRef` modules only it used (2,576). Measured at 4,670,093 bytes. The
+ * ceiling banks half the win: the remaining ~48 KB is under the ~98 KB that leak cost, so a
+ * regression of it trips this.
+ *
+ * This constant is code-owned: raising it needs a strong, written motivation for the growth being
+ * accepted, not a passing build.
+ *
+ * TODO(wittjosiah): Bring this back to at least 4.25 MB, the lowest ceiling this budget has held.
  */
-const MAX_PRELOAD_BYTES = 4.35 * 1024 * 1024;
+const MAX_PRELOAD_BYTES = 4.5 * 1024 * 1024;
 
 const buildDir = path.join(process.cwd(), 'out');
 const outDir = path.join(buildDir, 'composer');

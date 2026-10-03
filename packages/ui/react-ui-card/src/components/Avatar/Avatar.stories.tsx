@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Avatar } from './Avatar';
+import { Avatar } from './Avatar.tsx';
 
 const meta = {
   title: 'ui/react-ui-card/Avatar',

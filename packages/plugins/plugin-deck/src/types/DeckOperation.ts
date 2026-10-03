@@ -7,6 +7,7 @@
 import * as Schema from 'effect/Schema';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
@@ -22,6 +23,30 @@ const PartAdjustmentSchema = Schema.Union([
 ]);
 
 export type PartAdjustment = Schema.Schema.Type<typeof PartAdjustmentSchema>;
+
+/**
+ * Project a URL that arrived from outside the app: boot, a history traversal, or a deep link.
+ *
+ * An operation so the process runtime supplies the services its handler needs. The alternative is a
+ * DOM event listener threading them by hand, and a `popstate` listener has no Effect context of its
+ * own to take them from.
+ */
+export const HandleExternalUrl = Operation.make({
+  meta: {
+    key: DXN.make('org.dxos.operation.deck.handleExternalUrl'),
+    name: 'Handle External URL',
+    description: 'Project a URL the app was navigated to from outside into the deck.',
+    icon: 'ph--link--regular',
+  },
+  executionMode: 'sync',
+  services: [Capability.Service, Plugin.Service],
+  input: Schema.Struct({
+    url: Schema.optional(
+      Schema.String.annotate({ description: 'The URL to project; defaults to the current address bar.' }),
+    ),
+  }),
+  output: Schema.Void,
+});
 
 export const Adjust = Operation.make({
   meta: {

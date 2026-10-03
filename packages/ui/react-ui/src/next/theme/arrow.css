@@ -1,0 +1,19 @@
+/*
+ * Popup arrow (Tooltip, Popover): zag sizes the box from `--arrow-size`, straddles it across the content edge and adds
+ * half of it to the gutter; the tip paints `--arrow-background`.
+ */
+
+@layer dx-components {
+  .nx-arrow {
+    --arrow-size: calc(var(--nx-gap-size) + 2px);
+    /* The popup's own surface, so the arrow reads as part of it. */
+    --arrow-background: var(--surface-bg);
+  }
+  /*
+   * zag rotates a full-box square, whose corner would overhang the box by (√2 − 1)/2 of its size and eat the gutter;
+   * scaled by 1/√2 its corners touch the box edges, so the tip ends exactly at the gutter zag reserved.
+   */
+  .nx-arrow-tip {
+    scale: 0.7071;
+  }
+}

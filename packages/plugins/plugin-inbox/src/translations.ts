@@ -71,6 +71,7 @@ export const translations = [
 
         'event-add-attendee.placeholder': 'Add a person by name, or enter an email',
 
+        'attachment-type.label': 'Attachment',
         'mailbox-account.label': 'Account',
         'mailbox-account.placeholder': 'Select account...',
         'mailbox-sync.label': 'Mailbox Sync',

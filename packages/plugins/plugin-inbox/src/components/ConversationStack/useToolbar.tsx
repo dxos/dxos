@@ -8,8 +8,8 @@ import { AI_ACTION_ICON } from '@dxos/ui-types';
 
 import { meta } from '#meta';
 
-import { deleteAction, openGroup } from '../Toolbar';
-import { type ExtractorMenuItem } from './useExtractorActions';
+import { deleteAction, openGroup } from '../Toolbar/index.ts';
+import { type ExtractorMenuItem } from './useExtractorActions.tsx';
 
 export type UseMessageToolbarActionsProps = {
   /** App graph used to source contributed (`disposition: 'toolbar'`) actions; omitted outside a plugin context. */

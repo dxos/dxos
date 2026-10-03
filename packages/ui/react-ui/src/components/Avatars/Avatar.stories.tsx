@@ -8,8 +8,8 @@ import React, { type PropsWithChildren } from 'react';
 import { type ChromaticPalette, type Size } from '@dxos/ui-types';
 import { hexToFallback } from '@dxos/util';
 
-import { withTheme } from '../../testing';
-import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar';
+import { withTheme } from '../../testing/index.ts';
+import { Avatar, type AvatarAnimation, type AvatarStatus, type AvatarVariant } from './Avatar.tsx';
 
 type StoryArgs = PropsWithChildren<{
   id?: string;
@@ -76,7 +76,7 @@ const row = (size: Size) => (
 );
 
 export const Default = () => (
-  <div className='grid grid-cols-3 gap-6 p-[4rem] min-h-screen bg-cubes'>
+  <div className='grid grid-cols-3 gap-6 p-[4rem] min-h-screen bg-base-surface'>
     {row(28)}
     {row(20)}
     {row(16)}

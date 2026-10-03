@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { toFrames } from '#render';
 
-import { type FetchLike, selectTransport } from './LaMetricTransport';
+import { type FetchLike, selectTransport } from './LaMetricTransport.ts';
 
 type Captured = { method?: string; url?: string; headers: Record<string, unknown>; body: string };
 

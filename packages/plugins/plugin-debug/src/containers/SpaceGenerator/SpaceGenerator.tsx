@@ -19,9 +19,9 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { useClient } from '@dxos/react-client';
 import { type Space } from '@dxos/react-client/echo';
 import {
+  Field,
   Flex,
   IconButton,
-  Input,
   Panel,
   ScrollArea,
   ThemedClassName,
@@ -30,7 +30,7 @@ import {
 } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
-import { type ActionGraphProps, Menu, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
 import { Organization, Person, Task } from '@dxos/types';
 import { mx } from '@dxos/ui-theme';
 import { sortKeys } from '@dxos/util';
@@ -51,19 +51,18 @@ export type SpaceGeneratorProps = {
 
 export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
   ({ children, space, onCreateObjects, ...props }, forwardedRef) => {
-    const { invokePromise } = useOperationInvoker();
+    const invoker = useOperationInvoker();
+    const { invokePromise } = invoker;
     const { t } = useTranslation(meta.profile.key);
     const client = useClient();
     const [count, setCount] = useState(1);
     const [info, setInfo] = useState<any>({});
     const presets = useMemo(() => generator(), []);
     const manager = usePluginManager();
-    const sampleSpaces = useCapabilities(AppCapabilities.SampleSpace);
+    const allTemplates = useCapabilities(AppCapabilities.SpaceTemplate);
 
-    // Mounting is the demand signal: sample-space modules are gated on `SampleSpacesRequested`,
-    // which nothing else fires, so their content stays out of the app until this panel opens.
     useEffect(() => {
-      EffectEx.runDetached(manager.activate(ActivationEvents.SampleSpacesRequested));
+      EffectEx.runDetached(manager.activate(ActivationEvents.SpaceTemplatesRequested));
     }, [manager]);
 
     // Register types.
@@ -74,23 +73,21 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     // Create type generators.
     const typeMap = useMemo(() => {
       const recordGenerators = new Map<string, ObjectGenerator<any>>(
-        recordTypes.map((type) => [Type.getTypename(type), createGenerator(client, invokePromise, type)]),
+        recordTypes.map((type) => [Type.getTypename(type), createGenerator(client, invoker, manager, type)]),
       );
 
-      // A sample space is a generator that ignores the count: it writes one coherent world, not n
-      // of anything. Keyed by preset id so it sits in the same table as the type generators.
-      const sampleGenerators = new Map<string, ObjectGenerator<any>>(
-        sampleSpaces.map((sample) => [
-          sample.id,
+      const allTemplateGenerators = new Map<string, ObjectGenerator<any>>(
+        allTemplates.map((template) => [
+          template.id,
           async (space) => {
-            await sample.apply({ client, space });
+            await template.apply({ client, space });
             return [];
           },
         ]),
       );
 
-      return new Map([...staticGenerators, ...presets.items, ...recordGenerators, ...sampleGenerators]);
-    }, [client, invokePromise, presets, sampleSpaces]);
+      return new Map([...staticGenerators, ...presets.items, ...recordGenerators, ...allTemplateGenerators]);
+    }, [client, invoker, invokePromise, manager, presets, allTemplates]);
 
     // Query space to get info.
     const updateInfo = useCallback(async () => {
@@ -185,64 +182,62 @@ export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
     return (
       // `alwaysActive`: the toolbar gates itself on the menu scope's attention, and this debug panel
       // is not an attendable surface, so without it every action renders disabled.
-      <Menu.Root {...menuActions} alwaysActive>
-        <Panel.Root {...composableProps(props)} ref={forwardedRef}>
-          <Panel.Toolbar>
-            <Menu.Toolbar classNames='dx-document'>
-              <Menu.Items />
-              <Input.Root>
-                <Input.TextInput
-                  type='number'
-                  placeholder='Count'
-                  classNames='w-[4rem] text-right'
-                  min={1}
-                  max={100}
-                  size={8}
-                  value={count}
-                  onChange={(event) => setCount(parseInt(event.target.value))}
-                />
-              </Input.Root>
-            </Menu.Toolbar>
-          </Panel.Toolbar>
-          <Panel.Content asChild>
-            <ScrollArea.Root thin orientation='vertical'>
-              <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
+
+      <Panel.Root {...composableProps(props)} ref={forwardedRef}>
+        <Panel.Toolbar>
+          <ActionToolbar {...menuActions} alwaysActive classNames='dx-document'>
+            <Field.Root>
+              <Field.Input
+                type='number'
+                placeholder='Count'
+                classNames='w-[4rem] text-right'
+                min={1}
+                max={100}
+                size={8}
+                value={count}
+                onChange={(event) => setCount(parseInt(event.target.value))}
+              />
+            </Field.Root>
+          </ActionToolbar>
+        </Panel.Toolbar>
+        <Panel.Content asChild>
+          <ScrollArea.Root thin orientation='vertical'>
+            <ScrollArea.Viewport classNames='dx-document gap-4 divide-y divide-subdued-separator'>
+              <SchemaTable
+                classNames='py-1'
+                types={staticTypes}
+                objects={info.objects}
+                label='Static Types'
+                onClick={handleCreateData}
+              />
+              <SchemaTable
+                classNames='py-1'
+                types={recordTypes}
+                objects={info.objects}
+                label='Record Types'
+                onClick={handleCreateData}
+              />
+              <SchemaTable
+                classNames='py-1'
+                types={presets.types}
+                objects={info.objects}
+                label='Presets'
+                onClick={handleCreateData}
+              />
+              {allTemplates.length > 0 && (
                 <SchemaTable
                   classNames='py-1'
-                  types={staticTypes}
+                  types={allTemplates.map(({ id, label }) => ({ typename: id, presetLabel: label }))}
                   objects={info.objects}
-                  label='Static Types'
+                  label='Space Templates'
                   onClick={handleCreateData}
                 />
-                <SchemaTable
-                  classNames='py-1'
-                  types={recordTypes}
-                  objects={info.objects}
-                  label='Record Types'
-                  onClick={handleCreateData}
-                />
-                <SchemaTable
-                  classNames='py-1'
-                  types={presets.types}
-                  objects={info.objects}
-                  label='Presets'
-                  onClick={handleCreateData}
-                />
-                {sampleSpaces.length > 0 && (
-                  <SchemaTable
-                    classNames='py-1'
-                    types={sampleSpaces.map(({ id, label }) => ({ typename: id, presetLabel: label }))}
-                    objects={info.objects}
-                    label='Sample Spaces'
-                    onClick={handleCreateData}
-                  />
-                )}
-                <ProgressGenerator classNames='py-1' />
-              </ScrollArea.Viewport>
-            </ScrollArea.Root>
-          </Panel.Content>
-        </Panel.Root>
-      </Menu.Root>
+              )}
+              <ProgressGenerator classNames='py-1' />
+            </ScrollArea.Viewport>
+          </ScrollArea.Root>
+        </Panel.Content>
+      </Panel.Root>
     );
   },
 );

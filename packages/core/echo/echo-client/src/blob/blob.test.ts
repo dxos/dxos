@@ -10,7 +10,7 @@ import { fromDigestHex } from '@dxos/blob';
 import { Blob, Database, Error } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { EchoTestBuilder } from '../testing';
+import { EchoTestBuilder } from '../testing/index.ts';
 
 describe('Blob', () => {
   let builder: EchoTestBuilder;
@@ -119,6 +119,84 @@ describe('Blob', () => {
     } finally {
       cleanup();
     }
+  });
+
+  test('fromUpload adopts bytes the client never saw', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Blob.Blob] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    // The bytes are already in the store before the client is involved: a third party — an agent's
+    // `curl` — put them there over a signed URL, which is the whole point of this path.
+    const bytes = new Uint8Array([4, 5, 6, 7]);
+    const uri = fromDigestHex('abcdef');
+    const store = new Map([[uri, bytes]]);
+    // Adoption must never re-upload: the bytes are already in the store, and pushing them again
+    // would mean they had travelled through this process after all.
+    let reuploaded = false;
+    const cleanup = db.graph.registerBlobBackend('upload-test', {
+      schemes: [Blob.Scheme.ni],
+      put: async ({ contentHash }) => {
+        reuploaded = true;
+        return { uri: fromDigestHex(contentHash) };
+      },
+      get: async ({ uri: key }) => store.get(key),
+      has: async ({ uri: key }) => store.has(key),
+      adoptUpload: async () => ({ uri, size: bytes.byteLength, contentType: 'image/png' }),
+    });
+
+    try {
+      await Effect.gen(function* () {
+        const blob = yield* Blob.fromUpload('upload-1', { storage: 'upload-test' });
+        expect(blob.data._tag).toBe('external');
+        // Size and type come from the backend, not from the caller: nothing here saw the bytes.
+        expect(blob.size).toBe(bytes.byteLength);
+        expect(blob.type).toBe('image/png');
+        yield* Database.add(blob);
+
+        expect(yield* Blob.read(blob)).toEqual(bytes);
+      }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors);
+      expect(reuploaded).toBe(false);
+    } finally {
+      cleanup();
+    }
+  });
+
+  test('fromUpload on a backend that cannot adopt uploads fails rather than inventing a blob', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Blob.Blob] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    const cleanup = db.graph.registerBlobBackend('no-adopt', {
+      schemes: [Blob.Scheme.ni],
+      put: async ({ contentHash }) => ({ uri: fromDigestHex(contentHash) }),
+      get: async () => undefined,
+      has: async () => false,
+    });
+
+    try {
+      await expect(
+        Effect.gen(function* () {
+          yield* Blob.fromUpload('upload-1', { storage: 'no-adopt' });
+        }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors),
+      ).rejects.toThrow();
+    } finally {
+      cleanup();
+    }
+  });
+
+  test('fromUpload rejects inline storage, which has nowhere to upload to', async ({ expect }) => {
+    await using peer = await builder.createPeer({ types: [Blob.Blob] });
+    const db = await peer.createDatabase();
+    const testLayer = Database.layer(db);
+
+    // Inline keeps bytes on the ECHO object itself, so there is no third party that could have
+    // uploaded them; silently producing an empty blob would be the worse answer.
+    await expect(
+      Effect.gen(function* () {
+        yield* Blob.fromUpload('upload-1', { storage: Blob.Storage.inline });
+      }).pipe(Effect.provide(testLayer), EffectEx.runAndForwardErrors),
+    ).rejects.toThrow();
   });
 
   test('exceeding a backend maxSize fails with BlobTooLargeError', async ({ expect }) => {

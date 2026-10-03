@@ -20,7 +20,7 @@ import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 
 // Direct path, not the `#components` barrel: some components in that barrel import from `#hooks`
 // (which exports this file), so going through the barrel would create a module cycle.
-import { useConnectorEntry, useTargetConnection } from '../components/Initialize/useTargetConnection';
+import { useConnectorEntry, useTargetConnection } from '../components/Initialize/useTargetConnection.ts';
 
 /**
  * Hook to find, create, and toggle a timer-based sync Routine for a mailbox or calendar. An existing

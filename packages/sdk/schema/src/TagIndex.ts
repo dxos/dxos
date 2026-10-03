@@ -4,11 +4,10 @@
 
 // @import-as-namespace
 
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
-import { FormInputAnnotation } from '@dxos/echo/Annotation';
 import { EID, type EntityId } from '@dxos/keys';
 
 /**
@@ -27,8 +26,8 @@ import { EID, type EntityId } from '@dxos/keys';
 export class TagIndex extends Type.makeObject<TagIndex>(DXN.make('org.dxos.type.tagIndex', '0.1.0'))(
   Schema.Struct({
     /** Inverse index keyed by tag id; the value is the array of object ids carrying that tag. */
-    index: Schema.Record(Schema.String, Schema.Array(Obj.ID)).pipe(FormInputAnnotation.set(false)),
-  }).pipe(Annotation.HiddenAnnotation.set(true)),
+    index: Schema.Record(Schema.String, Schema.Array(Obj.ID)).pipe(Annotation.FormInputAnnotation.set(false)),
+  }),
 ) {}
 
 /** Creates an empty TagIndex object. */

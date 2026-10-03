@@ -13,9 +13,9 @@ import { Message, Task } from '@dxos/types';
 
 import { ProjectMailboxOperation } from '#types';
 
-import createTrackingProject from './create-tracking-project';
-import { seed, testLayer } from './testing';
-import updateProjectTasks from './update-project-tasks';
+import createTrackingProject from './create-tracking-project.ts';
+import { seed, testLayer } from './testing.ts';
+import updateProjectTasks from './update-project-tasks.ts';
 
 describe('create-tracking-project', () => {
   it.effect('scaffolds the project, routine, and backfilled tasks from a message', () =>

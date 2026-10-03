@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { Morph } from './Morph';
+import { Morph } from './Morph.tsx';
 
 const meta = {
   title: 'ui/react-ui-experimental/Morph',

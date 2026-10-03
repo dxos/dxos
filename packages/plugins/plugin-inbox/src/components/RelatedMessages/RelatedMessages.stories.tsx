@@ -12,7 +12,7 @@ import { Message } from '@dxos/types';
 
 import { translations } from '#translations';
 
-import { RelatedMessages } from './RelatedMessages';
+import { RelatedMessages } from './RelatedMessages.tsx';
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;

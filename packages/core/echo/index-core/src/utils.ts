@@ -2,17 +2,73 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Context from 'effect/Context';
+import type * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
+import type * as SqlClient from 'effect/sql/SqlClient';
+import type * as SqlError from 'effect/sql/SqlError';
+import type * as Statement from 'effect/sql/Statement';
 
 import { invariant } from '@dxos/invariant';
 
 export type EntityPropPath = string[];
 
 /**
- * SQLite bound-variable limit (`SQLITE_LIMIT_VARIABLE_NUMBER`, typically 999 in wasm builds).
- * Batch `IN (...)` queries below this; 500 gives a safe margin.
+ * A property path with array-index segments removed, the form `reverseRef.propPathNormalized`
+ * stores: `['items', '0', 'assignee']` and `['items', 'assignee']` name the same property.
  */
-export const SQL_CHUNK_SIZE = 500;
+export const normalizePropPath = (path: readonly string[]): EntityPropPath =>
+  path.filter((segment) => !/^[0-9]+$/.test(segment));
+
+/**
+ * Bound variables one statement may carry (`SQLITE_LIMIT_VARIABLE_NUMBER`).
+ *
+ * Sized for Durable Object SQLite, which is what production indexes against and which caps this at
+ * 100 — a tenth of the node and wasm builds this package's own tests run on, so the lowest
+ * supported runtime is the only safe bound.
+ */
+export const SQL_MAX_BOUND_VARIABLES = 100;
+
+/**
+ * Variables a statement may bind outside the chunked list — `spaceId = ${...}` and friends — so a
+ * caller gets a usable chunk size without having to count its own predicates.
+ */
+const RESERVED_BOUND_VARIABLES = 8;
+
+/** Rows one statement may carry when each binds `variablesPerRow` variables. */
+export const chunkSizeForBoundVariables = (variablesPerRow: number): number => {
+  invariant(Number.isInteger(variablesPerRow) && variablesPerRow > 0, 'variables per row must be a positive integer');
+  return Math.max(1, Math.floor((SQL_MAX_BOUND_VARIABLES - RESERVED_BOUND_VARIABLES) / variablesPerRow));
+};
+
+/**
+ * True for SQLite's authorizer refusing a function call, which Durable Object SQLite does for
+ * introspection functions such as `sqlite_version()`; the driver nests the message under `cause`.
+ */
+export const isUnauthorizedFunctionError = (err: unknown): boolean => {
+  let current: unknown = err;
+  for (let depth = 0; depth < 5 && current instanceof Object; depth++) {
+    if (
+      'message' in current &&
+      typeof current.message === 'string' &&
+      /not authorized to use function/i.test(current.message)
+    ) {
+      return true;
+    }
+    current = 'cause' in current ? current.cause : undefined;
+  }
+  return false;
+};
+
+/** Chunk size for a list binding one variable per element, as `IN (...)` does. */
+export const SQL_CHUNK_SIZE: number = chunkSizeForBoundVariables(1);
+
+/**
+ * Split rows for a multi-row `sql.insert`, sizing the batch by the columns the rows actually
+ * carry — so adding a column narrows the batch instead of silently overrunning the limit.
+ */
+export const chunkRows = <T extends Record<string, unknown>>(rows: readonly T[]): T[][] =>
+  rows.length === 0 ? [] : chunkArray(rows, chunkSizeForBoundVariables(Object.keys(rows[0]).length));
 
 /** Split an array into chunks of at most `size` for batched SQL `IN (...)` clauses. */
 export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE): T[][] => {
@@ -23,6 +79,176 @@ export const chunkArray = <T>(items: readonly T[], size: number = SQL_CHUNK_SIZE
     chunks.push(items.slice(index, index + size));
   }
   return chunks;
+};
+
+/**
+ * The bound-variable limit chunked reads plan against. A reference rather than
+ * {@link SQL_MAX_BOUND_VARIABLES} itself so tests can shrink it to drive the multi-statement paths.
+ */
+export const SqlBoundVariableLimit: Context.Reference<number> = Context.Reference<number>(
+  '@dxos/index-core/SqlBoundVariableLimit',
+  { defaultValue: () => SQL_MAX_BOUND_VARIABLES },
+);
+
+/** Most statements one chunked read may issue; a read wider than that fails instead. */
+export const MAX_CHUNKED_STATEMENTS = 64;
+
+/** Variables a fragment binds, measured by compiling it so the count cannot drift from the SQL. */
+export const countBoundVariables = (sql: SqlClient.SqlClient, fragment: Statement.Fragment): number =>
+  sql`${fragment}`.compile()[1].length;
+
+/**
+ * Runs the statements of a read split across several in one transaction, so a write landing between
+ * two of them cannot make them disagree. One statement already reads one snapshot, and is left alone:
+ * node SQLite takes the write lock for any transaction.
+ */
+export const readConsistently = <A, E, R>(
+  sql: SqlClient.SqlClient,
+  statementCount: number,
+  read: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E | SqlError.SqlError, R> => (statementCount > 1 ? sql.withTransaction(read) : read);
+
+/**
+ * What one item binds in a condition that ORs its items, measured by compiling the condition for that
+ * item alone. A cost re-derived from the builder's logic drifts the moment the builder changes.
+ */
+export const measuredVariableCost =
+  <T>(sql: SqlClient.SqlClient, build: (items: readonly T[]) => Statement.Fragment) =>
+  (item: T): number =>
+    countBoundVariables(sql, build([item]));
+
+/**
+ * Splits `items` into consecutive chunks whose summed `costs` fit `budget`, filling each chunk before
+ * starting the next, which leaves the fewest chunks any consecutive split can.
+ */
+const splitByCost = <T>(items: readonly T[], costs: readonly number[], budget: number): T[][] => {
+  const chunks: T[][] = [];
+  let chunk: T[] = [];
+  let chunkCost = 0;
+  items.forEach((item, index) => {
+    const cost = costs[index];
+    // Refused rather than emitted as one over-wide statement, which is how the 2026-09-22 outage shipped.
+    invariant(cost <= budget, `one item binds ${cost} variables but a statement has ${budget} left`);
+    if (chunkCost + cost > budget) {
+      chunks.push(chunk);
+      chunk = [];
+      chunkCost = 0;
+    }
+    chunk.push(item);
+    chunkCost += cost;
+  });
+  if (chunk.length > 0) {
+    chunks.push(chunk);
+  }
+  return chunks;
+};
+
+/**
+ * Splits `items` into consecutive chunks whose summed `costOf` fits `budget`, so a list too wide for
+ * one statement is read by several. No items plan no chunks: the caller answers empty rather than
+ * degrade to `IN ()` or drop the condition and match everything.
+ */
+export const planChunks = <T>(items: readonly T[], costOf: (item: T) => number, budget: number): T[][] => {
+  const chunks = splitByCost(
+    items,
+    items.map((item) => costOf(item)),
+    budget,
+  );
+  invariant(chunks.length <= MAX_CHUNKED_STATEMENTS, `a read needs ${chunks.length} statements`);
+  return chunks;
+};
+
+/** A list a read is restricted to, with what each of its items binds. */
+export type ChunkPlanInput<T> = {
+  readonly items: readonly T[];
+  readonly costOf: (item: T) => number;
+};
+
+/** The fewest statements reading a prefix of the outer list, and the last outer chunk they end with. */
+type PrefixPlan = { readonly statements: number; readonly start: number; readonly cost: number };
+
+/**
+ * Plans a read restricted by two lists at once: each chunk of `outer` pairs with every chunk of
+ * `inner` planned in the budget that outer chunk leaves.
+ *
+ * The outer list is cut wherever the statements total fewest rather than packed full, since a full
+ * outer chunk leaves the inner list a few variables per statement.
+ */
+export const planChunkPairs = <A, B>(
+  outer: ChunkPlanInput<A>,
+  inner: ChunkPlanInput<B>,
+  budget: number,
+): (readonly [A[], B[]])[] => {
+  if (outer.items.length === 0 || inner.items.length === 0) {
+    return [];
+  }
+  // Measured once: each cost compiles a fragment, and the search revisits every outer item many times.
+  const outerCosts = outer.items.map((item) => outer.costOf(item));
+  const innerCosts = inner.items.map((item) => inner.costOf(item));
+  const widestInner = innerCosts.reduce((widest, cost) => Math.max(widest, cost), 0);
+
+  // How many chunks the inner list needs depends only on what the outer chunk beside it binds.
+  const innerChunkCounts = new Map<number, number>();
+  const innerChunkCount = (outerCost: number): number => {
+    let count = innerChunkCounts.get(outerCost);
+    if (count === undefined) {
+      count = splitByCost(inner.items, innerCosts, budget - outerCost).length;
+      innerChunkCounts.set(outerCost, count);
+    }
+    return count;
+  };
+
+  // `fewest[end]` reads the first `end` outer items: the best of every last chunk ending there that
+  // leaves the widest inner item room, after the fewest statements reading what precedes it.
+  const fewest: PrefixPlan[] = [{ statements: 0, start: 0, cost: 0 }];
+  for (let end = 1; end <= outerCosts.length; end++) {
+    let best: PrefixPlan | undefined;
+    let cost = 0;
+    for (let start = end - 1; start >= 0 && cost + outerCosts[start] + widestInner <= budget; start--) {
+      cost += outerCosts[start];
+      const statements = fewest[start].statements + innerChunkCount(cost);
+      if (best === undefined || statements < best.statements) {
+        best = { statements, start, cost };
+      }
+    }
+    // Refused rather than emitted as one over-wide statement, which is how the 2026-09-22 outage shipped.
+    invariant(best, `one item binds ${outerCosts[end - 1]} variables but a statement has ${budget - widestInner} left`);
+    fewest.push(best);
+  }
+
+  const outerChunks: { readonly items: A[]; readonly cost: number }[] = [];
+  for (let end = outerCosts.length; end > 0; end = fewest[end].start) {
+    outerChunks.unshift({ items: outer.items.slice(fewest[end].start, end), cost: fewest[end].cost });
+  }
+  const pairs = outerChunks.flatMap(({ items, cost }) =>
+    splitByCost(inner.items, innerCosts, budget - cost).map((innerChunk) => [items, innerChunk] as const),
+  );
+  invariant(pairs.length <= MAX_CHUNKED_STATEMENTS, `a read needs ${pairs.length} statements`);
+  return pairs;
+};
+
+/**
+ * Merges the rows of a read issued as several statements: the first row per `recordId`, since
+ * chunks of overlapping conditions can match a row twice; then ordered by `compare` and cut to
+ * `limit`, which each statement could only apply to its own chunk.
+ */
+export const mergeChunkedRows = <T extends { readonly recordId: number }>(
+  results: readonly (readonly T[])[],
+  { compare, limit }: { compare?: (left: T, right: T) => number; limit?: number } = {},
+): T[] => {
+  const byRecordId = new Map<number, T>();
+  for (const rows of results) {
+    for (const row of rows) {
+      if (!byRecordId.has(row.recordId)) {
+        byRecordId.set(row.recordId, row);
+      }
+    }
+  }
+  const merged = [...byRecordId.values()];
+  if (compare) {
+    merged.sort(compare);
+  }
+  return limit === undefined ? merged : merged.slice(0, limit);
 };
 
 /**

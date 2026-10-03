@@ -6,8 +6,8 @@ import { describe, expect, test } from 'vitest';
 
 import { Trigger, sleep } from '@dxos/async';
 
-import * as WorkerProtocol from '../WorkerProtocol';
-import { createOnConnect } from './coordinator-worker';
+import * as WorkerProtocol from '../WorkerProtocol.ts';
+import { createOnConnect } from './coordinator-worker.ts';
 
 /**
  * Simulated tab connected to a coordinator: sends messages on its own port and records everything

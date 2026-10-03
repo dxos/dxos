@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import { CommandConfig, Common, printList, spaceLayer, withTypes } from '@dxos/cli-util';
 import { Database, Filter } from '@dxos/echo';
 import { AccessToken, Connection } from '@dxos/link';
 
-import { printConnection } from './util';
+import { printConnection } from './util.ts';
 
 export const list = Command.make(
   'list',

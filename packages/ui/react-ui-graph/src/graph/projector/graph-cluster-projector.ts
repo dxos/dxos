@@ -7,8 +7,8 @@ import { cluster as d3Cluster, hierarchy, linkRadial } from 'd3';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import { log } from '@dxos/log';
 
-import { type GraphLayoutEdge, type GraphLayoutNode } from '../types';
-import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector';
+import { type GraphLayoutEdge, type GraphLayoutNode } from '../types.ts';
+import { GraphRadialProjector, type GraphRadialProjectorOptions, updateNode } from './graph-radial-projector.ts';
 
 export type GraphClusterProjectorOptions = GraphRadialProjectorOptions & {
   /** Reserved space around the cluster (screen pixels). */

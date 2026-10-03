@@ -5,7 +5,7 @@
 import { Handle, Position } from '@xyflow/react';
 import React, { memo } from 'react';
 
-import { type NodeType } from './Chain';
+import { type NodeType } from './Chain.tsx';
 
 /**
  * https://reactflow.dev/examples/styling/tailwind

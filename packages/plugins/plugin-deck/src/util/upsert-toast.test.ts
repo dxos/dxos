@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 
-import { upsertToast } from './upsert-toast';
+import { upsertToast } from './upsert-toast.ts';
 
 describe('upsertToast', () => {
   test('appends a toast with an unseen id', ({ expect }) => {

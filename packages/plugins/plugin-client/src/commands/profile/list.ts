@@ -2,18 +2,18 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as FileSystem from 'effect/FileSystem';
 import * as Path from 'effect/Path';
-import * as Command from 'effect/unstable/cli/Command';
 import * as Yaml from 'yaml';
 
 import { CommandConfig, printList } from '@dxos/cli-util';
 import { Config } from '@dxos/client';
 import { DX_CONFIG, DX_DATA, getProfilePath } from '@dxos/client-protocol';
 
-import { printProfile } from './util';
+import { printProfile } from './util.ts';
 
 export const list = Command.make(
   'list',

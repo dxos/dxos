@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './SchemaTable';
-export * from './SpaceGenerator';
+export * from './SchemaTable/index.ts';
+export * from './SpaceGenerator/index.ts';

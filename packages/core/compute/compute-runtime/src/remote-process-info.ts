@@ -8,8 +8,8 @@ import * as Option from 'effect/Option';
 import * as Process from '@dxos/compute/Process';
 import { ErrorCodec } from '@dxos/protocols';
 
-import type * as ProcessManager from './ProcessManager';
-import type * as RemoteProcessManager from './RemoteProcessManager';
+import type * as ProcessManager from './ProcessManager.ts';
+import type * as RemoteProcessManager from './RemoteProcessManager.ts';
 
 /**
  * Projections from a {@link RemoteProcessManager.Snapshot} onto the in-process types.

@@ -31,6 +31,9 @@
       "path": "../../common/effect"
     },
     {
+      "path": "../../common/errors"
+    },
+    {
       "path": "../../common/feed-store"
     },
     {
@@ -41,9 +44,6 @@
     },
     {
       "path": "../../common/keys"
-    },
-    {
-      "path": "../../common/lock-file"
     },
     {
       "path": "../../common/log"
@@ -68,6 +68,12 @@
     },
     {
       "path": "../../common/util"
+    },
+    {
+      "path": "../../core/compute/compute"
+    },
+    {
+      "path": "../../core/compute/compute-runtime"
     },
     {
       "path": "../../core/echo/echo"
@@ -103,6 +109,9 @@
       "path": "../../core/mesh/network-manager"
     },
     {
+      "path": "../../core/mesh/rpc"
+    },
+    {
       "path": "../../core/mesh/teleport"
     },
     {
@@ -110,9 +119,6 @@
     },
     {
       "path": "../../core/mesh/teleport-extension-replicator"
-    },
-    {
-      "path": "../../core/mesh/websocket-rpc"
     },
     {
       "path": "../../core/protocols"

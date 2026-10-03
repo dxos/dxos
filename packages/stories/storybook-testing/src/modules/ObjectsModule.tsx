@@ -7,7 +7,7 @@ import React, { useMemo, useState } from 'react';
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
-import { Input, Panel, Select, Toolbar } from '@dxos/react-ui';
+import { Field, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
 /** `Select` values must be non-empty strings, so "no type filter" needs a sentinel. */
@@ -74,14 +74,14 @@ const ObjectsModuleContainer = ({ space }: { space: Space }) => {
               </Select.Content>
             </Select.Portal>
           </Select.Root>
-          <Input.Root>
-            <Input.TextInput
+          <Field.Root>
+            <Field.Input
               classNames='grow'
               placeholder='Filter objects…'
               value={text}
               onChange={(event) => setText(event.target.value)}
             />
-          </Input.Root>
+          </Field.Root>
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>

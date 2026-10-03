@@ -6,8 +6,8 @@ import { Context, ContextDisposedError } from '@dxos/context';
 import { StackTrace } from '@dxos/debug';
 import { type MaybePromise } from '@dxos/util';
 
-import { trackResource } from './track-leaks';
-import { Trigger } from './trigger';
+import { trackResource } from './track-leaks.ts';
+import { Trigger } from './trigger.ts';
 
 /**
  * A task that can be scheduled to run in the next event loop iteration.

@@ -22,10 +22,10 @@ import { EID, EntityId, PublicKey, SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { openAndClose } from '@dxos/test-utils';
 
-import { Doc } from '../automerge';
-import { EchoTestBuilder, createTmpPath } from '../testing';
-import { createObject } from './echo-handler';
-import { getObjectCore, isEchoObject } from './echo-object-utils';
+import { Doc } from '../automerge/index.ts';
+import { EchoTestBuilder, createTmpPath } from '../testing/index.ts';
+import { createObject } from './echo-handler.ts';
+import { getObjectCore, isEchoObject } from './echo-object-utils.ts';
 
 const TEST_OBJECT: TestSchema.ExampleSchema = {
   string: 'foo',
@@ -651,7 +651,7 @@ describe('Reactive Object with ECHO database', () => {
 
   // Annotations store their values in entity meta. A Ref-valued annotation must persist its
   // unsaved target just like a Ref assigned to an ordinary property does, otherwise the stored
-  // DXN dangles and resolution throws EntityNotFoundError (see CollectionModel root collection).
+  // DXN dangles and resolution throws EntityNotFoundError (see ContainerModel root collection).
   describe('annotation references', () => {
     const RootCollection = Type.makeObject(DXN.make('com.example.type.rootCollection', '0.1.0'))(
       Schema.Struct({

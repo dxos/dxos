@@ -12,7 +12,7 @@ import { meta } from '#meta';
 const Graph = Capability.lazyModule(
   'Graph',
   { requires: [Capabilities.AtomRegistry], provides: [AppCapabilities.AppGraph] },
-  () => import('./graph'),
+  () => import('./graph.ts'),
 );
 
 /**

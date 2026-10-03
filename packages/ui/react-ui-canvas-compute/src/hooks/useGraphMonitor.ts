@@ -4,14 +4,12 @@
 
 import { useMemo } from 'react';
 
-import { type ComputeEdge, ComputeGraphModel, type ComputeNode, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
-import { Obj, Ref } from '@dxos/echo';
+import { type ComputeEdge, ComputeGraphModel, DEFAULT_INPUT, DEFAULT_OUTPUT } from '@dxos/conductor';
 import { invariant } from '@dxos/invariant';
 import { type CanvasBoard, type CanvasGraphModel, type GraphMonitor } from '@dxos/react-ui-canvas-editor';
-import { isNonNullable } from '@dxos/util';
 
-import { createComputeNode, isValidComputeNode } from '../graph';
-import { type ComputeShape, type TriggerShape } from '../shapes';
+import { deleteTriggerObjects, syncCreate, syncDelete, syncLink } from '../graph/index.ts';
+import { type ComputeShape } from '../shapes/index.ts';
 
 /**
  * Map canvas edge to compute edge.
@@ -19,14 +17,13 @@ import { type ComputeShape, type TriggerShape } from '../shapes';
 export const mapEdge = (
   graph: CanvasGraphModel,
   { source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }: CanvasBoard.Connection,
-): ComputeEdge => {
+): Omit<ComputeEdge, 'id'> => {
   const sourceNode = graph.findNode(source) as ComputeShape;
   const targetNode = graph.findNode(target) as ComputeShape;
   invariant(sourceNode?.node);
   invariant(targetNode?.node);
 
   return {
-    id: Obj.ID.random(),
     source: sourceNode.node,
     target: targetNode.node,
     output,
@@ -48,41 +45,33 @@ export const useGraphMonitor = (model?: ComputeGraphModel): GraphMonitor<Compute
         }
 
         // Ignore shapes that don't have a corresponding node factory.
-        invariant(node.type);
-        if (!isValidComputeNode(node.type)) {
-          return;
+        const computeNode = syncCreate(model, node);
+        if (computeNode) {
+          node.node = computeNode.id;
         }
-
-        const computeNode = createComputeNode(node);
-        if (node.type === 'trigger') {
-          linkTriggerToCompute(model, computeNode, node as TriggerShape);
-        }
-        model.addNode(computeNode);
-        node.node = computeNode.id;
       },
 
       onLink: ({ graph, edge }) => {
         if (model) {
-          model.addEdge(mapEdge(graph, edge));
+          syncLink(model, mapEdge(graph, edge));
         }
       },
 
-      onDelete: ({ subgraph }) => {
+      onDelete: ({ graph, subgraph }) => {
         if (model) {
-          const nodeIds = subgraph.nodes.map((shape) => (shape as ComputeShape).node) as string[];
-
-          // NOTE(ZaymonFC): Based on the information we have, this is O(edges to remove * compute edges).
-          const edgeIds = subgraph.edges
-            .map(({ source, target, output = DEFAULT_OUTPUT, input = DEFAULT_INPUT }) => {
-              return model.edges.find((computeEdge) => computeEdge.input === input && computeEdge.output === output)
-                ?.id;
-            })
-            .filter(isNonNullable);
-
-          model.removeNodes(nodeIds);
-          model.removeEdges(edgeIds);
-
-          deleteTriggerObjects(model, subgraph);
+          const shapes = subgraph.nodes as ComputeShape[];
+          const nodeIds = shapes.map((shape) => shape.node).filter((id): id is string => id !== undefined);
+          // An edge's far end may survive the deletion, so it is looked up in the whole graph.
+          const computeId = (id: string) =>
+            ((subgraph.findNode(id) ?? graph.findNode(id)) as ComputeShape | undefined)?.node ?? '';
+          const links = subgraph.edges.map(({ source, target, output, input }) => ({
+            source: computeId(source),
+            target: computeId(target),
+            output,
+            input,
+          }));
+          syncDelete(model, nodeIds, links);
+          deleteTriggerObjects(model, shapes);
         }
       },
     };
@@ -94,40 +83,16 @@ export const createComputeGraph = (graph?: CanvasGraphModel<ComputeShape>) => {
 
   if (graph) {
     for (const shape of graph.nodes) {
-      if (isValidComputeNode(shape.type)) {
-        const node = createComputeNode(shape);
-        computeGraph.addNode(node);
+      const node = syncCreate(computeGraph, shape);
+      if (node) {
         shape.node = node.id;
       }
     }
 
     for (const edge of graph.edges) {
-      computeGraph.addEdge(mapEdge(graph, edge));
+      syncLink(computeGraph, mapEdge(graph, edge));
     }
   }
 
   return computeGraph;
-};
-
-const linkTriggerToCompute = (graph: ComputeGraphModel, computeNode: ComputeNode, triggerData: TriggerShape) => {
-  const functionTrigger = triggerData.functionTrigger?.target;
-  invariant(functionTrigger);
-  Obj.update(functionTrigger, (functionTrigger) => {
-    // TODO(wittjosiah): Widen Runnable union to include ComputeGraph and remove cast.
-    functionTrigger.runnable = Ref.make(graph.root) as any;
-    functionTrigger.inputNodeId = computeNode.id;
-  });
-};
-
-const deleteTriggerObjects = (computeGraph: ComputeGraphModel, deleted: CanvasGraphModel) => {
-  const db = Obj.getDatabase(computeGraph.root);
-  if (!db) {
-    return;
-  }
-  for (const node of deleted.nodes) {
-    if (node.type === 'trigger') {
-      const trigger = node as TriggerShape;
-      db.remove(trigger.functionTrigger!.target!);
-    }
-  }
 };

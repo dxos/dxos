@@ -16,14 +16,14 @@ import { useAtomState } from '@dxos/react-hooks';
 import { Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Attention, useArticleKeyboardNavigation, useSelection } from '@dxos/react-ui-attention';
 import { Listbox } from '@dxos/react-ui-list';
-import { Menu, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
+import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
 import { Ibkr, IbkrOperation } from '#types';
 
-import { IBKR_CONNECTOR_ID } from '../../constants';
-import { meta } from '../../meta';
-import { parseCash, parsePositions, parseTrades } from '../../services';
-import { PortfolioImportAction } from './PortfolioImportAction';
+import { IBKR_CONNECTOR_ID } from '../../constants.ts';
+import { meta } from '../../meta.ts';
+import { parseCash, parsePositions, parseTrades } from '../../services/index.ts';
+import { PortfolioImportAction } from './PortfolioImportAction.tsx';
 
 export type PortfolioArticleProps = AppSurface.ObjectArticleProps<Ibkr.Portfolio>;
 
@@ -148,13 +148,10 @@ export const PortfolioArticle = ({ role, subject, attendableId }: PortfolioArtic
 
   return (
     <Panel.Root role={role}>
-      <Menu.Root {...menuActions} onAction={runAction} attendableId={id}>
-        <Panel.Toolbar asChild>
-          <Menu.Toolbar>
-            <Menu.Items />
-          </Menu.Toolbar>
-        </Panel.Toolbar>
-      </Menu.Root>
+      <Panel.Toolbar asChild>
+        <ActionToolbar {...menuActions} onAction={runAction} attendableId={id} />
+      </Panel.Toolbar>
+
       <Panel.Content asChild>
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>

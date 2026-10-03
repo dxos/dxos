@@ -2,5 +2,6 @@
 // Copyright 2023 DXOS.org
 //
 
-export * from './useDiscordPresence';
-export * from './useTour';
+export * from './useDiscordPresence.ts';
+export * from './useTour.tsx';
+export * from './useTours.ts';

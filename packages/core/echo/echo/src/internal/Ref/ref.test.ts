@@ -7,10 +7,10 @@ import { describe, expect, test } from 'vitest';
 
 import { DXN, EID, EntityId } from '@dxos/keys';
 
-import * as Type from '../../Type';
-import { EchoObjectSchema, getObjectEchoUri } from '../Entity';
-import { createObject } from '../Obj';
-import { Ref, getReferenceAst } from './ref';
+import * as Type from '../../Type.ts';
+import { EchoObjectSchema, getObjectEchoUri } from '../Entity/index.ts';
+import { createObject } from '../Obj/index.ts';
+import { Ref, getReferenceAst } from './ref.ts';
 
 const Task = Schema.Struct({
   title: Schema.optional(Schema.String),
@@ -87,5 +87,38 @@ describe('Ref', () => {
     const contact = Schema.decodeUnknownSync(Type.getSchema(Contact))(contactData);
     expect(Ref.isRef(contact.tasks[0])).toEqual(true);
     expect(contact.tasks[0].uri.toString()).toEqual(`echo:/${id}`);
+  });
+
+  // A rejection message is what a remote caller gets back: `InvalidOperationInput` interpolates it
+  // verbatim, and the caller cannot see its own payload in our logs.
+  describe('rejection diagnostics', () => {
+    const rejectionMessage = (value: unknown, options?: { readonly reportInput: true }): string => {
+      try {
+        Schema.decodeUnknownSync(Schema.toType(Schema.Struct({ tasks: Ref(Task) })))({ tasks: value } as any, options);
+      } catch (err: any) {
+        return err.message;
+      }
+      throw new Error('expected the decode to fail');
+    };
+
+    test('names the expected type and the field', ({ expect }) => {
+      const message = rejectionMessage(42);
+
+      expect(message).toContain('["tasks"]');
+
+      // Without an `identifier` annotation Effect renders a declaration as `<Declaration>`, which
+      // tells a caller only what shape its value is not.
+      expect(message).not.toContain('<Declaration>');
+      expect(message).toContain('Ref<');
+      expect(message).toContain(Type.getTypename(Task));
+    });
+
+    test('reports the offending value under `reportInput`', ({ expect }) => {
+      // The value distinguishes "you passed a number" from "you passed an unresolvable envelope" —
+      // the two mistakes a remote caller actually makes. Operation input validation turns this on;
+      // see `validateOperationInput` in `@dxos/compute`.
+      expect(rejectionMessage(42, { reportInput: true })).toContain('42');
+      expect(rejectionMessage({ '/': 'not-a-uri' }, { reportInput: true })).toContain('not-a-uri');
+    });
   });
 });

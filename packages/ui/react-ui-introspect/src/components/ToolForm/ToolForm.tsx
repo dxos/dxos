@@ -16,8 +16,8 @@ import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
 
-import { Picker } from '../Picker';
-import type { ToolEntry } from '../types';
+import { Picker } from '../Picker/index.ts';
+import type { ToolEntry } from '../types.ts';
 
 export type ToolFormProps = ThemedClassName<{
   /**
@@ -102,7 +102,7 @@ export const ToolForm = ({ tool, defaultValues, onSubmit, onCancel, classNames, 
         onCancel={onCancel}
       >
         <Form.Content>
-          <Form.FieldSet fieldProvider={fieldProvider} />
+          <Form.Fields fieldProvider={fieldProvider} />
           <Form.Submit label={t('run-tool.label')} />
         </Form.Content>
       </Form.Root>

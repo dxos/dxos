@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 
 import { AiService } from '@dxos/ai';
 import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
@@ -26,8 +26,8 @@ import { trim } from '@dxos/util';
 
 import { InboxOperation } from '#types';
 
-import { type SystemTagId, findOrCreateSystemTag } from '../../types/SystemTags';
-import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../FeedCursor';
+import { type SystemTagId, findOrCreateSystemTag } from '../../types/SystemTags.ts';
+import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../FeedCursor.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -269,7 +269,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
           if (unknown.length > 0) {
             const prompt = `${CLASSIFY_PROMPT}\n\n${unknown.map(promptEntry).join('\n\n')}`;
             const payload = yield* generateClassification(prompt, strict ?? true).pipe(
-              Effect.provide(AiService.model(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
+              Effect.provide(AiService.languageModel(model ?? DEFAULT_MODEL).pipe(Layer.orDie)),
             );
             for (const result of payload.results) {
               const message = unknown[result.index];

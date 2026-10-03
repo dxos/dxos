@@ -18,7 +18,7 @@ import { useResizeDetector } from 'react-resize-detector';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type SpaceGraphModel } from '@dxos/schema';
 
-import { GraphAdapter } from './graph-adapter';
+import { GraphAdapter } from './graph-adapter.ts';
 
 export type CanvasForceGraphProps = {
   model?: SpaceGraphModel;

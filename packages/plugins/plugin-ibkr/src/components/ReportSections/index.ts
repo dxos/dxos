@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './ReportSections';
+export * from './ReportSections.tsx';

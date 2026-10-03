@@ -9,8 +9,8 @@ import { JsonSchema } from '@dxos/echo';
 import { invariant } from '@dxos/invariant';
 import { type URI } from '@dxos/keys';
 
-import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler';
-import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes';
+import { type ComputeResolver, GraphExecutor, compileOrThrow } from '../compiler/index.ts';
+import { NODE_INPUT, NODE_OUTPUT, type NodeType, inputNode, outputNode, registry } from '../nodes/index.ts';
 import {
   AnyInput,
   AnyOutput,
@@ -19,8 +19,8 @@ import {
   type ComputeNode,
   type Executable,
   synchronizedComputeFunction,
-} from '../types';
-import { Workflow } from './workflow';
+} from '../types/index.ts';
+import { Workflow } from './workflow.ts';
 
 export type WorkflowLoaderProps = {
   nodeResolver: (node: ComputeNode) => Promise<Executable>;

@@ -3,9 +3,9 @@
 //
 
 import { act, renderHook } from '@testing-library/react';
+import * as Atom from 'effect/reactivity/Atom';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { beforeEach, describe, test } from 'vitest';
 
 import { DXN, Filter, JsonSchema, Obj, Query, Type, type View } from '@dxos/echo';
@@ -16,7 +16,7 @@ import { ProjectionModel, ViewModel, createDirectChangeCallback } from '@dxos/sc
 
 import { Kanban } from '#types';
 
-import { useKanbanBoardModel } from './useKanbanBoardModel';
+import { useKanbanBoardModel } from './useKanbanBoardModel.ts';
 
 // TODO(wittjosiah): Consider adding single-select to TestSchema.Task and using that instead.
 const KanbanTaskSchema = Type.makeObject(DXN.make('com.example.type.kanbanTask', '0.1.0'))(

@@ -23,10 +23,10 @@ runs:
           echo 'cn-channel: environment input is required' >&2
           exit 1
         fi
-        # Production keeps the `main` channel it has always shipped on: every build bakes its channel into the
-        # updater endpoint, so moving it to the primary channel would strand installs still polling `main`.
+        # Empty for production, which ships on CrabNebula's default channel — the one the public releases
+        # page lists and the download button serves. A channel here publishes where nobody can reach it.
         if [ "$ENVIRONMENT" = 'production' ]; then
-          echo 'channel=main' >> "$GITHUB_OUTPUT"
+          echo 'channel=' >> "$GITHUB_OUTPUT"
         else
           echo "channel=$ENVIRONMENT" >> "$GITHUB_OUTPUT"
         fi

@@ -12,7 +12,7 @@ import * as Option from 'effect/Option';
 export const withTimeout: <A, E, R>(
   effect: Effect.Effect<A, E, R>,
 ) => Effect.Effect<A, Cause.TimeoutError | ConfigError.ConfigError | E, R> = Effect.fnUntraced(function* (effect) {
-  const timeout = yield* Config.int('TIMEOUT').pipe(Config.option);
+  const timeout = yield* Config.Int('TIMEOUT').pipe(Config.option);
   const duration = timeout.pipe(
     Option.map(Duration.millis),
     Option.getOrElse(() => Duration.infinity),

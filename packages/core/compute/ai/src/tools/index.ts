@@ -2,8 +2,8 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './call';
-export * from './tool';
-export * from './tool-execution-service';
-export * from './tool-resolver-service';
-export * from './util';
+export * from './call.ts';
+export * from './tool.ts';
+export * from './tool-execution-service.ts';
+export * from './tool-resolver-service.ts';
+export * from './util.ts';

@@ -2,23 +2,23 @@
 // Copyright 2023 DXOS.org
 //
 
+import { create } from '@bufbuild/protobuf';
+import { AnySchema } from '@bufbuild/protobuf/wkt';
 import { randomBytes } from 'node:crypto';
 
 import { Context } from '@dxos/context';
 import { checkType, raise } from '@dxos/debug';
 import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
-import {
-  MemorySignalManager,
-  MemorySignalManagerContext,
-  type Message,
-  type UnsubscribeCallback,
-} from '@dxos/messaging';
+import { MemorySignalManager, MemorySignalManagerContext, type UnsubscribeCallback } from '@dxos/messaging';
+import { fromPublicKey, requirePublicKey } from '@dxos/protocols/buf';
 import { type Runtime_Services_Signal } from '@dxos/protocols/buf/dxos/config_pb';
+import { PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
+import { JoinRequestSchema, LeaveRequestSchema, MessageSchema } from '@dxos/protocols/buf/dxos/edge/signal_pb';
 import { ComplexMap } from '@dxos/util';
 
-import { type TraceEvent } from './analysys';
-import { type SignalServerRunner, runSignal } from './run-test-signal';
+import { type TraceEvent } from './analysys/index.ts';
+import { type SignalServerRunner, runSignal } from './run-test-signal.ts';
 
 export class TestBuilder {
   private readonly _peers = new ComplexMap<PublicKey, TestPeer>(PublicKey.hash);
@@ -91,20 +91,17 @@ export class TestPeer {
       peerId: this.peerId,
     });
 
-    this.signalManager.swarmEvent.on(this._ctx, ({ swarmEvent, topic }) => {
-      const type = swarmEvent.peerAvailable ? 'PEER_AVAILABLE' : 'PEER_LEFT';
-      const discoveredPeer = swarmEvent.peerAvailable
-        ? PublicKey.from(swarmEvent.peerAvailable.peer).toHex()
-        : swarmEvent.peerLeft
-          ? PublicKey.from(swarmEvent.peerLeft.peer).toHex()
-          : raise(new Error('Unknown peer event'));
+    this.signalManager.swarmEvent.on(this._ctx, (swarmEvent) => {
+      const { case: event, value } = swarmEvent.event;
+      const type = event === 'peerAvailable' ? 'PEER_AVAILABLE' : 'PEER_LEFT';
+      const discoveredPeer = value?.peer?.peerKey ?? raise(new Error('Unknown peer event'));
 
       log.trace(
         'dxos.test.signal',
         checkType<TraceEvent>({
           peerId: this.peerId.toHex(),
           type,
-          topic: topic.toHex(),
+          topic: requirePublicKey(swarmEvent.topic).toHex(),
           discoveredPeer,
         }),
       );
@@ -113,15 +110,15 @@ export class TestPeer {
     await this.signalManager.open();
     // Routing/teardown is owned by the subscription (DX-1125); it delivers this peer's messages.
     this._messageSubscription = await this.signalManager.subscribeMessages({
-      peer: { peerKey: this.peerId.toHex() },
+      peer: create(PeerSchema, { peerKey: this.peerId.toHex() }),
       onMessage: (message) => {
         log.trace(
           'dxos.test.signal',
           checkType<TraceEvent>({
             type: 'RECEIVE_MESSAGE',
-            sender: message.author.peerKey,
+            sender: message.author?.peerKey ?? '',
             receiver: message.recipient?.peerKey ?? '',
-            message: Buffer.from(message.payload.value).toString('hex'),
+            message: Buffer.from(message.payload?.value ?? new Uint8Array()).toString('hex'),
           }),
         );
       },
@@ -154,7 +151,10 @@ export class TestPeer {
         peerId: this.peerId.toHex(),
       }),
     );
-    await this.signalManager.join(Context.default(), { topic, peerId: this.peerId });
+    await this.signalManager.join(
+      Context.default(),
+      create(JoinRequestSchema, { topic: fromPublicKey(topic), peer: { peerKey: this.peerId.toHex() } }),
+    );
   }
 
   async leaveTopic(topic: PublicKey): Promise<void> {
@@ -166,26 +166,29 @@ export class TestPeer {
         peerId: this.peerId.toHex(),
       }),
     );
-    await this.signalManager.leave(Context.default(), { topic, peerId: this.peerId });
+    await this.signalManager.leave(
+      Context.default(),
+      create(LeaveRequestSchema, { topic: fromPublicKey(topic), peer: { peerKey: this.peerId.toHex() } }),
+    );
   }
 
   async sendMessage(to: PublicKey): Promise<void> {
-    const message: Message = {
-      author: this.peerId,
-      recipient: to,
-      payload: {
-        type_url: 'example.Message',
+    const message = create(MessageSchema, {
+      author: { peerKey: this.peerId.toHex() },
+      recipient: { peerKey: to.toHex() },
+      payload: create(AnySchema, {
+        typeUrl: 'example.Message',
         value: randomBytes(32),
-      },
-    };
+      }),
+    });
 
     log.trace(
       'dxos.test.signal',
       checkType<TraceEvent>({
         type: 'SENT_MESSAGE',
-        sender: message.author.toHex(),
-        receiver: message.recipient.toHex(),
-        message: Buffer.from(message.payload.value).toString('hex'),
+        sender: message.author?.peerKey ?? '',
+        receiver: message.recipient?.peerKey ?? '',
+        message: Buffer.from(message.payload?.value ?? new Uint8Array()).toString('hex'),
       }),
     );
     await this.signalManager.sendMessage(Context.default(), message);

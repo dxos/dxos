@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { type ObjectCore } from './object-core';
+import { type ObjectCore } from './object-core.ts';
 
 /**
  * Identity map from object id to its live {@link ObjectCore}, held weakly.

@@ -11,7 +11,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { meta as pluginMeta } from '#meta';
 import { translations } from '#translations';
 
-import { AiUsageQuotaError, parseError } from '../../processor';
+import { AiUsageQuotaError, parseError } from '../../processor/index.ts';
 
 type FailureToastProps = {
   /**

@@ -20,8 +20,8 @@ import {
   type StageContext,
   type StageWrite,
   type TranscriptEvent,
-} from '../types';
-import { resolveModel } from './model-routing';
+} from '../types/index.ts';
+import { resolveModel } from './model-routing.ts';
 
 /** Upper bound on retained blocks; bounds memory for long sessions (stages slice their own window). */
 const MAX_WINDOW = 128;

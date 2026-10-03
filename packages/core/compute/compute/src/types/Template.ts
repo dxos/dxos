@@ -7,15 +7,14 @@
 import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 
-import { Database, DXN, Filter, Ref, Registry } from '@dxos/echo';
-import type { EntityNotFoundError } from '@dxos/echo/Error';
+import { Database, DXN, type Error as EchoError, Filter, Ref, Registry } from '@dxos/echo';
 import { assertArgument, invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { Text } from '@dxos/schema';
 import Handlebars from '@dxos/vendor-kbn-handlebars';
 
-import { FunctionNotFoundError } from '../errors';
-import * as Operation from '../Operation';
+import { FunctionNotFoundError } from '../errors.ts';
+import * as Operation from '../Operation.ts';
 
 /**
  * Template input kind determines how template variables are resolved.
@@ -86,7 +85,7 @@ export const process = <Options extends {}>(source: string, variables: Partial<O
 
 export const processTemplate = (
   template: Template,
-): Effect.Effect<string, EntityNotFoundError | FunctionNotFoundError, Registry.Service | Operation.Service> =>
+): Effect.Effect<string, EchoError.EntityNotFoundError | FunctionNotFoundError, Registry.Service | Operation.Service> =>
   Effect.gen(function* () {
     const entries = yield* Effect.forEach(template.inputs ?? [], (input) =>
       Effect.gen(function* () {

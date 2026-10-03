@@ -8,7 +8,7 @@ import { describe, test } from 'vitest';
 import { Context as DxosContext } from '@dxos/context';
 import { EffectEx } from '@dxos/effect';
 
-import * as RemoteOperationInvoker from './RemoteOperationInvoker';
+import * as RemoteOperationInvoker from './RemoteOperationInvoker.ts';
 
 describe('RemoteOperationInvoker', () => {
   test('resolves the Service tag from a provided layer', async ({ expect }) => {

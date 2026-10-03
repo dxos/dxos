@@ -9,7 +9,7 @@ import { afterEach, describe, expect, test } from 'vitest';
 import { ThemeProvider } from '@dxos/react-ui';
 import { type SearchResult } from '@dxos/react-ui-search';
 
-import { SearchResultList } from './SearchResultList';
+import { SearchResultList } from './SearchResultList.tsx';
 
 // `Listbox.Viewport` renders a `ScrollArea`, which reads theme tokens via context.
 const Wrapper = ({ children }: PropsWithChildren) => <ThemeProvider>{children}</ThemeProvider>;

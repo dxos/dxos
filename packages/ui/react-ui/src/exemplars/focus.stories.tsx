@@ -6,7 +6,7 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { forwardRef, useEffect, useMemo, useRef } from 'react';
 
 import { findFirstFocusable, useFocusGroup } from '@dxos/react-focus';
-import { Input, ScrollArea, useMergeRefs } from '@dxos/react-ui';
+import { Field, ScrollArea, useMergeRefs } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -78,12 +78,12 @@ const Item = ({ value }: { value: string }) => {
       {...focusGroupProps}
       className={mx('flex shrink-0 w-full gap-4 p-4 items-center', border)}
     >
-      <Input.Root>
-        <Input.Checkbox />
-      </Input.Root>
-      <Input.Root>
-        <Input.TextInput defaultValue={value} />
-      </Input.Root>
+      <Field.Root>
+        <Field.Checkbox />
+      </Field.Root>
+      <Field.Root>
+        <Field.Input defaultValue={value} />
+      </Field.Root>
     </div>
   );
 };

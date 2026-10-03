@@ -12,9 +12,9 @@ import { log } from '@dxos/log';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { ThemeProvider, Tooltip, defaultTx } from '@dxos/react-ui';
 
-import { ResetDialog } from '../components';
-import { resetComposerStorage } from '../recovery';
-import { LOG_STORE_DB_NAME, translations } from '../util';
+import { ResetDialog } from '../components/index.ts';
+import { resetComposerStorage } from '../recovery/index.ts';
+import { LOG_STORE_DB_NAME, translations } from '../util/index.ts';
 
 const logStore = new IdbLogStore({ dbName: LOG_STORE_DB_NAME });
 

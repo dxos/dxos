@@ -18,7 +18,8 @@ import { NoHandlerError } from '@dxos/compute';
 import * as Operation from '@dxos/compute/Operation';
 import { DXN } from '@dxos/keys';
 
-import * as OperationInvoker from './OperationInvoker';
+import { OperationInvocationError } from './errors.ts';
+import * as OperationInvoker from './OperationInvoker.ts';
 
 const testRuntime = ManagedRuntime.make(Layer.empty) as unknown as ManagedRuntime.ManagedRuntime<any, any>;
 
@@ -73,7 +74,7 @@ const addHandler = Operation.withHandler(Add, (data) => Effect.succeed(data[0] +
 
 const sideEffectHandler = Operation.withHandler(SideEffect, () => Effect.succeed(undefined));
 
-const failHandler = Operation.withHandler(Fail, () => Effect.fail(new Error('boom')));
+const failHandler = Operation.withHandler(Fail, () => Effect.fail(new OperationInvocationError({ message: 'boom' })));
 
 //
 // Test Utilities
