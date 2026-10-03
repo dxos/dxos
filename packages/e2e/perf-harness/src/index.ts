@@ -6,6 +6,7 @@ export * from './browser.ts';
 export * from './cdp.ts';
 export * from './collectors/allocation.ts';
 export * from './collectors/cpu.ts';
+export { type WaitForQuietDiskOptions, waitForQuietDisk } from './collectors/disk.ts';
 export * from './collectors/frames.ts';
 export * from './collectors/memory.ts';
 export * from './collectors/network.ts';

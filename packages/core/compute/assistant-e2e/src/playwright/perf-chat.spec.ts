@@ -12,6 +12,7 @@ import {
   StageRunner,
   appendRows,
   attachAll,
+  detachAll,
   installProbes,
   launchInstrumentedBrowser,
   listTargets,
@@ -20,6 +21,7 @@ import {
   startProfiling,
   sumAppFootprint,
   trackNetwork,
+  waitForQuietDisk,
   writePosthogBatch,
   writeRunReport,
 } from '@dxos/perf-harness';
@@ -129,6 +131,14 @@ const runFlow = async ({ scale, storyId }: Fixture, iteration: number) => {
         seed: await page.evaluate(() => Reflect.get(globalThis, '__dxosPerfSeed')),
       });
       await chatPrompt(page).waitFor({ timeout: BUDGET_MS });
+      // The prompt shows before the harness's chat, its bindings and their index passes have landed;
+      // unloading then would leave that work for boot, which would also miss the unindexed chat.
+      const quiet = await attachAll(debugPort);
+      try {
+        await waitForQuietDisk(quiet, { timeoutMs: BUDGET_MS });
+      } finally {
+        detachAll(quiet);
+      }
     });
 
     // Unloaded with every session closed, and only once the old workers are gone: a shared worker a
