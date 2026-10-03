@@ -16,7 +16,11 @@ import * as AssistantOperation from '@dxos/plugin-assistant/AssistantOperation';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Client, useClient } from '@dxos/react-client';
 import { type Space, SpaceState } from '@dxos/react-client/echo';
-import { Button, Checkbox, Select, Toolbar, useAsyncEffect } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Checkbox from '@dxos/react-ui/Checkbox';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { isPersistent, setPersistent } from '../testing/persistence.ts';
 import { VOYAGE_SPACE_ID } from '../testing/voyage-space.ts';
@@ -135,7 +139,7 @@ const TemplateSelect = () => {
   // template rather than on any: each contributing module activates on its own, so the samples can
   // register a beat before the story's own, and a one-shot on the first arrival would open nothing.
   const [opened, setOpened] = useState(false);
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     if (!opened && !busy.current && templates.some(({ id }) => id === templateId)) {
       setOpened(true);
       await handleSelect(templateId);
@@ -207,26 +211,26 @@ const ProfileControls = () => {
 
   return (
     <>
-      <Button
+      <Button.Button
         icon='ph--download-simple--regular'
         iconOnly
         label='Export profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleExport()}
       />
-      <Button
+      <Button.Button
         icon='ph--upload-simple--regular'
         iconOnly
         label='Import profile (.dxprofile)'
         disabled={!persistent}
         onClick={() => void handleImport()}
       />
-      <Checkbox
+      <Checkbox.Checkbox
         checked={persistent}
         onCheckedChange={({ checked }) => handlePersistentChange(checked === true)}
         label='Persistent'
       />
-      <Button icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
+      <Button.Button icon='ph--trash--regular' label='Reset' onClick={() => void handleReset()} />
     </>
   );
 };

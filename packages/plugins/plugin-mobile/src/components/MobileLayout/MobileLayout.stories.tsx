@@ -5,8 +5,14 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Button, Container, Field, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Container from '@dxos/react-ui/Container';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Splitter from '@dxos/react-ui/Splitter';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { WithKeyboard } from '../../testing/index.ts';
 import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout.tsx';
@@ -22,18 +28,18 @@ const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) =
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body asChild>
-        <Container gutter='sm' classNames='py-form-chrome'>
+        <Container.Container gutter='sm' classNames='py-form-chrome'>
           <Field.Root>
-            <Input placeholder={label} />
+            <Input.Input placeholder={label} />
           </Field.Root>
-        </Container>
+        </Container.Container>
       </Panel.Body>
     </Panel.Root>
   );
 };
 
 const DefaultStory = () => {
-  const [splitterMode, setSplitterMode] = useState<SplitterMode>('start');
+  const [splitterMode, setSplitterMode] = useState<Splitter.Mode>('start');
   const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   useEffect(() => {
@@ -48,18 +54,18 @@ const DefaultStory = () => {
             <Splitter.Panel position='start'>
               <StoryPanel label='Main'>
                 {splitterMode === 'start' && (
-                  <Button icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('split')} />
+                  <Button.Button icon='ph--plus--regular' label='Open' onClick={() => setSplitterMode('split')} />
                 )}
               </StoryPanel>
             </Splitter.Panel>
             <Splitter.Panel position='end'>
               <StoryPanel label='Drawer'>
-                <Button
+                <Button.Button
                   icon={splitterMode === 'end' ? 'ph--arrow-down--regular' : 'ph--arrow-up--regular'}
                   label={splitterMode === 'end' ? 'Collapse' : 'Expand'}
                   onClick={() => setSplitterMode((splitterMode) => (splitterMode === 'split' ? 'end' : 'split'))}
                 />
-                <Button icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('start')} />
+                <Button.Button icon='ph--x--regular' label='Close' onClick={() => setSplitterMode('start')} />
               </StoryPanel>
             </Splitter.Panel>
           </Splitter.Root>

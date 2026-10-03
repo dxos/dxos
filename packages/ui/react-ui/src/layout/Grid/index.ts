@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Grid.tsx';
+export * as Grid from './Grid.tsx';

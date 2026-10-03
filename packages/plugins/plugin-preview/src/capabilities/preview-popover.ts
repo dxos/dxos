@@ -16,9 +16,8 @@ import { Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import * as ClientCapabilities from '@dxos/plugin-client/ClientCapabilities';
-import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention/types';
-import { type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
+import { DX_ANCHOR_ACTIVATE, type DxAnchorActivate, type PreviewLinkRef, type PreviewLinkTarget } from '@dxos/ui-types';
 
 import { PreviewCapabilities } from '#types';
 

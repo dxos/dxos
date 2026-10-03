@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Slider.tsx';
+export * as Slider from './Slider.tsx';

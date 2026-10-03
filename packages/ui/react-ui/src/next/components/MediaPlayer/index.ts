@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './MediaPlayer.tsx';
+export * as MediaPlayer from './MediaPlayer.tsx';

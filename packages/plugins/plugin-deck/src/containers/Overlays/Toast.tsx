@@ -5,7 +5,9 @@
 import React, { useState } from 'react';
 
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type ToastRootProps, Toast as UiToast, toLocalizedString, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as UiToast from '@dxos/react-ui/Toast';
 
 import { meta } from '#meta';
 
@@ -19,8 +21,8 @@ export const Toast = ({
   actionAlt,
   onAction,
   onOpenChange,
-}: LayoutOperation.Toast & Pick<ToastRootProps, 'onOpenChange'>) => {
-  const { t } = useTranslation(meta.profile.key);
+}: LayoutOperation.Toast & Pick<UiToast.RootProps, 'onOpenChange'>) => {
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   // Control the open state so closing flips Radix's `open` (playing the exit animation) rather than
   // unmounting abruptly. Both the close button and Radix's own timeout/swipe route through here.
@@ -32,12 +34,12 @@ export const Toast = ({
 
   return (
     <UiToast.Root data-testid={id} open={open} duration={duration} onOpenChange={handleOpenChange}>
-      <UiToast.Header icon={icon}>{title && toLocalizedString(title, t)}</UiToast.Header>
-      {description && <UiToast.Description>{toLocalizedString(description, t)}</UiToast.Description>}
+      <UiToast.Header icon={icon}>{title && ThemeProvider.toLocalizedString(title, t)}</UiToast.Header>
+      {description && <UiToast.Description>{ThemeProvider.toLocalizedString(description, t)}</UiToast.Description>}
       {onAction && actionAlt && actionLabel && (
         <UiToast.Footer>
           <UiToast.ActionTrigger data-testid='toast.action' variant='primary' onClick={() => onAction?.()}>
-            {toLocalizedString(actionLabel, t)}
+            {ThemeProvider.toLocalizedString(actionLabel, t)}
           </UiToast.ActionTrigger>
         </UiToast.Footer>
       )}

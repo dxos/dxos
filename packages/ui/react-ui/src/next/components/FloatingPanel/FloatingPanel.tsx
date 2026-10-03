@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import {
   type FloatingPanelPoint,
   FloatingPanel as FloatingPanelPrimitive,
@@ -19,7 +21,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button, type ButtonProps } from '../Button/index.ts';
+import * as Button from '../Button/Button.tsx';
 
 const RESIZE_AXES: readonly FloatingPanelPrimitive.ResizeTriggerAxis[] = ['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw'];
 
@@ -216,7 +218,7 @@ const STAGE_ICONS: Record<FloatingPanelStage, string> = {
   default: 'ph--arrows-in-simple--regular',
 };
 
-type FloatingPanelStageTriggerProps = Omit<ButtonProps, 'icon' | 'label' | 'iconOnly'> & {
+type FloatingPanelStageTriggerProps = Omit<Button.ButtonProps, 'icon' | 'label' | 'iconOnly'> & {
   /** The stage the button moves the panel to; zag hides `default` until the panel is staged and the others while it is. */
   stage: FloatingPanelStage;
   icon?: string;
@@ -229,7 +231,7 @@ const FloatingPanelStageTrigger = forwardRef<HTMLButtonElement, FloatingPanelSta
     const { t } = useTranslation(translationKey);
     return (
       <FloatingPanelPrimitive.StageTrigger stage={stage} asChild>
-        <Button
+        <Button.Button
           variant='ghost'
           {...props}
           iconOnly
@@ -248,7 +250,7 @@ FloatingPanelStageTrigger.displayName = 'FloatingPanel.StageTrigger';
 // CloseTrigger
 //
 
-type FloatingPanelCloseTriggerProps = Omit<ButtonProps, 'icon' | 'label' | 'iconOnly'> & {
+type FloatingPanelCloseTriggerProps = Omit<Button.ButtonProps, 'icon' | 'label' | 'iconOnly'> & {
   icon?: string;
   label?: string;
 };
@@ -259,7 +261,7 @@ const FloatingPanelCloseTrigger = forwardRef<HTMLButtonElement, FloatingPanelClo
     const { t } = useTranslation(translationKey);
     return (
       <FloatingPanelPrimitive.CloseTrigger asChild>
-        <Button
+        <Button.Button
           variant='ghost'
           {...props}
           iconOnly
@@ -292,32 +294,31 @@ const FloatingPanelBody = forwardRef<HTMLDivElement, FloatingPanelBodyProps>(
 );
 
 FloatingPanelBody.displayName = 'FloatingPanel.Body';
-
-export const FloatingPanel = {
-  Root: FloatingPanelRoot,
-  Trigger: FloatingPanelTrigger,
-  Content: FloatingPanelContent,
-  Header: FloatingPanelHeader,
-  DragTrigger: FloatingPanelDragTrigger,
-  Title: FloatingPanelTitle,
-  Control: FloatingPanelControl,
-  StageTrigger: FloatingPanelStageTrigger,
-  CloseTrigger: FloatingPanelCloseTrigger,
-  Body: FloatingPanelBody,
+export type {
+  FloatingPanelBodyProps as BodyProps,
+  FloatingPanelCloseTriggerProps as CloseTriggerProps,
+  FloatingPanelContentProps as ContentProps,
+  FloatingPanelControlProps as ControlProps,
+  FloatingPanelDragTriggerProps as DragTriggerProps,
+  FloatingPanelHeaderProps as HeaderProps,
+  FloatingPanelPoint as Point,
+  FloatingPanelRootProps as RootProps,
+  FloatingPanelSize as Size,
+  FloatingPanelStage as Stage,
+  FloatingPanelStageTriggerProps as StageTriggerProps,
+  FloatingPanelTitleProps as TitleProps,
+  FloatingPanelTriggerProps as TriggerProps,
 };
 
-export type {
-  FloatingPanelBodyProps,
-  FloatingPanelCloseTriggerProps,
-  FloatingPanelContentProps,
-  FloatingPanelControlProps,
-  FloatingPanelDragTriggerProps,
-  FloatingPanelHeaderProps,
-  FloatingPanelPoint,
-  FloatingPanelRootProps,
-  FloatingPanelSize,
-  FloatingPanelStage,
-  FloatingPanelStageTriggerProps,
-  FloatingPanelTitleProps,
-  FloatingPanelTriggerProps,
+export {
+  FloatingPanelBody as Body,
+  FloatingPanelCloseTrigger as CloseTrigger,
+  FloatingPanelContent as Content,
+  FloatingPanelControl as Control,
+  FloatingPanelDragTrigger as DragTrigger,
+  FloatingPanelHeader as Header,
+  FloatingPanelRoot as Root,
+  FloatingPanelStageTrigger as StageTrigger,
+  FloatingPanelTitle as Title,
+  FloatingPanelTrigger as Trigger,
 };

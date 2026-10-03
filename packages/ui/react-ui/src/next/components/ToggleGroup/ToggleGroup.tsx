@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ToggleGroup as ToggleGroupPrimitive } from '@ark-ui/react/toggle-group';
 import React, { type ComponentPropsWithoutRef, forwardRef } from 'react';
 
@@ -9,7 +11,7 @@ import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
-import { Button } from '../Button/index.ts';
+import * as Button from '../Button/Button.tsx';
 
 //
 // Root
@@ -82,7 +84,7 @@ ToggleGroupRoot.displayName = 'ToggleGroup.Root';
 // Item
 //
 
-type ToggleGroupItemProps = ComponentPropsWithoutRef<typeof Button> & {
+type ToggleGroupItemProps = ComponentPropsWithoutRef<typeof Button.Button> & {
   value: string;
 };
 
@@ -90,16 +92,12 @@ type ToggleGroupItemProps = ComponentPropsWithoutRef<typeof Button> & {
 const ToggleGroupItem = forwardRef<HTMLButtonElement, ToggleGroupItemProps>(
   ({ value, disabled, ...props }, forwardedRef) => (
     <ToggleGroupPrimitive.Item value={value} disabled={disabled} asChild>
-      <Button {...props} disabled={disabled} ref={forwardedRef} />
+      <Button.Button {...props} disabled={disabled} ref={forwardedRef} />
     </ToggleGroupPrimitive.Item>
   ),
 );
 
 ToggleGroupItem.displayName = 'ToggleGroup.Item';
+export type { ToggleGroupItemProps as ItemProps, ToggleGroupRootProps as RootProps };
 
-export const ToggleGroup = {
-  Root: ToggleGroupRoot,
-  Item: ToggleGroupItem,
-};
-
-export type { ToggleGroupItemProps, ToggleGroupRootProps };
+export { ToggleGroupItem as Item, ToggleGroupRoot as Root };

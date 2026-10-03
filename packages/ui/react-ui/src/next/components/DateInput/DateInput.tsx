@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { DateInput as DateInputPrimitive, useDateInput } from '@ark-ui/react/date-input';
 import { DatePicker as DatePickerPrimitive, useDatePicker } from '@ark-ui/react/date-picker';
 import { useFieldContext } from '@ark-ui/react/field';
@@ -18,8 +20,8 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
-import { LABEL_TARGET_ATTRIBUTE } from '../Field/index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Field from '../Field/Field.tsx';
 import {
   type DateInputGranularity,
   type DateInputType,
@@ -180,7 +182,7 @@ export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
             <DateInputPrimitive.Segment
               key={index}
               segment={segment}
-              {...(index === firstEditable && { [LABEL_TARGET_ATTRIBUTE]: '' })}
+              {...(index === firstEditable && { [Field.LABEL_TARGET_ATTRIBUTE]: '' })}
               className={recipes.dateInputSegment()}
             />
           ))}
@@ -190,7 +192,7 @@ export const DateInput = forwardRef<HTMLDivElement, DateInputProps>(
 
     const trigger = picker && (
       <DatePickerPrimitive.Trigger asChild>
-        <Button
+        <Button.Button
           icon={type === 'date' ? 'ph--calendar-blank--regular' : 'ph--calendar-dots--regular'}
           label={t('date-picker.placeholder.single.label')}
           iconOnly

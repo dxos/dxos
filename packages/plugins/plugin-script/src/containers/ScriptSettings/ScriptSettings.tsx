@@ -5,8 +5,9 @@
 import React from 'react';
 
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { Button, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 import { Settings } from '#types';
@@ -19,7 +20,7 @@ export type ScriptSettingsProps = AppSurface.SettingsProps<
 >;
 
 export const ScriptSettings = ({ settings, onSettingsChange, scope, onAuthenticate }: ScriptSettingsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   return (
     <Form.Root
@@ -38,9 +39,9 @@ export const ScriptSettings = ({ settings, onSettingsChange, scope, onAuthentica
               label={t('authenticate-action.label')}
               description={t('authenticate-action.description')}
             >
-              <Button disabled={!onSettingsChange} onClick={onAuthenticate}>
+              <Button.Button disabled={!onSettingsChange} onClick={onAuthenticate}>
                 {t('authenticate-button.label')}
-              </Button>
+              </Button.Button>
             </Form.Field>
             <Form.Fields />
           </Form.FieldSet>

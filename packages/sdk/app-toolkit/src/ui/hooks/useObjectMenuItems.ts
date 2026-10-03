@@ -10,9 +10,9 @@ import { Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { EID } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import { type MenuItem, createMenuAction } from '@dxos/react-ui-menu';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { GraphPath } from '../../app/index.ts';
@@ -130,7 +130,7 @@ export const useObjectNavigate = (
  */
 export const useObjectMenuItems = (subject: unknown, pivot?: string): MenuItem[] => {
   const { invoke } = Hooks.useOperationInvoker();
-  const { t } = useTranslation(osTranslations);
+  const { t } = UiHooks.useTranslation(osTranslations);
 
   return useMemo(() => {
     if (!canNavigateToSubject(subject)) {

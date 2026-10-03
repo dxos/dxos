@@ -16,9 +16,15 @@ import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_p
 import { MembershipPolicy } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
-import { Button, Dialog, Flex, Input, Menu, Switch, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldMap } from '@dxos/react-ui-form';
 import { HuePicker, IconPicker } from '@dxos/react-ui-pickers';
+import * as Button from '@dxos/react-ui/Button';
+import * as Dialog from '@dxos/react-ui/Dialog';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Switch from '@dxos/react-ui/Switch';
 
 import { meta } from '#meta';
 import { SpaceCapabilities, SpaceOperation, SpaceSchema } from '#types';
@@ -27,7 +33,7 @@ const SpaceFormSchema = SpaceSchema.SpaceForm;
 
 // TODO(wittjosiah): Handle space migrations here?
 export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const client = useClient();
   const [edgeReplication, setEdgeReplication] = useState(
@@ -96,7 +102,7 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
         );
         return (
           <Form.Field label={label} description={t('display-name.description')}>
-            <Input
+            <Input.Input
               value={getValue()}
               onChange={handleChange}
               placeholder={t('display-name-input.placeholder')}
@@ -131,14 +137,14 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
       // Read-only: the membership policy is written into the genesis credential at creation.
       private: ({ label, getValue }) => (
         <Form.Field label={label} description={t('private.description')}>
-          <Switch checked={getValue()} disabled classNames='justify-self-end' />
+          <Switch.Switch checked={getValue()} disabled classNames='justify-self-end' />
         </Form.Field>
       ),
       edgeReplication: ({ type, label, getValue, onValueChange }) => {
         const handleChange = useCallback((checked: boolean) => onValueChange(type, checked), [onValueChange, type]);
         return (
           <Form.Field label={label} description={t('edge-replication.description')}>
-            <Switch
+            <Switch.Switch
               checked={getValue()}
               onCheckedChange={({ checked }) => handleChange(checked)}
               classNames='justify-self-end'
@@ -205,12 +211,12 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
 
           <Form.FieldSet label={t('space-controls.title')} description={t('space-controls.description')}>
             <Form.Field standalone label={t('space-id.title')} description={t('space-id.description')}>
-              <Input value={space.id} disabled variant='mono' copyable aria-label={t('space-id.title')} />
+              <Input.Input value={space.id} disabled variant='mono' copyable aria-label={t('space-id.title')} />
             </Form.Field>
             <Form.Field standalone label={t('backup-space.title')} description={t('backup-space.description')}>
               <Menu.Root>
                 <Menu.Trigger asChild>
-                  <Button caretDown>{t('download-backup.label')}</Button>
+                  <Button.Button caretDown>{t('download-backup.label')}</Button.Button>
                 </Menu.Trigger>
                 <Menu.Content>
                   <Menu.Item
@@ -225,10 +231,10 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
               </Menu.Root>
             </Form.Field>
             <Form.Field standalone label={t('repair-space.title')} description={t('repair-space.description')}>
-              <Button onClick={handleRepair}>{t('repair-space.label')}</Button>
+              <Button.Button onClick={handleRepair}>{t('repair-space.label')}</Button.Button>
             </Form.Field>
             <Form.Field standalone label={t('reset-home.title')} description={t('reset-home.description')}>
-              <Button onClick={handleResetHome}>{t('reset-home.label')}</Button>
+              <Button.Button onClick={handleResetHome}>{t('reset-home.label')}</Button.Button>
             </Form.Field>
           </Form.FieldSet>
 
@@ -242,9 +248,13 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
             >
               <Dialog.Root open={deleteConfirmOpen} onOpenChange={({ open }) => setDeleteConfirmOpen(open)}>
                 <Dialog.Trigger asChild>
-                  <Button variant='destructive' disabled={isDefaultSpace} data-testid='spaceSettings.deleteSpace'>
+                  <Button.Button
+                    variant='destructive'
+                    disabled={isDefaultSpace}
+                    data-testid='spaceSettings.deleteSpace'
+                  >
                     {t('delete-space.label')}
-                  </Button>
+                  </Button.Button>
                 </Dialog.Trigger>
                 <Dialog.Content>
                   <Dialog.Header>
@@ -252,18 +262,18 @@ export const SpaceSettingsContainer = ({ space }: AppSurface.SpaceArticleProps) 
                   </Dialog.Header>
                   <Dialog.Body>
                     <Dialog.Description>{t('delete-space-confirm.description')}</Dialog.Description>
-                    <Flex gap='sm' justify='end' classNames='mt-4'>
+                    <Flex.Flex gap='sm' justify='end' classNames='mt-4'>
                       <Dialog.CloseTrigger asChild>
-                        <Button>{t('cancel.label')}</Button>
+                        <Button.Button>{t('cancel.label')}</Button.Button>
                       </Dialog.CloseTrigger>
-                      <Button
+                      <Button.Button
                         variant='destructive'
                         onClick={handleDelete}
                         data-testid='spaceSettings.deleteSpaceConfirm'
                       >
                         {t('delete-space.label')}
-                      </Button>
-                    </Flex>
+                      </Button.Button>
+                    </Flex.Flex>
                   </Dialog.Body>
                 </Dialog.Content>
               </Dialog.Root>

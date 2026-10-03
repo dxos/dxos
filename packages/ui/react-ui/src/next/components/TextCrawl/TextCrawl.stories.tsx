@@ -14,7 +14,8 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, TextCrawl, type TextCrawlProps } from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as TextCrawl from './TextCrawl.tsx';
 
 random.seed(1234);
 
@@ -25,7 +26,7 @@ const LINES = createLines(6);
 
 const digits = '0123456789'.split('');
 
-type StoryArgs = SizeArgs & Pick<TextCrawlProps, 'autoAdvance' | 'cyclic' | 'minDuration' | 'transition'>;
+type StoryArgs = SizeArgs & Pick<TextCrawl.TextCrawlProps, 'autoAdvance' | 'cyclic' | 'minDuration' | 'transition'>;
 
 const DefaultStory = (args: StoryArgs) => {
   const [lines, setLines] = useState(LINES);
@@ -39,17 +40,24 @@ const DefaultStory = (args: StoryArgs) => {
   return (
     <>
       <div className='flex gap-2'>
-        <Button onClick={() => setLines((lines) => [...lines, `[${lines.length + 1}] ${random.lorem.sentence()}`])}>
+        <Button.Button
+          onClick={() => setLines((lines) => [...lines, `[${lines.length + 1}] ${random.lorem.sentence()}`])}
+        >
           Add
-        </Button>
-        <Button onClick={() => setLines(createLines())}>Generate</Button>
-        <Button onClick={() => setLines([])}>Clear</Button>
+        </Button.Button>
+        <Button.Button onClick={() => setLines(createLines())}>Generate</Button.Button>
+        <Button.Button onClick={() => setLines([])}>Clear</Button.Button>
       </div>
-      <TextCrawl lines={lines} autoAdvance={args.autoAdvance} cyclic={args.cyclic} transition={args.transition} />
-      <TextCrawl lines={lines} autoAdvance greedy />
+      <TextCrawl.TextCrawl
+        lines={lines}
+        autoAdvance={args.autoAdvance}
+        cyclic={args.cyclic}
+        transition={args.transition}
+      />
+      <TextCrawl.TextCrawl lines={lines} autoAdvance greedy />
       <div className='flex font-mono'>
         {Array.from({ length: 5 }, (_, i) => (
-          <TextCrawl key={i} lines={digits} index={digits.indexOf(counter[i])} transition={100} cyclic />
+          <TextCrawl.TextCrawl key={i} lines={digits} index={digits.indexOf(counter[i])} transition={100} cyclic />
         ))}
       </div>
     </>
@@ -75,11 +83,11 @@ const TestStory = ({ size }: StoryArgs) => {
   const [index, setIndex] = useState(0);
   return (
     <>
-      <Button data-testid={`${size}-next`} onClick={() => setIndex((index) => index + 1)}>
+      <Button.Button data-testid={`${size}-next`} onClick={() => setIndex((index) => index + 1)}>
         Next
-      </Button>
-      <TextCrawl lines={LINES} index={index} transition={100} data-testid={`${size}-controlled`} />
-      <TextCrawl lines={LINES} greedy data-testid={`${size}-greedy`} />
+      </Button.Button>
+      <TextCrawl.TextCrawl lines={LINES} index={index} transition={100} data-testid={`${size}-controlled`} />
+      <TextCrawl.TextCrawl lines={LINES} greedy data-testid={`${size}-greedy`} />
     </>
   );
 };

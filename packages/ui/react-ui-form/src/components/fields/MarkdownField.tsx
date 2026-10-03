@@ -7,8 +7,11 @@ import React, { useMemo } from 'react';
 
 import { type Database, Obj, Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
-import { Button, ControlFrame, Typography, useTranslation } from '@dxos/react-ui';
 import { Editor, useBasicMarkdownExtensions } from '@dxos/react-ui-editor';
+import * as Button from '@dxos/react-ui/Button';
+import * as ControlFrame from '@dxos/react-ui/ControlFrame';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Text } from '@dxos/schema';
 import { createDataExtensions } from '@dxos/ui-editor';
 
@@ -53,7 +56,7 @@ export const MarkdownField = ({
 
   const text = typeof value === 'string' ? value : '';
   return isStatic ? (
-    <Typography>{text}</Typography>
+    <Typography.Typography>{text}</Typography.Typography>
   ) : (
     <StringMarkdownEditor
       value={text}
@@ -74,11 +77,11 @@ type StringMarkdownEditorProps = {
 const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: StringMarkdownEditorProps) => {
   const extensions = useBasicMarkdownExtensions({ placeholder, readonly });
   return (
-    <ControlFrame rows={ROWS} disabled={readonly}>
+    <ControlFrame.ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
         <Editor.View extensions={extensions} value={value} onChange={readonly ? undefined : onChange} />
       </Editor.Root>
-    </ControlFrame>
+    </ControlFrame.ControlFrame>
   );
 };
 
@@ -86,7 +89,7 @@ const StringMarkdownEditor = ({ value, placeholder, readonly, onChange }: String
 const RefStaticText = ({ reference }: { reference: Ref.Unknown }) => {
   const target = useAtomValue(useMemo(() => reference.atom, [reference]));
   const content = Obj.instanceOf(Text.Text, target) ? target.content : undefined;
-  return content ? <Typography>{content}</Typography> : null;
+  return content ? <Typography.Typography>{content}</Typography.Typography> : null;
 };
 
 type RefMarkdownEditorProps = {
@@ -108,11 +111,11 @@ const RefMarkdownEditor = ({ reference, placeholder, readonly }: RefMarkdownEdit
   }
 
   return (
-    <ControlFrame rows={ROWS} disabled={readonly}>
+    <ControlFrame.ControlFrame rows={ROWS} disabled={readonly}>
       <Editor.Root>
         <Editor.View extensions={extensions} />
       </Editor.Root>
-    </ControlFrame>
+    </ControlFrame.ControlFrame>
   );
 };
 
@@ -122,10 +125,14 @@ type CreateTextButtonProps = {
 };
 
 const CreateTextButton = ({ db, onCreate }: CreateTextButtonProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   return (
-    <Button icon='ph--plus--regular' disabled={!db} onClick={() => db && onCreate(Ref.make(db.add(Text.make())))}>
+    <Button.Button
+      icon='ph--plus--regular'
+      disabled={!db}
+      onClick={() => db && onCreate(Ref.make(db.add(Text.make())))}
+    >
       {t('create-text.label')}
-    </Button>
+    </Button.Button>
   );
 };

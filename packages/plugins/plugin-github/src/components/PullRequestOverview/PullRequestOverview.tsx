@@ -7,9 +7,11 @@ import React, { useMemo } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { DxAnchor } from '@dxos/lit-ui/react';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { Empty, Icon, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { MarkdownLink, MarkdownView, type MarkdownViewProps } from '@dxos/react-ui-markdown';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 import { type GitHubOperation } from '#types';
@@ -33,7 +35,7 @@ export type PullRequestOverviewProps = {
  * beyond the diff, and every check on its head commit.
  */
 export const PullRequestOverview = ({ body, details, runs }: PullRequestOverviewProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const parsed = useMemo(() => parsePullRequestBody(body), [body]);
   const components = useBodyComponents();
   const related = useRelatedItems(parsed);
@@ -48,7 +50,7 @@ export const PullRequestOverview = ({ body, details, runs }: PullRequestOverview
           {parsed.markdown ? (
             <MarkdownView content={parsed.markdown} components={components} data-testid='pull-request.body' />
           ) : (
-            <Empty>{t('no-description.message')}</Empty>
+            <Empty.Empty>{t('no-description.message')}</Empty.Empty>
           )}
           <Form.FieldSet label={t('details.label')} data-testid='pull-request.details'>
             <Form.Fields />
@@ -92,7 +94,11 @@ const useBodyComponents = (): MarkdownViewProps['components'] => {
         return (
           <DxAnchor eid={href} className='dx-tag-anchor'>
             {icon && (
-              <Icon icon={icon.icon} size='md' classNames={['inline-block align-[-0.125em] me-1', icon.classNames]} />
+              <Icon.Icon
+                icon={icon.icon}
+                size='md'
+                classNames={['inline-block align-[-0.125em] me-1', icon.classNames]}
+              />
             )}
             {children === href ? (PreviewCapabilities.linkLabel(all, href) ?? children) : children}
           </DxAnchor>

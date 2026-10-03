@@ -6,7 +6,10 @@ import { type Meta } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Button, Icon, Panel, ScrollArea } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
@@ -173,11 +176,11 @@ const Sidebar = ({ mutate }: { mutate?: boolean }) => {
       </Panel.Body>
       <Panel.Footer>
         <div className='flex items-center my-2 px-2 gap-2'>
-          <Button icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />
+          <Button.Button icon='ph--plus-circle--regular' iconOnly label='Create space' onClick={handleCreateSpace} />
           <span className='grow text-sm' onClick={handleCreateSpace}>
             New space
           </span>
-          <Icon icon='ph--list--regular' />
+          <Icon.Icon icon='ph--list--regular' />
         </div>
       </Panel.Footer>
     </Panel.Root>

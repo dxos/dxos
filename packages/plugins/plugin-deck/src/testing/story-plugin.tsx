@@ -24,9 +24,9 @@ import * as GraphNodeMatcher from '@dxos/graph/GraphNodeMatcher';
 import { invariant } from '@dxos/invariant';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { random } from '@dxos/random';
-import { Panel } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { JsonHighlighter, Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Panel from '@dxos/react-ui/Panel';
 import { Loading } from '@dxos/react-ui/testing';
 import * as Position from '@dxos/util/Position';
 

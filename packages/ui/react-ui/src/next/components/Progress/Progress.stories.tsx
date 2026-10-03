@@ -11,17 +11,21 @@ import { expect, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Progress, type ProgressProps } from '../index.ts';
+import * as Progress from './Progress.tsx';
 
-type StoryArgs = SizeArgs & Pick<ProgressProps, 'value' | 'indeterminate' | 'error' | 'countdown' | 'paused'>;
+type StoryArgs = SizeArgs & Pick<Progress.ProgressProps, 'value' | 'indeterminate' | 'error' | 'countdown' | 'paused'>;
 
 const DefaultStory = ({ value, indeterminate, error, countdown, paused }: StoryArgs) => (
   <div className='flex flex-col gap-4'>
-    <Progress {...{ value, indeterminate, error, countdown, paused }} label='Upload' data-testid='controlled' />
-    <Progress value={0.25} label='Quarter' data-testid='quarter' />
-    <Progress indeterminate label='Indexing' data-testid='indeterminate' />
-    <Progress indeterminate error label='Failed' data-testid='failed' />
-    <Progress countdown={60_000} data-testid='countdown' />
+    <Progress.Progress
+      {...{ value, indeterminate, error, countdown, paused }}
+      label='Upload'
+      data-testid='controlled'
+    />
+    <Progress.Progress value={0.25} label='Quarter' data-testid='quarter' />
+    <Progress.Progress indeterminate label='Indexing' data-testid='indeterminate' />
+    <Progress.Progress indeterminate error label='Failed' data-testid='failed' />
+    <Progress.Progress countdown={60_000} data-testid='countdown' />
   </div>
 );
 

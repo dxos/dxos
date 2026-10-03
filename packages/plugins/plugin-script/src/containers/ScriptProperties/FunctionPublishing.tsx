@@ -12,8 +12,12 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Banner, Button, Flex, SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { kebabize } from '@dxos/util';
 
 import { meta } from '#meta';
@@ -22,7 +26,7 @@ export type FunctionPublishingProps = { object: Script.Script };
 
 // TODO(burdon): Move to separate tab?
 export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(object);
 
@@ -30,7 +34,7 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
   const gistKey = Obj.getMeta(object).keys.find(({ source }) => source === 'github.com');
   const [gistUrl, setGistUrl] = useState<string | undefined>();
 
-  useAsyncEffect(async () => {
+  UiHooks.useAsyncEffect(async () => {
     const token = githubToken?.token;
     const gistId = gistKey?.id;
     if (!token || !gistId) {
@@ -96,23 +100,23 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
   return (
     <Form.FieldSet label={t('script-publish-settings.label')} description={t('script-publish-settings.description')}>
       {!githubToken && (
-        <Flex column classNames='py-form-gap'>
+        <Flex.Flex column classNames='py-form-gap'>
           <Banner.Root valence='info'>
             <Banner.Title>{t('no-github-token.label')}</Banner.Title>
           </Banner.Root>
-          <Flex classNames='pt-form-gap'>
-            <Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button>
-          </Flex>
-        </Flex>
+          <Flex.Flex classNames='pt-form-gap'>
+            <Button.Button onClick={handleOpenTokenManager}>{t('open-token-manager.label')}</Button.Button>
+          </Flex.Flex>
+        </Flex.Flex>
       )}
 
       {githubToken && (
-        <Flex gap='sm' justify='end'>
+        <Flex.Flex gap='sm' justify='end'>
           {gistUrl && <SystemButton.Clipboard iconOnly value={gistUrl} />}
-          <Button disabled={publishing} onClick={handlePublish}>
+          <Button.Button disabled={publishing} onClick={handlePublish}>
             {t('publish.label')}
-          </Button>
-        </Flex>
+          </Button.Button>
+        </Flex.Flex>
       )}
     </Form.FieldSet>
   );

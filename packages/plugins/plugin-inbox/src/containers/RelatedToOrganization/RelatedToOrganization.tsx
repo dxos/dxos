@@ -13,8 +13,8 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { Card } from '@dxos/react-ui';
 import { Table } from '@dxos/react-ui-table/types';
+import * as Card from '@dxos/react-ui/Card';
 import { getTypeURIFromQuery } from '@dxos/schema';
 import { type Organization, Person } from '@dxos/types';
 

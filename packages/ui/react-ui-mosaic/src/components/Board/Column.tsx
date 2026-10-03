@@ -14,18 +14,14 @@ import React, {
 
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import {
-  Button,
-  DragHandle,
-  Focus,
-  ScrollArea,
-  type ThemedClassName,
-  Toolbar,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
 import { ActionMenu, createMenuAction } from '@dxos/react-ui-menu';
+import * as Button from '@dxos/react-ui/Button';
+import * as DragHandle from '@dxos/react-ui/DragHandle';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { translationKey } from '#translations';
@@ -54,7 +50,7 @@ type BoardColumnRootProps<TColumn = any> = PropsWithChildren<BoardColumnProps<TC
   dragHandle?: HTMLButtonElement | null;
 };
 
-const BoardColumnRootInner = composable<HTMLDivElement, BoardColumnRootProps>(
+const BoardColumnRootInner = Util.composable<HTMLDivElement, BoardColumnRootProps>(
   ({ classNames, children, location, data, debug, draggable, dragHandle, ...rest }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_ROOT_NAME);
 
@@ -101,9 +97,9 @@ const BOARD_COLUMN_HEADER_NAME = 'Board.Column.Header';
 
 type BoardColumnHeaderProps = { label: string; dragHandleRef: ReactRef<HTMLButtonElement> };
 
-const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
+const BoardColumnHeader = Util.composable<HTMLDivElement, BoardColumnHeaderProps>(
   ({ label, dragHandleRef, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const { model } = useBoard(BOARD_COLUMN_HEADER_NAME);
     const column = useBoardColumn();
     const columnMenuItems = useMemo(
@@ -123,17 +119,22 @@ const BoardColumnHeader = composable<HTMLDivElement, BoardColumnHeaderProps>(
       <>
         {/* TODO(burdon): Use Card.Header. */}
         <Toolbar.Root
-          {...composableProps(props, { classNames: 'gap-0' })}
+          {...Util.composableProps(props, { classNames: 'gap-0' })}
           data-testid='board-column-header'
           ref={forwardedRef}
         >
-          <DragHandle ref={dragHandleRef} data-testid='mosaicBoard.columnDragHandle' />
+          <DragHandle.DragHandle ref={dragHandleRef} data-testid='mosaicBoard.columnDragHandle' />
           <Toolbar.Text classNames='grow px-0' data-testid='mosaicBoard.columnTitle'>
             {label}
           </Toolbar.Text>
           {/* TODO(wittjosiah): Reconcile with Card.Menu. */}
           <ActionMenu disabled={!columnMenuItems?.length} actions={columnMenuItems}>
-            <Button iconOnly variant='ghost' icon='ph--dots-three-vertical--regular' label={t('action-menu.label')} />
+            <Button.Button
+              iconOnly
+              variant='ghost'
+              icon='ph--dots-three-vertical--regular'
+              label={t('action-menu.label')}
+            />
           </ActionMenu>
         </Toolbar.Root>
       </>
@@ -154,7 +155,7 @@ type BoardColumnBodyProps = Pick<BoardColumnProps, 'data'> &
     Tile?: MosaicStackProps<Obj.Unknown>['Tile'];
   };
 
-const BoardColumnBody = composable<HTMLDivElement, BoardColumnBodyProps>(
+const BoardColumnBody = Util.composable<HTMLDivElement, BoardColumnBodyProps>(
   ({ data, eventHandler, Tile = BoardItem, debug, ...props }, forwardedRef) => {
     const { model } = useBoard(BOARD_COLUMN_BODY_NAME);
     const [viewport, setViewport] = useState<HTMLElement | null>(null);
@@ -162,7 +163,7 @@ const BoardColumnBody = composable<HTMLDivElement, BoardColumnBodyProps>(
 
     return (
       <Mosaic.Container
-        {...composableProps(props)}
+        {...Util.composableProps(props)}
         asChild
         withFocus
         orientation='vertical'
@@ -189,14 +190,14 @@ BoardColumnBody.displayName = BOARD_COLUMN_BODY_NAME;
 
 const BOARD_COLUMN_FOOTER_NAME = 'Board.Column.Footer';
 
-type BoardColumnFooterProps = ThemedClassName & {
+type BoardColumnFooterProps = Util.ThemedClassName & {
   data?: any;
   onAdd?: () => void;
 };
 
 const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
   ({ classNames, data, onAdd }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const { model } = useBoard(BOARD_COLUMN_FOOTER_NAME);
 
     const handleAdd = onAdd ?? (model.onItemCreate && data ? () => void model.onItemCreate?.(data) : undefined);
@@ -204,7 +205,7 @@ const BoardColumnFooter = forwardRef<HTMLDivElement, BoardColumnFooterProps>(
     return (
       <Toolbar.Root classNames={mx('rounded-b-sm border-t border-separator', classNames)} ref={forwardedRef}>
         {handleAdd && (
-          <Button
+          <Button.Button
             data-testid='board-column-add-item'
             classNames='group-hover/column:opacity-100 md:opacity-0 transition transition-opacity duration-500'
             variant='ghost'

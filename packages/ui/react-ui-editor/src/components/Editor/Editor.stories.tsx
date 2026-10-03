@@ -8,8 +8,8 @@ import React, { useMemo } from 'react';
 import { createObject } from '@dxos/echo-client';
 import { Doc } from '@dxos/echo-doc';
 import { random } from '@dxos/random';
-import { useThemeMode } from '@dxos/react-ui';
 import { withAttention } from '@dxos/react-ui-attention/testing';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 import {
@@ -30,7 +30,7 @@ const initialValue = ['# Blue Monday', '', 'How does it **feel**?', ''].join('\n
 const items = random.helpers.multiple(random.commerce.productName, { count: 10 }).sort();
 
 const withExtensions: Decorator<EditorViewProps> = (Story, { args }) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const extensions = useMemo(
     () => [
       createBasicExtensions(),

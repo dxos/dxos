@@ -4,7 +4,8 @@
 
 import React from 'react';
 
-import { Grid, Tooltip } from '@dxos/react-ui';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 import { type DatabaseInfo } from '../../../hooks/index.ts';
@@ -38,24 +39,24 @@ export const ReplicatorMessagesCard = ({ database }: ReplicatorMessagesCardProps
       {rows.length === 0 && <StatCard.Row span label='No messages.' />}
       {rows.length > 0 && (
         <StatCard.Row>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
+          <Grid.Grid cols={ROW_TRACKS} gap='sm' classNames='text-end text-fg-muted'>
             <span className='text-start'>type</span>
             <span>KB</span>
             <span>↓</span>
             <span>↑</span>
-          </Grid>
+          </Grid.Grid>
         </StatCard.Row>
       )}
       {rows.map((row) => (
         <StatCard.Row key={row.type}>
-          <Grid cols={ROW_TRACKS} gap='sm' classNames='font-mono tabular-nums text-end'>
+          <Grid.Grid cols={ROW_TRACKS} gap='sm' classNames='font-mono tabular-nums text-end'>
             <Tooltip.Trigger asChild content={row.type}>
               <span className='truncate text-start'>{row.type}</span>
             </Tooltip.Trigger>
             <span className='text-fg-muted'>{row.size !== undefined ? Unit.KB(row.size) : '–'}</span>
             <span>{row.received.toLocaleString()}</span>
             <span>{row.sent.toLocaleString()}</span>
-          </Grid>
+          </Grid.Grid>
         </StatCard.Row>
       ))}
     </StatCard.Root>

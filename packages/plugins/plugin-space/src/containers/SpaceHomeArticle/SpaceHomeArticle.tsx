@@ -8,7 +8,6 @@ import * as Surface from '@dxos/app-framework/Surface';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { Container, Flex, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -18,6 +17,10 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Container from '@dxos/react-ui/Container';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { meta } from '#meta';
 import { SpaceSurface } from '#types';
@@ -47,18 +50,18 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
       </Panel.Header>
 
       <Panel.Body asChild>
-        <Container gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
+        <Container.Container gutter={gutter} style={{ gridTemplateRows: 'minmax(0,1fr) auto' }}>
           <ScrollArea.Root orientation='vertical'>
             <ScrollArea.Viewport>
-              <Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
+              <Flex.Flex column gap='lg' classNames='dx-document pb-trim-2xl'>
                 <Surface.Surface type={SpaceSurface.SpaceHomeContent} data={{ space }} />
-              </Flex>
+              </Flex.Flex>
             </ScrollArea.Viewport>
           </ScrollArea.Root>
           <div className='dx-document pb-4'>
             <Surface.Surface type={SpaceSurface.SpaceHomePinBottom} data={{ space }} limit={1} />
           </div>
-        </Container>
+        </Container.Container>
       </Panel.Body>
     </Panel.Root>
   );

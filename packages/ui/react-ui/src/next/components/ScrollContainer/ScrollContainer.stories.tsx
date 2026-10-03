@@ -11,23 +11,26 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Group, ScrollContainer, type ScrollContainerRootProps, Typography } from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Group from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as ScrollContainer from './ScrollContainer.tsx';
 
-type StoryArgs = SizeArgs & Pick<ScrollContainerRootProps, 'pin'>;
+type StoryArgs = SizeArgs & Pick<ScrollContainer.RootProps, 'pin'>;
 
 const DefaultStory = ({ pin }: StoryArgs) => {
   const [rows, setRows] = useState(() => Array.from({ length: 20 }, (_, index) => `Entry ${index + 1}`));
   return (
     <>
-      <Group>
-        <Button label='Add entry' onClick={() => setRows((rows) => [...rows, `Entry ${rows.length + 1}`])} />
-      </Group>
+      <Group.Group>
+        <Button.Button label='Add entry' onClick={() => setRows((rows) => [...rows, `Entry ${rows.length + 1}`])} />
+      </Group.Group>
       <ScrollContainer.Root pin={pin}>
         <ScrollContainer.Content classNames='h-[12rem]' data-testid='frame'>
           <ScrollContainer.Fade />
           <ScrollContainer.Viewport data-testid='viewport'>
             {rows.map((row) => (
-              <Typography key={row}>{row}</Typography>
+              <Typography.Typography key={row}>{row}</Typography.Typography>
             ))}
           </ScrollContainer.Viewport>
           <ScrollContainer.ScrollDownButton />

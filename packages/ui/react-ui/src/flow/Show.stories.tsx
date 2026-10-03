@@ -5,10 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
-import { Button, Toolbar } from '../next/components/index.ts';
+import * as Button from '../next/components/Button/Button.tsx';
+import * as Toolbar from '../next/components/Toolbar/Toolbar.tsx';
 import { withLayout, withTheme } from '../testing/index.ts';
-import { Match } from './Match.tsx';
-import { Show } from './Show.tsx';
+import * as Match from './Match.tsx';
+import * as Show from './Show.tsx';
 
 type Task = { title: string };
 
@@ -18,11 +19,13 @@ const ShowStory = () => {
   return (
     <div className='p-4 flex flex-col gap-4'>
       <Toolbar.Root>
-        <Button onClick={() => setTask(task ? undefined : { title: 'Task 1' })}>{task ? 'Deselect' : 'Select'}</Button>
+        <Button.Button onClick={() => setTask(task ? undefined : { title: 'Task 1' })}>
+          {task ? 'Deselect' : 'Select'}
+        </Button.Button>
       </Toolbar.Root>
-      <Show when={task} fallback={<p className='text-fg-subtle'>Nothing selected.</p>}>
+      <Show.Show when={task} fallback={<p className='text-fg-subtle'>Nothing selected.</p>}>
         {(task) => <p>Selected: {task.title}</p>}
-      </Show>
+      </Show.Show>
     </div>
   );
 };
@@ -33,9 +36,9 @@ const MatchStory = () => {
   return (
     <div className='p-4 flex flex-col gap-4'>
       <Toolbar.Root>
-        <Button onClick={() => setView('list')}>List</Button>
-        <Button onClick={() => setView('grid')}>Grid</Button>
-        <Button onClick={() => setView('other')}>Other</Button>
+        <Button.Button onClick={() => setView('list')}>List</Button.Button>
+        <Button.Button onClick={() => setView('grid')}>Grid</Button.Button>
+        <Button.Button onClick={() => setView('other')}>Other</Button.Button>
       </Toolbar.Root>
       <Match.Root on={view} fallback={<p className='text-fg-subtle'>No view.</p>}>
         <Match.Case when='list'>

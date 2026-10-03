@@ -4,7 +4,8 @@
 
 import React, { useEffect } from 'react';
 
-import { Button, useControlledState } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 export type PagerProps = {
   index?: number;
@@ -15,7 +16,7 @@ export type PagerProps = {
 };
 
 export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit }: PagerProps) => {
-  const [index, setIndex] = useControlledState(indexProp);
+  const [index, setIndex] = Hooks.useControlledState(indexProp);
   useEffect(() => {
     onChange?.(index);
   }, [index]);
@@ -76,7 +77,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
 
   return (
     <div className='flex items-center text-neutral-500'>
-      <Button
+      <Button.Button
         icon='ph--caret-double-left--regular'
         iconSize='xl'
         label='Jump to first'
@@ -86,7 +87,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
         classNames='p-0'
         onClick={() => onChange?.(0)}
       />
-      <Button
+      <Button.Button
         icon='ph--caret-left--regular'
         iconSize='xl'
         label='Previous'
@@ -96,7 +97,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
         classNames='p-0'
         onClick={() => handleChangeIndex(-1)}
       />
-      <Button
+      <Button.Button
         icon='ph--caret-right--regular'
         iconSize='xl'
         label='Next'
@@ -106,7 +107,7 @@ export const Pager = ({ index: indexProp = 0, count = 0, keys, onChange, onExit 
         classNames='p-0'
         onClick={() => handleChangeIndex(1)}
       />
-      <Button
+      <Button.Button
         icon='ph--caret-double-right--regular'
         iconSize='xl'
         label='Jump to last'
@@ -141,7 +142,7 @@ export const PageNumber = ({ index = 0, count = 1 }: PageNumberProps) => {
 
 export const StartButton = ({ running, onClick }: { running?: boolean; onClick?: (start: boolean) => void }) => {
   return (
-    <Button
+    <Button.Button
       icon={running ? 'ph--x--regular' : 'ph--play--regular'}
       iconSize='xl'
       label={running ? 'Stop' : 'Play'}

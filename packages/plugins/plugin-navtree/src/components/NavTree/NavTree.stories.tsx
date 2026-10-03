@@ -20,9 +20,15 @@ import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
 import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
-import { Button, Field, Focus, Main, Panel, Textarea, Toolbar } from '@dxos/react-ui';
 import { useAttention, useAttentionAttributes } from '@dxos/react-ui-attention';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Focus from '@dxos/react-ui/Focus';
+import * as Main from '@dxos/react-ui/Main';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout } from '@dxos/react-ui/testing';
+import * as Textarea from '@dxos/react-ui/Textarea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { mx } from '@dxos/ui-theme';
 
 import { NavTreeContainer } from '#containers';
@@ -44,7 +50,7 @@ const StoryPlankHeading = ({ attendableId }: { attendableId: string }) => {
   const { hasAttention } = useAttention(attendableId);
   return (
     <Panel.Header classNames='border-b border-separator'>
-      <Button
+      <Button.Button
         size='lg'
         icon='ph--circle--regular'
         label='Test'
@@ -89,7 +95,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
         <StoryPlankHeading attendableId={attendableId} />
         <Panel.Body classNames='grid'>
           <Toolbar.Root classNames='border-b border-separator-subtle'>
-            <Button>Test</Button>
+            <Button.Button>Test</Button.Button>
           </Toolbar.Root>
 
           <div className={mx(container, 'm-2 bg-current-surface')}>
@@ -99,7 +105,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
             <div className={mx(container, 'dx-base-surface')}>
               <Field.Root>
                 <Field.Label>Level 2 (base)</Field.Label>
-                <Textarea placeholder='Enter text' />
+                <Textarea.Textarea placeholder='Enter text' />
               </Field.Root>
             </div>
           </div>

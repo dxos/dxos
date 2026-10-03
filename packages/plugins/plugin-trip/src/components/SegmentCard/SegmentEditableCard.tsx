@@ -6,7 +6,12 @@ import { format as formatDate } from 'date-fns';
 import React, { type MouseEvent, forwardRef, useCallback } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { Block, Card, DateInput, Field, Icon, useTranslation } from '@dxos/react-ui';
+import * as Block from '@dxos/react-ui/Block';
+import * as Card from '@dxos/react-ui/Card';
+import * as DateInput from '@dxos/react-ui/DateInput';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 import { Segment } from '#types';
@@ -46,7 +51,7 @@ type FlightEditableCardProps = {
  */
 export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardProps>(
   ({ segment, onAction }, forwardedRef) => {
-    const { t } = useTranslation(meta.profile.key);
+    const { t } = Hooks.useTranslation(meta.profile.key);
 
     const handleDepartChange = useCallback(
       (next: string) => {
@@ -76,9 +81,9 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
     return (
       <Card.Root ref={forwardedRef}>
         <Card.Header>
-          <Block>
-            <Icon icon={icon} />
-          </Block>
+          <Block.Block>
+            <Icon.Icon icon={icon} />
+          </Block.Block>
           <Card.Title>{title}</Card.Title>
           <Card.Action system='delete' onClick={handleDelete} label={t('segment.delete.label')} />
         </Card.Header>
@@ -89,11 +94,11 @@ export const FlightEditableCard = forwardRef<HTMLDivElement, FlightEditableCardP
             </Card.Row>
           )}
           <Card.Row>
-            <Block>
-              <Icon icon='ph--calendar--regular' />
-            </Block>
+            <Block.Block>
+              <Icon.Icon icon='ph--calendar--regular' />
+            </Block.Block>
             <Field.Root>
-              <DateInput
+              <DateInput.DateInput
                 type='datetime-local'
                 aria-label={t('segment.depart.placeholder')}
                 value={isoToLocalDateTime(departAt)}

@@ -9,9 +9,9 @@ import type * as ChatTypes from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { useRegistry } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
 import { type ChatView } from '@dxos/react-ui-assistant';
 import { ChatDialog as NaturalChatDialog } from '@dxos/react-ui-chat';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { Chat, type ChatRootProps } from '#components';
 import { useChatProcessor, useChatServices, usePresets } from '#hooks';
@@ -23,7 +23,7 @@ export type ChatDialogProps = {
 };
 
 export const ChatDialog = ({ chat }: ChatDialogProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
 
   const db = chat && Obj.getDatabase(chat);
   const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);

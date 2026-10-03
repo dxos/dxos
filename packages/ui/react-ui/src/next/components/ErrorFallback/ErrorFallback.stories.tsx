@@ -13,12 +13,12 @@ import { translations } from '#translations';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { ErrorFallback, type ErrorFallbackProps, ErrorStack, type ErrorStackFrame } from '../index.ts';
+import * as ErrorFallback from './ErrorFallback.tsx';
 
-type StoryArgs = SizeArgs & Pick<ErrorFallbackProps, 'title'> & { message: string };
+type StoryArgs = SizeArgs & Pick<ErrorFallback.ErrorFallbackProps, 'title'> & { message: string };
 
 /** Frames as `error-stack-parser` yields them: one served from the workspace, one from a dependency. */
-const FRAMES: ErrorStackFrame[] = [
+const FRAMES: ErrorFallback.ErrorStackFrame[] = [
   {
     functionName: 'renderPlank',
     fileName: 'http://localhost:5173/@fs/Users/dev/dxos/packages/plugins/plugin-deck/src/Plank.tsx',
@@ -35,8 +35,8 @@ const FRAMES: ErrorStackFrame[] = [
 
 const DefaultStory = ({ title, message }: StoryArgs) => (
   <div className='flex flex-col'>
-    <ErrorFallback title={title} error={new Error(message)} data={{ plank: 'deck', attempt: 2 }} />
-    <ErrorStack frames={FRAMES} />
+    <ErrorFallback.ErrorFallback title={title} error={new Error(message)} data={{ plank: 'deck', attempt: 2 }} />
+    <ErrorFallback.ErrorStack frames={FRAMES} />
   </div>
 );
 

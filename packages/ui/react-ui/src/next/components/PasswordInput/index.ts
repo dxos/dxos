@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './PasswordInput.tsx';
+export * as PasswordInput from './PasswordInput.tsx';

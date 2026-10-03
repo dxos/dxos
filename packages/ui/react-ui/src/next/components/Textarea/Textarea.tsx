@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Field as FieldPrimitive } from '@ark-ui/react/field';
 import React, { type TextareaHTMLAttributes } from 'react';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { useFieldsetDisabled } from '../Fieldset/index.ts';
+import * as Fieldset from '../Fieldset/Fieldset.tsx';
 
 /** Fewest lines a textarea shows, so it never reads as a single-line Input. */
 const MIN_ROWS = 3;
@@ -22,7 +24,7 @@ export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & {
 /** Multi-line text at control width; inside a `Field.Root` it takes the field's id, label and description wiring. */
 export const Textarea = composable<HTMLTextAreaElement, TextareaProps>(
   ({ rows = MIN_ROWS, autoResize = false, variant = 'default', disabled, ...props }, forwardedRef) => {
-    const fieldsetDisabled = useFieldsetDisabled(disabled);
+    const fieldsetDisabled = Fieldset.useFieldsetDisabled(disabled);
     const { className, ...rest } = composableProps(props, { classNames: recipes.textarea() });
     return (
       <FieldPrimitive.Textarea

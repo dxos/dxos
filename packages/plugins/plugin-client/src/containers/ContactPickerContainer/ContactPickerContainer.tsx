@@ -9,7 +9,13 @@ import { log } from '@dxos/log';
 import { toPublicKey } from '@dxos/protocols/buf';
 import { SpaceMember_Role, useMembers } from '@dxos/react-client/echo';
 import { useContacts, useIdentity } from '@dxos/react-client/halo';
-import { Container, Field, Flex, Input, Select, SystemButton, useTranslation } from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as Field from '@dxos/react-ui/Field';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Select from '@dxos/react-ui/Select';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { ContactPicker } from '@dxos/shell/react';
 
 import { meta } from '#meta';
@@ -27,7 +33,7 @@ const roleLabel: Record<AdmitRole, string> = {
 export type ContactPickerContainerProps = AppSurface.ContactPickerData;
 
 export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const contacts = useContacts();
   const members = useMembers(space.key);
   const identity = useIdentity();
@@ -72,8 +78,8 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
   }
 
   return (
-    <Container gap='md' role='group' gutter='none'>
-      <Flex align='center' gap='sm'>
+    <Container.Container gap='md' role='group' gutter='none'>
+      <Flex.Flex align='center' gap='sm'>
         <ContactPicker
           contacts={contacts}
           excludeKeys={memberKeys}
@@ -105,16 +111,16 @@ export const ContactPickerContainer = ({ space, onAdd }: ContactPickerContainerP
           onClick={handleAdd}
           data-testid='contactPicker.add'
         />
-      </Flex>
+      </Flex.Flex>
       {joinUrl && (
-        <Flex gap='sm'>
+        <Flex.Flex gap='sm'>
           <Field.Root readOnly>
-            <Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
+            <Input.Input readOnly value={joinUrl} data-testid='contactPicker.joinUrl' />
           </Field.Root>
           <SystemButton.Clipboard value={joinUrl} />
-        </Flex>
+        </Flex.Flex>
       )}
-    </Container>
+    </Container.Container>
   );
 };
 

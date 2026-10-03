@@ -6,7 +6,9 @@ import { formatDistance, isValid } from 'date-fns';
 import React from 'react';
 
 import { useConfig } from '@dxos/react-client';
-import { Flex, Tooltip, useTranslation } from '@dxos/react-ui';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 
 import { StatusBar } from '#components';
 import { meta } from '#meta';
@@ -16,7 +18,7 @@ export type VersionNumberProps = {};
 const VERSION_REGEX = /([\d.]+)/;
 
 export const VersionNumber = (_props: VersionNumberProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const config = useConfig();
   const { version, timestamp } = config.values.runtime?.app?.build ?? {};
   const [_, short] = version?.match(VERSION_REGEX) ?? [];
@@ -32,10 +34,10 @@ export const VersionNumber = (_props: VersionNumberProps) => {
       : undefined;
 
   const content = (
-    <Flex column gap='xs' align='start'>
+    <Flex.Flex column gap='xs' align='start'>
       <span className='font-mono'>{version}</span>
       {released && <span className='text-xs'>{released}</span>}
-    </Flex>
+    </Flex.Flex>
   );
 
   return (

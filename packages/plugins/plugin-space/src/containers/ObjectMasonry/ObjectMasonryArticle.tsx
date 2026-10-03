@@ -8,9 +8,12 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
-import { Empty, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
 import { useSelection, useSelectionActions } from '@dxos/react-ui-attention';
 import { SearchList, useSearchListResults } from '@dxos/react-ui-search';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -35,7 +38,7 @@ export type ObjectMasonryArticleProps = {
  * that set is presented, which is all this owns.
  */
 export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage }: ObjectMasonryArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
 
   // Ordered by label: the query returns index order, which reads as arbitrary to someone scanning a
@@ -101,7 +104,11 @@ export const ObjectMasonryArticle = ({ role, attendableId, objects, emptyMessage
           </Toolbar.Root>
         </Panel.Header>
         <Panel.Body>
-          {empty ? <Empty classNames='h-full'>{empty}</Empty> : <ObjectMasonry cacheKey={attendableId} items={items} />}
+          {empty ? (
+            <Empty.Empty classNames='h-full'>{empty}</Empty.Empty>
+          ) : (
+            <ObjectMasonry cacheKey={attendableId} items={items} />
+          )}
         </Panel.Body>
         <Panel.Footer classNames='flex items-center p-1 border-t border-separator-subtle'>
           {t('item-count.label', { count: items.length })}

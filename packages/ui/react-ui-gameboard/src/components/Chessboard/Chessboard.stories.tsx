@@ -6,8 +6,9 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { Button, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
 import { withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Gameboard, type GameboardRootProps, type Move, type Player } from '../Gameboard/index.ts';
 import { ChessModel } from './chess.ts';
@@ -34,14 +35,14 @@ const DefaultStory = ({ orientation: _orientation, pgn, ...props }: StoryArgs) =
   return (
     <div className='flex flex-col grow gap-2 overflow-hidden'>
       <Toolbar.Root>
-        <Button onClick={() => model.update()}>Reset</Button>
-        <Button onClick={() => model.makeRandomMove()}>Move</Button>
+        <Button.Button onClick={() => model.update()}>Reset</Button.Button>
+        <Button.Button onClick={() => model.makeRandomMove()}>Move</Button.Button>
         <div className='grow'></div>
-        <Button
+        <Button.Button
           onClick={() => setOrientation((orientation) => (!orientation || orientation === 'white' ? 'black' : 'white'))}
         >
           Toggle
-        </Button>
+        </Button.Button>
       </Toolbar.Root>
       <Gameboard.Root model={model} onDrop={handleDrop}>
         <Gameboard.Content grow contain>

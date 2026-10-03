@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Textarea.tsx';
+export * as Textarea from './Textarea.tsx';

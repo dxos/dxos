@@ -6,8 +6,11 @@ import React from 'react';
 
 import { type Database, DXN, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { Block, Button, Card, useTranslation } from '@dxos/react-ui';
 import { Row } from '@dxos/react-ui-card';
+import * as Block from '@dxos/react-ui/Block';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Hooks from '@dxos/react-ui/Hooks';
 import { type Actor, type Event as EventType } from '@dxos/types';
 
 import { meta } from '#meta';
@@ -56,7 +59,7 @@ export const EventDetails = ({
   starred,
   onToggleStar,
 }: EventDetailsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Synced events are immutable feed snapshots (not LiveObjects), so read fields directly — `useObject`
   // requires a live object and throws on a snapshot. Inline draft editing is handled by EventEditor below.
   const data = event;
@@ -80,29 +83,29 @@ export const EventDetails = ({
     <>
       {title === 'heading' && (
         <Card.Row>
-          <Block>
+          <Block.Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Block>
+          </Block.Block>
           <Card.Text classNames='text-lg line-clamp-2'>{data.title ?? t('event-untitled.label')}</Card.Text>
           {meeting && (
-            <Block rail='end'>
-              <Button
+            <Block.Block rail='end'>
+              <Button.Button
                 iconOnly
                 variant='ghost'
                 icon='ph--handshake--regular'
                 label={Obj.getLabel(meeting) ?? 'Meeting'}
                 onClick={onOpenObject ? () => onOpenObject(meeting) : undefined}
               />
-            </Block>
+            </Block.Block>
           )}
         </Card.Row>
       )}
 
       {title === 'text' && (
         <Card.Row>
-          <Block>
+          <Block.Block>
             <Row.Star starred={starred} onToggle={onToggleStar} />
-          </Block>
+          </Block.Block>
           <Card.Text>{data.title ?? t('event-untitled.label')}</Card.Text>
         </Card.Row>
       )}

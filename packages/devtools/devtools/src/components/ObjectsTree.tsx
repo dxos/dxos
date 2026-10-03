@@ -19,8 +19,10 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Button, Icon, Menu } from '@dxos/react-ui';
 import { Tree, type TreeItemDataProps, type TreeModel, type TreeNode } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
 import { getStyles, hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 export interface ObjectsTreeProps {
@@ -104,9 +106,13 @@ const ObjectsTreeIcon = ({ item, path }: ObjectsTreeRowProps) => {
   const styles = scoped.iconHue ? getStyles(scoped.iconHue) : undefined;
   return (
     <>
-      {scoped.type === 'outgoing-relation' && <Icon icon='ph--arrow-right--regular' classNames='w-4 h-4 opacity-70' />}
-      {scoped.type === 'incoming-relation' && <Icon icon='ph--arrow-left--regular' classNames='w-4 h-4 opacity-70' />}
-      <Icon icon={scoped.icon} classNames={['w-4 h-4', styles?.text]} />
+      {scoped.type === 'outgoing-relation' && (
+        <Icon.Icon icon='ph--arrow-right--regular' classNames='w-4 h-4 opacity-70' />
+      )}
+      {scoped.type === 'incoming-relation' && (
+        <Icon.Icon icon='ph--arrow-left--regular' classNames='w-4 h-4 opacity-70' />
+      )}
+      <Icon.Icon icon={scoped.icon} classNames={['w-4 h-4', styles?.text]} />
     </>
   );
 };
@@ -152,7 +158,7 @@ const ObjectsTreeColumns = ({ item, path }: ObjectsTreeRowProps) => {
       {node.role && <span className='text-fg-subtle text-xs'>{node.role}</span>}
       <Menu.Root>
         <Menu.Trigger asChild>
-          <Button
+          <Button.Button
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
             icon='ph--dots-three-vertical--regular'

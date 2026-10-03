@@ -10,8 +10,12 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { Filter, Format, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { useClientStory, withClientProvider } from '@dxos/react-client/testing';
-import { Container, Icon, Panel, ScrollArea, Typography } from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 import { withTheme } from '@dxos/react-ui/testing';
+import * as Typography from '@dxos/react-ui/Typography';
 import { Person } from '@dxos/types';
 
 import { type PaneArgs, nextTranslations, withNextPane } from '../testing/next-pane.tsx';
@@ -39,7 +43,7 @@ const DefaultStory = (_: PaneArgs) => {
       <Panel.Body asChild>
         <ScrollArea.Root>
           <ScrollArea.Viewport asChild>
-            <Container>
+            <Container.Container>
               <Form.Root
                 schema={NoteSchema}
                 values={values}
@@ -53,7 +57,7 @@ const DefaultStory = (_: PaneArgs) => {
                         db={space?.db}
                         type={Person.Person}
                         value={recipients}
-                        start={<Icon icon='ph--users--regular' />}
+                        start={<Icon.Icon icon='ph--users--regular' />}
                         onChange={setRecipients}
                         data-testid='attendees'
                       />
@@ -61,14 +65,14 @@ const DefaultStory = (_: PaneArgs) => {
                   </FormField>
                 </Form.Content>
               </Form.Root>
-            </Container>
+            </Container.Container>
           </ScrollArea.Viewport>
         </ScrollArea.Root>
       </Panel.Body>
       <Panel.Footer>
-        <Typography truncate data-testid='values'>
+        <Typography.Typography truncate data-testid='values'>
           {JSON.stringify({ ...values, recipients })}
-        </Typography>
+        </Typography.Typography>
       </Panel.Footer>
     </Panel.Root>
   );

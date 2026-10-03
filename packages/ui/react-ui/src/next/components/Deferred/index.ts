@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Deferred.tsx';
+export * as Deferred from './Deferred.tsx';

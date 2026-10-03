@@ -14,15 +14,15 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Empty } from '../index.ts';
+import * as Empty from './Empty.tsx';
 
 /** The translated default, then an icon with the caller's own text. */
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Empty data-testid={`default-${size}`} />
-    <Empty icon='ph--tray--regular' data-testid={`custom-${size}`}>
+    <Empty.Empty data-testid={`default-${size}`} />
+    <Empty.Empty icon='ph--tray--regular' data-testid={`custom-${size}`}>
       No documents yet
-    </Empty>
+    </Empty.Empty>
   </>
 );
 

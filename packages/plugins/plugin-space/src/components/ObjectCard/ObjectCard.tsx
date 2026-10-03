@@ -11,8 +11,11 @@ import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Block, Button, Card, useTranslation } from '@dxos/react-ui';
 import { ActionMenu, useMenuActions, useMenuItems } from '@dxos/react-ui-menu';
+import * as Block from '@dxos/react-ui/Block';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as UiHooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
@@ -35,7 +38,7 @@ export type ObjectCardProps = {
  * renders a related object, a record's reference or a tile in a `CardMasonry`.
  */
 export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: ObjectCardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const data = useMemo(() => ({ subject }), [subject]);
   useObject(Obj.isObject(subject) ? subject : undefined);
 
@@ -69,13 +72,13 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
       <ObjectCardPrimitive.Header
         subject={subject}
         menu={
-          <Block rail='end'>
+          <Block.Block rail='end'>
             {/* React portals bubble through the component tree, so the menu's clicks would reach the card. */}
             <div role='none' className='contents' onClick={stopPropagation}>
               <CardMenuSlot.Root subject={subject} menu={menu} />
               {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
               <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
-                <Button
+                <Button.Button
                   iconOnly
                   variant='ghost'
                   icon='ph--dots-three-vertical--regular'
@@ -83,7 +86,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
                 />
               </ActionMenu>
             </div>
-          </Block>
+          </Block.Block>
         }
       />
       <Card.Body>

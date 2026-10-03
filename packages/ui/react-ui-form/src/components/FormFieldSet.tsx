@@ -4,7 +4,9 @@
 
 import React, { Children, type PropsWithChildren, type ReactNode, useState } from 'react';
 
-import { Collapsible, Fieldset, SystemButton } from '@dxos/react-ui';
+import * as Collapsible from '@dxos/react-ui/Collapsible';
+import * as Fieldset from '@dxos/react-ui/Fieldset';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { useFormContext } from '../hooks/index.ts';
 

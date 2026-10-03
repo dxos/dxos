@@ -5,8 +5,10 @@
 import React, { type ComponentType, type JSX, useCallback } from 'react';
 
 import { URI } from '@dxos/keys';
-import { Field, Input, SystemButton } from '@dxos/react-ui';
 import { JsonHighlighter, createElement } from '@dxos/react-ui-syntax-highlighter';
+import * as Field from '@dxos/react-ui/Field';
+import * as Input from '@dxos/react-ui/Input';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 export type ObjectViewerProps = {
   object: any;
@@ -69,7 +71,7 @@ export const ObjectViewer = ({ object, id, onNavigate }: ObjectViewerProps) => {
           <Field.Root>
             <div className='flex flex-col gap-1'>
               <div className='flex gap-1'>
-                <Input disabled value={id} />
+                <Input.Input disabled value={id} />
                 <SystemButton.Clipboard iconOnly value={id} />
                 <SystemButton.Clipboard label='Copy JSON' onCopy={handleCopy} />
               </div>

@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type KeyboardEvent, forwardRef, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -13,7 +15,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
+import * as Button from '../Button/Button.tsx';
 import { ToolbarContext } from '../Toolbar/toolbar-context.ts';
 import { announce, dragScope } from './drag.ts';
 
@@ -92,7 +94,7 @@ export const DragHandle = forwardRef<HTMLButtonElement, DragHandleProps>(
 
     return (
       <ToolbarContext.Provider value={undefined}>
-        <Button
+        <Button.Button
           icon='ph--dots-six-vertical--regular'
           label={label ?? t('drag-handle.label')}
           iconOnly
@@ -183,3 +185,5 @@ export const DragPreview = forwardRef<HTMLDivElement, DragPreviewProps>(
 DragPreview.displayName = 'DragPreview';
 
 export type { DragHandleProps, DragPreviewProps, DropIndicatorProps };
+
+export { dragScope } from './drag.ts';

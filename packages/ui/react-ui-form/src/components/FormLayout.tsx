@@ -9,7 +9,8 @@ import React, { Fragment, useMemo } from 'react';
 
 import { Annotation } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { Container, Typography } from '@dxos/react-ui';
+import * as Container from '@dxos/react-ui/Container';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { type FormPresentation } from '#types';
 
@@ -67,13 +68,19 @@ type LayoutNodeViewProps = Omit<FormLayoutProps, 'template' | 'name' | 'path'> &
 const LayoutNodeView = ({ node, schema, basePath, ...props }: LayoutNodeViewProps) => {
   if (node.kind === 'grid') {
     return (
-      <Container layout='row' gutter='inherit' align='start' gap='md' columns={`repeat(${node.cols}, minmax(0, 1fr))`}>
+      <Container.Container
+        layout='row'
+        gutter='inherit'
+        align='start'
+        gap='md'
+        columns={`repeat(${node.cols}, minmax(0, 1fr))`}
+      >
         {node.children.map((child, index) => (
           <Fragment key={index}>
             <LayoutNodeView node={child} schema={schema} basePath={basePath} {...props} />
           </Fragment>
         ))}
-      </Container>
+      </Container.Container>
     );
   }
 
@@ -86,7 +93,7 @@ const LayoutNodeView = ({ node, schema, basePath, ...props }: LayoutNodeViewProp
   const path = [...basePath, ...segments];
   return (
     // A cell is its own template root, so a group inside it (a nested object) finds the `content` lines.
-    <Container gutter='none' span={node.span}>
+    <Container.Container gutter='none' span={node.span}>
       <FormFieldErrorBoundary path={path}>
         {labelType ? (
           <LabelField
@@ -99,7 +106,7 @@ const LayoutNodeView = ({ node, schema, basePath, ...props }: LayoutNodeViewProp
           <FormFieldDispatch type={type} name={leafName} path={path} required={required} {...props} />
         )}
       </FormFieldErrorBoundary>
-    </Container>
+    </Container.Container>
   );
 };
 
@@ -121,7 +128,7 @@ const LabelField = ({ schema, label, path, layout }: LabelFieldProps) => {
 
   return (
     <FormFieldRow label={label} readonly standalone presentation={layout}>
-      <Typography truncate>{text}</Typography>
+      <Typography.Typography truncate>{text}</Typography.Typography>
     </FormFieldRow>
   );
 };

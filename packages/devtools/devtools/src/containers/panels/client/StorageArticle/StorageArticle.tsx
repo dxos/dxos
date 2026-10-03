@@ -10,7 +10,12 @@ import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useClient } from '@dxos/react-client';
 import { useDevtools, useStream } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Button, Icon, Menu, Panel, ScrollArea, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Bitbar, JsonView } from '../../../../components/index.ts';
 import { type ArticleProps } from '../../types.ts';
@@ -172,13 +177,13 @@ export const StorageArticle = ({ role }: ArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root>
-          <Button onClick={refresh} disabled={isRefreshing}>
+          <Button.Button onClick={refresh} disabled={isRefreshing}>
             Refresh
-          </Button>
+          </Button.Button>
           <div className='grow' />
           <Menu.Root positioning={{ placement: 'top' }}>
             <Menu.Trigger asChild>
-              <Button>Reset Storage</Button>
+              <Button.Button>Reset Storage</Button.Button>
             </Menu.Trigger>
             <Menu.Content>
               <Menu.Item
@@ -245,7 +250,7 @@ const DataItems: FC<{ items: Node[]; onSelect: (item: Node) => void }> = ({ item
         return (
           <div key={id} role='treeitem'>
             <div className='flex grow items-center gap-2 font-mono' onClick={() => onSelect(item)}>
-              <Icon icon={iconName} />
+              <Icon.Icon icon={iconName} />
               {Element}
             </div>
             {items && items.length > 0 && (

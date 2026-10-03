@@ -2,16 +2,18 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import { useMachine } from '@zag-js/react';
 import React, { type AnchorHTMLAttributes, type HTMLAttributes, forwardRef, useContext, useId } from 'react';
 
-import { composable, composableProps, slottable } from '../../../util/index.ts';
+import { composable, composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { ScrollArea } from '../ScrollArea/index.ts';
-import { Separator, type SeparatorProps } from '../Separator/index.ts';
-import { ToggleGroup, type ToggleGroupRootProps } from '../ToggleGroup/index.ts';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
+import * as Separator from '../Separator/Separator.tsx';
+import * as ToggleGroup from '../ToggleGroup/ToggleGroup.tsx';
 import { ToolbarContext, useToolbarItem } from './toolbar-context.ts';
 import * as toolbar from './toolbar-machine.ts';
 
@@ -90,7 +92,7 @@ ToolbarRoot.displayName = 'Toolbar.Root';
 // Separator
 //
 
-type ToolbarSeparatorProps = Omit<SeparatorProps, 'orientation'> & {
+type ToolbarSeparatorProps = Omit<Separator.SeparatorProps, 'orientation'> & {
   /** `gap` is an empty spacer that grows, pushing the items after it to the toolbar's end. */
   variant?: 'line' | 'gap';
 };
@@ -107,7 +109,7 @@ const ToolbarSeparator = composable<HTMLDivElement, ToolbarSeparatorProps>(({ va
   }
 
   return (
-    <Separator
+    <Separator.Separator
       {...props}
       orientation={api?.orientation === 'vertical' ? 'horizontal' : 'vertical'}
       ref={forwardedRef}
@@ -181,7 +183,7 @@ ToolbarLink.displayName = 'Toolbar.Link';
 // ToggleGroup
 //
 
-type ToolbarToggleGroupProps = ToggleGroupRootProps;
+type ToolbarToggleGroupProps = ToggleGroup.RootProps;
 
 /** A ToggleGroup whose items join the toolbar's roving focus, so the group adds no tab stop or arrow handling of its own. */
 const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((props, forwardedRef) => (
@@ -189,13 +191,19 @@ const ToolbarToggleGroup = forwardRef<HTMLDivElement, ToolbarToggleGroupProps>((
 ));
 
 ToolbarToggleGroup.displayName = 'Toolbar.ToggleGroup';
-
-export const Toolbar = {
-  Root: ToolbarRoot,
-  Text: ToolbarText,
-  Link: ToolbarLink,
-  Separator: ToolbarSeparator,
-  ToggleGroup: ToolbarToggleGroup,
+export type {
+  ToolbarLinkProps as LinkProps,
+  ToolbarRootProps as RootProps,
+  ToolbarSeparatorProps as SeparatorProps,
+  ToolbarTextProps as TextProps,
+  ToolbarToggleGroupProps as ToggleGroupProps,
 };
 
-export type { ToolbarLinkProps, ToolbarRootProps, ToolbarSeparatorProps, ToolbarTextProps, ToolbarToggleGroupProps };
+export {
+  ToolbarLink as Link,
+  ToolbarRoot as Root,
+  ToolbarSeparator as Separator,
+  ToolbarText as Text,
+  ToolbarToggleGroup as ToggleGroup,
+};
+export * from './toolbar-context.ts';

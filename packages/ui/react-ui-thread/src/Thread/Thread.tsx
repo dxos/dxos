@@ -19,22 +19,17 @@ import React, {
 } from 'react';
 
 import { Obj } from '@dxos/echo';
-import {
-  Button,
-  type ComposableProps,
-  Icon,
-  ScrollArea,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useThemeMode,
-  useTranslation,
-} from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Util from '@dxos/react-ui/Util';
 import { type Message as MessageType } from '@dxos/types';
 import { type Extension, createBasicExtensions, createThemeExtensions, listener } from '@dxos/ui-editor';
 import { hoverableControlItem, hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
+import { type ComposableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
@@ -113,11 +108,11 @@ type ThreadContentExtra = {
 export type ThreadContentProps = ComposableProps<ThreadContentExtra>;
 
 /** Visible thread container (the attention surface that hosts header / messages / composer). */
-const ThreadContent = composable<HTMLDivElement, ThreadContentExtra>(
+const ThreadContent = Util.composable<HTMLDivElement, ThreadContentExtra>(
   ({ children, current, id, ...props }, forwardedRef) => {
     return (
       <div
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           role: 'group',
           classNames: [
             'flex flex-col bg-[var(--surface-bg)] current-related dx-attention-surface [--controls-opacity:0]',
@@ -161,9 +156,9 @@ export type ThreadHeaderProps = Omit<
  * `[rail · 1fr · controls]` grid so the trailing controls align with message-tile
  * controls (which use the same template) — no grid is leaked in from the caller.
  */
-const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
+const ThreadHeader = Util.composable<HTMLDivElement, ThreadHeaderProps>(
   ({ title, detached, current, controls, onSelect, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const { focusComposer } = useThreadContext('Thread.Header');
     const handleSelect = useCallback(() => {
       onSelect?.();
@@ -172,7 +167,7 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
 
     return (
       <div
-        {...composableProps(props, {
+        {...Util.composableProps(props, {
           classNames: [
             'grid grid-cols-[var(--dx-rail-size)_1fr_min-content] items-center',
             hoverableControls,
@@ -182,7 +177,7 @@ const ThreadHeader = composable<HTMLDivElement, ThreadHeaderProps>(
         ref={forwardedRef}
       >
         <div className='flex items-center justify-center'>
-          <Button
+          <Button.Button
             iconOnly
             variant='ghost'
             size='sm'
@@ -341,7 +336,7 @@ const ThreadItemAdapter = ({ id, data, location, draggable, current, selected }:
   </Mosaic.Tile>
 );
 
-export type ThreadMessagesProps = ThemedClassName<{
+export type ThreadMessagesProps = Util.ThemedClassName<{
   messages: readonly MessageType.Message[];
   /** Stable id of the owning thread; scopes the Mosaic container so multiple threads don't collide. */
   id?: string;
@@ -370,7 +365,7 @@ const ThreadMessages = ({
   gapDividerMs = DEFAULT_GAP_DIVIDER_MS,
   classNames,
 }: ThreadMessagesProps) => {
-  const { dtLocale } = useTranslation(translationKey);
+  const { dtLocale } = Hooks.useTranslation(translationKey);
   const [viewport, setViewport] = useState<HTMLElement | null>(null);
   const items = useMemo(
     () => groupMessages(messages.filter(Boolean), { groupWindowMs, dayDivider, gapDividerMs, dtLocale }),
@@ -427,8 +422,8 @@ export type ThreadTextboxProps = MessageMetadata & {
 
 /** Message composer pinned at the foot of a thread. */
 const ThreadTextbox = ({ placeholder, autoFocus, disabled, extensions, onSend, ...metadata }: ThreadTextboxProps) => {
-  const { t } = useTranslation(translationKey);
-  const themeMode = useThemeMode();
+  const { t } = Hooks.useTranslation(translationKey);
+  const themeMode = Hooks.useThemeMode();
   const { registerComposerFocus } = useThreadContext('Thread.Textbox');
   const composerRef = useRef<{ focus: () => void } | null>(null);
   const messageRef = useRef('');
@@ -481,13 +476,13 @@ ThreadTextbox.displayName = 'Thread.Textbox';
 // Status
 //
 
-export type ThreadStatusProps = ThemedClassName<PropsWithChildren> & {
+export type ThreadStatusProps = Util.ThemedClassName<PropsWithChildren> & {
   activity?: boolean;
 };
 
 const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
   ({ activity, classNames, children, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     return (
       <div
         {...props}
@@ -497,7 +492,7 @@ const ThreadStatus = forwardRef<HTMLDivElement, ThreadStatusProps>(
         )}
         ref={forwardedRef}
       >
-        <Icon
+        <Icon.Icon
           icon='ph--spinner--bold'
           classNames='w-6 h-4 invisible data-[visible=show]:visible animate-spin-slow'
           data-visible={activity ? 'show' : 'hide'}

@@ -11,18 +11,21 @@ import { expect, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { byTestId, expectArrow, expectPopupSize, realHover, realUnhover } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Group, HoverCard, Typography } from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Group from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as HoverCard from './HoverCard.tsx';
 
 /** A profile card above a button, and one below a text link without an arrow, at its own `lg` size. */
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
-  <Group>
+  <Group.Group>
     <HoverCard.Root>
       <HoverCard.Trigger asChild>
-        <Button data-testid={`profile-${size}-trigger`}>Alice</Button>
+        <Button.Button data-testid={`profile-${size}-trigger`}>Alice</Button.Button>
       </HoverCard.Trigger>
       <HoverCard.Content data-testid={`profile-${size}`}>
-        <Typography>Alice Example</Typography>
-        <Typography tone='muted'>Joined in March · 12 spaces</Typography>
+        <Typography.Typography>Alice Example</Typography.Typography>
+        <Typography.Typography tone='muted'>Joined in March · 12 spaces</Typography.Typography>
       </HoverCard.Content>
     </HoverCard.Root>
     <HoverCard.Root positioning={{ placement: 'bottom' }}>
@@ -32,10 +35,10 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => (
         </a>
       </HoverCard.Trigger>
       <HoverCard.Content size='lg' arrow={false} data-testid={`link-${size}`}>
-        <Typography>A local-first workspace.</Typography>
+        <Typography.Typography>A local-first workspace.</Typography.Typography>
       </HoverCard.Content>
     </HoverCard.Root>
-  </Group>
+  </Group.Group>
 );
 
 const meta = {

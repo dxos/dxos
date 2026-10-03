@@ -2,12 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type CSSProperties } from 'react';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { type CSSVariables } from '../Container/index.ts';
+import type * as Container from '../Container/Container.tsx';
 
 export type TypographyTone = 'default' | 'muted' | 'subtle';
 
@@ -32,7 +34,7 @@ export type TypographyProps = {
 export const Typography = slottable<HTMLParagraphElement, TypographyProps>(
   ({ children, asChild, truncate, lines, tone, mono, ...props }, forwardedRef) => {
     const { className, style, ...rest } = composableProps(props, { classNames: recipes.typography() });
-    const linesStyle: CSSProperties & CSSVariables = lines ? { '--dx-lines': String(lines) } : {};
+    const linesStyle: CSSProperties & Container.CSSVariables = lines ? { '--dx-lines': String(lines) } : {};
     return (
       <ark.p
         asChild={asChild}

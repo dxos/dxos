@@ -12,7 +12,7 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Avatar, type AvatarRootProps } from '../index.ts';
+import * as Avatar from './Avatar.tsx';
 
 /** Inline SVG, so the stories never fetch from the network. */
 const PORTRAIT = `data:image/svg+xml,${encodeURIComponent(
@@ -22,7 +22,7 @@ const PORTRAIT = `data:image/svg+xml,${encodeURIComponent(
   </svg>`,
 )}`;
 
-type StoryArgs = SizeArgs & Pick<AvatarRootProps, 'variant' | 'status' | 'hue' | 'hueVariant' | 'fallback'>;
+type StoryArgs = SizeArgs & Pick<Avatar.RootProps, 'variant' | 'status' | 'hue' | 'hueVariant' | 'fallback'>;
 
 /** Initials, an emoji, an icon, an image (one with a dominant-colour backdrop) and a portrait filling its host, in a row with a visible name. */
 const DefaultStory = ({ size, variant, status, hue, hueVariant, fallback }: StoryArgs) => (

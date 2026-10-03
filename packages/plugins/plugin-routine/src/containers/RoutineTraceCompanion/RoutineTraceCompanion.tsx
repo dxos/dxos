@@ -6,8 +6,14 @@ import React from 'react';
 
 import * as Routine from '@dxos/compute/Routine';
 import { Obj } from '@dxos/echo';
-import { Accordion, Empty, Icon, type IconProps, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Accordion from '@dxos/react-ui/Accordion';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { meta } from '#meta';
 
@@ -21,7 +27,7 @@ const STATUS_ICONS: Record<RunStatus, string> = {
   pending: 'ph--clock--regular',
 };
 
-const STATUS_ICON_PROPS: Record<RunStatus, Pick<IconProps, 'valence' | 'tone'>> = {
+const STATUS_ICON_PROPS: Record<RunStatus, Pick<Icon.IconProps, 'valence' | 'tone'>> = {
   success: { valence: 'success' },
   failure: { valence: 'error' },
   incomplete: { valence: 'warning' },
@@ -35,7 +41,7 @@ export type RoutineTraceCompanionProps = {
 
 /** Companion panel showing the execution trace (runs) of a Routine. */
 export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(subject);
   const runs = useRoutineRuns(db, subject);
 
@@ -48,14 +54,14 @@ export const RoutineTraceCompanion = ({ role, subject }: RoutineTraceCompanionPr
         <ScrollArea.Root orientation='vertical'>
           <ScrollArea.Viewport>
             {runs.length === 0 ? (
-              <Empty>{t('history.empty.message')}</Empty>
+              <Empty.Empty>{t('history.empty.message')}</Empty.Empty>
             ) : (
               <Accordion.Root>
                 {runs.map((run) => (
                   <Accordion.Item key={getRunId(run)} value={getRunId(run)}>
                     <Accordion.ItemTrigger>
                       <span className='flex items-center gap-2 min-w-0'>
-                        <Icon icon={STATUS_ICONS[run.status]} {...STATUS_ICON_PROPS[run.status]} />
+                        <Icon.Icon icon={STATUS_ICONS[run.status]} {...STATUS_ICON_PROPS[run.status]} />
                         <span className='tabular-nums'>{formatTimestamp(run.startedAt)}</span>
                         <span className='truncate text-fg-muted'>
                           {`${t(`history.status.${run.status}.label`)} · ${formatDuration(run.duration)}`}

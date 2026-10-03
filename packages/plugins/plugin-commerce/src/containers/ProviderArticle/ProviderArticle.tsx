@@ -9,7 +9,6 @@ import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { useObject } from '@dxos/echo-react';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { Flex, Panel, useTranslation } from '@dxos/react-ui';
 import {
   type ActionExecutor,
   type ActionGraphProps,
@@ -19,6 +18,9 @@ import {
   isToolbarAction,
   useMenuBuilder,
 } from '@dxos/react-ui-menu';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { meta } from '#meta';
 import { Provider } from '#types';
@@ -31,7 +33,7 @@ export type ProviderArticleProps = AppSurface.ObjectArticleProps<Provider.Provid
  * Provider node's graph actions (e.g. Regenerate, which runs the skill agent) in the toolbar.
  */
 export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const [provider] = useObject(subject);
   const { actions, onAction } = useMenuActions(attendableId);
 
@@ -75,10 +77,10 @@ export const ProviderArticle = ({ role, subject, attendableId }: ProviderArticle
         {searchFields.length > 0 ? (
           <dl className='flex flex-col gap-1'>
             {searchFields.map((field) => (
-              <Flex key={field.key} gap='sm' align='baseline' justify='between'>
+              <Flex.Flex key={field.key} gap='sm' align='baseline' justify='between'>
                 <dt className='text-sm'>{field.title}</dt>
                 {field.type && <dd className='text-xs text-fg-muted'>{field.type}</dd>}
-              </Flex>
+              </Flex.Flex>
             ))}
           </dl>
         ) : (

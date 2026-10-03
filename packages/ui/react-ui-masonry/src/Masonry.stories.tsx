@@ -6,8 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useState } from 'react';
 
 import { random } from '@dxos/random';
-import { Button, Card, Panel, Toolbar } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Panel from '@dxos/react-ui/Panel';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 
 import { Masonry, type MasonryRootProps } from './Masonry.tsx';
 
@@ -146,13 +149,13 @@ const DefaultStory = (props: MasonryRootProps) => {
       <Panel.Header>
         <Toolbar.Root>
           {ITEM_COUNTS.map((count) => (
-            <Button key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
+            <Button.Button key={count} onClick={() => setVisible(shuffle(PEOPLE).slice(0, count))}>
               {count}
-            </Button>
+            </Button.Button>
           ))}
-          <Button onClick={addOne}>Add one</Button>
-          <Button onClick={removeOne}>Remove one</Button>
-          <Button onClick={() => setVisible([])}>Clear</Button>
+          <Button.Button onClick={addOne}>Add one</Button.Button>
+          <Button.Button onClick={removeOne}>Remove one</Button.Button>
+          <Button.Button onClick={() => setVisible([])}>Clear</Button.Button>
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body>

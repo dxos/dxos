@@ -8,7 +8,11 @@ import * as HomeSection from '@dxos/app-framework/HomeSection';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
-import { Block, Card, Container, Icon, useTranslation } from '@dxos/react-ui';
+import * as Block from '@dxos/react-ui/Block';
+import * as Card from '@dxos/react-ui/Card';
+import * as Container from '@dxos/react-ui/Container';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { useHomeSuggestions } from '#hooks';
 import { meta } from '#meta';
@@ -24,7 +28,7 @@ type SpaceScopedProps = {
  * quick entry points regardless of whether recent objects exist.
  */
 export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const suggestions = useHomeSuggestions(space);
 
@@ -45,7 +49,7 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
   return (
     <HomeSection.Root>
       <HomeSection.Header title={t('space-home.suggestions.heading')} onClose={onClose} />
-      <Container gap='lg' gutter='none'>
+      <Container.Container gap='lg' gutter='none'>
         {suggestions.map((prompt, index) => (
           // A real button, not a `role='button'` div: WKWebView only reliably synthesizes a tap into
           // a click for natively interactive elements, and the iOS walkthrough could not launch a
@@ -59,15 +63,15 @@ export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
           >
             <Card.Root>
               <Card.Header>
-                <Block>
-                  <Icon icon='ph--sparkle--regular' />
-                </Block>
+                <Block.Block>
+                  <Icon.Icon icon='ph--sparkle--regular' />
+                </Block.Block>
                 <Card.Title>{prompt}</Card.Title>
               </Card.Header>
             </Card.Root>
           </button>
         ))}
-      </Container>
+      </Container.Container>
     </HomeSection.Root>
   );
 };

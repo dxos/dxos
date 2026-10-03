@@ -5,13 +5,13 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { ThemeProvider } from './ThemeProvider.tsx';
+import * as ThemeProvider from './ThemeProvider.tsx';
 
 const meta = {
   title: 'ui/react-ui-core/providers/ThemeProvider',
-  component: ThemeProvider,
+  component: ThemeProvider.ThemeProvider,
   render: () => {
     const { themeMode, platform } = useThemeContext();
     return (
@@ -22,7 +22,7 @@ const meta = {
     );
   },
   decorators: [withTheme(), withLayout()],
-} satisfies Meta<typeof ThemeProvider>;
+} satisfies Meta<typeof ThemeProvider.ThemeProvider>;
 
 export default meta;
 

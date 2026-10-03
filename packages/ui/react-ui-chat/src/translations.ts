@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 export const translationKey = '@dxos/react-ui-chat';
 
@@ -12,4 +12,4 @@ export const translations = [
       [translationKey]: {},
     },
   },
-] as const satisfies Resource[];
+] as const satisfies ThemeProvider.Resource[];

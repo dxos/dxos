@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Dialog as DialogPrimitive, useDialogContext } from '@ark-ui/react/dialog';
 import { Portal } from '@ark-ui/react/portal';
 import React, {
@@ -20,11 +22,11 @@ import { type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
-import { Container } from '../Container/index.ts';
-import { Group } from '../Group/index.ts';
-import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Container from '../Container/Container.tsx';
+import * as Group from '../Group/Group.tsx';
 import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 
 /**
  * Marks the control a dialog focuses when it opens (the current constant's role); zag's own initial-focus lookup reads
@@ -237,7 +239,7 @@ const DialogCloseTrigger = forwardRef<HTMLButtonElement, DialogCloseTriggerProps
       </DialogPrimitive.CloseTrigger>
     ) : (
       <DialogPrimitive.CloseTrigger {...props} asChild ref={forwardedRef}>
-        <Button icon={icon} label={label} iconOnly />
+        <Button.Button icon={icon} label={label} iconOnly />
       </DialogPrimitive.CloseTrigger>
     ),
 );
@@ -248,7 +250,7 @@ DialogCloseTrigger.displayName = 'Dialog.CloseTrigger';
 // Body
 //
 
-type DialogBodyProps = ThemedClassName<Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'>> & {
+type DialogBodyProps = ThemedClassName<Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'>> & {
   children?: ReactNode;
 };
 
@@ -259,7 +261,7 @@ type DialogBodyProps = ThemedClassName<Pick<ScrollAreaRootProps, 'mode' | 'width
 const DialogBody = forwardRef<HTMLDivElement, DialogBodyProps>(({ classNames, children, ...props }, forwardedRef) => (
   <ScrollArea.Root {...props} classNames={mx(recipes.dialogBody(), classNames)} ref={forwardedRef}>
     <ScrollArea.Viewport asChild>
-      <Container gutter='md'>{children}</Container>
+      <Container.Container gutter='md'>{children}</Container.Container>
     </ScrollArea.Viewport>
   </ScrollArea.Root>
 ));
@@ -277,7 +279,7 @@ type DialogFooterProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
  * actions stay regular-sized in a small dialog, since they are the dialog's primary targets.
  */
 const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(({ classNames, ...props }, forwardedRef) => (
-  <Group asChild justify='end'>
+  <Group.Group asChild justify='end'>
     <div
       data-size='md'
       {...props}
@@ -286,32 +288,31 @@ const DialogFooter = forwardRef<HTMLDivElement, DialogFooterProps>(({ classNames
       className={mx(recipes.dialogFooter(), classNames)}
       ref={forwardedRef}
     />
-  </Group>
+  </Group.Group>
 ));
 
 DialogFooter.displayName = 'Dialog.Footer';
-
-export const Dialog = {
-  Root: DialogRoot,
-  Trigger: DialogTrigger,
-  Content: DialogContent,
-  Header: DialogHeader,
-  Title: DialogTitle,
-  Description: DialogDescription,
-  CloseTrigger: DialogCloseTrigger,
-  Body: DialogBody,
-  Footer: DialogFooter,
+export type {
+  DialogBodyProps as BodyProps,
+  DialogCloseTriggerProps as CloseTriggerProps,
+  DialogContentProps as ContentProps,
+  DialogDescriptionProps as DescriptionProps,
+  DialogFooterProps as FooterProps,
+  DialogHeaderProps as HeaderProps,
+  DialogPlacement as Placement,
+  DialogRootProps as RootProps,
+  DialogTitleProps as TitleProps,
+  DialogTriggerProps as TriggerProps,
 };
 
-export type {
-  DialogBodyProps,
-  DialogCloseTriggerProps,
-  DialogContentProps,
-  DialogDescriptionProps,
-  DialogFooterProps,
-  DialogHeaderProps,
-  DialogPlacement,
-  DialogRootProps,
-  DialogTitleProps,
-  DialogTriggerProps,
+export {
+  DialogBody as Body,
+  DialogCloseTrigger as CloseTrigger,
+  DialogContent as Content,
+  DialogDescription as Description,
+  DialogFooter as Footer,
+  DialogHeader as Header,
+  DialogRoot as Root,
+  DialogTitle as Title,
+  DialogTrigger as Trigger,
 };

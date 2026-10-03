@@ -10,7 +10,15 @@ import { Runtime_Client_ServicesMode, Runtime_Client_Storage_SqliteMode } from '
 import { type DevtoolsHost } from '@dxos/protocols/rpc';
 import { useDevtools } from '@dxos/react-client/devtools';
 import { useAsyncEffect } from '@dxos/react-hooks';
-import { Button, Field, Icon, Input, Panel, ScrollArea, Textarea, Toolbar, useFileDownload } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Textarea from '@dxos/react-ui/Textarea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { arrayToString, decodeUint8ArrayFromJson, isEncodedUint8Array } from '@dxos/util';
 
 import { type ArticleProps } from '../../types.ts';
@@ -60,7 +68,7 @@ const toNumber = (value: unknown): number | undefined => {
 
 export const SqliteArticle = ({ role }: ArticleProps) => {
   const devtoolsHost = useDevtools();
-  const fileDownload = useFileDownload();
+  const fileDownload = Hooks.useFileDownload();
 
   const [query, setQuery] = useState(DEFAULT_QUERY);
   const [params, setParams] = useState('');
@@ -276,13 +284,18 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
     <Panel.Root role={role}>
       <Panel.Header>
         <Toolbar.Root classNames='col-span-2'>
-          <Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
+          <Button.Button onClick={handleRunQuery} disabled={isRunning || !query.trim()}>
             Run Query
-          </Button>
-          <Button onClick={refresh} disabled={isRefreshing}>
+          </Button.Button>
+          <Button.Button onClick={refresh} disabled={isRefreshing}>
             Refresh
-          </Button>
-          <Button icon='ph--download--regular' label='Export database' onClick={handleExport} disabled={isExporting} />
+          </Button.Button>
+          <Button.Button
+            icon='ph--download--regular'
+            label='Export database'
+            onClick={handleExport}
+            disabled={isExporting}
+          />
         </Toolbar.Root>
       </Panel.Header>
       <Panel.Body classNames='grid grid-cols-[240px_1fr] divide-x divide-separator h-full'>
@@ -333,7 +346,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
                       onClick={() => handleSelectTable(tableName)}
                       disabled={isRunning}
                     >
-                      <Icon icon='ph--table--regular' size='md' />
+                      <Icon.Icon icon='ph--table--regular' size='md' />
                       {tableName}
                     </button>
                   ))}
@@ -347,7 +360,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
           <div className='flex flex-col gap-2 p-2 border-b border-separator'>
             <Field.Root>
               <Field.Label>SQL</Field.Label>
-              <Textarea
+              <Textarea.Textarea
                 value={query}
                 onChange={({ target }) => setQuery(target.value)}
                 classNames='min-h-24 font-mono text-xs'
@@ -355,7 +368,7 @@ export const SqliteArticle = ({ role }: ArticleProps) => {
             </Field.Root>
             <Field.Root>
               <Field.Label>Params (JSON array)</Field.Label>
-              <Input
+              <Input.Input
                 value={params}
                 onChange={({ target }) => setParams(target.value)}
                 placeholder='[]'

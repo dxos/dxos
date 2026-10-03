@@ -11,16 +11,13 @@ import {
   type InvitationStatus,
   useInvitationStatus,
 } from '@dxos/react-client/invitations';
-import {
-  Avatar,
-  type AvatarRootProps,
-  Button,
-  SystemButton,
-  type ThemedClassName,
-  Tooltip,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
 
@@ -32,7 +29,7 @@ export type InvitationListItemProps = SharedInvitationListProps & {
   invitation: CancellableInvitationObservable;
   onClickRemove?: (invitation: CancellableInvitationObservable) => void;
   reverseEffects?: boolean;
-} & ThemedClassName<ComponentPropsWithoutRef<'div'>>;
+} & Util.ThemedClassName<ComponentPropsWithoutRef<'div'>>;
 
 export type InvitationListItemImplProps = InvitationListItemProps & {
   invitationStatus: InvitationStatus;
@@ -51,7 +48,7 @@ const AvatarStackEffect = ({
   animation,
   status,
   reverseEffects,
-}: Pick<AvatarRootProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => (
+}: Pick<Avatar.RootProps, 'status' | 'animation'> & Pick<InvitationListItemProps, 'reverseEffects'>) => (
   <>
     {[
       { offset: reverseEffects ? 'left-3' : 'left-1', opacity: 'opacity-20', delay: '400ms' },
@@ -80,7 +77,7 @@ export const InvitationListItemImpl = ({
   reverseEffects,
   ...props
 }: InvitationListItemImplProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const { cancel, status: invitationStatus, invitationCode, authCode, multiUse, shareable } = propsInvitationStatus;
 
   const isCancellable = !(
@@ -157,14 +154,14 @@ export const InvitationListItemImpl = ({
               invitationHasLifetime ? t('expires.label', { timeLeft: invitationTimeLeft }) : t('no-expiration.label')
             }
           >
-            <Button
+            <Button.Button
               variant='ghost'
               classNames='grow justify-start font-medium'
               data-testid='show-qrcode'
               onClick={() => send({ type: 'selectInvitation', invitation })}
             >
               <span>{t('open-share-panel.label')}</span>
-            </Button>
+            </Button.Button>
           </Tooltip.Trigger>
           <SystemButton.Clipboard iconOnly variant='ghost' value={invitationUrl} />
         </>
@@ -186,7 +183,7 @@ export const InvitationListItemImpl = ({
         <span className='grow'> </span>
       )}
       {isCancellable ? (
-        <Button
+        <Button.Button
           icon='ph--x--regular'
           iconSize='md'
           label={t('cancel-invitation.label')}
@@ -197,7 +194,7 @@ export const InvitationListItemImpl = ({
           data-testid='cancel-invitation'
         />
       ) : (
-        <Button
+        <Button.Button
           icon='ph--x--regular'
           iconSize='md'
           label={t('remove-invitation.label')}

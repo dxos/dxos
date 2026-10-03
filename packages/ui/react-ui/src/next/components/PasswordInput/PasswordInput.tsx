@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { PasswordInput as PasswordInputPrimitive, usePasswordInputContext } from '@ark-ui/react/password-input';
 import React, { type FocusEventHandler, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,7 +14,7 @@ import { type ThemedClassName } from '@dxos/ui-types';
 import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
-import { Button } from '../Button/index.ts';
+import * as Button from '../Button/Button.tsx';
 
 export type PasswordInputProps = ThemedClassName<
   Pick<
@@ -52,7 +54,7 @@ const VisibilityTrigger = ({ showLabel, hideLabel }: VisibilityTriggerProps) => 
   const { visible } = usePasswordInputContext();
   return (
     <PasswordInputPrimitive.VisibilityTrigger asChild>
-      <Button
+      <Button.Button
         icon={visible ? 'ph--eye-slash--regular' : 'ph--eye--regular'}
         label={visible ? (hideLabel ?? t('password-input.hide.label')) : (showLabel ?? t('password-input.show.label'))}
         iconOnly

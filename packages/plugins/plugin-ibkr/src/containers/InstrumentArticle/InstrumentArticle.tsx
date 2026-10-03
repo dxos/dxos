@@ -8,7 +8,12 @@ import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { Block, Card, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
+import * as Block from '@dxos/react-ui/Block';
+import * as Card from '@dxos/react-ui/Card';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
 
 import { FundamentalsPanel, TradingViewChart } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
@@ -20,7 +25,7 @@ export type InstrumentArticleProps = AppSurface.ObjectArticleProps<Ibkr.Instrume
 
 /** Article surface for an Instrument: static header, TradingView chart, SEC EDGAR fundamentals via op. */
 export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const [instrument] = useObject(subject);
   const tradingViewSymbol = useMemo(() => resolveTradingViewSymbol(instrument), [instrument]);
@@ -61,8 +66,8 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
           <ScrollArea.Viewport classNames='p-4 space-y-4'>
             <Card.Root border={false}>
               <Card.Header>
-                <Block />
-                <Flex column gap='xs' classNames='min-w-0'>
+                <Block.Block />
+                <Flex.Flex column gap='xs' classNames='min-w-0'>
                   <Card.Title>
                     {instrument.symbol}
                     {instrument.name ? ` · ${instrument.name}` : ''}
@@ -72,8 +77,8 @@ export const InstrumentArticle = ({ role, subject }: InstrumentArticleProps) => 
                       {[instrument.exchange, instrument.sector, instrument.industry].filter(Boolean).join(' · ')}
                     </Card.Text>
                   )}
-                </Flex>
-                <Block />
+                </Flex.Flex>
+                <Block.Block />
               </Card.Header>
               <Card.Body>
                 <Card.Row>

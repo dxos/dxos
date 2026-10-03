@@ -5,20 +5,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
 import { type Parser } from '@dxos/nlp';
-import {
-  Button,
-  Empty,
-  Field,
-  Input,
-  Panel,
-  ScrollArea,
-  Select,
-  Switch,
-  type ThemedClassName,
-  Toolbar,
-  useThemeMode,
-} from '@dxos/react-ui';
 import { Editor } from '@dxos/react-ui-editor';
+import * as Button from '@dxos/react-ui/Button';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Select from '@dxos/react-ui/Select';
+import * as Switch from '@dxos/react-ui/Switch';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import type * as Util from '@dxos/react-ui/Util';
 import {
   createBasicExtensions,
   createMarkdownExtensions,
@@ -59,7 +57,7 @@ export type InputPayload =
       transcript: string;
     };
 
-export type InputPanelProps = ThemedClassName<{
+export type InputPanelProps = Util.ThemedClassName<{
   /** The active input tab (controlled, so the parent can keep it in sync with the selected pipeline). */
   mode: InputMode;
   /** Switch the active input tab. */
@@ -100,7 +98,7 @@ export const InputPanel = ({
   onLoadDataset,
   onInput,
 }: InputPanelProps) => {
-  const themeMode = useThemeMode();
+  const themeMode = Hooks.useThemeMode();
   const [text, setText] = useState(initialDocument);
   const [underline, setUnderline] = useState(false);
   const [datasetId, setDatasetId] = useState(datasets[0]?.id ?? '');
@@ -138,20 +136,20 @@ export const InputPanel = ({
     <Panel.Root classNames={classNames}>
       <Panel.Header>
         <Toolbar.Root>
-          <Button variant={mode === 'document' ? 'primary' : 'ghost'} onClick={() => onModeChange('document')}>
+          <Button.Button variant={mode === 'document' ? 'primary' : 'ghost'} onClick={() => onModeChange('document')}>
             Document
-          </Button>
-          <Button variant={mode === 'dataset' ? 'primary' : 'ghost'} onClick={() => onModeChange('dataset')}>
+          </Button.Button>
+          <Button.Button variant={mode === 'dataset' ? 'primary' : 'ghost'} onClick={() => onModeChange('dataset')}>
             Dataset
-          </Button>
-          <Button variant={mode === 'record' ? 'primary' : 'ghost'} onClick={() => onModeChange('record')}>
+          </Button.Button>
+          <Button.Button variant={mode === 'record' ? 'primary' : 'ghost'} onClick={() => onModeChange('record')}>
             Record
-          </Button>
+          </Button.Button>
           <div className='grow' />
           {mode === 'document' && parse && (
             <Field.Root>
               <div className='flex items-center gap-2 px-2'>
-                <Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
+                <Switch.Switch checked={underline} onCheckedChange={({ checked }) => setUnderline(checked === true)} />
                 <Field.Label classNames='text-sm text-fg-muted'>POS</Field.Label>
               </div>
             </Field.Root>
@@ -185,7 +183,7 @@ export const InputPanel = ({
                   <>
                     <Toolbar.Separator />
                     <Field.Root>
-                      <Input
+                      <Input.Input
                         min={1}
                         value={String(count)}
                         onChange={(event) => setCount(Math.max(1, Number(event.target.value) || 1))}
@@ -193,9 +191,9 @@ export const InputPanel = ({
                         type='number'
                       />
                     </Field.Root>
-                    <Button disabled={busy} onClick={() => onLoadDataset(count)}>
+                    <Button.Button disabled={busy} onClick={() => onLoadDataset(count)}>
                       Load
-                    </Button>
+                    </Button.Button>
                   </>
                 )}
               </Toolbar.Root>
@@ -204,7 +202,7 @@ export const InputPanel = ({
               <ScrollArea.Root>
                 <ScrollArea.Viewport classNames='flex flex-col gap-2 py-1'>
                   {!dataset || dataset.messages.length === 0 ? (
-                    <Empty>No messages.</Empty>
+                    <Empty.Empty>No messages.</Empty.Empty>
                   ) : (
                     dataset.messages.map((message) => (
                       <div
@@ -227,7 +225,7 @@ export const InputPanel = ({
           <Panel.Root>
             <Panel.Header>
               <Toolbar.Root>
-                <Button
+                <Button.Button
                   icon={transcript ? 'ph--microphone-slash--regular' : 'ph--microphone--regular'}
                   label={transcript ? 'Clear recording' : 'Record'}
                   onClick={() => setTranscript((current) => (current ? '' : sampleTranscript))}

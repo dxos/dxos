@@ -11,25 +11,25 @@ import { expect, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { AttentionGlyph, type AttentionGlyphPresence, type AttentionGlyphProps } from '../index.ts';
+import * as AttentionGlyph from './AttentionGlyph.tsx';
 
-type StoryArgs = SizeArgs & Pick<AttentionGlyphProps, 'attended' | 'containsAttended' | 'syncing'>;
+type StoryArgs = SizeArgs & Pick<AttentionGlyph.AttentionGlyphProps, 'attended' | 'containsAttended' | 'syncing'>;
 
-const PRESENCES: AttentionGlyphPresence[] = ['none', 'one', 'many'];
+const PRESENCES: AttentionGlyph.AttentionGlyphPresence[] = ['none', 'one', 'many'];
 
 const DefaultStory = ({ attended, containsAttended, syncing }: StoryArgs) => (
   <div className='flex items-center gap-4'>
     {PRESENCES.map((presence) => (
-      <AttentionGlyph
+      <AttentionGlyph.AttentionGlyph
         key={presence}
         presence={presence}
         {...{ attended, containsAttended, syncing }}
         data-testid={presence}
       />
     ))}
-    <AttentionGlyph attended presence='one' data-testid='attended' />
-    <AttentionGlyph containsAttended data-testid='contains' />
-    <AttentionGlyph syncing data-testid='syncing' />
+    <AttentionGlyph.AttentionGlyph attended presence='one' data-testid='attended' />
+    <AttentionGlyph.AttentionGlyph containsAttended data-testid='contains' />
+    <AttentionGlyph.AttentionGlyph syncing data-testid='syncing' />
   </div>
 );
 

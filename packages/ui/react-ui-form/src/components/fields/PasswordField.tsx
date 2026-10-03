@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { PasswordInput } from '@dxos/react-ui';
+import * as PasswordInput from '@dxos/react-ui/PasswordInput';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -26,7 +26,7 @@ export const PasswordField = ({
   }
 
   return (
-    <PasswordInput
+    <PasswordInput.PasswordInput
       ignorePasswordManagers
       disabled={!!readonly}
       placeholder={placeholder}

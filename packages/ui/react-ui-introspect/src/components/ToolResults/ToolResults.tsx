@@ -13,25 +13,21 @@
 
 import React, { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 
-import {
-  Banner,
-  Empty,
-  Field,
-  Input,
-  Panel,
-  ScrollArea,
-  type ThemedClassName,
-  Toolbar,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as Field from '@dxos/react-ui/Field';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Input from '@dxos/react-ui/Input';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 
 import { translationKey } from '#translations';
 
-export type ToolResultsProps = ThemedClassName<{
+export type ToolResultsProps = Util.ThemedClassName<{
   /**
    * Result data to render. Already-parsed values land in the table /
    * `Syntax.Root` as-is. For convenience, an MCP tool envelope shape
@@ -49,12 +45,12 @@ export type ToolResultsProps = ThemedClassName<{
 
 type State = 'loading' | 'error' | 'empty' | 'result';
 
-export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
+export const ToolResults = Util.composable<HTMLDivElement, ToolResultsProps>(
   ({ result, error, loading, debug, ...props }, forwardedRef) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const state: State = loading ? 'loading' : error ? 'error' : result === undefined ? 'empty' : 'result';
     return (
-      <div {...composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
+      <div {...Util.composableProps(props, { classNames: 'dx-expand' })} ref={forwardedRef}>
         {state === 'loading' && <p className='p-3 text-sm text-fg-muted'>{t('calling-tool.message')}</p>}
         {state === 'error' && (
           <Banner.Root valence='error'>
@@ -62,7 +58,7 @@ export const ToolResults = composable<HTMLDivElement, ToolResultsProps>(
             <Banner.Body>{error instanceof Error ? error.message : String(error)}</Banner.Body>
           </Banner.Root>
         )}
-        {state === 'empty' && <Empty>{t('no-result.message')}</Empty>}
+        {state === 'empty' && <Empty.Empty>{t('no-result.message')}</Empty.Empty>}
         {state === 'result' &&
           (debug ? (
             <Syntax.Root data={tryParseMcpEnvelope(result)}>
@@ -92,7 +88,7 @@ ToolResults.displayName = 'ToolResults';
 const SKIP_KEYS = new Set(['location', 'metaLocation']);
 
 const ResultTable = ({ data }: { data: unknown }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   // Each row carries a synthetic id derived from its position in the source array. Stable
   // across filter changes (filter narrows the view, never re-orders), so `Listbox.Item`
   // bindings can't drift to the wrong logical row.
@@ -125,7 +121,7 @@ const ResultTable = ({ data }: { data: unknown }) => {
           <Toolbar.Root>
             <Field.Root>
               <Field.Label srOnly>{t('filter-results.placeholder')}</Field.Label>
-              <Input
+              <Input.Input
                 ref={filterInputRef}
                 autoFocus
                 placeholder={t('filter-results.placeholder')}
@@ -139,7 +135,7 @@ const ResultTable = ({ data }: { data: unknown }) => {
           <ScrollArea.Root>
             <ScrollArea.Viewport>
               {filtered.length === 0 ? (
-                <Empty>{t('no-matching-rows.message')}</Empty>
+                <Empty.Empty>{t('no-matching-rows.message')}</Empty.Empty>
               ) : (
                 <Listbox.Content
                   aria-label={t('tool-result.label')}
@@ -182,7 +178,7 @@ const itemMatchesFilter = (item: unknown, needle: string): boolean => {
 // imply term-and-definition semantics these arbitrary record fields don't
 // have, so divs are the honest tag here.
 const KeyValueTable = ({ record }: { record: unknown }) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   if (record === null || typeof record !== 'object') {
     return <div className='col-span-2 font-mono text-xs'>{formatValue(record)}</div>;
   }

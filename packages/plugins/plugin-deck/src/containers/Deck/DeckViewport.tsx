@@ -25,20 +25,16 @@ import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { addEventListener } from '@dxos/async';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import {
-  Button,
-  Flex,
-  Main,
-  type MainContentProps,
-  ScrollArea,
-  Splitter,
-  type ThemedClassName,
-  toLocalizedString,
-  useOnTransition,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Attention, useAttended, useAttention, useAttentionContext } from '@dxos/react-ui-attention';
 import { Mosaic, type MosaicStackTileComponent, type MosaicTileProps } from '@dxos/react-ui-mosaic';
+import * as Button from '@dxos/react-ui/Button';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Main from '@dxos/react-ui/Main';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Splitter from '@dxos/react-ui/Splitter';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import type * as Util from '@dxos/react-ui/Util';
 import { hoverableControls, hoverableFocusedWithinControls, mx } from '@dxos/ui-theme';
 
 import { FoldSpine, SPINE_PX } from '#components';
@@ -171,7 +167,7 @@ const PlankContext = createContext<PlankContextValue>({
 // DeckViewport
 //
 
-export type DeckViewportProps = ThemedClassName<PropsWithChildren>;
+export type DeckViewportProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
  * Deck viewport that renders the main content area and sets CSS variables for sidebar widths.
@@ -207,7 +203,7 @@ export const DeckViewport = ({ children, classNames }: DeckViewportProps) => {
               : complementarySidebarState === 'collapsed'
                 ? 'var(--dx-rail-size)'
                 : '0',
-        } as MainContentProps['style']
+        } as Main.ContentProps['style']
       }
     >
       {children}
@@ -226,7 +222,7 @@ export const DeckContentEmpty = () => {
   const { state } = useDeckState();
   const topbar = layoutAppliesTopbar(breakpoint, !!state.fullscreen);
   return (
-    <Flex
+    <Flex.Flex
       column
       center
       classNames='p-8 relative dx-deck-surface'
@@ -235,7 +231,7 @@ export const DeckContentEmpty = () => {
     >
       <Surface.Surface type={DeckRole.Keyshortcuts} />
       {!topbar && <ToggleSidebarButton />}
-    </Flex>
+    </Flex.Flex>
   );
 };
 
@@ -389,7 +385,7 @@ const PlankSplit = ({
   companionSize,
   total,
   classNames,
-}: ThemedClassName<{
+}: Util.ThemedClassName<{
   id: string;
   /** Whether the seam is open; the pane it opens is empty until `companionId` resolves. */
   companion: boolean;
@@ -470,8 +466,8 @@ const DeckPlankTile: MosaicStackTileComponent<string> = (props) => {
   const index = rendered.indexOf(id);
   // Resolve the node's (possibly localized) label the same way the plank heading does, falling back to
   // the id only when there is no label at all.
-  const { t } = useTranslation(meta.profile.key);
-  const spineLabel = toLocalizedString(node?.properties?.label ?? '', t) || id;
+  const { t } = UiHooks.useTranslation(meta.profile.key);
+  const spineLabel = ThemeProvider.toLocalizedString(node?.properties?.label ?? '', t) || id;
   const spineIcon = typeof node?.properties.icon === 'string' ? node.properties.icon : 'ph--circle-dashed--regular';
   // Clamp the tile to the viewport-derived cap so its trailing controls stay clear of the piled spines;
   // the cap only ever shrinks the stored width, so widths are restored when the viewport grows.
@@ -718,7 +714,7 @@ const usePreservedScroll = ({
       viewportRef.current.scrollLeft = scrollLeftRef.current;
     }
   }, [viewportRef]);
-  useOnTransition(isSliding, (value) => !value, true, restoreScroll);
+  UiHooks.useOnTransition(isSliding, (value) => !value, true, restoreScroll);
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -1859,7 +1855,7 @@ const ToggleComplementarySidebarButton = () => (
 );
 
 const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   return (
     <div
       className={mx(
@@ -1869,7 +1865,7 @@ const ExitFullscreenButton = ({ onExit }: { onExit: () => void }) => {
         'transition-opacity opacity-(--controls-opacity)',
       )}
     >
-      <Button
+      <Button.Button
         label={t('exit-fullscreen.label')}
         icon='ph--corners-in--regular'
         iconOnly

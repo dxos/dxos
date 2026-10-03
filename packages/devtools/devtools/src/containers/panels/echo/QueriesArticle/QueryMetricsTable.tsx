@@ -5,8 +5,14 @@
 import React, { Fragment, type ReactNode, useMemo, useState } from 'react';
 
 import { type QueryMetrics } from '@dxos/echo-client';
-import { Button, Grid, Icon, ScrollArea, Toggle, Toolbar, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as Toggle from '@dxos/react-ui/Toggle';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
 import { mx } from '@dxos/ui-theme';
 
 import { Searchbar } from '../../../../components/index.ts';
@@ -123,14 +129,14 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
     <div className='flex flex-col h-full min-h-0'>
       <Toolbar.Root>
         <Searchbar placeholder='Filter queries' value={filter} onChange={setFilter} />
-        <Toggle pressed={liveOnly} onPressedChange={setLiveOnly}>
+        <Toggle.Toggle pressed={liveOnly} onPressedChange={setLiveOnly}>
           Live only
-        </Toggle>
+        </Toggle.Toggle>
         <Toolbar.Text classNames='shrink-0 font-mono text-xs text-fg-muted'>
           {live} live · {queries.length} queries
         </Toolbar.Text>
         {onReset && (
-          <Button
+          <Button.Button
             variant='ghost'
             icon='ph--arrow-counter-clockwise--regular'
             iconOnly
@@ -139,7 +145,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
           />
         )}
       </Toolbar.Root>
-      <Grid
+      <Grid.Grid
         cols={TRACKS}
         gap='sm'
         grow={false}
@@ -154,12 +160,12 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
             >
               {column.label}
               {sort.column === column.id && (
-                <Icon size='xs' icon={sort.descending ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} />
+                <Icon.Icon size='xs' icon={sort.descending ? 'ph--caret-down--regular' : 'ph--caret-up--regular'} />
               )}
             </button>
           </Tooltip.Trigger>
         ))}
-      </Grid>
+      </Grid.Grid>
       <ScrollArea.Root orientation='vertical' classNames='dx-grow'>
         <ScrollArea.Viewport>
           {rows.length === 0 && <p className='p-2 text-xs text-fg-muted'>No queries.</p>}
@@ -167,7 +173,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
             const open = expanded === query.query;
             return (
               <Fragment key={query.query}>
-                <Grid
+                <Grid.Grid
                   asChild
                   cols={TRACKS}
                   gap='sm'
@@ -190,7 +196,7 @@ export const QueryMetricsTable = ({ queries, onReset }: QueryMetricsTableProps) 
                       <span key={column.id}>{column.render?.(query) ?? column.value(query).toLocaleString()}</span>
                     ))}
                   </button>
-                </Grid>
+                </Grid.Grid>
                 {open && (
                   <div className='px-2 py-1 text-xs border-y border-separator-subtle'>
                     <JsonHighlighter data={{ ...query, avgTime: averageQueryTime(query) }} />

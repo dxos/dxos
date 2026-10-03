@@ -12,57 +12,60 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size, SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, controlSize, expectScoped } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Block, Container, Icon, Input, Typography } from '../index.ts';
+import * as Block from '../Block/Block.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Input from '../Input/Input.tsx';
 import { Label } from '../Label/Label.tsx';
-import { type CSSVariables } from './Container.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Container from './Container.tsx';
 
 /** A narrow reading width, so the story's pane is wider than the document. */
-const READING_WIDTH: CSSVariables = { '--spacing-document-max-width': '20rem' };
+const READING_WIDTH: Container.CSSVariables = { '--spacing-document-max-width': '20rem' };
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
 const Row = ({ id, label, testId }: { id: string; label: string; testId: string }) => (
-  <Container layout='row' data-testid={testId}>
-    <Block rail='start' data-testid={`${testId}-rail-start`}>
-      <Icon icon='ph--user--regular' />
-    </Block>
+  <Container.Container layout='row' data-testid={testId}>
+    <Block.Block rail='start' data-testid={`${testId}-rail-start`}>
+      <Icon.Icon icon='ph--user--regular' />
+    </Block.Block>
     <Label htmlFor={id} classNames='pe-(--dx-gap-size)' data-testid={`${testId}-label`}>
       {label}
     </Label>
-    <Input id={id} data-testid={`${testId}-input`} />
-    <Block rail='end' data-testid={`${testId}-rail-end`}>
-      <Icon icon='ph--x--regular' />
-    </Block>
-  </Container>
+    <Input.Input id={id} data-testid={`${testId}-input`} />
+    <Block.Block rail='end' data-testid={`${testId}-rail-end`}>
+      <Icon.Icon icon='ph--x--regular' />
+    </Block.Block>
+  </Container.Container>
 );
 
 /** A labelled row, a nested (subgrid) row, a full-bleed strip and a raised row; `prefix` keeps test ids unique. */
 const Section = ({ size, prefix = '' }: { size: Size; prefix?: string }) => (
-  <Container gutter='rail' columns={LABEL_COLUMNS} level='base' data-testid={`${prefix}section-${size}`}>
+  <Container.Container gutter='rail' columns={LABEL_COLUMNS} level='base' data-testid={`${prefix}section-${size}`}>
     <Row id={`${prefix}name-${size}`} label='Name' testId={`${prefix}row-${size}`} />
-    <Container data-testid={`${prefix}nested-${size}`}>
+    <Container.Container data-testid={`${prefix}nested-${size}`}>
       <Row id={`${prefix}city-${size}`} label='A much longer label' testId={`${prefix}nested-row-${size}`} />
-    </Container>
+    </Container.Container>
     <div data-place='full' className='h-2 bg-accent-bg' data-testid={`${prefix}full-${size}`} />
-    <Container level='+1' data-testid={`${prefix}raised-${size}`}>
+    <Container.Container level='+1' data-testid={`${prefix}raised-${size}`}>
       <Row id={`${prefix}note-${size}`} label='Raised' testId={`${prefix}raised-row-${size}`} />
-    </Container>
-  </Container>
+    </Container.Container>
+  </Container.Container>
 );
 
 /** Three tracks: a cell across two, a one-track cell, then a cell across all three (`span='full'`). */
 const Spans = ({ size }: { size: Size }) => (
-  <Container layout='row' columns='repeat(3, minmax(0, 1fr))' data-testid={`spans-${size}`}>
-    <Container span={2} data-testid={`span-two-${size}`}>
-      <Input aria-label='Two tracks' />
-    </Container>
-    <Container data-testid={`span-one-${size}`}>
-      <Input aria-label='One track' />
-    </Container>
-    <Container span='full' data-testid={`span-full-${size}`}>
-      <Input aria-label='Every track' />
-    </Container>
-  </Container>
+  <Container.Container layout='row' columns='repeat(3, minmax(0, 1fr))' data-testid={`spans-${size}`}>
+    <Container.Container span={2} data-testid={`span-two-${size}`}>
+      <Input.Input aria-label='Two tracks' />
+    </Container.Container>
+    <Container.Container data-testid={`span-one-${size}`}>
+      <Input.Input aria-label='One track' />
+    </Container.Container>
+    <Container.Container span='full' data-testid={`span-full-${size}`}>
+      <Input.Input aria-label='Every track' />
+    </Container.Container>
+  </Container.Container>
 );
 
 /**
@@ -71,20 +74,20 @@ const Spans = ({ size }: { size: Size }) => (
  * whose `content-*` lines a cell away from the row's edges does not reach.
  */
 const SideBySide = ({ size }: { size: Size }) => (
-  <Container layout='row' columns='repeat(3, minmax(0, 1fr))' gap='md' data-testid={`split-${size}`}>
+  <Container.Container layout='row' columns='repeat(3, minmax(0, 1fr))' gap='md' data-testid={`split-${size}`}>
     {(['left', 'right'] as const).map((side) => (
-      <Container key={side} span={side === 'left' ? 1 : 2} data-testid={`split-${side}-${size}`}>
-        <Typography>{side === 'left' ? 'Shipping' : 'Billing'}</Typography>
-        <Container data-testid={`split-${side}-group-${size}`}>
-          <Input aria-label={`${side} street`} data-testid={`split-${side}-input-${size}`} />
-          <Container layout='row' columns='auto minmax(0, 1fr)' data-testid={`split-${side}-row-${size}`}>
+      <Container.Container key={side} span={side === 'left' ? 1 : 2} data-testid={`split-${side}-${size}`}>
+        <Typography.Typography>{side === 'left' ? 'Shipping' : 'Billing'}</Typography.Typography>
+        <Container.Container data-testid={`split-${side}-group-${size}`}>
+          <Input.Input aria-label={`${side} street`} data-testid={`split-${side}-input-${size}`} />
+          <Container.Container layout='row' columns='auto minmax(0, 1fr)' data-testid={`split-${side}-row-${size}`}>
             <Label classNames='pe-(--dx-gap-size)'>City</Label>
-            <Input aria-label={`${side} city`} data-testid={`split-${side}-city-${size}`} />
-          </Container>
-        </Container>
-      </Container>
+            <Input.Input aria-label={`${side} city`} data-testid={`split-${side}-city-${size}`} />
+          </Container.Container>
+        </Container.Container>
+      </Container.Container>
     ))}
-  </Container>
+  </Container.Container>
 );
 
 type StoryArgs = SizeArgs & {
@@ -95,14 +98,14 @@ type StoryArgs = SizeArgs & {
 const DefaultStory = ({ size = 'md', narrow }: StoryArgs) => (
   <>
     <Section size={size} />
-    <Container gap='lg' data-testid={`gap-${size}`}>
-      <Typography data-testid={`gap-first-${size}`}>A stack with a large row gap</Typography>
-      <Typography data-testid={`gap-second-${size}`}>between its children</Typography>
-    </Container>
+    <Container.Container gap='lg' data-testid={`gap-${size}`}>
+      <Typography.Typography data-testid={`gap-first-${size}`}>A stack with a large row gap</Typography.Typography>
+      <Typography.Typography data-testid={`gap-second-${size}`}>between its children</Typography.Typography>
+    </Container.Container>
     <Spans size={size} />
-    <Container gutter='rail' width='document' style={READING_WIDTH} data-testid={`reading-${size}`}>
-      <Typography>At the document width</Typography>
-    </Container>
+    <Container.Container gutter='rail' width='document' style={READING_WIDTH} data-testid={`reading-${size}`}>
+      <Typography.Typography>At the document width</Typography.Typography>
+    </Container.Container>
     <SideBySide size={size} />
     {narrow && (
       <div className='@container w-[20rem]'>

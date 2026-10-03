@@ -8,8 +8,11 @@ import * as Option from 'effect/Option';
 import React, { useCallback, useContext, useMemo, useRef } from 'react';
 
 import * as Process from '@dxos/compute/Process';
-import { Button, Icon, Tooltip, composable, composableProps } from '@dxos/react-ui';
 import { Tree, type TreeNode, type TreeSelectEvent, createStaticTreeModel } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import * as Util from '@dxos/react-ui/Util';
 import { Unit } from '@dxos/util';
 
 const DEFAULT_DEPTH = 1;
@@ -62,7 +65,7 @@ const NO_SELECTION: readonly string[] = [];
  * model and is re-seeded — a collapse must survive the next tick. Renders through `Tree`.
  */
 export const ProcessTree = React.memo(
-  composable<HTMLDivElement, ProcessTreeProps>(
+  Util.composable<HTMLDivElement, ProcessTreeProps>(
     (
       {
         processes,
@@ -126,7 +129,7 @@ export const ProcessTree = React.memo(
       );
 
       return (
-        <div {...composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
+        <div {...Util.composableProps(props, { classNames: 'flex flex-col min-h-0' })} ref={forwardedRef}>
           <Tree.Root
             id={ROOT_ID}
             model={model}
@@ -168,7 +171,7 @@ const ProcessRow = ({ node, onProcessTerminate }: ProcessRowProps) => {
       </span>
       <span>
         {process && onProcessTerminate && process.state !== Process.State.TERMINATED && (
-          <Button
+          <Button.Button
             icon='ph--x--regular'
             iconOnly
             size='sm'
@@ -187,7 +190,7 @@ const ProcessRow = ({ node, onProcessTerminate }: ProcessRowProps) => {
 
 const StatusIcon = ({ process }: { process: Process.Info }) => (
   <Tooltip.Trigger content={process.state.toString()}>
-    <Icon
+    <Icon.Icon
       size='md'
       spin={process.state === Process.State.RUNNING}
       valence={

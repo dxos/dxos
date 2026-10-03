@@ -50,7 +50,7 @@ export const createComposerTestApp = async (opts: ComposerTestAppOptions = {}): 
   const core = headlessCorePlugins();
   if (theme) {
     const { ThemePlugin } = await import('@dxos/plugin-theme/testing');
-    const { defaultTx } = await import('@dxos/react-ui');
+    const { defaultTx } = await import('@dxos/react-ui/ThemeProvider');
     core.push(ThemePlugin.make({ tx: defaultTx }));
   }
   return createTestApp({

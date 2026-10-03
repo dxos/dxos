@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Field as FieldPrimitive, useFieldContext } from '@ark-ui/react/field';
 import { useFieldsetContext } from '@ark-ui/react/fieldset';
 import React, { Children, type ComponentPropsWithoutRef, forwardRef, isValidElement } from 'react';
@@ -11,7 +13,7 @@ import { type MessageValence, type ThemedClassName } from '@dxos/ui-types';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { type Level, type Span, spanAttributes } from '../Container/index.ts';
+import * as Container from '../Container/Container.tsx';
 
 //
 // Root
@@ -33,9 +35,9 @@ type FieldRootProps = ThemedClassName<FieldPrimitive.RootProps> & {
    */
   layout?: 'stack' | 'row';
   /** A surface rung for a `row` field, which then draws a separator border around itself (a settings card row). */
-  level?: Level;
+  level?: Container.Level;
   /** Tracks the field spans in its parent Container (e.g. two columns of a multi-column form). */
-  span?: Span;
+  span?: Container.Span;
 };
 
 /** A part, not a container (decision 13): a flex stack in the content track with the label above its control. */
@@ -43,7 +45,7 @@ const FieldRoot = forwardRef<HTMLDivElement, FieldRootProps>(
   ({ classNames, invalid, validationValence, layout, level, span, style, ...props }, forwardedRef) => {
     // Ark inherits only `disabled` from an enclosing Fieldset; an invalid set marks its fields invalid too.
     const fieldset = useFieldsetContext();
-    const { style: spanStyle, ...spanAttrs } = spanAttributes(span);
+    const { style: spanStyle, ...spanAttrs } = Container.spanAttributes(span);
     return (
       <FieldPrimitive.Root
         {...props}
@@ -179,24 +181,23 @@ const FieldErrorText = forwardRef<HTMLSpanElement, FieldErrorTextProps>(({ class
 ));
 
 FieldErrorText.displayName = 'Field.ErrorText';
-
-export const Field = {
-  Root: FieldRoot,
-  Header: FieldHeader,
-  Label: FieldLabel,
-  RequiredIndicator: FieldRequiredIndicator,
-  HelperText: FieldHelperText,
-  ErrorText: FieldErrorText,
-};
-
 export { LABEL_TARGET_ATTRIBUTE };
 
 export type {
-  FieldErrorTextProps,
-  FieldHeaderProps,
-  FieldHelperTextProps,
-  FieldLabelProps,
-  FieldRequiredIndicatorProps,
-  FieldRootProps,
-  FieldValence,
+  FieldErrorTextProps as ErrorTextProps,
+  FieldHeaderProps as HeaderProps,
+  FieldHelperTextProps as HelperTextProps,
+  FieldLabelProps as LabelProps,
+  FieldRequiredIndicatorProps as RequiredIndicatorProps,
+  FieldRootProps as RootProps,
+  FieldValence as Valence,
+};
+
+export {
+  FieldErrorText as ErrorText,
+  FieldHeader as Header,
+  FieldHelperText as HelperText,
+  FieldLabel as Label,
+  FieldRequiredIndicator as RequiredIndicator,
+  FieldRoot as Root,
 };

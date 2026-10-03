@@ -5,8 +5,11 @@
 import React, { useCallback, useMemo } from 'react';
 
 import { Format, TypeEnum } from '@dxos/echo/Format';
-import { Banner, Button, Progress, useTranslation } from '@dxos/react-ui';
 import { Form, type FormFieldProvider } from '@dxos/react-ui-form';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Progress from '@dxos/react-ui/Progress';
 import { formatForDisplay } from '@dxos/schema';
 
 import { Ibkr } from '#types';
@@ -54,7 +57,7 @@ const formatFundamentalValue = (
 
 /** Read-only panel for SEC EDGAR fundamentals returned by {@link IbkrOperation.GetInstrumentFundamentals}. */
 export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: FundamentalsPanelProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
 
   const fieldProvider = useCallback<FormFieldProvider>(
     ({ prop, fieldProps: { label, description, getValue, format, jsonPath } }) => {
@@ -105,7 +108,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
               {asOfDescription && <p className='text-fg-muted'>{asOfDescription}</p>}
             </div>
             {onRefresh ? (
-              <Button
+              <Button.Button
                 iconOnly
                 variant='ghost'
                 icon='ph--arrows-clockwise--regular'
@@ -117,7 +120,7 @@ export const FundamentalsPanel = ({ snapshot, loading, error, onRefresh }: Funda
           </div>
 
           {loading ? (
-            <Progress indeterminate label={t('fundamentals.heading')} />
+            <Progress.Progress indeterminate label={t('fundamentals.heading')} />
           ) : error ? (
             <Banner.Root valence='error'>
               <Banner.Title icon='ph--warning-circle--duotone'>{t('fundamentals.heading')}</Banner.Title>

@@ -4,13 +4,14 @@
 
 import React from 'react';
 
-import { Button, type ButtonProps, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { meta } from '#meta';
 
 import { type DebugPanelMode } from './view-state.ts';
 
-export type DebugPanelHeaderProps = Pick<ButtonProps, 'size'> & {
+export type DebugPanelHeaderProps = Pick<Button.ButtonProps, 'size'> & {
   mode: DebugPanelMode;
   onModeChange: (mode: DebugPanelMode) => void;
   /** Omitted where the host brings its own close (the floating window's `CloseTrigger`). */
@@ -22,11 +23,11 @@ export type DebugPanelHeaderProps = Pick<ButtonProps, 'size'> & {
  * of its own. The button says what it does next, so the icon flips with the mode.
  */
 export const DebugPanelHeader = ({ mode, onModeChange, onClose, size }: DebugPanelHeaderProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const floating = mode === 'floating';
   return (
     <>
-      <Button
+      <Button.Button
         variant='ghost'
         size={size}
         iconOnly
@@ -36,7 +37,7 @@ export const DebugPanelHeader = ({ mode, onModeChange, onClose, size }: DebugPan
         onClick={() => onModeChange(floating ? 'docked' : 'floating')}
       />
       {onClose && (
-        <Button
+        <Button.Button
           variant='ghost'
           size={size}
           iconOnly

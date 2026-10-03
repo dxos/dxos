@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { ark } from '@ark-ui/react/factory';
 import React, { type ReactNode, useId } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,13 +13,13 @@ import { type MessageValence } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { composable, composableProps, slottable } from '../../../util/index.ts';
+import { composable, composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
-import { Block } from '../Block/index.ts';
-import { Button } from '../Button/index.ts';
-import { DefaultGutterProvider, containerAttributes, useInGrid } from '../Container/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { Typography } from '../Typography/index.ts';
+import * as Block from '../Block/Block.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Container from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Typography from '../Typography/Typography.tsx';
 
 const BANNER_ICONS: Record<MessageValence, string> = {
   success: 'ph--check-circle--duotone',
@@ -51,8 +53,8 @@ const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
     const titleId = useId();
     const descriptionId = useId();
     // Outside a Container (a pane's body) there is no gutter to sit in, so the banner insets itself as a form's would be.
-    const inset = !useInGrid();
-    const { style, ...attributes } = containerAttributes({ gutter: 'rail' });
+    const inset = !Container.useInGrid();
+    const { style, ...attributes } = Container.containerAttributes({ gutter: 'rail' });
     const {
       className,
       style: propsStyle,
@@ -76,7 +78,7 @@ const BannerRoot = composable<HTMLDivElement, BannerRootProps>(
         ref={forwardedRef}
       >
         <BannerProvider titleId={titleId} descriptionId={descriptionId} valence={valence} icon={icon}>
-          <DefaultGutterProvider gutter={undefined}>{children}</DefaultGutterProvider>
+          <Container.DefaultGutterProvider gutter={undefined}>{children}</Container.DefaultGutterProvider>
         </BannerProvider>
       </div>
     );
@@ -102,7 +104,7 @@ const BannerTitle = composable<HTMLDivElement, BannerTitleProps>(
     const { t } = useTranslation(translationKey);
     const { titleId, valence, icon: rootIcon } = useBannerContext('Banner.Title');
     const icon = iconProp ?? rootIcon ?? BANNER_ICONS[valence];
-    const { style, ...attributes } = containerAttributes({ layout: 'row' });
+    const { style, ...attributes } = Container.containerAttributes({ layout: 'row' });
     const {
       className,
       style: propsStyle,
@@ -120,16 +122,22 @@ const BannerTitle = composable<HTMLDivElement, BannerTitleProps>(
         className={className}
         ref={forwardedRef}
       >
-        <Block rail='start'>
-          <Icon icon={icon} />
-        </Block>
-        <Typography asChild>
+        <Block.Block rail='start'>
+          <Icon.Icon icon={icon} />
+        </Block.Block>
+        <Typography.Typography asChild>
           <h2 id={titleId}>{children}</h2>
-        </Typography>
+        </Typography.Typography>
         {onClose && (
-          <Block rail='end'>
-            <Button icon='ph--x--regular' label={t('toolbar-close.label')} iconOnly variant='ghost' onClick={onClose} />
-          </Block>
+          <Block.Block rail='end'>
+            <Button.Button
+              icon='ph--x--regular'
+              label={t('toolbar-close.label')}
+              iconOnly
+              variant='ghost'
+              onClick={onClose}
+            />
+          </Block.Block>
         )}
       </div>
     );
@@ -163,11 +171,6 @@ const BannerBody = slottable<HTMLParagraphElement>(({ children, asChild, ...prop
 });
 
 BannerBody.displayName = 'Banner.Body';
+export type { BannerRootProps as RootProps, BannerTitleProps as TitleProps };
 
-export const Banner = {
-  Root: BannerRoot,
-  Title: BannerTitle,
-  Body: BannerBody,
-};
-
-export type { BannerRootProps, BannerTitleProps };
+export { BannerBody as Body, BannerRoot as Root, BannerTitle as Title };

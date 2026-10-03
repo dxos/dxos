@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';

@@ -21,8 +21,9 @@ import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { useMainSidebars, useMediaQuery } from '@dxos/react-ui';
 import { type DropKind, type TreeData, isTreeDataFor } from '@dxos/react-ui-list';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Main from '@dxos/react-ui/Main';
 import { arrayMove } from '@dxos/util';
 
 import { NAV_TREE_ITEM, NavTree, NavTreeContext } from '#components';
@@ -95,7 +96,7 @@ export type NavTreeContainerProps = {
 
 export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProps>(
   ({ tab, popoverAnchorId }, forwardedRef) => {
-    const [isLg] = useMediaQuery('lg');
+    const [isLg] = UiHooks.useMediaQuery('lg');
     const { invokePromise } = Hooks.useOperationInvoker();
     const runAction = GraphHooks.useActionRunner();
     const builder = ToolkitHooks.useAppGraph();
@@ -110,7 +111,7 @@ export const NavTreeContainer$ = forwardRef<HTMLDivElement, NavTreeContainerProp
     const { getItem, setItem } = useNavTreeState();
     const layout = ToolkitHooks.useLayout();
     const model = useNavTreeModel(GraphNode.RootId);
-    const { navigationSidebarState } = useMainSidebars(meta.profile.key);
+    const { navigationSidebarState } = Main.useMainSidebars(meta.profile.key);
     const latestRef = useRef({
       tab,
       activeItems: layout.active,

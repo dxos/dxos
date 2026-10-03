@@ -5,7 +5,9 @@
 import React, { type ReactNode, forwardRef } from 'react';
 
 import { composeRefs } from '@dxos/react-hooks';
-import { Button, type ButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import type * as Util from '@dxos/react-ui/Util';
 
 import { useMosaicTileContext } from './MosaicTileContext.ts';
 
@@ -13,8 +15,8 @@ const MOSAIC_DRAG_HANDLE_NAME = 'Mosaic.DragHandle';
 
 const REACT_UI_TRANSLATION_KEY = '@dxos/react-ui';
 
-export type MosaicDragHandleProps = ThemedClassName<
-  Partial<Pick<ButtonProps, 'icon' | 'label' | 'variant'>> & {
+export type MosaicDragHandleProps = Util.ThemedClassName<
+  Partial<Pick<Button.ButtonProps, 'icon' | 'label' | 'variant'>> & {
     testId?: string;
     /**
      * Inline glyph rendered in place of the sprite icon. The browser does not rasterize external SVG
@@ -35,7 +37,7 @@ export const MosaicDragHandle = forwardRef<HTMLButtonElement, MosaicDragHandlePr
     { icon = 'ph--dots-six-vertical--regular', label, variant = 'ghost', classNames, testId, children },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(REACT_UI_TRANSLATION_KEY);
+    const { t } = Hooks.useTranslation(REACT_UI_TRANSLATION_KEY);
     const { setDragHandle } = useMosaicTileContext(MOSAIC_DRAG_HANDLE_NAME);
     const ref = composeRefs(forwardedRef, setDragHandle);
     const testIdProps = testId ? { 'data-testid': testId } : {};
@@ -43,7 +45,7 @@ export const MosaicDragHandle = forwardRef<HTMLButtonElement, MosaicDragHandlePr
     // Inline-glyph variant: stays visible in the tile's own native drag image (sprite icons do not).
     if (children) {
       return (
-        <Button
+        <Button.Button
           ref={ref}
           variant={variant}
           tabIndex={-1}
@@ -52,12 +54,12 @@ export const MosaicDragHandle = forwardRef<HTMLButtonElement, MosaicDragHandlePr
         >
           {children}
           <span className='sr-only'>{label ?? t('toolbar-drag-handle.label')}</span>
-        </Button>
+        </Button.Button>
       );
     }
 
     return (
-      <Button
+      <Button.Button
         ref={ref}
         iconOnly
         showTooltip={false}

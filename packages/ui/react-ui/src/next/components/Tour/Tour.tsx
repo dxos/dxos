@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { Portal } from '@ark-ui/react/portal';
 import {
   Tour as TourPrimitive,
@@ -21,7 +23,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button, type ButtonProps } from '../Button/index.ts';
+import * as Button from '../Button/Button.tsx';
 
 /**
  * Creates the machine, which owns the steps, waits for each target, scrolls it into view, places the card beside it
@@ -175,7 +177,7 @@ const TourActions = TourPrimitive.Actions;
 // ActionTrigger
 //
 
-type TourActionTriggerProps = Omit<ButtonProps, 'label'> & {
+type TourActionTriggerProps = Omit<Button.ButtonProps, 'label'> & {
   action: TourStepAction;
   /** Defaults to the action's `label`. */
   label?: string;
@@ -189,7 +191,7 @@ const TourActionTrigger = forwardRef<HTMLButtonElement, TourActionTriggerProps>(
   ({ action, label, ...props }, forwardedRef) => (
     // Button drops zag's `aria-label` unless it is icon-only, so its visible label names it.
     <TourPrimitive.ActionTrigger action={action} asChild>
-      <Button {...props} label={label ?? action.label} ref={forwardedRef} />
+      <Button.Button {...props} label={label ?? action.label} ref={forwardedRef} />
     </TourPrimitive.ActionTrigger>
   ),
 );
@@ -217,43 +219,42 @@ const TourCloseTrigger = forwardRef<HTMLButtonElement, TourCloseTriggerProps>(
       </TourPrimitive.CloseTrigger>
     ) : (
       <TourPrimitive.CloseTrigger {...props} asChild ref={forwardedRef}>
-        <Button variant='ghost' icon={icon} label={label ?? t('toolbar-close.label')} iconOnly />
+        <Button.Button variant='ghost' icon={icon} label={label ?? t('toolbar-close.label')} iconOnly />
       </TourPrimitive.CloseTrigger>
     );
   },
 );
 
 TourCloseTrigger.displayName = 'Tour.CloseTrigger';
-
-export const Tour = {
-  Root: TourRoot,
-  Content: TourContent,
-  Header: TourHeader,
-  Title: TourTitle,
-  Description: TourDescription,
-  ProgressText: TourProgressText,
-  Control: TourControl,
-  Actions: TourActions,
-  ActionTrigger: TourActionTrigger,
-  CloseTrigger: TourCloseTrigger,
-};
-
 export { useTour, useTourContext };
 
 export type {
-  TourActionsProps,
-  TourActionTriggerProps,
-  TourCloseTriggerProps,
-  TourContentProps,
-  TourControlProps,
-  TourDescriptionProps,
-  TourHeaderProps,
-  TourProgressTextProps,
-  TourRootProps,
-  TourStepAction,
-  TourStepDetails,
-  TourStepPlacement,
-  TourTitleProps,
+  TourActionsProps as ActionsProps,
+  TourActionTriggerProps as ActionTriggerProps,
+  TourCloseTriggerProps as CloseTriggerProps,
+  TourContentProps as ContentProps,
+  TourControlProps as ControlProps,
+  TourDescriptionProps as DescriptionProps,
+  TourHeaderProps as HeaderProps,
+  TourProgressTextProps as ProgressTextProps,
+  TourRootProps as RootProps,
+  TourStepAction as StepAction,
+  TourStepDetails as StepDetails,
+  TourStepPlacement as StepPlacement,
+  TourTitleProps as TitleProps,
   UseTourProps,
   UseTourReturn,
+};
+
+export {
+  TourActions as Actions,
+  TourActionTrigger as ActionTrigger,
+  TourCloseTrigger as CloseTrigger,
+  TourContent as Content,
+  TourControl as Control,
+  TourDescription as Description,
+  TourHeader as Header,
+  TourProgressText as ProgressText,
+  TourRoot as Root,
+  TourTitle as Title,
 };

@@ -22,10 +22,11 @@ import {
   sizeRow,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { type FieldRootProps } from '../Field/index.ts';
-import { DateInput, type DateInputProps, Field, Input } from '../index.ts';
+import * as Field from '../Field/Field.tsx';
+import * as Input from '../Input/Input.tsx';
+import * as DateInput from './DateInput.tsx';
 
-type ValueFieldProps = DateInputProps & { label: string; testId: string; fieldProps?: FieldRootProps };
+type ValueFieldProps = DateInput.DateInputProps & { label: string; testId: string; fieldProps?: Field.RootProps };
 
 /** A labelled DateInput whose value string is shown beside it, so a test can read what the field reports. */
 const ValueField = ({ label, testId, fieldProps, defaultValue = '', ...props }: ValueFieldProps) => {
@@ -33,7 +34,7 @@ const ValueField = ({ label, testId, fieldProps, defaultValue = '', ...props }: 
   return (
     <Field.Root {...fieldProps}>
       <Field.Label>{label}</Field.Label>
-      <DateInput {...props} value={value} onValueChange={setValue} data-testid={testId} />
+      <DateInput.DateInput {...props} value={value} onValueChange={setValue} data-testid={testId} />
       <Field.HelperText>
         Value: <output data-testid={`${testId}-value`}>{value}</output>
       </Field.HelperText>
@@ -44,7 +45,7 @@ const ValueField = ({ label, testId, fieldProps, defaultValue = '', ...props }: 
 const DefaultStory = ({ size = 'md' }: SizeArgs) => (
   <>
     <ValueField label='Due' testId={`date-${size}`} defaultValue='2026-09-29' />
-    <Input aria-label='Note' data-testid={`input-${size}`} />
+    <Input.Input aria-label='Note' data-testid={`input-${size}`} />
     <ValueField label='Starts at' testId={`time-${size}`} type='time' defaultValue='09:30' />
     <ValueField label='Reminder' testId={`datetime-${size}`} type='datetime-local' defaultValue='2026-09-29T09:30' />
     <ValueField label='Empty' testId={`empty-${size}`} />

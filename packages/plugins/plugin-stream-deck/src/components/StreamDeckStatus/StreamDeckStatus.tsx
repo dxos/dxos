@@ -5,7 +5,8 @@
 import React from 'react';
 
 import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
-import { Icon, useTranslation } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
 
 import { meta } from '#meta';
 
@@ -21,7 +22,7 @@ export type StreamDeckStatusProps = {
  * sits off-centre next to its neighbours.
  */
 export const StreamDeckStatus = ({ model }: StreamDeckStatusProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   // Always says what it is; the model only qualifies it, since "Stream Deck +" alone reads as a
   // label rather than a status.
   const label = model ? `${t('device-connected.label')} (${model})` : t('device-connected.label');
@@ -30,7 +31,7 @@ export const StreamDeckStatus = ({ model }: StreamDeckStatusProps) => {
       <span role='status' aria-label={label} title={label} data-testid='stream-deck.status'>
         {/* Default colour: the indicator's presence is the signal, so colour is reserved for a state
             that needs attention. */}
-        <Icon icon='ph--squares-four--regular' size='lg' />
+        <Icon.Icon icon='ph--squares-four--regular' size='lg' />
       </span>
     </StatusBar.Item>
   );

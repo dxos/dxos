@@ -20,7 +20,11 @@ import {
   popupFrame,
 } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Group, Menu, Typography, useVirtualAnchor } from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Group from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as VirtualAnchor from '../VirtualAnchor/VirtualAnchor.ts';
+import * as Menu from './Menu.tsx';
 
 /** A menu tree three levels deep, rendered recursively as nested `Menu.Sub`s. */
 type MenuNode = { value: string; label: string; icon?: string; children?: MenuNode[] };
@@ -93,7 +97,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
     <>
       <Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Menu.Trigger asChild>
-          <Button data-testid={`trigger-${size}`}>Actions</Button>
+          <Button.Button data-testid={`trigger-${size}`}>Actions</Button.Button>
         </Menu.Trigger>
         <Menu.Content>
           <Menu.ItemGroup>
@@ -138,7 +142,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       </Menu.Root>
       <Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Menu.Trigger asChild>
-          <Button data-testid={`file-${size}`}>File</Button>
+          <Button.Button data-testid={`file-${size}`}>File</Button.Button>
         </Menu.Trigger>
         <Menu.Content>
           <MenuNodes nodes={HIERARCHY} />
@@ -146,7 +150,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       </Menu.Root>
       <Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Menu.Trigger asChild>
-          <Button data-testid={`long-${size}`}>Long</Button>
+          <Button.Button data-testid={`long-${size}`}>Long</Button.Button>
         </Menu.Trigger>
         <Menu.Content size='lg'>
           {LONG.map((label) => (
@@ -156,38 +160,38 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
       </Menu.Root>
       <Menu.Root onSelect={({ value }) => setSelected(value)}>
         <Menu.ContextTrigger asChild>
-          <Typography data-testid={`context-${size}`}>Right-click here</Typography>
+          <Typography.Typography data-testid={`context-${size}`}>Right-click here</Typography.Typography>
         </Menu.ContextTrigger>
         <Menu.Content>
           <Menu.Item item={{ value: 'rename', label: 'Rename' }} />
         </Menu.Content>
       </Menu.Root>
-      <Group>
-        <Button onClick={() => setAnchored(true)} data-testid={`open-anchored-${size}`}>
+      <Group.Group>
+        <Button.Button onClick={() => setAnchored(true)} data-testid={`open-anchored-${size}`}>
           Open at anchor
-        </Button>
-        <Typography asChild>
+        </Button.Button>
+        <Typography.Typography asChild>
           <span ref={anchor} data-testid={`anchor-${size}`}>
             Anchor
           </span>
-        </Typography>
-      </Group>
+        </Typography.Typography>
+      </Group.Group>
       <Menu.Root
         open={anchored}
         onOpenChange={({ open }) => setAnchored(open)}
         onSelect={({ value }) => setSelected(value)}
-        positioning={useVirtualAnchor(anchor)}
+        positioning={VirtualAnchor.useVirtualAnchor(anchor)}
       >
         <Menu.Content arrow data-testid={`anchored-${size}`}>
           <Menu.Item item={{ value: 'pin', label: 'Pin' }} />
         </Menu.Content>
       </Menu.Root>
-      <Typography data-testid={`selected-${size}`}>
+      <Typography.Typography data-testid={`selected-${size}`}>
         {selected ? `Selected: ${selected}` : 'Nothing selected'}
-      </Typography>
-      <Typography data-testid={`options-${size}`}>
+      </Typography.Typography>
+      <Typography.Typography data-testid={`options-${size}`}>
         grid {grid ? 'on' : 'off'}, sort by {sort}
-      </Typography>
+      </Typography.Typography>
     </>
   );
 };

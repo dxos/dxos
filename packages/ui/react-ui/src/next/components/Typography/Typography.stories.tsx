@@ -14,7 +14,10 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreY, expectScoped, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Block, Container, Icon, Typography } from '../index.ts';
+import * as Block from '../Block/Block.tsx';
+import * as Container from '../Container/Container.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Typography from './Typography.tsx';
 
 random.seed(123);
 
@@ -22,38 +25,38 @@ const TEXT = random.lorem.paragraph();
 
 const DefaultStory = ({ size }: SizeArgs) => (
   <>
-    <Container>
-      <Block rail='start' data-testid={`icon-${size}`}>
-        <Icon icon='ph--chat-circle--regular' />
-      </Block>
-      <Typography data-testid={`text-${size}`}>{TEXT}</Typography>
-    </Container>
-    <Container layout='row' columns='minmax(0, 1fr) auto'>
-      <Typography truncate data-testid={`truncate-${size}`}>
+    <Container.Container>
+      <Block.Block rail='start' data-testid={`icon-${size}`}>
+        <Icon.Icon icon='ph--chat-circle--regular' />
+      </Block.Block>
+      <Typography.Typography data-testid={`text-${size}`}>{TEXT}</Typography.Typography>
+    </Container.Container>
+    <Container.Container layout='row' columns='minmax(0, 1fr) auto'>
+      <Typography.Typography truncate data-testid={`truncate-${size}`}>
         {TEXT}
-      </Typography>
-      <Typography tone='muted' data-testid={`description-${size}`}>
+      </Typography.Typography>
+      <Typography.Typography tone='muted' data-testid={`description-${size}`}>
         Description
-      </Typography>
-    </Container>
-    <Container>
-      <Typography lines={2} data-testid={`lines-${size}`}>
+      </Typography.Typography>
+    </Container.Container>
+    <Container.Container>
+      <Typography.Typography lines={2} data-testid={`lines-${size}`}>
         {TEXT} {TEXT}
-      </Typography>
-      <Typography tone='subtle' data-testid={`subdued-${size}`}>
+      </Typography.Typography>
+      <Typography.Typography tone='subtle' data-testid={`subdued-${size}`}>
         Subdued interface text
-      </Typography>
-      <Typography mono data-testid={`mono-${size}`}>
+      </Typography.Typography>
+      <Typography.Typography mono data-testid={`mono-${size}`}>
         did:key:z6Mk
-      </Typography>
-    </Container>
-    <Container>
-      <Typography asChild>
+      </Typography.Typography>
+    </Container.Container>
+    <Container.Container>
+      <Typography.Typography asChild>
         <h2 className='font-medium' data-testid={`heading-${size}`}>
           Typography as a heading
         </h2>
-      </Typography>
-    </Container>
+      </Typography.Typography>
+    </Container.Container>
   </>
 );
 

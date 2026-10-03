@@ -5,7 +5,10 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React from 'react';
 
-import { Menu, toLocalizedString, useTranslation, virtualAnchor } from '@dxos/react-ui';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
+import * as VirtualAnchor from '@dxos/react-ui/VirtualAnchor';
 
 import { translationKey } from '#translations';
 
@@ -14,7 +17,7 @@ import { type ModalController, type TableModel } from '../../model/index.ts';
 type RowActionsMenuProps = { model: TableModel; modals: ModalController };
 
 export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
-  const { t } = useTranslation(translationKey);
+  const { t } = Hooks.useTranslation(translationKey);
   const hasSelection = model.selection.hasSelection;
   const state = useAtomValue(modals.state);
   if (state?.type !== 'row') {
@@ -24,7 +27,7 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
     <Menu.Root
       open={true}
       onOpenChange={({ open }) => !open && modals.close()}
-      positioning={virtualAnchor(modals.trigger)}
+      positioning={VirtualAnchor.virtualAnchor(modals.trigger)}
     >
       <Menu.Content>
         {/* Custom actions */}
@@ -39,7 +42,7 @@ export const RowActionsMenu = ({ model, modals }: RowActionsMenuProps) => {
                     modals.close();
                     model.handleRowAction(action.id, state.rowIndex);
                   }}
-                  item={{ value: action.id, label: toLocalizedString(action.label, t) }}
+                  item={{ value: action.id, label: ThemeProvider.toLocalizedString(action.label, t) }}
                 />
               ))}
             </Menu.ItemGroup>

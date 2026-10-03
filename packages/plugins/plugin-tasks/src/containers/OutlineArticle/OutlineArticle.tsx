@@ -10,9 +10,11 @@ import { useResolveRef } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
-import { Panel, Show, useTranslation } from '@dxos/react-ui';
 import { Form, omitId } from '@dxos/react-ui-form';
 import { type ActionGraphProps, ActionToolbar, MenuBuilder, useMenuBuilder } from '@dxos/react-ui-menu';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Show from '@dxos/react-ui/Show';
 import { Outline as OutlineType, Task, TaskSet } from '@dxos/types';
 
 import { Outline, type OutlineController } from '#components';
@@ -40,7 +42,7 @@ export const OutlineArticle = ({
   taskSet,
   toolbar = true,
 }: OutlineArticleProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const db = Obj.getDatabase(outline);
 
   // Link the user navigated into; the back button clears it to return to the outline.
@@ -148,7 +150,7 @@ export const OutlineArticle = ({
   }
 
   return (
-    <Show when={text}>
+    <Show.Show when={text}>
       {(text) => (
         <Outline.Root
           ref={outlineRef}
@@ -161,18 +163,18 @@ export const OutlineArticle = ({
           extensions={extensions}
         >
           <Panel.Root role={role}>
-            <Show when={toolbar}>
+            <Show.Show when={toolbar}>
               <Panel.Header>
                 <ActionToolbar {...outlineActions} attendableId={attendableId} classNames='dx-document' />
               </Panel.Header>
-            </Show>
+            </Show.Show>
             <Panel.Body asChild>
               <Outline.Content classNames='dx-document' />
             </Panel.Body>
           </Panel.Root>
         </Outline.Root>
       )}
-    </Show>
+    </Show.Show>
   );
 };
 

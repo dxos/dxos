@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Input.tsx';
+export * as Input from './Input.tsx';

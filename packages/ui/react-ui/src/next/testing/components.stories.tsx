@@ -9,47 +9,44 @@ import React from 'react';
 import { expect, userEvent } from 'storybook/test';
 
 import { withTheme } from '../../testing/index.ts';
-import {
-  Block,
-  Button,
-  Checkbox,
-  Collapsible,
-  Combobox,
-  Container,
-  DateInput,
-  Field,
-  Icon,
-  Input,
-  Select,
-  type SelectOption,
-  Switch,
-  Textarea,
-  Toggle,
-  Toolbar,
-  Typography,
-} from '../components/index.ts';
+import * as Block from '../components/Block/Block.tsx';
+import * as Button from '../components/Button/Button.tsx';
+import * as Checkbox from '../components/Checkbox/Checkbox.tsx';
+import * as Collapsible from '../components/Collapsible/Collapsible.tsx';
+import * as Combobox from '../components/Combobox/Combobox.tsx';
+import * as Container from '../components/Container/Container.tsx';
+import * as DateInput from '../components/DateInput/DateInput.tsx';
+import * as Field from '../components/Field/Field.tsx';
+import * as Icon from '../components/Icon/Icon.tsx';
+import * as Input from '../components/Input/Input.tsx';
 import { Label } from '../components/Label/Label.tsx';
+import * as Select from '../components/Select/Select.tsx';
+import * as Switch from '../components/Switch/Switch.tsx';
+import * as Textarea from '../components/Textarea/Textarea.tsx';
+import * as Toggle from '../components/Toggle/Toggle.tsx';
+import * as Toolbar from '../components/Toolbar/Toolbar.tsx';
+import * as Typography from '../components/Typography/Typography.tsx';
 import { type Size, SIZES } from '../sizes.ts';
 import { SIZE_ARG_TYPES, type SizeArgs } from './stories.tsx';
 
 const LABEL_COLUMNS = 'auto [field-start] minmax(0, 1fr)';
 
-const OPTIONS: SelectOption[] = [
+const OPTIONS: Select.Option[] = [
   { value: 'red', label: 'Red' },
   { value: 'green', label: 'Green' },
   { value: 'blue', label: 'Blue' },
 ];
 
 const SizeSection = ({ size }: { size: Size }) => (
-  <Container size={size} gutter='rail' columns={LABEL_COLUMNS} data-testid={`section-${size}`}>
+  <Container.Container size={size} gutter='rail' columns={LABEL_COLUMNS} data-testid={`section-${size}`}>
     <Toolbar.Root data-testid={`toolbar-${size}`}>
-      <Block>
-        <Icon icon='ph--circle--regular' />
-      </Block>
-      <Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
-      <Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
-      <Button data-testid={`button-${size}`}>Save</Button>
-      <Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
+      <Block.Block>
+        <Icon.Icon icon='ph--circle--regular' />
+      </Block.Block>
+      <Button.Button icon='ph--plus--regular' label='Add' iconOnly data-testid={`add-${size}`} />
+      <Button.Button icon='ph--minus--regular' label='Remove' iconOnly data-testid={`remove-${size}`} />
+      <Button.Button data-testid={`button-${size}`}>Save</Button.Button>
+      <Input.Input placeholder='Search' aria-label='Search' data-testid={`input-${size}`} />
       <Select.Root items={OPTIONS}>
         <Select.Trigger placeholder='Color' aria-label='Color' data-testid={`select-${size}`} />
         <Select.Content data-testid={`listbox-${size}`}>
@@ -60,44 +57,44 @@ const SizeSection = ({ size }: { size: Size }) => (
       </Select.Root>
     </Toolbar.Root>
 
-    <Container layout='row' data-testid={`row-${size}`}>
-      <Block rail='start' data-testid={`row-${size}-rail-start`}>
-        <Icon icon='ph--user--regular' />
-      </Block>
+    <Container.Container layout='row' data-testid={`row-${size}`}>
+      <Block.Block rail='start' data-testid={`row-${size}-rail-start`}>
+        <Icon.Icon icon='ph--user--regular' />
+      </Block.Block>
       <Label htmlFor={`name-${size}`} classNames='pe-(--dx-gap-size)'>
         Name
       </Label>
-      <Input id={`name-${size}`} data-testid={`row-input-${size}`} />
-      <Block rail='end'>
-        <Icon icon='ph--x--regular' label='Clear' />
-      </Block>
-    </Container>
+      <Input.Input id={`name-${size}`} data-testid={`row-input-${size}`} />
+      <Block.Block rail='end'>
+        <Icon.Icon icon='ph--x--regular' label='Clear' />
+      </Block.Block>
+    </Container.Container>
 
-    <Container>
-      <Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
-    </Container>
+    <Container.Container>
+      <Checkbox.Checkbox label='Subscribe' defaultChecked data-testid={`checkbox-${size}`} />
+    </Container.Container>
 
     <Field.Root data-testid={`field-${size}`}>
       <Field.Label>Email</Field.Label>
-      <Input data-testid={`field-input-${size}`} />
+      <Input.Input data-testid={`field-input-${size}`} />
       <Field.HelperText>We never share it.</Field.HelperText>
     </Field.Root>
 
     <Field.Root invalid>
       <Field.Label>Website</Field.Label>
-      <Input defaultValue='not a url' />
+      <Input.Input defaultValue='not a url' />
       <Field.ErrorText>Enter a valid URL.</Field.ErrorText>
     </Field.Root>
 
-    <Container>
-      <Block rail='start'>
-        <Icon icon='ph--chat-circle--regular' />
-      </Block>
-      <Typography>
+    <Container.Container>
+      <Block.Block rail='start'>
+        <Icon.Icon icon='ph--chat-circle--regular' />
+      </Block.Block>
+      <Typography.Typography>
         Typography centres its first line in the block, so the icon beside it lines up however far it wraps.
-      </Typography>
-    </Container>
-  </Container>
+      </Typography.Typography>
+    </Container.Container>
+  </Container.Container>
 );
 
 /** Every size by default; pick one in the properties panel by turning `allSizes` off. */
@@ -134,22 +131,22 @@ const FOREIGN_RING = 'rgb(37, 99, 235)';
 /** Every focusable Next control, themed with the audit ring colour. */
 const FocusRingsStory = () => (
   <div className='dx-scope' data-size='md' style={{ ['--dx-focus-ring-color' as string]: AUDIT_RING }}>
-    <Container gutter='rail' level='base'>
+    <Container.Container gutter='rail' level='base'>
       <Field.Root>
         <Field.Label>Input</Field.Label>
-        <Input />
+        <Input.Input />
       </Field.Root>
       <Field.Root>
         <Field.Label>Textarea</Field.Label>
-        <Textarea />
+        <Textarea.Textarea />
       </Field.Root>
       <Field.Root>
         <Field.Label>Date</Field.Label>
-        <DateInput defaultValue='2026-09-29' />
+        <DateInput.DateInput defaultValue='2026-09-29' />
       </Field.Root>
       <Field.Root>
         <Field.Label>Time</Field.Label>
-        <DateInput type='time' defaultValue='09:30' />
+        <DateInput.DateInput type='time' defaultValue='09:30' />
       </Field.Root>
       <Field.Root>
         <Select.Root items={OPTIONS}>
@@ -172,20 +169,20 @@ const FocusRingsStory = () => (
           <Combobox.Content size='md' />
         </Combobox.Root>
       </Field.Root>
-      <Checkbox label='Checkbox' />
-      <Switch label='Switch' />
+      <Checkbox.Checkbox label='Checkbox' />
+      <Switch.Switch label='Switch' />
       <Collapsible.Root>
         <Collapsible.Trigger>Collapsible</Collapsible.Trigger>
         <Collapsible.Content>
-          <Typography>Hidden content.</Typography>
+          <Typography.Typography>Hidden content.</Typography.Typography>
         </Collapsible.Content>
       </Collapsible.Root>
       <Toolbar.Root>
-        <Button>Button</Button>
-        <Button icon='ph--plus--regular' label='Add' iconOnly showTooltip={false} />
-        <Toggle icon='ph--text-b--regular' label='Bold' iconOnly showTooltip={false} />
+        <Button.Button>Button</Button.Button>
+        <Button.Button icon='ph--plus--regular' label='Add' iconOnly showTooltip={false} />
+        <Toggle.Toggle icon='ph--text-b--regular' label='Bold' iconOnly showTooltip={false} />
       </Toolbar.Root>
-    </Container>
+    </Container.Container>
   </div>
 );
 

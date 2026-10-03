@@ -7,17 +7,12 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { type FC, type PropsWithChildren } from 'react';
 
 import { Obj } from '@dxos/echo';
-import {
-  Button,
-  Toolbar,
-  type ToolbarRootProps,
-  composable,
-  composableProps,
-  slottable,
-  useTranslation,
-} from '@dxos/react-ui';
 import type { MenuActions } from '@dxos/react-ui-menu';
 import { Board, type BoardModel, useBoard, useEventHandlerAdapter } from '@dxos/react-ui-mosaic';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
+import * as Util from '@dxos/react-ui/Util';
 import { type ProjectionModel } from '@dxos/schema';
 import { type Pipeline } from '@dxos/types';
 
@@ -63,11 +58,11 @@ type PipelineContentProps = PropsWithChildren<{
   model: BoardModel<Pipeline.Column, Obj.Unknown>;
 }>;
 
-const PipelineContent = slottable<HTMLDivElement, PipelineContentProps>(
+const PipelineContent = Util.slottable<HTMLDivElement, PipelineContentProps>(
   ({ asChild, model, children, ...props }, forwardedRef) => {
     return (
       <Board.Root model={model}>
-        <ark.div asChild={asChild} {...composableProps(props)} ref={forwardedRef}>
+        <ark.div asChild={asChild} {...Util.composableProps(props)} ref={forwardedRef}>
           {children}
         </ark.div>
       </Board.Root>
@@ -87,7 +82,7 @@ type PipelineColumnsProps = {
   pipeline: Pipeline.Pipeline;
 };
 
-const PipelineColumns = composable<HTMLDivElement, PipelineColumnsProps>(({ pipeline, ...props }) => {
+const PipelineColumns = Util.composable<HTMLDivElement, PipelineColumnsProps>(({ pipeline, ...props }) => {
   const { model } = useBoard(PIPELINE_COLUMNS_NAME);
   const columns = useAtomValue(model.columns);
   const eventHandler = useEventHandlerAdapter<Pipeline.Column, Obj.Unknown>({
@@ -112,16 +107,18 @@ PipelineColumns.displayName = PIPELINE_COLUMNS_NAME;
 
 const PIPELINE_TOOLBAR_NAME = 'Pipeline.Toolbar';
 
-export const PipelineToolbar = composable<HTMLDivElement, ToolbarRootProps>(({ children, ...props }, forwardedRef) => {
-  const { t } = useTranslation(meta.profile.key);
-  const { onAddColumn } = usePipeline(PIPELINE_TOOLBAR_NAME);
+export const PipelineToolbar = Util.composable<HTMLDivElement, Toolbar.RootProps>(
+  ({ children, ...props }, forwardedRef) => {
+    const { t } = Hooks.useTranslation(meta.profile.key);
+    const { onAddColumn } = usePipeline(PIPELINE_TOOLBAR_NAME);
 
-  return (
-    <Toolbar.Root {...composableProps(props)} ref={forwardedRef}>
-      <Button icon='ph--plus--regular' iconOnly label={t('add-column.label')} onClick={onAddColumn} />
-    </Toolbar.Root>
-  );
-});
+    return (
+      <Toolbar.Root {...Util.composableProps(props)} ref={forwardedRef}>
+        <Button.Button icon='ph--plus--regular' iconOnly label={t('add-column.label')} onClick={onAddColumn} />
+      </Toolbar.Root>
+    );
+  },
+);
 
 PipelineToolbar.displayName = PIPELINE_TOOLBAR_NAME;
 

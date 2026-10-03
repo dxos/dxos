@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { createListCollection } from '@ark-ui/react/collection';
 import { Listbox as ListboxPrimitive, type UseListboxContext, useListboxContext } from '@ark-ui/react/listbox';
 import React, {
@@ -22,17 +24,17 @@ import { useComposedRefs } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { type ContainerProps, containerAttributes } from '../Container/index.ts';
-import { Empty } from '../Empty/index.ts';
-import { Icon, type IconProps } from '../Icon/index.ts';
-import { ScrollArea, type ScrollAreaRootProps } from '../ScrollArea/index.ts';
+import * as Container from '../Container/Container.tsx';
+import * as Empty from '../Empty/Empty.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import { RowContext, handleGridKeyDown, isFromControl, useRowTabStops } from './grid.ts';
 import { type VirtualMode, VirtualSpacer, useVirtualRows } from './virtual.tsx';
 
-export type ListboxOption = {
+type ListboxOption = {
   value: string;
   label: string;
   disabled?: boolean;
@@ -43,7 +45,7 @@ export type ListboxOption = {
 };
 
 /** `none` keeps zag's focus, keyboard and typeahead with no selection (AUDIT §6 group B: every list runs the machine). */
-export type ListboxSelectionMode = 'single' | 'multiple' | 'none';
+type ListboxSelectionMode = 'single' | 'multiple' | 'none';
 
 type RootContextValue = {
   items: readonly ListboxOption[];
@@ -174,8 +176,8 @@ ListboxLabel.displayName = 'Listbox.Label';
 //
 
 type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
-  Pick<ScrollAreaRootProps, 'mode' | 'width' | 'native'> &
-  Pick<ContainerProps, 'gutter' | 'gap'> & {
+  Pick<ScrollArea.RootProps, 'mode' | 'width' | 'native'> &
+  Pick<Container.ContainerProps, 'gutter' | 'gap'> & {
     /**
      * `false` renders the rows without a ScrollArea of their own, for a host that already scrolls (a ScrollArea
      * composed in `Panel.Body`): the rows then inherit the host's rails (`gutter='inherit'` by default).
@@ -189,7 +191,7 @@ type ListboxContentProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
  */
 const ListboxViewport = composable<
   HTMLDivElement,
-  ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'> & { hostScrolls?: boolean }
+  Container.ContainerProps & Omit<ComponentPropsWithoutRef<'div'>, 'className'> & { hostScrolls?: boolean }
 >(({ gutter, gap, hostScrolls, onKeyDown, onFocus, onBlur, children, ...props }, forwardedRef) => {
   const api = useListboxContext();
   const { columns, virtual, scrollToIndexRef } = useRootContext('Content');
@@ -200,7 +202,7 @@ const ListboxViewport = composable<
   const ref = useComposedRefs<HTMLDivElement>(forwardedRef, setElement, windowing.listRef);
   useRowTabStops(element);
 
-  const { style, ...attributes } = containerAttributes({ gutter, gap, columns });
+  const { style, ...attributes } = Container.containerAttributes({ gutter, gap, columns });
   const {
     className,
     style: ownStyle,
@@ -294,12 +296,12 @@ ListboxContent.displayName = 'Listbox.Content';
 // Empty
 //
 
-type ListboxEmptyProps = ComponentPropsWithoutRef<typeof Empty>;
+type ListboxEmptyProps = ComponentPropsWithoutRef<typeof Empty.Empty>;
 
 /** `Empty`, rendered only while the Root has no items. */
 const ListboxEmpty = forwardRef<HTMLDivElement, ListboxEmptyProps>((props, forwardedRef) => {
   const { items } = useRootContext('Empty');
-  return items.length === 0 ? <Empty {...props} ref={forwardedRef} /> : null;
+  return items.length === 0 ? <Empty.Empty {...props} ref={forwardedRef} /> : null;
 });
 
 ListboxEmpty.displayName = 'Listbox.Empty';
@@ -345,7 +347,7 @@ const ListboxItem = forwardRef<HTMLDivElement, ListboxItemProps>(
     const textId = useId();
     const row = useMemo(() => ({ textId }), [textId]);
     // Under Root `columns` the row is a subgrid of the Content's tracks (theme); otherwise it has its own template.
-    const { style: columnsStyle, ...attributes } = containerAttributes(
+    const { style: columnsStyle, ...attributes } = Container.containerAttributes(
       columns ? {} : { columns: 'var(--dx-item-columns)' },
     );
     const itemProps = api.getItemProps({ item, highlightOnHover });
@@ -406,7 +408,7 @@ ListboxItem.displayName = 'Listbox.Item';
 //
 
 type ListboxItemIconProps = ThemedClassName<ComponentPropsWithoutRef<'div'>> &
-  Partial<Pick<IconProps, 'icon' | 'hue' | 'valence' | 'label'>>;
+  Partial<Pick<Icon.IconProps, 'icon' | 'hue' | 'valence' | 'label'>>;
 
 /** A block-sized leading cell, so the labels of every row start at the same x; `hue` and the rest reach the Icon. */
 const ListboxItemIcon = forwardRef<HTMLDivElement, ListboxItemIconProps>(
@@ -421,7 +423,7 @@ const ListboxItemIcon = forwardRef<HTMLDivElement, ListboxItemIconProps>(
         className={mx(recipes.block(), recipes.listboxItemIcon(), classNames)}
         ref={forwardedRef}
       >
-        {children ?? (glyph && <Icon icon={glyph} hue={hue} valence={valence} label={label} />)}
+        {children ?? (glyph && <Icon.Icon icon={glyph} hue={hue} valence={valence} label={label} />)}
       </div>
     );
   },
@@ -511,7 +513,7 @@ const ListboxItemIndicator = forwardRef<HTMLDivElement, ListboxItemIndicatorProp
         className={mx(recipes.listboxItemIndicator(), classNames)}
         ref={forwardedRef}
       >
-        {children ?? <Icon icon='ph--check--regular' />}
+        {children ?? <Icon.Icon icon='ph--check--regular' />}
       </div>
     );
   },
@@ -531,7 +533,7 @@ type ListboxItemGroupProps = ThemedClassName<ComponentPropsWithoutRef<'div'>>;
  */
 const ListboxItemGroup = forwardRef<HTMLDivElement, ListboxItemGroupProps>(
   ({ classNames, style, children, ...props }, forwardedRef) => {
-    const { style: containerStyle, ...attributes } = containerAttributes({});
+    const { style: containerStyle, ...attributes } = Container.containerAttributes({});
     return (
       <ListboxPrimitive.ItemGroup
         {...props}
@@ -579,33 +581,35 @@ type ListboxContext = UseListboxContext<ListboxOption>;
 
 /** Ark's listbox api (`value`, `selectedItems`, `setValue`, `clearValue`, …) for parts inside the Root, e.g. a detail pane. */
 const useListboxRootContext = (): ListboxContext => useListboxContext();
-
-export const Listbox = {
-  Root: ListboxRoot,
-  Label: ListboxLabel,
-  Content: ListboxContent,
-  Empty: ListboxEmpty,
-  Item: ListboxItem,
-  ItemIcon: ListboxItemIcon,
-  ItemText: ListboxItemText,
-  ItemDescription: ListboxItemDescription,
-  ItemIndicator: ListboxItemIndicator,
-  ItemGroup: ListboxItemGroup,
-  ItemGroupLabel: ListboxItemGroupLabel,
-  useContext: useListboxRootContext,
-};
-
 export type {
-  ListboxContentProps,
-  ListboxContext,
-  ListboxEmptyProps,
-  ListboxItemDescriptionProps,
-  ListboxItemGroupLabelProps,
-  ListboxItemGroupProps,
-  ListboxItemIconProps,
-  ListboxItemIndicatorProps,
-  ListboxItemProps,
-  ListboxItemTextProps,
-  ListboxLabelProps,
-  ListboxRootProps,
+  ListboxContentProps as ContentProps,
+  ListboxContext as Context,
+  ListboxEmptyProps as EmptyProps,
+  ListboxItemDescriptionProps as ItemDescriptionProps,
+  ListboxItemGroupLabelProps as ItemGroupLabelProps,
+  ListboxItemGroupProps as ItemGroupProps,
+  ListboxItemIconProps as ItemIconProps,
+  ListboxItemIndicatorProps as ItemIndicatorProps,
+  ListboxItemProps as ItemProps,
+  ListboxItemTextProps as ItemTextProps,
+  ListboxLabelProps as LabelProps,
+  ListboxRootProps as RootProps,
 };
+
+export {
+  ListboxContent as Content,
+  ListboxEmpty as Empty,
+  ListboxItem as Item,
+  ListboxItemDescription as ItemDescription,
+  ListboxItemGroup as ItemGroup,
+  ListboxItemGroupLabel as ItemGroupLabel,
+  ListboxItemIcon as ItemIcon,
+  ListboxItemIndicator as ItemIndicator,
+  ListboxItemText as ItemText,
+  ListboxLabel as Label,
+  ListboxRoot as Root,
+  useListboxRootContext as useContext,
+};
+export type { ListboxOption as Option, ListboxSelectionMode as SelectionMode };
+export { RowContext, type RowContextValue } from './grid.ts';
+export * from './virtual.tsx';

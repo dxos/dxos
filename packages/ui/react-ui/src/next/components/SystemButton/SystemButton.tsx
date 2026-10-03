@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, {
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
@@ -22,25 +24,25 @@ import { downloadBlob } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { composable } from '../../../util/index.ts';
-import { Button, type ButtonContentProps, type ButtonVariantProps } from '../Button/index.ts';
+import { composable } from '../../../util/slots.ts';
+import * as Button from '../Button/Button.tsx';
 import { RowContext } from '../Listbox/grid.ts';
-import { Toggle } from '../Toggle/index.ts';
-import { type TooltipSide } from '../Tooltip/index.ts';
+import * as Toggle from '../Toggle/Toggle.tsx';
+import type * as Tooltip from '../Tooltip/Tooltip.tsx';
 
 /**
  * Every preset is a Button whose icon is fixed and whose label defaults from the `system-button.*` translations;
  * callers may still override `label`.
  */
-export type SystemButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> &
-  ButtonVariantProps & {
+type SystemButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> &
+  Button.ButtonVariantProps & {
     label?: string;
     /** Only the icon, named by the label in a Tooltip (the default); `false` shows the label after the icon. */
     iconOnly?: boolean;
     /** Icon-only: opt out of the label Tooltip. */
     showTooltip?: boolean;
     /** Icon-only: the side the label Tooltip opens on. */
-    tooltipSide?: TooltipSide;
+    tooltipSide?: Tooltip.Side;
   };
 
 type PresetContent = Pick<SystemButtonProps, 'iconOnly' | 'showTooltip' | 'tooltipSide'> & {
@@ -55,7 +57,7 @@ const presetContent = ({
   iconOnly = true,
   showTooltip,
   tooltipSide,
-}: PresetContent): ButtonContentProps =>
+}: PresetContent): Button.ButtonContentProps =>
   iconOnly ? { iconOnly: true, icon, label, showTooltip, tooltipSide } : { icon, label };
 
 /** Star and Bookmark: a Toggle (`aria-pressed`) whose icon and label follow the pressed state. */
@@ -90,7 +92,7 @@ const createTogglePreset = (
         onChange: onPressedChange,
       });
       return (
-        <Toggle
+        <Toggle.Toggle
           {...props}
           {...presetContent({
             icon,
@@ -122,7 +124,7 @@ const createStaticPreset = (
     ({ label, iconOnly, showTooltip, tooltipSide, ...props }, forwardedRef) => {
       const { t } = useTranslation(translationKey);
       return (
-        <Button
+        <Button.Button
           {...defaults}
           {...props}
           {...presetContent({ icon, label: label ?? t(labelKey), iconOnly, showTooltip, tooltipSide })}
@@ -191,7 +193,7 @@ const Disclosure = composable<HTMLButtonElement, SystemDisclosureProps>(
       onChange: onExpandedChange,
     });
     return (
-      <Button
+      <Button.Button
         {...props}
         {...presetContent({
           icon: 'ph--caret-right--regular',
@@ -245,7 +247,7 @@ const Remove = composable<HTMLButtonElement, SystemButtonProps>(
     const labelledBy =
       label === undefined && row && props['aria-labelledby'] === undefined ? `${ownId} ${row.textId}` : undefined;
     return (
-      <Button
+      <Button.Button
         aria-labelledby={labelledBy}
         {...props}
         id={ownId}
@@ -307,7 +309,7 @@ const Clipboard = composable<HTMLButtonElement, SystemClipboardProps>(
     useEffect(() => () => clearTimeout(timeoutRef.current), []);
 
     return (
-      <Button
+      <Button.Button
         {...props}
         {...presetContent({
           icon: copied ? 'ph--check--regular' : icon,
@@ -342,7 +344,7 @@ const Upload = composable<HTMLButtonElement, SystemUploadProps>(
     return (
       <>
         <input hidden type='file' accept={accept} multiple={multiple} onChange={onFileChange} ref={fileInputRef} />
-        <Button
+        <Button.Button
           {...props}
           {...presetContent({
             icon: 'ph--upload-simple--regular',
@@ -387,7 +389,7 @@ const Download = composable<HTMLButtonElement, SystemDownloadProps>(
       }
     }, [onDownload, filename]);
     return (
-      <Button
+      <Button.Button
         {...props}
         {...presetContent({
           icon: 'ph--download-simple--regular',
@@ -510,7 +512,7 @@ const Mic = composable<HTMLButtonElement, SystemMicProps>(
         : { onClick: onToggle };
 
     return (
-      <Button
+      <Button.Button
         {...props}
         {...handlers}
         {...presetContent({
@@ -533,8 +535,7 @@ Mic.displayName = 'SystemButton.Mic';
 // Namespace
 //
 
-/** Button and Toggle presets with fixed icons, translated default labels and built-in behaviour; icon-only by default. */
-export const SystemButton = {
+export {
   Add,
   Ai,
   Bookmark,
@@ -551,3 +552,4 @@ export const SystemButton = {
   Star,
   Upload,
 };
+export type { SystemButtonProps as Props };

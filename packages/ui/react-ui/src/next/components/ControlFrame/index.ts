@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './ControlFrame.tsx';
+export * as ControlFrame from './ControlFrame.tsx';

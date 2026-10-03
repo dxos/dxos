@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { HoverCard as HoverCardPrimitive, useHoverCardContext } from '@ark-ui/react/hover-card';
 import { Portal } from '@ark-ui/react/portal';
 import React, { type RefObject, forwardRef } from 'react';
@@ -108,11 +110,10 @@ const HoverCardContent = forwardRef<HTMLDivElement, HoverCardContentProps>(
 );
 
 HoverCardContent.displayName = 'HoverCard.Content';
-
-export const HoverCard = {
-  Root: HoverCardRoot,
-  Trigger: HoverCardTrigger,
-  Content: HoverCardContent,
+export type {
+  HoverCardContentProps as ContentProps,
+  HoverCardRootProps as RootProps,
+  HoverCardTriggerProps as TriggerProps,
 };
 
-export type { HoverCardContentProps, HoverCardRootProps, HoverCardTriggerProps };
+export { HoverCardContent as Content, HoverCardRoot as Root, HoverCardTrigger as Trigger };

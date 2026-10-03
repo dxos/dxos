@@ -5,8 +5,7 @@
 import React, { type FC } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { ThemeProvider } from '@dxos/react-ui';
-import { defaultTx } from '@dxos/react-ui';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { type RenderCallback } from '@dxos/ui-editor/types';
 
 /**
@@ -21,8 +20,8 @@ export const createRenderer =
   <TProps extends object>(Component: FC<TProps>): RenderCallback<TProps> =>
   (el, props) => {
     createRoot(el).render(
-      <ThemeProvider tx={defaultTx}>
+      <ThemeProvider.ThemeProvider tx={ThemeProvider.defaultTx}>
         <Component {...props} />
-      </ThemeProvider>,
+      </ThemeProvider.ThemeProvider>,
     );
   };

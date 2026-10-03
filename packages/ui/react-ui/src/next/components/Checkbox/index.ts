@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Checkbox.tsx';
+export * as Checkbox from './Checkbox.tsx';

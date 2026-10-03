@@ -53,10 +53,13 @@ import * as Trip from '@dxos/plugin-trip/Trip';
 import { useClient } from '@dxos/react-client';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { useIdentity } from '@dxos/react-client/halo';
-import { Button, Panel, Select, Toolbar } from '@dxos/react-ui';
 import { ProgressMeter } from '@dxos/react-ui-components';
 import { translations as debugTranslations } from '@dxos/react-ui-debug/translations';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Button from '@dxos/react-ui/Button';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as Select from '@dxos/react-ui/Select';
+import * as Toolbar from '@dxos/react-ui/Toolbar';
 import { TagIndex, Text } from '@dxos/schema';
 import {
   ModuleContainer,
@@ -467,7 +470,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
     <Panel.Root>
       <Panel.Header>
         <Toolbar.Root>
-          <Button
+          <Button.Button
             icon='ph--play--regular'
             iconOnly
             label='Execute'
@@ -536,7 +539,7 @@ const ProcessModuleContainer = ({ space }: { space: Space }) => {
         ))}
         <Toolbar.Root>
           {resets.map((reset) => (
-            <Button
+            <Button.Button
               key={reset.id}
               icon='ph--trash--regular'
               label={reset.label}

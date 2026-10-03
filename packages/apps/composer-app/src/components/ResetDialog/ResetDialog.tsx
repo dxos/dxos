@@ -8,18 +8,14 @@ import { log } from '@dxos/log';
 import { type IdbLogStore } from '@dxos/log-store-idb';
 import * as FeedbackForm from '@dxos/plugin-support/FeedbackForm';
 import type * as SupportOperation from '@dxos/plugin-support/SupportOperation';
-import {
-  AlertDialog,
-  Banner,
-  Button,
-  Menu,
-  Popover,
-  SystemButton,
-  useFileDownload,
-  useMediaQuery,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
+import * as AlertDialog from '@dxos/react-ui/AlertDialog';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Button from '@dxos/react-ui/Button';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 
 import { RECOVERY_PATH, composerLogFileName, exportManualLogDownload, setSafeModeUrl } from '../../util/index.ts';
 
@@ -68,13 +64,13 @@ export const ResetDialog = ({
   onRefresh,
   onReset,
 }: ResetDialogProps) => {
-  const { t } = useTranslation('composer');
-  const [isNotMobile] = useMediaQuery('md');
+  const { t } = Hooks.useTranslation('composer');
+  const [isNotMobile] = Hooks.useMediaQuery('md');
   const error = errorProp && parseError(t, errorProp);
   const [showStack, setShowStack] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
-  const download = useFileDownload();
+  const download = Hooks.useFileDownload();
 
   useEffect(() => {
     if (!feedbackSent) {
@@ -154,7 +150,7 @@ export const ResetDialog = ({
             <>
               <div>
                 <div className='flex items-center justify-between py-3'>
-                  <Button
+                  <Button.Button
                     icon={showStack ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
                     variant='ghost'
                     classNames='flex items-center'
@@ -164,7 +160,7 @@ export const ResetDialog = ({
                   />
                   <div className='flex items-center gap-1'>
                     <SystemButton.Clipboard iconOnly label={t('copy-error.label')} onCopy={handleCopyError} />
-                    <Button
+                    <Button.Button
                       icon='ph--download-simple--regular'
                       iconOnly
                       label={t('download-logs.label')}
@@ -187,14 +183,14 @@ export const ResetDialog = ({
         </AlertDialog.Body>
 
         <AlertDialog.Footer>
-          <Button
+          <Button.Button
             variant='primary'
             icon='ph--barricade--regular'
             iconOnly={!isNotMobile}
             label={t('safe-mode.label')}
             onClick={handleSafeMode}
           />
-          <Button
+          <Button.Button
             icon='ph--stethoscope--regular'
             iconOnly={!isNotMobile}
             label={t('recovery.label')}
@@ -204,7 +200,7 @@ export const ResetDialog = ({
           {onReset && (
             <Menu.Root positioning={{ placement: 'top' }}>
               <Menu.Trigger asChild>
-                <Button
+                <Button.Button
                   icon='ph--trash--regular'
                   iconOnly
                   label={t('reset-app.label')}
@@ -226,11 +222,11 @@ export const ResetDialog = ({
           {onSubmitReport &&
             isNotMobile &&
             (feedbackSent ? (
-              <Button icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
+              <Button.Button icon='ph--check--regular' label={t('feedback-sent.label')} disabled />
             ) : (
               <Popover.Root open={feedbackOpen} onOpenChange={({ open }) => setFeedbackOpen(open)}>
                 <Popover.Trigger asChild>
-                  <Button icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
+                  <Button.Button icon='ph--paper-plane-tilt--regular' label={t('feedback.label')} />
                 </Popover.Trigger>
                 <Popover.Content>
                   <Popover.Body>
@@ -246,7 +242,7 @@ export const ResetDialog = ({
                 </Popover.Content>
               </Popover.Root>
             ))}
-          <Button
+          <Button.Button
             icon='ph--arrow-clockwise--regular'
             iconOnly={!!isNotMobile}
             label={t(needRefresh ? 'update-and-reload-page.label' : 'reload-page.label')}

@@ -4,8 +4,10 @@
 
 import React, { Fragment, memo, useMemo } from 'react';
 
-import { Popover, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { Tree } from '@dxos/react-ui-list';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Popover from '@dxos/react-ui/Popover';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 
 import { getListActions, useActions } from '#hooks';
 import { meta } from '#meta';
@@ -16,7 +18,7 @@ import { type NavTreeItemColumnsProps } from '../types.ts';
 import { NavTreeItemActionDropdownMenu, NavTreeItemMonolithicAction } from './NavTreeItemAction.tsx';
 
 export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumnsProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd, popoverAnchorId } = useNavTreeContext();
 
   const level = path.length - 2;
@@ -34,7 +36,7 @@ export const NavTreeItemColumns = memo(({ path, item, open }: NavTreeItemColumns
         <ActionRoot>
           {allActions.length === 1 ? (
             <NavTreeItemMonolithicAction
-              baseLabel={toLocalizedString(allActions[0].properties?.label, t)}
+              baseLabel={ThemeProvider.toLocalizedString(allActions[0].properties?.label, t)}
               parent={item}
               path={path}
               {...allActions[0]}

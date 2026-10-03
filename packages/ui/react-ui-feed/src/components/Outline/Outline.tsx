@@ -12,7 +12,8 @@ import React, {
   useState,
 } from 'react';
 
-import { Popover, type ThemedClassName } from '@dxos/react-ui';
+import * as Popover from '@dxos/react-ui/Popover';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 // Rest tick width (px) and the wave radius (in rows) over which the hover extension falls off. The
@@ -39,7 +40,7 @@ export type OutlineMarker = {
   range: { from: number; to: number };
 };
 
-export type OutlineProps = ThemedClassName<{
+export type OutlineProps = Util.ThemedClassName<{
   markers: OutlineMarker[];
   /** Currently-visible document range; markers intersecting it render brighter ("active"). */
   visibleRange?: { from: number; to: number };

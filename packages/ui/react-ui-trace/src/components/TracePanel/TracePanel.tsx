@@ -5,17 +5,13 @@
 import React, { useCallback, useDeferredValue, useMemo, useState } from 'react';
 
 import type * as Process from '@dxos/compute/Process';
-import {
-  Accordion,
-  Panel,
-  ScrollContainer,
-  type ThemedClassName,
-  composable,
-  composableProps,
-  useTranslation,
-} from '@dxos/react-ui';
 import { ActionToolbar } from '@dxos/react-ui-menu';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
+import * as Accordion from '@dxos/react-ui/Accordion';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
+import * as ScrollContainer from '@dxos/react-ui/ScrollContainer';
+import * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 import { type ExecutionGraph } from '../../execution-graph/index.ts';
@@ -26,7 +22,7 @@ import { SpanTreeView } from './SpanTreeView.tsx';
 import { type ProcessEnvironment, filterProcesses } from './trace-filter.ts';
 import { useTraceMenu } from './useTraceMenu.ts';
 
-export type TracePanelProps = ThemedClassName<
+export type TracePanelProps = Util.ThemedClassName<
   Pick<ProcessTreeProps, 'resolveLabel' | 'selected' | 'onSelectedChange' | 'onProcessTerminate'> & {
     /** The live process tree; narrowed here by `environments`. */
     processes: readonly Process.Info[];
@@ -47,7 +43,7 @@ export type TracePanelProps = ThemedClassName<
  * event. Presentation only — the host resolves the process monitor, the trace feed, settings and
  * navigation and hands them in as props.
  */
-export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
+export const TracePanel = Util.composable<HTMLDivElement, TracePanelProps>(
   (
     {
       classNames,
@@ -65,7 +61,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     },
     forwardedRef,
   ) => {
-    const { t } = useTranslation(translationKey);
+    const { t } = Hooks.useTranslation(translationKey);
     const handleClearSelection = useCallback(() => onSelectedChange?.([]), [onSelectedChange]);
     const menu = useTraceMenu({
       selected: environments,
@@ -105,7 +101,7 @@ export const TracePanel = composable<HTMLDivElement, TracePanelProps>(
     }, [selected, branches]);
 
     return (
-      <Panel.Root {...composableProps(props, { classNames: ['h-full', classNames] })} ref={forwardedRef}>
+      <Panel.Root {...Util.composableProps(props, { classNames: ['h-full', classNames] })} ref={forwardedRef}>
         <Panel.Header>
           <ActionToolbar {...menu} alwaysActive classNames='justify-end' />
         </Panel.Header>
@@ -219,7 +215,7 @@ const SECTIONS: TraceSection[] = [{ id: 'processes' }, { id: 'trace' }, { id: 'd
 
 const NO_SELECTION: readonly string[] = [];
 
-type ProcessTreeContainerProps = ThemedClassName<
+type ProcessTreeContainerProps = Util.ThemedClassName<
   Pick<ProcessTreeProps, 'resolveLabel' | 'selected' | 'onSelectedChange' | 'onProcessTerminate'> & {
     processes: readonly Process.Info[];
     environments: readonly ProcessEnvironment[];

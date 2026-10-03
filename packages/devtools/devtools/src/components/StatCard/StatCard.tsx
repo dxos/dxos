@@ -4,7 +4,14 @@
 
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 
-import { Block, Button, Card, Flex, Icon, Menu, type ThemedClassName, Tooltip } from '@dxos/react-ui';
+import * as Block from '@dxos/react-ui/Block';
+import * as Button from '@dxos/react-ui/Button';
+import * as Card from '@dxos/react-ui/Card';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Menu from '@dxos/react-ui/Menu';
+import * as Tooltip from '@dxos/react-ui/Tooltip';
+import type * as Util from '@dxos/react-ui/Util';
 import { type Hue, getStyles, mx } from '@dxos/ui-theme';
 
 /** An entry of a card's header menu. */
@@ -26,7 +33,7 @@ export const STAT_CARD_HUES = {
 // Root
 //
 
-type StatCardRootProps = PropsWithChildren<ThemedClassName<{ id?: string }>>;
+type StatCardRootProps = PropsWithChildren<Util.ThemedClassName<{ id?: string }>>;
 
 /** A compact stats card: full width so it tiles in a stack, rows hang off the card's 3-track grid. */
 const StatCardRoot = ({ id, classNames, children }: StatCardRootProps) => (
@@ -55,14 +62,14 @@ type StatCardHeaderProps = {
 
 const StatCardHeader = ({ icon, hue, title, info, action, menu }: StatCardHeaderProps) => (
   <Card.Header>
-    <Block>
-      <Icon icon={icon} classNames={hue && getStyles(hue).text} />
-    </Block>
-    <Flex align='center' gap='sm' classNames='min-w-0'>
+    <Block.Block>
+      <Icon.Icon icon={icon} classNames={hue && getStyles(hue).text} />
+    </Block.Block>
+    <Flex.Flex align='center' gap='sm' classNames='min-w-0'>
       <Card.Title>{title}</Card.Title>
       {info !== undefined && <span className='shrink-0 font-mono text-xs text-fg-muted'>{info}</span>}
-    </Flex>
-    {action && <Block rail='end'>{action}</Block>}
+    </Flex.Flex>
+    {action && <Block.Block rail='end'>{action}</Block.Block>}
     {menu && (
       <Card.Menu label={title}>
         {menu.map((item) => (
@@ -84,7 +91,7 @@ StatCardHeader.displayName = 'StatCard.Header';
 //
 
 type StatCardRowProps = PropsWithChildren<
-  ThemedClassName<{
+  Util.ThemedClassName<{
     /** Leading gutter icon; the gutter is kept even when empty so labels align across rows. */
     icon?: string;
     iconClassNames?: string;
@@ -145,7 +152,7 @@ const StatCardRow = ({
   const leading =
     control ??
     (onToggle ? (
-      <Button
+      <Button.Button
         variant='ghost'
         icon={open ? 'ph--caret-down--regular' : 'ph--caret-right--regular'}
         iconOnly
@@ -154,7 +161,7 @@ const StatCardRow = ({
         onClick={() => onToggle(!open)}
       />
     ) : (
-      (icon && <Icon icon={icon} classNames={iconClassNames} />) || <span />
+      (icon && <Icon.Icon icon={icon} classNames={iconClassNames} />) || <span />
     ));
   return (
     <Card.Row
@@ -169,7 +176,7 @@ const StatCardRow = ({
       leading={leading}
       trailing={trailing}
     >
-      <Flex align='center' justify='between' gap='sm' classNames='min-w-0 text-xs'>
+      <Flex.Flex align='center' justify='between' gap='sm' classNames='min-w-0 text-xs'>
         {children ?? (
           <>
             {tooltip ? (
@@ -184,7 +191,7 @@ const StatCardRow = ({
             )}
           </>
         )}
-      </Flex>
+      </Flex.Flex>
     </Card.Row>
   );
 };
@@ -215,7 +222,7 @@ StatCardSection.displayName = 'StatCard.Section';
 //
 
 type StatCardContentProps = PropsWithChildren<
-  ThemedClassName<{
+  Util.ThemedClassName<{
     /** Run across all three tracks (both rails), for content with no label to align with, such as a chart. */
     full?: boolean;
   }>
@@ -224,9 +231,9 @@ type StatCardContentProps = PropsWithChildren<
 /** Content that lays itself out (a chart, a JSON block), in the content and trailing tracks under a row. */
 const StatCardContent = ({ classNames, full, children }: StatCardContentProps) => (
   <Card.Row leading={full ? undefined : <span />} classNames={full ? SPAN_FULL : SPAN_TRAILING}>
-    <Flex column grow={false} classNames={['min-w-0 text-xs', classNames]}>
+    <Flex.Flex column grow={false} classNames={['min-w-0 text-xs', classNames]}>
       {children}
-    </Flex>
+    </Flex.Flex>
   </Card.Row>
 );
 

@@ -11,9 +11,14 @@ import { useDevices, useInvitationFlow } from '@dxos/halo-react';
 import { log } from '@dxos/log';
 import { useClient } from '@dxos/react-client';
 import { useNetworkStatus } from '@dxos/react-client/mesh';
-import { Button, Flex, Icon, QrCode, SystemButton, useId, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { Listbox } from '@dxos/react-ui-list';
+import * as Button from '@dxos/react-ui/Button';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as QrCode from '@dxos/react-ui/QrCode';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { AuthCode, Centered, DeviceListItem, Emoji, Viewport } from '@dxos/shell/react';
 import { osTranslations } from '@dxos/ui-theme';
 import { hexToEmoji } from '@dxos/util';
@@ -27,7 +32,7 @@ export type DevicesContainerProps = Pick<ClientOptions.ClientPluginOptions, 'ide
 };
 
 export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: DevicesContainerProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const devices = useDevices();
   const { swarm: connectionState } = useNetworkStatus();
@@ -69,9 +74,9 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
           </Form.FieldSet>
           <Form.FieldSet label={t('logout-section.title')} description={t('logout-section.description')}>
             <Form.Field standalone label={t('logout.label')} description={t('logout.description')}>
-              <Button variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
+              <Button.Button variant='destructive' onClick={handleLogout} data-testid='devicesContainer.logout'>
                 {t('logout.label')}
-              </Button>
+              </Button.Button>
             </Form.Field>
           </Form.FieldSet>
           {identityTestActions && (
@@ -84,22 +89,22 @@ export const DevicesContainer = ({ createInvitationUrl, identityTestActions }: D
                 label={t('recover-identity.label')}
                 description={t('recover-identity.description')}
               >
-                <Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
+                <Button.Button variant='destructive' onClick={handleRecover} data-testid='devicesContainer.recover'>
                   {t('recover-identity.label')}
-                </Button>
+                </Button.Button>
               </Form.Field>
               <Form.Field
                 standalone
                 label={t('join-new-identity.label')}
                 description={t('join-new-identity.description')}
               >
-                <Button
+                <Button.Button
                   variant='destructive'
                   onClick={handleJoinNewIdentity}
                   data-testid='devicesContainer.joinExisting'
                 >
                   {t('join-new-identity.label')}
-                </Button>
+                </Button.Button>
               </Form.Field>
             </Form.FieldSet>
           )}
@@ -206,7 +211,7 @@ const InvitationSection = ({
   onInvitationDone = () => {},
   onInvitationCreate = () => {},
 }: InvitationComponentProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const authCode = event?._tag === 'readyForAuthentication' ? event.authCode : undefined;
   const activeView = !event
     ? 'init'
@@ -219,7 +224,7 @@ const InvitationSection = ({
   return activeView === 'init' ? (
     <>
       <p className='text-fg-muted mb-2'>{t('add-device.description')}</p>
-      <Button
+      <Button.Button
         icon='ph--plus--regular'
         label={t('create-device-invitation.label')}
         disabled={!!event}
@@ -249,40 +254,40 @@ const InvitationSection = ({
 };
 
 const InvitationQR = ({ id, url, onCancel }: { id: string; url: string; onCancel: () => void }) => {
-  const { t } = useTranslation(osTranslations);
-  const qrLabel = useId('devices-container__qr-code');
+  const { t } = UiHooks.useTranslation(osTranslations);
+  const qrLabel = UiHooks.useId('devices-container__qr-code');
   const emoji = hexToEmoji(id);
   return (
     <>
       <p className='text-fg-muted'>{t('qr-code.description', { ns: meta.profile.key })}</p>
       <div role='group' className='grid grid-cols-[1fr_min-content]'>
-        <Flex justify='center' classNames='py-4'>
+        <Flex.Flex justify='center' classNames='py-4'>
           <div className='w-full md:max-w-80 aspect-square relative text-fg-muted'>
-            <QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
+            <QrCode.QrCode aria-labelledby={qrLabel} errorCorrection='Q' value={url ?? 'never'} />
             <Centered>
               <Emoji text={emoji} />
             </Centered>
           </div>
-        </Flex>
+        </Flex.Flex>
         <span id={qrLabel} className='sr-only'>
           {t('qr.label')}
         </span>
       </div>
       {/* TODO(burdon): Factor out button bar */}
-      <Flex justify='center'>
-        <Flex gap='sm'>
+      <Flex.Flex justify='center'>
+        <Flex.Flex gap='sm'>
           <SystemButton.Clipboard value={url ?? 'never'} />
-          <Button variant='ghost' onClick={onCancel}>
+          <Button.Button variant='ghost' onClick={onCancel}>
             {t('cancel.label')}
-          </Button>
-        </Flex>
-      </Flex>
+          </Button.Button>
+        </Flex.Flex>
+      </Flex.Flex>
     </>
   );
 };
 
 const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; onCancel: () => void }) => {
-  const { t } = useTranslation(osTranslations);
+  const { t } = UiHooks.useTranslation(osTranslations);
   const emoji = hexToEmoji(id);
 
   return (
@@ -291,18 +296,18 @@ const InvitationAuthCode = ({ id, code, onCancel }: { id: string; code: string; 
       {emoji && <Emoji text={emoji} className='mx-auto my-2 text-center' />}
       <p className='text-fg-muted'>{t('auth-code.message')}</p>
       <AuthCode code={code} large classNames='mx-auto my-2 text-center grow' />
-      <Button variant='ghost' onClick={onCancel}>
+      <Button.Button variant='ghost' onClick={onCancel}>
         {t('cancel.label')}
-      </Button>
+      </Button.Button>
     </>
   );
 };
 
 const InvitationComplete = ({ succeeded }: { succeeded: boolean }) => {
   return succeeded ? (
-    <Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
+    <Icon.Icon icon='ph--check--regular' size='xl' classNames='m-trim-xs' />
   ) : (
-    <Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
+    <Icon.Icon icon='ph--x--regular' size='xl' classNames='m-trim-xs' />
   );
 };
 

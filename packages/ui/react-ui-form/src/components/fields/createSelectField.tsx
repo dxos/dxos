@@ -5,7 +5,8 @@
 import React from 'react';
 
 import { invariant } from '@dxos/invariant';
-import { type SelectOption, Typography } from '@dxos/react-ui';
+import type * as Select from '@dxos/react-ui/Select';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { type FormFieldRenderer, type FormFieldRendererProps } from '#types';
 
@@ -34,7 +35,7 @@ export const createSelectField = ({
     `createSelectField: option value '${SENTINEL}' is reserved.`,
   );
   const hasDefault = defaultLabel !== null;
-  const items: SelectOption[] = [
+  const items: Select.Option[] = [
     ...(hasDefault ? [{ value: SENTINEL, label: defaultLabel }] : []),
     ...normalized.map((option) => ({ value: option.value, label: option.label ?? option.value })),
   ];
@@ -53,9 +54,9 @@ export const createSelectField = ({
     return (
       <FormField path={jsonPath} label={label} readonly={readonly} presentation={presentation}>
         {presentationFor(presentation).isStatic ? (
-          <Typography truncate>
+          <Typography.Typography truncate>
             {normalized.find((option) => option.value === value)?.label ?? String(value ?? '')}
-          </Typography>
+          </Typography.Typography>
         ) : (
           <SelectControl
             items={items}

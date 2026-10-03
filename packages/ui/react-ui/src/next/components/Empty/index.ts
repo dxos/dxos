@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Empty.tsx';
+export * as Empty from './Empty.tsx';

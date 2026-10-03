@@ -14,8 +14,17 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { type Size, SIZES } from '../../sizes.ts';
 import { GEOMETRY, byTestId, centreX, controlSize, expectTooltip, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Avatar, Block, Button, Card, Container, DragHandle, Icon, Menu, Switch, Tag, Typography } from '../index.ts';
-import { type CardRootProps } from './Card.tsx';
+import * as Avatar from '../Avatar/Avatar.tsx';
+import * as Block from '../Block/Block.tsx';
+import * as Button from '../Button/Button.tsx';
+import * as Container from '../Container/Container.tsx';
+import * as DragHandle from '../DragHandle/DragHandle.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import * as Menu from '../Menu/Menu.tsx';
+import * as Switch from '../Switch/Switch.tsx';
+import * as Tag from '../Tag/Tag.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Card from './Card.tsx';
 
 /** Inline SVG, so the story never fetches from the network. */
 const POSTER = `data:image/svg+xml,${encodeURIComponent(
@@ -31,7 +40,7 @@ const BROKEN = 'data:image/png;base64,AAAA';
 type RowsCardProps = {
   size: Size;
   /** Places icons and trailing actions in the card's rails; without it they sit inline in each row. */
-  grid?: CardRootProps['grid'];
+  grid?: Card.RootProps['grid'];
   /** Keeps the test ids and accessible names of the inline copy distinct. */
   prefix?: string;
   rows: number;
@@ -44,7 +53,7 @@ const RowsCard = ({ size, grid, prefix = '', rows, onInvite }: RowsCardProps) =>
   return (
     <Card.Root grid={grid} data-testid={`${prefix}rows-card-${size}`}>
       <Card.Header>
-        <DragHandle label={`${name}Drag`} data-testid={`${prefix}drag-${size}`} />
+        <DragHandle.DragHandle label={`${name}Drag`} data-testid={`${prefix}drag-${size}`} />
         <Card.Title>{name}Project</Card.Title>
         <Card.Menu label={`${name}Project actions`}>
           <Menu.Item item={{ value: 'archive', label: 'Archive' }} />
@@ -53,7 +62,7 @@ const RowsCard = ({ size, grid, prefix = '', rows, onInvite }: RowsCardProps) =>
       <Card.Section title={`${name}Members`} data-testid={`${prefix}section-${size}`}>
         <Card.Row
           icon='ph--user--regular'
-          trailing={<Tag hue='emerald'>Owner</Tag>}
+          trailing={<Tag.Tag hue='emerald'>Owner</Tag.Tag>}
           data-testid={`${prefix}row-${size}`}
         >
           Ada Lovelace
@@ -99,22 +108,22 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           <Card.Description>The first public release, with sharing and sync.</Card.Description>
         </Card.Body>
         <Card.Footer>
-          <Button variant='primary'>Open</Button>
+          <Button.Button variant='primary'>Open</Button.Button>
         </Card.Footer>
       </Card.Root>
 
       <Card.Root data-testid={`card-${size}`}>
         <Card.Header>
           <Card.Title>Roadmap</Card.Title>
-          <Button icon='ph--dots-three--regular' label='More actions' iconOnly />
+          <Button.Button icon='ph--dots-three--regular' label='More actions' iconOnly />
         </Card.Header>
         <Card.Body>
           <Card.Description>What ships next quarter and why.</Card.Description>
-          <Typography>Three milestones, each with an owner and a date.</Typography>
+          <Typography.Typography>Three milestones, each with an owner and a date.</Typography.Typography>
         </Card.Body>
         <Card.Footer data-testid={`footer-${size}`}>
-          <Button>Dismiss</Button>
-          <Button variant='primary'>Review</Button>
+          <Button.Button>Dismiss</Button.Button>
+          <Button.Button variant='primary'>Review</Button.Button>
         </Card.Footer>
       </Card.Root>
 
@@ -122,12 +131,12 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         <Card.Poster src={BROKEN} alt='Missing artwork' data-testid={`broken-${size}`} />
         <Card.Header>
           <Card.Title>Notes</Card.Title>
-          <Block>
-            <Icon icon='ph--note--regular' />
-          </Block>
+          <Block.Block>
+            <Icon.Icon icon='ph--note--regular' />
+          </Block.Block>
         </Card.Header>
         <Card.Body>
-          <Typography>A card with a broken poster and no footer.</Typography>
+          <Typography.Typography>A card with a broken poster and no footer.</Typography.Typography>
         </Card.Body>
       </Card.Root>
 
@@ -199,9 +208,9 @@ export const Sized: Story = {
   render: () => (
     <Card.Root size='sm' data-testid='sized-card'>
       <Card.Header>
-        <Block data-testid='sized-block'>
-          <Icon icon='ph--cube--regular' />
-        </Block>
+        <Block.Block data-testid='sized-block'>
+          <Icon.Icon icon='ph--cube--regular' />
+        </Block.Block>
         <Card.Title>Small card</Card.Title>
       </Card.Header>
     </Card.Root>
@@ -229,8 +238,8 @@ const TILES = [
 const TileGridStory = () => {
   const [opened, setOpened] = useState('');
   return (
-    <Container gutter='md' padBlock data-testid='tile-root'>
-      <Container
+    <Container.Container gutter='md' padBlock data-testid='tile-root'>
+      <Container.Container
         layout='row'
         columns='repeat(auto-fill, minmax(14rem, 1fr))'
         gap='lg'
@@ -244,19 +253,19 @@ const TileGridStory = () => {
               <Card.Header>
                 <Card.Title truncate>{title}</Card.Title>
               </Card.Header>
-              <Typography tone='muted' lines={3}>
+              <Typography.Typography tone='muted' lines={3}>
                 {text}
-              </Typography>
+              </Typography.Typography>
               <Card.Footer justify='between' data-testid={`tile-footer-${title}`}>
-                <Tag hue='purple'>labs</Tag>
-                <Switch aria-label={title} />
+                <Tag.Tag hue='purple'>labs</Tag.Tag>
+                <Switch.Switch aria-label={title} />
               </Card.Footer>
             </Card.Body>
           </Card.Root>
         ))}
-      </Container>
-      <Typography data-testid='tile-opened'>{opened}</Typography>
-    </Container>
+      </Container.Container>
+      <Typography.Typography data-testid='tile-opened'>{opened}</Typography.Typography>
+    </Container.Container>
   );
 };
 
@@ -295,7 +304,7 @@ export const LeadingRow: Story = {
     <Card.Root grid>
       <Card.Row
         leading={<Avatar.Root fallback='Ada Lovelace' label='Ada Lovelace' data-testid='leading-avatar' />}
-        trailing={<Icon icon='ph--arrow-right--regular' />}
+        trailing={<Icon.Icon icon='ph--arrow-right--regular' />}
         onClick={() => {}}
       >
         <Card.Text>Ada Lovelace</Card.Text>

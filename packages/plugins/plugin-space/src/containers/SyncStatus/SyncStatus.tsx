@@ -8,7 +8,12 @@ import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { type EdgeStatus, EdgeStatus_ConnectionState } from '@dxos/protocols/buf/dxos/client/services_pb';
 import { useClient } from '@dxos/react-client';
 import { type SpaceSyncStateMap, getSyncSummary, useSyncState } from '@dxos/react-client/echo';
-import { Button, Flex, Grid, Icon, Popover, useTranslation } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Flex from '@dxos/react-ui/Flex';
+import * as Grid from '@dxos/react-ui/Grid';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as Popover from '@dxos/react-ui/Popover';
 import { iconSize, mx } from '@dxos/ui-theme';
 import { Unit, type UnitFormat } from '@dxos/util';
 
@@ -37,7 +42,7 @@ export const SyncStatusIndicator = ({
   saved: boolean;
   edgeStatus: EdgeStatus;
 }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const summary = getSyncSummary(state);
   // Absent peer sync state is indistinguishable from having no connection.
   const offline = edgeStatus.state !== EdgeStatus_ConnectionState.CONNECTED || Object.values(state).length === 0;
@@ -58,7 +63,7 @@ export const SyncStatusIndicator = ({
       <Popover.Trigger asChild>
         <StatusBar.Item>
           {/* The icon and label carry the status; the indicator keeps a single colour in every state. */}
-          <Button variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
+          <Button.Button variant='ghost' icon={icon} iconOnly label={t(`${status}.label`)} />
         </StatusBar.Item>
       </Popover.Trigger>
       <Popover.Content>
@@ -69,61 +74,61 @@ export const SyncStatusIndicator = ({
 };
 
 const EdgeConnectionPopover = ({ status }: { status: EdgeStatus }) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const client = useClient();
 
   const isConnected = status.state === EdgeStatus_ConnectionState.CONNECTED;
   const edgeUrl = client.config.get('runtime.services.edge.url');
 
   return (
-    <Flex column gap='sm' classNames='w-popover-min-width p-2' style={iconSize(4)}>
+    <Flex.Flex column gap='sm' classNames='w-popover-min-width p-2' style={iconSize(4)}>
       {/* Connection Status Header */}
-      <Flex gap='sm' align='center' classNames='mb-2'>
-        <Icon
+      <Flex.Flex gap='sm' align='center' classNames='mb-2'>
+        <Icon.Icon
           icon={isConnected ? 'ph--check-circle--regular' : 'ph--warning-circle--regular'}
           classNames={mx(isConnected ? 'text-success-text' : 'text-error-text animate-pulse')}
         />
         <span className='font-medium text-sm truncate' title={edgeUrl}>
           {isConnected ? (edgeUrl ?? t('sync-edge-connected.label')) : t('sync-edge-disconnected.label')}
         </span>
-      </Flex>
+      </Flex.Flex>
 
       {/* Connection Details */}
       {!isConnected && (
-        <Grid cols={SYNC_COLS} grow={false} gap='sm'>
-          <Icon icon='ph--cloud-x--regular' />
+        <Grid.Grid cols={SYNC_COLS} grow={false} gap='sm'>
+          <Icon.Icon icon='ph--cloud-x--regular' />
           <span className='text-fg-muted'>{t('sync-no-connection.label')}</span>
-        </Grid>
+        </Grid.Grid>
       )}
 
       {isConnected && (
-        <Grid cols={SYNC_COLS} grow={false} gap='sm' classNames='gap-y-1'>
+        <Grid.Grid cols={SYNC_COLS} grow={false} gap='sm' classNames='gap-y-1'>
           {/* Latency */}
-          <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
-            <Icon icon='ph--timer--regular' />
+          <Grid.Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
+            <Icon.Icon icon='ph--timer--regular' />
             <span className='text-fg-muted'>{t('sync-latency.label')}</span>
             <div />
             <UnitValue value={status.rtt} format={Unit.Millisecond} />
-          </Grid>
+          </Grid.Grid>
 
           {/* Upload Speed */}
-          <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
-            <Icon icon='ph--arrow-up--regular' classNames='text-green-500' />
+          <Grid.Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
+            <Icon.Icon icon='ph--arrow-up--regular' classNames='text-green-500' />
             <span className='text-fg-muted'>{t('sync-upload.label')}</span>
             <UnitValue value={status.messagesSent} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesUp} format={Unit.Kilobyte} suffix='/s' />
-          </Grid>
+          </Grid.Grid>
 
           {/* Download Speed */}
-          <Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
-            <Icon icon='ph--arrow-down--regular' classNames='text-orange-500' />
+          <Grid.Grid cols='subgrid' grow={false} gap='sm' align='center' classNames='text-sm'>
+            <Icon.Icon icon='ph--arrow-down--regular' classNames='text-orange-500' />
             <span className='text-fg-muted'>{t('sync-download.label')}</span>
             <UnitValue value={status.messagesReceived} format={Unit.Thousand} />
             <UnitValue value={status.rateBytesDown} format={Unit.Kilobyte} suffix='/s' />
-          </Grid>
-        </Grid>
+          </Grid.Grid>
+        </Grid.Grid>
       )}
-    </Flex>
+    </Flex.Flex>
   );
 };
 

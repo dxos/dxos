@@ -13,7 +13,7 @@ import { translationKey } from '#translations';
 
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Button } from '../Button/index.ts';
+import * as Button from '../Button/Button.tsx';
 import { usePopupSize } from '../ScrollArea/PopupScroll.tsx';
 
 /** Months and years are laid out four to a row, as the current Calendar's pickers. */
@@ -34,7 +34,7 @@ const ViewControl = ({ view }: { view: CalendarView }) => {
   return (
     <DatePickerPrimitive.ViewControl className={recipes.dateCalendarHeader()}>
       <DatePickerPrimitive.PrevTrigger asChild>
-        <Button
+        <Button.Button
           icon='ph--caret-left--regular'
           label={t(NAV_LABELS[view].previous)}
           iconOnly
@@ -43,12 +43,12 @@ const ViewControl = ({ view }: { view: CalendarView }) => {
         />
       </DatePickerPrimitive.PrevTrigger>
       <DatePickerPrimitive.ViewTrigger asChild>
-        <Button variant='ghost' classNames={recipes.dateCalendarTitle()}>
+        <Button.Button variant='ghost' classNames={recipes.dateCalendarTitle()}>
           <DatePickerPrimitive.RangeText />
-        </Button>
+        </Button.Button>
       </DatePickerPrimitive.ViewTrigger>
       <DatePickerPrimitive.NextTrigger asChild>
-        <Button
+        <Button.Button
           icon='ph--caret-right--regular'
           label={t(NAV_LABELS[view].next)}
           iconOnly

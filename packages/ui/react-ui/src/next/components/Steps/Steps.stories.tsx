@@ -14,13 +14,14 @@ import { withLayout, withTheme } from '../../../testing/index.ts';
 import { SIZES } from '../../sizes.ts';
 import { GEOMETRY, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Steps, type StepsProps } from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Steps from './Steps.tsx';
 
 const TICK_MS = 200;
 /** Items in a counted stage; the line leaving it fills as they are worked through. */
 const ITEMS = 10;
 
-type StoryArgs = SizeArgs & Pick<StepsProps, 'indeterminate' | 'error'> & { stages?: number };
+type StoryArgs = SizeArgs & Pick<Steps.StepsProps, 'indeterminate' | 'error'> & { stages?: number };
 
 /** Drives a plan from the first stage to the last, so it is watched advancing rather than sampled at rest. */
 const DefaultStory = ({ stages = 5, indeterminate, error }: StoryArgs) => {
@@ -32,7 +33,7 @@ const DefaultStory = ({ stages = 5, indeterminate, error }: StoryArgs) => {
   }, [stages]);
 
   return (
-    <Steps
+    <Steps.Steps
       steps={['Plan', 'Build', 'Verify', 'Ship', 'Launch'].slice(0, stages).map((label) => ({ id: label, label }))}
       active={Math.floor(tick / ITEMS)}
       fraction={(tick % ITEMS) / ITEMS}
@@ -70,7 +71,7 @@ const TestStory = ({ size }: StoryArgs) => {
   return (
     <>
       <div className='flex gap-2'>
-        <Button
+        <Button.Button
           data-testid={testId('advance')}
           onClick={() => {
             setActive((active) => (active ?? 0) + 1);
@@ -78,11 +79,11 @@ const TestStory = ({ size }: StoryArgs) => {
           }}
         >
           Advance
-        </Button>
-        <Button data-testid={testId('fail')} onClick={() => setError(true)}>
+        </Button.Button>
+        <Button.Button data-testid={testId('fail')} onClick={() => setError(true)}>
           Fail
-        </Button>
-        <Button
+        </Button.Button>
+        <Button.Button
           data-testid={testId('reset')}
           onClick={() => {
             setActive(undefined);
@@ -91,10 +92,10 @@ const TestStory = ({ size }: StoryArgs) => {
           }}
         >
           Reset
-        </Button>
+        </Button.Button>
       </div>
-      <Steps steps={4} active={active} fraction={fraction} error={error} data-testid={testId('steps')} />
-      <Steps
+      <Steps.Steps steps={4} active={active} fraction={fraction} error={error} data-testid={testId('steps')} />
+      <Steps.Steps
         steps={[
           { id: 'plan', label: 'Plan' },
           { id: 'build', label: 'Build' },

@@ -9,8 +9,11 @@ import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import * as DeckHooks from '@dxos/plugin-deck/Hooks';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { Empty, ErrorFallback, Panel, useTranslation } from '@dxos/react-ui';
 import { ActionToolbar, useMenuActions } from '@dxos/react-ui-menu';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as ErrorFallback from '@dxos/react-ui/ErrorFallback';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { Loading } from '#components';
 import { useMobileDrawerActions, useMobileStack } from '#hooks';
@@ -22,7 +25,7 @@ const DRAWER_NAME = 'MobileDeckLayout.Drawer';
  * Companion drawer for the visible panel of the mobile stack.
  */
 export const MobileDrawer = () => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { graph } = Hooks.useAppGraph();
   const { state } = DeckHooks.useDeckState();
   const { topId } = useMobileStack();
@@ -65,11 +68,11 @@ export const MobileDrawer = () => {
             type={AppSurface.Article}
             data={data}
             limit={1}
-            fallback={ErrorFallback}
+            fallback={ErrorFallback.ErrorFallback}
             placeholder={placeholder}
           />
         ) : (
-          <Empty>{t('empty-drawer.message')}</Empty>
+          <Empty.Empty>{t('empty-drawer.message')}</Empty.Empty>
         )}
       </Panel.Body>
     </Panel.Root>

@@ -2,7 +2,7 @@
 // Copyright 2023 DXOS.org
 //
 
-import { type Resource } from '@dxos/react-ui';
+import type * as ThemeProvider from './providers/ThemeProvider/ThemeProvider.tsx';
 
 export const translationKey = '@dxos/react-ui';
 
@@ -89,4 +89,4 @@ export const translations = [
       },
     },
   },
-] as const satisfies Resource[];
+] as const satisfies ThemeProvider.Resource[];

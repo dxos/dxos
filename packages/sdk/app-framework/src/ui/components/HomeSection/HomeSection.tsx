@@ -4,14 +4,16 @@
 
 import React, { type PropsWithChildren, forwardRef } from 'react';
 
-import { Block, SystemButton, type ThemedClassName } from '@dxos/react-ui';
+import * as Block from '@dxos/react-ui/Block';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import type * as Util from '@dxos/react-ui/Util';
 import { mx } from '@dxos/ui-theme';
 
 //
 // Root
 //
 
-type HomeSectionRootProps = ThemedClassName<PropsWithChildren>;
+type HomeSectionRootProps = Util.ThemedClassName<PropsWithChildren>;
 
 /**
  * Shared container for a Home content section: a centered, max-width column. Home surface
@@ -30,7 +32,7 @@ HomeSectionRoot.displayName = 'HomeSection.Root';
 // Header
 //
 
-type HomeSectionHeaderProps = ThemedClassName<
+type HomeSectionHeaderProps = Util.ThemedClassName<
   PropsWithChildren<{
     /** Section heading. */
     title?: string;
@@ -52,9 +54,9 @@ const HomeSectionHeader = forwardRef<HTMLDivElement, HomeSectionHeaderProps>(
       {!title && <span className='grow' />}
       {children}
       {onClose && (
-        <Block>
+        <Block.Block>
           <SystemButton.Close variant='ghost' size='sm' iconOnly onClick={onClose} />
-        </Block>
+        </Block.Block>
       )}
     </div>
   ),

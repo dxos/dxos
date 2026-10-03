@@ -11,7 +11,10 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { byTestId, expectAnchoredBelow, expectPopupSize } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Button, Group, MenuButton, type MenuButtonItem, Typography } from '../index.ts';
+import * as Button from '../Button/Button.tsx';
+import * as Group from '../Group/Group.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as MenuButton from './MenuButton.tsx';
 
 const DEVICES = ['Built-in microphone', 'USB headset'];
 
@@ -27,14 +30,14 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   const [device, setDevice] = useState('');
   const [extraction, setExtraction] = useState(false);
   const [view, setView] = useState('List');
-  const items: MenuButtonItem[] = [
+  const items: MenuButton.MenuButtonItem[] = [
     { type: 'group', label: 'Record mode' },
     { type: 'option', label: 'Toggle', selected: mode === 'toggle', onSelect: () => setMode('toggle') },
     { type: 'option', label: 'Hold', selected: mode === 'hold', onSelect: () => setMode('hold') },
     { type: 'separator' },
     { type: 'group', label: 'Audio device' },
     { type: 'option', label: 'Default', selected: device === '', onSelect: () => setDevice('') },
-    ...DEVICES.map((label): MenuButtonItem => ({
+    ...DEVICES.map((label): MenuButton.MenuButtonItem => ({
       type: 'option',
       label,
       selected: device === label,
@@ -52,9 +55,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
   ];
 
   return (
-    <Group>
-      <Button icon='ph--microphone--regular' label='Record' />
-      <MenuButton
+    <Group.Group>
+      <Button.Button icon='ph--microphone--regular' label='Record' />
+      <MenuButton.MenuButton
         icon='ph--caret-down--regular'
         iconOnly
         variant='ghost'
@@ -63,7 +66,7 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         data-testid={`options-${size}`}
       />
       {/* The picker form: a default-variant button whose icon keeps its square's padding beside a half-cell caret. */}
-      <MenuButton
+      <MenuButton.MenuButton
         icon={VIEW_ICONS[view]}
         iconOnly
         caretDown
@@ -76,8 +79,10 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
         }))}
         data-testid={`view-${size}`}
       />
-      <Typography data-testid={`state-${size}`}>{`${mode} · ${device || 'default'} · ${extraction}`}</Typography>
-    </Group>
+      <Typography.Typography
+        data-testid={`state-${size}`}
+      >{`${mode} · ${device || 'default'} · ${extraction}`}</Typography.Typography>
+    </Group.Group>
   );
 };
 

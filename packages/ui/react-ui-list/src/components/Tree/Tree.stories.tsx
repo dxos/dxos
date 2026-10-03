@@ -9,7 +9,8 @@ import { type Mock, expect, fn, userEvent, waitFor, within } from 'storybook/tes
 
 import '@dxos/react-ui/theme.css';
 import { random } from '@dxos/random';
-import { Button, Icon } from '@dxos/react-ui';
+import * as Button from '@dxos/react-ui/Button';
+import * as Icon from '@dxos/react-ui/Icon';
 import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withRegistry, withSizes, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
 
@@ -190,14 +191,14 @@ const renderColumnsRow = (node: TreeNode<TestItem>) => (
   <Tree.Item node={node}>
     <Tree.ItemIndicator />
     <Tree.ItemIcon>
-      <Icon icon='ph--spinner-gap--regular' spin label='Running' />
+      <Icon.Icon icon='ph--spinner-gap--regular' spin label='Running' />
     </Tree.ItemIcon>
     <Tree.ItemText />
     <span className='text-fg-muted tabular-nums' data-testid='tree-figure'>
       {node.depth}
     </span>
     <Tree.ItemActions>
-      <Button icon='ph--x--regular' iconOnly label='Remove' variant='ghost' size='sm' />
+      <Button.Button icon='ph--x--regular' iconOnly label='Remove' variant='ghost' size='sm' />
     </Tree.ItemActions>
   </Tree.Item>
 );

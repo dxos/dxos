@@ -7,8 +7,8 @@ import React, { useCallback } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { log } from '@dxos/log';
-import { Panel } from '@dxos/react-ui';
 import { useSoundEffect } from '@dxos/react-ui-audio';
+import * as Panel from '@dxos/react-ui/Panel';
 
 import { CallsCapabilities } from '#types';
 

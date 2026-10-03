@@ -2,17 +2,19 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import React, { type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 import { type ChromaticPalette, type ClassNameValue, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { useFieldsetDisabled } from '../Fieldset/index.ts';
-import { Icon } from '../Icon/index.ts';
-import { useToolbarItem } from '../Toolbar/index.ts';
-import { Tooltip, type TooltipSide } from '../Tooltip/index.ts';
+import * as Fieldset from '../Fieldset/Fieldset.tsx';
+import * as Icon from '../Icon/Icon.tsx';
+import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
+import * as Tooltip from '../Tooltip/Tooltip.tsx';
 
 /** The current Button's variants; `primary` marks the one action a surface leads with (e.g. a form's Save). */
 export type ButtonVariant = 'default' | 'primary' | 'ghost' | 'outline' | 'destructive' | 'valence';
@@ -71,7 +73,7 @@ export type ButtonContentProps =
       /** Opt out of the label Tooltip, e.g. when the caller wraps the button in its own `Tooltip.Trigger`. */
       showTooltip?: boolean;
       /** Side of the trigger the label Tooltip opens on; below by default. */
-      tooltipSide?: TooltipSide;
+      tooltipSide?: Tooltip.Side;
       iconEnd?: never;
       children?: never;
     };
@@ -108,7 +110,7 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
     },
     forwardedRef,
   ) => {
-    const disabled = useFieldsetDisabled(buttonProps.disabled);
+    const disabled = Fieldset.useFieldsetDisabled(buttonProps.disabled);
     const toolbarItem = useToolbarItem(disabled);
     const { className, ...attributes } = composableProps(buttonProps, { classNames: recipes.button() });
     const button = (
@@ -136,11 +138,11 @@ export const Button = composable<HTMLButtonElement, ButtonProps>(
         className={className}
         ref={forwardedRef}
       >
-        {icon && <Icon icon={icon} spin={spin} size={iconSize} classNames={iconClassNames} />}
+        {icon && <Icon.Icon icon={icon} spin={spin} size={iconSize} classNames={iconClassNames} />}
         {/* Icon-only children stand in for the icon (e.g. a swatch), so they keep the square's padding. */}
         {iconOnly ? !icon && children : (children ?? label)}
-        {iconEnd && <Icon icon={iconEnd} size={iconSize} />}
-        {caretDown && <Icon icon='ph--caret-down--bold' />}
+        {iconEnd && <Icon.Icon icon={iconEnd} size={iconSize} />}
+        {caretDown && <Icon.Icon icon='ph--caret-down--bold' />}
       </button>
     );
 

@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './Group.tsx';
+export * as Group from './Group.tsx';

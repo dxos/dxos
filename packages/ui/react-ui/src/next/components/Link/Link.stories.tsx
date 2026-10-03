@@ -11,24 +11,25 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { realHover, realUnhover, sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Link, type LinkProps, Typography } from '../index.ts';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Link from './Link.tsx';
 
-type StoryArgs = SizeArgs & Pick<LinkProps, 'variant'>;
+type StoryArgs = SizeArgs & Pick<Link.LinkProps, 'variant'>;
 
 const DefaultStory = ({ variant }: StoryArgs) => (
-  <Typography data-testid='text'>
-    Read the <Link href='https://dxos.org/guide'>guide</Link>, published{' '}
-    <Link href='https://github.com/dxos/dxos/releases' variant='neutral'>
+  <Typography.Typography data-testid='text'>
+    Read the <Link.Link href='https://dxos.org/guide'>guide</Link.Link>, published{' '}
+    <Link.Link href='https://github.com/dxos/dxos/releases' variant='neutral'>
       2 days ago
-    </Link>
+    </Link.Link>
     , or open the{' '}
-    <Link asChild variant={variant}>
+    <Link.Link asChild variant={variant}>
       <a href='#changelog' target='_self'>
         changelog
       </a>
-    </Link>
+    </Link.Link>
     .
-  </Typography>
+  </Typography.Typography>
 );
 
 const meta = {

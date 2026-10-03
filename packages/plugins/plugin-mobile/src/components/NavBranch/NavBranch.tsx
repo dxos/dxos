@@ -12,20 +12,16 @@ import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import {
-  Avatar,
-  Block,
-  Card,
-  Empty,
-  Icon,
-  ScrollArea,
-  toAvatarHue,
-  toLocalizedString,
-  useId,
-  useTranslation,
-} from '@dxos/react-ui';
 import { Mosaic, type MosaicStackTileComponent } from '@dxos/react-ui-mosaic';
 import { SearchPanel, useSearchListItem, useSearchListResults } from '@dxos/react-ui-search';
+import * as Avatar from '@dxos/react-ui/Avatar';
+import * as Block from '@dxos/react-ui/Block';
+import * as Card from '@dxos/react-ui/Card';
+import * as Empty from '@dxos/react-ui/Empty';
+import * as UiHooks from '@dxos/react-ui/Hooks';
+import * as Icon from '@dxos/react-ui/Icon';
+import * as ScrollArea from '@dxos/react-ui/ScrollArea';
+import * as ThemeProvider from '@dxos/react-ui/ThemeProvider';
 import { mx } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
@@ -100,7 +96,7 @@ const useEmptyGroupIds = (graph: AppGraph.ExpandableGraph, nodes: AppGraphNode.N
  * spaces, collection sections, type sections, and schema nodes.
  */
 export const NavBranch = ({ id }: NavBranchProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { graph } = ToolkitHooks.useAppGraph();
 
   useExpandPath(id);
@@ -115,7 +111,7 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
   const { results, handleSearch } = useSearchListResults({
     items: visibleChildren,
-    extract: (child) => toLocalizedString(child.properties.label, t),
+    extract: (child) => ThemeProvider.toLocalizedString(child.properties.label, t),
   });
 
   return (
@@ -126,7 +122,9 @@ export const NavBranch = ({ id }: NavBranchProps) => {
             {results.length === 0 ? (
               // A branch with no openable children is a legitimate state (an unpopulated section, or a
               // search that matched nothing); rendering nothing at all reads as a broken screen.
-              <Empty>{t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')}</Empty>
+              <Empty.Empty>
+                {t(visibleChildren.length === 0 ? 'empty-branch.message' : 'no-results.message')}
+              </Empty.Empty>
             ) : (
               <Mosaic.Stack
                 classNames='py-2 gap-1'
@@ -145,14 +143,14 @@ export const NavBranch = ({ id }: NavBranchProps) => {
 
 const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = UiHooks.useTranslation(meta.profile.key);
   const { invokePromise } = Hooks.useOperationInvoker();
   const ref = useRef<HTMLDivElement>(null);
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const isSelected = selectedValue === data.id;
 
-  const name = toLocalizedString(data.properties.label, t);
-  const titleId = useId('mobile-tile');
+  const name = ThemeProvider.toLocalizedString(data.properties.label, t);
+  const titleId = UiHooks.useId('mobile-tile');
 
   const handleSelect = useCallback(
     () => void invokePromise(LayoutOperation.Open, { subject: [data.id] }),
@@ -189,20 +187,20 @@ const NavBranchTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
       <Card.Header>
         {/* `Card.Header` is a 3-track subgrid: the gutter `Card.Block`s and the center
             `Card.Title` are what keep the icon, label, and caret on one row. */}
-        <Block>
+        <Block.Block>
           <Avatar.Root
             icon={data.properties.icon}
-            hue={toAvatarHue(data.properties.hue)}
+            hue={Avatar.toAvatarHue(data.properties.hue)}
             hueVariant='transparent'
             variant='square'
             fallback={name}
             aria-labelledby={titleId}
           />
-        </Block>
+        </Block.Block>
         <Card.Title id={titleId}>{name}</Card.Title>
-        <Block rail='end'>
-          <Icon icon='ph--caret-right--regular' />
-        </Block>
+        <Block.Block rail='end'>
+          <Icon.Icon icon='ph--caret-right--regular' />
+        </Block.Block>
       </Card.Header>
     </Card.Root>
   );

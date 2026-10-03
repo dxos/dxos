@@ -11,23 +11,25 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { withLayout, withTheme } from '../../../testing/index.ts';
 import { sizeRow } from '../../testing.ts';
 import { SIZE_ARG_TYPES, type SizeArgs, withSizes } from '../../testing/stories.tsx';
-import { Deferred, type DeferredProps, Switch, Typography } from '../index.ts';
+import * as Switch from '../Switch/Switch.tsx';
+import * as Typography from '../Typography/Typography.tsx';
+import * as Deferred from './Deferred.tsx';
 
-type StoryArgs = SizeArgs & Pick<DeferredProps, 'delay' | 'minDuration'>;
+type StoryArgs = SizeArgs & Pick<Deferred.DeferredProps, 'delay' | 'minDuration'>;
 
 const DefaultStory = ({ delay, minDuration }: StoryArgs) => {
   const [pending, setPending] = useState(false);
   return (
     <>
-      <Switch label='Pending' checked={pending} onCheckedChange={({ checked }) => setPending(checked)} />
-      <Deferred
+      <Switch.Switch label='Pending' checked={pending} onCheckedChange={({ checked }) => setPending(checked)} />
+      <Deferred.Deferred
         pending={pending}
         delay={delay}
         minDuration={minDuration}
-        fallback={() => <Typography data-testid='fallback'>No messages yet.</Typography>}
+        fallback={() => <Typography.Typography data-testid='fallback'>No messages yet.</Typography.Typography>}
       >
-        <Typography data-testid='content'>3 messages</Typography>
-      </Deferred>
+        <Typography.Typography data-testid='content'>3 messages</Typography.Typography>
+      </Deferred.Deferred>
     </>
   );
 };

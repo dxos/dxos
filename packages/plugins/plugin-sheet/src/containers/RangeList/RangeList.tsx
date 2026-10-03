@@ -8,8 +8,11 @@ import React, { useCallback } from 'react';
 import '@dxos/react-ui/theme.css';
 import { rangeToA1Notation } from '@dxos/compute-hyperformula';
 import { useObject } from '@dxos/echo-react';
-import { Banner, SystemButton, Typography, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';
+import * as Banner from '@dxos/react-ui/Banner';
+import * as Hooks from '@dxos/react-ui/Hooks';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
+import * as Typography from '@dxos/react-ui/Typography';
 
 import { meta } from '#meta';
 import { type Sheet, SheetUtil } from '#types';
@@ -23,7 +26,7 @@ export type RangeListProps = {
 
 /** The sheet's formatting ranges in precedence order (later ranges win), each removable. */
 export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const [sheet, updateSheet] = useObject(sheetProp);
 
   // The row's text, also its typeahead label.
@@ -50,7 +53,7 @@ export const RangeList = ({ sheet: sheetProp }: RangeListProps) => {
 
   return (
     <>
-      <Typography>{t('range-list.heading')}</Typography>
+      <Typography.Typography>{t('range-list.heading')}</Typography.Typography>
       {sheet.ranges.length === 0 ? (
         <Banner.Root>
           <Banner.Title>{t('no-ranges.message')}</Banner.Title>

@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { Format } from '@dxos/echo';
-import { DateInput } from '@dxos/react-ui';
+import * as DateInput from '@dxos/react-ui/DateInput';
 
 import { type FormFieldRendererProps } from '#types';
 
@@ -33,7 +33,7 @@ export const DateField = ({
   switch (format) {
     case Format.TypeFormat.Date:
       return (
-        <DateInput
+        <DateInput.DateInput
           type='date'
           disabled={!!readonly}
           value={value ?? ''}
@@ -42,7 +42,7 @@ export const DateField = ({
       );
     case Format.TypeFormat.Time:
       return (
-        <DateInput
+        <DateInput.DateInput
           type='time'
           granularity='second'
           disabled={!!readonly}
@@ -52,7 +52,7 @@ export const DateField = ({
       );
     default:
       return (
-        <DateInput
+        <DateInput.DateInput
           type='datetime-local'
           disabled={!!readonly}
           value={isoToLocalDateTime(value)}

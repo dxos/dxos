@@ -10,7 +10,7 @@ import { type Database, Filter, Obj, Ref, Tag, Type } from '@dxos/echo';
 import { useObject, useQuery, useType } from '@dxos/echo-react';
 import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
-import { composable } from '@dxos/react-ui';
+import * as Util from '@dxos/react-ui/Util';
 import { FactoryAnnotation } from '@dxos/schema';
 
 import { translationKey } from '#translations';
@@ -161,7 +161,7 @@ export type ObjectPropertiesProps = PropsWithChildren<
  * extra rows) in a set of their own. Composable, so a host's `Panel.Body asChild` merges its slot props and ref onto
  * the form's viewport.
  */
-export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps>(
+export const ObjectProperties = Util.composable<HTMLDivElement, ObjectPropertiesProps>(
   ({ children, object, getCreateDefaults, resolveCreateEntry, ...props }, forwardedRef) => {
     const db = Obj.getDatabase(object);
     const [snapshot] = useObject(object);

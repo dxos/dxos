@@ -2,6 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
+// @import-as-namespace
+
 import { createListCollection } from '@ark-ui/react/collection';
 import { Portal } from '@ark-ui/react/portal';
 import { Select as SelectPrimitive, useSelectContext } from '@ark-ui/react/select';
@@ -10,25 +12,25 @@ import React, { type ReactNode, type RefObject, createContext, forwardRef, useCo
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
-import { Icon, type IconHue, type IconProps } from '../Icon/index.ts';
+import * as Icon from '../Icon/Icon.tsx';
 import { PopupScroll, popupPositioning, usePopupSize } from '../ScrollArea/PopupScroll.tsx';
-import { Separator, type SeparatorProps } from '../Separator/index.ts';
-import { useToolbarItem } from '../Toolbar/index.ts';
+import * as Separator from '../Separator/Separator.tsx';
+import { useToolbarItem } from '../Toolbar/toolbar-context.ts';
 
 /** Gap between trigger and popup, in px (positioning takes a number, not a CSS variable). */
 const POPUP_GUTTER = 2;
 
-export type SelectOption = {
+type SelectOption = {
   value: string;
   label: string;
   disabled?: boolean;
   /** Leading icon, shown in the item and, once selected, in the trigger. */
   icon?: string;
   /** Colours the icon with a Tag hue (the current SelectField's `iconHue`). */
-  iconHue?: IconHue;
+  iconHue?: Icon.IconHue;
 };
 
 //
@@ -141,21 +143,25 @@ const SelectTrigger = forwardRef<HTMLButtonElement, SelectTriggerProps>(
         className={mx(recipes.selectTrigger(), classNames)}
         ref={forwardedRef}
       >
-        {selected?.icon && <Icon icon={selected.icon} hue={selected.iconHue} />}
+        {selected?.icon && <Icon.Icon icon={selected.icon} hue={selected.iconHue} />}
         <SelectPrimitive.ValueText placeholder={placeholder} />
         {fit === 'options' && (
           <span aria-hidden data-scope='select' data-part='value-sizer' className={recipes.selectValueSizer()}>
             {placeholder && <span>{placeholder}</span>}
             {collection.items.map((item) => (
               <span key={item.value}>
-                {item.icon && <Icon icon={item.icon} />}
+                {item.icon && <Icon.Icon icon={item.icon} />}
                 {item.label}
               </span>
             ))}
           </span>
         )}
         <SelectPrimitive.Indicator>
-          {loading ? <Icon icon='ph--spinner-gap--regular' spin /> : <Icon icon='ph--caret-up-down--regular' />}
+          {loading ? (
+            <Icon.Icon icon='ph--spinner-gap--regular' spin />
+          ) : (
+            <Icon.Icon icon='ph--caret-up-down--regular' />
+          )}
         </SelectPrimitive.Indicator>
       </SelectPrimitive.Trigger>
     );
@@ -248,7 +254,7 @@ SelectItem.displayName = 'Select.Item';
 // ItemIcon
 //
 
-type SelectItemIconProps = Omit<IconProps, 'icon'> & {
+type SelectItemIconProps = Omit<Icon.IconProps, 'icon'> & {
   /** Defaults to the option's `icon`. */
   icon?: string;
 };
@@ -257,7 +263,7 @@ type SelectItemIconProps = Omit<IconProps, 'icon'> & {
 const SelectItemIcon = forwardRef<SVGSVGElement, SelectItemIconProps>(({ icon, hue, ...props }, forwardedRef) => {
   const item = useItem('ItemIcon');
   const glyph = icon ?? item.icon;
-  return glyph ? <Icon {...props} icon={glyph} hue={hue ?? item.iconHue} ref={forwardedRef} /> : null;
+  return glyph ? <Icon.Icon {...props} icon={glyph} hue={hue ?? item.iconHue} ref={forwardedRef} /> : null;
 });
 
 SelectItemIcon.displayName = 'Select.ItemIcon';
@@ -292,7 +298,7 @@ type SelectItemIndicatorProps = ThemedClassName<SelectPrimitive.ItemIndicatorPro
 const SelectItemIndicator = forwardRef<HTMLDivElement, SelectItemIndicatorProps>(
   ({ classNames, children, ...props }, forwardedRef) => (
     <SelectPrimitive.ItemIndicator {...props} className={mx(classNames)} ref={forwardedRef}>
-      {children ?? <Icon icon='ph--check--regular' />}
+      {children ?? <Icon.Icon icon='ph--check--regular' />}
     </SelectPrimitive.ItemIndicator>
   ),
 );
@@ -335,41 +341,41 @@ SelectItemGroupLabel.displayName = 'Select.ItemGroupLabel';
 // Separator
 //
 
-type SelectSeparatorProps = Omit<SeparatorProps, 'orientation' | 'decorative'>;
+type SelectSeparatorProps = Omit<Separator.SeparatorProps, 'orientation' | 'decorative'>;
 
 /** A decorative rule between options: a listbox admits only options and groups, so it takes no separator role. */
 const SelectSeparator = composable<HTMLDivElement, SelectSeparatorProps>((props, forwardedRef) => (
-  <Separator {...props} decorative ref={forwardedRef} />
+  <Separator.Separator {...props} decorative ref={forwardedRef} />
 ));
 
 SelectSeparator.displayName = 'Select.Separator';
-
-export const Select = {
-  Root: SelectRoot,
-  Label: SelectLabel,
-  Trigger: SelectTrigger,
-  Content: SelectContent,
-  Item: SelectItem,
-  ItemIcon: SelectItemIcon,
-  ItemText: SelectItemText,
-  ItemIndicator: SelectItemIndicator,
-  ItemGroup: SelectItemGroup,
-  ItemGroupLabel: SelectItemGroupLabel,
-  Separator: SelectSeparator,
-};
-
 export type {
-  SelectContentProps,
-  SelectItemGroupLabelProps,
-  SelectItemGroupProps,
-  SelectItemIconProps,
-  SelectItemIndicatorProps,
-  SelectItemProps,
-  SelectItemTextProps,
-  SelectLabelProps,
-  SelectPositioning,
-  SelectRootProps,
-  SelectSeparatorProps,
-  SelectTriggerFit,
-  SelectTriggerProps,
+  SelectContentProps as ContentProps,
+  SelectItemGroupLabelProps as ItemGroupLabelProps,
+  SelectItemGroupProps as ItemGroupProps,
+  SelectItemIconProps as ItemIconProps,
+  SelectItemIndicatorProps as ItemIndicatorProps,
+  SelectItemProps as ItemProps,
+  SelectItemTextProps as ItemTextProps,
+  SelectLabelProps as LabelProps,
+  SelectPositioning as Positioning,
+  SelectRootProps as RootProps,
+  SelectSeparatorProps as SeparatorProps,
+  SelectTriggerFit as TriggerFit,
+  SelectTriggerProps as TriggerProps,
 };
+
+export {
+  SelectContent as Content,
+  SelectItem as Item,
+  SelectItemGroup as ItemGroup,
+  SelectItemGroupLabel as ItemGroupLabel,
+  SelectItemIcon as ItemIcon,
+  SelectItemIndicator as ItemIndicator,
+  SelectItemText as ItemText,
+  SelectLabel as Label,
+  SelectRoot as Root,
+  SelectSeparator as Separator,
+  SelectTrigger as Trigger,
+};
+export type { SelectOption as Option };

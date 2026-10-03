@@ -10,8 +10,8 @@ import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvide
 import { Collection, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { type Space, useMembers } from '@dxos/react-client/echo';
-import { useTranslation } from '@dxos/react-ui';
 import { Dashboard } from '@dxos/react-ui-dashboard';
+import * as Hooks from '@dxos/react-ui/Hooks';
 
 import { SPACE_STATS_QUERY, countObjects, countTypenames } from '#dashboard';
 import { meta } from '#meta';
@@ -32,7 +32,7 @@ type SpaceHomeDashboardProps = {
 const COLLECTION_TYPENAME = Type.getTypename(Collection.Collection);
 
 export const SpaceHomeDashboard = ({ space, stats = STAT_IDS, onClose }: SpaceHomeDashboardProps) => {
-  const { t } = useTranslation(meta.profile.key);
+  const { t } = Hooks.useTranslation(meta.profile.key);
   const members = useMembers(space?.key);
 
   const manager = PluginManagerProvider.usePluginManager();

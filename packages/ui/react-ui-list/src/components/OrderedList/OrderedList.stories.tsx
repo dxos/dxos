@@ -7,9 +7,11 @@ import React, { useCallback, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import '@dxos/react-ui/theme.css';
-import { Checkbox, SystemButton, Typography } from '@dxos/react-ui';
+import * as Checkbox from '@dxos/react-ui/Checkbox';
+import * as SystemButton from '@dxos/react-ui/SystemButton';
 import { SIZE_ARG_TYPES, type SizeArgs, withLayout, withSizes, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '@dxos/react-ui/translations';
+import * as Typography from '@dxos/react-ui/Typography';
 import { arrayMove } from '@dxos/util';
 
 import { useStableIds } from '../../hooks/index.ts';
@@ -70,7 +72,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
                     onClick={() => setItems((items) => items.filter((entry) => entry.id !== item.id))}
                   />
                   <OrderedList.Detail>
-                    <Typography data-testid={`panel-${item.id}-${size}`}>Details for {item.label}</Typography>
+                    <Typography.Typography data-testid={`panel-${item.id}-${size}`}>
+                      Details for {item.label}
+                    </Typography.Typography>
                   </OrderedList.Detail>
                 </OrderedList.Item>
               ))}
@@ -78,7 +82,9 @@ const DefaultStory = ({ size = 'md' }: SizeArgs) => {
           </>
         )}
       </OrderedList.Root>
-      <Typography data-testid={`order-${size}`}>{items.map((item) => item.id).join(' ')}</Typography>
+      <Typography.Typography data-testid={`order-${size}`}>
+        {items.map((item) => item.id).join(' ')}
+      </Typography.Typography>
     </>
   );
 };
@@ -180,7 +186,7 @@ const VirtualStory = () => {
           )}
         </OrderedList.Root>
       </div>
-      <Typography data-testid='many-first'>{items[0].label}</Typography>
+      <Typography.Typography data-testid='many-first'>{items[0].label}</Typography.Typography>
     </>
   );
 };
@@ -197,7 +203,7 @@ const CheckboxWithRemoveStory = () => {
           <OrderedList.Content aria-label='Todos'>
             {items.map((item) => (
               <OrderedList.Item key={item.id} id={item.id}>
-                <Checkbox
+                <Checkbox.Checkbox
                   aria-label={`Done ${item.label}`}
                   checked={item.done}
                   onCheckedChange={({ checked }) =>
@@ -237,14 +243,14 @@ const StableIdsStory = () => {
                 <OrderedList.DragHandle />
                 <OrderedList.ItemText />
                 <OrderedList.Detail>
-                  <Typography>Heading {value}</Typography>
+                  <Typography.Typography>Heading {value}</Typography.Typography>
                 </OrderedList.Detail>
               </OrderedList.Item>
             ))}
           </OrderedList.Content>
         )}
       </OrderedList.Root>
-      <Typography data-testid='directions'>{values.join(' ')}</Typography>
+      <Typography.Typography data-testid='directions'>{values.join(' ')}</Typography.Typography>
     </>
   );
 };
@@ -258,9 +264,9 @@ const ColumnsStory = () => (
           <OrderedList.Item key={item.id} id={item.id} data-testid={`column-row-${item.id}`}>
             <OrderedList.DragHandle />
             <OrderedList.ItemText />
-            <Typography tone='muted' data-testid={`column-${item.id}`}>
+            <Typography.Typography tone='muted' data-testid={`column-${item.id}`}>
               {item.label.length} letters
-            </Typography>
+            </Typography.Typography>
           </OrderedList.Item>
         ))}
       </OrderedList.Content>
