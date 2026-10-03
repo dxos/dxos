@@ -30,9 +30,9 @@ export const localSpaceId = (name: string): SpaceId =>
  */
 export const makeLocalDatabaseFactory =
   (driverFor: (spaceId: SpaceId) => StoreDriver): Hypergraph.LocalDatabaseFactory =>
-  (name, { types }) => {
+  (name, { types, graph }) => {
     const spaceId = localSpaceId(name);
-    return SqliteDatabase.make({ spaceId, types, driver: driverFor(spaceId) });
+    return SqliteDatabase.make({ spaceId, types, graph, driver: driverFor(spaceId) });
   };
 
 /**

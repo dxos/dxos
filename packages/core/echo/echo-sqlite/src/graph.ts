@@ -3,9 +3,9 @@
 //
 
 import { type CleanupFn, Event } from '@dxos/async';
-import { Blob, type Database, type Entity, Hypergraph, type Ref, Type } from '@dxos/echo';
+import { Blob, type Database, Entity, Hypergraph, type Ref, Type } from '@dxos/echo';
 import { type RefResolverRequest, type RefSource, makeSettledRequest } from '@dxos/echo/internal';
-import { type SpaceId, type URI } from '@dxos/keys';
+import { EID, type SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 
 import { UnsupportedOperationError } from './errors.ts';
@@ -24,12 +24,20 @@ export interface EntitySource extends Database.Database {
 
 /**
  * Resolves refs against one database: synchronously from the working set, asynchronously by loading
- * the one target row. Type URIs resolve against the registry.
+ * the one target row. Type URIs resolve against the registry. A URI in another space goes to the
+ * `outside` resolver (the owning graph's), when there is one.
  */
 export class DatabaseRefResolver implements Ref.Resolver {
-  constructor(private readonly _source: EntitySource) {}
+  constructor(
+    private readonly _source: EntitySource,
+    private readonly _outside?: () => Ref.Resolver,
+  ) {}
 
   resolve(uri: URI.URI, options: { source: RefSource }): RefResolverRequest {
+    const outside = this.#outsideFor(uri);
+    if (outside) {
+      return outside.resolve(uri, options);
+    }
     const entity = this.resolveSync(uri, false);
     if (entity !== undefined || options.source === 'working-set') {
       return makeSettledRequest(entity ? 'ready' : 'unavailable', entity);
@@ -38,6 +46,11 @@ export class DatabaseRefResolver implements Ref.Resolver {
   }
 
   resolveSync(uri: URI.URI, load: boolean, onLoad?: () => void): Entity.Unknown | undefined {
+    const outside = this.#outsideFor(uri);
+    if (outside) {
+      const resolved = outside.resolveSync(uri, load, onLoad);
+      return Entity.isEntity(resolved) ? resolved : undefined;
+    }
     const entity = this._source.peek(uri) ?? this._source.registry.getByURI(uri);
     if (entity === undefined && load) {
       void this._source
@@ -49,6 +62,11 @@ export class DatabaseRefResolver implements Ref.Resolver {
   }
 
   async resolveLegacy(uri: URI.URI): Promise<Entity.Unknown | undefined> {
+    const outside = this.#outsideFor(uri);
+    if (outside) {
+      const resolved = await outside.resolveLegacy(uri);
+      return Entity.isEntity(resolved) ? resolved : undefined;
+    }
     return (await this._source.load(uri)) ?? this._source.registry.getByURI(uri);
   }
 
@@ -60,6 +78,13 @@ export class DatabaseRefResolver implements Ref.Resolver {
   async resolveType(uri: URI.URI): Promise<Entity.Unknown | undefined> {
     const type = this._source.registry.getByURI(uri);
     return type && Type.isType(type) ? type : undefined;
+  }
+
+  /** The resolver for an `echo:` URI that names another space; relative URIs are this database's. */
+  #outsideFor(uri: URI.URI): Ref.Resolver | undefined {
+    const eid = EID.tryParse(uri);
+    const spaceId = eid ? EID.getSpaceId(eid) : undefined;
+    return spaceId !== undefined && spaceId !== this._source.spaceId ? this._outside?.() : undefined;
   }
 }
 

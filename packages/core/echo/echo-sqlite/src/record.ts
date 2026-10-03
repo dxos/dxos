@@ -2,8 +2,8 @@
 // Copyright 2026 DXOS.org
 //
 
-import { Entity, Obj, Relation, Type } from '@dxos/echo';
-import { ATTR_PARENT } from '@dxos/echo/internal';
+import { Entity, Obj, Ref, Relation, Type } from '@dxos/echo';
+import { ATTR_PARENT, getRefSavedTarget } from '@dxos/echo/internal';
 import { EID, type SpaceId } from '@dxos/keys';
 
 /**
@@ -29,7 +29,8 @@ const SYSTEM_KEYS = new Set(['id', '@type', '@uri', '@parent', '@relationSource'
  * Serializes a live entity into the columns, reference rows and text the store writes.
  */
 export const toRecord = (entity: Entity.Unknown, spaceId: SpaceId): EntityRecord => {
-  const body: Record<string, unknown> = { ...Entity.toJSON(entity) };
+  const foreign = foreignTargets(entity, spaceId);
+  const body = qualifyReferences({ ...Entity.toJSON(entity) }, foreign);
   const parent = Obj.isObject(entity) ? Obj.getParent(entity) : undefined;
   if (parent) {
     body[ATTR_PARENT] = EID.make({ entityId: parent.id });
@@ -76,13 +77,77 @@ export const toRecord = (entity: Entity.Unknown, spaceId: SpaceId): EntityRecord
     typeDxn: Entity.getTypeURI(entity) ?? '',
     deleted: Entity.isDeleted(entity),
     parentId: parent?.id ?? null,
-    sourceId: isRelation ? localEntityId(Relation.getSourceURI(entity), spaceId) : null,
-    targetId: isRelation ? localEntityId(Relation.getTargetURI(entity), spaceId) : null,
+    sourceId: isRelation ? localEntityId(qualify(Relation.getSourceURI(entity), foreign), spaceId) : null,
+    targetId: isRelation ? localEntityId(qualify(Relation.getTargetURI(entity), foreign), spaceId) : null,
     body,
     refs,
     text: strings.join('\n'),
   };
 };
+
+/**
+ * Absolute URIs for the relative ones in `entity` whose live target belongs to another database. A ref
+ * built with `Ref.make` names its target relative to wherever it lives, which read back from this space
+ * would point into it; the row must name the target's own space.
+ */
+const foreignTargets = (entity: Entity.Unknown, spaceId: SpaceId): Map<string, string> => {
+  const foreign = new Map<string, string>();
+  const note = (uri: string, target: unknown): void => {
+    const eid = EID.tryParse(uri);
+    const targetSpace = Entity.isEntity(target) ? Entity.getDatabase(target)?.spaceId : undefined;
+    if (eid && EID.isLocal(eid) && targetSpace !== undefined && targetSpace !== spaceId && Entity.isEntity(target)) {
+      foreign.set(uri, EID.make({ spaceId: targetSpace, entityId: target.id }));
+    }
+  };
+  const visit = (value: unknown): void => {
+    if (Ref.isRef(value)) {
+      note(value.uri, getRefSavedTarget(value));
+    } else if (Array.isArray(value)) {
+      value.forEach(visit);
+    } else if (value !== null && typeof value === 'object') {
+      Object.values(value).forEach(visit);
+    }
+  };
+  visit(Object.values(entity));
+  if (Relation.isRelation(entity)) {
+    note(Relation.getSourceURI(entity), Relation.getSource(entity));
+    note(Relation.getTargetURI(entity), Relation.getTarget(entity));
+  }
+  return foreign;
+};
+
+const qualify = (uri: string, foreign: ReadonlyMap<string, string>): string => foreign.get(uri) ?? uri;
+
+/** Rewrites encoded references (`{ "/": uri }`) and endpoint URIs to their absolute form. */
+const qualifyReferences = (
+  body: Record<string, unknown>,
+  foreign: ReadonlyMap<string, string>,
+): Record<string, unknown> => {
+  if (foreign.size === 0) {
+    return body;
+  }
+  const rewrite = (value: unknown): unknown => {
+    if (Array.isArray(value)) {
+      return value.map(rewrite);
+    }
+    if (value !== null && typeof value === 'object') {
+      const uri = Object.keys(value).length === 1 ? Object.getOwnPropertyDescriptor(value, '/')?.value : undefined;
+      if (typeof uri === 'string') {
+        return { '/': qualify(uri, foreign) };
+      }
+      return Object.fromEntries(Object.entries(value).map(([key, inner]) => [key, rewrite(inner)]));
+    }
+    return value;
+  };
+  return Object.fromEntries(
+    Object.entries(body).map(([key, value]) => [
+      key,
+      ENDPOINT_KEYS.has(key) && typeof value === 'string' ? qualify(value, foreign) : rewrite(value),
+    ]),
+  );
+};
+
+const ENDPOINT_KEYS = new Set(['@relationSource', '@relationTarget']);
 
 /**
  * The bare entity id of an `echo:` URI that is local to `spaceId` (or space-relative), else null.

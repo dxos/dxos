@@ -53,12 +53,12 @@ describe('Hypergraph.localDatabase', () => {
     expect(people.map((person) => person.name)).toEqual(['Ada']);
   });
 
-  test('is not part of graph queries', async () => {
+  test('is part of graph queries and reachable by space id', async () => {
     const settings = graph.localDatabase('settings');
-    settings.add(Obj.make(TestSchema.Person, { name: 'Ada' }));
+    const person = settings.add(Obj.make(TestSchema.Person, { name: 'Ada' }));
     await settings.flush();
     const found = await graph.query(Query.select(Filter.type(TestSchema.Person)).from('all-accessible-spaces')).run();
-    expect(found).toHaveLength(0);
-    expect(graph.getDatabase(settings.spaceId)).toBeUndefined();
+    expect(found).toEqual([person]);
+    expect(graph.getDatabase(settings.spaceId)).toBe(settings);
   });
 });

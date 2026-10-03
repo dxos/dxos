@@ -28,8 +28,9 @@ last execution (empty before the first) and never blocks; use `run()` or `subscr
 
 ## Local databases
 
-`Hypergraph.localDatabase(name)` (in `@dxos/echo`) returns a device-local database: not a space, never
-replicated, absent from graph queries, and reopened by name. This package supplies its storage:
+`Hypergraph.localDatabase(name)` (in `@dxos/echo`) returns a device-local database: never replicated,
+reopened by name, and otherwise part of the graph like a space — graph queries scan and traverse across
+it, and references resolve into and out of it. This package supplies its storage:
 
 ```ts
 const echo = new EchoClient({ localDatabaseFactory: yield* localDatabaseFactory }); // needs SqlClient

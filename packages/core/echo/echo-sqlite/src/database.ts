@@ -84,6 +84,8 @@ export type MakeOptions = {
   /** Storage for {@link spaceId}; in this process, or across an RPC boundary. */
   driver: StoreDriver;
   types?: readonly Type.AnyEntity[];
+  /** The graph the database joins: it resolves references to other spaces and is `db.graph`. */
+  graph?: Hypergraph.Hypergraph;
 };
 
 /**
@@ -102,7 +104,7 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
   #ready: Promise<void> = Promise.resolve();
   readonly #registry: SimpleRegistry;
   readonly #resolver: DatabaseRefResolver;
-  readonly #graph: SqliteHypergraph;
+  readonly #graph: Hypergraph.Hypergraph;
 
   /** The working set: one live instance per id while anything outside holds it. */
   readonly #live = new Map<string, WeakRef<Entity.Unknown>>();
@@ -131,13 +133,20 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
   readonly #committed = new Event<ReadonlySet<string>>();
   readonly #counters = { hydrated: 0, queries: 0, loads: 0 };
 
-  private constructor(spaceId: SpaceId, driver: StoreDriver, types: readonly Type.AnyEntity[]) {
+  private constructor(
+    spaceId: SpaceId,
+    driver: StoreDriver,
+    types: readonly Type.AnyEntity[],
+    graph?: Hypergraph.Hypergraph,
+  ) {
     this.#spaceId = spaceId;
     this.#driver = driver;
     // The meta-type is registered so persisted `Type.Type` rows decode.
     this.#registry = new SimpleRegistry([Type.Type, ...types]);
-    this.#resolver = new DatabaseRefResolver(this);
-    this.#graph = new SqliteHypergraph(this, this.#resolver);
+    // Created on first use: the graph may still be wiring this database in when it is constructed.
+    let outside: Ref.Resolver | undefined;
+    this.#resolver = new DatabaseRefResolver(this, graph && (() => (outside ??= graph.createRefResolver({}))));
+    this.#graph = graph ?? new SqliteHypergraph(this, this.#resolver);
   }
 
   /**
@@ -167,8 +176,8 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
    * Returns the database at once and opens storage in the background; reads and writes wait for it.
    * The caller owns the database and must {@link close} it. A failed open fails every later storage call.
    */
-  static make({ spaceId, driver, types = [] }: MakeOptions): SqliteDatabase {
-    const db = new SqliteDatabase(spaceId, driver, types);
+  static make({ spaceId, driver, types = [], graph }: MakeOptions): SqliteDatabase {
+    const db = new SqliteDatabase(spaceId, driver, types, graph);
     db.#ready = driver.open().then((rows) => db.#registerTypes(rows));
     db.#ready.catch((error) => log.catch(error));
     return db;
@@ -195,6 +204,13 @@ export class SqliteDatabase implements Hypergraph.LocalDatabase, EntitySource {
 
   toJSON(): object {
     return { spaceId: this.#spaceId };
+  }
+
+  /**
+   * Calls `callback` after each batch of writes is durable.
+   */
+  subscribeChanges(callback: () => void): CleanupFn {
+    return this.#committed.on(() => callback());
   }
 
   /**

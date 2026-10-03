@@ -91,11 +91,15 @@ export interface Hypergraph extends Database.Queryable {
   getDatabase(spaceId: Key.SpaceId): Database.Database | undefined;
 
   /**
-   * The device-local database named `name`, opened on first use. It is not a space: nothing in it
-   * replicates, it is absent from {@link query} and {@link getDatabase}, and the same name reopens
+   * The device-local database named `name`, opened on first use. Nothing in it replicates, but it is
+   * part of the graph like a space: {@link getDatabase} finds it by its `spaceId`, graph queries scan
+   * and traverse into and out of it, and references resolve in both directions. The same name reopens
    * the same objects. Fails when the graph was built without a {@link LocalDatabaseFactory}.
    *
-   * @performance O(1); returns at once and opens storage on the database's first read or write.
+   * @performance O(1); returns at once and opens storage on the database's first read or write. A
+   * graph query whose scope includes a local database is evaluated across databases by the graph:
+   * incoming references, relations and children are found by scanning candidates in every database in
+   * scope, and the query re-runs on any database change.
    */
   localDatabase(name: string): Database.Database;
 
@@ -124,11 +128,23 @@ export interface Hypergraph extends Database.Queryable {
 export interface LocalDatabase extends Database.Database {
   /** Flushes pending writes and releases the database. */
   close(): Promise<void>;
+
+  /** The resident entity for an `echo:` URI in this database, without reading storage. */
+  peek(uri: URI.URI): Entity.Unknown | undefined;
+
+  /** The entity for an `echo:` URI in this database, reading storage when it is not resident. */
+  load(uri: URI.URI): Promise<Entity.Unknown | undefined>;
+
+  /** Calls `callback` after each batch of writes is durable; graph queries over the database re-run on it. */
+  subscribeChanges(callback: () => void): CleanupFn;
 }
 
 export type LocalDatabaseOptions = {
   /** Static types to hydrate stored objects with. */
   readonly types: readonly Type.AnyEntity[];
+
+  /** The graph the database joins: it resolves references that leave the database, and is its `db.graph`. */
+  readonly graph: Hypergraph;
 };
 
 /**

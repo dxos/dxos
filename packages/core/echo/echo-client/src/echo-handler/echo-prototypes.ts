@@ -299,7 +299,7 @@ export const getParent = (target: ProxyTarget): any => {
   // collected and rehydrated as a new core, whose old proxy must not be handed out.
   const uri = EncodedReference.toURI(parentRef);
   // The implementation behind the binding, which exposes cores by id.
-  const cores = database.graph.getDatabase(database.spaceId);
+  const cores = database.graph._getSpaceDatabase(database.spaceId);
   const cached = parentCache.get(core);
   if (cached?.uri === uri) {
     const parentCore = cached.core.deref();
