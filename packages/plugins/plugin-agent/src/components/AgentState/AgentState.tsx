@@ -92,11 +92,11 @@ type AgentStateSkill = { key: string; name: string };
 
 type AgentStateIdentityProps = {
   did?: string;
-  /** The skills bound to the agent's conversation, which together are its current mode. */
+  /** The base skills every conversation binds; each conversation's mode adds more (see Conversations). */
   skills: readonly AgentStateSkill[];
 };
 
-/** Who the agent is and the mode its bound skills put it in. */
+/** Who the agent is and the base skills it brings to every conversation. */
 const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
@@ -112,13 +112,13 @@ const AgentStateIdentity = ({ did, skills }: AgentStateIdentityProps) => {
               }
             />
           </Listbox.Item>
-          <Listbox.Item id='mode'>
+          <Listbox.Item id='skills'>
             <Listbox.ItemContent
-              icon='ph--blueprint--regular'
-              title={t('agent-state-mode.label')}
+              icon='ph--puzzle-piece--regular'
+              title={t('agent-state-skills.label')}
               description={
                 skills.length === 0 ? (
-                  t('agent-state-mode-empty.label')
+                  t('agent-state-skills-empty.label')
                 ) : (
                   <Flex asChild wrap gap='xs'>
                     <span>
