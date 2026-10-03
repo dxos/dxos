@@ -497,19 +497,26 @@ export const AgentProcess = (options: AgentProcessOptions) =>
                 }
               }
 
-              // The turn appends its own user message built from `prompt`, so the queue entry that
-              // supplied it must leave the queue view now or the same content shows in both places
-              // until the late ack below.
-              if (dequeued !== undefined) {
-                yield* sessionStore.markInFlight(feed, dequeued);
-              }
-
-              log('begin request', { prompt });
-              log('trace agent request begin');
-              yield* Trace.write(Trace.AgentRequestBegin, {});
+              // The MCP servers are read concurrently with the writes below: neither depends on the
+              // other, and each is a round trip to the database that the turn would otherwise wait on in series.
+              const [mcpServers] = yield* Effect.all(
+                [
+                  loadSpaceMcpServers(),
+                  Effect.gen(function* () {
+                    // The turn appends its own user message built from `prompt`, so the queue entry that
+                    // supplied it must leave the queue view now or the same content shows in both places
+                    // until the late ack below.
+                    if (dequeued !== undefined) {
+                      yield* sessionStore.markInFlight(feed, dequeued);
+                    }
+                    log('begin request', { prompt });
+                    log('trace agent request begin');
+                    yield* Trace.write(Trace.AgentRequestBegin, {});
+                  }),
+                ],
+                { concurrency: 'unbounded' },
+              );
               markWork('agent.turn-begin');
-              const mcpServers = yield* loadSpaceMcpServers();
-              markWork('agent.mcp-servers-loaded');
               yield* session
                 .runTurn({
                   prompt,
