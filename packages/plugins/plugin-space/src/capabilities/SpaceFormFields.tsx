@@ -8,8 +8,9 @@
 import * as Option from 'effect/Option';
 import React, { useCallback } from 'react';
 
-import { type Surface } from '@dxos/app-framework/ui';
-import { type AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
+import type * as Surface from '@dxos/app-framework/Surface';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Database, Obj } from '@dxos/echo';
 import { Field } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField } from '@dxos/react-ui-form';
@@ -64,7 +65,7 @@ export const TypenameField = ({ data, ...inputProps }: SpaceFormFieldProps) => {
     location: [],
     kind: [],
   }));
-  const options = useTypeOptions({ db, annotation });
+  const options = Hooks.useTypeOptions({ db, annotation });
 
   if (!ast) {
     return null;

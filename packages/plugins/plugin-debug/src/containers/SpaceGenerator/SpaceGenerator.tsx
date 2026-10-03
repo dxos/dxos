@@ -5,13 +5,14 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
-import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useProgressMonitor } from '@dxos/app-toolkit/ui';
 import { ComputeGraph } from '@dxos/conductor';
 import { Filter, Obj, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as Drawing from '@dxos/plugin-illustrator/Drawing';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import * as Sheet from '@dxos/plugin-sheet/Sheet';
@@ -53,15 +54,15 @@ export type SpaceGeneratorProps = {
 
 export const SpaceGenerator = composable<HTMLDivElement, SpaceGeneratorProps>(
   ({ children, space, onCreateObjects, ...props }, forwardedRef) => {
-    const invoker = useOperationInvoker();
+    const invoker = Hooks.useOperationInvoker();
     const { invokePromise } = invoker;
     const { t } = useTranslation(meta.profile.key);
     const client = useClient();
     const [count, setCount] = useState(1);
     const [info, setInfo] = useState<any>({});
     const presets = useMemo(() => generator(), []);
-    const manager = usePluginManager();
-    const allTemplates = useCapabilities(AppCapabilities.SpaceTemplate);
+    const manager = PluginManagerProvider.usePluginManager();
+    const allTemplates = Hooks.useCapabilities(AppCapabilities.SpaceTemplate);
 
     useEffect(() => {
       EffectEx.runDetached(manager.activate(ActivationEvents.SpaceTemplatesRequested));
@@ -293,8 +294,8 @@ type ProgressGeneratorProps = ThemedClassName;
 // and renders the meter here too, since the rail's only lives inside a popover the user must open,
 // which made a working monitor look like a broken one.
 const ProgressGenerator = ({ classNames }: ProgressGeneratorProps) => {
-  const registry = useOptionalCapability(AppCapabilities.ProgressRegistry);
-  const monitor = useProgressMonitor(TEST_PROGRESS_NAME);
+  const registry = Hooks.useOptionalCapability(AppCapabilities.ProgressRegistry);
+  const monitor = ToolkitHooks.useProgressMonitor(TEST_PROGRESS_NAME);
   const running = monitor?.status === 'running';
   const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 

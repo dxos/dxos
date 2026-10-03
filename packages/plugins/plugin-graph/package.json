@@ -35,10 +35,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./testing": {
       "source": "./src/testing.ts",
@@ -49,6 +49,11 @@
       "source": "./src/GraphPlugin.ts",
       "types": "./dist/types/src/GraphPlugin.d.ts",
       "import": "./dist/lib/GraphPlugin.mjs"
+    },
+    "./GraphAction": {
+      "source": "./src/GraphAction.ts",
+      "types": "./dist/types/src/GraphAction.d.ts",
+      "import": "./dist/lib/ns/GraphAction.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

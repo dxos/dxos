@@ -5,7 +5,7 @@
 import * as Schema from 'effect/Schema';
 import React, { type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Format } from '@dxos/echo';
 import { Button, Dialog, SystemButton, useTranslation } from '@dxos/react-ui';
@@ -82,7 +82,7 @@ const QuickEntryActions = ({ continueRef, formSaveRef }: QuickEntryActionsProps)
 
 export const QuickEntryDialog = () => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [formKey, setFormKey] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   const continueRef = useRef(false);

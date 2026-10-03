@@ -6,15 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, within } from 'storybook/test';
 
 import { ScriptedLanguageModel } from '@dxos/ai/testing';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { AiContext } from '@dxos/assistant';
-import {
-  DelegationSkill,
-  DelegationSkillOperations,
-  PlanningOperations,
-  PlanningSkill,
-  WebSearchSkill,
-} from '@dxos/assistant-toolkit';
+import * as DelegationSkill from '@dxos/assistant-toolkit/DelegationSkill';
+import * as PlanningSkill from '@dxos/assistant-toolkit/PlanningSkill';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import * as Operation from '@dxos/compute/Operation';
 import * as Project from '@dxos/compute/Project';
@@ -502,7 +498,7 @@ export const TestPlanningScripted: Story = {
           {
             parts: [
               text('Here is the plan.'),
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), {
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), {
                 changes: [
                   { create: true, title: 'Source the beans', status: 'started' },
                   { create: true, title: 'Dial in the roast' },
@@ -513,7 +509,7 @@ export const TestPlanningScripted: Story = {
           },
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), () => ({
                 changes: ['Source the beans', 'Dial in the roast', 'Print the labels'].map((title) => ({
                   task: checklistRef(title),
                   status: 'done',
@@ -583,7 +579,7 @@ export const TestDelegationScripted: Story = {
           {
             parts: [
               text('On it — delegating.'),
-              toolCall(Operation.toolName(DelegationSkillOperations.DelegateTask), { title: TASK_TITLE }),
+              toolCall(Operation.toolName(DelegationSkill.Operations.DelegateTask), { title: TASK_TITLE }),
             ],
           },
           { parts: [text('Delegated. I will report back when it completes.')] },
@@ -642,7 +638,7 @@ export const TestTaskExecutionScripted: Story = {
           {
             parts: [
               text('Starting task 1.'),
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), () => ({
                 changes: [{ task: checklistRef(EXECUTABLE_TASKS[0].title), status: 'started' }],
               })),
             ],
@@ -650,7 +646,7 @@ export const TestTaskExecutionScripted: Story = {
           { parts: [toolCall(Operation.toolName(Calculate), { expression: EXECUTABLE_TASKS[0].expression })] },
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), () => ({
                 changes: [{ task: checklistRef(EXECUTABLE_TASKS[0].title), status: 'done' }],
               })),
             ],
@@ -700,7 +696,7 @@ export const TestTaskDelegationScripted: Story = {
           {
             parts: [
               text('Delegating task 1.'),
-              toolCall(Operation.toolName(DelegationSkillOperations.DelegateTasks), { tasks: [1] }),
+              toolCall(Operation.toolName(DelegationSkill.Operations.DelegateTasks), { tasks: [1] }),
             ],
           },
           { parts: [text('Task 1 delegated. I will report back when it completes.')] },
@@ -762,7 +758,7 @@ export const TestTaskDrainScripted: Story = {
           {
             parts: [
               text('Delegating all three tasks; they will run in dependency order.'),
-              toolCall(Operation.toolName(DelegationSkillOperations.DelegateTasks), { tasks: [1, 2, 3] }),
+              toolCall(Operation.toolName(DelegationSkill.Operations.DelegateTasks), { tasks: [1, 2, 3] }),
             ],
           },
           { parts: [text('All three delegated; the sub-agents will report back as each completes.')] },
@@ -835,7 +831,7 @@ export const TestProjectTaskDelegationScripted: Story = {
           // the opening prompt deliberately does not restate it.
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), () => ({
                 changes: [{ task: checklistRef(POEM_TASK_TITLE), status: 'started' }],
               })),
             ],
@@ -853,7 +849,7 @@ export const TestProjectTaskDelegationScripted: Story = {
           // the task attachment.
           {
             parts: [
-              toolCall(Operation.toolName(PlanningOperations.UpdateTasks), () => ({
+              toolCall(Operation.toolName(PlanningSkill.Operations.UpdateTasks), () => ({
                 changes: [{ task: checklistRef(POEM_TASK_TITLE), status: 'done' }],
               })),
             ],

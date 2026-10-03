@@ -7,7 +7,7 @@ import type * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import { useMemo } from 'react';
 
-import { getQueryTarget } from '@dxos/app-toolkit/query';
+import { getQueryTarget } from '@dxos/app-toolkit/Query';
 import { Obj, Query } from '@dxos/echo';
 import { type BoardModel } from '@dxos/react-ui-mosaic';
 import { Pipeline } from '@dxos/types';

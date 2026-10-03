@@ -6,8 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery, useResolveRef } from '@dxos/echo-react';
 import { Button, Field, Icon, Input, Panel } from '@dxos/react-ui';
@@ -19,7 +19,7 @@ export type TestPlanArticleProps = AppSurface.ObjectArticleProps<TestPlan.TestPl
 
 /** The plan surface: the declared cases above the feed of runs, newest first. */
 export const TestPlanArticle = ({ role, subject }: TestPlanArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [plan] = useObject(subject);
   const [starting, setStarting] = useState(false);
   const [caseKey, setCaseKey] = useState('');

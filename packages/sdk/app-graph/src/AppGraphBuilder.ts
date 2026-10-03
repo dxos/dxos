@@ -15,7 +15,8 @@ import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { Position, isNonNullable } from '@dxos/util';
+import { isNonNullable } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { type FrameBudget, makeFrameBudget, scheduleTask, yieldOrContinue } from '#scheduler';
 

@@ -6,11 +6,11 @@ import * as Effect from 'effect/Effect';
 import * as Schema from 'effect/Schema';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useActivationSignal, useCapabilities, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import type * as Routine from '@dxos/compute/Routine';
 import { Database, Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { log } from '@dxos/log';
 import type * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { useTranslation } from '@dxos/react-ui';
@@ -56,9 +56,9 @@ export const CreateRoutinePanel = ({
   templates: templatesProp,
 }: CreateRoutinePanelProps) => {
   const { t } = useTranslation(meta.profile.key);
-  useActivationSignal(RoutineEvents.Start);
-  const capabilityTemplates = useCapabilities(RoutineCapabilities.Template);
-  const { invokePromise } = useOperationInvoker();
+  Hooks.useActivationSignal(RoutineEvents.Start);
+  const capabilityTemplates = Hooks.useCapabilities(RoutineCapabilities.Template);
+  const { invokePromise } = Hooks.useOperationInvoker();
   const templates = templatesProp ?? capabilityTemplates;
   const db = Database.isDatabase(target) ? target : Obj.getDatabase(target);
   const [draft, setDraft] = useState<Draft | undefined>();

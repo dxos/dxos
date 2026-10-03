@@ -10,7 +10,7 @@ import * as Stream from 'effect/Stream';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { ProcessManager } from '@dxos/compute-runtime';
 import * as Process from '@dxos/compute/Process';
 import * as ServiceResolver from '@dxos/compute/ServiceResolver';
@@ -86,8 +86,8 @@ export const useProcessEphemeralStatus = (
 ): string | undefined => {
   // Optional capabilities: the live status is a progressive enhancement, so the component still
   // renders (e.g. in standalone stories) when there is no plugin manager / process runtime.
-  const runtime = useOptionalCapability(Capabilities.ProcessManagerRuntime);
-  const monitor = useOptionalCapability(Capabilities.ProcessMonitor);
+  const runtime = Hooks.useOptionalCapability(Capabilities.ProcessManagerRuntime);
+  const monitor = Hooks.useOptionalCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(monitor?.processTreeAtom ?? atomEmpty);
   const [status, setStatus] = useState<string | undefined>();
   const fibersRef = useRef<Fiber.Fiber<void, unknown>[]>([]);

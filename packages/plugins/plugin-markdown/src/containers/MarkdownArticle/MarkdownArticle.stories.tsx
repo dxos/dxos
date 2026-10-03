@@ -8,11 +8,12 @@ import React, { useMemo } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Plugin from '@dxos/app-framework/Plugin';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { DXN } from '@dxos/keys';
@@ -23,7 +24,7 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
@@ -77,7 +78,7 @@ type StoryArgs = {
 };
 
 const DefaultStory = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [space] = useSpaces();
   const docs = useQuery(space?.db, Query.type(Markdown.Document));
   const doc = docs.find((candidate) => candidate.name !== EMBEDDED_NOTES);
@@ -106,7 +107,7 @@ const meta = {
     withPluginManager<StoryArgs>(
       ({ args: { title = 'Testing', content = '', objects: showObjects = false, deleted = false } }) => ({
         plugins: [
-          ...corePlugins(),
+          ...CorePlugins.make(),
           StorybookPlugin.make({}),
           MarkdownExtensionsPlugin(),
           IllustratorPlugin.make(),

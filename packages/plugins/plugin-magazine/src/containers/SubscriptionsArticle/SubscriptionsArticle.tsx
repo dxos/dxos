@@ -4,9 +4,10 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface, useLayout } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Ref, Type } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { invariant } from '@dxos/invariant';
@@ -22,8 +23,8 @@ export type SubscriptionsArticleProps = AppSurface.SpaceArticleProps;
 
 export const SubscriptionsArticle = ({ role, space, attendableId }: SubscriptionsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  const layout = useLayout();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const layout = ToolkitHooks.useLayout();
 
   const feeds = useQuery(space.db, Filter.type(Subscription.Subscription));
   const currentId = useSelection(attendableId, 'single');

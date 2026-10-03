@@ -4,7 +4,7 @@
 
 import React, { useEffect, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Obj } from '@dxos/echo';
 import { type AccessToken } from '@dxos/link';
@@ -32,7 +32,7 @@ export const DeploymentDialog = ({ accessToken, scriptTemplates }: DeploymentDia
   // TODO(ZaymonFC): Thinking further. All of this should get moved to intents to run async in the background.
   //   Deployment shouldn't be tied to the lifecycle of the dialogue component.
   const { handleCreateAndDeployScripts, status } = useCreateAndDeployScriptTemplates(db, scriptTemplates);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   useEffect(() => {
     if (status === 'success') {

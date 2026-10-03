@@ -9,7 +9,7 @@ import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Option from 'effect/Option';
 import { useCallback, useState } from 'react';
 
-import { useSpaceCallback } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Credential from '@dxos/compute/Credential';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -73,7 +73,7 @@ export const useTestConnection = (connection: Connection.Connection | undefined)
 
   // Resolved through the process manager so the connector reads its credential from the same
   // space-scoped `CredentialsService` operations use.
-  const runTest = useSpaceCallback(
+  const runTest = Hooks.useSpaceCallback(
     db?.spaceId,
     [Credential.CredentialsService],
     () => {

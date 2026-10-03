@@ -6,7 +6,9 @@ import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 
 import { type Context } from '@dxos/context';
-import { EffectEx, Hook, RuntimeProvider } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as Hook from '@dxos/effect/Hook';
+import * as RuntimeProvider from '@dxos/effect/RuntimeProvider';
 import { log } from '@dxos/log';
 
 import * as IdentityContract from '../../contracts/identity.ts';

@@ -4,15 +4,11 @@
 
 import React, { type ComponentType, type KeyboardEvent, type SyntheticEvent, useCallback, useMemo } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import {
-  AppSurface,
-  CardMenuSlot,
-  ObjectCard as ObjectCardPrimitive,
-  useCardPivot,
-  useObjectMenuItems,
-  useObjectNavigate,
-} from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as CardMenuSlot from '@dxos/app-toolkit/CardMenuSlot';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
 import { Entity, Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Block, Button, Card, useTranslation } from '@dxos/react-ui';
@@ -44,9 +40,9 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
   useObject(Obj.isObject(subject) ? subject : undefined);
 
   // The card menu renders in a portal; resolve the origin plank from the card element instead.
-  const [cardRef, pivotId] = useCardPivot();
-  const objectMenuItems = useObjectMenuItems(subject, pivotId);
-  const handleOpen = useObjectNavigate(subject, detailOf);
+  const [cardRef, pivotId] = Hooks.useCardPivot();
+  const objectMenuItems = Hooks.useObjectMenuItems(subject, pivotId);
+  const handleOpen = Hooks.useObjectNavigate(subject, detailOf);
   const handleKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
       if (handleOpen && event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
@@ -76,7 +72,7 @@ export const ObjectCard = ({ data: subject, classNames, CardMenu, detailOf }: Ob
           <Block rail='end'>
             {/* React portals bubble through the component tree, so the menu's clicks would reach the card. */}
             <div role='none' className='contents' onClick={stopPropagation}>
-              <CardMenuSlot subject={subject} menu={menu} />
+              <CardMenuSlot.Root subject={subject} menu={menu} />
               {CardMenu && Obj.isObject(subject) && <CardMenu subject={subject} menu={menu} />}
               <ActionMenu {...menu} disabled={!menuItems?.length} actions={objectMenuItems}>
                 <Button

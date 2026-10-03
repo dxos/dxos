@@ -6,8 +6,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { PropsWithChildren, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useProcessManagerRuntime } from '@dxos/app-framework/ui';
 import { addEventListener } from '@dxos/async';
 import { ProcessManager } from '@dxos/compute-runtime';
 import { FeedTraceSink } from '@dxos/compute-runtime';
@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Button, Panel, ScrollContainer, Toolbar } from '@dxos/react-ui';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
@@ -67,7 +67,7 @@ const JsonInspectorPanel = ({ data }: { data: unknown }) => (
 
 const DefaultStory = () => {
   const [space] = useSpaces();
-  const runtime = useProcessManagerRuntime();
+  const runtime = Hooks.useProcessManagerRuntime();
 
   // Advances through `agentScenarios` so repeated clicks show different shapes (nesting, concurrency, failure).
   const scenarioRef = useRef(0);
@@ -345,7 +345,7 @@ export const Default: Story = {
       // Fire SetupSettings so the assistant settings module activates and contributes
       // `AssistantCapabilities.Settings`, which `TracePanel` reads via `useAtomCapability`.
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: ({ client }) =>
@@ -374,7 +374,7 @@ export const WithSnapshot: Story = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(() => import('../../testing/data/trace-timeline.dx.json')),
@@ -392,7 +392,7 @@ export const WithRemoteSnapshot: Story = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(
@@ -412,7 +412,7 @@ export const WithRemoteMultipleSnapshot: Story = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(

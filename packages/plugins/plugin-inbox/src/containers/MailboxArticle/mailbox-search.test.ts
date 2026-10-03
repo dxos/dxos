@@ -8,7 +8,7 @@ import { describe, expect, test } from 'vitest';
 import { Database, Feed, Filter, Obj, Scope, Tag } from '@dxos/echo';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { QueryBuilder } from '@dxos/echo-query';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { EntityId } from '@dxos/keys';
 import { Message } from '@dxos/types';
 

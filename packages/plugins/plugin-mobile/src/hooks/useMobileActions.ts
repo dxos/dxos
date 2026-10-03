@@ -6,18 +6,18 @@ import * as Effect from 'effect/Effect';
 import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import type * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as AppNode from '@dxos/app-toolkit/AppNode';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as Operation from '@dxos/compute/Operation';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import * as DeckCapabilities from '@dxos/plugin-deck/DeckCapabilities';
 import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
-import { type DeckStateHook, useDeckState } from '@dxos/plugin-deck/hooks';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import * as DeckHooks from '@dxos/plugin-deck/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
 import {
@@ -28,7 +28,7 @@ import {
   createMenuItemGroup,
   graphActions,
 } from '@dxos/react-ui-menu';
-import { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 import { useMobileLayout } from '#components';
 import { meta } from '#meta';
@@ -55,7 +55,7 @@ type CompanionActionsConfig = {
   /** Highlight the companion matching this variant, when set. */
   selectedVariant?: string;
   /** Toggles the complementary sidebar's panel and open state. */
-  updateState: DeckStateHook['updateState'];
+  updateState: DeckHooks.DeckStateHook['updateState'];
 };
 
 /**
@@ -163,11 +163,11 @@ const createMobileAccountMenuSection = (
  */
 export const useMobileNavbarActions = (): MobileNavbarActions => {
   const { t } = useTranslation(meta.profile.key);
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
-  const stateAtom = useCapability(DeckCapabilities.State);
-  const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
-  const { updateState } = useDeckState();
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
+  const stateAtom = Hooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
+  const { updateState } = DeckHooks.useDeckState();
 
   const actionsAtom = useMemo(
     () =>
@@ -217,11 +217,11 @@ export const useMobileNavbarActions = (): MobileNavbarActions => {
  */
 export const useMobileDrawerActions = (consumerName: string): MobileDrawerActions => {
   const { t } = useTranslation(meta.profile.key);
-  const stateAtom = useCapability(DeckCapabilities.State);
-  const ephemeralAtom = useCapability(DeckCapabilities.EphemeralState);
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
-  const { updateState } = useDeckState();
+  const stateAtom = Hooks.useCapability(DeckCapabilities.State);
+  const ephemeralAtom = Hooks.useCapability(DeckCapabilities.EphemeralState);
+  const { graph } = ToolkitHooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
+  const { updateState } = DeckHooks.useDeckState();
   const { keyboardOpen } = useMobileLayout(consumerName);
 
   const actionsAtom = useMemo(

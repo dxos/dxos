@@ -4,8 +4,9 @@
 
 import React, { forwardRef, useCallback, useState } from 'react';
 
-import { NamePopover, useCapabilities } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as NamePopover from '@dxos/app-framework/NamePopover';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -28,7 +29,7 @@ export type ObjectHistoryProps = AppSurface.ObjectArticleProps<History.Versioned
  */
 export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role, subject }, forwardedRef) => {
   const { t } = useTranslation(meta.profile.key);
-  const providers = useCapabilities(ReviewCapabilities.HistoryProvider);
+  const providers = Hooks.useCapabilities(ReviewCapabilities.HistoryProvider);
   const provider = providers.find(({ id }) => id === Obj.getTypename(subject));
   const [naming, setNaming] = useState<'checkpoint' | 'branch' | undefined>(undefined);
   useObject(subject, 'history');
@@ -180,7 +181,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
     <Panel.Root role={role} ref={forwardedRef as React.Ref<HTMLDivElement>}>
       <Panel.Header>
         <Toolbar.Root classNames='dx-document'>
-          <NamePopover
+          <NamePopover.Root
             placeholder={t('revision-name.placeholder')}
             submitLabel={t('create.label')}
             open={naming === 'checkpoint'}
@@ -195,8 +196,8 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
               disabled={selection.kind === 'checkpoint' || selection.kind === 'fork'}
               onClick={() => setNaming('checkpoint')}
             />
-          </NamePopover>
-          <NamePopover
+          </NamePopover.Root>
+          <NamePopover.Root
             placeholder={t('branch-name.placeholder')}
             submitLabel={t('create.label')}
             open={naming === 'branch'}
@@ -214,7 +215,7 @@ export const ObjectHistory = forwardRef<HTMLElement, ObjectHistoryProps>(({ role
               disabled={!!activeBranch || !!activeVersion?.branch || selection.kind === 'fork'}
               onClick={() => setNaming('branch')}
             />
-          </NamePopover>
+          </NamePopover.Root>
           {activeBranch && (
             <>
               <Button icon='ph--git-merge--regular' label={t('merge.label')} onClick={handleMerge} />

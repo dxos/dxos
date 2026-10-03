@@ -17,14 +17,15 @@ import * as Option from 'effect/Option';
 import * as ActivationEvents from '@dxos/app-framework/ActivationEvents';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { createCliApp } from '@dxos/app-framework/cli';
+import * as Cli from '@dxos/app-framework/Cli';
 import * as AppMigrations from '@dxos/app-toolkit/AppMigrations';
 import { unrefTimeout } from '@dxos/async';
 import { ClientService, ConfigService, DXOS_VERSION, fromConfig } from '@dxos/client';
 import { DEFAULT_PROFILE, DXEnv } from '@dxos/client-protocol';
 import { LogLevel, LogProcessorType, levels, log } from '@dxos/log';
 import * as Observability from '@dxos/observability/Observability';
-import { isRecordEnabled, loadPlugins, makeInstalledPlugins } from '@dxos/plugin-registry';
+import * as PluginLoader from '@dxos/plugin-registry/PluginLoader';
+import * as PluginStorage from '@dxos/plugin-registry/PluginStorage';
 
 import {
   admin,
@@ -167,11 +168,11 @@ const program = Effect.gen(function* () {
 
   // `undefined` means the profile has never been configured; an empty array means the user
   // turned everything optional off, which must not be re-seeded with the defaults.
-  const records = yield* loadPlugins({ profile });
-  const enabled = records?.filter(isRecordEnabled).map((record) => record.id) ?? getDefaults();
+  const records = yield* PluginStorage.loadPlugins({ profile });
+  const enabled = records?.filter(PluginStorage.isRecordEnabled).map((record) => record.id) ?? getDefaults();
   // Third-party installs register as lazy stubs built from the metadata cached at install time, so
   // a `dx` invocation imports a plugin's code only once something enables it.
-  const installed = makeInstalledPlugins(records ?? []);
+  const installed = PluginLoader.makeInstalledPlugins(records ?? []);
   const overridden = new Set(installed.map((plugin) => plugin.meta.profile.key));
   // Must precede any plugin import so a third-party plugin's bare specifiers resolve to the host's
   // module instances rather than its own copies.
@@ -181,7 +182,7 @@ const program = Effect.gen(function* () {
   const installationId = yield* Effect.promise(() => Observability.getInstallationId(namespace));
   const observabilityInstance = yield* initializeObservability({ config, namespace, distinctId: installationId });
 
-  const { command, layer: pluginLayer } = yield* createCliApp({
+  const { command, layer: pluginLayer } = yield* Cli.createCliApp({
     rootCommand: dx,
     subCommands: [
       repl,

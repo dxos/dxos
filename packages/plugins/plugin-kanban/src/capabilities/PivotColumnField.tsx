@@ -4,8 +4,8 @@
 
 import React, { useMemo } from 'react';
 
-import { type Surface } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as Surface from '@dxos/app-framework/Surface';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Database, Obj, Type } from '@dxos/echo';
 import { Field } from '@dxos/react-ui';
 import { type FormFieldRendererProps, SelectField, useFormValues } from '@dxos/react-ui-form';

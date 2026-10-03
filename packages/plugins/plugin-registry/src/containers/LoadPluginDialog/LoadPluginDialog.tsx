@@ -4,14 +4,14 @@
 
 import React, { useCallback, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Button, Dialog, Field, Flex, Input, SystemButton, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { RegistryOperation, describeLoadError } from '#operations';
 
 export const LoadPluginDialog = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { t } = useTranslation(meta.profile.key);
   const [url, setUrl] = useState('');
   const [loading, setLoading] = useState(false);

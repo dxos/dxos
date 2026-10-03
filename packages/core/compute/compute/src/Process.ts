@@ -18,7 +18,7 @@ import * as Stream from 'effect/Stream';
 import type * as Types from 'effect/Types';
 
 import { Annotation, type Type } from '@dxos/echo';
-import { SchemaAST } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
 import { assertArgument } from '@dxos/invariant';
 import { DXN, type SpaceId, URI } from '@dxos/keys';
 import { log } from '@dxos/log';
@@ -795,3 +795,5 @@ const undeclaredTopLevelKeys = (typeAst: SchemaAST.AST, input: unknown): string[
 };
 
 const CONTENTLESS_INPUT_TAGS: ReadonlySet<string> = new Set(['Any', 'Unknown', 'Void', 'Undefined', 'Null', 'Never']);
+
+export { RUN_AGAIN_ERROR_CODE, RUN_AGAIN_MESSAGE, RunAgainError } from './errors.ts';

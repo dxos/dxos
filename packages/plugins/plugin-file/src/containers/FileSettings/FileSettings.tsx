@@ -4,8 +4,9 @@
 
 import React, { useCallback, useMemo } from 'react';
 
-import { useCapabilities, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { useClient } from '@dxos/react-client';
 import { Select, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -17,9 +18,9 @@ export type FileSettingsProps = AppSurface.SettingsData;
 
 export const FileSettings = ({ subject }: FileSettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { settings, updateSettings } = useSettingsState<Settings.Settings>(subject.atom);
+  const { settings, updateSettings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
   const client = useClient();
-  const contributed = useCapabilities(FileCapabilities.Backend);
+  const contributed = Hooks.useCapabilities(FileCapabilities.Backend);
   // Sorted by name: contribution order is module activation order, which is neither stable nor
   // meaningful to the reader, so the list would otherwise reshuffle as plugins are toggled.
   const backends = useMemo(() => [...contributed].sort((a, b) => a.name.localeCompare(b.name)), [contributed]);
@@ -46,7 +47,7 @@ export const FileSettings = ({ subject }: FileSettingsProps) => {
         <Form.Content>
           <Form.FieldSet
             label={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={meta.profile.key} />}
+            actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Form.Field
               label={t('settings.backend.label')}

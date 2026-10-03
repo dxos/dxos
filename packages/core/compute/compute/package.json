@@ -38,6 +38,11 @@
       "types": "./dist/types/src/Credential.d.ts",
       "import": "./dist/lib/Credential.mjs"
     },
+    "./FunctionsAiError": {
+      "source": "./src/FunctionsAiError.ts",
+      "types": "./dist/types/src/FunctionsAiError.d.ts",
+      "import": "./dist/lib/FunctionsAiError.mjs"
+    },
     "./Header": {
       "source": "./src/Header.ts",
       "types": "./dist/types/src/Header.d.ts",
@@ -132,11 +137,6 @@
       "source": "./src/types/TriggerEvent.ts",
       "types": "./dist/types/src/types/TriggerEvent.d.ts",
       "import": "./dist/lib/types/TriggerEvent.mjs"
-    },
-    "./errors": {
-      "source": "./src/errors.ts",
-      "types": "./dist/types/src/errors.d.ts",
-      "import": "./dist/lib/errors.mjs"
     },
     "./package.json": "./package.json",
     "./testing": {

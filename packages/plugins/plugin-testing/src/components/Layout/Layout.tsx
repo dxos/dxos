@@ -14,9 +14,10 @@ import React, {
   useState,
 } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import type * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import {
   AlertDialog,
   Card,
@@ -71,7 +72,7 @@ export const Layout = ({ children }: PropsWithChildren<{}>) => {
   const { t } = useTranslation(meta.profile.key);
   const trigger = useRef<HTMLButtonElement | null>(null);
   const registry = useContext(RegistryContext);
-  const stateAtom = useCapability(StorybookCapabilities.LayoutState);
+  const stateAtom = Hooks.useCapability(StorybookCapabilities.LayoutState);
   const layout = useAtomValue(stateAtom);
   const [iter, setIter] = useState(0);
   const [open, setOpen] = useState(false);

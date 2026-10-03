@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useMemo } from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj } from '@dxos/echo';
 import { AccessToken } from '@dxos/link';
@@ -49,7 +49,7 @@ const meta = {
   decorators: [
     withTheme(),
     withPluginManager({
-      plugins: [ProcessManagerPlugin(), ClientPlugin.make({})],
+      plugins: [ProcessManagerPlugin.make(), ClientPlugin.make({})],
     }),
   ],
 } satisfies Meta<typeof DeploymentDialogStory>;

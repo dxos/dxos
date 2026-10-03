@@ -9,7 +9,7 @@ import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { log } from '@dxos/log';
-import { type SpaceDashboard, toMetrics, toSlots } from '@dxos/plugin-space/dashboard';
+import * as Dashboard from '@dxos/plugin-space/Dashboard';
 import * as SpaceCapabilities from '@dxos/plugin-space/SpaceCapabilities';
 import { getIconRegistry } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
@@ -55,14 +55,14 @@ export default Capability.makeModule(
     let targets: (string | undefined)[] = [];
 
     let unsubscribeDashboard: (() => void) | undefined;
-    let current: SpaceDashboard | undefined;
+    let current: Dashboard.SpaceDashboard | undefined;
 
     const publish = () => {
       if (!current) {
         return;
       }
       const { stats, tasks, favorites } = current;
-      const keys = toSlots(favorites, DEVICE.keys);
+      const keys = Dashboard.toSlots(favorites, DEVICE.keys);
       const icons: Record<string, IconMarkup> = {};
       for (const key of keys) {
         // Undefined until the sprite has the glyph; the icon-registry subscription republishes then.
@@ -75,7 +75,7 @@ export default Capability.makeModule(
       const frame = buildFrame({
         device: DEVICE,
         keys,
-        dials: toMetrics(tasks, stats, DEVICE.dials),
+        dials: Dashboard.toMetrics(tasks, stats, DEVICE.dials),
         icons,
       });
 

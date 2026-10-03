@@ -4,8 +4,8 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
 import { Button, Panel, SystemButton, Toolbar, useTranslation } from '@dxos/react-ui';
@@ -29,7 +29,7 @@ export type PortfolioReportDetailProps = Pick<
  */
 export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioReportDetailProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const db = Obj.getDatabase(subject);
   const positions = useMemo(() => parsePositions(subject.xml), [subject.xml]);
   const trades = useMemo(() => parseTrades(subject.xml), [subject.xml]);

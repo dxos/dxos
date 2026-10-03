@@ -12,7 +12,7 @@ import * as Schema from 'effect/Schema';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Draw from './Draw.ts';
 import * as SystemOne from './SystemOne.ts';

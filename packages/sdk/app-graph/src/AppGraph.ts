@@ -11,7 +11,7 @@ import * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { type CleanupFn, Event, Trigger } from '@dxos/async';
 import { todo } from '@dxos/debug';
-import { AtomEx } from '@dxos/effect';
+import * as AtomEx from '@dxos/effect/AtomEx';
 import * as GraphModel from '@dxos/graph/GraphModel';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { invariant } from '@dxos/invariant';

@@ -61,6 +61,11 @@
       "types": "./dist/types/src/app-framework/ObservabilityMapping.d.ts",
       "import": "./dist/lib/app-framework/ObservabilityMapping.mjs"
     },
+    "./Progress": {
+      "source": "./src/app-framework/Progress.ts",
+      "types": "./dist/types/src/app-framework/Progress.d.ts",
+      "import": "./dist/lib/app-framework/Progress.mjs"
+    },
     "./AppNode": {
       "source": "./src/app-graph/AppNode.ts",
       "types": "./dist/types/src/app-graph/AppNode.d.ts",
@@ -186,31 +191,11 @@
       "types": "./dist/types/src/app/UrlResolution.d.ts",
       "import": "./dist/lib/app/UrlResolution.mjs"
     },
-    "./events": {
-      "source": "./src/app-framework/AppActivationEvents.ts",
-      "types": "./dist/types/src/app-framework/AppActivationEvents.d.ts",
-      "import": "./dist/lib/app-framework/AppActivationEvents.mjs"
-    },
     "./package.json": "./package.json",
-    "./query": {
-      "source": "./src/echo/Query.ts",
-      "types": "./dist/types/src/echo/Query.d.ts",
-      "import": "./dist/lib/echo/Query.mjs"
-    },
     "./testing": {
       "source": "./src/testing/index.ts",
       "types": "./dist/types/src/testing/index.d.ts",
       "import": "./dist/lib/testing.mjs"
-    },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    },
-    "./ui": {
-      "source": "./src/ui/index.ts",
-      "types": "./dist/types/src/ui/index.d.ts",
-      "import": "./dist/lib/ui.mjs"
     },
     "./AppUpdate": {
       "source": "./src/app/AppUpdate.ts",
@@ -221,6 +206,56 @@
       "source": "./src/app-framework/Tour.ts",
       "types": "./dist/types/src/app-framework/Tour.d.ts",
       "import": "./dist/lib/app-framework/Tour.mjs"
+    },
+    "./AppSurface": {
+      "source": "./src/AppSurface.ts",
+      "types": "./dist/types/src/AppSurface.d.ts",
+      "import": "./dist/lib/ns/AppSurface.mjs"
+    },
+    "./AttentionSigil": {
+      "source": "./src/AttentionSigil.ts",
+      "types": "./dist/types/src/AttentionSigil.d.ts",
+      "import": "./dist/lib/ns/AttentionSigil.mjs"
+    },
+    "./CardIconSlot": {
+      "source": "./src/CardIconSlot.ts",
+      "types": "./dist/types/src/CardIconSlot.d.ts",
+      "import": "./dist/lib/ns/CardIconSlot.mjs"
+    },
+    "./CardMenuSlot": {
+      "source": "./src/CardMenuSlot.ts",
+      "types": "./dist/types/src/CardMenuSlot.d.ts",
+      "import": "./dist/lib/ns/CardMenuSlot.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
+    },
+    "./NotFoundArticle": {
+      "source": "./src/NotFoundArticle.ts",
+      "types": "./dist/types/src/NotFoundArticle.d.ts",
+      "import": "./dist/lib/ns/NotFoundArticle.mjs"
+    },
+    "./ObjectCard": {
+      "source": "./src/ObjectCard.ts",
+      "types": "./dist/types/src/ObjectCard.d.ts",
+      "import": "./dist/lib/ns/ObjectCard.mjs"
+    },
+    "./PluginRegistryButton": {
+      "source": "./src/PluginRegistryButton.ts",
+      "types": "./dist/types/src/PluginRegistryButton.d.ts",
+      "import": "./dist/lib/ns/PluginRegistryButton.mjs"
+    },
+    "./SettingsScope": {
+      "source": "./src/SettingsScope.ts",
+      "types": "./dist/types/src/SettingsScope.d.ts",
+      "import": "./dist/lib/ns/SettingsScope.mjs"
+    },
+    "./UpdateRow": {
+      "source": "./src/UpdateRow.ts",
+      "types": "./dist/types/src/UpdateRow.d.ts",
+      "import": "./dist/lib/ns/UpdateRow.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

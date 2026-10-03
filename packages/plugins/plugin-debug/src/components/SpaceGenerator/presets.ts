@@ -4,7 +4,8 @@
 
 import * as Schema from 'effect/Schema';
 
-import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
@@ -179,7 +180,7 @@ export const generator = () => ({
             Trigger.make({
               enabled: true,
               spec: Trigger.specSubscription(organizationsQuery),
-              runnable: Ref.make(Operation.serialize(RunInstructions)),
+              runnable: Ref.make(Operation.serialize(AgentOperation.RunInstructions)),
               input: {
                 instructions: Ref.make(researchPrompt),
                 input: '{{event.subject}}',

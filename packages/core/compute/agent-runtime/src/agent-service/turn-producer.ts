@@ -10,7 +10,7 @@ import { type AiRequest, AiSession } from '@dxos/assistant';
 import type * as Instructions from '@dxos/compute/Instructions';
 import type * as Skill from '@dxos/compute/Skill';
 import type { Database, Feed } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import type { Message } from '@dxos/types';
 
 /**

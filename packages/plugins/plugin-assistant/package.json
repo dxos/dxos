@@ -84,20 +84,25 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
+    "./Chat": {
+      "source": "./src/Chat.ts",
+      "types": "./dist/types/src/Chat.d.ts",
+      "import": "./dist/lib/ns/Chat.mjs"
     },
-    "./extensions": {
-      "source": "./src/extensions/index.ts",
-      "types": "./dist/types/src/extensions/index.d.ts",
-      "import": "./dist/lib/extensions.mjs"
+    "./TracePanel": {
+      "source": "./src/TracePanel.ts",
+      "types": "./dist/types/src/TracePanel.d.ts",
+      "import": "./dist/lib/ns/TracePanel.mjs"
     },
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
+    "./Extensions": {
+      "source": "./src/Extensions.ts",
+      "types": "./dist/types/src/Extensions.d.ts",
+      "import": "./dist/lib/ns/Extensions.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./package.json": "./package.json",
     "./testing": {
@@ -169,6 +174,11 @@
       "source": "./src/skills/assistant/AssistantSkill.ts",
       "types": "./dist/types/src/skills/assistant/AssistantSkill.d.ts",
       "import": "./dist/lib/AssistantSkill.mjs"
+    },
+    "./PluginManagerSkill": {
+      "source": "./src/skills/plugin-manager/PluginManagerSkill.ts",
+      "types": "./dist/types/src/skills/plugin-manager/PluginManagerSkill.d.ts",
+      "import": "./dist/lib/PluginManagerSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

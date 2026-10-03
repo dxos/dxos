@@ -7,7 +7,8 @@ import { useCallback, useMemo } from 'react';
 import { type Database, DXN, Entity, Filter, Obj, Query, Scope, Tag, Type } from '@dxos/echo';
 import { useType as defaultUseType, useQuery } from '@dxos/echo-react';
 import { ANY_OBJECT_TYPENAME, ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/internal';
-import { type SchemaAST, SchemaEx } from '@dxos/effect';
+import type * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { useTranslation } from '@dxos/react-ui';
 import { hues } from '@dxos/ui-types';
 

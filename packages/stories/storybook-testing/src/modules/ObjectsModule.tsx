@@ -4,7 +4,7 @@
 
 import React, { useMemo, useState } from 'react';
 
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj } from '@dxos/echo';
 import { type Space, useQuery } from '@dxos/react-client/echo';
 import { Field, Input, Panel, Select, Toolbar } from '@dxos/react-ui';
@@ -20,7 +20,7 @@ const ALL_TYPES = '__all__';
  * space.
  */
 export const ObjectsModule = () => {
-  const space = useActiveSpace();
+  const space = Hooks.useActiveSpace();
   if (!space) {
     return null;
   }

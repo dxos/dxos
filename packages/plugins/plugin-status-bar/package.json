@@ -58,10 +58,10 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
+    "./StatusBar": {
+      "source": "./src/StatusBar.ts",
+      "types": "./dist/types/src/StatusBar.d.ts",
+      "import": "./dist/lib/ns/StatusBar.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",

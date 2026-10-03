@@ -24,15 +24,15 @@ import {
   formatSystemPrompt,
 } from '@dxos/assistant';
 import type * as Chat from '@dxos/assistant/Chat';
-import { type ServiceNotAvailableError } from '@dxos/compute';
 import * as AgentService from '@dxos/compute/AgentService';
 import type * as Credential from '@dxos/compute/Credential';
 import type * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
+import type * as ServiceResolver from '@dxos/compute/ServiceResolver';
 import * as Trace from '@dxos/compute/Trace';
 import { Database, Feed, Obj, Ref, type Registry } from '@dxos/echo';
 import { UsageQuotaExceededError } from '@dxos/edge-client';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { type ContentBlock, Message } from '@dxos/types';
@@ -258,7 +258,7 @@ export class AiChatProcessor {
      * Provided to every effect run by the processor so the underlying
      * {@link ProcessManagerRuntime} has access to space-affinity services.
      */
-    private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceNotAvailableError, never>,
+    private readonly _spaceLayer: Layer.Layer<SpaceServices, ServiceResolver.ServiceNotAvailableError, never>,
     private readonly _options: AiChatProcessorOptions = defaultOptions,
   ) {
     this.#registry = this._options.observableRegistry ?? AtomRegistry.make();

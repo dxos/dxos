@@ -4,7 +4,8 @@
 
 import React, { useCallback } from 'react';
 
-import { HomeSection, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as HomeSection from '@dxos/app-framework/HomeSection';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as RoutineOperation from '@dxos/plugin-routine/RoutineOperation';
 import { type Space } from '@dxos/react-client/echo';
 import { Block, Card, Container, Icon, useTranslation } from '@dxos/react-ui';
@@ -24,7 +25,7 @@ type SpaceScopedProps = {
  */
 export const SpaceHomeSuggestions = ({ space, onClose }: SpaceScopedProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const suggestions = useHomeSuggestions(space);
 
   const handleRunPrompt = useCallback(

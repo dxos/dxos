@@ -4,8 +4,9 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj, Ref } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Panel, Tabs, useTranslation } from '@dxos/react-ui';
@@ -25,7 +26,7 @@ export type VideoArticleProps = AppSurface.ObjectArticleProps<Video.Video>;
  * The transcript/summary are shown in a tab panel below the player on large form factors.
  */
 export const VideoArticle = ({ role, attendableId, subject }: VideoArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [video] = useObject(subject);
   const [tab, setTab] = useState('transcript');
   const [summarizing, setSummarizing] = useState(false);

@@ -85,10 +85,10 @@
       "types": "./dist/types/src/GitHubPlugin.d.ts",
       "import": "./dist/lib/GitHubPlugin.mjs"
     },
-    "./extensions": {
-      "source": "./src/extensions/index.ts",
-      "types": "./dist/types/src/extensions/index.d.ts",
-      "import": "./dist/lib/extensions.mjs"
+    "./Extensions": {
+      "source": "./src/Extensions.ts",
+      "types": "./dist/types/src/Extensions.d.ts",
+      "import": "./dist/lib/ns/Extensions.mjs"
     },
     "./GitHubCapabilities": {
       "source": "./src/types/GitHubCapabilities.ts",

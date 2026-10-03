@@ -6,7 +6,7 @@ import * as Option from 'effect/Option';
 import React, { type KeyboardEvent, type MouseEvent, useMemo } from 'react';
 
 import { Annotation, Entity, Obj, Ref, Type } from '@dxos/echo';
-import { type SchemaAST } from '@dxos/effect';
+import type * as SchemaAST from '@dxos/effect/SchemaAST';
 import { URI } from '@dxos/keys';
 import { Field, Group, SystemButton, Tag, Typography, useTranslation } from '@dxos/react-ui';
 import { OrderedList } from '@dxos/react-ui-list';

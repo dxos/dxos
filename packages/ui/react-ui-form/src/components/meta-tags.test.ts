@@ -6,7 +6,8 @@ import * as Schema from 'effect/Schema';
 import { describe, test } from 'vitest';
 
 import { Obj, Ref, Tag } from '@dxos/echo';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 import { Organization } from '../testing/schema.ts';
 import { META_TAGS_KEY, filterTagCandidates, partitionMetaTags, withMetaTags } from './meta-tags.ts';

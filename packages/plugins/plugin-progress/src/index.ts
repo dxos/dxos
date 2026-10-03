@@ -3,4 +3,3 @@
 //
 
 export * as ProgressPlugin from './ProgressPlugin.ts';
-export { meta } from '#meta';

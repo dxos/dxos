@@ -4,7 +4,7 @@
 
 // @import-as-namespace
 
-import { Hook } from '@dxos/effect';
+import * as Hook from '@dxos/effect/Hook';
 import { type Credential, type ProfileDocument } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 
 import { type Identity } from './Identity.ts';

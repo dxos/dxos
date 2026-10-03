@@ -4,8 +4,9 @@
 
 import React from 'react';
 
-import { useOperationInvoker, useSettingsState } from '@dxos/app-framework/ui';
-import { type AppSurface, SettingsScope } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as SettingsScope from '@dxos/app-toolkit/SettingsScope';
 import { Banner, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 
@@ -20,8 +21,8 @@ export type ObservabilitySettingsProps = AppSurface.SettingsData;
  */
 export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { settings } = useSettingsState<Settings.Settings>(subject.atom);
-  const { invokePromise } = useOperationInvoker();
+  const { settings } = Hooks.useSettingsState<Settings.Settings>(subject.atom);
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   return (
     <Form.Root
@@ -36,7 +37,7 @@ export const ObservabilitySettings = ({ subject }: ObservabilitySettingsProps) =
         <Form.Content>
           <Form.FieldSet
             label={meta.profile.name ?? meta.profile.key}
-            actions={<SettingsScope prefix={meta.profile.key} />}
+            actions={<SettingsScope.Root prefix={meta.profile.key} />}
           >
             <Banner.Root valence='info'>
               <Banner.Body>{t('observability.description')}</Banner.Body>

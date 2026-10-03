@@ -8,7 +8,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Ref } from '@dxos/echo';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaAST, SchemaEx } from '@dxos/effect';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { log } from '@dxos/log';
 import { useDefaultValue } from '@dxos/react-ui';
 import { type ValidationError, validateSchema } from '@dxos/schema';

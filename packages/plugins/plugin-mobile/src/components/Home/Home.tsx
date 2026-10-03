@@ -4,12 +4,12 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
-import { useConnections } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import {
   Avatar,
   Block,
@@ -67,7 +67,7 @@ export const Home = (_: HomeProps) => {
 const WorkspaceTile: MosaicStackTileComponent<AppGraphNode.Node> = (props) => {
   const data = props.data;
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { selectedValue, registerItem, unregisterItem } = useSearchListItem();
   const name = toLocalizedString(data.properties.label, t);
   const titleId = useId('mobile-tile');
@@ -140,7 +140,7 @@ const filterItems = (node: AppGraphNode.Node, disposition: string) => {
 
 /** Returns root-level items filtered by disposition. */
 const useItemsByDisposition = (disposition: string) => {
-  const { graph } = useAppGraph();
-  const connections = useConnections(graph, GraphNode.RootId, 'child');
+  const { graph } = ToolkitHooks.useAppGraph();
+  const connections = GraphHooks.useConnections(graph, GraphNode.RootId, 'child');
   return useMemo(() => connections.filter((node) => filterItems(node, disposition)), [connections, disposition]);
 };

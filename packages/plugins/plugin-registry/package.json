@@ -92,10 +92,25 @@
       "types": "./dist/types/src/RegistryPlugin.d.ts",
       "import": "./dist/lib/RegistryPlugin.mjs"
     },
-    "./operations": {
-      "source": "./src/operations/index.ts",
-      "types": "./dist/types/src/operations/index.d.ts",
-      "import": "./dist/lib/operations.mjs"
+    "./Operations": {
+      "source": "./src/Operations.ts",
+      "types": "./dist/types/src/Operations.d.ts",
+      "import": "./dist/lib/ns/Operations.mjs"
+    },
+    "./PluginLoader": {
+      "source": "./src/PluginLoader.ts",
+      "types": "./dist/types/src/PluginLoader.d.ts",
+      "import": "./dist/lib/ns/PluginLoader.mjs"
+    },
+    "./PluginStorage": {
+      "source": "./src/PluginStorage.ts",
+      "types": "./dist/types/src/PluginStorage.d.ts",
+      "import": "./dist/lib/ns/PluginStorage.mjs"
+    },
+    "./RegistryOperation": {
+      "source": "./src/RegistryOperation.ts",
+      "types": "./dist/types/src/RegistryOperation.d.ts",
+      "import": "./dist/lib/ns/RegistryOperation.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

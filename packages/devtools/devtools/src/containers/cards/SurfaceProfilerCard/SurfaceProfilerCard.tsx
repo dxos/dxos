@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { type SurfaceProfilerStats as BaseSurfaceProfilerStats } from '@dxos/app-framework/ui';
+import type * as Surface from '@dxos/app-framework/Surface';
 import { Button, Container, Flex, Grid, Switch, SystemButton, Tooltip } from '@dxos/react-ui';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
 import { mx } from '@dxos/ui-theme';
@@ -15,7 +15,7 @@ import { STAT_CARD_HUES, StatCard } from '../../../components/index.ts';
 const SLOW_TIME = 16;
 
 /** Profiler render timings joined with the surface's dispatch metrics. */
-export type SurfaceProfilerStats = BaseSurfaceProfilerStats & {
+export type SurfaceProfilerStats = Surface.ProfilerStats & {
   /** Candidates matched on the last dispatch (from Surface dev metrics). */
   candidates?: number;
   /** `true` when more candidates matched than rendered. */

@@ -16,7 +16,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { MapPlugin } from '@dxos/plugin-map/testing';
 import { TablePlugin } from '@dxos/plugin-table/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
 import { Loading, withTheme } from '@dxos/react-ui/testing';
 import { Organization, Person } from '@dxos/types';
@@ -75,7 +75,7 @@ const meta = {
     withTheme(),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Chat.Chat, Feed.Feed, Organization.Organization, Person.Person],
           onClientInitialized: ({ client }) =>

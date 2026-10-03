@@ -4,11 +4,11 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { type AppSurface } from '@dxos/app-toolkit/ui';
-import { useLayout } from '@dxos/app-toolkit/ui';
 import { Entity, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Dialog, DIALOG_AUTOFOCUS_ATTRIBUTE, SystemButton, useTranslation } from '@dxos/react-ui';
@@ -24,9 +24,9 @@ export type SearchDialogProps = AppSurface.SpaceArticleProps<{
 
 export const SearchDialog = ({ space, pivotId: pivotIdProp }: SearchDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { setMatch } = useGlobalSearch();
-  const layout = useLayout();
+  const layout = ToolkitHooks.useLayout();
   const pivotId = pivotIdProp ?? layout.active[layout.active.length - 1];
   const [query, setQuery] = useState<string>();
 

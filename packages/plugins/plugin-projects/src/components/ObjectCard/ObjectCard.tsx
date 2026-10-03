@@ -4,11 +4,12 @@
 
 import React, { type KeyboardEventHandler, useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, ObjectCard as ObjectCardPrimitive } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useArchiveMenuItem } from '@dxos/plugin-space/hooks';
+import * as SpaceHooks from '@dxos/plugin-space/Hooks';
 import { Card, Menu, Tag, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -29,7 +30,7 @@ export const ObjectCard = ({ object: objectProp, onClick, onDelete }: ObjectCard
   const { t } = useTranslation(meta.profile.key);
   const [object] = useObject(objectProp);
   const label = Obj.getLabel(object)?.trim() || t('object-card.untitled.label');
-  const { archived, item: archiveItem } = useArchiveMenuItem(objectProp);
+  const { archived, item: archiveItem } = SpaceHooks.useArchiveMenuItem(objectProp);
   const menuItems = [
     ...(onDelete ? [{ label: t('object-card.delete.label'), icon: 'ph--trash--regular', onClick: onDelete }] : []),
     ...(archiveItem ? [archiveItem] : []),

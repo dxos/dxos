@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useMemo } from 'react';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { PublicKey } from '@dxos/keys';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -115,7 +115,7 @@ const meta = {
       createSpace: true,
     }),
     // TODO(wittjosiah): Try to write story which does not depend on plugin manager.
-    withPluginManager({ plugins: [ProcessManagerPlugin()] }),
+    withPluginManager({ plugins: [ProcessManagerPlugin.make()] }),
     withComputeGraphDecorator(),
   ],
   parameters: {

@@ -25,7 +25,7 @@ import {
   View,
 } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { invariant } from '@dxos/invariant';
 import { Banner, Button, Field, Toggle, Typography, useTranslation } from '@dxos/react-ui';
 import { QueryForm, type QueryFormProps } from '@dxos/react-ui-components';

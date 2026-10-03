@@ -11,7 +11,9 @@ import * as Match from 'effect/Match';
 import * as Option from 'effect/Option';
 
 import { Annotation, type Database, Filter, Query, type QueryAST, Scope, Type } from '@dxos/echo';
-import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
+import * as SchemaAST from '@dxos/effect/SchemaAST';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { Person } from '@dxos/types';

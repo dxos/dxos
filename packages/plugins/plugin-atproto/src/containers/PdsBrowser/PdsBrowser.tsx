@@ -5,11 +5,13 @@
 import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 
-import { Surface, useCapability } from '@dxos/app-framework/ui';
-import { AppSurface, ObjectCard } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { type Database, Filter, Obj } from '@dxos/echo';
 import { Panproto } from '@dxos/echo-panproto';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { AccessToken, Connection } from '@dxos/link';
 import { useQuery } from '@dxos/react-client/echo';
 import {
@@ -119,7 +121,7 @@ const PaneList = ({ rows, selectedId, onSelect, emptyLabel, detail }: PaneListPr
  */
 export const PdsBrowser = ({ role, db }: PdsBrowserProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const readRepoLayer = useCapability(AtprotoCapabilities.ReadRepoLayer);
+  const readRepoLayer = Hooks.useCapability(AtprotoCapabilities.ReadRepoLayer);
 
   const connections = useQuery(db, Filter.type(Connection.Connection));
   const tokens = useQuery(db, Filter.type(AccessToken.AccessToken));

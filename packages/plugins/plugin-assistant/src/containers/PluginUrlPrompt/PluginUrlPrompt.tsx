@@ -5,9 +5,10 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as UrlLoader from '@dxos/app-framework/UrlLoader';
-import { RegistryOperation, describeLoadError } from '@dxos/plugin-registry/operations';
+import * as Operations from '@dxos/plugin-registry/Operations';
 import { Button, Flex, Icon, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -30,9 +31,9 @@ export type PluginUrlPromptProps = {
  */
 export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const { submit } = useChatReportContext(PLUGIN_URL_PROMPT_NAME);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -50,10 +51,10 @@ export const PluginUrlPrompt = ({ url, name }: PluginUrlPromptProps) => {
     setError(undefined);
     // Loaded but not enabled: turning it on is a second, deliberate step in Plugins, where the reader
     // sees what the plugin is before it runs. `invokePromise` reports a failure as `{ error }`.
-    const { data, error } = await invokePromise(RegistryOperation.LoadPlugin, { url, enable: false });
+    const { data, error } = await invokePromise(Operations.RegistryOperation.LoadPlugin, { url, enable: false });
     setPending(false);
     if (error || !data) {
-      setError(describeLoadError(error));
+      setError(Operations.describeLoadError(error));
     } else {
       // The agent is waiting on a click it cannot observe, so the outcome is reported as a turn.
       submit(`Loaded the plugin \`${data.id}\` from ${url}; I will enable it in Plugins. Continue.`);

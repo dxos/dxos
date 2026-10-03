@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import React, { useCallback, useContext, useMemo } from 'react';
 import { expect, waitFor, within } from 'storybook/test';
 
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, type QueryAST, Type, View } from '@dxos/echo';
 import { useQuery, useType } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
@@ -21,7 +21,7 @@ import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
@@ -63,7 +63,7 @@ type ClientSetupOptions = {
 const withKanbanPlugins = ({ types = [], onSpaceCreated }: ClientSetupOptions): Decorator =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types: [...types, View.View, Kanban.Kanban],
         onClientInitialized: ({ client }) =>

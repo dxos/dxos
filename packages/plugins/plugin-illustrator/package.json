@@ -84,15 +84,15 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./model": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "import": "./dist/lib/model.mjs"
+    "./DrawingSkill": {
+      "source": "./src/skills/DrawingSkill.ts",
+      "types": "./dist/types/src/skills/DrawingSkill.d.ts",
+      "import": "./dist/lib/DrawingSkill.mjs"
     },
-    "./skills": {
-      "source": "./src/skills/index.ts",
-      "types": "./dist/types/src/skills/index.d.ts",
-      "import": "./dist/lib/skills.mjs"
+    "./UmlSkill": {
+      "source": "./src/skills/UmlSkill.ts",
+      "types": "./dist/types/src/skills/UmlSkill.d.ts",
+      "import": "./dist/lib/UmlSkill.mjs"
     },
     "./translations": {
       "source": "./src/translations.ts",
@@ -126,9 +126,9 @@
       "import": "./dist/lib/IllustratorEvents.mjs"
     },
     "./IllustratorModel": {
-      "source": "./src/model/index.ts",
-      "types": "./dist/types/src/model/index.d.ts",
-      "import": "./dist/lib/model.mjs"
+      "source": "./src/IllustratorModel.ts",
+      "types": "./dist/types/src/IllustratorModel.d.ts",
+      "import": "./dist/lib/ns/IllustratorModel.mjs"
     },
     "./IllustratorPlugin": {
       "source": "./src/IllustratorPlugin.ts",
@@ -139,6 +139,11 @@
       "source": "./src/types/LegacySketch.ts",
       "types": "./dist/types/src/types/LegacySketch.d.ts",
       "import": "./dist/lib/LegacySketch.mjs"
+    },
+    "./IllustratorOperationHandlerSet": {
+      "source": "./src/IllustratorOperationHandlerSet.ts",
+      "types": "./dist/types/src/IllustratorOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ns/IllustratorOperationHandlerSet.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

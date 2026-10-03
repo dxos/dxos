@@ -10,6 +10,7 @@ export default defineConfig({
     FilePlugin: 'src/FilePlugin.ts',
     plugin: 'src/plugin.tsx',
     skills: 'src/skills/index.ts',
+    FileSkill: 'src/skills/FileSkill.ts',
     capabilities: 'src/capabilities/index.ts',
     components: 'src/components/index.ts',
     containers: 'src/containers/index.ts',

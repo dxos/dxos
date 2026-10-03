@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import { Database, Feed, Filter } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Message } from '@dxos/types';
 
 import { Mailbox } from '#types';

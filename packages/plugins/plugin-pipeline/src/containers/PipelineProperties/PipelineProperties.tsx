@@ -6,12 +6,13 @@ import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 
-import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/query';
-import { AppSurface, useTypeOptions } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import { resolveSchemaWithRegistry } from '@dxos/app-toolkit/Query';
 import { EID, Filter, JsonSchema, Obj, Query, type QueryAST, Ref, Scope, Tag, type Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { type Mutable } from '@dxos/echo/Obj';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { SystemButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form, ViewEditor } from '@dxos/react-ui-form';
 import { OrderedList } from '@dxos/react-ui-list';
@@ -40,7 +41,7 @@ export const PipelineProperties = ({ subject: pipeline }: PipelinePropertiesProp
   const [type, setType] = useState<Type.AnyEntity>();
   const projectionRef = useRef<ProjectionModel>(null);
   const tags = useQuery(db, Filter.type(Tag.Tag));
-  const types = useTypeOptions({
+  const types = Hooks.useTypeOptions({
     db,
     annotation: {
       location: ['database', 'runtime'],

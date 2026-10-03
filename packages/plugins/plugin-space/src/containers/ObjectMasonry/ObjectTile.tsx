@@ -5,10 +5,12 @@
 import * as Option from 'effect/Option';
 import React, { useCallback, useMemo } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as CollectionOperation from '@dxos/app-toolkit/CollectionOperation';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
-import { AppSurface, ObjectCard } from '@dxos/app-toolkit/ui';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
 import { Card, Focus, Menu, Tag, useTranslation } from '@dxos/react-ui';
@@ -38,7 +40,7 @@ export const TileAdapter = ({ data }: { data: TileData | undefined; index: numbe
 /** Selectable header-only card for a single object. */
 export const ObjectTile = ({ object, current, onSelect, onOpen, onDelete }: TileData) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   // Subscribe so the label re-renders when the object changes.
   const [live] = useObject(object);
   const typename = Obj.getTypename(live);

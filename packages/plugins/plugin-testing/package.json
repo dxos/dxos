@@ -58,9 +58,9 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/lib/index.mjs"
     },
-    "./harness": {
-      "source": "./src/harness.ts",
-      "types": "./dist/types/src/harness.d.ts",
+    "./Harness": {
+      "source": "./src/Harness.ts",
+      "types": "./dist/types/src/Harness.d.ts",
       "import": "./dist/lib/harness.mjs"
     },
     "./package.json": "./package.json",
@@ -73,6 +73,16 @@
       "source": "./src/StorybookPlugin.ts",
       "types": "./dist/types/src/StorybookPlugin.d.ts",
       "import": "./dist/lib/StorybookPlugin.mjs"
+    },
+    "./Corpus": {
+      "source": "./src/Corpus.ts",
+      "types": "./dist/types/src/Corpus.d.ts",
+      "import": "./dist/lib/ns/Corpus.mjs"
+    },
+    "./CorePlugins": {
+      "source": "./src/CorePlugins.ts",
+      "types": "./dist/types/src/CorePlugins.d.ts",
+      "import": "./dist/lib/ns/CorePlugins.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -6,8 +6,8 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { List, ListItem } from '@dxos/react-list';
 import { Button, Combobox, Flex, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
@@ -27,7 +27,7 @@ const LOADED_POLL_INTERVAL = 3_000;
  * browser/mobile. Split from the section body so hooks are never called conditionally.
  */
 export const OllamaModels = () => {
-  const manager = useOptionalCapability(AssistantCapabilities.OllamaManager);
+  const manager = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager);
   if (!manager) {
     return null;
   }

@@ -4,11 +4,13 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, ObjectCard as ObjectCardPrimitive, useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ObjectCardPrimitive from '@dxos/app-toolkit/ObjectCard';
 import { Obj, Type } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Card, Field, Flex, Panel, ScrollArea, useTranslation } from '@dxos/react-ui';
 import { Masonry } from '@dxos/react-ui-masonry';
 import {
@@ -118,8 +120,8 @@ export const RecordArticle = ({ role, subject, attendableId }: AppSurface.Object
 const useMenuActions = (
   attendableId?: string,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = Hooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
 
   const menuActions = useMenuBuilder(
     (get): ActionGraphProps =>

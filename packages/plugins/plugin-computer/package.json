@@ -66,11 +66,6 @@
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
     "./package.json": "./package.json",
-    "./shell": {
-      "source": "./src/shell/index.ts",
-      "types": "./dist/types/src/shell/index.d.ts",
-      "import": "./dist/lib/shell.mjs"
-    },
     "./vite-plugin": {
       "types": "./dist/types/src/vite-plugin/index.d.ts",
       "import": "./dist/lib/vite-plugin.mjs"
@@ -91,9 +86,6 @@
     "*": {
       "ComputerOperation": [
         "dist/types/src/types/ComputerOperation.d.ts"
-      ],
-      "shell": [
-        "dist/types/src/shell/index.d.ts"
       ],
       "vite-plugin": [
         "dist/types/src/vite-plugin/index.d.ts"

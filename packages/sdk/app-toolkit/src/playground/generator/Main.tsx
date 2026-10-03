@@ -8,8 +8,9 @@ import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface, usePluginManager } from '@dxos/app-framework/ui';
-import { EffectEx } from '@dxos/effect';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Button } from '@dxos/react-ui';
 import { Listbox } from '@dxos/react-ui-list';
 
@@ -42,7 +43,7 @@ const Item = ({
 };
 
 export const Main = () => {
-  const manager = usePluginManager();
+  const manager = PluginManagerProvider.usePluginManager();
   const plugins = useAtomValue(manager.plugins);
   const core = useAtomValue(manager.core);
 

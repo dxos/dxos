@@ -6,11 +6,11 @@ import { useAtomValue } from '@effect/atom-react/Hooks';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Model, Provider } from '@dxos/ai';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as Chat from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN } from '@dxos/keys';
 import { useTranslation } from '@dxos/react-ui';
 
@@ -44,7 +44,7 @@ export const usePresets = (settings: Assistant.Settings, chat?: Chat.Chat): UseP
 
   // The Ollama manager is the bundled sidecar (desktop only); its presence signals that the
   // `built-in` provider (rather than an external Ollama server) is available.
-  const ollamaManager = useOptionalCapability(AssistantCapabilities.OllamaManager);
+  const ollamaManager = Hooks.useOptionalCapability(AssistantCapabilities.OllamaManager);
 
   const provider = resolveProvider(settings.modelProvider, !!ollamaManager);
   const defaultModel = settings.modelDefaults?.[defaultsKeyForProvider(provider)];

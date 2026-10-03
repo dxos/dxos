@@ -4,8 +4,9 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as Project from '@dxos/compute/Project';
 import { Filter, type Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
@@ -32,7 +33,7 @@ export const ProjectModule = ({ data }: { data: ProjectModuleProps }) => {
   const [space] = useSpaces();
   const [mailbox] = useQuery(space?.db, Filter.type(Mailbox.Mailbox));
   const [project] = useQuery(space?.db, Filter.type(Project.Project));
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [error, setError] = useState<string>();
 
   const handleCreate = useCallback(

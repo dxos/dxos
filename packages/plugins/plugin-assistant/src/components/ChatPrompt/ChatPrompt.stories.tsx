@@ -9,15 +9,15 @@ import React, { useContext, useEffect } from 'react';
 import { expect, within } from 'storybook/test';
 
 import { SERVICES_CONFIG } from '@dxos/ai/testing';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability } from '@dxos/app-framework/ui';
 import { Alarm, SessionStore } from '@dxos/assistant';
 import { capabilities } from '@dxos/assistant-toolkit/testing';
 import * as ChatType from '@dxos/assistant/Chat';
 import { Database, Feed, Filter, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { Config } from '@dxos/react-client';
 import { useRegistry, useSpaces } from '@dxos/react-client/echo';
@@ -50,7 +50,7 @@ type StoryArgs = {
 const DefaultStory = ({ tasksVisible: initialTasksVisible, running }: StoryArgs) => {
   const [space] = useSpaces();
   const [chat] = useQuery(space?.db, Filter.type(ChatType.Chat));
-  const settings = useAtomCapability(AssistantCapabilities.Settings);
+  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const registry = useRegistry();
   const { preset, ...chatProps } = usePresets(settings, chat);
   const db = space?.db;
@@ -97,7 +97,7 @@ const meta = {
     withLayout({ layout: 'column', classNames: 'flex flex-col justify-end w-[30rem]' }),
     withPluginManager<StoryArgs>(({ args: { tasks = [], queued = [], alarmInMinutes } }) => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [ChatType.Chat, Feed.Feed, Message.Message, Task.Task, Alarm.Alarm],
           config: new Config({ runtime: { services: SERVICES_CONFIG.REMOTE } }),

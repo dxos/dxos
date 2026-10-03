@@ -8,9 +8,9 @@ import * as Option from 'effect/Option';
 import * as Atom from 'effect/reactivity/Atom';
 import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Alarm } from '@dxos/assistant';
-import { resolveSlashCommand } from '@dxos/assistant-toolkit';
+import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
@@ -94,7 +94,7 @@ const ChatRoot = ({
 }: ChatRootProps) => {
   const [debug, setDebug] = useState(debugProp ?? false);
   // Slash commands run their operations through the same invoker the rest of the UI uses.
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const processorState = getProcessorState(processor);
   const streaming = useAtomValue(processorState.streaming);
   const active = useAtomValue(processorState.active);
@@ -203,7 +203,7 @@ const ChatRoot = ({
           if (text.length) {
             // A leading /command is a deterministic shortcut — executed directly, no model in
             // the loop; an unknown command falls through to the model as plain text.
-            const resolved = resolveSlashCommand(text, TaskSlashCommands);
+            const resolved = SlashCommand.resolveSlashCommand(text, TaskSlashCommands);
             if (resolved) {
               // One command at a time: `invokePromise` does not queue, so two quick submissions
               // would interleave their operations and land their summaries out of order.
@@ -862,7 +862,7 @@ ChatTaskList.displayName = CHAT_TASK_LIST_NAME;
  * resumed — which is the whole point of answering here instead of on the task.
  */
 const ChatTaskQuestions = ({ tasks }: { tasks: readonly Task.Task[] }) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const threads = useMemo(
     () =>
       tasks.flatMap((task) =>

@@ -11,7 +11,7 @@ import * as Schema from 'effect/Schema';
 import * as Stream from 'effect/Stream';
 
 import { AiService } from '@dxos/ai';
-import { PROGRESS_STATUS_CANCELLED, PROGRESS_STATUS_COMPLETE, PROGRESS_STATUS_FAILED } from '@dxos/app-toolkit';
+import * as Progress from '@dxos/app-toolkit/Progress';
 import * as Cancellation from '@dxos/compute/Cancellation';
 import * as Operation from '@dxos/compute/Operation';
 import * as Trace from '@dxos/compute/Trace';
@@ -27,7 +27,7 @@ import { trim } from '@dxos/util';
 import { InboxOperation } from '#types';
 
 import { type SystemTagId, findOrCreateSystemTag } from '../../types/SystemTags.ts';
-import { CLASSIFY_CURSOR_KEY_ID, findOrCreateFeedCursor } from '../FeedCursor.ts';
+import * as FeedCursor from '../FeedCursor.ts';
 
 const DEFAULT_MODEL = 'com.anthropic.model.claude-haiku-4-5.default';
 
@@ -184,7 +184,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
       const feed = yield* Database.load(mailbox.feed);
       const tagIndex = yield* Database.load(mailbox.tags);
       const { db } = yield* Database.Service;
-      const cursor = yield* findOrCreateFeedCursor(mailbox, CLASSIFY_CURSOR_KEY_ID);
+      const cursor = yield* FeedCursor.findOrCreateFeedCursor(mailbox, FeedCursor.CLASSIFY_CURSOR_KEY_ID);
 
       const signal = yield* Cancellation.signal;
       const traceWriter = yield* Trace.TraceService;
@@ -319,7 +319,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
           signal,
           Effect.sync(() => {
             log.info('classify: pipeline cancelled', { mailbox: Obj.getURI(mailbox), processed });
-            reportStatus({ message: PROGRESS_STATUS_CANCELLED });
+            reportStatus({ message: Progress.STATUS_CANCELLED });
           }),
         ),
       );
@@ -329,7 +329,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
           Effect.sync(() => {
             if (!Cause.hasInterruptsOnly(cause)) {
               Cursor.recordError(cursor, Cause.pretty(cause).slice(0, 500));
-              reportStatus({ message: PROGRESS_STATUS_FAILED });
+              reportStatus({ message: Progress.STATUS_FAILED });
             }
           }),
         ),
@@ -343,7 +343,7 @@ const handler = InboxOperation.ClassifyMailbox.pipe(
         known: knownCount,
         remaining,
       });
-      reportStatus({ message: PROGRESS_STATUS_COMPLETE });
+      reportStatus({ message: Progress.STATUS_COMPLETE });
       return { processed, spam, known: knownCount, remaining };
     }),
   ),

@@ -72,6 +72,11 @@
       "source": "./src/types/PreviewCapabilities.ts",
       "types": "./dist/types/src/types/PreviewCapabilities.d.ts",
       "import": "./dist/lib/PreviewCapabilities.mjs"
+    },
+    "./PreviewEvents": {
+      "source": "./src/PreviewEvents.ts",
+      "types": "./dist/types/src/PreviewEvents.d.ts",
+      "import": "./dist/lib/ns/PreviewEvents.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

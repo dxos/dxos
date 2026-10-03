@@ -95,11 +95,6 @@
       "types": "./dist/types/src/protocol/Protocol.d.ts",
       "import": "./dist/lib/Protocol.mjs"
     },
-    "./types": {
-      "source": "./src/types/index.ts",
-      "types": "./dist/types/src/types/index.d.ts",
-      "import": "./dist/lib/types.mjs"
-    },
     "./StreamDeckCapabilities": {
       "source": "./src/types/StreamDeckCapabilities.ts",
       "types": "./dist/types/src/types/StreamDeckCapabilities.d.ts",

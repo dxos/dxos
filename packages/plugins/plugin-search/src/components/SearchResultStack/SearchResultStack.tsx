@@ -4,8 +4,10 @@
 
 import React, { type KeyboardEvent, forwardRef, useCallback, useMemo, useState } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface, ObjectCard, useCardPivot, useObjectMenuItems } from '@dxos/app-toolkit/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as ObjectCard from '@dxos/app-toolkit/ObjectCard';
 import { Entity } from '@dxos/echo';
 import { Block, Button, Focus, ScrollArea, composable, composableProps } from '@dxos/react-ui';
 import { ActionMenu } from '@dxos/react-ui-menu';
@@ -76,8 +78,8 @@ const SearchResultTile = forwardRef<HTMLDivElement, SearchResultTileProps>(
     const { result, query } = data;
     const label = result.label ?? (result.object && Entity.getLabel(result.object)) ?? '';
     // Card.Root already takes the forwarded ref; walk from the header to resolve the origin plank.
-    const [cardRef, pivotId] = useCardPivot();
-    const menuItems = useObjectMenuItems(result.object, pivotId);
+    const [cardRef, pivotId] = Hooks.useCardPivot();
+    const menuItems = Hooks.useObjectMenuItems(result.object, pivotId);
     const { setCurrentId } = useMosaicContainer('SearchResultTile');
 
     const handleCurrentChange = useCallback(() => {

@@ -23,8 +23,8 @@ Registers a React component for a specific role and data shape. Prefer the typed
 form: pass an `AppSurface` filter and the role is derived from its bindings.
 
 ```typescript
-import { Surface } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import { Surface } from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 // Typed form — role carried by the filter.
 Surface.create({
@@ -63,12 +63,12 @@ applies to and a runtime guard that narrows the data type.
 ### Role tokens
 
 ```typescript
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 
 // Built-in tokens: Article, Section, Card, Slide, Tabpanel, Related, Dialog,
 // Popover, Navigation, MenuFooter, NavbarEnd, DocumentTitle.
 // Mint your own:
-import { Surface } from '@dxos/app-framework/ui';
+import { Surface } from '@dxos/app-framework/Surface';
 const MyRole = Surface.makeType<{ subject: MyShape }>('my-plugin/my-role');
 ```
 

@@ -4,15 +4,16 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
-import { RunInstructions, WebSearchSkill } from '@dxos/assistant-toolkit';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
+import * as WebSearchSkill from '@dxos/assistant-toolkit/WebSearchSkill';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import { Reply } from '@dxos/compute/testing';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Query, Ref } from '@dxos/echo';
 import * as ChessOperation from '@dxos/plugin-chess/ChessOperation';
-import { meta as automationMeta } from '@dxos/plugin-routine';
+import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { Text } from '@dxos/schema';
 import { Cell } from '@dxos/storybook-testing';
 
@@ -46,7 +47,7 @@ export const WithTriggers: Story = {
     layout: [
       [StoryRole.Chat],
       [
-        { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+        { type: AppSurface.Article, data: { subject: `${RoutinePlugin.meta.profile.key}.space-settings-automation` } },
         StoryRole.Invocations,
       ],
     ],
@@ -108,7 +109,10 @@ export const WithChessTrigger: Story = {
       return [
         [Cell.article(game)],
         [
-          { type: AppSurface.Article, data: { subject: `${automationMeta.profile.key}.space-settings-automation` } },
+          {
+            type: AppSurface.Article,
+            data: { subject: `${RoutinePlugin.meta.profile.key}.space-settings-automation` },
+          },
           StoryRole.Invocations,
         ],
       ];
@@ -127,7 +131,7 @@ export const WithPrompt: Story = {
     },
     types: [Text.Text],
     onInit: async ({ space }) => {
-      space.db.add(Operation.serialize(RunInstructions));
+      space.db.add(Operation.serialize(AgentOperation.RunInstructions));
       space.db.add(
         Instructions.make({
           name: 'Research',

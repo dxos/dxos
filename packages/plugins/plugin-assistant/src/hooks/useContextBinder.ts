@@ -9,7 +9,7 @@ import { useContext, useState } from 'react';
 
 import { AiContext } from '@dxos/assistant';
 import { Database, Feed } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { type Space } from '@dxos/react-client/echo';
 import { useAsyncEffect } from '@dxos/react-ui';
 

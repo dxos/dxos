@@ -4,10 +4,10 @@
 
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 
-import { type AppSurface } from '@dxos/app-toolkit/ui';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Filter, Obj, Type } from '@dxos/echo';
 import { useResolveRef } from '@dxos/echo-react';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { URI } from '@dxos/keys';
 import { useQuery } from '@dxos/react-client/echo';
 import { Panel, Show, useTranslation } from '@dxos/react-ui';

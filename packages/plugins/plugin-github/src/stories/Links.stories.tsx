@@ -5,14 +5,15 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useCallback, useMemo } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useCapabilities } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
-import { PreviewEvents } from '@dxos/plugin-preview';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Block, Card, Icon, Popover, useThemeMode } from '@dxos/react-ui';
 import {
   EditorPreviewProvider,
@@ -77,7 +78,7 @@ type StoryArgs = {
  */
 const DefaultStory = ({ text }: StoryArgs) => {
   const themeMode = useThemeMode();
-  const resolvers = useCapabilities(PreviewCapabilities.LinkResolver);
+  const resolvers = Hooks.useCapabilities(PreviewCapabilities.LinkResolver);
   const handleLookup = useCallback<NonNullable<EditorPreviewProviderProps['onLookup']>>(
     async (ref) => {
       for (const { match, resolve } of resolvers.flat()) {
@@ -122,7 +123,7 @@ const meta = {
     // No PreviewPlugin: its popover module would answer the anchors too, through the deck's layout
     // operation, which has no handler here. The start event alone activates this plugin's resolver.
     withPluginManager({
-      plugins: [...corePlugins(), GitHubPlugin(), FixtureLinkSourcePlugin()],
+      plugins: [...CorePlugins.make(), GitHubPlugin(), FixtureLinkSourcePlugin()],
       setupEvents: [PreviewEvents.Start],
     }),
   ],

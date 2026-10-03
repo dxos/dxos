@@ -12,7 +12,7 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { Button, Field, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
@@ -24,7 +24,7 @@ export type SamplePropertiesProps = {
 
 export const SampleProperties = ({ subject }: SamplePropertiesProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const handleRandomize = useCallback(() => {
     void invokePromise(SampleOperation.Randomize, { item: subject });

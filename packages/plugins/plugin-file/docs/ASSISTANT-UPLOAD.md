@@ -5,7 +5,7 @@ the path an out-of-process agent (Claude in a cloud sandbox, Claude Desktop) wou
 
 ## 1. Why `FileOperation.Create` cannot simply be exposed
 
-The File skill (`src/skills/file-skill.ts`) lists exactly one tool:
+The File skill (`src/skills/FileSkill.ts`) lists exactly one tool:
 
 ```ts
 tools: Skill.toolDefinitions({ operations: [FileOperation.Read] }),

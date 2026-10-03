@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './commands.ts';
-export * from './skills/index.ts';
-export * from './operations/index.ts';
-export * from './supervisor/index.ts';
-export * from './sync/index.ts';
 export * from './types/index.ts';
+export * as AgentOperationHandlerSet from './AgentOperationHandlerSet.ts';
+export * as DelegationStrategy from './DelegationStrategy.ts';
+export * as SlashCommand from './SlashCommand.ts';
+export * as AgentOperation from './AgentOperation.ts';
+export * from './skills/index.ts';

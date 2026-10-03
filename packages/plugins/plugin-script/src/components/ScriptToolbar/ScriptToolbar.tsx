@@ -6,8 +6,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import type * as Script from '@dxos/compute/Script';
-import { useTranslation } from '@dxos/react-ui';
-import { composable, composableProps } from '@dxos/react-ui';
+import { composable, composableProps, useTranslation } from '@dxos/react-ui';
 import {
   type ActionGraphProps,
   ActionToolbar,

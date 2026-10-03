@@ -9,7 +9,7 @@ import { type Database, Obj, Ref, Type } from '@dxos/echo';
 import { useType as defaultUseType } from '@dxos/echo-react';
 import { ReferenceAnnotationId, type ReferenceAnnotationValue } from '@dxos/echo/Annotation';
 import { type AnyProperties } from '@dxos/echo/internal';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 import { DXN, type URI } from '@dxos/keys';
 import { Button, Group, useTranslation } from '@dxos/react-ui';
 

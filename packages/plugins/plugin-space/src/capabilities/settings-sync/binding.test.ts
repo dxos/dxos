@@ -7,7 +7,7 @@ import { describe, test } from 'vitest';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import * as PluginManager from '@dxos/app-framework/PluginManager';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { pluginSet } from './binding.ts';
 

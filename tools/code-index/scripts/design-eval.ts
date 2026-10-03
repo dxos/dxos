@@ -13,7 +13,7 @@ import * as Effect from 'effect/Effect';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import * as Crawler from '../src/Crawler.ts';
 import * as Cache from '../src/design/Cache.ts';

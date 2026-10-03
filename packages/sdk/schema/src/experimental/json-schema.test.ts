@@ -7,7 +7,7 @@ import * as Struct from 'effect/Struct';
 import { describe, test } from 'vitest';
 
 import { JsonSchema, Obj } from '@dxos/echo';
-import { SchemaEx } from '@dxos/effect';
+import * as SchemaEx from '@dxos/effect/SchemaEx';
 
 const TestSchema = Schema.Struct({
   name: Schema.String,

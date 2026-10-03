@@ -561,7 +561,7 @@ type LazyPayload = { loader: LazyLoader<any>; options: unknown };
  * @example
  * ```ts
  * // plugin-markdown/src/index.ts
- * import { Plugin } from '@dxos/app-framework';
+ * import * as Plugin from '@dxos/app-framework/Plugin';
  * import { meta } from './meta';
  *
  * export const MarkdownPlugin = Plugin.lazy(meta, () => import('./MarkdownPlugin'));

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { useAppGraph } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Empty, Panel } from '@dxos/react-ui';
 import { ActionToolbar, MenuBuilder, graphActions, isToolbarAction, useMenuBuilder } from '@dxos/react-ui-menu';
 
@@ -18,7 +18,7 @@ export type EmptyPanelProps = {
  * actions (Play) all the same.
  */
 export const EmptyPanel = ({ label, attendableId }: EmptyPanelProps) => {
-  const { graph } = useAppGraph();
+  const { graph } = Hooks.useAppGraph();
   const menuActions = useMenuBuilder(
     (get) => {
       const builder = MenuBuilder.make().separator('gap');

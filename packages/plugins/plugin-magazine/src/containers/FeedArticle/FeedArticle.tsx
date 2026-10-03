@@ -4,8 +4,9 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
-import { type AppSurface, useProgressMonitor } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import { Filter, Obj, Query, Ref, Scope } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Panel } from '@dxos/react-ui';
@@ -20,10 +21,10 @@ import { FeedToolbar } from './FeedToolbar.tsx';
 export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Subscription>;
 
 export const FeedArticle = ({ role, subject, attendableId }: FeedArticleProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const [currentPostId, setCurrentPostId] = useState<string>();
   const [subscription] = useObject(subject);
-  const syncProgress = useProgressMonitor(FeedOperation.createSyncProgressKey(subject));
+  const syncProgress = ToolkitHooks.useProgressMonitor(FeedOperation.createSyncProgressKey(subject));
   // Subscribe to the backing queue via its Ref — `.target` alone does not re-render when the
   // feed loads after navigation (same pitfall as plugin-inbox MailboxArticle).
   const [postFeed] = useObject(subscription?.feed);

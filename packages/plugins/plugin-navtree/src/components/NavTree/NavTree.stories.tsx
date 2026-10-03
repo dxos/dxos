@@ -11,13 +11,13 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { useAtomCapability, useOperationInvoker } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as Operation from '@dxos/compute/Operation';
 import * as OperationHandlerSet from '@dxos/compute/OperationHandlerSet';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { Button, Field, Focus, Main, Panel, Textarea, Toolbar } from '@dxos/react-ui';
@@ -110,7 +110,7 @@ const StoryPlank = ({ attendableId }: { attendableId: string }) => {
 };
 
 const DefaultStory = () => {
-  const state = useAtomCapability(StoryState);
+  const state = Hooks.useAtomCapability(StoryState);
 
   return (
     <Main.Root navigationSidebarState='expanded'>
@@ -131,7 +131,7 @@ const DefaultStory = () => {
 const MISSING_WORKSPACE = 'root/B4NRQGGJ7XSDT4WMGXCTZNBLTDYIWGXNQIB6JW3AVLW3G';
 
 const UnavailableWorkspaceStory = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   useEffect(() => {
     void invokePromise(LayoutOperation.SwitchWorkspace, { subject: MISSING_WORKSPACE });
   }, [invokePromise]);
@@ -143,7 +143,7 @@ const navTreeDecorators = (graphOptions?: StorybookGraphOptions) => [
   withLayout({ layout: 'fullscreen' }),
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       StorybookPlugin.make({
         initialState: { sidebarState: 'expanded' },
       }),

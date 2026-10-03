@@ -6,9 +6,10 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { Surface, useCapabilities } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Feed, Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { log } from '@dxos/log';
@@ -17,7 +18,7 @@ import * as CallsPlugin from '@dxos/plugin-calls/CallsPlugin';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as TranscriptionCapabilities from '@dxos/plugin-transcription/TranscriptionCapabilities';
 import * as TranscriptionPlugin from '@dxos/plugin-transcription/TranscriptionPlugin';
@@ -55,8 +56,8 @@ type CallTranscriptionViewProps = {
  * tab reflects the live transcript feed. A story-local toolbar joins the call and toggles recording.
  */
 const CallTranscriptionView = ({ meeting, transcript }: CallTranscriptionViewProps) => {
-  const callManager = useCapabilities(CallsCapabilities.Manager)[0];
-  const transcriptionManagerProvider = useCapabilities(TranscriptionCapabilities.TranscriptionManagerProvider)[0];
+  const callManager = Hooks.useCapabilities(CallsCapabilities.Manager)[0];
+  const transcriptionManagerProvider = Hooks.useCapabilities(TranscriptionCapabilities.TranscriptionManagerProvider)[0];
   const roomId = Obj.getURI(meeting);
 
   const space = getSpace(transcript);
@@ -149,7 +150,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(() => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Transcript.Transcript, Meeting.Meeting, Text.Text],
           // CallManager requires the edge service config to construct (it throws otherwise).

@@ -5,10 +5,10 @@
 import * as Schema from 'effect/Schema';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { useActiveSpace } from '@dxos/app-toolkit/ui';
 import { Filter, Obj, Order, Query, Type } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { Connection } from '@dxos/link';
@@ -30,8 +30,8 @@ export type ConnectionSettingsArticleProps = Record<string, never>;
 
 export const ConnectionSettingsArticle = (_props: ConnectionSettingsArticleProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const space = useActiveSpace();
-  const { invokePromise } = useOperationInvoker();
+  const space = ToolkitHooks.useActiveSpace();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const connections = useQuery(
     space?.db,
     Query.select(Filter.type(Connection.Connection)).orderBy(Order.property('name', 'asc')),

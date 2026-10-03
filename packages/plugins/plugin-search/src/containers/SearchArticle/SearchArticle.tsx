@@ -4,7 +4,7 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Entity } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { Icon, Panel, Toolbar } from '@dxos/react-ui';

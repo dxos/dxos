@@ -7,11 +7,11 @@ import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
 import { useCallback, useMemo } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as ContainerModel from '@dxos/app-toolkit/ContainerModel';
 import * as TypeOptions from '@dxos/app-toolkit/TypeOptions';
 import { Annotation, Database, Filter, Obj, Query, Type } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import * as SpaceOperation from '@dxos/plugin-space/SpaceOperation';
 import { type Label, toLocalizedString, useTranslation } from '@dxos/react-ui';
 import { type EditorMenuGroup, type EditorMenuItem } from '@dxos/react-ui-editor';
@@ -46,7 +46,7 @@ const insertLink = (view: EditorView, head: number, label: string, uri: string, 
 
 export const useLinkQuery = (db: Database.Database | undefined, current?: Obj.Unknown) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
 
   const filter = useMemo(
     () =>

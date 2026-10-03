@@ -2,7 +2,6 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './errors.ts';
 export * from './types/index.ts';
 
 export * as AgentIdentity from './AgentIdentity.ts';
@@ -20,3 +19,4 @@ export * as Runnable from './Runnable.ts';
 export * as ServiceResolver from './ServiceResolver.ts';
 export * as StorageService from './StorageService.ts';
 export * as Trace from './Trace.ts';
+export * as FunctionsAiError from './FunctionsAiError.ts';

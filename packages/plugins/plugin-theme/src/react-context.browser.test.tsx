@@ -6,9 +6,9 @@ import { act } from '@testing-library/react';
 import React from 'react';
 import { beforeEach, describe, test, vi } from 'vitest';
 
-import { ProcessManagerPlugin } from '@dxos/app-framework';
+import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { createTestApp } from '@dxos/app-framework/testing';
-import { render } from '@dxos/app-framework/testing-react';
+import { render } from '@dxos/app-framework/testing/react';
 import { Toast } from '@dxos/react-ui';
 
 import { ThemePlugin } from '#plugin';
@@ -29,7 +29,7 @@ beforeEach(() => {
 describe('ThemePlugin ReactContext', () => {
   test('a toast with a close button renders under the app providers', async ({ expect }) => {
     await using harness = await createTestApp({
-      plugins: [ProcessManagerPlugin(), ThemePlugin({})],
+      plugins: [ProcessManagerPlugin.make(), ThemePlugin({})],
     });
 
     // Toasts render in the viewport rather than where their roots sit, so the viewport's place in the

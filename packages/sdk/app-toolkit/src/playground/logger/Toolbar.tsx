@@ -7,14 +7,15 @@ import React, { useCallback } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
 import { Button } from '@dxos/react-ui';
 
 import { PlaygroundRoles } from '../roles.ts';
 import { LogOperation } from './schema.ts';
 
 export const Logger = () => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const handleClick = useCallback(() => invokePromise(LogOperation, { message: 'Hello, world!' }), []);
   return <Button onClick={handleClick}>Log</Button>;
 };

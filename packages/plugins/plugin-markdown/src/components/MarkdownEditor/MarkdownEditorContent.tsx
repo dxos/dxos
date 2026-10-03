@@ -8,7 +8,7 @@ import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import type * as Atom from 'effect/reactivity/Atom';
 import React, { forwardRef, useCallback, useContext, useEffect, useImperativeHandle, useMemo } from 'react';
 
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { INITIAL_FOCUS_ATTRIBUTE } from '@dxos/react-focus';
 import { type ThemedClassName, useThemeMode, useTranslation } from '@dxos/react-ui';
 import {

@@ -134,6 +134,11 @@
       "source": "./src/types/RepositoryService.ts",
       "types": "./dist/types/src/types/RepositoryService.d.ts",
       "import": "./dist/lib/RepositoryService.mjs"
+    },
+    "./SandboxSkill": {
+      "source": "./src/skills/SandboxSkill.ts",
+      "types": "./dist/types/src/skills/SandboxSkill.d.ts",
+      "import": "./dist/lib/ns/SandboxSkill.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

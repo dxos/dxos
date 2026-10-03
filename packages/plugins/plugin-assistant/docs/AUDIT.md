@@ -849,7 +849,7 @@ renders with no model. If track 0 fails, this still proceeds on the moved-as-is 
 
 `stories-assistant` is the full-stack integration surface (7 story files, ~10 peer plugins, live or
 scripted EDGE AI). It consumes exactly three things from the plugin —
-`@dxos/plugin-assistant/components` (`Chat`), `/hooks` (`useChatProcessor`, `usePresets`), and
+`@dxos/plugin-assistant/Chat` (`Chat`), `/Hooks` (`useChatProcessor`, `usePresets`), and
 `/Assistant` (`ChatViews`) — so the move costs it one import rewrite.
 
 It should **stay full-stack**: its value is proving the composition against real plugins and a real

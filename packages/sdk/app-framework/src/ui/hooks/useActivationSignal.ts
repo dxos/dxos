@@ -4,7 +4,7 @@
 
 import { useEffect } from 'react';
 
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 
 import { type ActivationEvent } from '../../core/index.ts';
 import { useOptionalPluginManager } from '../components/index.ts';

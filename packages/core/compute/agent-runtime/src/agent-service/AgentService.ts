@@ -25,7 +25,7 @@ import {
 import * as Process from '@dxos/compute/Process';
 import * as Skill from '@dxos/compute/Skill';
 import { Annotation, Database, Feed, Obj, Ref, Registry } from '@dxos/echo';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { DXN, EID, type SpaceId } from '@dxos/keys';
 import { log } from '@dxos/log';
 import type { ContentBlock } from '@dxos/types';

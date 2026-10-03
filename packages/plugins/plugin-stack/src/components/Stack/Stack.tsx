@@ -12,9 +12,10 @@ import React, {
   useState,
 } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as AttentionSigil from '@dxos/app-toolkit/AttentionSigil';
 import * as GraphPath from '@dxos/app-toolkit/GraphPath';
-import { AppSurface, AttentionSigilButton } from '@dxos/app-toolkit/ui';
 import { Obj } from '@dxos/echo';
 import { Icon, Menu, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { useAttentionAttributes } from '@dxos/react-ui-attention';
@@ -200,9 +201,9 @@ const StackSection = ({ data, ...tileProps }: StackSectionProps) => {
       <div className='p-1 dx-toolbar-surface'>
         <Menu.Root open={optionsMenuOpen} onOpenChange={({ open }) => setOptionsMenuOpen(open)}>
           <Menu.Trigger asChild>
-            <AttentionSigilButton size='md' attendableId={attendableId}>
+            <AttentionSigil.Button size='md' attendableId={attendableId}>
               <Icon icon={icon} classNames='transition-opacity' />
-            </AttentionSigilButton>
+            </AttentionSigil.Button>
           </Menu.Trigger>
           <Menu.Content>
             {isCollapsed ? (

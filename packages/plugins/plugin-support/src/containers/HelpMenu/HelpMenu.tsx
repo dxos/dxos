@@ -5,10 +5,10 @@
 import { formatDistance, isValid } from 'date-fns';
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { getEnvString } from '@dxos/config';
-import { StatusBar } from '@dxos/plugin-status-bar/components';
+import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
 import { useConfig } from '@dxos/react-client';
 import { Button, Flex, Menu, useTranslation } from '@dxos/react-ui';
 import { isTauri } from '@dxos/util';
@@ -24,7 +24,7 @@ const GITHUB_URL = 'https://github.com/dxos/dxos';
 
 export const HelpMenu = () => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const config = useConfig();
   const { version, timestamp, commitHash } = config.values.runtime?.app?.build ?? {};
   const releasedAt = timestamp ? new Date(timestamp) : undefined;

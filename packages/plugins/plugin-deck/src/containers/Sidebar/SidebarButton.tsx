@@ -4,7 +4,7 @@
 
 import React, { useCallback } from 'react';
 
-import { useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Button, type ButtonProps, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { Attention } from '@dxos/react-ui-attention';
@@ -65,7 +65,7 @@ export const ToggleComplementarySidebarButton = ({
   classNames,
   current,
 }: ThemedClassName<{ inR0?: boolean; current?: string }>) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const { state, updateState } = useDeckState();
   const { t } = useTranslation(meta.profile.key);
 

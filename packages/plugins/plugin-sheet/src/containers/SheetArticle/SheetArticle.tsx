@@ -4,8 +4,8 @@
 
 import React from 'react';
 
-import { useCapability } from '@dxos/app-framework/ui';
-import { AppSurface } from '@dxos/app-toolkit/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { type Space, getSpace } from '@dxos/react-client/echo';
 import { Panel } from '@dxos/react-ui';
 
@@ -24,7 +24,7 @@ export type SheetArticleProps = AppSurface.ObjectArticleProps<
  * that registry. A sheet outside a space has no graph to evaluate against.
  */
 export const SheetArticle = ({ subject, ...props }: SheetArticleProps) => {
-  const registry = useCapability(SheetCapabilities.ComputeGraphRegistry);
+  const registry = Hooks.useCapability(SheetCapabilities.ComputeGraphRegistry);
   const space = getSpace(subject);
   if (!space) {
     return null;

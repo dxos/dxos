@@ -10,7 +10,7 @@ import type * as Telemetry from 'effect/ai/Telemetry';
 import * as Effect from 'effect/Effect';
 import type * as Tracer from 'effect/Tracer';
 
-import { SpanAttributes } from '@dxos/effect';
+import * as SpanAttributes from '@dxos/effect/SpanAttributes';
 import { log } from '@dxos/log';
 
 /** Span attributes carrying AI capture, outside the `gen_ai.*` semantic conventions. */

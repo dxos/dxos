@@ -129,6 +129,11 @@
       "source": "./src/skills/CommentSkill.ts",
       "types": "./dist/types/src/skills/CommentSkill.d.ts",
       "import": "./dist/lib/CommentSkill.mjs"
+    },
+    "./Containers": {
+      "source": "./src/Containers.ts",
+      "types": "./dist/types/src/Containers.d.ts",
+      "import": "./dist/lib/ns/Containers.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

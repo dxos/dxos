@@ -4,9 +4,10 @@
 
 import React, { useCallback } from 'react';
 
-import { Surface } from '@dxos/app-framework/ui';
-import { type AppSurface, useAppGraph, useLayout } from '@dxos/app-toolkit/ui';
-import { useActionRunner } from '@dxos/plugin-graph/hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
+import * as GraphHooks from '@dxos/plugin-graph/Hooks';
 import { Container, Flex, Panel, ScrollArea } from '@dxos/react-ui';
 import {
   type ActionExecutor,
@@ -35,7 +36,7 @@ export type SpaceHomeArticleProps = AppSurface.SpaceArticleProps;
  */
 export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticleProps) => {
   const { actions, onAction } = useMenuActions(attendableId);
-  const layout = useLayout();
+  const layout = Hooks.useLayout();
   // The card-scale gutter is a fifth of a phone viewport; mobile steps down to the dialog scale.
   const gutter = layout.mode === 'mobile' ? 'md' : 'lg';
 
@@ -75,8 +76,8 @@ export const SpaceHomeArticle = ({ role, attendableId, space }: SpaceHomeArticle
 const useMenuActions = (
   attendableId?: string,
 ): { actions: ReturnType<typeof useMenuBuilder>; onAction: ActionExecutor } => {
-  const { graph } = useAppGraph();
-  const runAction = useActionRunner();
+  const { graph } = Hooks.useAppGraph();
+  const runAction = GraphHooks.useActionRunner();
 
   const menuActions = useMenuBuilder(
     (get): ActionGraphProps => {

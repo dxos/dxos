@@ -4,11 +4,12 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { Filter, Obj, Ref } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
-import { EffectEx } from '@dxos/effect';
+import * as EffectEx from '@dxos/effect/EffectEx';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
 import { Button, Dialog, Empty, Flex, Listbox, ScrollArea, SystemButton, useTranslation } from '@dxos/react-ui';
@@ -33,8 +34,8 @@ export type SyncTargetsDialogProps = {
  */
 export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget }: SyncTargetsDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const { invokePromise } = useOperationInvoker();
-  const manager = usePluginManager();
+  const { invokePromise } = Hooks.useOperationInvoker();
+  const manager = PluginManagerProvider.usePluginManager();
 
   const db = Obj.getDatabase(connection);
   const allCursors = useQuery(db, Filter.type(Cursor.Cursor));

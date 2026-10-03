@@ -79,15 +79,20 @@
       "import": "./dist/lib/index.mjs"
     },
     "./assets/PLUGIN.mdl": "./PLUGIN.mdl",
-    "./components": {
-      "source": "./src/components/index.ts",
-      "types": "./dist/types/src/components/index.d.ts",
-      "import": "./dist/lib/components.mjs"
+    "./InstructionsEditor": {
+      "source": "./src/InstructionsEditor.ts",
+      "types": "./dist/types/src/InstructionsEditor.d.ts",
+      "import": "./dist/lib/ns/InstructionsEditor.mjs"
     },
-    "./hooks": {
-      "source": "./src/hooks/index.ts",
-      "types": "./dist/types/src/hooks/index.d.ts",
-      "import": "./dist/lib/hooks.mjs"
+    "./TemplateEditor": {
+      "source": "./src/TemplateEditor.ts",
+      "types": "./dist/types/src/TemplateEditor.d.ts",
+      "import": "./dist/lib/ns/TemplateEditor.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     },
     "./package.json": "./package.json",
     "./testing": {
@@ -100,10 +105,10 @@
       "types": "./dist/types/src/translations.d.ts",
       "import": "./dist/lib/translations.mjs"
     },
-    "./util": {
-      "source": "./src/util/index.ts",
-      "types": "./dist/types/src/util/index.d.ts",
-      "import": "./dist/lib/util.mjs"
+    "./Wire": {
+      "source": "./src/Wire.ts",
+      "types": "./dist/types/src/Wire.d.ts",
+      "import": "./dist/lib/ns/Wire.mjs"
     },
     "./Routine": {
       "source": "./src/types/Routine.ts",
@@ -129,6 +134,11 @@
       "source": "./src/RoutinePlugin.ts",
       "types": "./dist/types/src/RoutinePlugin.d.ts",
       "import": "./dist/lib/RoutinePlugin.mjs"
+    },
+    "./RoutinePath": {
+      "source": "./src/RoutinePath.ts",
+      "types": "./dist/types/src/RoutinePath.d.ts",
+      "import": "./dist/lib/ns/RoutinePath.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

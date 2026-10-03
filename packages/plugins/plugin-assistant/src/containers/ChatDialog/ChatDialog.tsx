@@ -4,7 +4,7 @@
 
 import React, { useCallback, useState } from 'react';
 
-import { useAtomCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as ChatTypes from '@dxos/assistant/Chat';
 import { Obj } from '@dxos/echo';
 import { useObject } from '@dxos/echo-react';
@@ -26,7 +26,7 @@ export const ChatDialog = ({ chat }: ChatDialogProps) => {
   const { t } = useTranslation(meta.profile.key);
 
   const db = chat && Obj.getDatabase(chat);
-  const settings = useAtomCapability(AssistantCapabilities.Settings);
+  const settings = Hooks.useAtomCapability(AssistantCapabilities.Settings);
   const runtime = useChatServices({ id: db?.spaceId });
   const { preset, ...chatProps } = usePresets(settings, chat);
   const registry = useRegistry();

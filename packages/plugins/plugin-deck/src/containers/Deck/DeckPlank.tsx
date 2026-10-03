@@ -4,10 +4,11 @@
 
 import React, { type KeyboardEvent, memo, useCallback, useLayoutEffect, useMemo, useRef } from 'react';
 
-import { Surface, useOperationInvoker } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
+import * as Surface from '@dxos/app-framework/Surface';
+import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NotFound from '@dxos/app-toolkit/NotFound';
-import { AppSurface } from '@dxos/app-toolkit/ui';
 import { findFirstFocusable } from '@dxos/react-focus';
 import { type ThemedClassName } from '@dxos/react-ui';
 import { Attention, useAttentionContext } from '@dxos/react-ui-attention';
@@ -52,7 +53,7 @@ export const DeckPlank = memo(({ id, part, fullscreen = false, active, path, cla
 DeckPlank.displayName = 'DeckPlank';
 
 const DeckPlankInner = ({ id, part, fullscreen = false, active, path, classNames }: DeckPlankProps) => {
-  const { invokePromise } = useOperationInvoker();
+  const { invokePromise } = Hooks.useOperationInvoker();
   const rootRef = useRef<HTMLDivElement>(null);
   const { attention } = useAttentionContext('DeckPlank');
   const {

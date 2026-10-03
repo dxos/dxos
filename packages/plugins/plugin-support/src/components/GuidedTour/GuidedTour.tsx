@@ -5,9 +5,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import type * as CapabilityManager from '@dxos/app-framework/CapabilityManager';
-import { usePluginManager } from '@dxos/app-framework/ui';
+import * as PluginManagerProvider from '@dxos/app-framework/PluginManagerProvider';
+import * as Hooks from '@dxos/app-toolkit/Hooks';
 import type * as Tour from '@dxos/app-toolkit/Tour';
-import { useLayout } from '@dxos/app-toolkit/ui';
 import { log } from '@dxos/log';
 import { Button, Icon, type TourStepDetails, Tour as UiTour, useTour, useTranslation } from '@dxos/react-ui';
 
@@ -48,8 +48,8 @@ export type GuidedTourProps = {
 
 export const GuidedTour = ({ steps: initialSteps, running: runningProp, onRunningChanged }: GuidedTourProps) => {
   const { t } = useTranslation(meta.profile.key);
-  const manager = usePluginManager();
-  const layout = useLayout();
+  const manager = PluginManagerProvider.usePluginManager();
+  const layout = Hooks.useLayout();
   const paused = layout.dialogOpen;
   const [override, setOverride] = useState<{ base: readonly Tour.Step[]; steps: readonly Tour.Step[] }>();
   const steps = override?.base === initialSteps ? override.steps : initialSteps;

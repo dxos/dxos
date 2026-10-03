@@ -13,7 +13,6 @@ import * as Schema$ from 'effect/Schema';
 import type { AiModelResolver as AiModelResolver$ } from '@dxos/ai';
 import type { OpaqueToolkit } from '@dxos/ai';
 import * as Capability$ from '@dxos/app-framework/Capability';
-import { BuilderExtensions } from '@dxos/app-graph';
 import * as AppGraphBuilder$ from '@dxos/app-graph/AppGraphBuilder';
 import type * as AppGraphNode$ from '@dxos/app-graph/AppGraphNode';
 import type { Client } from '@dxos/client';
@@ -27,7 +26,7 @@ import { type Translator as Translator$ } from '@dxos/i18n';
 import { type URI } from '@dxos/keys';
 import { Progress } from '@dxos/progress';
 import type { AnchoredTo } from '@dxos/types';
-import type { Position } from '@dxos/util';
+import * as Position from '@dxos/util/Position';
 
 // eslint-disable-next-line @dxos/rules/import-as-namespace
 import type * as AppUpdate$ from '../app/AppUpdate.ts';
@@ -162,7 +161,7 @@ export const AppGraph = Capability$.makeSingleton<AppGraph>()('org.dxos.app-fram
 /**
  * @category Capability
  */
-export const AppGraphBuilder = Capability$.make<BuilderExtensions>()(
+export const AppGraphBuilder = Capability$.make<AppGraphBuilder$.BuilderExtensions>()(
   'org.dxos.app-framework.capability.appGraphBuilder',
 );
 

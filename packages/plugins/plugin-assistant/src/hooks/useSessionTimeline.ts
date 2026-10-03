@@ -8,7 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import { useMemo } from 'react';
 
 import * as Capabilities from '@dxos/app-framework/Capabilities';
-import { useOptionalCapability } from '@dxos/app-framework/ui';
+import * as Hooks from '@dxos/app-framework/Hooks';
 import * as Chat from '@dxos/assistant/Chat';
 import type * as Process from '@dxos/compute/Process';
 import { Obj } from '@dxos/echo';
@@ -48,7 +48,7 @@ export const useSessionTimeline = (
   space: Space | undefined,
   { chats, tasks }: UseSessionTimelineOptions,
 ): SessionTimeline => {
-  const monitor = useOptionalCapability(Capabilities.ProcessMonitor);
+  const monitor = Hooks.useOptionalCapability(Capabilities.ProcessMonitor);
   const processes = useAtomValue(
     useMemo(() => monitor?.processTreeAtom.pipe(Atom.debounce(Duration.millis(500))) ?? atomEmpty, [monitor]),
   );
