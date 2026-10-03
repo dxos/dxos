@@ -546,6 +546,51 @@ jobs:
           IOS_MOBILE_PROVISION: ${{ secrets.IOS_MOBILE_PROVISION }}
           NODE_ENV: production
 
+      # With API-key credentials the Tauri CLI archives unsigned, and its export signs the app with the profile's
+      # entitlements only, dropping the app's own (tauri-apps/tauri#15663). Re-sign with both before uploading.
+      - name: Restore the app's entitlements in the IPA
+        working-directory: ./packages/apps/composer-app/src-tauri/gen/apple
+        env:
+          IOS_CERTIFICATE: ${{ secrets.IOS_CERTIFICATE }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+        run: |
+          set -euo pipefail
+          work="$RUNNER_TEMP/ios-resign"
+          rm -rf "$work" && mkdir -p "$work"
+          ipa="build/arm64/Composer.ipa"
+          unzip -q "$ipa" -d "$work/ipa"
+          app="$work/ipa/Payload/Composer.app"
+
+          keychain="$work/signing.keychain-db"
+          password="$(openssl rand -hex 16)"
+          security create-keychain -p "$password" "$keychain"
+          security set-keychain-settings -lut 3600 "$keychain"
+          security unlock-keychain -p "$password" "$keychain"
+          echo "$IOS_CERTIFICATE" | base64 --decode > "$work/certificate.p12"
+          security import "$work/certificate.p12" -k "$keychain" -P "$IOS_CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$password" "$keychain" > /dev/null
+          identity="$(security find-identity -v -p codesigning "$keychain" | awk -F'"' '/Apple Distribution/ { print $2; exit }')"
+
+          codesign -d --entitlements - --xml "$app" > "$work/entitlements.plist"
+          python3 - "$work/entitlements.plist" app_iOS/app_iOS.entitlements <<'EOF'
+          import plistlib, sys
+          with open(sys.argv[1], 'rb') as signed, open(sys.argv[2], 'rb') as declared:
+              entitlements = plistlib.load(signed)
+              entitlements.update(plistlib.load(declared))
+          with open(sys.argv[1], 'wb') as out:
+              plistlib.dump(entitlements, out)
+          EOF
+
+          codesign --force --sign "$identity" --keychain "$keychain" --generate-entitlement-der \
+            --entitlements "$work/entitlements.plist" "$app"
+          security delete-keychain "$keychain"
+          codesign -d --entitlements - --xml "$app" | plutil -p - > "$work/signed.txt"
+          cat "$work/signed.txt"
+          grep -q 'webcredentials:composer.space' "$work/signed.txt"
+
+          rm "$ipa"
+          (cd "$work/ipa" && zip -qr --symlinks "$OLDPWD/$ipa" .)
+
       - name: Upload assets to CN
         timeout-minutes: 30
         uses: ./.github/actions/cn-release
