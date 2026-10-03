@@ -15,7 +15,7 @@ import { PostStack, type PostStackAction } from '#components';
 import { meta } from '#meta';
 import { FeedOperation, Subscription } from '#types';
 
-import { FeedToolbar } from './FeedToolbar';
+import { FeedToolbar } from './FeedToolbar.tsx';
 
 export type FeedArticleProps = AppSurface.ObjectArticleProps<Subscription.Subscription>;
 

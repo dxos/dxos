@@ -12,7 +12,7 @@ import { Format } from '@dxos/echo';
  */
 export const HeyGenRequestConfig = Schema.Struct({
   prompt: Schema.NonEmptyString.pipe(
-    Format.FormatAnnotation.set(Format.TypeFormat.Text),
+    Format.FormatAnnotation.set(Format.TypeFormat.Markdown),
     Schema.annotate({ title: 'Prompt' }),
   ),
   avatarId: Schema.NonEmptyString.annotate({ title: 'Avatar', description: 'HeyGen avatar id.' }),

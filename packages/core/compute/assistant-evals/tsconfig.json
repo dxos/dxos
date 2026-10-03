@@ -9,10 +9,22 @@
       "path": "../../../../tools/vite-plugin-import-source"
     },
     {
+      "path": "../../../common/async"
+    },
+    {
+      "path": "../../../common/diagram"
+    },
+    {
       "path": "../../../common/effect"
     },
     {
+      "path": "../../../common/errors"
+    },
+    {
       "path": "../../../common/keys"
+    },
+    {
+      "path": "../../../common/test-utils"
     },
     {
       "path": "../../../common/util"
@@ -25,6 +37,12 @@
     },
     {
       "path": "../../../plugins/plugin-crm"
+    },
+    {
+      "path": "../../../plugins/plugin-debug"
+    },
+    {
+      "path": "../../../plugins/plugin-file"
     },
     {
       "path": "../../../plugins/plugin-illustrator"
@@ -40,6 +58,9 @@
     },
     {
       "path": "../../../plugins/plugin-routine"
+    },
+    {
+      "path": "../../../plugins/plugin-sandbox"
     },
     {
       "path": "../../../plugins/plugin-space"
@@ -60,13 +81,43 @@
       "path": "../../../sdk/app-toolkit"
     },
     {
+      "path": "../../../sdk/client"
+    },
+    {
+      "path": "../../../sdk/config"
+    },
+    {
       "path": "../../../sdk/types"
     },
     {
       "path": "../../../ui/react-ui-table"
     },
     {
+      "path": "../../echo/blob"
+    },
+    {
       "path": "../../echo/echo"
+    },
+    {
+      "path": "../../echo/echo-client"
+    },
+    {
+      "path": "../../echo/echo-protocol"
+    },
+    {
+      "path": "../../halo/credentials"
+    },
+    {
+      "path": "../../mesh/edge-client"
+    },
+    {
+      "path": "../../protocols"
+    },
+    {
+      "path": "../agent-code-mode"
+    },
+    {
+      "path": "../agent-runtime"
     },
     {
       "path": "../ai"
@@ -82,6 +133,15 @@
     },
     {
       "path": "../compute-runtime"
+    },
+    {
+      "path": "../link"
+    },
+    {
+      "path": "../mcp-client"
+    },
+    {
+      "path": "../mcp-server"
     }
   ]
 }

@@ -23,11 +23,12 @@ export type ImportBinding = {
 };
 
 /**
- * `effect` and its `unstable/*` barrels publish every module whole (`export * as Layer from
- * './Layer.js'`), so `Layer.Layer` under `effect` is `Layer` under `effect/Layer`. Rewriting to the
- * module's own specifier gives one IRI per symbol however it was imported.
+ * `effect` and its lowercase sub-package barrels (`effect/rpc`, `effect/cli`, …) publish every module
+ * whole (`export * as Layer from './Layer.js'`), so `Layer.Layer` under `effect` is `Layer` under
+ * `effect/Layer`. Rewriting to the module's own specifier gives one IRI per symbol however it was
+ * imported.
  */
-const NAMESPACE_BARRELS = /^effect(\/unstable\/[a-z]+)?$/;
+const NAMESPACE_BARRELS = /^effect(\/[a-z][a-z-]*)?$/;
 
 /** The member IRI a type or value reference names, canonicalized through namespace barrels. */
 export const memberIri = (specifier: string, path: readonly string[]): string => {

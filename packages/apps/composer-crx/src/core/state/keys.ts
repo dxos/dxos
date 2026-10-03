@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { decodeBoolean, decodeString, defineState } from './state';
+import { decodeBoolean, decodeString, defineState } from './state.ts';
 
 //
 // Config — `browser.storage.sync` (user-set, synced across the user's browsers).

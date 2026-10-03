@@ -14,7 +14,7 @@ import { FunctionsServiceClient } from '@dxos/edge-compute';
 import { bundleFunction } from '@dxos/edge-compute/native';
 import { failedInvariant } from '@dxos/invariant';
 import { FunctionRuntimeKind } from '@dxos/protocols';
-import { EdgeReplicationSetting } from '@dxos/protocols/proto/dxos/echo/metadata';
+import { EdgeReplicationSetting } from '@dxos/protocols/buf/dxos/echo/metadata_pb';
 
 // To heavy to run in CI.
 describe.skip('Function', { tags: ['functions-e2e'] }, () => {

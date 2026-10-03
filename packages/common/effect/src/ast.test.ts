@@ -21,13 +21,13 @@ import {
   mapAst,
   retainContext,
   visit,
-} from './internal/ast';
-import { type JsonPath, type JsonProp } from './internal/json-path';
-import * as SchemaAST from './internal/schema-ast';
+} from './internal/ast.ts';
+import { type JsonPath, type JsonProp } from './internal/json-path.ts';
+import * as SchemaAST from './internal/schema-ast.ts';
 
 const ZipCode = Schema.String.pipe(
   Schema.check(
-    Schema.isPattern(/^\d{5}$/, {
+    Schema.isPattern(/^\d{5}$/u, {
       identifier: 'ZipCode',
       title: 'ZIP code',
       description: 'Simple 5 digit zip code',
@@ -119,7 +119,7 @@ describe('AST', () => {
   });
 
   test('findAnnotation', ({ expect }) => {
-    const TestSchema = Schema.NonEmptyString.pipe(Schema.check(Schema.isPattern(/^\d{5}$/))).annotate({
+    const TestSchema = Schema.NonEmptyString.pipe(Schema.check(Schema.isPattern(/^\d{5}$/u))).annotate({
       title: 'original title',
     });
 
@@ -280,5 +280,47 @@ describe('mapAst', () => {
     expect(SchemaAST.isOptional(retainContext(original, Schema.Number.ast))).to.be.true;
     // A replacement that already carries its own context is left alone.
     expect(SchemaAST.isOptional(retainContext(Schema.String.ast, Schema.Number.ast))).to.be.false;
+  });
+
+  test('a rebuilt node keeps its encoding checks', ({ expect }) => {
+    const rejectAll: SchemaAST.Checks = [Schema.makeFilter(() => 'rejected')];
+    const cases: [SchemaAST.AST, unknown][] = [
+      [
+        new SchemaAST.Objects(
+          [new SchemaAST.PropertySignature('a', Schema.String.ast)],
+          [],
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          rejectAll,
+        ),
+        { a: 'x' },
+      ],
+      [
+        new SchemaAST.Union(
+          [Schema.String.ast, Schema.Number.ast],
+          { mode: 'anyOf' },
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          rejectAll,
+        ),
+        'x',
+      ],
+      [
+        new SchemaAST.Arrays(false, [], [Schema.String.ast], undefined, undefined, undefined, undefined, rejectAll),
+        ['x'],
+      ],
+    ];
+    for (const [node, value] of cases) {
+      const mapped = mapAst(node, (child) => child);
+      expect(mapped, mapped._tag).to.have.property('encodingChecks', rejectAll);
+      expect(mapped.checks, mapped._tag).to.be.undefined;
+      expect(() => Schema.decodeUnknownSync(Schema.make<Schema.Codec<unknown>>(mapped))(value), mapped._tag).to.throw(
+        'rejected',
+      );
+    }
   });
 });

@@ -11,7 +11,7 @@ import { Text } from '@dxos/schema';
 
 import { Markdown } from '#types';
 
-import { getMarkdownAnchorText, getSelectionRanges } from './selection';
+import { getMarkdownAnchorText, getSelectionRanges } from './selection.ts';
 
 describe('selection', () => {
   let builder: EchoTestBuilder;

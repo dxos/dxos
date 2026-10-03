@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './demand-gated';
-export * from './harness';
-export * from './operationCapture';
-export * from './service';
-export * from './withPluginManager';
-export * from './withSurfaceDebug';
+export * from './demand-gated.ts';
+export * from './harness.ts';
+export * from './operationCapture.ts';
+export * from './service.ts';
+export * from './withPluginManager.tsx';
+export * from './withSurfaceDebug.tsx';

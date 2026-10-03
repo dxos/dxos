@@ -15,7 +15,7 @@ Parsing runs off the main thread: a pool of workers, addressed over Effect RPC, 
 and resolves imports with `oxc-resolver`. Workers never touch a database, so nothing contends on
 SQLite or LevelDB; only the main thread writes.
 
-The CLI is `effect/unstable/cli` on Bun. The library is Effect-native and runs on Node as well,
+The CLI is `effect/cli` on Bun. The library is Effect-native and runs on Node as well,
 which is where the test suite exercises it.
 
 ## Extensions
@@ -40,8 +40,8 @@ The following extension dialects are used in this document.
 | Reasoning          | `eyereasoner` (EYE, N3)                 | Forward-chaining rules over an N3 serialization of the asserted facts; conclusions land in one replaceable graph. Reachability is left to SPARQL property paths. |
 | Parsing            | `oxc-parser`, `oxc-resolver`            | Real module records and real resolution, not regex. |
 | Manifests          | `yaml`, `JSON.parse`                    | `moon.yml` layers and `package.json` identity, entries and workspace deps. |
-| Concurrency        | `effect/unstable/rpc` over worker threads | Batches of paths in, JSON-LD documents out. |
-| CLI                | `effect/unstable/cli`, `@effect/platform-bun` | Subcommands, flags and help from the same Effect runtime as the library. |
+| Concurrency        | `effect/rpc` over worker threads | Batches of paths in, JSON-LD documents out. |
+| CLI                | `effect/cli`, `@effect/platform-bun` | Subcommands, flags and help from the same Effect runtime as the library. |
 
 ## Layout
 

@@ -7,7 +7,7 @@ import { Person } from '@dxos/types';
 
 import { GoogleContacts } from '#apis';
 
-import { GOOGLE_INTEGRATION_SOURCE } from '../../constants';
+import { GOOGLE_INTEGRATION_SOURCE } from '../../constants.ts';
 
 /**
  * Maps a Google People API `Person` response to a DXOS `Person` object shape,

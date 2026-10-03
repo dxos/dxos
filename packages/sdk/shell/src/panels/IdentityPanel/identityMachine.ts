@@ -10,8 +10,8 @@ import { type Client } from '@dxos/react-client';
 import { type Identity } from '@dxos/react-client/halo';
 import { type CancellableInvitationObservable } from '@dxos/react-client/invitations';
 
-import { type StepEvent } from '../../steps';
-import { type IdentityPanelInitialDisposition } from './IdentityPanelProps';
+import { type StepEvent } from '../../steps/index.ts';
+import { type IdentityPanelInitialDisposition } from './IdentityPanelProps.ts';
 
 type IdentityMachineContext = {
   initialDisposition?: IdentityPanelInitialDisposition;

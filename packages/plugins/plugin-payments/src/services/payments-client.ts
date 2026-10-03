@@ -7,7 +7,7 @@ import type { WalletClient } from 'viem';
 import { type Identity } from '@dxos/halo';
 import { log } from '@dxos/log';
 
-import { createEdgeAuthedFetch, getEdgeAuthHeader } from './edge-auth';
+import { createEdgeAuthedFetch, getEdgeAuthHeader } from './edge-auth.ts';
 
 //
 // payments-service client (x402 protocol v2).

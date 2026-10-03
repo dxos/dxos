@@ -2,5 +2,5 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './components';
-export * from './types';
+export * from './components/index.ts';
+export * from './types.ts';

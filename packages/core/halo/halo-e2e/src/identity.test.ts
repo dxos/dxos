@@ -5,14 +5,14 @@
 import { it } from '@effect/vitest';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Stream from 'effect/Stream';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe } from 'vitest';
 
 import { Identity } from '@dxos/halo';
 import { PublicKey, SpaceId } from '@dxos/keys';
 
-import { currentOf, makeClientLayer, pollUntil } from './testing';
+import { currentOf, makeClientLayer, pollUntil } from './testing.ts';
 
 describe('Identity', () => {
   it.effect(

@@ -5,7 +5,7 @@
 import { Event } from '@dxos/async';
 import { log } from '@dxos/log';
 
-import * as WorkerProtocol from '../WorkerProtocol';
+import * as WorkerProtocol from '../WorkerProtocol.ts';
 
 export class Memory implements WorkerProtocol.WorkerCoordinator {
   readonly onMessage = new Event<WorkerProtocol.CoordinatorMessage>();

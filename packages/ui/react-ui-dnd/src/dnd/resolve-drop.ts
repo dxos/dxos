@@ -4,7 +4,7 @@
 
 import { log } from '@dxos/log';
 
-import { type DndContainerHandler, type DndData, type DndTileData } from './types';
+import { type DndContainerHandler, type DndData, type DndTileData } from './types.ts';
 
 // Kept out of `Root.tsx`: react-refresh only fast-refreshes a module whose exports are all
 // components, so a helper exported beside them forces a full page reload on every edit.

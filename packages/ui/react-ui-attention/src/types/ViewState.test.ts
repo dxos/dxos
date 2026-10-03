@@ -2,13 +2,13 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
-import { createDefaultBackends } from '../core';
-import { Manager, define } from './ViewState';
+import { createDefaultBackends } from '../core/index.ts';
+import { Manager, define } from './ViewState.ts';
 
 const Counter = define({
   key: 'counter',

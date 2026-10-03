@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { createConfig } from '../../../../tools/storybook-react/.storybook/main';
+import { createConfig } from '../../../../tools/storybook-react/.storybook/main.ts';
 
 export const stories = ['../src/**/*.stories.tsx'];
 

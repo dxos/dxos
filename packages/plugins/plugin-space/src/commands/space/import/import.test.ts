@@ -14,8 +14,8 @@ import { ClientService } from '@dxos/client';
 import { Obj } from '@dxos/echo';
 import { EffectEx } from '@dxos/effect';
 
-import { type Format, handler as exportSpace } from '../export';
-import { handler as importSpace } from './import';
+import { type Format, handler as exportSpace } from '../export/index.ts';
+import { handler as importSpace } from './import.ts';
 
 const ImportTestLayer = Layer.mergeAll(TestLayer, NodeServices.layer);
 

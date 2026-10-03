@@ -12,7 +12,7 @@ import { EffectEx } from '@dxos/effect';
 
 import { Booking, Segment, Trip } from '#types';
 
-import mergeTripHandler from './merge-trip';
+import mergeTripHandler from './merge-trip.ts';
 
 describe('MergeTrip', () => {
   let builder: EchoTestBuilder;
@@ -81,8 +81,7 @@ describe('MergeTrip', () => {
     const source = addTrip({ name: 'Source', start: '2026-06-10T10:00:00.000Z', end: '2026-06-10T13:00:00.000Z' }, [
       srcSeg,
     ]);
-    const booking = db.add(Booking.make({ confirmationCode: 'SRC1', source: 'email' }));
-    Obj.setParent(booking, source);
+    const booking = db.add(Booking.make({ [Obj.Parent]: source, confirmationCode: 'SRC1', source: 'email' }));
 
     const nearSeg = Segment.make({ details: { _tag: 'flight', number: 'NN-1', departAt: '2026-06-12T10:00:00.000Z' } });
     const near = addTrip({ name: 'Near', start: '2026-06-12T10:00:00.000Z', end: '2026-06-12T12:00:00.000Z' }, [

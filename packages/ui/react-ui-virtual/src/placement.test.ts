@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { Placement } from './placement';
+import { Placement } from './placement.ts';
 
 /**
  * The placement module, with nothing rendered.
@@ -127,6 +127,25 @@ describe('placement', () => {
 
     expect(placement.anchor.index).to.eq(anchor.index + 10);
     expect([0, 1, 2, 3].map((step) => placement.positionOf(placement.anchor.index + step))).to.deep.eq(positions);
+  });
+
+  test('a model that shrinks below the anchor still mounts its rows', () => {
+    const ids = Array.from({ length: 1_000 }, (_, index) => `row-${index}`);
+    const placement = new Placement({
+      count: ids.length,
+      getId: (index) => ids[index],
+      extents: { of: () => 100 },
+      viewport: VIEWPORT,
+      overscan: 2,
+    });
+    placement.scrollTo(50_000);
+
+    ids.splice(10);
+    placement.setCount(ids.length);
+    const { first, last, sizerExtent } = placement.layout();
+    expect(first).to.be.at.most(last);
+    expect(last).to.eq(9);
+    expect(sizerExtent).to.eq(1_000);
   });
 
   test('appending moves nothing at all', () => {

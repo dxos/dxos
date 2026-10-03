@@ -40,4 +40,4 @@
 { ?s deus:extends <https://dxos.org/deus/module/effect%2FSchema#TaggedError> } => { ?s rdf:type deus:DomainError }.
 
 # RPC groups.
-{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2Funstable%2Frpc%2FRpcGroup#make> } => { ?s rdf:type deus:Rpc }.
+{ ?s deus:constructedBy <https://dxos.org/deus/module/effect%2Frpc%2FRpcGroup#make> } => { ?s rdf:type deus:Rpc }.

@@ -7,8 +7,8 @@ import React, { useCallback } from 'react';
 import { Button } from 'storybook/internal/components';
 import { addons, types } from 'storybook/manager-api';
 
-import { ADDON_ID, DOWNLOAD_EVENT, LOGS_DATA_EVENT, TOOL_ID } from './constants';
-import { triggerLogsDownload } from './trigger-download';
+import { ADDON_ID, DOWNLOAD_EVENT, LOGS_DATA_EVENT, TOOL_ID } from './constants.ts';
+import { triggerLogsDownload } from './trigger-download.ts';
 
 const DownloadLogsButton = () => {
   const channel = addons.getChannel();

@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import * as TerraObject from './TerraObject';
+import * as TerraObject from './TerraObject.ts';
 
 describe('TerraObject', () => {
   test('make() builds a routed object', () => {

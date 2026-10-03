@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './transcript-model';
+export * from './transcript-model.ts';

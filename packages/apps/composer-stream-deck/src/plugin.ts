@@ -6,9 +6,9 @@ import streamDeck from '@elgato/streamdeck';
 
 import * as Protocol from '@dxos/plugin-stream-deck/Protocol';
 
-import { FavoriteAction } from './actions/FavoriteAction';
-import { MonitorAction } from './actions/MonitorAction';
-import { BridgeServer } from './server';
+import { FavoriteAction } from './actions/FavoriteAction.ts';
+import { MonitorAction } from './actions/MonitorAction.ts';
+import { BridgeServer } from './server/index.ts';
 
 const favorites = new FavoriteAction();
 const monitors = new MonitorAction();

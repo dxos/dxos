@@ -5,7 +5,7 @@
 import React from 'react';
 
 import { useActiveSpace } from '@dxos/app-toolkit/ui';
-import { DevtoolsContextProvider, InvocationTraceContainer } from '@dxos/devtools';
+import { InvocationTraceContainer } from '@dxos/devtools';
 import { Feed } from '@dxos/echo';
 import { Panel, Toolbar } from '@dxos/react-ui';
 
@@ -22,10 +22,7 @@ export const InvocationsModule = () => {
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content>
-        {/* `InvocationTraceContainer` reads the devtools context, which the deck normally provides. */}
-        <DevtoolsContextProvider>
-          <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} detailAxis='block' />
-        </DevtoolsContextProvider>
+        <InvocationTraceContainer db={space?.db} feedDXN={feedDXN} detailAxis='block' />
       </Panel.Content>
     </Panel.Root>
   );

@@ -5,18 +5,18 @@
 // TODO(wittjosiah): Refactor to use a dfx-style Effect-native client.
 
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Predicate from 'effect/Predicate';
 import * as Schedule from 'effect/Schedule';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { withAuthorization } from '@dxos/compute-runtime';
 // eslint-disable-next-line unused-imports/no-unused-imports
 import * as Credential from '@dxos/compute/Credential';
 import { log } from '@dxos/log';
 
-import { GoogleApiError } from '../errors';
-import { GoogleCredentials } from '../services/google-credentials';
+import { GoogleApiError } from '../errors.ts';
+import { GoogleCredentials } from '../services/google-credentials.ts';
 
 /**
  * Shared utilities for Google API integration (Gmail, Calendar, etc.)

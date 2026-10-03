@@ -9,26 +9,37 @@ import * as Function from 'effect/Function';
 import * as Option from 'effect/Option';
 import * as String from 'effect/String';
 
-import { type Database, Entity, Filter, Format, Obj, Query, Ref, type Registry, Scope, Type, View } from '@dxos/echo';
-import { LabelAnnotation } from '@dxos/echo/Annotation';
+import {
+  Annotation,
+  type Database,
+  Entity,
+  Filter,
+  Format,
+  JsonSchema,
+  Obj,
+  Query,
+  Ref,
+  type Registry,
+  Scope,
+  Type,
+  View,
+} from '@dxos/echo';
 import { TypeEnum } from '@dxos/echo/Format';
-import { type JsonSchema as JsonSchemaType, toEffectSchema } from '@dxos/echo/JsonSchema';
-import { type Mutable } from '@dxos/echo/Obj';
 import { EffectEx, SchemaAST, SchemaEx } from '@dxos/effect';
 import { invariant } from '@dxos/invariant';
 
-import { ProjectionModel, createEchoChangeCallback } from '../projection';
-import { createDefaultSchema, getSchema } from '../util';
+import { ProjectionModel, createEchoChangeCallback } from '../projection/index.ts';
+import { createDefaultSchema, getSchema } from '../util/index.ts';
 
 type MakeProps = {
   name?: string;
   query: Query.Any;
   queryRaw?: string;
   // TODO(wittjosiah): Revisit this and try to unify this. Maybe always expect Type.AnyEntity since it can be created from JsonSchema anyways.
-  jsonSchema: JsonSchemaType; // Base schema.
+  jsonSchema: JsonSchema.JsonSchema; // Base schema.
   /** Persisted `Type.Type` entity backing `jsonSchema`, when one exists; enables `Type.update` on schema edits. */
   type?: Type.AnyEntity;
-  overrideSchema?: JsonSchemaType; // Override schema.
+  overrideSchema?: JsonSchema.JsonSchema; // Override schema.
   fields?: string[];
   pivotFieldName?: string;
 };
@@ -59,7 +70,7 @@ export const make = ({
     change: createEchoChangeCallback(view, type),
   });
   projection.normalizeView();
-  const effectSchema = toEffectSchema(jsonSchema);
+  const effectSchema = JsonSchema.toEffectSchema(jsonSchema);
   const properties = SchemaEx.getProperties(effectSchema.ast);
   for (const property of properties) {
     const name = property.name.toString() as SchemaEx.JsonProp;
@@ -80,7 +91,7 @@ export const make = ({
   // Sort fields to match the order in the params.
   if (fields) {
     Obj.update(view, (view) => {
-      (view.projection.fields as Mutable<View.Projection>['fields']).sort((a, b) => {
+      (view.projection.fields as Obj.Mutable<View.Projection>['fields']).sort((a, b) => {
         const indexA = fields.indexOf(a.path);
         const indexB = fields.indexOf(b.path);
         return indexA - indexB;
@@ -133,7 +144,7 @@ export const makeWithReferences = async ({
     baseSchema: jsonSchema,
     change: createEchoChangeCallback(view, type),
   });
-  const effectSchema = toEffectSchema(jsonSchema);
+  const effectSchema = JsonSchema.toEffectSchema(jsonSchema);
   const properties = SchemaEx.getProperties(effectSchema.ast);
   for (const property of properties) {
     const name = property.name.toString() as SchemaEx.JsonProp;
@@ -161,7 +172,7 @@ export const makeWithReferences = async ({
         Function.pipe(
           Option.fromNullishOr(referenceSchema),
           Option.map((schema) => Type.getSchema(schema)),
-          Option.flatMap((schema) => LabelAnnotation.get(schema)),
+          Option.flatMap((schema) => Annotation.LabelAnnotation.get(schema)),
           Option.flatMap((labels) => (labels.length > 0 ? Option.some(labels[0]) : Option.none())),
         ),
       );
@@ -211,7 +222,7 @@ export const makeFromDatabase = async ({
   typename,
   createInitial = 1,
   ...props
-}: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchemaType; view: View.View }> => {
+}: MakeFromDatabaseProps): Promise<{ jsonSchema: JsonSchema.JsonSchema; view: View.View }> => {
   if (!typename) {
     const type = await db.addType(createDefaultSchema());
     // `db.addType` returns a persisted `Type.Type` entity; its typename lives in the

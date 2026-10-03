@@ -4,7 +4,7 @@
 
 import { type ClaudeManagedAgent } from '#types';
 
-import { type AgentConfig, type ContentBlock, type SessionEvent, type TranscriptMessage } from './types';
+import { type AgentConfig, type ContentBlock, type SessionEvent, type TranscriptMessage } from './types.ts';
 
 /**
  * Projects the stored agent object onto the Managed Agents request body. Optional fields are omitted

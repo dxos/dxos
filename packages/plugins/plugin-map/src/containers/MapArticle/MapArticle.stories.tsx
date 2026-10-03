@@ -11,8 +11,8 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Map } from '#types';
 
-import { viewMarkerProvider } from '../../capabilities/marker-provider';
-import { MapArticle } from './MapArticle';
+import { viewMarkerProvider } from '../../capabilities/marker-provider.tsx';
+import { MapArticle } from './MapArticle.tsx';
 
 type StoryArgs = {};
 

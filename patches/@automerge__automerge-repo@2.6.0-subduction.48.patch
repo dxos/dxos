@@ -1,0 +1,1443 @@
+diff --git a/dist/Repo.d.ts b/dist/Repo.d.ts
+index 15d4ca65aa613fb567335f09c8fcb8cb9c4a954a..8145da3c154e94a0db9b6fd7760f2a40eff926ce 100644
+--- a/dist/Repo.d.ts
++++ b/dist/Repo.d.ts
+@@ -8,6 +8,7 @@ import { StorageAdapterInterface } from "./storage/StorageAdapterInterface.js";
+ import { StorageSubsystem } from "./storage/StorageSubsystem.js";
+ import { StorageId } from "./storage/types.js";
+ import { CollectionSynchronizer } from "./synchronizer/CollectionSynchronizer.js";
++import type { SubductionPeerBinding } from "./subduction/source.js";
+ import type { AnyDocumentId, AutomergeUrl, DocumentId, PeerId, UrlHeads } from "./types.js";
+ import { AbortOptions } from "./helpers/abortable.js";
+ import { type Subduction } from "@automerge/automerge-subduction/slim";
+@@ -39,6 +40,11 @@ export declare class Repo extends EventEmitter<RepoEvents> {
+     constructor({ storage, network, peerId, sharePolicy, shareConfig, isEphemeral, enableRemoteHeadsGossiping, denylist, saveDebounceRate, idFactory, signer, subductionPolicy, subductionWebsocketEndpoints, subductionAdapters, subductionTimeouts, subductionCompactionDeleteConcurrency, subductionBlobInterceptor, }?: RepoConfig);
+     /** Returns all the handles we have cached. */
+     get handles(): Record<DocumentId, DocHandle<any>>;
++    /**
++     * O(1) lookup of a single cached handle by id (undefined if not cached). Prefer this over
++     * `repo.handles[id]`, which rebuilds a full object over ALL handles on every access.
++     */
++    getHandle(documentId: DocumentId): DocHandle<any> | undefined;
+     /** Returns a list of all connected peer ids */
+     get peers(): PeerId[];
+     /** Returns the local peer id */
+@@ -160,6 +166,12 @@ export declare class Repo extends EventEmitter<RepoEvents> {
+      * there is no Subduction source or the document is not attached to it.
+      */
+     resyncSubduction: (documentId: DocumentId) => void;
++    /**
++     * DXOS patch: whether Subduction still has a sync round, or the load that
++     * follows a successful one, ahead of the document's handle. False when there
++     * is no Subduction source or the document is not attached to it.
++     */
++    hasPendingSubductionSync: (documentId: DocumentId) => boolean;
+     /**
+      * Drain pending writes for the given documents (or all documents
+      * when `documents` is omitted) so they are durable in storage.
+@@ -345,6 +357,12 @@ export interface RepoEvents {
+     "heal-exhausted": (payload: {
+         documentId: DocumentId;
+     }) => void;
++    /** A subduction handshake bound a verified peer identity to a transport. */
++    "subduction-peer-bound": (binding: SubductionPeerBinding) => void;
++    /** DXOS patch: Subduction stored data for a document with no attached handle. */
++    "subduction-detached-data": (payload: {
++        documentId: DocumentId;
++    }) => void;
+     /**
+      * A Subduction peer (e.g. the sync server) advertised new heads for a
+      * document. `storageId` is the peer's verifying-key peer id. Fires only for
+diff --git a/dist/Repo.js b/dist/Repo.js
+index adfddd9b3926510604274217c42f97f104e119a3..b5bac0a87e5b53211f19fe7bff4fb154db5d85e0 100644
+--- a/dist/Repo.js
++++ b/dist/Repo.js
+@@ -157,6 +157,26 @@ export class Repo extends EventEmitter {
+             onConnectionChanged: connected => {
+                 this.emit("subduction-connection", { connected });
+             },
++            onPeerBound: binding => {
++                // Surfaces the subduction ↔ repo PeerId binding so consumers can
++                // map a verified subduction Ed25519 identity to its repo PeerId.
++                // Listener throws are swallowed and logged; they must not abort
++                // the handshake or break the reconnect loop.
++                try {
++                    this.emit("subduction-peer-bound", binding);
++                }
++                catch (err) {
++                    this.#log.error("subduction-peer-bound listener threw", { err });
++                }
++            },
++            onDetachedData: documentId => {
++                try {
++                    this.emit("subduction-detached-data", { documentId });
++                }
++                catch (err) {
++                    this.#log.error("subduction-detached-data listener threw", { err });
++                }
++            },
+         });
+         this.#subductionSource = subductionSource;
+         this.#sources.set("subduction", subductionSource);
+@@ -377,6 +397,14 @@ export class Repo extends EventEmitter {
+         }
+         return result;
+     }
++    /**
++     * O(1) lookup of a single cached handle by id (undefined if not cached). Prefer this over
++     * `repo.handles[id]`, which invokes the `handles` getter and rebuilds a full object over ALL
++     * handles on every access — O(n) per lookup, O(n^2) when called per-document in a hot path.
++     */
++    getHandle(documentId) {
++        return this.#queries[documentId]?.handle;
++    }
+     /** Returns a list of all connected peer ids */
+     get peers() {
+         return this.synchronizer.peers;
+@@ -492,6 +520,12 @@ export class Repo extends EventEmitter {
+     // ability to not create a doc handle if we abort while loading. Once the DocHandle
+     // was running the abort signal didn't have much effect
+     _options) {
++        // DXOS patch: a bare document id whose query exists resolves to it directly. Parsing
++        // checksum-validates the id (base58check, two SHA-256 passes), and callers look documents up
++        // by id far more often than they open new ones.
++        if (typeof id === "string" && this.#queries[id]) {
++            return this.#queries[id];
++        }
+         const parsed = isValidAutomergeUrl(id)
+             ? parseAutomergeUrl(id)
+             : {
+@@ -667,6 +701,14 @@ export class Repo extends EventEmitter {
+     resyncSubduction = (documentId) => {
+         this.#subductionSource?.resync(documentId);
+     };
++    /**
++     * DXOS patch: whether Subduction still has a sync round, or the load that
++     * follows a successful one, ahead of the document's handle. False when there
++     * is no Subduction source or the document is not attached to it.
++     */
++    hasPendingSubductionSync = (documentId) => {
++        return this.#subductionSource?.hasPendingSync(documentId) ?? false;
++    };
+     /**
+      * Drain pending writes for the given documents (or all documents
+      * when `documents` is omitted) so they are durable in storage.
+diff --git a/dist/StorageSource.js b/dist/StorageSource.js
+index 2701ebc492066feba0d05cf556a3d8473312bc39..b359189739a660d354633bb0b7239b4270b31742 100644
+--- a/dist/StorageSource.js
++++ b/dist/StorageSource.js
+@@ -11,6 +11,8 @@ export class StorageSource {
+     #storage;
+     #saveDebounceRate;
+     #saveFns = {};
++    /** The handle each save listener is attached to, so {@link detach} can remove it. */
++    #handles = {};
+     #log = makeLogger("automerge-repo:storage-source");
+     constructor(storage, saveDebounceRate, { priority = 1 } = {}) {
+         this.#storage = storage;
+@@ -22,6 +24,7 @@ export class StorageSource {
+         const saveFn = this.#makeSaveFn(handle.documentId);
+         // Attach throttled save listener
+         handle.on("heads-changed", saveFn);
++        this.#handles[handle.documentId] = handle;
+         // If the handle already has data (e.g. from create/import), persist it
+         // immediately rather than waiting for a future heads-changed event.
+         if (Automerge.getHeads(handle.fullDoc()).length > 0) {
+@@ -57,7 +60,15 @@ export class StorageSource {
+         });
+     }
+     detach(documentId) {
++        // A detached handle can still receive changes (a source that kept a reference to it), and a
++        // listener left on it would persist that stale copy over the document's next load.
++        const saveFn = this.#saveFns[documentId];
++        const handle = this.#handles[documentId];
++        if (saveFn && handle) {
++            handle.off("heads-changed", saveFn);
++        }
+         delete this.#saveFns[documentId];
++        delete this.#handles[documentId];
+     }
+     shareConfigChanged() { }
+     #makeSaveFn(documentId) {
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 1ca836a0b386a69c63e0fa2f655b9f78d5dfe508..5126850c2da2c368d4ad42ec9f0059e088b80025 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -46,12 +46,12 @@ import { next as Automerge, type ObjID } from "@automerge/automerge/slim";
+ export * as cbor from "./helpers/cbor.js";
+ export type { DocHandleChangePayload, DocHandleDeletePayload, DocHandleEncodedChangePayload, DocHandleEphemeralMessagePayload, DocHandleRemoteHeadsPayload, DocHandleEvents, DocHandleOptions, DocHandleOutboundEphemeralMessagePayload, HandleState, SyncInfo, } from "./DocHandle.js";
+ export type { DeleteDocumentPayload, DocumentPayload, RepoConfig, RepoEvents, RepoFindOptions, DocMetrics, ShareConfig, SharePolicy, } from "./Repo.js";
+-export type { DocumentProgress, QueryState, SourceState, } from "./DocumentQuery.js";
++export type { DocumentQuery, DocumentProgress, QueryState, SourceState, } from "./DocumentQuery.js";
+ export type { AbortOptions } from "./helpers/abortable.js";
+ export type { DocumentSource } from "./DocumentSource.js";
+-export type { Policy as SubductionPolicy } from "@automerge/automerge-subduction/slim";
++export type { Policy as SubductionPolicy, PeerId as SubductionPeerId } from "@automerge/automerge-subduction/slim";
+ export { setSubductionLogLevel } from "@automerge/automerge-subduction/slim";
+-export type { SubductionTimeouts, BlobInterceptor, } from "./subduction/source.js";
++export type { SubductionPeerBinding, OnSubductionPeerBound, SubductionTimeouts, BlobInterceptor, } from "./subduction/source.js";
+ export { WebSocketEndpoint, WorkerWebSocketEndpoint, type ManagedTransport, type WebSocketEndpointInterface, type WorkerWebSocketEndpointOptions, } from "./subduction/websocket-endpoint.js";
+ export { WorkerWebSocketError, type WorkerPortLike, type WorkerPortSource, type WorkerWebSocketErrorCode, } from "./subduction/worker-websocket/protocol.js";
+ export { WorkerWebSocketTransport, type WorkerWebSocketConnectOptions, } from "./subduction/worker-websocket/transport.js";
+diff --git a/dist/storage/StorageSubsystem.js b/dist/storage/StorageSubsystem.js
+index 373de48918620aaf26b7d375d5269c8fc6ffada5..a9ba313bca84d5d6339c435f9af67b0fd313f619 100644
+--- a/dist/storage/StorageSubsystem.js
++++ b/dist/storage/StorageSubsystem.js
+@@ -5,7 +5,6 @@ import { mergeArrays } from "../helpers/mergeArrays.js";
+ import { keyHash, headsHash } from "./keyHash.js";
+ import * as Uuid from "uuid";
+ import { EventEmitter } from "eventemitter3";
+-import { encodeHeads } from "../AutomergeUrl.js";
+ import { SavedHeads } from "./SavedHeads.js";
+ /**
+  * The storage subsystem is responsible for saving and loading Automerge documents to and from
+@@ -158,6 +157,22 @@ export class StorageSubsystem extends EventEmitter {
+         // Don't bother saving if the document hasn't changed
+         if (!this.#shouldSave(documentId, doc))
+             return;
++        // A document behind what is stored — a handle that outlived its eviction, or a throttled
++        // save that lost a race with a newer one — must not compact: `#saveTotal` deletes every
++        // chunk it did not write, which would drop the newer history. Its own history is appended
++        // instead, so a later load merges both, and the stored heads are left as they are.
++        const storedHeads = this.#storedHeads.lastSavedHeads(documentId).value;
++        if (storedHeads && !A.hasHeads(doc, storedHeads)) {
++            this.#log.warn(`document ${documentId} is behind storage; appending its history without compacting`);
++            const binary = A.save(doc);
++            const key = [documentId, "incremental", keyHash(binary)];
++            await this.#storageAdapter.save(key, binary);
++            if (!this.#chunkInfos.has(documentId)) {
++                this.#chunkInfos.set(documentId, []);
++            }
++            this.#chunkInfos.get(documentId).push({ key, type: "incremental", size: binary.length });
++            return;
++        }
+         const sourceChunks = this.#chunkInfos.get(documentId) ?? [];
+         if (this.#shouldCompact(sourceChunks)) {
+             await this.#saveTotal(documentId, doc, sourceChunks);
+@@ -271,7 +286,9 @@ export class StorageSubsystem extends EventEmitter {
+             return true;
+         }
+         const newHeads = A.getHeads(doc);
+-        if (headsAreSame(encodeHeads(newHeads), encodeHeads(oldHeads))) {
++        // DXOS patch: compared as stored. Encoding maps each hash to a unique string, so the answer is
++        // the same, without two base58check encodes per head for every document a flush checks.
++        if (headsAreSame(newHeads, oldHeads)) {
+             // the document hasn't changed
+             return false;
+         }
+diff --git a/dist/subduction/AdapterConnections.d.ts b/dist/subduction/AdapterConnections.d.ts
+index 55231beca6494ed4ab0eaeb45383b822bcea5fe3..826676a1b2ea406a000f874d429b11e3ff0caa98 100644
+--- a/dist/subduction/AdapterConnections.d.ts
++++ b/dist/subduction/AdapterConnections.d.ts
+@@ -1,10 +1,17 @@
+-import { Subduction } from "@automerge/automerge-subduction/slim";
++import { PeerId as SubductionPeerId, Subduction } from "@automerge/automerge-subduction/slim";
+ import { NetworkAdapterInterface } from "../network/NetworkAdapterInterface.js";
+ import { PeerId } from "../types.js";
+ import { ConnectionManager } from "./ConnectionManager.js";
++export type OnAdapterPeerBound = (binding: {
++    subductionPeerId: SubductionPeerId;
++    repoPeerId: PeerId;
++    adapter: NetworkAdapterInterface;
++    serviceName: string;
++    role: "connect" | "accept";
++}) => void;
+ export declare class AdapterConnections implements ConnectionManager {
+     #private;
+-    constructor(subduction: Promise<Subduction>, localPeerId: PeerId);
++    constructor(subduction: Promise<Subduction>, localPeerId: PeerId, onPeerBound?: OnAdapterPeerBound);
+     isConnecting(): boolean;
+     isConnected(): boolean;
+     generation(): number;
+diff --git a/dist/subduction/AdapterConnections.js b/dist/subduction/AdapterConnections.js
+index 40f525a6be944be10dd5e707c73f6af48d7ffde1..873e9e29828867d7c6263cc8c714f52750a0d9bb 100644
+--- a/dist/subduction/AdapterConnections.js
++++ b/dist/subduction/AdapterConnections.js
+@@ -1,15 +1,19 @@
++import debug from "debug";
+ import { NetworkAdapterTransport } from "./network.js";
+ export class AdapterConnections {
+     #adapters = [];
+     #subduction;
+     #localPeerId;
+     #onChangeCallback = null;
++    #onPeerBound;
+     #pendingTransports = 0;
+     #generation = 0;
+     #isShutdown = false;
+-    constructor(subduction, localPeerId) {
++    #log = debug("automerge-repo:subduction:adapters");
++    constructor(subduction, localPeerId, onPeerBound) {
+         this.#subduction = subduction;
+         this.#localPeerId = localPeerId;
++        this.#onPeerBound = onPeerBound ?? null;
+     }
+     // ── ConnectionManager interface ─────────────────────────────────────
+     isConnecting() {
+@@ -32,17 +36,44 @@ export class AdapterConnections {
+     shutdown() {
+         this.#isShutdown = true;
+         this.#onChangeCallback = null;
++        this.#onPeerBound = null;
+     }
+     // ── Adapter management ──────────────────────────────────────────────
+     addAdapter(adapter, serviceName, role) {
+         this.#adapters.push(adapter);
++        // DXOS patch: the current connection attempt per repo peer, dropped once it is released.
++        const attempts = new Map();
+         adapter.on("peer-candidate", ({ peerId }) => {
+             if (this.#isShutdown)
+                 return;
+             // Increment synchronously so isConnecting() returns true
+             // before the async handshake begins.
+             this.#pendingTransports++;
+-            void this.#startTransport(adapter, serviceName, peerId, role);
++            const previous = attempts.get(peerId);
++            const attempt = {
++                lost: false,
++                subductionPeerId: null,
++                disconnecting: undefined,
++                // A reconnecting peer binds the same subduction PeerId, so the lost connection goes first.
++                after: previous?.lost ? previous.handshake.then(() => previous.disconnecting) : undefined,
++            };
++            attempts.set(peerId, attempt);
++            attempt.handshake = this.#startTransport(adapter, serviceName, peerId, role, attempt, attempts);
++            void attempt.handshake.then(() => {
++                if (attempt.subductionPeerId === null)
++                    this.#release(attempts, peerId, attempt);
++            });
++        });
++        // DXOS patch: the transport's disconnect callback leaves the connection registered in
++        // subduction_core with its requests pending until they time out; `disconnectFromPeer` removes it
++        // and settles them, so a round in flight to a lost peer finishes against the others.
++        adapter.on("peer-disconnected", ({ peerId }) => {
++            const attempt = attempts.get(peerId);
++            if (this.#isShutdown || attempt === undefined || attempt.lost)
++                return;
++            attempt.lost = true;
++            if (attempt.subductionPeerId !== null)
++                this.#disconnect(attempts, peerId, attempt);
+         });
+         void this.#watchAdapter(adapter);
+         adapter.connect(this.#localPeerId);
+@@ -53,15 +84,36 @@ export class AdapterConnections {
+             this.#onChangeCallback?.();
+         }
+     }
+-    async #startTransport(adapter, serviceName, peerId, role) {
++    #disconnect(attempts, peerId, attempt) {
++        attempt.disconnecting = (async () => {
++            try {
++                await (await this.#subduction).disconnectFromPeer(attempt.subductionPeerId);
++            }
++            catch (e) {
++                this.#log("disconnectFromPeer failed for %s: %O", peerId, e);
++            }
++            this.#release(attempts, peerId, attempt);
++        })();
++    }
++    #release(attempts, peerId, attempt) {
++        if (attempts.get(peerId) === attempt)
++            attempts.delete(peerId);
++    }
++    async #startTransport(adapter, serviceName, peerId, role, attempt, attempts) {
++        let subductionPeerId = null;
+         try {
++            await attempt.after;
+             const subduction = await this.#subduction;
+             const transport = new NetworkAdapterTransport(adapter, this.#localPeerId, peerId);
+-            if (role === "accept") {
+-                await subduction.acceptTransport(transport, serviceName);
+-            }
+-            else {
+-                await subduction.connectTransport(transport, serviceName);
++            subductionPeerId =
++                role === "accept"
++                    ? await subduction.acceptTransport(transport, serviceName)
++                    : await subduction.connectTransport(transport, serviceName);
++            attempt.subductionPeerId = subductionPeerId;
++            if (attempt.lost) {
++                // The peer left while the handshake was in flight.
++                this.#disconnect(attempts, peerId, attempt);
++                subductionPeerId = null;
+             }
+         }
+         catch {
+@@ -72,6 +124,23 @@ export class AdapterConnections {
+             this.#generation++;
+             this.#onChangeCallback?.();
+         }
++        // Notify outside the try/finally so a listener throw can't be
++        // mistaken for a transport failure, and so the post-handshake
++        // bookkeeping above has already settled.
++        if (subductionPeerId !== null && this.#onPeerBound !== null) {
++            try {
++                this.#onPeerBound({
++                    subductionPeerId,
++                    repoPeerId: peerId,
++                    adapter,
++                    serviceName,
++                    role,
++                });
++            }
++            catch (e) {
++                this.#log("onPeerBound threw for %s/%s: %O", serviceName, peerId, e);
++            }
++        }
+     }
+ }
+ //# sourceMappingURL=AdapterConnections.js.map
+\ No newline at end of file
+diff --git a/dist/subduction/SubductionConnections.d.ts b/dist/subduction/SubductionConnections.d.ts
+index 7128dd6c9407ed5bd76bf19597cd30805835b135..cbaed9393b9a67f2478a242b648f152550987a36 100644
+--- a/dist/subduction/SubductionConnections.d.ts
++++ b/dist/subduction/SubductionConnections.d.ts
+@@ -1,10 +1,14 @@
+-import { Subduction } from "@automerge/automerge-subduction/slim";
++import { PeerId as SubductionPeerId, Subduction } from "@automerge/automerge-subduction/slim";
+ import { ConnectionManager } from "./ConnectionManager.js";
+ import type { WebSocketEndpointInterface } from "./websocket-endpoint.js";
+ export type ConnectionState = "connecting" | "running" | "awaiting-reconnect";
++export type OnWebSocketPeerBound = (binding: {
++    subductionPeerId: SubductionPeerId;
++    url: string;
++}) => void;
+ export declare class SubductionConnections implements ConnectionManager {
+     #private;
+-    constructor(subduction: Promise<Subduction>);
++    constructor(subduction: Promise<Subduction>, onPeerBound?: OnWebSocketPeerBound);
+     isConnecting(): boolean;
+     isConnected(): boolean;
+     generation(): number;
+diff --git a/dist/subduction/SubductionConnections.js b/dist/subduction/SubductionConnections.js
+index 4760a1899a8c0127db4840d5de090f6825211d97..590986560d039afeaa029f7ba67aed072a5c0264 100644
+--- a/dist/subduction/SubductionConnections.js
++++ b/dist/subduction/SubductionConnections.js
+@@ -6,11 +6,13 @@ export class SubductionConnections {
+     #log = makeLogger("automerge-repo:subduction:connections");
+     #subduction;
+     #onChangeCallback = null;
++    #onPeerBound;
+     #generation = 0;
+     #isShutdown = false;
+     #pendingSleeps = new Map();
+-    constructor(subduction) {
++    constructor(subduction, onPeerBound) {
+         this.#subduction = subduction;
++        this.#onPeerBound = onPeerBound ?? null;
+     }
+     // ── ConnectionManager interface ─────────────────────────────────────
+     isConnecting() {
+@@ -54,10 +56,21 @@ export class SubductionConnections {
+                     break;
+                 }
+                 const subduction = await this.#subduction;
+-                await subduction.connectTransport(transport, serviceName);
++                const subductionPeerId = await subduction.connectTransport(transport, serviceName);
+                 this.#setConnectionState(url, "running");
+                 this.#log.debug(`connected to ${url}`);
+                 backoff = RECONNECT_BASE_MS;
++                // Notify after the connection state has flipped to "running"
++                // so consumers reading repo state from inside the listener see
++                // the settled value.
++                if (this.#onPeerBound !== null) {
++                    try {
++                        this.#onPeerBound({ subductionPeerId, url });
++                    }
++                    catch (e) {
++                        this.#log.warn(`onPeerBound threw for ${url}:`, e);
++                    }
++                }
+                 await transport.closed();
+                 this.#log.warn(`disconnected from ${url}`);
+             }
+@@ -82,6 +95,7 @@ export class SubductionConnections {
+     }
+     shutdown() {
+         this.#isShutdown = true;
++        this.#onPeerBound = null;
+         for (const [timer, resolve] of this.#pendingSleeps) {
+             clearTimeout(timer);
+             resolve();
+diff --git a/dist/subduction/SyncScheduler.js b/dist/subduction/SyncScheduler.js
+index 609e087a8829d5170733ff14da63f8fbe81194b4..b07ef33c13bc9f83036d63e72ea264891bfff907 100644
+--- a/dist/subduction/SyncScheduler.js
++++ b/dist/subduction/SyncScheduler.js
+@@ -6,10 +6,10 @@ const DEFAULT_HEAL_MAX_ATTEMPTS = 10;
+ /**
+  * Manages self-healing retry logic for failed syncs.
+  *
+- * When a caller observes a failed `syncWithAllPeers` for a sedimentree,
++ * When a caller observes a failed sync round for a sedimentree,
+  * it invokes {@link scheduleHealSync} to schedule an exponential-backoff
+  * retry (2 s → 60 s cap, up to {@link HEAL_MAX_ATTEMPTS}). Each retry
+- * calls `syncWithAllPeers`; if it recovers new commits/fragments, the
++ * runs the caller's `syncRound`; if it recovers new commits/fragments, the
+  * caller's {@link SyncSchedulerOptions.onSyncDataReceived} hook is
+  * invoked so the handle can be updated. Successful retries clear the
+  * heal state via {@link resetHealState}. After exhausting retries the
+@@ -35,8 +35,23 @@ export class SyncScheduler {
+     #healInitialDelayMs;
+     #healMaxDelayMs;
+     #healMaxAttempts;
++    /**
++     * DXOS patch: runs a heal retry's round and resolves with one result per peer.
++     * `SubductionSource` asks each peer separately, so a slow peer does not hold the retry
++     * (`syncWithAllPeers` waits for every peer).
++     */
++    #syncRound;
++    /**
++     * Concurrency gate shared with `SubductionSource#doSync` (see MAX_IN_FLIGHT_DOC_SYNCS
++     * there). Heal retries run their own rounds, so without the gate a heal wave
++     * after a mass failure fires unbounded concurrent rounds — the burst the gate exists to
++     * prevent. Identity function when not provided.
++     */
++    #syncGate;
+     constructor(options) {
+         this.#subduction = options.subduction;
++        this.#syncGate = options.syncGate ?? ((fn) => fn());
++        this.#syncRound = options.syncRound;
+         this.#log = options.log;
+         this.#onSyncDataReceived = options.onSyncDataReceived;
+         this.#onHealExhausted = options.onHealExhausted;
+@@ -48,7 +63,7 @@ export class SyncScheduler {
+     }
+     // ── Self-healing sync ────────────────────────────────────────────────
+     //
+-    // When syncWithAllPeers fails for a sedimentree, we schedule a retry
++    // When a sync round fails for a sedimentree, we schedule a retry
+     // with exponential backoff (2s → 60s cap). After HEAL_MAX_ATTEMPTS
+     // consecutive failures we give up and notify the application via the
+     // onHealExhausted callback.
+@@ -81,9 +96,10 @@ export class SyncScheduler {
+         this.#log.debug(`executing heal sync for ${key.slice(0, 8)}...`);
+         try {
+             const subduction = await this.#subduction;
+-            const peerResultMap = await subduction.syncWithAllPeers(sedimentreeId, true, this.#syncTimeout);
+-            const results = peerResultMap.entries();
+-            const anyFailed = results.some(r => !r.success || (r.transportErrors?.length ?? 0) > 0);
++            const results = await this.#syncGate(() => this.#syncRound(sedimentreeId, subduction, this.#syncTimeout));
++            // A peer still answering when the round settled has not failed; its answer lands later.
++            const answered = results.filter(r => !r.stillPending);
++            const anyFailed = answered.some(r => !r.success || (r.transportErrors?.length ?? 0) > 0);
+             // If new data was received during the heal, load it into the handle
+             // immediately — otherwise the recovered commits/fragments would sit
+             // in subduction storage until some other event surfaced them.
+@@ -99,12 +115,29 @@ export class SyncScheduler {
+                     this.#log.debug(`onSyncDataReceived threw during heal for ${key.slice(0, 8)}: %O`, e);
+                 }
+             }
+-            if (anyFailed || results.length === 0) {
++            if (anyFailed || answered.length === 0) {
+                 const currentDelay = this.#healBackoff.get(key) ?? this.#healInitialDelayMs;
+                 const nextDelay = Math.min(currentDelay * 2, this.#healMaxDelayMs);
+                 this.#healBackoff.set(key, nextDelay);
+                 this.scheduleHealSync(sedimentreeId);
+             }
++            else if (answered.length < results.length) {
++                // DXOS patch: the round no longer waits for a peer still answering, so the retry does:
++                // a peer that then fails is retried as a failed round is.
++                this.#log.debug(`heal sync for ${key.slice(0, 8)} waits for a peer still answering`);
++                const answers = results.filter(r => r.stillPending).map(r => r.answer);
++                void Promise.all(answers).then(late => {
++                    if (late.some(r => !r.success || (r.transportErrors?.length ?? 0) > 0)) {
++                        const currentDelay = this.#healBackoff.get(key) ?? this.#healInitialDelayMs;
++                        this.#healBackoff.set(key, Math.min(currentDelay * 2, this.#healMaxDelayMs));
++                        this.scheduleHealSync(sedimentreeId);
++                    }
++                    // A retry scheduled since, for a newer failure, keeps its state.
++                    else if (!this.#healTimers.has(key)) {
++                        this.resetHealState(key);
++                    }
++                });
++            }
+             else {
+                 this.#log.debug(`heal sync succeeded for ${key.slice(0, 8)}`);
+                 this.resetHealState(key);
+diff --git a/dist/subduction/network.js b/dist/subduction/network.js
+index 761e08f5065092d61888b381f5fe5ac08d5829db..3b57a2ff7af10c58e862fe4c979468f22361b550 100644
+--- a/dist/subduction/network.js
++++ b/dist/subduction/network.js
+@@ -92,7 +92,11 @@ export class NetworkAdapterTransport {
+     };
+     #handlePeerDisconnected = ({ peerId }) => {
+         if (peerId === this.#remotePeerId.toString()) {
+-            this.#teardown();
++            // DXOS patch: fire the disconnect callback so subduction_core removes its
++            // connection for this transport. Without it the core keeps a zombie
++            // connection that it later replaces silently on the next handshake,
++            // orphaning any sync rounds in flight on it.
++            this.#teardown({ fireDisconnectCallback: true });
+         }
+     };
+     /** Send a tagged frame over the adapter. */
+diff --git a/dist/subduction/source.d.ts b/dist/subduction/source.d.ts
+index c1f722a51f7e273ee8161e4569b1602c2e3c3d11..f35b76264c687b78d606eca08a7b51419ac190ae 100644
+--- a/dist/subduction/source.d.ts
++++ b/dist/subduction/source.d.ts
+@@ -1,4 +1,4 @@
+-import { SedimentreeId, Subduction, type Policy } from "@automerge/automerge-subduction/slim";
++import { PeerId as SubductionPeerId, SedimentreeId, Subduction, type Policy } from "@automerge/automerge-subduction/slim";
+ import { DocumentSource } from "../DocumentSource.js";
+ import { DocumentQuery, SourcePriority } from "../DocumentQuery.js";
+ import { DocumentId, PeerId } from "../types.js";
+@@ -61,6 +61,28 @@ export interface SubductionTimeouts {
+      */
+     healMaxAttempts?: number;
+ }
++/**
++ * Describes a successful subduction handshake — the moment when
++ * `acceptTransport` / `connectTransport` resolves with a verified
++ * peer identity.
++ */
++export type SubductionPeerBinding = {
++    subductionPeerId: SubductionPeerId;
++    source: {
++        kind: "adapter";
++        adapter: NetworkAdapterInterface;
++        serviceName: string;
++        role: "connect" | "accept";
++    };
++    repoPeerId: PeerId;
++} | {
++    subductionPeerId: SubductionPeerId;
++    source: {
++        kind: "websocket";
++        url: string;
++    };
++};
++export type OnSubductionPeerBound = (binding: SubductionPeerBinding) => void;
+ /** Intercepts and transforms incoming and outgoing blobs (e.g., for E2EE). */
+ export interface BlobInterceptor {
+     /**
+@@ -106,6 +128,12 @@ export interface SubductionSourceOptions {
+      * dropping → `false`). Lets a consumer surface online/offline status.
+      */
+     onConnectionChanged?: (connected: boolean) => void;
++    onPeerBound?: OnSubductionPeerBound;
++    /**
++     * DXOS patch: data was stored for a document with no attached handle (e.g. evicted), so nothing
++     * applied it; the consumer decides whether to load the document.
++     */
++    onDetachedData?: (documentId: DocumentId) => void;
+     policy?: Policy;
+     /**
+      * What priority this source should have w.r.t to other sources
+@@ -123,15 +151,18 @@ export interface SubductionSourceOptions {
+ export declare class SubductionSource implements DocumentSource {
+     #private;
+     readonly priority: SourcePriority;
+-    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, priority, policy, timeouts, compactionDeleteConcurrency, blobInterceptor, }: SubductionSourceOptions);
++    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, priority, policy, timeouts, compactionDeleteConcurrency, blobInterceptor, }: SubductionSourceOptions);
+     /** True if any connection manager has an established connection. */
+     isConnected(): boolean;
+     getSubduction(): Promise<Subduction>;
+     attach(query: DocumentQuery<unknown>): void;
+-    detach(_documentId: DocumentId): void;
++    /** Drops the entry bound to this document, so a later `attach` rebinds to the new handle. */
++    detach(documentId: DocumentId): void;
+     shareConfigChanged(): void;
+     /** Check whether a sedimentree is currently in heal-backoff. */
+     isHealing(sedimentreeId: SedimentreeId): boolean;
++    /** DXOS patch: whether a sync round, or the blob load after a successful one, is still ahead of the document's handle. */
++    hasPendingSync(documentId: DocumentId): boolean;
+     /**
+      * Force a fresh outbound sync round for a document, re-arming the
+      * self-healing retry loop.
+@@ -147,6 +178,9 @@ export declare class SubductionSource implements DocumentSource {
+      *      {@link SubductionSource.#needsOutboundSync} re-opens a round, then
+      *   3. schedule a recompute walk to act on it.
+      *
++     * DXOS patch: a running entry also reapplies every locally stored blob to
++     * its handle, since the peer may already have delivered what the handle lacks.
++     *
+      * No-op for unknown or not-yet-attached documents.
+      */
+     resync(documentId: DocumentId): void;
+diff --git a/dist/subduction/source.js b/dist/subduction/source.js
+index 4692619444edfae0ef5f111cef6ce29499507afa..2dbaff6220aaea16a23e91037155a96e199c0fbd 100644
+--- a/dist/subduction/source.js
++++ b/dist/subduction/source.js
+@@ -13,8 +13,8 @@ import { WebSocketEndpoint, } from "./websocket-endpoint.js";
+ import { SyncScheduler } from "./SyncScheduler.js";
+ import { AdapterConnections } from "./AdapterConnections.js";
+ /**
+- * Default timeout for `subduction.syncWithAllPeers(...)`. Bounds how
+- * long we wait for a single sync round before giving up.
++ * Default deadline for a sync round. Bounds how long we wait for a
++ * single sync round before giving up.
+  *
+  * Override per-Repo via `RepoConfig.subductionTimeouts.syncMs`.
+  */
+@@ -41,12 +41,55 @@ const SHUTDOWN_IDLE_TIMEOUT_MS = 5_000;
+  * `RepoConfig.subductionCompactionDeleteConcurrency`.
+  */
+ const DEFAULT_COMPACTION_DELETE_CONCURRENCY = 16;
++/**
++ * Cap on concurrent sync rounds — push and pull alike, including heal retries (the gate is
++ * shared with `SyncScheduler`). Attaching a space with
++ * thousands of documents would otherwise fire every sync round at once, saturating
++ * a single-threaded server (edge) — rounds contend, replies are dropped/stranded, and each
++ * stranded round burns the full sync timeout. Excess rounds queue (FIFO) and start as slots free,
++ * so the working set the server sees at any moment is bounded. Tune to the server's concurrency.
++ */
++const MAX_IN_FLIGHT_DOC_SYNCS = 100;
++/** Sentinel resolved by the disconnect race in #doSync (DXOS patch). */
++const disconnectedSentinel = Symbol("subduction-sync-disconnected");
++/**
++ * DXOS patch: how long a sync round waits for the remaining peers once one has answered with what
++ * the document needs. `syncWithAllPeers` settles only when every peer has answered or the deadline
++ * passes, so one slow peer (a mesh link carries one message per round trip) held every round, its
++ * slot in MAX_IN_FLIGHT_DOC_SYNCS and the document's first load until it answered.
++ */
++const LATE_PEER_GRACE_MS = 250;
++/**
++ * DXOS patch: cap on concurrent sync requests to one peer. A request that outlives its round no
++ * longer holds a round slot, so this is what bounds the requests a slow peer is sent.
++ */
++const MAX_IN_FLIGHT_PEER_SYNCS = MAX_IN_FLIGHT_DOC_SYNCS;
++/** DXOS patch: the result a round records for a peer that failed to answer. */
++const noAnswer = (transportErrors = []) => ({ success: false, stats: undefined, transportErrors });
++/**
++ * DXOS patch: the result a round records for a peer whose request was still running when the round
++ * settled. The request carries on, and `answer` resolves with its result, which a heal retry waits for.
++ */
++const stillPending = (answer) => ({ success: false, stats: undefined, transportErrors: [], stillPending: true, answer });
++/** DXOS patch: whether a peer's answer brought commits or fragments. */
++const receivedData = (result) => {
++    const stats = result.stats;
++    return !!stats && (stats.commitsReceived > 0 || stats.fragmentsReceived > 0);
++};
+ export class SubductionSource {
+     #subduction;
+     #storage;
+     #entries = new Map();
+     #log;
+     #connectionManagers = [];
++    /** Resolvers fired when aggregate connectivity drops to fully-disconnected; used to abort in-flight syncs early (DXOS patch). */
++    #disconnectAbortWaiters = new Set();
++    /** Per-peer request gates and their outstanding requests, keyed by peer id; see MAX_IN_FLIGHT_PEER_SYNCS (DXOS patch). */
++    #peerSyncLanes = new Map();
++    /** Every `syncWithPeer` request not yet settled, including those that outlived their round (DXOS patch). */
++    #outstandingPeerSyncs = new Set();
++    // Bounds concurrent `#doSync` rounds; see MAX_IN_FLIGHT_DOC_SYNCS.
++    #syncGate = semaphore(MAX_IN_FLIGHT_DOC_SYNCS);
+     /** Normalized endpoints; kept so `shutdown()` can run their teardown hooks. */
+     #websocketEndpoints = [];
+     #scheduler;
+@@ -55,6 +98,7 @@ export class SubductionSource {
+     #compactionDeleteConcurrency;
+     #blobInterceptor;
+     #onRemoteHeadsChanged;
++    #onDetachedData;
+     #onConnectionChanged;
+     /** Last reported aggregate connectedness, to fire onConnectionChanged only
+      *  on transitions. */
+@@ -70,7 +114,7 @@ export class SubductionSource {
+      */
+     #shuttingDown = false;
+     priority;
+-    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, priority = 2, policy, timeouts, compactionDeleteConcurrency = DEFAULT_COMPACTION_DELETE_CONCURRENCY, blobInterceptor, }) {
++    constructor({ peerId, storage, signer, websocketEndpoints, adapters, onRemoteHeadsChanged, onEphemeral, onHealExhausted, onConnectionChanged, onPeerBound, onDetachedData, priority = 2, policy, timeouts, compactionDeleteConcurrency = DEFAULT_COMPACTION_DELETE_CONCURRENCY, blobInterceptor, }) {
+         this.#blobInterceptor = blobInterceptor;
+         this.#onConnectionChanged = onConnectionChanged;
+         this.priority = priority;
+@@ -105,6 +149,7 @@ export class SubductionSource {
+         this.#log = makeLogger(`automerge-repo:subduction(${peerId})`);
+         this.#storage = storage;
+         this.#onRemoteHeadsChanged = onRemoteHeadsChanged;
++        this.#onDetachedData = onDetachedData;
+         // Registered unconditionally so a peer's heads are persisted (and
+         // replayed on attach) even when there's no live consumer.
+         const onRemoteHeads = (sedimentreeId, remotePeerId, heads) => {
+@@ -133,12 +178,23 @@ export class SubductionSource {
+         // the shared manager owns the reconnect/backoff loop. Plain URL
+         // strings are shorthand for in-thread endpoints.
+         this.#websocketEndpoints = websocketEndpoints.map(endpoint => typeof endpoint === "string" ? new WebSocketEndpoint(endpoint) : endpoint);
+-        const wsConnections = new SubductionConnections(this.#subduction);
++        const wsConnections = new SubductionConnections(this.#subduction, onPeerBound
++            ? ({ subductionPeerId, url }) => onPeerBound({
++                subductionPeerId,
++                source: { kind: "websocket", url },
++            })
++            : undefined);
+         for (const endpoint of this.#websocketEndpoints) {
+             void wsConnections.manageConnection(endpoint);
+         }
+         this.#connectionManagers.push(wsConnections);
+-        const adapterConnections = new AdapterConnections(this.#subduction, peerId);
++        const adapterConnections = new AdapterConnections(this.#subduction, peerId, onPeerBound
++            ? ({ subductionPeerId, repoPeerId, adapter, serviceName, role }) => onPeerBound({
++                subductionPeerId,
++                repoPeerId,
++                source: { kind: "adapter", adapter, serviceName, role },
++            })
++            : undefined);
+         for (const { adapter, serviceName, role } of adapters) {
+             adapterConnections.addAdapter(adapter, serviceName, role ?? "connect");
+         }
+@@ -147,6 +203,15 @@ export class SubductionSource {
+             mgr.onChange(() => {
+                 this.#scheduleRecompute();
+                 this.#notifyConnectionChange();
++                // DXOS patch: on full disconnect, wake sync races so in-flight
++                // sync rounds settle immediately instead of waiting out
++                // the WASM per-request timeout (subduction_core does not reject
++                // pending RequestIds on disconnect).
++                if (!this.isConnected()) {
++                    for (const wake of this.#disconnectAbortWaiters)
++                        wake();
++                    this.#disconnectAbortWaiters.clear();
++                }
+             });
+         }
+         this.#storage.on("commit-saved", (sid, commitId, blob) => {
+@@ -163,6 +228,8 @@ export class SubductionSource {
+         });
+         // ── Sync scheduler ────────────────────────────────────────────────
+         this.#scheduler = new SyncScheduler({
++            syncGate: (fn) => this.#syncGate(fn),
++            syncRound: (sedimentreeId, subduction, timeoutMs) => this.#syncHealRound(sedimentreeId, subduction, timeoutMs),
+             subduction: this.#subduction,
+             log: this.#log,
+             onSyncDataReceived: async (sedimentreeId, subduction) => {
+@@ -230,8 +297,12 @@ export class SubductionSource {
+     // ── Storage events ──────────────────────────────────────────────────
+     #handleDataFound(id, commitId, blob) {
+         const entry = this.#entries.get(id.toString());
+-        if (!entry)
++        if (!entry) {
++            // DXOS patch: stored with no handle to apply it to, so the owner has to fault the document
++            // back in; otherwise its copy stays behind for as long as nothing else loads it.
++            this.#onDetachedData?.(toDocumentId(id));
+             return;
++        }
+         // During "initializing", let #loadBlobsAndTransition handle the
+         // complete blob load atomically. Applying individual commits here
+         // would cause premature "ready" transitions (the handle gets heads > 0
+@@ -244,6 +315,9 @@ export class SubductionSource {
+         // — recomputes are targeted, so other entries' completions no
+         // longer walk this one. Mark it dirty so the walk retries the load.
+         if (entry.syncState === "initializing") {
++            // DXOS patch: a load in flight may have read storage before this landed.
++            if (entry.blobLoadInFlight)
++                entry.reloadAfterFirstLoad = true;
+             this.#scheduleRecompute(entry);
+             return;
+         }
+@@ -392,9 +466,21 @@ export class SubductionSource {
+             hasUntransformedBlobs: false,
+             retryTransformAfterSync: false,
+             transformRetryScheduled: false,
++            // Requests not yet started, keyed by peer id (DXOS patch).
++            waitingPeerSyncs: new Map(),
++            // The latest request to each peer, until it settles, keyed by peer id (DXOS patch).
++            latestPeerSyncs: new Map(),
++            // A late peer's data landed while the first load was reading storage (DXOS patch).
++            reloadAfterFirstLoad: false,
++            // The commit and fragment ids on disk have been listed (DXOS patch).
++            storedIdsListed: false,
++            // The handle has been loaded from disk ahead of the first round (DXOS patch).
++            storedLoadStarted: false,
+         });
+         query.sourcePending("subduction");
+-        query.handle.on("heads-changed", () => throttledSave());
++        const headsChangedListener = () => throttledSave();
++        this.#entries.get(sidStr).headsChangedListener = headsChangedListener;
++        query.handle.on("heads-changed", headsChangedListener);
+         throttledSave();
+         // Subscribe to ephemeral messages for this sedimentree
+         void (async () => {
+@@ -415,8 +501,8 @@ export class SubductionSource {
+         // compaction even though it may be defunct relative to the
+         // current minimal sedimentree.
+         void (async () => {
++            const entry = this.#entries.get(sidStr);
+             try {
+-                const entry = this.#entries.get(sidStr);
+                 if (!entry)
+                     return;
+                 const [commitIds, fragmentIds] = await Promise.all([
+@@ -424,10 +510,17 @@ export class SubductionSource {
+                     this.#storage.listFragmentIds(sid),
+                 ]);
+                 for (const c of commitIds) {
+-                    entry.persistedCommitHashes.add(c.toHexString());
++                    const hex = c.toHexString();
++                    entry.persistedCommitHashes.add(hex);
++                    // DXOS patch: mirror into knownHashes so a reload attach does
++                    // not re-persist commits already on disk (same hex as
++                    // Automerge fragment metadata) — see automerge/automerge-repo#712.
++                    entry.knownHashes.add(hex);
+                 }
+                 for (const f of fragmentIds) {
+-                    entry.persistedFragmentHashes.add(f.toHexString());
++                    const hex = f.toHexString();
++                    entry.persistedFragmentHashes.add(hex);
++                    entry.knownHashes.add(hex);
+                 }
+                 if (entry.persistedCommitHashes.size > 0 ||
+                     entry.persistedFragmentHashes.size > 0) {
+@@ -440,6 +533,13 @@ export class SubductionSource {
+             catch (e) {
+                 this.#log.debug(`failed to seed persistedHashes for ${sidStr.slice(0, 8)}: %O`, e);
+             }
++            finally {
++                // DXOS patch: the recompute loads what is on disk, and until now held back `unavailable`.
++                if (entry !== undefined && this.#entries.get(sidStr) === entry) {
++                    entry.storedIdsListed = true;
++                    this.#scheduleRecompute(entry);
++                }
++            }
+         })();
+         // Replay the last-known remote heads for this sedimentree so the
+         // DocHandle reflects the last sync state immediately on (re)attach,
+@@ -457,7 +557,21 @@ export class SubductionSource {
+         })();
+         this.#scheduleRecompute(this.#entries.get(sidStr));
+     }
+-    detach(_documentId) { }
++    detach(documentId) {
++        // The repo evicts a document by dropping its query and handle, and builds new ones if the
++        // document is faulted back in. A retained entry makes `attach` early-return, so the new
++        // handle would never be saved or synced: the entry has to go with the handle it was bound to.
++        const sidStr = toSedimentreeId(documentId).toString();
++        const entry = this.#entries.get(sidStr);
++        if (!entry)
++            return;
++        if (entry.headsChangedListener)
++            entry.handle.off("heads-changed", entry.headsChangedListener);
++        this.#entries.delete(sidStr);
++        this.#recomputeDirty.delete(sidStr);
++        // A pending throttled save reads the entry back out of the map and stops when it is gone,
++        // and an in-flight compaction only touches records already written.
++    }
+     shareConfigChanged() {
+         for (const entry of this.#entries.values()) {
+             // A share-config change can flip a previously-denied fetch to
+@@ -589,32 +703,55 @@ export class SubductionSource {
+      * True when `entry` should open a sync round now: never synced, or it
+      * previously synced / found no peers and the connection generation has since
+      * advanced (a reconnect — server subscriptions are per-connection, so a
+-     * synced doc must re-sync to re-subscribe). `"all-failed"` is left to the healer.
++     * synced doc must re-sync to re-subscribe). A prior `"all-failed"` is also
++     * re-driven on a generation change: a fresh connection is new evidence, and
++     * leaving it to the healer alone risks permanent loss once the healer exhausts
++     * its retry budget (the reconnect path would then never re-drive it). `#doSync`
++     * resets the healer budget for the re-driven entry.
+      */
+     #needsOutboundSync(entry) {
+         if (entry.lastSyncResult === null)
+             return true;
+         return ((entry.lastSyncResult === "succeeded" ||
+-            entry.lastSyncResult === "no-peers") &&
++            entry.lastSyncResult === "no-peers" ||
++            entry.lastSyncResult === "all-failed") &&
+             entry.lastSyncGeneration !== this.#connectionGeneration());
+     }
++    /** Whether an initializing entry's next step is loading its stored blobs into the handle. */
++    #loadsStoredBlobs(entry) {
++        return (entry.lastSyncResult === "succeeded" ||
++            (entry.lastSyncResult !== null && Automerge.getHeads(entry.handle.fullDoc()).length > 0));
++    }
+     #recomputeEntry(entry) {
+         // No new background syncs once shutting down: `shutdown()`'s quiesce
+         // round is the sole sync initiator from that point. A recompute walk
+         // scheduled just before `#shuttingDown` was set could otherwise resume
+         // mid-teardown (it iterates with `await maybeYield()`) and kick a
+         // `#doSync` for an entry the quiesce worker pool is also about to sync,
+-        // double-dispatching `syncWithAllPeers` for one sedimentree.
++        // double-dispatching a sync round for one sedimentree.
+         if (this.#shuttingDown)
+             return;
+         switch (entry.syncState) {
+             case "initializing": {
+-                // After a successful sync, batch-load blobs into the handle
+-                if (entry.lastSyncResult === "succeeded" && !entry.blobLoadInFlight) {
++                // After a successful sync, batch-load blobs into the handle. DXOS patch: also after an
++                // unsuccessful round when the handle already holds a copy from disk — local Subduction
++                // storage can be ahead of it, and nothing else would ever apply what it holds.
++                if (this.#loadsStoredBlobs(entry) && !entry.blobLoadInFlight) {
+                     entry.blobLoadInFlight = true;
+                     void this.#loadBlobsAndTransition(entry);
+                     return;
+                 }
++                // DXOS patch: a document on disk that the handle lacks loads from there rather than
++                // waiting for its first round, which lasts until a peer answers or the deadline passes.
++                if (!entry.blobLoadInFlight &&
++                    !entry.storedLoadStarted &&
++                    (entry.persistedCommitHashes.size > 0 || entry.persistedFragmentHashes.size > 0) &&
++                    Automerge.getHeads(entry.handle.fullDoc()).length === 0) {
++                    entry.storedLoadStarted = true;
++                    entry.blobLoadInFlight = true;
++                    void this.#loadStoredBlobs(entry);
++                    return;
++                }
+                 if (!entry.syncInFlight && !entry.blobLoadInFlight) {
+                     if (this.#needsOutboundSync(entry)) {
+                         // Sync when we haven't tried yet (null) or when the last
+@@ -626,7 +763,8 @@ export class SubductionSource {
+                         void this.#doSync(entry);
+                     }
+                     else if (Automerge.getHeads(entry.handle.fullDoc()).length === 0 &&
+-                        !this.#anyConnectionManagerConnecting()) {
++                        !this.#anyConnectionManagerConnecting() &&
++                        entry.storedIdsListed) {
+                         // All connections settled and sync failed — give up.
+                         this.#log.debug("marking as unavailable");
+                         entry.query.sourceUnavailable("subduction");
+@@ -647,12 +785,27 @@ export class SubductionSource {
+     async #doSync(entry, timeoutMs) {
+         const { sedimentreeId } = entry;
+         const sid = sedimentreeId.toString().slice(0, 8);
+-        entry.lastSyncGeneration = this.#connectionGeneration();
+         let resolveSyncSettled;
+         entry.syncSettled = new Promise(r => {
+             resolveSyncSettled = r;
+         });
+         try {
++            // Gate the round so at most MAX_IN_FLIGHT_DOC_SYNCS run at once; the rest queue
++            // (FIFO) and start as slots free. `entry.syncInFlight` (set by the caller) stays true
++            // while queued, so `#recomputeEntry` will not double-dispatch this entry. `syncSettled`
++            // is created above (outside the gate) so shutdown's in-flight wait is correct even for
++            // a still-queued round.
++            await this.#syncGate(async () => {
++            // Stamp the connection generation and reset the healer budget at the round's actual
++            // start, not when it was queued: a round waiting behind many others may span a
++            // reconnect, and it should count as an attempt at the generation it truly runs under.
++            entry.lastSyncGeneration = this.#connectionGeneration();
++            // A source-driven sync supersedes any pending healer backoff for this
++            // sedimentree and starts it from a clean budget. This path is only reached
++            // for a previously "all-failed" entry when the connection generation has
++            // advanced (a reconnect), so a doc that exhausted the healer on a dead
++            // connection is retried afresh instead of being orphaned.
++            this.#scheduler.resetHealState(sedimentreeId.toString());
+             const subduction = await this.#subduction;
+             // Flush any pending throttled save and wait for in-progress saves
+             // to complete. This ensures that all locally-known commits have
+@@ -662,8 +815,28 @@ export class SubductionSource {
+             entry.flushSave.flush();
+             await entry.saveSettled;
+             this.#log.debug(`doSync ${sid} (state=${entry.syncState})`);
+-            const peerResultMap = await subduction.syncWithAllPeers(sedimentreeId, true, timeoutMs !== undefined ? timeoutMs : this.#syncTimeout);
+-            const results = peerResultMap.entries();
++            // DXOS patch: race the sync against a full-disconnect signal. On
++            // disconnect the WASM call would otherwise hang until its timeout
++            // (60s default); settling as all-failed here lets the heal/resync
++            // machinery re-issue the fetch on the next connection immediately.
++            let wakeOnDisconnect;
++            const disconnected = new Promise(resolve => {
++                wakeOnDisconnect = () => resolve(disconnectedSentinel);
++                this.#disconnectAbortWaiters.add(wakeOnDisconnect);
++            });
++            entry.disconnectWaiter = wakeOnDisconnect;
++            const racedResult = await Promise.race([
++                this.#syncWithConnectedPeers(entry, subduction, timeoutMs !== undefined ? timeoutMs : this.#syncTimeout),
++                disconnected,
++            ]);
++            if (racedResult === disconnectedSentinel) {
++                this.#log.debug(`doSync ${sid}: aborted by disconnect; settling as all-failed`);
++                entry.lastSyncResult = "all-failed";
++                entry.needsResync = true;
++                this.#scheduler.scheduleHealSync(sedimentreeId);
++                return;
++            }
++            const results = racedResult;
+             const anySuccess = results.some(r => r.success);
+             this.#log.debug(`doSync ${sid}: ${results.length} peer(s), success=${anySuccess}`);
+             // Check if any data was received from peers
+@@ -671,6 +844,9 @@ export class SubductionSource {
+                 const s = r.stats;
+                 return s && (s.commitsReceived > 0 || s.fragmentsReceived > 0);
+             });
++            // DXOS patch: the load from disk may have read storage before this data landed.
++            if (dataReceived && entry.blobLoadInFlight)
++                entry.reloadAfterFirstLoad = true;
+             // If new data was received, immediately load it into the handle.
+             // This makes sync reactive — the handle updates as soon as data
+             // arrives, without waiting for further state transitions.
+@@ -702,6 +878,7 @@ export class SubductionSource {
+                 entry.lastSyncResult = "succeeded";
+                 this.#scheduler.resetHealState(sedimentreeId.toString());
+             }
++            });
+         }
+         catch (e) {
+             this.#log.error(`doSync THREW for ${sid}:`, e);
+@@ -709,6 +886,10 @@ export class SubductionSource {
+             this.#scheduler.scheduleHealSync(sedimentreeId);
+         }
+         finally {
++            if (entry.disconnectWaiter) {
++                this.#disconnectAbortWaiters.delete(entry.disconnectWaiter);
++                entry.disconnectWaiter = undefined;
++            }
+             entry.syncInFlight = false;
+             resolveSyncSettled();
+             if (entry.retryTransformAfterSync) {
+@@ -730,6 +911,202 @@ export class SubductionSource {
+             this.#scheduleRecompute(entry);
+         }
+     }
++    /**
++     * DXOS patch: `syncWithAllPeers`, except that the round settles LATE_PEER_GRACE_MS after a peer
++     * answers with what the document needs rather than waiting for the slowest one. A peer still
++     * pending carries on outside the round, and `#applyLatePeerResult` takes its answer. Resolves
++     * with one result per peer connected at the start; a peer that has not answered when the round
++     * settles is recorded as still pending.
++     */
++    async #syncWithConnectedPeers(entry, subduction, timeoutMs) {
++        const peerIds = await subduction.getConnectedPeerIds();
++        if (peerIds.length === 0)
++            return [];
++        return new Promise(resolve => {
++            const results = [];
++            const unanswered = new Set();
++            let settled = false;
++            let graceTimer;
++            let deadlineTimer;
++            const settle = () => {
++                settled = true;
++                clearTimeout(graceTimer);
++                clearTimeout(deadlineTimer);
++                for (const request of unanswered)
++                    results.push(stillPending(request));
++                resolve(results);
++            };
++            // A started request carries its own deadline; this one also bounds the wait for a gate slot.
++            deadlineTimer = setTimeout(settle, timeoutMs);
++            for (const peerId of peerIds) {
++                const request = this.#requestPeerSync(entry, subduction, peerId, timeoutMs);
++                unanswered.add(request);
++                void request.then(result => {
++                    if (settled) {
++                        void this.#applyLatePeerResult(entry, subduction, result);
++                        return;
++                    }
++                    unanswered.delete(request);
++                    results.push(result);
++                    if (unanswered.size === 0)
++                        settle();
++                    else if (graceTimer === undefined && this.#answerLetsRoundSettle(entry, result))
++                        graceTimer = setTimeout(settle, LATE_PEER_GRACE_MS);
++                });
++            }
++        });
++    }
++    /**
++     * DXOS patch: a heal retry's round, asked of each peer as `#doSync` asks, so a peer that never
++     * answers holds neither the retry nor its slot in MAX_IN_FLIGHT_DOC_SYNCS.
++     */
++    async #syncHealRound(sedimentreeId, subduction, timeoutMs) {
++        const deadline = timeoutMs ?? this.#syncTimeout;
++        const entry = this.#entries.get(sedimentreeId.toString());
++        return entry === undefined
++            ? this.#syncStoredTree(sedimentreeId, subduction, deadline)
++            : this.#syncWithConnectedPeers(entry, subduction, deadline);
++    }
++    /**
++     * DXOS patch: a heal retry for a document evicted since its round failed. With no handle to
++     * fill, the round only moves data between storage and the peers (local edits still to push), so
++     * the first peer to succeed settles it and the others' requests carry on outside it.
++     */
++    async #syncStoredTree(sedimentreeId, subduction, timeoutMs) {
++        const peerIds = await subduction.getConnectedPeerIds();
++        if (peerIds.length === 0)
++            return [];
++        return new Promise(resolve => {
++            const results = [];
++            const unanswered = new Set();
++            let settled = false;
++            const settle = () => {
++                settled = true;
++                clearTimeout(deadlineTimer);
++                for (const request of unanswered)
++                    results.push(stillPending(request));
++                resolve(results);
++            };
++            const deadlineTimer = setTimeout(settle, timeoutMs);
++            for (const peerId of peerIds) {
++                const request = this.#queuePeerSync(peerId, () => subduction.syncWithPeer(peerId, sedimentreeId, true, timeoutMs));
++                unanswered.add(request);
++                void request.then(result => {
++                    if (settled)
++                        return;
++                    unanswered.delete(request);
++                    results.push(result);
++                    if (unanswered.size === 0 || result.success)
++                        settle();
++                });
++            }
++        });
++    }
++    /**
++     * DXOS patch: whether a peer's answer lets the round stop waiting for the rest. Once the
++     * document has data, in the handle or on disk, a later answer can only update it, which it does
++     * when it lands. Before that, a peer without the document answers with an empty success, which
++     * must not cut short the wait for a peer that has it.
++     */
++    #answerLetsRoundSettle(entry, result) {
++        return (result.success &&
++            (receivedData(result) ||
++                entry.syncState === "running" ||
++                entry.persistedCommitHashes.size > 0 ||
++                entry.persistedFragmentHashes.size > 0 ||
++                Automerge.getHeads(entry.handle.fullDoc()).length > 0));
++    }
++    /**
++     * DXOS patch: one `syncWithPeer` request under the peer's gate. A request reads the document's
++     * state when it starts, so a round joins one not yet started instead of queueing another. A
++     * request starts once the document's previous one to that peer has settled: rounds no longer
++     * wait for a slow peer, and without this each round would add a request to the ones it has not
++     * answered.
++     */
++    #requestPeerSync(entry, subduction, peerId, timeoutMs) {
++        const key = peerId.toString();
++        const waiting = entry.waitingPeerSyncs.get(key);
++        if (waiting !== undefined)
++            return waiting.result;
++        const request = { started: false, result: undefined };
++        request.result = this.#queuePeerSync(peerId, () => {
++            request.started = true;
++            if (entry.waitingPeerSyncs.get(key) === request)
++                entry.waitingPeerSyncs.delete(key);
++            // A document unloaded while its request waited has no handle left to update.
++            if (this.#entries.get(entry.sedimentreeId.toString()) !== entry)
++                return noAnswer();
++            return subduction.syncWithPeer(peerId, entry.sedimentreeId, true, timeoutMs);
++        }, entry.latestPeerSyncs.get(key));
++        entry.latestPeerSyncs.set(key, request.result);
++        void request.result.then(() => {
++            if (entry.latestPeerSyncs.get(key) === request.result)
++                entry.latestPeerSyncs.delete(key);
++        });
++        if (!request.started)
++            entry.waitingPeerSyncs.set(key, request);
++        return request.result;
++    }
++    /**
++     * DXOS patch: runs a request to one peer under that peer's gate, once `after` has settled when
++     * given, tracked for shutdown's drain.
++     */
++    #queuePeerSync(peerId, request, after) {
++        const key = peerId.toString();
++        const run = () => {
++            let lane = this.#peerSyncLanes.get(key);
++            if (lane === undefined) {
++                lane = { gate: semaphore(MAX_IN_FLIGHT_PEER_SYNCS), requests: 0 };
++                this.#peerSyncLanes.set(key, lane);
++            }
++            lane.requests++;
++            return lane.gate(request).finally(() => {
++                // A peer's id changes when it restarts (an EDGE replicator mints one per start), so idle lanes go.
++                if (--lane.requests === 0 && this.#peerSyncLanes.get(key) === lane)
++                    this.#peerSyncLanes.delete(key);
++            });
++        };
++        const result = (after === undefined ? run() : after.then(run))
++            .catch(error => noAnswer([error]))
++            .finally(() => this.#outstandingPeerSyncs.delete(result));
++        this.#outstandingPeerSyncs.add(result);
++        return result;
++    }
++    /**
++     * DXOS patch: the answer of a peer that its round stopped waiting for. Its data goes into the
++     * handle as a heal retry's does; the round has already recorded its own result.
++     */
++    async #applyLatePeerResult(entry, subduction, result) {
++        const sid = entry.sedimentreeId.toString();
++        if (this.#shuttingDown || this.#entries.get(sid) !== entry)
++            return;
++        if (entry.syncState === "initializing") {
++            // The round gave up before any peer succeeded; this success unblocks the first load.
++            if (result.success && !entry.syncInFlight && entry.lastSyncResult === "all-failed") {
++                entry.lastSyncResult = "succeeded";
++                this.#scheduler.resetHealState(sid);
++            }
++            if (receivedData(result) && entry.blobLoadInFlight)
++                entry.reloadAfterFirstLoad = true;
++            this.#scheduleRecompute(entry);
++            return;
++        }
++        if (!receivedData(result))
++            return;
++        try {
++            // A late peer usually repeats what a faster one delivered; reloading every blob for that is wasted.
++            const remoteHeads = result.stats.remoteHeads.map(head => head.toHexString());
++            if (remoteHeads.length > 0 && Automerge.hasHeads(entry.handle.fullDoc(), remoteHeads))
++                return;
++            await this.#loadBlobsIntoHandle(entry, subduction);
++            if (Automerge.getHeads(entry.handle.fullDoc()).length > 0) {
++                entry.query.sourcePending("subduction");
++            }
++        }
++        catch (e) {
++            this.#log.debug(`late peer result for ${sid.slice(0, 8)}: %O`, e);
++        }
++    }
+     /**
+      * Pair each stored blob with the commit or fragment id it belongs to.
+      */
+@@ -758,7 +1135,7 @@ export class SubductionSource {
+      * handle via `Automerge.loadIncremental`. If new data was loaded, signal
+      * the query so it can transition to "ready".
+      *
+-     * This is called reactively after any `syncWithAllPeers` that received
++     * This is called reactively after any sync round that received
+      * data, making handle updates immediate.
+      */
+     async #loadBlobsIntoHandle(entry, subduction) {
+@@ -875,6 +1252,40 @@ export class SubductionSource {
+         }
+         finally {
+             entry.blobLoadInFlight = false;
++            if (entry.reloadAfterFirstLoad) {
++                entry.reloadAfterFirstLoad = false;
++                void this.#reloadBlobs(entry);
++            }
++            this.#scheduleRecompute(entry);
++        }
++    }
++    /**
++     * DXOS patch: loads a document from disk ahead of its first round. A document stored only by
++     * Subduction (its data arrived while it was not loaded) has nothing else to load from, so it
++     * stayed loading until a peer answered, and `unavailable` with no peer. If disk holds nothing
++     * the handle can show, the entry stays initializing and its round decides, as before.
++     */
++    async #loadStoredBlobs(entry) {
++        const sid = entry.sedimentreeId.toString();
++        try {
++            const subduction = await this.#subduction;
++            await this.#loadBlobsIntoHandle(entry, subduction);
++            if (this.#entries.get(sid) === entry && Automerge.getHeads(entry.handle.fullDoc()).length > 0) {
++                entry.syncState = "running";
++                entry.query.sourcePending("subduction");
++            }
++        }
++        catch (e) {
++            this.#log.debug(`loadStoredBlobs threw for ${sid.slice(0, 8)}: %O`, e);
++        }
++        finally {
++            entry.blobLoadInFlight = false;
++            if (entry.reloadAfterFirstLoad) {
++                entry.reloadAfterFirstLoad = false;
++                // Still initializing, the load after the round's success reads everything.
++                if (entry.syncState === "running")
++                    void this.#reloadBlobs(entry);
++            }
+             this.#scheduleRecompute(entry);
+         }
+     }
+@@ -1026,7 +1437,10 @@ export class SubductionSource {
+                 .slice(0, 8)}: setting needsResync=true (sync in flight)`);
+             entry.needsResync = true;
+         }
+-        else if (entry.lastSyncResult !== "no-peers") {
++        else if (entry.lastSyncResult !== "no-peers" || this.isConnected()) {
++            // DXOS patch: a live connection makes a "no-peers" census stale. Subduction 0.17 counts
++            // only peers SUBSCRIBED to this sedimentree, so a census taken before the peer subscribed
++            // latches with no connection change left to clear it and the commits are never broadcast.
+             entry.lastSyncResult = null;
+         }
+         this.#scheduleRecompute(entry);
+@@ -1297,6 +1711,27 @@ export class SubductionSource {
+     isHealing(sedimentreeId) {
+         return this.#scheduler.isHealing(sedimentreeId);
+     }
++    /**
++     * DXOS patch: whether a sync round, or the blob load that follows a successful
++     * one, is still ahead of this document's handle. A host that unloads idle
++     * documents keeps it resident until then: `detach` drops the entry, and the
++     * round's result with it, so a handle unloaded mid-round never catches up.
++     */
++    hasPendingSync(documentId) {
++        const entry = this.#entries.get(toSedimentreeId(documentId).toString());
++        if (entry === undefined)
++            return false;
++        // The load after a successful round, running or due on the next recompute,
++        // reads local storage only.
++        if (entry.blobLoadInFlight || (entry.syncState === "initializing" && this.#loadsStoredBlobs(entry)))
++            return true;
++        // A round with no peer to reach brings nothing in.
++        if (!this.isConnected())
++            return false;
++        // A round in flight, or one the next recompute starts: never run for this
++        // handle, or re-armed by a save or `resync`.
++        return entry.syncInFlight || entry.lastSyncResult === null;
++    }
+     /**
+      * Force a fresh outbound sync round for a document, re-arming the
+      * self-healing retry loop.
+@@ -1321,6 +1756,11 @@ export class SubductionSource {
+             return;
+         this.#scheduler.resetHealState(sid);
+         entry.lastSyncResult = null;
++        // DXOS patch: a round that finds nothing new never reloads storage, so a fragment already
++        // persisted locally but dropped before reaching the handle would stay out of the doc forever.
++        if (entry.syncState === "running") {
++            void this.#reloadBlobs(entry);
++        }
+         this.#scheduleRecompute(entry);
+     }
+     // ── Flush ───────────────────────────────────────────────────────────
+@@ -1478,12 +1918,28 @@ export class SubductionSource {
+         catch (e) {
+             this.#log.debug("error disconnecting subduction transports: %O", e);
+         }
++        // DXOS patch: a request that outlived its round can still be storing a peer's data; with the
++        // peers gone it settles, and it must before the bridge closes.
++        await this.#drainPeerSyncs();
+         for (const endpoint of this.#websocketEndpoints) {
+             endpoint.shutdown?.();
+         }
+         this.#storage.close();
+         await this.#awaitStorageIdle();
+     }
++    /** DXOS patch: wait for outstanding `syncWithPeer` requests, bounded by a deadline. */
++    async #drainPeerSyncs() {
++        let timer;
++        const deadline = new Promise(resolve => {
++            timer = setTimeout(resolve, SHUTDOWN_IDLE_TIMEOUT_MS);
++        });
++        try {
++            await Promise.race([Promise.all(this.#outstandingPeerSyncs), deadline]);
++        }
++        finally {
++            clearTimeout(timer);
++        }
++    }
+     /** Drain in-flight bridge operations, bounded by a deadline. */
+     async #awaitStorageIdle() {
+         let timer;
+diff --git a/dist/subduction/storage.d.ts b/dist/subduction/storage.d.ts
+index 8d260aa38e6de498e56efff9747149696c150d0c..480cabdb6687a5d8b22b1af7c63b88aa90ef364d 100644
+--- a/dist/subduction/storage.d.ts
++++ b/dist/subduction/storage.d.ts
+@@ -129,6 +129,7 @@ export declare class SubductionStorageBridge implements SedimentreeStorage {
+     saveSedimentreeId(sedimentreeId: SedimentreeId): Promise<void>;
+     deleteSedimentreeId(sedimentreeId: SedimentreeId): Promise<void>;
+     loadAllSedimentreeIds(): Promise<SedimentreeId[]>;
++    containsSedimentreeId(sedimentreeId: SedimentreeId): Promise<boolean>;
+     saveCommit(sedimentreeId: SedimentreeId, commitId: CommitId, signedCommit: SignedLooseCommit, blob: Uint8Array): Promise<void>;
+     loadCommit(sedimentreeId: SedimentreeId, commitId: CommitId): Promise<CommitWithBlob | null>;
+     /**
+diff --git a/dist/subduction/storage.js b/dist/subduction/storage.js
+index 37f9cc727f7ab1d24118879efadc4bb44f90e827..7c3f51b53a8df1512ee45f69c6a7c0d4e024da8c 100644
+--- a/dist/subduction/storage.js
++++ b/dist/subduction/storage.js
+@@ -243,6 +243,15 @@ export class SubductionStorageBridge {
+                 .map(chunk => SedimentreeId.fromBytes(hexToBytes(chunk.key[2])));
+         });
+     }
++    /**
++     * DXOS patch: single-key existence check. Subduction calls it on its hydration hot path when
++     * the storage provides it, and otherwise lists every id via `loadAllSedimentreeIds`, once per
++     * sync round of a document not stored yet: a fresh device pulling N documents did O(N²) work.
++     */
++    async containsSedimentreeId(sedimentreeId) {
++        const key = [this.prefix, IDS_PREFIX, sedimentreeId.toString()];
++        return this.guarded("containsSedimentreeId", false, async () => (await this.adapter.load(key)) !== undefined);
++    }
+     // ==================== Commits (compound storage with blob) ====================
+     async saveCommit(sedimentreeId, commitId, signedCommit, blob) {
+         // Encode the signed commit to bytes

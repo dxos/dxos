@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { DEFAULT_REGION } from './constants';
-import { formatUri, objectKey, parseUri, regionFromHost, toHttpsUrl } from './s3-uri';
+import { DEFAULT_REGION } from './constants.ts';
+import { formatUri, objectKey, parseUri, regionFromHost, toHttpsUrl } from './s3-uri.ts';
 
 describe('s3 uri', () => {
   test('round-trips through format and parse', ({ expect }) => {

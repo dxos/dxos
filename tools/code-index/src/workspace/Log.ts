@@ -12,9 +12,9 @@ import * as PubSub from 'effect/PubSub';
 import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
+import * as Migrator from 'effect/sql/Migrator';
+import * as SqlClient from 'effect/sql/SqlClient';
 import * as Stream from 'effect/Stream';
-import * as Migrator from 'effect/unstable/sql/Migrator';
-import * as SqlClient from 'effect/unstable/sql/SqlClient';
 import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 

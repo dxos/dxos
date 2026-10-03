@@ -11,7 +11,7 @@ import { invariant } from '@dxos/invariant';
 
 import { SlackOperation } from '#types';
 
-import { findOrCreateChannelForTarget } from './sync';
+import { findOrCreateChannelForTarget } from './sync.ts';
 
 /**
  * Find-or-create the empty local Channel root for a Slack conversation so a

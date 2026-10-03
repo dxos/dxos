@@ -9,7 +9,7 @@ import { getHostPlatform, isTauri } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { SearchList, SearchListRootProps } from '../SearchList';
+import { SearchList, SearchListRootProps } from '../SearchList/index.ts';
 
 export type SearchPanelProps = PropsWithChildren<SearchListRootProps>;
 

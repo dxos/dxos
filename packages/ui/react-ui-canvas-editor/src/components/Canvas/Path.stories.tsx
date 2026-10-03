@@ -8,7 +8,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Canvas, type CanvasController, Grid, useCanvasContext, useWheel } from '@dxos/react-ui-canvas';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { useRope } from '../../hooks';
+import { useRope } from '../../hooks/index.ts';
 
 const DefaultStory = () => {
   const canvasRef = useRef<CanvasController>(null);

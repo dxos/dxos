@@ -2,14 +2,14 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, onTestFinished, test, vi } from 'vitest';
 
 import * as Trace from '@dxos/compute/Trace';
 import { Ref } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { createProgressRegistry } from './progress-registry';
+import { createProgressRegistry } from './progress-registry.ts';
 import {
   PROGRESS_STATUS_CANCELLED,
   PROGRESS_STATUS_COMPLETE,
@@ -17,7 +17,7 @@ import {
   PROGRESS_STATUS_STALLED,
   createProgressTraceSink,
   resolveTriggerId,
-} from './progress-trace-sink';
+} from './progress-trace-sink.ts';
 
 const statusMessage = (data: Trace.PayloadType<typeof Trace.StatusUpdate>, meta: Trace.Meta = {}): Trace.Message =>
   ({
@@ -114,6 +114,23 @@ describe('createProgressTraceSink', () => {
     expect(task?.status).toBe('error');
     expect(task?.error).toBe(PROGRESS_STATUS_FAILED);
     expect(task?.current).toBe(1);
+  });
+
+  test('a later run clears the failed run state', () => {
+    const registry = Registry.make();
+    const progress = createProgressRegistry(registry);
+    const sink = createProgressTraceSink(progress);
+    const key = 'pull-request#walkthrough';
+
+    sink.write(statusMessage({ message: 'Walkthrough', progress: { key, current: 2, total: 5 } }));
+    sink.write(statusMessage({ message: PROGRESS_STATUS_FAILED, progress: { key, current: 5, total: 5 } }));
+    expect(registry.get(progress.monitorAtom(key))?.status).toBe('error');
+
+    sink.write(statusMessage({ message: 'Walkthrough', progress: { key, current: 0, total: 5 } }));
+    const task = registry.get(progress.monitorAtom(key));
+    expect(task?.status).toBe('running');
+    expect(task?.current).toBe(0);
+    expect(task?.error).toBeUndefined();
   });
 
   test('notes and removes the monitor on Cancelled', () => {

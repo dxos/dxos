@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { buildCalendar, normalizeDate, toKey } from './util';
+import { buildCalendar, normalizeDate, toKey } from './util.ts';
 
 describe('buildCalendar', () => {
   test('lays out Monday-first weeks ending on the end date', ({ expect }) => {

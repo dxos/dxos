@@ -14,7 +14,7 @@ import {
   decorateMarkdown,
 } from '@dxos/ui-editor';
 
-import { MarkdownBlock } from '../components';
+import { MarkdownBlock } from '../components/index.ts';
 
 /**
  * Controls for attributing what a row costs to mount.

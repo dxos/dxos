@@ -19,10 +19,10 @@ import {
   runBenchmark,
 } from '@dxos/pipeline/testing';
 
-import { SAMPLES } from './config';
-import { type ModelVariant } from './models';
-import { progressReportingLayer } from './progress';
-import { startResponseLog, writeResults } from './results';
+import { SAMPLES } from './config.ts';
+import { type ModelVariant } from './models.ts';
+import { progressReportingLayer } from './progress.ts';
+import { startResponseLog, writeResults } from './results.ts';
 
 /** Logs the comparison table and writes the results JSON; returns the result. */
 export const reportBenchmark = (

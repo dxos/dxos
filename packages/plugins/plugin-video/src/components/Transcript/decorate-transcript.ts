@@ -163,7 +163,7 @@ class TimestampMarker extends GutterMarker {
 
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'dx-tag dx-tag--neutral cursor-pointer tabular-nums';
+    button.className = 'dx-tag dx-tag--neutral mx-0.5 cursor-pointer tabular-nums';
     button.textContent = this._label;
     button.setAttribute('data-seconds', String(this._seconds));
     // Activate on click; prevent the editor from stealing focus/selection.

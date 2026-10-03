@@ -2,16 +2,16 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { CommandConfig, printList } from '@dxos/cli-util';
 
-import { loadPlugins } from '../../storage';
-import { type FormattedPlugin, getLoadFailure, getPluginStatus, printPlugin } from '../../util';
+import { loadPlugins } from '../../storage.ts';
+import { type FormattedPlugin, getLoadFailure, getPluginStatus, printPlugin } from '../../util/index.ts';
 
 export const handler = Effect.fn(function* ({ enabled: enabledOnly }: { enabled: boolean }) {
   const { json, profile } = yield* CommandConfig;
@@ -60,7 +60,10 @@ export const handler = Effect.fn(function* ({ enabled: enabledOnly }: { enabled:
 export const list = Command.make(
   'list',
   {
-    enabled: Options.boolean('enabled').pipe(Options.withDescription('Only list enabled plugins.')),
+    enabled: Options.Boolean('enabled').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Only list enabled plugins.'),
+    ),
   },
   handler,
 ).pipe(Command.withDescription('List all available plugins.'));

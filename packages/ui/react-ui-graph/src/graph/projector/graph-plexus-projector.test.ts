@@ -6,15 +6,15 @@ import { describe, test } from 'vitest';
 
 import * as GraphModel from '@dxos/graph/GraphModel';
 
-import { SVGContext } from '../../hooks';
-import { type GraphLayoutEdge } from '../types';
+import { SVGContext } from '../../hooks/index.ts';
+import { type GraphLayoutEdge } from '../types.ts';
 import {
   GraphPlexusProjector,
   PLEXUS_NODE_TYPE_FOCUS,
   PLEXUS_NODE_TYPE_OBJECT,
   PLEXUS_NODE_TYPE_RELATION,
   type PlexusRelation,
-} from './graph-plexus-projector';
+} from './graph-plexus-projector.ts';
 
 const makeContext = () => {
   const context = new SVGContext({});

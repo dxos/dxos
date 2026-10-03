@@ -10,7 +10,7 @@ import { TestConsole, TestLayer } from '@dxos/cli-util/testing';
 import { ClientService } from '@dxos/client';
 import { EffectEx } from '@dxos/effect';
 
-import { handler } from './list';
+import { handler } from './list.ts';
 
 describe('halo credential list', () => {
   it('should list HALO credentials', () =>

@@ -2,9 +2,14 @@
 // Copyright 2025 DXOS.org
 //
 
-import type * as Atom from 'effect/unstable/reactivity/Atom';
+import type * as Atom from 'effect/reactivity/Atom';
 
-import type { Ref } from './ref';
+import { ObjectDeletedId } from '../common/types/model-symbols.ts';
+import type { LoadOptions, Ref } from './ref.ts';
+
+/** Reads the deletion marker off a value of unconstrained target type. */
+export const isTargetDeleted = (target: unknown): boolean =>
+  typeof target === 'object' && target !== null && (target as Record<symbol, unknown>)[ObjectDeletedId] === true;
 
 /**
  * Internal helper for loading ref targets in atoms.
@@ -14,6 +19,7 @@ export const loadRefTarget = <T, R>(
   ref: Ref<T>,
   get: Atom.AtomContext,
   onTargetAvailable: (target: T) => R,
+  options?: LoadOptions,
 ): R | undefined => {
   // Accessing `ref.target` registers a resolution callback when the target is
   // not yet loaded, so resolution can be observed via `ref.onResolved` below.
@@ -31,9 +37,10 @@ export const loadRefTarget = <T, R>(
   });
   get.addFinalizer(unsubscribe);
 
-  // Also try async load (e.g. for objects that need disk loading).
+  // Also try async load (e.g. for objects that need disk loading). `ref.target` above never yields a
+  // deleted target, so this is the only path that reaches one.
   void ref
-    .load()
+    .load(options)
     .then((loadedTarget) => {
       get.setSelf(onTargetAvailable(loadedTarget));
     })

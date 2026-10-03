@@ -5,11 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useEffect, useState } from 'react';
 
-import { Column, Flex, Input, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
+import { Column, Field, Flex, Panel, Splitter, type SplitterMode, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { WithKeyboard } from '../../testing';
-import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout';
+import { WithKeyboard } from '../../testing/index.ts';
+import { MobileLayout, type MobileLayoutRootProps } from './MobileLayout.tsx';
 
 const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) => {
   return (
@@ -25,9 +25,9 @@ const StoryPanel = ({ children, label }: PropsWithChildren<{ label: string }>) =
         <Column.Root gutter='sm' classNames='py-form-chrome'>
           <Column.Center>
             <Flex column>
-              <Input.Root>
-                <Input.TextInput placeholder={label} />
-              </Input.Root>
+              <Field.Root>
+                <Field.Input placeholder={label} />
+              </Field.Root>
             </Flex>
           </Column.Center>
         </Column.Root>

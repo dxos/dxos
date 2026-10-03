@@ -4,7 +4,7 @@
 
 import { mx } from '@dxos/ui-theme';
 
-import { type ThemeExtensionsOptions } from './extensions';
+import { type ThemeExtensionsOptions } from './extensions/index.ts';
 
 export const editorClassNames = (role?: string) =>
   mx(

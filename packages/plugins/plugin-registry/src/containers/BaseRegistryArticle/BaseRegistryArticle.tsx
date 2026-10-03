@@ -7,20 +7,20 @@ import * as Effect from 'effect/Effect';
 import React, { type ReactNode, useCallback, useMemo, useState } from 'react';
 
 import type * as Plugin from '@dxos/app-framework/Plugin';
-import { useCapabilities, useOperationInvoker, usePluginManager } from '@dxos/app-framework/ui';
+import { useCapabilities, useOperationInvoker, useOptionalCapability, usePluginManager } from '@dxos/app-framework/ui';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as SettingsOperation from '@dxos/app-toolkit/SettingsOperation';
 import { EffectEx } from '@dxos/effect';
 import * as ObservabilityOperation from '@dxos/plugin-observability/ObservabilityOperation';
-import { Input, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
+import { Field, Panel, ScrollArea, Toolbar, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 
 import { PluginList, type PluginListProps } from '#components';
 import { meta } from '#meta';
 
-import { useDisableConfirmation } from '../../hooks';
-import { getPluginPath } from '../../paths';
+import { useDisableConfirmation } from '../../hooks/index.ts';
+import { getPluginPath } from '../../paths.ts';
 
 const matchesFilter = (plugin: Plugin.Plugin, query: string) => {
   const haystack = `${plugin.meta.profile.name ?? ''} ${plugin.meta.profile.key}`.toLowerCase();
@@ -47,6 +47,7 @@ export type BaseRegistryArticleProps = {
   | 'updateAvailableIds'
   | 'extraTagsById'
   | 'failuresById'
+  | 'deviceOnlyIds'
   | 'onInstall'
   | 'onUpdate'
 >;
@@ -64,6 +65,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       updateAvailableIds,
       extraTagsById,
       failuresById,
+      deviceOnlyIds,
       onInstall,
       onUpdate,
       ...props
@@ -75,6 +77,7 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
     const { invoke, invokePromise } = useOperationInvoker();
     const allSettings = useCapabilities(AppCapabilities.Settings);
     const enabled = useAtomValue(manager.enabled);
+    const settingsSync = useOptionalCapability(AppCapabilities.SettingsSync);
     const [filter, setFilter] = useState('');
 
     const filtered = useMemo(() => {
@@ -137,14 +140,14 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
       <Panel.Root {...composableProps(props)} ref={forwardedRef}>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
-            <Input.Root>
-              <Input.Label srOnly>{t('filter.label')}</Input.Label>
-              <Input.TextInput
+            <Field.Root>
+              <Field.Label srOnly>{t('filter.label')}</Field.Label>
+              <Field.Input
                 placeholder={t('filter.placeholder')}
                 value={filter}
                 onChange={(event) => setFilter(event.target.value)}
               />
-            </Input.Root>
+            </Field.Root>
           </Toolbar.Root>
         </Panel.Toolbar>
         <Panel.Content asChild>
@@ -160,7 +163,9 @@ export const BaseRegistryArticle = composable<HTMLDivElement, BaseRegistryArticl
                   updateAvailableIds={updateAvailableIds}
                   extraTagsById={extraTagsById}
                   failuresById={failuresById}
+                  deviceOnlyIds={deviceOnlyIds}
                   onClick={handleClick}
+                  readOnly={settingsSync === undefined}
                   onChange={handleChange}
                   onInstall={onInstall}
                   onUpdate={onUpdate}

@@ -7,7 +7,7 @@ import { HighlightStyle } from '@codemirror/language';
 import { Tag, styleTags, tags } from '@lezer/highlight';
 import { type MarkdownConfig, Table } from '@lezer/markdown';
 
-import { fontBody, markdownTheme } from '../../../styles';
+import { fontBody, markdownTheme } from '../../../styles/index.ts';
 
 export type HighlightOptions = {};
 

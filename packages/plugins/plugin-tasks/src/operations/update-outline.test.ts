@@ -11,7 +11,7 @@ import { URI } from '@dxos/keys';
 import { Text } from '@dxos/schema';
 import { Outline } from '@dxos/types';
 
-import updateOutline from './update-outline';
+import updateOutline from './update-outline.ts';
 
 describe('update-outline', () => {
   it.effect('upserts items in place and preserves prose', () =>

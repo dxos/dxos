@@ -3,13 +3,13 @@
 //
 
 import * as Effect from 'effect/Effect';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 
 import * as Operation from '@dxos/compute/Operation';
 
 import { SlackOperation } from '#types';
 
-import { SlackApi } from '../services';
+import { SlackApi } from '../services/index.ts';
 
 /**
  * Friendly label for a Slack conversation, derived from its type:

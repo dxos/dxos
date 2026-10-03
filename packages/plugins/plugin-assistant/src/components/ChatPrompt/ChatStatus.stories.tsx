@@ -9,7 +9,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
 import { translations } from '#translations';
 
-import { ChatStatusView, formatWakeAt } from './ChatStatus';
+import { ChatStatusView, formatWakeAt } from './ChatStatus.tsx';
 
 // Fixed so the rendered clock time is deterministic to assert against.
 const WAKE_AT = new Date('2026-06-04T14:20:00.000Z').getTime();

@@ -3,17 +3,17 @@
 //
 
 import type * as Effect from 'effect/Effect';
-import type * as HttpClient from 'effect/unstable/http/HttpClient';
+import type * as HttpClient from 'effect/http/HttpClient';
 
 import { log } from '@dxos/log';
 
-import { SASL_MECHANISM } from '../constants';
-import { FreeqAuthError, FreeqConnectionError } from '../errors';
-import type { CredentialProvider, SaslChallenge } from './CredentialProvider';
-import { IrcProtocol } from './IrcProtocol';
-import type { Transport } from './Transport';
+import { SASL_MECHANISM } from '../constants.ts';
+import { FreeqAuthError, FreeqConnectionError } from '../errors.ts';
+import type { CredentialProvider, SaslChallenge } from './CredentialProvider.ts';
+import { IrcProtocol } from './IrcProtocol.ts';
+import type { Transport } from './Transport.ts';
 
-export type { Transport } from './Transport';
+export type { Transport } from './Transport.ts';
 
 export interface IncomingMessage {
   id: string;

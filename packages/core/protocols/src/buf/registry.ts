@@ -29,10 +29,10 @@ import { file_dxos_halo_keyring } from './proto/gen/dxos/halo/keyring_pb.ts';
 import { file_dxos_halo_signed } from './proto/gen/dxos/halo/signed_pb.ts';
 import { file_dxos_iframe } from './proto/gen/dxos/iframe_pb.ts';
 import { file_dxos_keys } from './proto/gen/dxos/keys_pb.ts';
-import { file_dxos_mesh_bridge } from './proto/gen/dxos/mesh/bridge_pb.ts';
 import { file_dxos_mesh_messaging } from './proto/gen/dxos/mesh/messaging_pb.ts';
 import { file_dxos_mesh_muxer } from './proto/gen/dxos/mesh/muxer_pb.ts';
 import { file_dxos_mesh_presence } from './proto/gen/dxos/mesh/presence_pb.ts';
+import { file_dxos_mesh_rtc } from './proto/gen/dxos/mesh/rtc_pb.ts';
 import { file_dxos_mesh_signal } from './proto/gen/dxos/mesh/signal_pb.ts';
 import { file_dxos_mesh_swarm } from './proto/gen/dxos/mesh/swarm_pb.ts';
 import { file_dxos_mesh_teleport_admission_discovery } from './proto/gen/dxos/mesh/teleport/admission-discovery_pb.ts';
@@ -77,7 +77,7 @@ export const bufRegistry: Registry = createRegistry(
   file_dxos_halo_signed,
   file_dxos_iframe,
   file_dxos_keys,
-  file_dxos_mesh_bridge,
+  file_dxos_mesh_rtc,
   file_dxos_mesh_messaging,
   file_dxos_mesh_muxer,
   file_dxos_mesh_presence,

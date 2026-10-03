@@ -24,9 +24,6 @@
       "path": "../../common/random"
     },
     {
-      "path": "../../common/storybook-utils"
-    },
-    {
       "path": "../../common/test-utils"
     },
     {
@@ -40,6 +37,9 @@
     },
     {
       "path": "../../sdk/react-client"
+    },
+    {
+      "path": "../react-primitives/react-hooks"
     },
     {
       "path": "../react-ui"

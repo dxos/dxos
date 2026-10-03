@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as Response from 'effect/ai/Response';
+import * as Toolkit from 'effect/ai/Toolkit';
 import * as Schema from 'effect/Schema';
-import * as Response from 'effect/unstable/ai/Response';
-import * as Toolkit from 'effect/unstable/ai/Toolkit';
 import { describe, expect, test } from 'vitest';
 
-import { AnthropicWebSearchTool } from './anthropic-web-search';
+import { AnthropicWebSearchTool } from './anthropic-web-search.ts';
 
 const WebSearchToolkit = Toolkit.make(AnthropicWebSearchTool);
 const StreamPartSchema = Response.StreamPart(WebSearchToolkit);

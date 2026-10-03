@@ -6,11 +6,11 @@ import * as Schema from 'effect/Schema';
 
 import * as Keys from '@dxos/keys';
 
-import * as DateUtil from './date';
-import * as NumberUtil from './number';
-import * as ObjectUtil from './object';
-import * as StringUtil from './string';
-import { TypeFormat as TypeFormat$ } from './types';
+import * as DateUtil from './date.ts';
+import * as NumberUtil from './number.ts';
+import * as ObjectUtil from './object.ts';
+import * as StringUtil from './string.ts';
+import { TypeFormat as TypeFormat$ } from './types.ts';
 
 // TODO(burdon): Media encoding.
 // - https://json-schema.org/understanding-json-schema/reference/non_json_data

@@ -9,10 +9,10 @@ import { Obj } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { invariant } from '@dxos/invariant';
 
-import * as Doc from '../automerge/Doc';
-import { EchoTestBuilder } from '../testing';
-import { getObjectCore } from './echo-object-utils';
-import { checkoutVersion, getEditHistory, getEditHistoryWithDiffs } from './edit-history';
+import * as Doc from '../automerge/Doc.ts';
+import { EchoTestBuilder } from '../testing/index.ts';
+import { getObjectCore } from './echo-object-utils.ts';
+import { checkoutVersion, getEditHistory, getEditHistoryWithDiffs } from './edit-history.ts';
 
 describe('edit-history', () => {
   let builder: EchoTestBuilder;

@@ -3,10 +3,10 @@
 //
 
 import { describe, it } from '@effect/vitest';
+import * as AiError from 'effect/ai/AiError';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
-import * as AiError from 'effect/unstable/ai/AiError';
 import { test } from 'vitest';
 
 import { AssistantTestLayer } from '@dxos/agent-runtime/testing';
@@ -20,7 +20,7 @@ import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { DXN } from '@dxos/keys';
 
-import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor';
+import { AiChatProcessor, AiUsageQuotaError, parseError } from './processor.ts';
 
 const TestLayer = AssistantTestLayer({ tracing: 'noop', types: [Chat.Chat, Feed.Feed] });
 

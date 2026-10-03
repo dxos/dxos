@@ -6,11 +6,11 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type ComponentPropsWithoutRef, forwardRef, useState } from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { withLayout, withTheme } from '../../testing';
-import { Panel } from '../Panel';
-import { ScrollArea } from '../ScrollArea';
-import { Toolbar } from '../Toolbar';
-import { Splitter, type SplitterMode, type SplitterRootProps } from './Splitter';
+import { withLayout, withTheme } from '../../testing/index.ts';
+import { Panel } from '../Panel/index.ts';
+import { ScrollArea } from '../ScrollArea/index.ts';
+import { Toolbar } from '../Toolbar/index.ts';
+import { Splitter, type SplitterMode, type SplitterRootProps } from './Splitter.tsx';
 
 const PanelContent = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'> & { label: string }>(
   ({ label, ...props }, forwardedRef) => (

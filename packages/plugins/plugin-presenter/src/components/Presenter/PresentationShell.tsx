@@ -19,8 +19,8 @@ export type PresentationShellProps = PropsWithChildren<{
 }>;
 
 /**
- * Wraps presentation content with a fade-in/out transition, an ESC handler that exits in a
- * single keypress (intercepting before the deck's fullscreen handler), and a transient [ESC]
+ * Wraps presentation content with a fade-in/out transition and, when fullscreen, an ESC handler
+ * that exits in a single keypress (intercepting before the deck's handler) plus a transient [ESC]
  * caption shown on enter.
  */
 export const PresentationShell = composable<HTMLDivElement, PresentationShellProps>(
@@ -58,7 +58,12 @@ export const PresentationShell = composable<HTMLDivElement, PresentationShellPro
     useEffect(() => () => clearTimeout(exitTimeout.current), []);
 
     // Capture ESC before the deck/reveal handlers so a single keypress exits directly.
+    // Only while fullscreen: in a companion, ESC belongs to the rest of the app.
     useEffect(() => {
+      if (!fullscreen) {
+        return;
+      }
+
       const handler = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
           event.preventDefault();
@@ -69,7 +74,7 @@ export const PresentationShell = composable<HTMLDivElement, PresentationShellPro
 
       document.addEventListener('keydown', handler, { capture: true });
       return () => document.removeEventListener('keydown', handler, { capture: true });
-    }, [handleExit]);
+    }, [fullscreen, handleExit]);
 
     return (
       <div

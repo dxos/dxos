@@ -5,12 +5,11 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { useEffect, useState } from 'react';
 
-import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
-import { withRegistry } from '@dxos/storybook-utils';
+import { Loading, withLayout, withRegistry, withTheme } from '@dxos/react-ui/testing';
 
-import { type CanvasBoard, CanvasGraphModel, type Polygon } from '../../types';
-import { Editor } from '../Editor';
-import { GraphCanvas, type GraphCanvasProps } from './GraphCanvas';
+import { type CanvasBoard, CanvasGraphModel, type Polygon } from '../../types/index.ts';
+import { Editor } from '../Editor/index.ts';
+import { GraphCanvas, type GraphCanvasProps } from './GraphCanvas.tsx';
 
 // TODO(burdon): Story with conductor nodes and local processing.
 // TODO(burdon): Undo.

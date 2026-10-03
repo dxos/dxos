@@ -4,11 +4,11 @@
 
 import { type Dispatch, type SetStateAction, useCallback, useEffect, useRef, useState } from 'react';
 
-import { useDynamicRef } from './useDynamicRef';
+import { useDynamicRef } from './useDynamicRef.ts';
 
 /**
  * A stateful hook with a controlled value.
- * NOTE: Consider using Radix's `useControllableState`.
+ * NOTE: Prefer `useControllableState` when the value has a controlled/uncontrolled split.
  */
 export const useControlledState = <T>(
   valueProp: T,

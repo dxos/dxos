@@ -6,7 +6,7 @@ import '@hazae41/symbol-dispose-polyfill';
 
 import { throwUnhandledError } from '@dxos/util';
 
-import { Context } from './context';
+import { Context } from './context.ts';
 
 export enum LifecycleState {
   CLOSED = 'CLOSED',

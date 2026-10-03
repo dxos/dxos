@@ -4,7 +4,7 @@
 
 import { log as logger } from '@dxos/log';
 
-import { type DebugPortOptions, resolveDebugPortOrigin, runDebugPortLoop } from './debug-port';
+import { type DebugPortOptions, resolveDebugPortOrigin, runDebugPortLoop } from './debug-port.ts';
 
 /** Bindings in scope for evaluated snippets. */
 export type DebugPortScope = Record<string, unknown>;

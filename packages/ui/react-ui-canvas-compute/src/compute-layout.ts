@@ -6,8 +6,8 @@ import { DefaultInput, DefaultOutput } from '@dxos/conductor';
 import { toEffectSchema } from '@dxos/echo/JsonSchema';
 import { type Anchor, ShapeLayout, type ShapeRegistry } from '@dxos/react-ui-canvas-editor';
 
-import { type ComputeGraphController } from './graph';
-import { type ComputeShape, createFunctionAnchors } from './shapes';
+import { type ComputeGraphController } from './graph/index.ts';
+import { type ComputeShape, createFunctionAnchors } from './shapes/index.ts';
 
 // TODO(burdon): Customize layout. Specialize ComputeShapeDef and registry.
 export class ComputeShapeLayout extends ShapeLayout {

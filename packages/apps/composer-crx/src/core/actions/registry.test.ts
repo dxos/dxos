@@ -10,8 +10,8 @@ import { describe, test, vi } from 'vitest';
 // `invoke.test.ts`).
 vi.mock('webextension-polyfill', () => ({ default: {} }));
 
-import { type RegistryBridgeApi, refreshRegistry } from './registry';
-import { PAGE_ACTIONS_LIST_MESSAGE_TYPE, PAGE_ACTIONS_STORAGE_KEY } from './types';
+import { type RegistryBridgeApi, refreshRegistry } from './registry.ts';
+import { PAGE_ACTIONS_LIST_MESSAGE_TYPE, PAGE_ACTIONS_STORAGE_KEY } from './types.ts';
 
 const okAck = {
   version: 1,

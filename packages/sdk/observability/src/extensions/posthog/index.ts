@@ -2,6 +2,6 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './llm-analytics';
-export * from './extension';
-export * from './otel-destination';
+export * from './llm-analytics.ts';
+export * from './extension.ts';
+export * from './otel-destination.ts';

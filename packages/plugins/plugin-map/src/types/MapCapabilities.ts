@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
+import type * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
 import * as Struct from 'effect/Struct';
-import type * as Atom from 'effect/unstable/reactivity/Atom';
 
 import * as Capability from '@dxos/app-framework/Capability';
 import { type GeoMarker, type LatLngLiteral } from '@dxos/react-ui-geo';
@@ -12,7 +12,7 @@ import { type GeoMarker, type LatLngLiteral } from '@dxos/react-ui-geo';
 import { type MapControlType } from '#containers';
 import { meta } from '#meta';
 
-import { type Settings as SettingsType } from './Settings';
+import { type Settings as SettingsType } from './Settings.ts';
 
 const LatLngLiteralSchema = Schema.Struct({
   lat: Schema.Number,

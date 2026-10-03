@@ -2,9 +2,9 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './commands';
-export * from './references';
+export * from './commands.ts';
+export * from './references.ts';
 
-export * from './useChatExtensions';
+export * from './useChatExtensions.ts';
 
-export * from './ChatEditor';
+export * from './ChatEditor.tsx';

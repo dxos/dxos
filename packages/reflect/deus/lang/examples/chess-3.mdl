@@ -14,7 +14,7 @@ game state transitions, and the chess engine service dependency.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`        |
 | `feat`      | `org.dxos.mdl.feat@1.0`        |
-| `test`      | `org.dxos.mdl.test@1.0`        |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`    |
 | `component` | `org.dxos.mdl.component@1.0`   |
 | `op`        | `org.dxos.mdl.op@1.0`          |
 | `service`   | `org.dxos.mdl.service@1.0`     |
@@ -169,7 +169,7 @@ feat F-6: Game Persistence
 ## Acceptance
 
 ```mdl
-test T-6: Submit valid move
+scenario T-6: Submit valid move
   given: active game, white's turn, white player logged in
   when: white submits pawn e2→e4
   then:
@@ -180,7 +180,7 @@ test T-6: Submit valid move
 ```
 
 ```mdl
-test T-7: Submit invalid move rejected atomically
+scenario T-7: Submit invalid move rejected atomically
   given: active game, white's turn
   when: white submits an illegal move (e2→e5)
   then:
@@ -190,7 +190,7 @@ test T-7: Submit invalid move rejected atomically
 ```
 
 ```mdl
-test T-8: Legal moves highlighted
+scenario T-8: Legal moves highlighted
   given: new game, white's turn, Gameboard shown
   when: player selects e2
   then:

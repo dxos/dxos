@@ -2,7 +2,7 @@
 // Copyright 2026 DXOS.org
 //
 
-import { TableCard } from './TableCard';
+import { TableCard } from './TableCard.tsx';
 
-export * from './TableCard';
+export * from './TableCard.tsx';
 export default TableCard;

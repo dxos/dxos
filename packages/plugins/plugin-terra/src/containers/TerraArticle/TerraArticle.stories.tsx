@@ -14,8 +14,8 @@ import { TerraPlugin } from '#plugin';
 import { translations } from '#translations';
 import { Terra, TerraCapabilities } from '#types';
 
-import { STORY_ATTENDABLE_ID, withAttention } from '../../testing';
-import { TerraArticle } from './TerraArticle';
+import { STORY_ATTENDABLE_ID, withAttention } from '../../testing/index.ts';
+import { TerraArticle } from './TerraArticle.tsx';
 
 type StoryArgs = Partial<Terra.TerraConfig>;
 

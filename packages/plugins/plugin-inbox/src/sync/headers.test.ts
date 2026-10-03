@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { parseFromHeader } from './headers';
+import { parseFromHeader } from './headers.ts';
 
 describe('parseFromHeader', () => {
   test('name-addr', () => {

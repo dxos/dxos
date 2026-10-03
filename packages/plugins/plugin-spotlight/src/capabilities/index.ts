@@ -14,18 +14,18 @@ import { SpotlightCapabilities } from '#types';
 // eslint-disable-next-line import/no-relative-packages
 import pluginSpec from '../../PLUGIN.mdl?raw';
 
-export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler'));
+export const OperationHandler = AppCapability.operationHandler(() => import('./operation-handler.ts'));
 export const PluginAsset = AppCapability.pluginAsset({
   pluginId: meta.profile.key,
   path: 'PLUGIN.mdl',
   content: pluginSpec,
   mimeType: 'application/x-mdl',
 });
-export const ReactRoot = AppCapability.reactRoot(() => import('./react-root'));
+export const ReactRoot = AppCapability.reactRoot(() => import('./react-root.tsx'));
 export const SpotlightDismiss = Capability.lazyModule(
   'SpotlightDismiss',
   { provides: [] },
-  () => import('./spotlight-dismiss'),
+  () => import('./spotlight-dismiss.ts'),
 );
 export const State = Capability.lazyModule(
   'State',
@@ -35,6 +35,6 @@ export const State = Capability.lazyModule(
     activatesOn: ActivationEvents.Startup,
     provides: [SpotlightCapabilities.State, AppCapabilities.Layout],
   },
-  () => import('./state'),
+  () => import('./state.tsx'),
 );
 export const Translations = AppCapability.translations(translations);

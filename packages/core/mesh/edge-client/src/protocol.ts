@@ -5,7 +5,6 @@
 import { invariant } from '@dxos/invariant';
 import { buf, bufWkt } from '@dxos/protocols/buf';
 import { type Message, MessageSchema, type PeerSchema } from '@dxos/protocols/buf/dxos/edge/messenger_pb';
-import { bufferToArray } from '@dxos/util';
 
 export type PeerData = buf.MessageInitShape<typeof PeerSchema>;
 
@@ -96,9 +95,10 @@ export class Protocol {
  * Convert websocket data to Uint8Array.
  */
 export const toUint8Array = async (data: any): Promise<Uint8Array> => {
-  // Node.
-  if (data instanceof Buffer) {
-    return bufferToArray(data);
+  // Node, where the websocket yields a `Buffer` — itself a `Uint8Array`, so one check covers both
+  // runtimes and neither pulls in the browser `buffer` polyfill.
+  if (data instanceof Uint8Array) {
+    return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
   }
 
   // Browser with `binaryType = 'arraybuffer'`.

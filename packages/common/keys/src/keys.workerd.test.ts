@@ -9,8 +9,8 @@
 
 import { describe, test } from 'vitest';
 
-import { EntityId } from './entity-id';
-import { PublicKey } from './public-key';
+import { EntityId } from './entity-id.ts';
+import { PublicKey } from './public-key.ts';
 
 describe('keys in workerd', () => {
   test('runs inside the Cloudflare Workers runtime', ({ expect }) => {

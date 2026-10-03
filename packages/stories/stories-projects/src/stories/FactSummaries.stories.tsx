@@ -7,8 +7,8 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import * as BrainPlugin from '@dxos/plugin-brain/BrainPlugin';
 
-import { StoryRole } from '../modules';
-import { ModuleContainer, createDecorators, storyParameters } from '../testing';
+import { StoryRole } from '../modules/index.ts';
+import { ModuleContainer, createDecorators, storyParameters } from '../testing/index.ts';
 
 const MAILBOX_NAME = 'Work';
 const TEMPLATE_ID = 'org.dxos.project.mailboxFacts';

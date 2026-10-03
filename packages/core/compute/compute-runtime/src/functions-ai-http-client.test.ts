@@ -5,15 +5,15 @@
 import * as Cause from 'effect/Cause';
 import * as Effect from 'effect/Effect';
 import * as Exit from 'effect/Exit';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import { describe, test } from 'vitest';
 
 import { FunctionsAiMemoizationMissError, FunctionsAiUpstreamError } from '@dxos/compute';
 import { EffectEx } from '@dxos/effect';
 import { type EdgeFunctionEnv } from '@dxos/protocols';
 
-import { FunctionsAiHttpClient } from './functions-ai-http-client';
+import { FunctionsAiHttpClient } from './functions-ai-http-client.ts';
 
 const makeStubService = (response: Response): EdgeFunctionEnv.FunctionsAiService => ({
   fetch: async () => response as any,

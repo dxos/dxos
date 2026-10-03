@@ -29,7 +29,7 @@ import {
   formatMailbox,
   refEditor,
   refEditorRedecorate,
-} from './ref-editor-extension';
+} from './ref-editor-extension.ts';
 
 export type RefEditorProps = ThemedClassName<
   {

@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { DropdownMenu, useTranslation } from '@dxos/react-ui';
+import { Menu, useTranslation } from '@dxos/react-ui';
 
 import { meta } from '#meta';
 import { Notebook } from '#types';
@@ -19,29 +19,27 @@ export type NotebookMenuProps = {
 export const NotebookMenu = ({ cell, onCellInsert, onCellDelete }: NotebookMenuProps) => {
   const { t } = useTranslation(meta.profile.key);
   return (
-    <DropdownMenu.Portal>
-      <DropdownMenu.Content>
-        <DropdownMenu.Viewport>
-          <DropdownMenu.Item onClick={() => onCellInsert?.('script', cell?.id)}>
+    <Menu.Portal>
+      <Menu.Content>
+        <Menu.Viewport>
+          <Menu.Item onClick={() => onCellInsert?.('script', cell?.id)}>
             {t('notebook-cell-insert-script.label')}
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={() => onCellInsert?.('prompt', cell?.id)}>
+          </Menu.Item>
+          <Menu.Item onClick={() => onCellInsert?.('prompt', cell?.id)}>
             {t('notebook-cell-insert-prompt.label')}
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={() => onCellInsert?.('query', cell?.id)}>
+          </Menu.Item>
+          <Menu.Item onClick={() => onCellInsert?.('query', cell?.id)}>
             {t('notebook-cell-insert-query.label')}
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={() => onCellInsert?.('markdown', cell?.id)}>
+          </Menu.Item>
+          <Menu.Item onClick={() => onCellInsert?.('markdown', cell?.id)}>
             {t('notebook-cell-insert-markdown.label')}
-          </DropdownMenu.Item>
+          </Menu.Item>
           {cell && onCellDelete && (
-            <DropdownMenu.Item onClick={() => onCellDelete?.(cell.id)}>
-              {t('notebook-cell-delete.label')}
-            </DropdownMenu.Item>
+            <Menu.Item onClick={() => onCellDelete?.(cell.id)}>{t('notebook-cell-delete.label')}</Menu.Item>
           )}
-        </DropdownMenu.Viewport>
-        <DropdownMenu.Arrow />
-      </DropdownMenu.Content>
-    </DropdownMenu.Portal>
+        </Menu.Viewport>
+        <Menu.Arrow />
+      </Menu.Content>
+    </Menu.Portal>
   );
 };

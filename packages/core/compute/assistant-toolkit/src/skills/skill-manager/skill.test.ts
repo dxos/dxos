@@ -16,9 +16,9 @@ import { EffectEx } from '@dxos/effect';
 import { TestHelpers } from '@dxos/effect/testing';
 import { EntityId, type URI } from '@dxos/keys';
 
-import { AutomationSkill, ChatContextSkill, MemorySkill } from '../index';
-import { SkillManagerHandlers } from './operations';
-import { EnableSkills, QuerySkills } from './operations/definitions';
+import { AutomationSkill, ChatContextSkill, MemorySkill } from '../index.ts';
+import { EnableSkills, QuerySkills } from './operations/definitions.ts';
+import { SkillManagerHandlers } from './operations/index.ts';
 
 EntityId.dangerouslyDisableRandomness();
 

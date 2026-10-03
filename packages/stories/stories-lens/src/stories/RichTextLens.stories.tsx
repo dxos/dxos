@@ -13,10 +13,10 @@ import { useClientStory, withClientProvider, withMultiClientProvider } from '@dx
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
 import { Text } from '@dxos/schema';
 
-import { DemoPanel } from '../components';
-import { MarkdownEditor } from '../MarkdownEditor';
-import { DEMO_MARKDOWN, makeDemoText } from '../rich-text';
-import { BlockList, RichTextEditor } from '../RichTextEditor';
+import { DemoPanel } from '../components.tsx';
+import { MarkdownEditor } from '../MarkdownEditor.tsx';
+import { DEMO_MARKDOWN, makeDemoText } from '../rich-text.ts';
+import { BlockList, RichTextEditor } from '../RichTextEditor.tsx';
 
 //
 // One `Text` object, two editors: the core markdown editor on the stored string, and a basic

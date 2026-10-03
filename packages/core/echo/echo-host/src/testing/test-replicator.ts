@@ -9,8 +9,12 @@ import { log } from '@dxos/log';
 import type { AutomergeProtocolMessage } from '@dxos/protocols';
 import * as TeleportAutomergeReplicator from '@dxos/teleport-extension-automerge-replicator';
 
-import type { AutomergeReplicator, AutomergeReplicatorConnection, AutomergeReplicatorContext } from '../automerge';
-import type { ShouldAdvertiseProps } from '../automerge/echo-replicator';
+import type { ShouldAdvertiseProps } from '../automerge/echo-replicator.ts';
+import type {
+  AutomergeReplicator,
+  AutomergeReplicatorConnection,
+  AutomergeReplicatorContext,
+} from '../automerge/index.ts';
 
 export type TestReplicatorNetworkOptions = {
   latency?: number;

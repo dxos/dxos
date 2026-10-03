@@ -12,9 +12,9 @@ import {
   type TextBoxProps,
 } from '@dxos/react-ui-canvas-editor';
 
-import { useComputeNodeState } from '../hooks';
-import { type ChatShape } from './chat-def';
-import { Box } from './common';
+import { useComputeNodeState } from '../hooks/index.ts';
+import { type ChatShape } from './chat-def.tsx';
+import { Box } from './common/index.ts';
 
 //
 // Component

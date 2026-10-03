@@ -8,7 +8,7 @@ import { Obj, Ref } from '@dxos/echo';
 
 import { Model, Scene } from '#types';
 
-import { downloadFile, exportSTL } from '../../engine';
+import { downloadFile, exportSTL } from '../../engine/index.ts';
 
 export type ImportExportOptions = {
   scene: Scene.Scene | undefined;

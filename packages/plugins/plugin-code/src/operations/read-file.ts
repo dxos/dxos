@@ -9,6 +9,8 @@ import { Database } from '@dxos/echo';
 
 import { CodeOperation } from '#types';
 
+import { CodeOperationError } from '../errors.ts';
+
 const handler: Operation.WithHandler<typeof CodeOperation.ReadFile> = CodeOperation.ReadFile.pipe(
   Operation.withHandler(
     Effect.fn(function* ({ project, path }) {
@@ -21,7 +23,7 @@ const handler: Operation.WithHandler<typeof CodeOperation.ReadFile> = CodeOperat
           return { path: file.path, content: text.content };
         }
       }
-      return yield* Effect.fail(new Error(`File not found: ${path}`));
+      return yield* Effect.fail(new CodeOperationError({ message: `File not found: ${path}` }));
     }),
   ),
 );

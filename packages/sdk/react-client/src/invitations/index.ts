@@ -17,4 +17,4 @@ export {
   InvitationsProxy,
 } from '@dxos/client/invitations';
 
-export * from './useInvitationStatus';
+export * from './useInvitationStatus.ts';

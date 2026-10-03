@@ -9,8 +9,8 @@ import { type Attributes } from '@opentelemetry/api';
 import { defaultResource, resourceFromAttributes } from '@opentelemetry/resources';
 import { type PushMetricExporter } from '@opentelemetry/sdk-metrics';
 
-import { OtelMetrics } from './metrics';
-import { type OtelDestination } from './otel';
+import { OtelMetrics } from './metrics.ts';
+import { type OtelDestination } from './otel.ts';
 
 export type Init = {
   type: 'otel-metrics-init';
@@ -19,16 +19,25 @@ export type Init = {
   tags: Record<string, string>;
 };
 
+/**
+ * One instrument series aggregated on the producer side: an increment carries its sum, a gauge its
+ * latest value, a distribution every recorded value.
+ */
 export type Metric = {
-  type: 'otel-metric';
   op: 'increment' | 'distribution' | 'gauge';
   name: string;
-  value: number;
+  values: number[];
   tags?: Attributes;
   meta?: { unit?: string; description?: string };
 };
 
-export type Message = Init | Metric;
+/** Everything a producer recorded since its previous batch, in one message. */
+export type Batch = {
+  type: 'otel-metric-batch';
+  metrics: Metric[];
+};
+
+export type Message = Init | Batch;
 
 export type Options = {
   exporter?: PushMetricExporter;
@@ -49,19 +58,10 @@ export class Sink {
     });
   }
 
-  append(record: Metric): void {
-    switch (record.op) {
-      case 'increment': {
-        this.#metrics.increment(record.name, record.value, record.tags, record.meta);
-        break;
-      }
-      case 'distribution': {
-        this.#metrics.distribution(record.name, record.value, record.tags, record.meta);
-        break;
-      }
-      case 'gauge': {
-        this.#metrics.gauge(record.name, record.value, record.tags, record.meta);
-        break;
+  append(batch: Batch): void {
+    for (const metric of batch.metrics) {
+      for (const value of metric.values) {
+        this.#record(metric, value);
       }
     }
   }
@@ -76,5 +76,22 @@ export class Sink {
 
   close(): Promise<void> {
     return this.#metrics.close();
+  }
+
+  #record(metric: Metric, value: number): void {
+    switch (metric.op) {
+      case 'increment': {
+        this.#metrics.increment(metric.name, value, metric.tags, metric.meta);
+        break;
+      }
+      case 'distribution': {
+        this.#metrics.distribution(metric.name, value, metric.tags, metric.meta);
+        break;
+      }
+      case 'gauge': {
+        this.#metrics.gauge(metric.name, value, metric.tags, metric.meta);
+        break;
+      }
+    }
   }
 }

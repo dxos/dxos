@@ -6,7 +6,7 @@ import { Event } from '@dxos/async';
 import { type AnyProperties, type RefResolverRequest, type RefSource } from '@dxos/echo/internal';
 import { type URI } from '@dxos/keys';
 
-import { type LoadOp, type LoadOpTable } from './load-op';
+import { type LoadOp, type LoadOpTable } from './load-op.ts';
 
 /**
  * A closure-aware {@link RefResolverRequest}: an un-coalesced per-call handle over a root

@@ -19,7 +19,7 @@ import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
 import { type JmapDataset, JmapMailApi } from '#services';
 
-import { jmapMailSyncProvider } from '../operations/mail/sync/sync-provider';
+import { jmapMailSyncProvider } from '../operations/mail/sync/sync-provider.ts';
 
 /**
  * Test entry point for the JMAP sync — the account-level fan-out over `runMailSync` with this

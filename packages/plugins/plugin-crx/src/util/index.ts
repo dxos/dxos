@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './pingExtension';
+export * from './pingExtension.ts';

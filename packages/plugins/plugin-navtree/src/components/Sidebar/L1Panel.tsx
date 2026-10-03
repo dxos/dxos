@@ -7,28 +7,29 @@ import React, { memo, useCallback, useMemo } from 'react';
 
 import * as AppGraph from '@dxos/app-graph/AppGraph';
 import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import * as GraphPath from '@dxos/app-toolkit/GraphPath';
+import * as AppNode from '@dxos/app-toolkit/AppNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
-import * as DeckSchema from '@dxos/plugin-deck/DeckSchema';
 import { useActionRunner, useEdges } from '@dxos/plugin-graph/hooks';
-import { DensityProvider, IconButton, ScrollArea, toLocalizedString, useTranslation } from '@dxos/react-ui';
-import { Empty, Tree } from '@dxos/react-ui-list';
-import { Menu, type MenuItem } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
+import {
+  Banner,
+  DensityProvider,
+  Icon,
+  IconButton,
+  ScrollArea,
+  Tabs,
+  toLocalizedString,
+  useTranslation,
+} from '@dxos/react-ui';
+import { Tree, TREE_BLOCK } from '@dxos/react-ui-list';
+import { ActionMenu, type MenuItem } from '@dxos/react-ui-menu';
 import { hoverableControlItem, hoverableOpenControlItem } from '@dxos/ui-theme';
 
 import { getListActions, useActions, useLoadDescendents } from '#hooks';
 import { meta } from '#meta';
 
-import { NAV_TREE_ITEM } from '../NavTree';
-import { useNavTreeContext } from '../NavTreeContext';
-import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns';
-
-/**
- * Delay before the unavailable-workspace message appears, timed from the last change to the set of
- * space workspaces rather than from mount, so it lands only once that set has held still.
- */
-const RENDER_DELAY = '1s';
+import { NAV_TREE_ITEM } from '../NavTree/index.ts';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { NavTreeItemColumns } from '../NavTreeItem/NavTreeItemColumns.tsx';
 
 /**
  * Width held for the item-end slot, whose surface resolves after the tree has painted: a
@@ -37,6 +38,9 @@ const RENDER_DELAY = '1s';
  */
 const ITEM_END_SIZE = '1.25rem';
 
+/** Delay before a pending or unavailable workspace renders anything. */
+const RENDER_DELAY = '1s';
+
 export type L1PanelProps = {
   open?: boolean;
   path: string[];
@@ -44,12 +48,8 @@ export type L1PanelProps = {
   id: string;
   /** Absent when the workspace is not in the graph; the panel then renders the unavailable message. */
   item?: AppGraphNode.Node;
-  /**
-   * Identity of the set of space workspaces, which the unavailable message is a claim about. Empty
-   * means not-loaded-yet rather than nothing-to-show, since every identity ends up with at least a
-   * settings space.
-   */
-  spaces?: string;
+  /** Whether the workspace this tab names is known to be missing, rather than still on its way. */
+  unavailable?: boolean;
   isCurrent: boolean;
   onBack?: () => void;
 };
@@ -59,14 +59,12 @@ export type L1PanelProps = {
  * longer exists, or persisted deck state pointing at one after a profile switch — the panel body is the
  * unavailable-workspace message, so the sidebar is never blank.
  */
-const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1PanelProps) => {
+const L1PanelInner = ({ open, path, id, item, unavailable, isCurrent, onBack }: L1PanelProps) => {
   const { t } = useTranslation(meta.profile.key);
+  const pending = item?.properties.pending === true;
   const title = item ? toLocalizedString(item.properties.label, t) : t('workspace-unavailable.heading');
   const isActivated = useIsActivatedWorkspace(id);
   const shouldRenderContent = isCurrent || isActivated;
-  // Needs a published space list to make the claim against, and a workspace actually being asked
-  // for — the sentinel deck means none has resolved yet.
-  const reportUnavailable = !!spaces && id !== DeckSchema.DEFAULT_DECK_ID;
 
   return (
     <Tabs.Panel
@@ -84,18 +82,30 @@ const L1PanelInner = ({ open, path, id, item, spaces, isCurrent, onBack }: L1Pan
       // reference a missing element.
       {...(!item && { 'aria-labelledby': undefined })}
       {...(isCurrent && {
-        'data-testid': item ? 'navtree.workspace.visible' : 'navtree.workspace.unavailable',
+        'data-testid': pending
+          ? 'navtree.workspace.pending'
+          : item
+            ? 'navtree.workspace.visible'
+            : 'navtree.workspace.unavailable',
       })}
       {...(!open && { inert: true })}
     >
       {shouldRenderContent &&
-        (item ? (
+        (pending ? (
+          <div
+            role='status'
+            aria-label={t('pending-workspace.label')}
+            className='row-start-2 self-start flex justify-center p-4 animate-fade-in'
+            style={{ animationDelay: RENDER_DELAY, animationFillMode: 'backwards' }}
+          >
+            <Icon icon='ph--spinner-gap--regular' size={6} classNames='animate-spin' />
+          </div>
+        ) : item ? (
           <L1PanelContent open={open} path={path} item={item} onBack={onBack} />
         ) : (
-          reportUnavailable && (
-            <Empty
-              // Spaces publish one at a time, so remounting restarts the delay until they stop.
-              key={spaces}
+          unavailable && (
+            <Banner.Empty
+              key={id}
               label={t('workspace-unavailable.description')}
               // Second grid row, so the message clears the rail exactly as the tree does, and
               // hugging its top rather than stretching to the row's full height.
@@ -147,10 +157,11 @@ const L1PanelContent = ({
             rootId={item.id}
             path={path}
             draggable
-            gridTemplateColumns={`[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
+            compact
+            gridTemplateColumns={`[tree-row-start] ${TREE_BLOCK} minmax(0, 1fr) min-content minmax(${ITEM_END_SIZE}, min-content) [tree-row-end]`}
             renderColumns={NavTreeItemColumns}
-            blockInstruction={navTreeContext.blockInstruction}
             canDrop={navTreeContext.canDrop}
+            getDropKind={navTreeContext.getDropKind}
             canSelect={navTreeContext.canSelect}
             onOpenChange={navTreeContext.onOpenChange}
             onSelect={navTreeContext.onSelect}
@@ -169,14 +180,14 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
   const { t } = useTranslation(meta.profile.key);
   const { renderItemEnd: ItemEnd } = useNavTreeContext();
   const title = toLocalizedString(item.properties.label, t);
-  const backCapableWorkspace = GraphPath.isPinnedWorkspace(item.id);
+  const backCapableWorkspace = AppNode.isPinnedWorkspace(item);
 
   const { menuActions, onAction } = useL1MenuActions({ item, path });
   useLoadDescendents(item);
 
   return (
     <div
-      data-tauri-drag-region
+      data-tauri-drag-region='deep'
       className='grid w-full items-center dx-app-drag dx-density-lg'
       // Same late item-end surface as the tree rows below, so the header holds the slot too.
       style={{ gridTemplateColumns: `28px 1fr min-content minmax(${ITEM_END_SIZE}, min-content)` }}
@@ -195,9 +206,7 @@ const L1PanelHeader = ({ item, path, onBack }: Pick<L1PanelProps, 'path' | 'onBa
       ) : (
         <div />
       )}
-      <h2 data-tauri-drag-region className='flex-1 truncate min-w-0'>
-        {title}
-      </h2>
+      <h2 className='flex-1 truncate min-w-0'>{title}</h2>
       <div className='contents dx-app-no-drag'>
         <MenuActions item={item} menuActions={menuActions} onAction={onAction} />
         {ItemEnd && <ItemEnd node={item} open />}
@@ -245,20 +254,17 @@ const MenuActions = ({
   }
 
   return (
-    <Menu.Root caller={NAV_TREE_ITEM} onAction={onAction}>
-      <Menu.Trigger asChild>
-        <IconButton
-          classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
-          variant='ghost'
-          icon='ph--dots-three-vertical--regular'
-          iconOnly
-          size={4}
-          label={t('tree-item-actions.label')}
-          data-testid='navtree.treeItem.actionsLevel0'
-        />
-      </Menu.Trigger>
-      <Menu.Content group={item} items={menuActions as MenuItem[]} />
-    </Menu.Root>
+    <ActionMenu caller={NAV_TREE_ITEM} onAction={onAction} group={item} actions={menuActions as MenuItem[]}>
+      <IconButton
+        classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
+        variant='ghost'
+        icon='ph--dots-three-vertical--regular'
+        iconOnly
+        size={4}
+        label={t('tree-item-actions.label')}
+        data-testid='navtree.treeItem.actionsLevel0'
+      />
+    </ActionMenu>
   );
 };
 

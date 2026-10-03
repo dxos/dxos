@@ -2,10 +2,11 @@
 // Copyright 2023 DXOS.org
 //
 
-import { BaseError } from '@dxos/errors';
+import { BaseError, messageOf } from '@dxos/errors';
 import { invariant } from '@dxos/invariant';
 
-import { type Error as SerializedErrorProto } from '../proto/gen/dxos/error.ts';
+import { type Error as SerializedErrorProto } from '../buf/proto/gen/dxos/error_pb.ts';
+import { SystemError } from './base-errors.ts';
 
 export const reconstructError = (error: SerializedErrorProto) => {
   const { name, message, context } = error;
@@ -36,4 +37,38 @@ export const errorFromCode = (code?: string, message?: string, context?: any) =>
   } else {
     return new BaseError(code ?? 'Error', { message, context });
   }
+};
+
+/** The `name` a thrown value carries, which is the field `encodeError` puts on the wire. */
+const nameOf = (error: unknown): string | undefined => {
+  if (typeof error === 'object' && error !== null && 'name' in error) {
+    const { name } = error as { name?: unknown };
+    return typeof name === 'string' && name.length > 0 ? name : undefined;
+  }
+  return undefined;
+};
+
+/**
+ * Narrows a thrown value for a service RPC's error channel.
+ *
+ * A DXOS error is returned as it is. Anything else is rebuilt as a `BaseError` under its own
+ * `name` and stack, the fields `encodeError` puts on the wire and `decodeError` rebuilds from.
+ * The wire format has no `cause` field, so `encodeError` folds the chain into the stack.
+ */
+export const toServiceError = (error: unknown): BaseError => {
+  if (error instanceof BaseError) {
+    return error;
+  }
+
+  const name = nameOf(error);
+  const message = messageOf(error) ?? String(error);
+  const wrapped =
+    name === undefined ? new SystemError({ message, cause: error }) : new BaseError(name, { message, cause: error });
+  const stack = typeof error === 'object' && error !== null ? (error as { stack?: unknown }).stack : undefined;
+  if (typeof stack === 'string') {
+    // The origin's frames are what makes a host-side failure diagnosable once it reaches the client.
+    wrapped.stack = stack;
+  }
+
+  return wrapped;
 };

@@ -16,10 +16,10 @@ import {
   DEFAULT_HARNESS_PACKAGE,
   DEFAULT_RUN_TIMEOUT_MS,
   DEFAULT_SANDBOX_NAME,
-} from '../../constants';
-import { HarnessInstallError, MissingCredentialError } from '../../errors';
-import { InstallHarness } from './definitions';
-import { buildInstallCommand } from './harness-command';
+} from '../../constants.ts';
+import { HarnessInstallError, MissingCredentialError } from '../../errors.ts';
+import { InstallHarness } from './definitions.ts';
+import { buildInstallCommand } from './harness-command.ts';
 
 export default InstallHarness.pipe(
   Operation.withHandler(

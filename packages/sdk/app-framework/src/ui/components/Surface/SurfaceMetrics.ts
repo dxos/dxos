@@ -4,6 +4,8 @@
 
 import { useSyncExternalStore } from 'react';
 
+import { shallowEqual } from '@dxos/util';
+
 /**
  * Per-surface dev metrics, complementing the render-timing data collected by the
  * React Profiler ({@link SurfaceProfilerStats}). Captures dispatch-level signals
@@ -27,9 +29,9 @@ export type SurfaceMetric = {
   candidates: number;
   /** `true` when more candidates matched than `limit` rendered. */
   truncated: boolean;
-  /** `true` when the `data` prop identity churns across renders without changing value. */
+  /** `true` when the caller's `data` prop identity churns across renders without changing value. */
   dataUnstable: boolean;
-  /** Consecutive renders where `data` identity changed but value did not. */
+  /** Consecutive renders where the caller's `data` identity changed but value did not. */
   dataChurn: number;
   /** Error boundary trips. */
   errors: number;
@@ -43,25 +45,6 @@ export type SurfaceMetric = {
 const UNSTABLE_THRESHOLD = 3;
 
 export const surfaceMetricKey = (surfaceId: string, role: string): string => `surface/${surfaceId}/${role}`;
-
-/**
- * Shallow (top-level) value equality. Used to distinguish a genuinely new `data`
- * value from a new object/array carrying the same content (the unstable-prop case).
- */
-const shallowEqual = (a: unknown, b: unknown): boolean => {
-  if (Object.is(a, b)) {
-    return true;
-  }
-  if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) {
-    return false;
-  }
-  const aKeys = Object.keys(a as Record<string, unknown>);
-  const bKeys = Object.keys(b as Record<string, unknown>);
-  if (aKeys.length !== bKeys.length) {
-    return false;
-  }
-  return aKeys.every((key) => Object.is((a as Record<string, unknown>)[key], (b as Record<string, unknown>)[key]));
-};
 
 /**
  * Singleton store of surface dev metrics. A module singleton (rather than a React
@@ -170,15 +153,11 @@ class SurfaceMetricsStore {
 export const surfaceMetrics = new SurfaceMetricsStore();
 
 /**
- * Updates the running churn count for a consumer's `data` prop.
+ * Updates the running churn count for the caller's raw `data` prop.
  *
  * @returns the new churn count (0 when `data` changed value or is unchanged).
  */
 export const nextDataChurn = (previous: unknown, next: unknown, churn: number): number => {
-  // Unchanged reference: preserve churn. NOTE: do NOT reset to 0 here — `useDefaultValue`
-  // (used for the `data` default) lags one render, so each prop change yields two renders
-  // (stale-then-new); resetting on the stale (Object.is) render would wipe accumulated churn
-  // and never flag genuinely unstable data. The flag clears on the next genuine value change.
   if (Object.is(previous, next)) {
     return churn;
   }

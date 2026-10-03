@@ -3,7 +3,7 @@
 //
 
 import * as Predicate from 'effect/Predicate';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
 
 import { Obj, type View } from '@dxos/echo';
 import { Format, TypeEnum } from '@dxos/echo/Format';
@@ -20,9 +20,9 @@ import { formatForDisplay } from '@dxos/schema';
 import { VIEW_FIELD_LIMIT } from '@dxos/schema';
 import { mx } from '@dxos/ui-theme';
 
-import { tableButtons, tableControls } from '../util';
-import { type SelectionMode } from './selection-model';
-import { type TableModel, type TableRow } from './table-model';
+import { tableButtons, tableControls } from '../util/index.ts';
+import { type SelectionMode } from './selection-model.ts';
+import { type TableModel, type TableRow } from './table-model.ts';
 
 /**
  * Presentation layer for a table component, handling cell rendering and grid display logic.
@@ -208,7 +208,7 @@ export class TablePresentation<T extends TableRow = TableRow> {
       const targetObj = SchemaEx.getValue(obj, field.path)?.target;
       if (targetObj) {
         const uri = Obj.getURI(targetObj);
-        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><dx-anchor uri=${uri} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
+        cell.accessoryHtml = `<div role="none" class="dx-grid__cell__block"><dx-anchor eid=${uri} class="dx-button w-6 aspect-square min-h-0" data-dx-grid-action="accessory"><dx-icon icon="ph--link-simple--regular"/></dx-anchor></div>`;
       }
     }
 

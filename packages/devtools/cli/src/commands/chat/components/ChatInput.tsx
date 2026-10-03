@@ -5,8 +5,8 @@
 import { type KeyEvent, type TextareaRenderable } from '@opentui/core';
 import { type Accessor, createEffect, useContext } from 'solid-js';
 
-import { AppContext } from '../../../components';
-import { theme } from '../../../theme';
+import { AppContext } from '../../../components/index.ts';
+import { theme } from '../../../theme.ts';
 
 type ChatInputProps = {
   focused?: Accessor<boolean | undefined>;

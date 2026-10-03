@@ -8,9 +8,9 @@ import * as Array from 'effect/Array';
 import { pipe } from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Order from 'effect/Order';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Record from 'effect/Record';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import React from 'react';
 
@@ -19,11 +19,12 @@ import { type Database, Entity, Filter, Obj, Query, Ref, Relation } from '@dxos/
 import { invariant } from '@dxos/invariant';
 import { EID, EntityId } from '@dxos/keys';
 import { log } from '@dxos/log';
-import { DropdownMenu, Icon, IconButton, ScrollArea } from '@dxos/react-ui';
+import { Icon, IconButton, Menu, ScrollArea } from '@dxos/react-ui';
 import {
   type ColumnRenderer,
   type IconRenderer,
   Tree,
+  TREE_BLOCK,
   type TreeItemDataProps,
   type TreeModel,
 } from '@dxos/react-ui-list';
@@ -81,7 +82,7 @@ export const ObjectsTree = ({ db, root, onSelect, onOpen, canOpen }: ObjectsTree
             // `min-content` column is sized from the widest role across the whole subgrid, so
             // expanding a node whose child carries a role widened that track and visibly shifted
             // every row's action button.
-            gridTemplateColumns='[tree-row-start] var(--dx-control) minmax(0, 1fr) min-content [tree-row-end]'
+            gridTemplateColumns={`[tree-row-start] ${TREE_BLOCK} minmax(0, 1fr) min-content [tree-row-end]`}
             classNames='w-full min-w-0'
             renderIcon={ObjectsTreeIcon}
             renderColumns={ObjectsTreeColumns}
@@ -151,8 +152,8 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
   return (
     <div className='flex shrink-0 items-center gap-1'>
       {node.role && <span className='text-subdued text-xs'>{node.role}</span>}
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger asChild>
+      <Menu.Root>
+        <Menu.Trigger asChild>
           <IconButton
             classNames={['shrink-0 px-2 pointer-fine:px-1', hoverableControlItem, hoverableOpenControlItem]}
             variant='ghost'
@@ -161,42 +162,42 @@ const ObjectsTreeColumns: ColumnRenderer<ObjectsTreeItem> = ({ item, path }) => 
             label='Actions'
             data-testid='objects-tree.row.actions'
           />
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content>
+        </Menu.Trigger>
+        <Menu.Content>
           {showOpen && (
-            <DropdownMenu.Item onClick={handleOpen}>
+            <Menu.Item onClick={handleOpen}>
               <Icon icon='ph--arrow-square-out--regular' />
               Open
-            </DropdownMenu.Item>
+            </Menu.Item>
           )}
           {!node.deleted && (
-            <DropdownMenu.Item onClick={handleDelete}>
+            <Menu.Item onClick={handleDelete}>
               <Icon icon='ph--trash--regular' />
               Delete
-            </DropdownMenu.Item>
+            </Menu.Item>
           )}
           {node.deleted && (
-            <DropdownMenu.Item onClick={handleRestore}>
+            <Menu.Item onClick={handleRestore}>
               <Icon icon='ph--arrow-counter-clockwise--regular' />
               Restore
-            </DropdownMenu.Item>
+            </Menu.Item>
           )}
 
-          <DropdownMenu.Separator />
-          <DropdownMenu.Item onClick={handleCopyDXN}>
+          <Menu.Separator />
+          <Menu.Item onClick={handleCopyDXN}>
             <Icon icon='ph--copy--regular' />
             Copy DXN
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={handleCopyJSON}>
+          </Menu.Item>
+          <Menu.Item onClick={handleCopyJSON}>
             <Icon icon='ph--brackets-curly--regular' />
             Copy JSON
-          </DropdownMenu.Item>
-          <DropdownMenu.Item onClick={handlePrintToConsole}>
+          </Menu.Item>
+          <Menu.Item onClick={handlePrintToConsole}>
             <Icon icon='ph--terminal-window--regular' />
             Print to console
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+          </Menu.Item>
+        </Menu.Content>
+      </Menu.Root>
     </div>
   );
 };

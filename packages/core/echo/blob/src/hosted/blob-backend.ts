@@ -4,8 +4,8 @@
 
 import { invariant } from '@dxos/invariant';
 
-import { type BlobBackend, type BlobTransport } from '../backend';
-import { SCHEME, digestHex, fromDigestHex } from '../ni-uri';
+import { type BlobBackend, type BlobTransport } from '../backend.ts';
+import { SCHEME, digestHex, fromDigestHex } from '../ni-uri.ts';
 
 export interface CreateEdgeBlobBackendOptions {
   transport: BlobTransport;
@@ -35,18 +35,33 @@ export const MAX_EDGE_BLOB_SIZE = 50 * 1024 * 1024;
  * `remove` and GC/refcounting for content-addressed blobs — without that, a local cache has no way
  * to know when a cached entry is safe to evict once its owning Blob object is deleted.
  */
-export const createEdgeBlobBackend = ({ transport }: CreateEdgeBlobBackendOptions): BlobBackend => ({
-  schemes: [SCHEME],
-  maxSize: MAX_EDGE_BLOB_SIZE,
+export const createEdgeBlobBackend = ({ transport }: CreateEdgeBlobBackendOptions): BlobBackend => {
+  // Bound once here rather than re-read inside the closure: the capability check and the call then
+  // share one proof that the method exists, and `bind` keeps a method-style transport working.
+  const finalizeUpload = transport.finalizeUpload?.bind(transport);
 
-  put: async ({ data, contentType, contentHash }) => {
-    await transport.put(contentHash, data, { contentType });
-    return { uri: fromDigestHex(contentHash) };
-  },
+  return {
+    schemes: [SCHEME],
+    maxSize: MAX_EDGE_BLOB_SIZE,
 
-  get: async ({ uri }) => transport.get(parseNiUri(uri)),
+    put: async ({ data, contentType, contentHash }) => {
+      await transport.put(contentHash, data, { contentType });
+      return { uri: fromDigestHex(contentHash) };
+    },
 
-  has: async ({ uri }) => transport.has(parseNiUri(uri)),
+    get: async ({ uri }) => transport.get(parseNiUri(uri)),
 
-  getUrl: async ({ uri }) => transport.url(parseNiUri(uri)).toString(),
-});
+    has: async ({ uri }) => transport.has(parseNiUri(uri)),
+
+    getUrl: async ({ uri }) => transport.url(parseNiUri(uri)).toString(),
+
+    // Spread rather than always present: `adoptUpload` being absent is how the manager tells a
+    // backend that cannot adopt uploads from an adoption that failed.
+    ...(finalizeUpload && {
+      adoptUpload: async ({ uploadId }: { uploadId: string }) => {
+        const { key, size, contentType } = await finalizeUpload(uploadId);
+        return { uri: fromDigestHex(key), size, contentType };
+      },
+    }),
+  };
+};

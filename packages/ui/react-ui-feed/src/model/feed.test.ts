@@ -6,7 +6,7 @@ import { describe, expect, test } from 'vitest';
 
 import { Message } from '@dxos/types';
 
-import { FeedModel, fromMessages } from './feed';
+import { FeedModel, fromMessages } from './feed.ts';
 
 const message = (role: 'user' | 'assistant', text: string) =>
   Message.make({ sender: { role, name: role }, blocks: [{ _tag: 'text', text }] });

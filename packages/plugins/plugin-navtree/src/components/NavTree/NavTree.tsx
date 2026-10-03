@@ -8,18 +8,21 @@ import * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import { useAppGraph } from '@dxos/app-toolkit/ui';
 import * as GraphNode from '@dxos/graph/GraphNode';
 import { useConnections, useActions as useGraphActions } from '@dxos/plugin-graph/hooks';
+import { Tabs } from '@dxos/react-ui';
 import { type MenuItem } from '@dxos/react-ui-menu';
-import { Tabs } from '@dxos/react-ui-tabs';
 import { Position } from '@dxos/util';
 
 import { useLoadDescendents } from '#hooks';
 
-import { useNavTreeContext } from '../NavTreeContext';
-import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar';
+import { useNavTreeContext } from '../NavTreeContext/index.ts';
+import { L0Menu, L1Tabs, type L1TabsProps } from '../Sidebar/index.ts';
 
 export const NAV_TREE_ITEM = 'NavTreeItem';
 
-export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string } & Pick<L1TabsProps, 'open'>;
+export type NavTreeProps = { id: string; root?: AppGraphNode.Node; tab: string } & Pick<
+  L1TabsProps,
+  'open' | 'unavailable'
+>;
 
 // TODO(wittjosiah): Refactor to Radix-style.
 export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab, ...props }, forwardedRef) => {
@@ -33,7 +36,7 @@ export const NavTree = forwardRef<HTMLDivElement, NavTreeProps>(({ id, root, tab
     // TODO(thure): `Tabs.Root` forces all items that should be able to receive focus to use `Tabs.Tab(Primitive)` since
     //  it uses RovingFocus and doesn't support moving focus to an item that is not a tab. Assess whether this situation
     //  should change including whether it should motivate a change in the design/taxonomy, or if this means this should
-    //  not use `react-ui-tabs` at all.
+    //  not use `Tabs` at all.
     <Tabs.Root value={tab} orientation='vertical' classNames='relative' ref={forwardedRef}>
       <L0Menu
         menuActions={topLevelActions as MenuItem[]}

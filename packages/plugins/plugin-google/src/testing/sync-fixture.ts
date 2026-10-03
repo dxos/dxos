@@ -3,8 +3,8 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
 
 import type * as Capability from '@dxos/app-framework/Capability';
 import { credentialsLayerFromDatabase } from '@dxos/compute-runtime';
@@ -20,7 +20,7 @@ import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
 import { type GmailDataset, GoogleCredentials, GoogleMailApi } from '#services';
 
-import { googleMailSyncProvider } from '../operations/mail/sync/sync-provider';
+import { googleMailSyncProvider } from '../operations/mail/sync/sync-provider.ts';
 
 /**
  * Test entry point for the Gmail sync — `runMailSync` with the Gmail provider layer, leaving the API for

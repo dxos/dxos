@@ -6,9 +6,9 @@
 
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
+import * as RpcClient from 'effect/rpc/RpcClient';
 
-import { Rpcs } from './Protocol.ts';
+import * as Protocol from './Protocol.ts';
 
 /** A pool of parsing workers, addressed through Effect RPC. */
 
@@ -18,10 +18,10 @@ const workerUrl = new URL('./main.ts', import.meta.url);
 const platformLayer = Layer.unwrap(
   Effect.promise(async () => {
     if (typeof globalThis.Bun !== 'undefined') {
-      const { BunWorker } = await import('@effect/platform-bun');
+      const BunWorker = await import('@effect/platform-bun/BunWorker');
       return BunWorker.layer(() => new globalThis.Worker(workerUrl.href, { type: 'module' }));
     }
-    const { NodeWorker } = await import('@effect/platform-node');
+    const NodeWorker = await import('@effect/platform-node/NodeWorker');
     const { Worker } = await import('node:worker_threads');
     return NodeWorker.layer(() => new Worker(workerUrl));
   }),
@@ -35,7 +35,7 @@ const platformLayer = Layer.unwrap(
 export const make = (size: number) =>
   Effect.gen(function* () {
     const context = yield* Layer.build(RpcClient.layerProtocolWorker({ size }).pipe(Layer.provide(platformLayer)));
-    return yield* Effect.provideContext(RpcClient.make(Rpcs), context);
+    return yield* Effect.provideContext(RpcClient.make(Protocol.Rpcs), context);
   });
 
 /** The RPC client the pool hands out. */

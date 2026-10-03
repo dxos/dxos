@@ -13,8 +13,8 @@ import { DXN } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { ProjectionModel, createDirectChangeCallback } from '@dxos/schema';
 
-import { TestSchema } from '../testing';
-import { ViewModel } from '../types';
+import { TestSchema } from '../testing/index.ts';
+import { ViewModel } from '../types/index.ts';
 
 describe('Projection', () => {
   let builder: EchoTestBuilder;

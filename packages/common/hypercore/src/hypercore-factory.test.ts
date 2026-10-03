@@ -7,13 +7,13 @@ import { describe, expect, test } from 'vitest';
 import { createKeyPair } from '@dxos/crypto';
 import { random } from '@dxos/random';
 
-import { HypercoreFactory } from './hypercore-factory';
-import { createDataItem } from './testing';
-import { py } from './util';
+import { RawHypercoreFactory } from './hypercore-factory.ts';
+import { createDataItem } from './testing.ts';
+import { py } from './util.ts';
 
-describe('HypercoreFactory', () => {
+describe('RawHypercoreFactory', () => {
   test('appends to, and read from, multiple feeds', async () => {
-    const factory = new HypercoreFactory();
+    const factory = new RawHypercoreFactory();
 
     const numFeeds = 10;
     const numBlocks = 100;
@@ -22,7 +22,7 @@ describe('HypercoreFactory', () => {
     const feeds = await Promise.all(
       Array.from({ length: numFeeds }).map(async () => {
         const { publicKey, secretKey } = createKeyPair();
-        return await factory.openFeed(publicKey, { secretKey });
+        return await factory.openHypercore(publicKey, { secretKey });
       }),
     );
 

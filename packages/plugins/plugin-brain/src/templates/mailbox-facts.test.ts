@@ -18,7 +18,7 @@ import { TagIndex, Text } from '@dxos/schema';
 
 import { BrainOperation } from '#types';
 
-import { mailboxFacts } from './mailbox-facts';
+import { mailboxFacts } from './mailbox-facts.ts';
 
 describe('mailbox facts project template', () => {
   let builder: EchoTestBuilder;

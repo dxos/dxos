@@ -4,5 +4,5 @@
 
 import { type ComponentType, lazy } from 'react';
 
-export const BookmarkArticle: ComponentType<any> = lazy(() => import('./BookmarkArticle'));
-export const BookmarkCard: ComponentType<any> = lazy(() => import('./BookmarkCard'));
+export const BookmarkArticle: ComponentType<any> = lazy(() => import('./BookmarkArticle/index.ts'));
+export const BookmarkCard: ComponentType<any> = lazy(() => import('./BookmarkCard/index.ts'));

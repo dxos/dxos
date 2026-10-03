@@ -7,7 +7,7 @@ import * as Schema from 'effect/Schema';
 import { Annotation, DXN, Obj, Ref, Type } from '@dxos/echo';
 import { LabelAnnotation } from '@dxos/echo/Annotation';
 
-import { Provider } from './Provider';
+import { Provider } from './Provider.ts';
 
 /** A single product listing returned by a provider search. */
 export class Result extends Type.makeObject<Result>(DXN.make('org.dxos.type.productSearchResult', '0.1.0'))(
@@ -23,7 +23,11 @@ export class Result extends Type.makeObject<Result>(DXN.make('org.dxos.type.prod
     fetchedAt: Schema.optional(Schema.String),
     // Note: user state (e.g. `starred`) is NOT on the immutable Result — it lives on the Search's tag
     // index keyed by Result id (see Search.STARRED_TAG / Search.setStarred).
-  }).pipe(LabelAnnotation.set(['title']), Annotation.IconAnnotation.set({ icon: 'ph--tag--regular', hue: 'cyan' })),
+  }).pipe(
+    LabelAnnotation.set(['title']),
+    Annotation.IconAnnotation.set({ icon: 'ph--tag--regular', hue: 'cyan' }),
+    Annotation.UserType.set(),
+  ),
 ) {}
 
 /** Checks if a value is a Result object. */

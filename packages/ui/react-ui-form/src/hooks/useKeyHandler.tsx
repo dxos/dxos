@@ -6,7 +6,7 @@ import { type RefObject, useCallback, useLayoutEffect } from 'react';
 
 import { addEventListener } from '@dxos/async';
 
-import { type FormHandler } from './useFormHandler';
+import { type FormHandler } from './useFormHandler.ts';
 
 /**
  * Key handler.

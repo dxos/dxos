@@ -5,14 +5,14 @@
 import { useAtomValue } from '@effect/atom-react/Hooks';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
+import * as Result from 'effect/reactivity/AsyncResult';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Stream from 'effect/Stream';
-import * as Result from 'effect/unstable/reactivity/AsyncResult';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import { useMemo } from 'react';
 
 import { Identity } from '@dxos/halo';
 
-import { useHaloServices } from './HaloProvider';
+import { useHaloServices } from './HaloProvider.tsx';
 
 /**
  * Returns the local identity, or `undefined` if none exists. Reactive: re-renders when the

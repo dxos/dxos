@@ -11,15 +11,3 @@ workspace:
   inheritedTasks:
     exclude:
       - lint
-
-tasks:
-  build:
-    args:
-      - '--entryPoint=src/hyperformula.js'
-      - '--platform=neutral'
-      - '--mainFields=browser,module,main'
-      - '--bundlePackage=hyperformula'
-      - '--bundlePackage=chevrotain'
-      - '--bundlePackage=unorm'
-      - '--bundlePackage=tiny-emitter'
-      - '--bundlePackage=regexp-to-ast'

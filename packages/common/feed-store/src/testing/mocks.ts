@@ -6,12 +6,12 @@ import { Event, scheduleTask } from '@dxos/async';
 import { Context } from '@dxos/context';
 import { PublicKey } from '@dxos/keys';
 
-import type { FeedWriter, WriteOptions, WriteReceipt } from '../feed-writer';
+import type { HypercoreWriter, WriteOptions, WriteReceipt } from '../hypercore-writer.ts';
 
 /**
  * Mock writer collects and emits messages.
  */
-export class MockFeedWriter<T extends {}> implements FeedWriter<T> {
+export class MockHypercoreWriter<T extends {}> implements HypercoreWriter<T> {
   public readonly written = new Event<[T, WriteReceipt]>();
   public readonly messages: T[] = [];
 

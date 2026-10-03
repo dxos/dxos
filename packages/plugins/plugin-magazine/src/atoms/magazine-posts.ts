@@ -3,14 +3,14 @@
 //
 
 import { useAtomValue } from '@effect/atom-react/Hooks';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 
 import { Obj } from '@dxos/echo';
 
 import { Magazine, Subscription } from '#types';
 
-import { publishedTimestamp } from '../util/date';
-import { postTagsAtom } from './post-tags';
+import { publishedTimestamp } from '../util/date.ts';
+import { postTagsAtom } from './post-tags.ts';
 
 /**
  * Tile filter mode. Mutually exclusive — `default` shows everything except archived,

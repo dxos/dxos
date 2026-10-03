@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * from './DropIndicator';
+export * from './DropIndicator.tsx';

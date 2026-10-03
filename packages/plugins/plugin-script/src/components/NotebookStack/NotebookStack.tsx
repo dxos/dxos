@@ -5,7 +5,7 @@
 import React, { useCallback, useId, useMemo, useState } from 'react';
 
 import { Obj } from '@dxos/echo';
-import { DropdownMenu, IconButton, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
+import { IconButton, Menu, ScrollArea, type ThemedClassName, useTranslation } from '@dxos/react-ui';
 import { composable, composableProps } from '@dxos/react-ui';
 import { type DndContainerHandler } from '@dxos/react-ui-dnd';
 import { Mosaic, type MosaicTileProps } from '@dxos/react-ui-mosaic';
@@ -15,9 +15,9 @@ import { arrayMove } from '@dxos/util';
 import { meta } from '#meta';
 import { Notebook } from '#types';
 
-import { type TypescriptEditorProps } from '../TypescriptEditor';
-import { NotebookCell, type NotebookCellProps } from './NotebookCell';
-import { NotebookMenu } from './NotebookMenu';
+import { type TypescriptEditorProps } from '../TypescriptEditor/index.ts';
+import { NotebookCell, type NotebookCellProps } from './NotebookCell.tsx';
+import { NotebookMenu } from './NotebookMenu.tsx';
 
 const minSectionHeight = 'min-h-[16rem]';
 
@@ -144,17 +144,17 @@ const NotebookSection = ({
           iconOnly
           label='Drag handle'
         />
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger asChild>
+        <Menu.Root>
+          <Menu.Trigger asChild>
             <IconButton
               variant='ghost'
               icon='ph--dots-three--regular'
               iconOnly
               label={t('notebook-cell-insert.label')}
             />
-          </DropdownMenu.Trigger>
+          </Menu.Trigger>
           <NotebookMenu cell={cell} onCellInsert={onCellInsert} onCellDelete={onCellDelete} />
-        </DropdownMenu.Root>
+        </Menu.Root>
       </div>
 
       <NotebookCell db={db} cell={cell} env={env} graph={graph} promptResults={promptResults} />

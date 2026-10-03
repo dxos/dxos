@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { topologicalSort } from './helpers';
+import { topologicalSort } from './helpers.ts';
 
 describe('topologicalSort', () => {
   it('should handle empty array', () => {

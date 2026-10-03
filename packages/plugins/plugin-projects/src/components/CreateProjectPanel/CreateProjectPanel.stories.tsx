@@ -7,13 +7,14 @@ import * as Effect from 'effect/Effect';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
+import { translations as formTranslations } from '@dxos/react-ui-form/translations';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations as reactUiTranslations } from '@dxos/react-ui/translations';
 
 import { translations } from '#translations';
 
-import { defaultTemplates, scaffoldProject } from '../../templates';
-import { CreateProjectPanel } from './CreateProjectPanel';
+import { defaultTemplates, scaffoldProject } from '../../templates/index.ts';
+import { CreateProjectPanel } from './CreateProjectPanel.tsx';
 
 const meta: Meta<typeof CreateProjectPanel> = {
   title: 'plugins/plugin-projects/components/CreateProjectPanel',
@@ -21,7 +22,7 @@ const meta: Meta<typeof CreateProjectPanel> = {
   // An empty plugin manager satisfies the component's unconditional `useCapabilities` hook; the
   // story supplies templates via the prop override.
   decorators: [withTheme(), withLayout({ layout: 'column' }), withPluginManager({ plugins: [] })],
-  parameters: { translations: [...translations, ...reactUiTranslations] },
+  parameters: { translations: [...translations, ...reactUiTranslations, ...formTranslations] },
   args: {
     // Static templates so the story renders without a plugin manager (no capability context).
     templates: [
@@ -34,6 +35,7 @@ const meta: Meta<typeof CreateProjectPanel> = {
       },
     ],
     onCreateObject: fn(),
+    onCancel: fn(),
   },
 };
 
@@ -60,9 +62,23 @@ export const Default: Story = {
     }
 
     await userEvent.type(await canvas.findByTestId('create-project-panel.name-input'), 'Voyage');
-    await userEvent.click(canvas.getByText('Default'));
+
+    // Picking a template only selects it; Save creates.
+    await userEvent.click(canvas.getByText('Example Research'));
+    await expect(args.onCreateObject).not.toHaveBeenCalled();
+    await userEvent.click(canvas.getByTestId('save-button'));
     await waitFor(async () =>
-      expect(args.onCreateObject).toHaveBeenCalledWith({ name: 'Voyage', templateId: 'org.dxos.project.default' }),
+      expect(args.onCreateObject).toHaveBeenCalledWith({ name: 'Voyage', templateId: 'org.dxos.project.example' }),
+    );
+  },
+};
+
+export const DefaultSelected: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByTestId('save-button'));
+    await waitFor(async () =>
+      expect(args.onCreateObject).toHaveBeenCalledWith({ name: undefined, templateId: 'org.dxos.project.default' }),
     );
   },
 };

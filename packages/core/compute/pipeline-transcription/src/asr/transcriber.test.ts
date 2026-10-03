@@ -4,8 +4,8 @@
 
 import { describe, test } from 'vitest';
 
-import { type AudioChunk, type AudioRecorder } from './audio-recorder';
-import { Transcriber, type WhisperSegment, alignWhisperSegments } from './transcriber';
+import { type AudioChunk, type AudioRecorder } from './audio-recorder.ts';
+import { Transcriber, type WhisperSegment, alignWhisperSegments } from './transcriber.ts';
 
 const T0 = Date.parse('2026-01-01T00:00:00.000Z');
 

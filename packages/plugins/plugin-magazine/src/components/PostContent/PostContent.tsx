@@ -11,8 +11,8 @@ import { MarkdownView } from '@dxos/react-ui-markdown';
 import { usePostContentAtom } from '#atoms';
 import { Subscription } from '#types';
 
-import { formatDate, getImageUrl } from '../../util';
-import { contentHasImage, dedupeImagesInMarkdown } from './dedupe-images';
+import { formatDate, getImageUrl } from '../../util/index.ts';
+import { contentHasImage, dedupeImagesInMarkdown } from './dedupe-images.ts';
 
 export type PostContentProps = {
   /** Post to render. */

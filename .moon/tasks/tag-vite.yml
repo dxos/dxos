@@ -29,10 +29,10 @@ tasks:
       - $DX_PWA
       - $DX_POSTHOG_API_KEY
       - $DX_POSTHOG_API_HOST
-      - $DX_POSTHOG_FEEDBACK_SURVEY_ID
       - $DX_POSTHOG_PROJECT_ID
       - $DX_SANDBOX_SERVICE_URL
       - $DX_SHARED_WORKER
+      - $DX_TAURI
       - $IPFS_API_SECRET
       - $LOG_FILTER
       - $LOG_PREFIX

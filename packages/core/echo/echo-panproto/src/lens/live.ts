@@ -7,9 +7,9 @@ import type * as Schema from 'effect/Schema';
 import { Obj, Type } from '@dxos/echo';
 import { ChangeId, SchemaId, TypeEntityId, TypeId } from '@dxos/echo/internal';
 
-import { getOverlay } from './overlay';
-import { type AnyLens, type Lens } from './types';
-import { applyWrites } from './write';
+import { getOverlay } from './overlay.ts';
+import { type AnyLens, type Lens } from './types.ts';
+import { applyWrites } from './write.ts';
 
 //
 // The live handle. There is only ever ONE object in the database: this is a view of it, not a copy.

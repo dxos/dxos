@@ -10,24 +10,24 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { test } from 'vitest';
 
-import { runAndForwardErrors } from './internal/errors';
+import { runAndForwardErrors } from './internal/errors.ts';
 
 class ClientConfig extends Context.Service<ClientConfig, { endpoint: string }>()('ClientConfig') {}
 
-class Client extends Context.Service<Client, { call: () => Effect.Effect<void> }>()('Client') {
-  static layer = Layer.effect(
-    Client,
-    Effect.gen(function* () {
-      const config = yield* ClientConfig;
-      return {
-        call: () => {
-          console.log('called', config.endpoint);
-          return Effect.void;
-        },
-      };
-    }),
-  );
-}
+class Client extends Context.Service<Client, { call: () => Effect.Effect<void> }>()('Client') {}
+
+const layer = Layer.effect(
+  Client,
+  Effect.gen(function* () {
+    const config = yield* ClientConfig;
+    return {
+      call: () => {
+        console.log('called', config.endpoint);
+        return Effect.void;
+      },
+    };
+  }),
+);
 
 const ServerLive = Layer.effect(
   ClientConfig,
@@ -56,7 +56,7 @@ it.effect.skip(
       const client = yield* Client;
       yield* client.call();
     },
-    Effect.provide(Layer.provide(Client.layer, ServerLive)),
+    Effect.provide(Layer.provide(layer, ServerLive)),
   ),
 );
 
@@ -76,13 +76,13 @@ class ClientPlugin {
   constructor(private readonly _serverPlugin: ServerPlugin) {}
 
   async run() {
-    const layer = Layer.provide(Client.layer, this._serverPlugin.clientConfigLayer);
+    const providedLayer = Layer.provide(layer, this._serverPlugin.clientConfigLayer);
 
     await runAndForwardErrors(
       Effect.gen(function* () {
         const client = yield* Client;
         yield* client.call();
-      }).pipe(Effect.provide(layer)),
+      }).pipe(Effect.provide(providedLayer)),
     );
   }
 }

@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import { renderDial } from './dial';
+import { renderDial } from './dial.ts';
 
 describe('renderDial', () => {
   test('renders a determinate task with a bar', ({ expect }) => {

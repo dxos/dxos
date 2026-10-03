@@ -2,7 +2,7 @@
 // Copyright 2024 DXOS.org
 //
 
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, type PropsWithChildren, type ReactNode, forwardRef } from 'react';
 
 import { type ThemedClassName } from '@dxos/react-ui';
@@ -54,14 +54,16 @@ const StatusBarButton = forwardRef<HTMLButtonElement, StatusBarButtonProps>(
       classNames,
     );
 
-    return asChild ? (
-      <Slot role='button' ref={forwardedRef} className={classes} {...props}>
+    return (
+      <ark.button
+        asChild={asChild}
+        {...(asChild && { role: 'button' })}
+        className={classes}
+        ref={forwardedRef}
+        {...props}
+      >
         {children}
-      </Slot>
-    ) : (
-      <button className={classes} ref={forwardedRef} {...props}>
-        {children}
-      </button>
+      </ark.button>
     );
   },
 );

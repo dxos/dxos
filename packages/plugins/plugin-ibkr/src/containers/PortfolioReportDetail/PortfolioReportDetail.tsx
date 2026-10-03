@@ -8,13 +8,13 @@ import { useOperationInvoker } from '@dxos/app-framework/ui';
 import { type AppSurface } from '@dxos/app-toolkit/ui';
 import { Obj, Ref } from '@dxos/echo';
 import { log } from '@dxos/log';
-import { IconButton, Panel, Toolbar, useTranslation } from '@dxos/react-ui';
+import { IconButton, Panel, SystemIconButton, Toolbar, useTranslation } from '@dxos/react-ui';
 
 import { ReportSections } from '#components';
 import { Ibkr, IbkrOperation } from '#types';
 
-import { meta } from '../../meta';
-import { parseCash, parseClosedLots, parseOpenLots, parsePositions, parseTrades } from '../../services';
+import { meta } from '../../meta.ts';
+import { parseCash, parseClosedLots, parseOpenLots, parsePositions, parseTrades } from '../../services/index.ts';
 
 export type PortfolioReportDetailProps = Pick<
   AppSurface.ObjectArticleProps<Ibkr.Report, {}, Ibkr.Portfolio>,
@@ -37,18 +37,7 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
   const openLots = useMemo(() => parseOpenLots(subject.xml), [subject.xml]);
   const closedLots = useMemo(() => parseClosedLots(subject.xml), [subject.xml]);
 
-  const [copied, setCopied] = useState(false);
   const [syncingLots, setSyncingLots] = useState(false);
-
-  const handleCopyXml = useCallback(() => {
-    void navigator.clipboard.writeText(subject.xml).then(
-      () => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      },
-      () => {},
-    );
-  }, [subject.xml]);
 
   const handleSyncLots = useCallback(async () => {
     if (!companionTo) {
@@ -84,11 +73,7 @@ export const PortfolioReportDetail = ({ role, subject, companionTo }: PortfolioR
               }}
             />
           )}
-          <IconButton
-            icon={copied ? 'ph--check--regular' : 'ph--copy--regular'}
-            label={copied ? t('copied.label') : t('copy-xml.label')}
-            onClick={handleCopyXml}
-          />
+          <SystemIconButton.Clipboard label={t('copy-xml.label')} value={subject.xml} />
         </Toolbar.Root>
       </Panel.Toolbar>
       <Panel.Content classNames='grid grid-rows-1 min-h-0'>

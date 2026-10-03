@@ -10,7 +10,7 @@ import { Matrix } from '@dxos/react-ui-components';
 import { type ContentBlock } from '@dxos/types';
 import { Unit } from '@dxos/util';
 
-import { type ChatRequestTiming, useChatContext } from '../Chat/context';
+import { type ChatRequestTiming, useChatContext } from '../Chat/context.ts';
 
 const CHAT_STREAM_STATUS_NAME = 'Chat.StreamStatus';
 const TICK_MS = 1_000;
@@ -66,6 +66,7 @@ export const ChatStatus = ({ classNames, icon }: ChatStreamStatusProps) => {
         }
       }
     }
+
     return { lastOutputTokens: last, sessionTotalTokens: total };
   }, [messages]);
 
@@ -103,11 +104,11 @@ export const ChatStatusView = ({
   }
 
   return (
-    <NaturalChatStatus.Root defaultRunning={false} classNames={['py-2 gap-2 text-sm', classNames]}>
+    <NaturalChatStatus.Root defaultRunning={false} classNames={['p-1.5 gap-2 text-sm', classNames]}>
       {icon && (
         <NaturalChatStatus.Icon>
           <Matrix
-            classNames='w-5 h-5'
+            classNames='size-5'
             dotClassNames='bg-primary-500'
             dim={4}
             dotSize={3}
@@ -120,7 +121,7 @@ export const ChatStatusView = ({
       {show && (
         <div className='flex items-center'>
           {requestTiming && (
-            <NaturalChatStatus.Text>
+            <NaturalChatStatus.Text classNames={isRunning && 'text-sky-500'}>
               <Elapsed timing={requestTiming} />
             </NaturalChatStatus.Text>
           )}

@@ -14,8 +14,8 @@ import { log } from '@dxos/log';
 import { seedMailboxBinding } from '@dxos/plugin-inbox/testing/sync';
 import { Message } from '@dxos/types';
 
-import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants';
-import { googleSyncLiveServices, runGoogleSync } from '../../../testing/sync-fixture';
+import { GMAIL_CONNECTOR_ID, GMAIL_SOURCE } from '../../../constants.ts';
+import { googleSyncLiveServices, runGoogleSync } from '../../../testing/sync-fixture.ts';
 
 /** {@link seedMailboxBinding} with this provider's identity — the shared fixture defaults to neither. */
 const seedGmailBinding = (

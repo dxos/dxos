@@ -11,14 +11,14 @@ import { useQuery } from '@dxos/echo-react';
 import { EffectEx } from '@dxos/effect';
 import { Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Button, Dialog, Flex, Input, ScrollArea, useTranslation } from '@dxos/react-ui';
-import { Empty, Listbox } from '@dxos/react-ui-list';
+import { Banner, Button, Dialog, Field, Flex, ScrollArea, useTranslation } from '@dxos/react-ui';
+import { Listbox } from '@dxos/react-ui-list';
 import { osTranslations } from '@dxos/ui-theme';
 
 import { meta } from '#meta';
 import { ConnectorCoordination, ConnectorSpec } from '#types';
 
-import * as Binding from '../../Binding';
+import * as Binding from '../../Binding.ts';
 
 export type SyncTargetsDialogProps = {
   connection: Connection.Connection;
@@ -125,7 +125,7 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
         )}
 
         {availableTargets.length === 0 ? (
-          <Empty label={t('no-available-targets.message')} />
+          <Banner.Empty label={t('no-available-targets.message')} />
         ) : (
           <ScrollArea.Root padding>
             <ScrollArea.Viewport>
@@ -136,10 +136,10 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
                     const checkboxId = `sync-target-${target.id}`;
                     return (
                       <Listbox.Item key={target.id} id={target.id}>
-                        <Input.Root>
+                        <Field.Root>
                           <Listbox.ItemContent
                             icon={
-                              <Input.Checkbox
+                              <Field.Checkbox
                                 id={checkboxId}
                                 checked={selected.has(target.id)}
                                 onCheckedChange={() => handleToggle(target.id)}
@@ -148,13 +148,13 @@ export const SyncTargetsDialog = ({ connection, availableTargets, existingTarget
                               />
                             }
                             title={
-                              <Input.Label htmlFor={checkboxId} classNames='text-base text-base-text'>
+                              <Field.Label htmlFor={checkboxId} classNames='text-base text-base-fg'>
                                 {target.name}
-                              </Input.Label>
+                              </Field.Label>
                             }
                             description={target.description}
                           />
-                        </Input.Root>
+                        </Field.Root>
                       </Listbox.Item>
                     );
                   })}

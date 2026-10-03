@@ -9,7 +9,7 @@ export {
   type MakeBranchProps as MakeProps,
   BranchStatus as Status,
   makeBranch as make,
-} from './internal/types';
+} from './internal/types.ts';
 export {
   type CreateBranchProps as CreateProps,
   type MergeResult,
@@ -22,4 +22,4 @@ export {
   branchLabel as label,
   mergeBranch as merge,
   suggestionBranch as suggestion,
-} from './internal/model';
+} from './internal/model.ts';

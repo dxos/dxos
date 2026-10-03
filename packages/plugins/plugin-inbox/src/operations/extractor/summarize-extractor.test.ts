@@ -2,10 +2,10 @@
 // Copyright 2026 DXOS.org
 //
 
+import * as LanguageModel from 'effect/ai/LanguageModel';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
 import * as Stream from 'effect/Stream';
-import * as LanguageModel from 'effect/unstable/ai/LanguageModel';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { AiService } from '@dxos/ai';
@@ -16,7 +16,7 @@ import { EffectEx } from '@dxos/effect';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { ContentBlock, Message } from '@dxos/types';
 
-import { SUMMARIZE_ID, SummarizeMessageExtractor, summarizeMessage } from './summarize-extractor';
+import { SUMMARIZE_ID, SummarizeMessageExtractor, summarizeMessage } from './summarize-extractor.ts';
 
 describe('SummarizeMessageExtractor', () => {
   let builder: EchoTestBuilder;
@@ -82,16 +82,19 @@ const LONG_BODY =
 // Fake AiService whose `model(...)` returns a LanguageModel layer that always responds with
 // `MOCK_SUMMARY`, so the operation handler's `yield* LanguageModel.generateText(...)`
 // resolves to a deterministic value without hitting any real provider.
-const mockAiServiceLayer = Layer.succeed(AiService.AiService, {
-  model: () =>
-    Layer.effect(
-      LanguageModel.LanguageModel,
-      LanguageModel.make({
-        generateText: () => Effect.succeed([{ type: 'text', text: MOCK_SUMMARY }] as const) as any,
-        streamText: () => Stream.empty as any,
-      }),
-    ),
-});
+const mockAiServiceLayer = Layer.succeed(
+  AiService.AiService,
+  AiService.make({
+    languageModel: () =>
+      Layer.effect(
+        LanguageModel.LanguageModel,
+        LanguageModel.make({
+          generateText: () => Effect.succeed([{ type: 'text', text: MOCK_SUMMARY }] as const) as any,
+          streamText: () => Stream.empty as any,
+        }),
+      ),
+  }),
+);
 
 const makeMessage = (text: string, subject = 'Quarterly planning') =>
   Obj.make(Message.Message, {

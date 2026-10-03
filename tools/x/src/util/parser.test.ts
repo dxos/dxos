@@ -4,7 +4,7 @@
 
 import { describe, expect, test } from 'vitest';
 
-import { LogParser, LogPrinter, type LogReport } from './parser';
+import { LogParser, LogPrinter, type LogReport } from './parser.ts';
 
 const log = `
 Typescript

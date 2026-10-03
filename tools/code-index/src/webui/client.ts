@@ -5,12 +5,12 @@
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
 import * as Fiber from 'effect/Fiber';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
 import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
+import * as RpcClient from 'effect/rpc/RpcClient';
+import * as RpcSerialization from 'effect/rpc/RpcSerialization';
 import * as Stream from 'effect/Stream';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
-import * as RpcSerialization from 'effect/unstable/rpc/RpcSerialization';
 
 import type * as Events from '../workspace/Events.ts';
 import * as Protocol from '../workspace/Protocol.ts';

@@ -2,9 +2,9 @@
 // Copyright 2026 DXOS.org
 //
 
-import { bundleEntry, needsBundling } from './bundle';
-import { type Diagnostic } from './compiler';
-import { getCompiler } from './singleton';
+import { bundleEntry, needsBundling } from './bundle.ts';
+import { type Diagnostic } from './compiler.ts';
+import { getCompiler } from './singleton.ts';
 
 export type LoadedFile = { path: string; content: string };
 

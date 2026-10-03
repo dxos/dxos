@@ -17,9 +17,9 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { Scene } from '@babylonjs/core/scene';
 
-import { type Planet } from './generate-planet';
-import { type Vec3 } from './noise';
-import { palette } from './palette';
+import { type Planet } from './generate-planet.ts';
+import { type Vec3 } from './noise.ts';
+import { palette } from './palette.ts';
 
 // Neutral space backdrop; theme-derived background is the container's concern.
 const BACKGROUND_COLOR = new Color4(0.043, 0.051, 0.071, 1);

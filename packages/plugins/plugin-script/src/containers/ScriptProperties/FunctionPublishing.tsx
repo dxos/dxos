@@ -12,7 +12,7 @@ import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { AccessToken } from '@dxos/link';
 import { log } from '@dxos/log';
-import { Banner, Button, Clipboard, Flex, useAsyncEffect, useTranslation } from '@dxos/react-ui';
+import { Banner, Button, Flex, SystemIconButton, useAsyncEffect, useTranslation } from '@dxos/react-ui';
 import { Form } from '@dxos/react-ui-form';
 import { kebabize } from '@dxos/util';
 
@@ -94,9 +94,7 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
   }, [object, githubToken]);
 
   return (
-    <Flex column>
-      <Form.Section title={t('script-publish-settings.label')} description={t('script-publish-settings.description')} />
-
+    <Form.FieldSet label={t('script-publish-settings.label')} description={t('script-publish-settings.description')}>
       {!githubToken && (
         <Flex column classNames='py-form-gap'>
           <Banner.Root valence='info'>
@@ -112,13 +110,13 @@ export const FunctionPublishing = ({ object }: FunctionPublishingProps) => {
 
       {githubToken && (
         <Flex gap='sm' justify='end'>
-          {gistUrl && <Clipboard.IconButton value={gistUrl} />}
+          {gistUrl && <SystemIconButton.Clipboard iconOnly value={gistUrl} />}
           <Button disabled={publishing} onClick={handlePublish}>
             {t('publish.label')}
           </Button>
         </Flex>
       )}
-    </Flex>
+    </Form.FieldSet>
   );
 };
 

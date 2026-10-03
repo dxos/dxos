@@ -9,7 +9,7 @@ import { random } from '@dxos/random';
 import { Card, Panel, Toolbar } from '@dxos/react-ui';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { Masonry, type MasonryRootProps } from './Masonry';
+import { Masonry, type MasonryRootProps } from './Masonry.tsx';
 
 random.seed(1);
 

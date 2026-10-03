@@ -7,8 +7,8 @@ import React from 'react';
 
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../translations';
-import { Root } from './Root';
+import { translations } from '../../translations.ts';
+import { Root } from './Root.tsx';
 
 const meta = {
   title: 'apps/composer-crx/Root',

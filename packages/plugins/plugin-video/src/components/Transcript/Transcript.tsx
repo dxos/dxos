@@ -3,13 +3,12 @@
 //
 
 import { EditorView } from '@codemirror/view';
-import { composeRefs } from '@radix-ui/react-compose-refs';
 import React, { useEffect } from 'react';
 
 import { type Ref } from '@dxos/echo';
 import { Doc } from '@dxos/echo-doc';
 import { useObject } from '@dxos/echo-react';
-import { composable, composableProps, useThemeContext } from '@dxos/react-ui';
+import { composable, composableProps, composeRefs, useThemeContext } from '@dxos/react-ui';
 import { useTextEditor } from '@dxos/react-ui-editor';
 import { type Text } from '@dxos/schema';
 import {
@@ -21,7 +20,7 @@ import {
   documentSlots,
 } from '@dxos/ui-editor';
 
-import { decorateTranscript, parseLineTimestamp, transcriptMarkdownExtensions } from './decorate-transcript';
+import { decorateTranscript, parseLineTimestamp, transcriptMarkdownExtensions } from './decorate-transcript.ts';
 
 export type TranscriptProps = {
   /** Stable editor/document id (used for collaboration + selection state). */

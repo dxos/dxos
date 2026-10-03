@@ -17,7 +17,7 @@ import { FactoryAnnotation } from '@dxos/schema';
 import { translationKey } from '#translations';
 import { type FormFieldMap, type RefFieldDataProps } from '#types';
 
-import { Form, META_TAGS_KEY, partitionMetaTags, withMetaTags } from '../Form';
+import { Form, META_TAGS_KEY, partitionMetaTags, withMetaTags } from '../Form/index.ts';
 
 export type ObjectPropertiesProps = PropsWithChildren<
   { object: Obj.Unknown } & Pick<RefFieldDataProps, 'getCreateDefaults' | 'resolveCreateEntry'>
@@ -108,7 +108,7 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
         // Handle other property changes.
         const nonTagPaths = changedPaths.filter((path) => SchemaEx.splitJsonPath(path)[0] !== META_TAGS_KEY);
         if (nonTagPaths.length > 0) {
-          Obj.update(object, () => {
+          Obj.update(object, (object) => {
             for (const path of nonTagPaths) {
               const parts = SchemaEx.splitJsonPath(path);
               const value = Obj.getValue(values as any, parts);
@@ -141,8 +141,8 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
       >
         <Form.Viewport {...composableProps(props)} scroll ref={forwardedRef}>
           <Form.Content>
-            <Form.FieldSet />
-            <Form.Section>{children}</Form.Section>
+            <Form.Fields />
+            <Form.FieldSet>{children}</Form.FieldSet>
           </Form.Content>
         </Form.Viewport>
       </Form.Root>
@@ -151,14 +151,13 @@ export const ObjectProperties = composable<HTMLDivElement, ObjectPropertiesProps
 );
 
 const createFieldMap: FormFieldMap = {
-  hue: ({ type, label, presentation, getValue, onValueChange }) => {
+  hue: ({ type, label, jsonPath, presentation, getValue, onValueChange }) => {
     const handleChange = useCallback((nextHue: string) => onValueChange(type, nextHue), [onValueChange, type]);
     const handleReset = useCallback(() => onValueChange(type, undefined), [onValueChange, type]);
     return (
-      <>
-        {presentation !== 'inline' && <Form.Label label={label} />}
+      <Form.Field path={jsonPath} label={label} presentation={presentation}>
         <HuePicker value={getValue()} onChange={handleChange} onReset={handleReset} />
-      </>
+      </Form.Field>
     );
   },
 };

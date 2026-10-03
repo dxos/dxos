@@ -4,7 +4,7 @@
 
 import { RegistryContext } from '@effect/atom-react/RegistryContext';
 import { renderHook, waitFor } from '@testing-library/react';
-import * as AtomRegistry from 'effect/unstable/reactivity/AtomRegistry';
+import * as AtomRegistry from 'effect/reactivity/AtomRegistry';
 import React, { type PropsWithChildren } from 'react';
 import { describe, expect, test } from 'vitest';
 
@@ -12,7 +12,7 @@ import { Obj, Ref } from '@dxos/echo';
 import { createObject } from '@dxos/echo-client';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { useObject } from './useObject';
+import { useObject } from './useObject.ts';
 
 const createWrapper = (registry: AtomRegistry.AtomRegistry) => {
   return ({ children }: PropsWithChildren) => (

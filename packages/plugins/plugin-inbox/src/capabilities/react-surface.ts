@@ -27,10 +27,10 @@ import {
 } from '#containers';
 import { Calendar, Mailbox } from '#types';
 
-import { POPOVER_SAVE_FILTER } from '../constants';
-import { getSubscriptionsId } from '../paths';
-import { isAttachmentRef } from './app-graph-builder';
-import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces';
+import { POPOVER_SAVE_FILTER } from '../constants.ts';
+import { getSubscriptionsId } from '../paths.ts';
+import { isAttachmentRef } from './app-graph-builder.ts';
+import { EventArticleSurface, MessageArticleSurface } from './InboxSurfaces.tsx';
 
 const isNonDraftMessage = (subject: unknown): subject is Message.Message =>
   Obj.instanceOf(Message.Message, subject) && !DraftMessage.instanceOf(subject);
@@ -75,7 +75,7 @@ export default Capability.makeModule(() =>
           AppSurface.subject(AppSurface.Section, isNonDraftMessage),
         ),
         component: MessageArticleSurface,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
         id: 'attachment',
@@ -93,20 +93,11 @@ export default Capability.makeModule(() =>
       Surface.create({
         id: 'event',
         filter: AppSurface.oneOf(
-          AppSurface.allOf(
-            AppSurface.object(AppSurface.Article, Event.Event),
-            AppSurface.companion(AppSurface.Article, Calendar.Calendar),
-          ),
-          AppSurface.allOf(
-            AppSurface.object(AppSurface.Section, Event.Event),
-            AppSurface.companion(AppSurface.Section, Calendar.Calendar),
-          ),
-          // Primary mode (navigated directly — no companion; calendar looked up from parent node).
           AppSurface.object(AppSurface.Article, Event.Event),
           AppSurface.object(AppSurface.Section, Event.Event),
         ),
         component: EventArticleSurface,
-        props: ({ role, data: { subject, attendableId } }) => ({ role, subject, attendableId }),
+        props: ({ role, data: { subject, attendableId, nodeId } }) => ({ role, subject, attendableId, nodeId }),
       }),
       Surface.create({
         id: 'calendar',

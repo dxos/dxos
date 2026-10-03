@@ -27,7 +27,7 @@ import { trim } from '@dxos/util';
 
 import { translations } from '#translations';
 
-import { OutlineArticle } from './OutlineArticle';
+import { OutlineArticle } from './OutlineArticle.tsx';
 
 const ITEM = 'Review pricing page';
 const RENAMED = 'Revise pricing tiers';
@@ -133,7 +133,7 @@ const TaskSetView = ({ outline, taskSet }: { outline: Outline.Outline; taskSet?:
           getTaskActions={getTaskActions}
         >
           <TaskList.Content />
-          <TaskList.Edit grid />
+          <TaskList.Editor grid />
         </TaskList.Root>
       </Panel.Content>
     </Panel.Root>

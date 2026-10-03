@@ -8,7 +8,7 @@ import { Event, Trigger } from '@dxos/async';
 import { log, logInfo } from '@dxos/log';
 import { type ProtoRpcPeer, type ProtoRpcPeerOptions, createProtoRpcPeer } from '@dxos/rpc';
 
-import { WebSocketWithTokenAuth } from './token-auth';
+import { WebSocketWithTokenAuth } from './token-auth.ts';
 
 export type WebsocketRpcClientProps<C, S> = {
   url: string;
@@ -37,7 +37,7 @@ export class WebsocketRpcClient<C, S> {
         subscribe: (cb) => {
           this._socket!.onmessage = async (msg: WebSocket.MessageEvent) => {
             if (typeof Blob !== 'undefined' && msg.data instanceof Blob) {
-              cb(Buffer.from(await msg.data.arrayBuffer()));
+              cb(new Uint8Array(await msg.data.arrayBuffer()));
             } else {
               cb(msg.data as any);
             }

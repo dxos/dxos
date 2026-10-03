@@ -2,4 +2,4 @@
 // Copyright 2026 DXOS.org
 //
 
-export * as Account from './Account';
+export * as Account from './Account.ts';

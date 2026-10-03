@@ -11,7 +11,7 @@ import { PublicKey } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { random } from '@dxos/random';
 
-import { HypercoreFactory } from './hypercore-factory';
+import { RawHypercoreFactory } from './hypercore-factory.ts';
 
 // TODO(burdon): Test encoding.
 // TODO(burdon): Simulate multiple peers and broadcast.
@@ -73,10 +73,10 @@ describe('ProtocolStream', () => {
     // https://github.com/hypercore-protocol/hypercore-protocol#const-channel--streamopenkey-handlers
     //
 
-    const factory = new HypercoreFactory<string>();
+    const factory = new RawHypercoreFactory<string>();
     const { publicKey, secretKey } = createKeyPair();
-    const core1 = factory.createFeed(publicKey, { secretKey });
-    const core2 = factory.createFeed(publicKey);
+    const core1 = factory.createHypercore(publicKey, { secretKey });
+    const core2 = factory.createHypercore(publicKey);
 
     const [feedsClosed, setFeedClosed] = latch({ count: 2 });
     core1.once('close', setFeedClosed);
@@ -174,7 +174,7 @@ describe('ProtocolStream', () => {
     // Feeds.
     //
 
-    const factory = new HypercoreFactory<string>();
+    const factory = new RawHypercoreFactory<string>();
 
     const numFeeds = 5;
     const [feedsClosed, setFeedClosed] = latch({ count: 2 * numFeeds });
@@ -182,8 +182,8 @@ describe('ProtocolStream', () => {
     // Create set of feed pairs.
     const feeds = Array.from(Array(numFeeds)).map(() => {
       const { publicKey, secretKey } = createKeyPair();
-      const core1 = factory.createFeed(publicKey, { secretKey });
-      const core2 = factory.createFeed(publicKey);
+      const core1 = factory.createHypercore(publicKey, { secretKey });
+      const core2 = factory.createHypercore(publicKey);
 
       core1.once('close', setFeedClosed);
       core2.once('close', setFeedClosed);

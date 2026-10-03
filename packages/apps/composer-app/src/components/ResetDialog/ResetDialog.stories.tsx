@@ -7,8 +7,8 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { IdbLogStore } from '@dxos/log-store-idb';
 import { withTheme } from '@dxos/react-ui/testing';
 
-import { translations } from '../../util';
-import { ResetDialog } from './ResetDialog';
+import { translations } from '../../util/index.ts';
+import { ResetDialog } from './ResetDialog.tsx';
 
 const meta = {
   title: 'apps/composer-app/ResetDialog',

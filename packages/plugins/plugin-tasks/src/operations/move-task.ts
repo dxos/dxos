@@ -10,7 +10,7 @@ import { Task, TaskSet } from '@dxos/types';
 
 import { TaskOperation } from '#types';
 
-import { InvalidOperationInput } from '../errors';
+import { InvalidOperationInput } from '../errors.ts';
 
 const handler: Operation.WithHandler<typeof TaskOperation.MoveTask> = TaskOperation.MoveTask.pipe(
   Operation.withHandler(
@@ -18,7 +18,7 @@ const handler: Operation.WithHandler<typeof TaskOperation.MoveTask> = TaskOperat
       const task = Database.peek(taskRef) ?? (yield* Database.load(taskRef));
       const taskSet = Database.peek(taskSetRef) ?? (yield* Database.load(taskSetRef));
 
-      if (!taskSet.tasks.some((ref) => Task.refEntityId(ref) === task.id)) {
+      if (!TaskSet.ensureMember(taskSet, task)) {
         return yield* Effect.fail(new InvalidOperationInput({ message: 'The task does not belong to the task set.' }));
       }
 

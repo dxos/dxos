@@ -2,11 +2,11 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './FieldEditor';
-export * from './Form';
-export * from './ObjectForm';
-export * from './ObjectPicker';
-export * from './ObjectProperties';
-export * from './ObjectTree';
-export * from './RefEditor';
-export * from './ViewEditor';
+export * from './FieldEditor/index.ts';
+export * from './Form/index.ts';
+export * from './ObjectForm/index.ts';
+export * from './ObjectPicker/index.ts';
+export * from './ObjectProperties/index.ts';
+export * from './ObjectTree/index.ts';
+export * from './RefEditor/index.ts';
+export * from './ViewEditor/index.ts';

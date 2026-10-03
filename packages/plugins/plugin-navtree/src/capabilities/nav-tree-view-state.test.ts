@@ -2,12 +2,12 @@
 // Copyright 2026 DXOS.org
 //
 
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, test } from 'vitest';
 
 import { LocalBackend, MemoryBackend, ViewState } from '@dxos/react-ui-attention';
 
-import { navTreeOpenAspect } from './nav-tree-view-state';
+import { navTreeOpenAspect } from './nav-tree-view-state.ts';
 
 // Minimal in-memory Storage stand-in (no real localStorage in the test runner).
 const fakeStorage = (): Storage => {

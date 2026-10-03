@@ -7,13 +7,14 @@ import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate
 
 import { mx } from '@dxos/ui-theme';
 
-import { decorateMarkdown } from '../../language';
-import { CONTENT_WIDTH, blockSelectionField } from '../blocks';
-import { commands } from './commands';
-import { outlinerDnd } from './dnd';
-import { editor } from './editor';
-import { menu } from './menu';
-import { getRange, outlinerTree, treeFacet } from './tree';
+import { decorateMarkdown } from '../../language/index.ts';
+import { CONTENT_WIDTH, blockSelectionField } from '../blocks/index.ts';
+import { commands } from './commands.ts';
+import { outlinerDnd } from './dnd.ts';
+import { editor } from './editor.ts';
+import { type GhostOptions, ghost } from './ghost.ts';
+import { menu } from './menu.ts';
+import { getRange, outlinerTree, treeFacet } from './tree.ts';
 
 // ISSUES: (move to DESIGN.md)
 // TODO(burdon): Remove requirement for continuous lines to be indented (so that user's can't accidentally delete them and break the layout).
@@ -25,6 +26,8 @@ import { getRange, outlinerTree, treeFacet } from './tree';
 // TODO(burdon): Convert to task object and insert link (menu button).
 
 export type OutlinerProps = {
+  /** Copy for the empty-row hints; see {@link GhostOptions}. */
+  ghost?: GhostOptions;
   /**
    * Presentation only: no editing affordances. Drops the drag grips, the floating menu, and the
    * gutters reserved for them — a read-only surface (a card preview) has nothing to grab and no room
@@ -40,7 +43,7 @@ export type OutlinerProps = {
  * - Constrains editor to outline structure.
  * - Supports smart cut-and-paste.
  */
-export const outliner = ({ readonly }: OutlinerProps = {}): Extension => [
+export const outliner = ({ readonly, ghost: ghostOptions }: OutlinerProps = {}): Extension => [
   // Commands.
   Prec.highest(commands()),
 
@@ -66,6 +69,7 @@ export const outliner = ({ readonly }: OutlinerProps = {}): Extension => [
   ...(readonly
     ? []
     : [
+        ghost(ghostOptions),
         menu(),
         EditorView.contentAttributes.of({
           class: CONTENT_WIDTH,
@@ -134,6 +138,10 @@ const decorations = () => [
                 ),
               }).range(line.from, line.from),
             );
+          } else {
+            // Prose sits flush with the content edge, so a blank line reads as a gap between lists,
+            // not as a continuation of the item above.
+            decorations.push(Decoration.line({ class: 'cm-outline-prose' }).range(line.from, line.from));
           }
         }
 

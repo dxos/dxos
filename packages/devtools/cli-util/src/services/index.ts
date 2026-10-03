@@ -2,5 +2,5 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './command-config';
-export * from './command-services';
+export * from './command-config.ts';
+export * from './command-services.ts';

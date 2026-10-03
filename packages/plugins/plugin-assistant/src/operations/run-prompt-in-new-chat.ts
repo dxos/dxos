@@ -23,7 +23,7 @@ import { Text } from '@dxos/schema';
 
 import { AssistantCapabilities, AssistantOperation } from '#types';
 
-import { getChatPath } from '../paths';
+import { getChatPath } from '../paths.ts';
 
 const handler: Operation.WithHandler<typeof RoutineOperation.RunPromptInNewChat> =
   RoutineOperation.RunPromptInNewChat.pipe(

@@ -24,7 +24,7 @@ import { MagazinePlugin } from '#plugin';
 import { translations } from '#translations';
 import { Subscription } from '#types';
 
-import { SubscriptionsArticle } from './SubscriptionsArticle';
+import { SubscriptionsArticle } from './SubscriptionsArticle.tsx';
 
 const DefaultStory = () => {
   const spaces = useSpaces();

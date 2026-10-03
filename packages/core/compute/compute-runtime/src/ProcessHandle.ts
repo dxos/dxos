@@ -14,23 +14,24 @@ import * as Fiber from 'effect/Fiber';
 import * as Option from 'effect/Option';
 import * as Predicate from 'effect/Predicate';
 import * as Queue from 'effect/Queue';
+import * as Atom from 'effect/reactivity/Atom';
+import type * as Registry from 'effect/reactivity/AtomRegistry';
+import * as RpcClient from 'effect/rpc/RpcClient';
 import * as Schema from 'effect/Schema';
 import * as Scope from 'effect/Scope';
 import * as Semaphore from 'effect/Semaphore';
 import * as Stream from 'effect/Stream';
-import * as Atom from 'effect/unstable/reactivity/Atom';
-import type * as Registry from 'effect/unstable/reactivity/AtomRegistry';
-import * as RpcClient from 'effect/unstable/rpc/RpcClient';
 
 import * as Process from '@dxos/compute/Process';
 import type * as StorageService from '@dxos/compute/StorageService';
 import type * as Trace from '@dxos/compute/Trace';
 import { Performance, SpanAttributes } from '@dxos/effect';
+import { isCancellation } from '@dxos/errors';
 import { log } from '@dxos/log';
 
-import type { PersistedEvent, PersistedEventInput } from './process-store';
-import type * as ProcessManager from './ProcessManager';
-import { EphemeralTraceBuffer } from './trace-buffer';
+import type { PersistedEvent, PersistedEventInput } from './process-store.ts';
+import type * as ProcessManager from './ProcessManager.ts';
+import { EphemeralTraceBuffer } from './trace-buffer.ts';
 
 /**
  * Output queue uses Option to signal completion: Some(value) for data, None for end-of-stream.
@@ -86,14 +87,24 @@ const failingValue = (cause: Cause.Cause<unknown>): unknown =>
   );
 
 /**
- * Report a crashed process at `error`, from the single point every FAILED transition passes through.
+ * Report a crashed process, from the single point every FAILED transition passes through.
+ *
+ * A user dismissing an interactive prompt (a passkey ceremony, an aborted signal) fails the process
+ * but is not a defect, so it reports at `info` — at `error` it swamps the production error stream
+ * and hides real regressions (DX-1281).
  *
  * The failing value is passed as `error` rather than only as pretty-printed text because the log
  * pipeline walks its `cause` chain, while `Cause.pretty` flattens to the outermost reason — the same
  * loss that makes a failed agent turn surface to the user as "An unexpected error occurred."
  */
 const logFailure = (pid: Process.ID, key: string, cause: Cause.Cause<unknown>): void => {
-  log.error('lifecycle: failed', { pid, key, error: failingValue(cause), cause: Cause.pretty(cause) });
+  const error = failingValue(cause);
+  const entry = { pid, key, error, cause: Cause.pretty(cause) };
+  if (isCancellation(error)) {
+    log.info('lifecycle: cancelled', entry);
+  } else {
+    log.error('lifecycle: failed', entry);
+  }
 };
 
 const serializeFailure = (cause: Cause.Cause<unknown>): NonNullable<Process.Info['error']> => {
@@ -137,8 +148,8 @@ const fromPersistedChildEvent = (event: {
  * on shutdown. ProcessManager.Status transitions are computed here from handler accounting
  * (`#activeHandlers`, `#succeedRequested`, `#failError`, alarm/children).
  */
-export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, any> {
-  readonly statusAtom: Atom.Writable<ProcessManager.Status>;
+export class Impl<I, O, R> implements ProcessManager.Handle<I, O, any> {
+  readonly statusAtom: Atom.Atom<ProcessManager.Status> = Atom.readable(() => this.#currentStatus);
   readonly parentId: Process.ID | null;
   readonly environment: Process.Environment;
 
@@ -233,8 +244,6 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       startedAt: new Date(),
       completedAt: Option.none(),
     };
-    this.statusAtom = Atom.make<ProcessManager.Status>(this.#currentStatus);
-    this.#registry.mount(this.statusAtom);
     log('lifecycle: created', { parentId, key, params });
   }
   snapshotStatus(): ProcessManager.Status {
@@ -267,7 +276,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       },
     };
   }
-  /** Run process onSpawn. Called by ProcessManagerImpl after spawn. */
+  /** Run process onSpawn. Called by ProcessManager.Impl after spawn. */
   runOnSpawn(seq?: number): Effect.Effect<void> {
     if (this.#restoring) {
       log('lifecycle: onspawn skipped (restoring)');
@@ -763,20 +772,21 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
         return;
       }
 
+      // The terminal status is recorded BEFORE cleanup closes the outputs: closing them resumes
+      // whoever is collecting, and a collector that reads the status first would take a finished
+      // process for a suspended one.
       if (this.#failError !== null && this.#activeHandlers === 0) {
         this.#finished = true;
         const error = this.#failError;
         logFailure(this.pid, this.key, Cause.die(error));
-        yield* this.#cleanup().pipe(
-          Effect.tap(() => Effect.sync(() => this.#setStatus(Process.State.FAILED, Exit.die(error)))),
-          Effect.tap(() => this.#onFinished?.(Process.State.FAILED, Cause.die(error)) ?? Effect.void),
-        );
+        this.#setStatus(Process.State.FAILED, Exit.die(error));
+        yield* this.#cleanup();
+        yield* this.#onFinished?.(Process.State.FAILED, Cause.die(error)) ?? Effect.void;
       } else if (this.#succeedRequested && this.#activeHandlers === 0) {
         this.#finished = true;
-        yield* this.#cleanup().pipe(
-          Effect.tap(() => Effect.sync(() => this.#setStatus(Process.State.SUCCEEDED, Exit.void))),
-          Effect.tap(() => this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void),
-        );
+        this.#setStatus(Process.State.SUCCEEDED, Exit.void);
+        yield* this.#cleanup();
+        yield* this.#onFinished?.(Process.State.SUCCEEDED) ?? Effect.void;
       } else if (this.#activeHandlers === 0) {
         const hybernating = this.#alarmFiber !== null || this.#alarmDispatching || this.#hasRunningChildren();
         this.#setStatus(hybernating ? Process.State.HYBERNATING : Process.State.IDLE);
@@ -851,7 +861,7 @@ export class ProcessHandleImpl<I, O, R> implements ProcessManager.Handle<I, O, a
       completedAt: isTerminal ? Option.some(new Date()) : Option.none(),
     };
     log('state updated', { pid: this.pid, state });
-    this.#registry.set(this.statusAtom, this.#currentStatus);
+    this.#registry.refresh(this.statusAtom);
     this.#onStatusChanged?.();
     // State is persisted after handlers settle (in #runHandler success pipeline).
   }

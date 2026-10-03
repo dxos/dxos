@@ -5,7 +5,7 @@ version: 1.0
 ---
 
 The minimal base language. Defines document format and the `ext` primitive only.
-All domain constructs — type, op, feat, test, ui, db, service, etc. — are extensions.
+All domain constructs — type, op, feat, scenario, test, ui, db, service, etc. — are extensions.
 
 ## Document Format
 

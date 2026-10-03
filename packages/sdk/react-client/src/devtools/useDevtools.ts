@@ -5,7 +5,7 @@
 import { type DevtoolsHost } from '@dxos/client/devtools';
 import { raise } from '@dxos/debug';
 
-import { useClient } from '../client';
+import { useClient } from '../client/index.ts';
 
 export const useDevtools = (): DevtoolsHost => {
   const client = useClient();

@@ -4,11 +4,11 @@
 
 import { render, waitFor } from '@solidjs/testing-library';
 import * as Effect from 'effect/Effect';
-import * as Atom from 'effect/unstable/reactivity/Atom';
+import * as Atom from 'effect/reactivity/Atom';
 import { beforeEach, describe, expect, test } from 'vitest';
 
-import { defaultRegistry } from '../registry';
-import { useAtomResource } from './useAtomResource';
+import { defaultRegistry } from '../registry.ts';
+import { useAtomResource } from './useAtomResource.ts';
 
 describe('useAtomResource', () => {
   beforeEach(() => {

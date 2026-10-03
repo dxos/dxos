@@ -10,19 +10,19 @@
 // be unused, and a runtime import would ship the module.
 // oxlint-disable-next-line @dxos/rules/effect-subpath-imports
 import type {} from '@effect/ai-anthropic/AnthropicLanguageModel';
+import * as Prompt from 'effect/ai/Prompt';
 import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import * as Function from 'effect/Function';
 import * as Match from 'effect/Match';
 import * as Predicate from 'effect/Predicate';
-import * as Prompt from 'effect/unstable/ai/Prompt';
 import * as TokenX from 'tokenx';
 
 import { log } from '@dxos/log';
 import { ContentBlock, type Message } from '@dxos/types';
 import { bufferToArray, safeParseJson } from '@dxos/util';
 
-import { PromptPreprocessingError as PromptPreprocesorError } from './errors';
+import { PromptPreprocessingError as PromptPreprocesorError } from './errors.ts';
 
 export type CacheControl = 'no-cache' | 'ephemeral';
 
@@ -361,7 +361,10 @@ const makeToolResultPart = (
   Prompt.makePart('tool-result', {
     id: block.toolCallId,
     name: block.name,
-    result,
+    // `undefined` drops the key on serialization, and the part schema requires it — a single such
+    // part fails the decode of the entire prompt, permanently, for a conversation that already
+    // holds one. Normalized here so a history written before the parser guard still replays.
+    result: result === undefined ? null : result,
     isFailure,
     providerExecuted: false,
   });

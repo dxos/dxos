@@ -6,7 +6,7 @@ import { describe, test } from 'vitest';
 
 import { Obj } from '@dxos/echo';
 
-import { FreeqChannel, makeFreeqChannel } from './types';
+import { FreeqChannel, makeFreeqChannel } from './types.ts';
 
 describe('FreeqChannel', () => {
   test('makeFreeqChannel builds a config object', ({ expect }) => {

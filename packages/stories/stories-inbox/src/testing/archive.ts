@@ -89,8 +89,7 @@ export const replaceFeed = async (
   const previous = await mailbox.feed?.tryLoad();
 
   // Parent the new feed to the mailbox so it persists with (and cascade-deletes alongside) it.
-  const next = Feed.make();
-  Obj.setParent(next, mailbox);
+  const next = Feed.make({ [Obj.Parent]: mailbox });
   Obj.update(mailbox, (mailbox) => {
     mailbox.feed = Ref.make(next);
   });

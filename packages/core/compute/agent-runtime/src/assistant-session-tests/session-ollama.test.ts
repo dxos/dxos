@@ -14,7 +14,7 @@ import { DXN } from '@dxos/keys';
 import { dbg, log } from '@dxos/log';
 import { ContentBlock } from '@dxos/types';
 
-import { AssistantTestLayer } from '../testing';
+import { AssistantTestLayer } from '../testing/index.ts';
 
 /**
  * Exercises the full AiRequest tool-call loop against a local Ollama instance.

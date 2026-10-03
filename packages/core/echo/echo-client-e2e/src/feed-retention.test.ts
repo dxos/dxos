@@ -9,7 +9,7 @@ import { type EchoDatabase } from '@dxos/echo-client';
 import { EchoTestBuilder } from '@dxos/echo-client/testing';
 import { TestSchema } from '@dxos/echo/testing';
 
-import { type Checkpoint, aliveCount, capture, makePayload, report } from './testing/retention';
+import { type Checkpoint, aliveCount, capture, makePayload, report } from './testing/retention.ts';
 
 /**
  * Does a feed release its objects when the caller lets go of them? Harness and rationale:
@@ -62,7 +62,9 @@ describe('feed object retention', { tags: ['memory'] }, () => {
 
     const feed = db.add(Feed.make({ name: 'retention' }));
     await appendObjects(db, feed);
-    await db.flush();
+    // Drains the deferred full-text pass too: a batch still in flight would be reachable
+    // from the checkpoint below and measured as retention.
+    await db.flush({ secondaryIndexes: true });
     // Evicted before the baseline is taken: the writing path materializes a core per appended
     // object, so without this A would carry the whole working set and measure the writer rather
     // than the reader.
@@ -100,7 +102,9 @@ describe('feed object retention', { tags: ['memory'] }, () => {
 
     const feed = db.add(Feed.make({ name: 'retention' }));
     await appendObjects(db, feed);
-    await db.flush();
+    // Drains the deferred full-text pass too: a batch still in flight would be reachable
+    // from the checkpoint below and measured as retention.
+    await db.flush({ secondaryIndexes: true });
     await db.evictFeedHandle(feed);
     await capture('A: data on disk, handle evicted', checkpoints, db);
 

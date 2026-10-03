@@ -12,8 +12,8 @@ import type * as Operation from '@dxos/compute/Operation';
 import { ClientOperation } from '@dxos/plugin-client';
 import { InvalidRecoveryTokenError } from '@dxos/protocols';
 
-import { WELCOME_SCREEN } from './constants';
-import { OnboardingManager } from './onboarding-manager';
+import { WELCOME_SCREEN } from './constants.ts';
+import { OnboardingManager } from './onboarding-manager.ts';
 
 /** The HALO adapter's wrapper shape: the cause travels under `context.error` rather than `cause`. */
 class WrappedIdentityError extends Error {
@@ -44,10 +44,7 @@ describe('OnboardingManager', () => {
     });
     await manager.initialize();
 
-    const dialogSubjects = calls
-      .filter((call) => call.key === String(LayoutOperation.UpdateDialog.meta.key))
-      .map((call) => (call.input as { subject?: string }).subject);
-    expect(dialogSubjects).not.toContain(WELCOME_SCREEN);
+    expect(dialogSubjects(calls)).not.toContain(WELCOME_SCREEN);
   });
 
   test('without a device invitation a fresh identity is created', async ({ expect }) => {
@@ -67,9 +64,32 @@ describe('OnboardingManager', () => {
     expect(calls).toEqual([
       expect.objectContaining({
         key: String(ClientOperation.ResetStorage.meta.key),
-        input: { mode: 'join-new-identity' },
+        input: { mode: 'join-new-identity', invitationCode: 'test-code' },
       }),
     ]);
+  });
+
+  test('a logout with auth disabled brings up a fresh identity in place', async ({ expect }) => {
+    const { manager, getCalls } = await createManager({ identity: true });
+    await manager.onIdentityDeleted();
+
+    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(1);
+  });
+
+  test('a logout with auth enabled returns to the welcome screen', async ({ expect }) => {
+    const { manager, calls, getCalls } = await createManager({ identity: true, hubUrl: 'https://hub.example.com' });
+    await manager.onIdentityDeleted();
+
+    expect(dialogSubjects(calls)).toContain(WELCOME_SCREEN);
+    expect(getCalls(ClientOperation.CreateIdentity)).toHaveLength(0);
+  });
+
+  test('a deletion that hands over to a join or recovery flow is left to it', async ({ expect }) => {
+    const { manager, calls } = await createManager({ identity: true });
+    await manager.onIdentityDeleted({ target: 'deviceInvitation' });
+    await manager.onIdentityDeleted({ target: 'recoverIdentity' });
+
+    expect(calls).toEqual([]);
   });
 
   test('url-driven signup with an already-registered email creates no identity', async ({ expect }) => {
@@ -176,6 +196,12 @@ const stubEmailProbe = (outcome: 'exists' | 'available' | 'unavailable') => {
     vi.unstubAllGlobals();
   });
 };
+
+/** The subjects of every dialog the manager opened, in order. */
+const dialogSubjects = (calls: readonly { key: string; input: unknown }[]) =>
+  calls
+    .filter((call) => call.key === String(LayoutOperation.UpdateDialog.meta.key))
+    .map((call) => (call.input as { subject?: string }).subject);
 
 const createManager = async (options: {
   identity?: boolean;

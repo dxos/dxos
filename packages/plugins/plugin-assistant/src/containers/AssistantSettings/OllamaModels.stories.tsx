@@ -4,8 +4,8 @@
 
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import * as Effect from 'effect/Effect';
+import * as Atom from 'effect/reactivity/Atom';
 import * as Schema from 'effect/Schema';
-import * as Atom from 'effect/unstable/reactivity/Atom';
 import React, { useMemo } from 'react';
 
 import { Form } from '@dxos/react-ui-form';
@@ -14,7 +14,7 @@ import { withLayout, withTheme } from '@dxos/react-ui/testing';
 import { translations } from '#translations';
 import { Ollama } from '#types';
 
-import { OllamaModelsSection } from './OllamaModels';
+import { OllamaModelsSection } from './OllamaModels.tsx';
 
 // In-memory manager that bypasses the (desktop-only) capability lookup; methods are no-ops so the
 // configured state is what renders.

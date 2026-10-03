@@ -6,8 +6,8 @@ import React from 'react';
 
 import { ResizeHandle } from '@dxos/react-ui-dnd';
 
-import { useMosaicContainerContext } from './MosaicContainerContext';
-import { useMosaicTileContext } from './MosaicTileContext';
+import { useMosaicContainerContext } from './MosaicContainerContext.ts';
+import { useMosaicTileContext } from './MosaicTileContext.ts';
 
 const MOSAIC_RESIZE_HANDLE_NAME = 'Mosaic.ResizeHandle';
 

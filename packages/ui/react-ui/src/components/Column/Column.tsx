@@ -2,16 +2,15 @@
 // Copyright 2025 DXOS.org
 //
 
-import { Primitive } from '@radix-ui/react-primitive';
-import { Slot } from '@radix-ui/react-slot';
+import { ark } from '@ark-ui/react/factory';
 import React, { type CSSProperties } from 'react';
 
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks';
-import { composableProps, slottable } from '../../util';
-import { type ColumnGap } from './Column.theme';
-import { ColumnContext } from './ColumnContext';
+import { useThemeContext } from '../../hooks/index.ts';
+import { composableProps, slottable } from '../../util/index.ts';
+import { type ColumnGap } from './Column.theme.ts';
+import { ColumnContext } from './ColumnContext.ts';
 
 //
 // Root
@@ -55,14 +54,14 @@ type ColumnRootProps = {
 const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
   ({ children, asChild, role, gutter = 'lg', subgrid, gap, ...props }, forwardedRef) => {
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     const { tx } = useThemeContext();
     const gutterSize = gutterSizes[gutter];
-    // The provider wraps `Comp` rather than the children: under `asChild`, `Comp` is a Slot that
-    // merges its props into its single child, and a Provider in that position would swallow them.
+    // The provider wraps `Comp` rather than the children: under `asChild`, `Comp` merges its props into
+    // its single child, and a Provider in that position would swallow them.
     return (
       <ColumnContext.Provider value={true}>
-        <Comp
+        <ark.div
+          asChild={asChild}
           {...rest}
           role={role ?? 'none'}
           style={
@@ -78,7 +77,7 @@ const ColumnRoot = slottable<HTMLDivElement, ColumnRootProps>(
           ref={forwardedRef}
         >
           {children}
-        </Comp>
+        </ark.div>
       </ColumnContext.Provider>
     );
   },
@@ -101,12 +100,17 @@ type ColumnRowProps = {};
  */
 const ColumnRow = slottable<HTMLDivElement, ColumnRowProps>(({ children, asChild, role, ...props }, forwardedRef) => {
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   const { tx } = useThemeContext();
   return (
-    <Comp {...rest} role={role ?? 'none'} className={tx('column.row', {}, className)} ref={forwardedRef}>
+    <ark.div
+      asChild={asChild}
+      {...rest}
+      role={role ?? 'none'}
+      className={tx('column.row', {}, className)}
+      ref={forwardedRef}
+    >
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
@@ -128,15 +132,52 @@ type ColumnCenterProps = SlottableProps;
 const ColumnCenter = slottable<HTMLDivElement>(({ children, asChild, ...props }, forwardedRef) => {
   const { tx } = useThemeContext();
   const { className, ...rest } = composableProps(props);
-  const Comp = asChild ? Slot : Primitive.div;
   return (
-    <Comp {...rest} className={tx('column.center', {}, className)} ref={forwardedRef}>
+    <ark.div asChild={asChild} {...rest} className={tx('column.center', {}, className)} ref={forwardedRef}>
       {children}
-    </Comp>
+    </ark.div>
   );
 });
 
 ColumnCenter.displayName = COLUMN_CENTER_NAME;
+
+//
+// Section
+//
+
+const COLUMN_SECTION_NAME = 'Column.Section';
+
+type ColumnSectionProps = SlottableProps<{
+  /** Heading above the section's content, in the content track with it. */
+  label?: string;
+  /** Vertical gap between the heading and the content, and between the content's own rows. */
+  gap?: ColumnGap;
+}>;
+
+/**
+ * A labelled run of content inside a Column: a heading, then whatever it heads.
+ *
+ * Spans the parent's three tracks and re-exposes them, so the heading and plain content land in the
+ * content track while a `Column.Row` inside can still reach the gutters. That is the difference from
+ * `Column.Center`, which places one element and closes the tracks to everything below it — a pane
+ * whose sections hold rows with leading glyphs needs both.
+ */
+const ColumnSection = slottable<HTMLElement, ColumnSectionProps>(
+  ({ children, asChild, label, gap = 'md', ...props }, forwardedRef) => {
+    const { tx } = useThemeContext();
+    const { className, ...rest } = composableProps(props);
+    return (
+      <ark.section asChild={asChild} {...rest} className={tx('column.section', { gap }, className)} ref={forwardedRef}>
+        {/* A heading rather than a `Field.Label`: it names a region of the pane, not a control, and
+            it is what lets a reader skip the section. */}
+        {label && <h2 className={tx('column.sectionLabel', {})}>{label}</h2>}
+        {children}
+      </ark.section>
+    );
+  },
+);
+
+ColumnSection.displayName = COLUMN_SECTION_NAME;
 
 //
 // Block
@@ -157,11 +198,15 @@ const ColumnBlock = slottable<HTMLDivElement, ColumnBlockProps>(
   ({ children, asChild, end, compact, square, ...props }, forwardedRef) => {
     const { tx } = useThemeContext();
     const { className, ...rest } = composableProps(props);
-    const Comp = asChild ? Slot : Primitive.div;
     return (
-      <Comp {...rest} className={tx('column.block', { end, compact, square }, className)} ref={forwardedRef}>
+      <ark.div
+        asChild={asChild}
+        {...rest}
+        className={tx('column.block', { end, compact, square }, className)}
+        ref={forwardedRef}
+      >
         {children}
-      </Comp>
+      </ark.div>
     );
   },
 );
@@ -177,6 +222,7 @@ export const Column = {
   Row: ColumnRow,
   Block: ColumnBlock,
   Center: ColumnCenter,
+  Section: ColumnSection,
 };
 
-export type { ColumnBlockProps, ColumnCenterProps, ColumnRootProps, ColumnRowProps };
+export type { ColumnBlockProps, ColumnCenterProps, ColumnRootProps, ColumnRowProps, ColumnSectionProps };

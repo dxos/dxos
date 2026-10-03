@@ -14,8 +14,8 @@ import { type SpaceId } from '@dxos/keys';
 import { type EdgeFunctionEnv, makeInProcessClient } from '@dxos/protocols';
 import { DataService, QueryService } from '@dxos/protocols/rpc';
 
-import { ServiceContainer } from './internal';
-import { SpaceProxy } from './space-proxy';
+import { ServiceContainer } from './internal/index.ts';
+import { SpaceProxy } from './space-proxy.ts';
 
 type Services = {
   dataService: EdgeFunctionEnv.DataService;

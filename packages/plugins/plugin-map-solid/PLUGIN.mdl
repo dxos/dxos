@@ -17,10 +17,10 @@ Each extension is defined in the Appendix or resolved via its URI.
 |-------------|--------------------------------|
 | `type`      | `org.dxos.mdl.type@1.0`       |
 | `feat`      | `org.dxos.mdl.feat@1.0`       |
-| `test`      | `org.dxos.mdl.test@1.0`       |
+| `scenario`  | `org.dxos.mdl.scenario@1.0`   |
 | `component` | `org.dxos.mdl.component@1.0`  |
 | `op`        | `org.dxos.mdl.op@1.0`         |
-| `flow`      | `org.dxos.mdl.flow@1.0`       |
+| `test`      | `org.dxos.mdl.test@1.0`       |
 | `step`      | `org.dxos.mdl.step@1.0`       |
 
 ## Types
@@ -156,35 +156,35 @@ feat F-4: No Shadow DOM
 ## Acceptance
 
 ```mdl
-test T-1: Surface renders for Map object
+scenario T-1: Surface renders for Map object
   given: a Map ECHO object is added to a space
   when: the object is opened as an article
   then: dx-map-surface is rendered; MapControl is visible in map mode
 ```
 
 ```mdl
-test T-2: Markers appear from linked view
+scenario T-2: Markers appear from linked view
   given: a Map with a linked View over a schema with a GeoPoint field
   when: two rows exist in the dataset with valid coordinates
   then: exactly two GeoMarker pins are displayed on the map
 ```
 
 ```mdl
-test T-3: Malformed coordinate filtered
+scenario T-3: Malformed coordinate filtered
   given: a Map linked to 3 rows; one row has a null GeoPoint
   when: MapSurface renders
   then: two markers shown; no error thrown
 ```
 
 ```mdl
-test T-4: Toggle to globe
+scenario T-4: Toggle to globe
   given: MapSurface is in map mode
   when: user clicks the toggle control on MapControl
   then: GlobeControl is rendered; MapControl is hidden
 ```
 
 ```mdl
-test T-5: Filter rejects non-Map object
+scenario T-5: Filter rejects non-Map object
   given: a non-Map ECHO object
   when: the ReactSurface filter evaluates
   then: dx-map-surface is not rendered for that object
@@ -194,16 +194,16 @@ test T-5: Filter rejects non-Map object
 
 ## QA
 
-Executable flows. Each step carries a human instruction (`do`) and, where the step maps to an
-invocable operation, an agent binding (`invoke`). Report failures by flow and step number.
+Executable tests. Each step carries a human instruction (`do`) and, where the step maps to an
+invocable operation, an agent binding (`invoke`). Report failures by test and step number.
 
 ```mdl
-flow QA-1: Create a Map and view it through the SolidJS surface
+test QA-1: Create a Map and view it through the SolidJS surface
   desc: |
     The plugin contributes no operations of its own — `resolveSurfaceMarkers` is a reactive
     derivation, not an invocable op, and creating a Map goes through the generic
     CreateObjectEntry factory like plugin-chess's `startGame` (no runtime counterpart). This
-    flow is therefore the core round-trip a human can run: create a Map, open it, and confirm
+    test is therefore the core round-trip a human can run: create a Map, open it, and confirm
     `dx-map-surface` (not the React MapControl) renders it.
   actors: human
   covers: [F-1.2, F-1.3, F-3.1, T-1, T-4]
@@ -214,11 +214,11 @@ flow QA-1: Create a Map and view it through the SolidJS surface
     - collection: a collection in that space, to create into
     - plugin-map-solid is enabled — it is OFF by default AND only registered at all when
       `isLocal` (see `plugin-defs.tsx`: `isLocal && MapPluginSolid.make()`); on a non-local
-      deployment the plugin is not in the module graph and this flow cannot run at all.
-    - no Map named "QA Solid Map" exists — ABORT rather than deleting one this flow did not create
-    - map: the Map "QA Solid Map" this flow creates — no create op exists (human-only step), so
+      deployment the plugin is not in the module graph and this test cannot run at all.
+    - no Map named "QA Solid Map" exists — ABORT rather than deleting one this test did not create
+    - map: the Map "QA Solid Map" this test creates — no create op exists (human-only step), so
       the runner binds this once that step completes
-  test:
+  steps:
     - name: Create the Map
       do: In the navtree, click + on a collection and choose Map. Name it "QA Solid Map".
       expect: a Map appears under the collection, rendered by dx-map-surface in map mode
@@ -273,8 +273,8 @@ ext feat
 ```
 
 ```mdl
-ext test
-  uri: org.dxos.mdl.test@1.0
+ext scenario
+  uri: org.dxos.mdl.scenario@1.0
   desc: An acceptance scenario expressed as given / when / then steps.
   fields:
     given?: Step | Step[]

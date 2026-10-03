@@ -7,18 +7,18 @@
 import * as Cause from 'effect/Cause';
 import * as Context from 'effect/Context';
 import * as Effect from 'effect/Effect';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientError from 'effect/http/HttpClientError';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
 import * as Schedule from 'effect/Schedule';
 import * as Schema from 'effect/Schema';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientError from 'effect/unstable/http/HttpClientError';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 
 import { Database, type Ref } from '@dxos/echo';
 import { type AccessToken, Connection } from '@dxos/link';
 
-import { TRELLO_API_BASE } from '../constants';
-import { InvalidTrelloAccessTokenError } from '../errors';
+import { TRELLO_API_BASE } from '../constants.ts';
+import { InvalidTrelloAccessTokenError } from '../errors.ts';
 
 /**
  * Trello API credentials. The `key` is the user's API key; `token` is the

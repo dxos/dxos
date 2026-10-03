@@ -8,17 +8,19 @@ import { Client } from '@dxos/client';
 import { DXN, Obj, Ref, Type } from '@dxos/echo';
 import { TestSchema } from '@dxos/echo/testing';
 import { log } from '@dxos/log';
+import { createBuf } from '@dxos/protocols/buf';
+import { ProfileDocumentSchema } from '@dxos/protocols/buf/dxos/halo/credentials_pb';
 import { SpacesService } from '@dxos/protocols/rpc';
 
-import { SpacesDumper } from './space-json-dump';
-import { Todo } from './types';
-import { createConfig } from './util';
+import { SpacesDumper } from './space-json-dump.ts';
+import { Todo } from './types.ts';
+import { createConfig } from './util.ts';
 
 export const generateSnapshot = async (snapshotDir: string, dumpPath: string) => {
   const config = createConfig({ dataRoot: snapshotDir });
   const client = new Client({ config, types: [Todo, TestSchema.Expando] });
   await client.initialize();
-  await client.halo.createIdentity({ displayName: 'My Identity' });
+  await client.halo.createIdentity(createBuf(ProfileDocumentSchema, { displayName: 'My Identity' }));
   const space = await client.spaces.create({ name: 'My Space' });
   await space.waitUntilReady();
   await seedData(client);

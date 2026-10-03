@@ -11,7 +11,7 @@ import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import { Annotation, Database, Feed, Filter, Obj, Ref, Type } from '@dxos/echo';
 import { TestHelpers } from '@dxos/effect/testing';
-import { EntityId } from '@dxos/keys';
+import { DXN, EntityId } from '@dxos/keys';
 import { FeedProtocol } from '@dxos/protocols';
 import { Text } from '@dxos/schema';
 import { Message, Outline, Task, TaskSet } from '@dxos/types';
@@ -53,7 +53,44 @@ describe('Chat', () => {
         // Asserted on the schema, not the instance: `in` reports false for any declared-but-unset
         // optional field. The agent a chat runs as is reached through the ECHO parent edge, never a
         // field — a field was the edge that made Agent and Chat mutually dependent.
-        expect(Object.keys(Chat.fields).sort()).toEqual(['feed', 'instructions', 'name', 'tasks', 'viewType']);
+        expect(Object.keys(Chat.fields).sort()).toEqual([
+          'feed',
+          'instructions',
+          'name',
+          'remote',
+          'session',
+          'tasks',
+          'viewType',
+        ]);
+      },
+      Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+  );
+
+  it.effect(
+    'the session config holds the model DXN, and clears back to unset',
+    Effect.fnUntraced(
+      function* (_) {
+        const chat = yield* makeChat;
+        expect(chat.session?.model).toBeUndefined();
+
+        const model = DXN.make('com.anthropic.model.claude-sonnet-5.default');
+        Obj.update(chat, (chat) => {
+          chat.session = { model };
+        });
+        yield* Database.flush();
+        expect(chat.session?.model).toBe(model);
+
+        // Survives a round trip through the database.
+        const [reloaded] = yield* Database.query(Filter.type(Chat.Chat)).run;
+        expect(reloaded.session?.model).toBe(model);
+
+        Obj.update(chat, (chat) => {
+          chat.session = undefined;
+        });
+        yield* Database.flush();
+        expect(chat.session?.model).toBeUndefined();
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -96,7 +133,8 @@ describe('Chat', () => {
         const { db } = yield* Database.Service;
 
         const parent = Chat.addTask(db, chat, 'Ship the release');
-        const child = Chat.addTask(db, chat, 'Write the changelog', { parentTask: Ref.make(parent) });
+        const child = Chat.addTask(db, chat, 'Write the changelog');
+        nest(parent, child);
         const sibling = Chat.addTask(db, chat, 'Unrelated');
         yield* Database.flush();
 
@@ -127,7 +165,7 @@ describe('Chat', () => {
           owner.tasks = [Ref.make(delegated)];
         });
         Obj.update(chat, (chat) => {
-          chat.tasks = [...chat.tasks, Ref.make(delegated)];
+          chat.tasks.push(Ref.make(delegated));
         });
         yield* Database.flush();
 
@@ -156,26 +194,28 @@ describe('Chat', () => {
         const { db } = yield* Database.Service;
 
         const parent = Chat.addTask(db, chat, 'Ship the release');
-        const child = Chat.addTask(db, chat, 'Write the changelog', { parentTask: Ref.make(parent) });
+        const child = Chat.addTask(db, chat, 'Write the changelog');
+        nest(parent, child);
         yield* Database.flush();
 
         // What the sync reader yields when a child is not in the working set: the walk cannot see
-        // the child, so it survives in the array — and, parented to the chat, the cascade misses it.
+        // the child, so its entry survives in the array though the cascade deletes the task itself.
         expect(Chat.deleteTask(db, chat, [parent], parent)).toEqual([parent]);
+        yield* Database.flush();
         expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(child).uri]);
+        expect(Obj.isDeleted(child)).toBe(true);
 
-        // The loaded checklist takes it with the parent, which is the contract callers must meet.
+        // The loaded checklist takes the entry with its parent, which is the contract callers must meet.
         const restored = Chat.addTask(db, chat, 'Ship again');
-        Obj.update(child, (child) => {
-          child.parentTask = Ref.make(restored);
-        });
+        const step = Chat.addTask(db, chat, 'Tag the release');
+        nest(restored, step);
         yield* Database.flush();
         expect(
           Chat.deleteTask(db, chat, yield* Chat.loadTasks(chat), restored)
             .map((task) => task.id)
             .sort(),
-        ).toEqual([restored.id, child.id].sort());
-        expect(chat.tasks).toEqual([]);
+        ).toEqual([restored.id, step.id].sort());
+        expect(chat.tasks.map((ref) => ref.uri)).toEqual([Ref.make(child).uri]);
       },
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
@@ -336,3 +376,14 @@ const readFeed = (feed: Feed.Feed) =>
       Number(Obj.getKeys(item, FeedProtocol.KEY_QUEUE_POSITION).at(0)?.id ?? Number.POSITIVE_INFINITY);
     return [...messages].sort((a, b) => position(a) - position(b));
   });
+
+/**
+ * Files `child`, already on the checklist, as a sub-task of `parent`. The edge is moved explicitly:
+ * `subtasks` claims only an unparented task, and a checklist task is parented to its chat.
+ */
+const nest = (parent: Task.Task, child: Task.Task): void => {
+  Obj.update(parent, (parent) => {
+    parent.subtasks?.push(Ref.make(child));
+  });
+  Obj.setParent(child, parent);
+};

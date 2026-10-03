@@ -8,9 +8,9 @@ import * as Effect from 'effect/Effect';
 import { invariant } from '@dxos/invariant';
 import { DXN } from '@dxos/keys';
 
-import * as Capability from '../capability';
-import * as Plugin from '../plugin';
-import * as ActivationGraph from './activation-graph';
+import * as Capability from '../capability.ts';
+import * as Plugin from '../plugin.ts';
+import * as ActivationGraph from './activation-graph.ts';
 
 const Single = Capability.makeSingleton<{ value: string }>()('org.dxos.test.graphSingle');
 const Single2 = Capability.makeSingleton<{ value: string }>()('org.dxos.test.graphSingleTwo');

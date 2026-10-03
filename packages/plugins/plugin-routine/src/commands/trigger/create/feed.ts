@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
+import * as Prompt from 'effect/cli/Prompt';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import * as Option from 'effect/Option';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
-import * as Prompt from 'effect/unstable/cli/Prompt';
 
 import { CommandConfig } from '@dxos/cli-util';
 import { flushAndSync, print, spaceLayer, withTypes } from '@dxos/cli-util';
@@ -17,8 +17,9 @@ import * as Trigger from '@dxos/compute/Trigger';
 import { Database, Filter, JsonSchema, Ref, Feed as Feed$ } from '@dxos/echo';
 import { EID } from '@dxos/keys';
 
-import { Enabled, Feed, Input } from '../options';
-import { printTrigger, promptForSchemaInput, selectFeed, selectFunction } from '../util';
+import { RoutineCommandError } from '../../errors.ts';
+import { Enabled, Feed, Input } from '../options.ts';
+import { printTrigger, promptForSchemaInput, selectFeed, selectFunction } from '../util.ts';
 
 export const feed = Command.make(
   'feed',
@@ -40,7 +41,7 @@ export const feed = Command.make(
       const functions = yield* Database.query(Filter.type(Operation.PersistentOperation)).run;
       const fn = functions.find((fn) => fn.id === functionId);
       if (!fn) {
-        return yield* Effect.fail(new Error(`Function not found: ${functionId}`));
+        return yield* Effect.fail(new RoutineCommandError({ message: `Function not found: ${functionId}` }));
       }
 
       const feed = yield* Option.match(options.feed, {
@@ -57,7 +58,7 @@ export const feed = Command.make(
       // Always prompt for enabled if functionId is not provided.
       const enabled = yield* Option.match(options.functionId, {
         onNone: () =>
-          Prompt.confirm({
+          Prompt.Confirm({
             message: 'Enable the trigger?',
             initial: true,
           }).pipe(Prompt.run),

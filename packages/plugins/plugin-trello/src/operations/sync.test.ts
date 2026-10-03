@@ -13,9 +13,9 @@ import * as Kanban from '@dxos/plugin-kanban/Kanban';
 import * as KanbanConstants from '@dxos/plugin-kanban/KanbanConstants';
 import { Expando } from '@dxos/schema';
 
-import { TRELLO_SOURCE } from '../constants';
-import { TrelloApi } from '../services';
-import { findOrCreateKanbanForBoard, pushBoardCards, reconcileBoardCards } from './sync';
+import { TRELLO_SOURCE } from '../constants.ts';
+import { TrelloApi } from '../services/index.ts';
+import { findOrCreateKanbanForBoard, pushBoardCards, reconcileBoardCards } from './sync.ts';
 
 type TrelloBoard = TrelloApi.TrelloBoard;
 type TrelloCard = TrelloApi.TrelloCard;

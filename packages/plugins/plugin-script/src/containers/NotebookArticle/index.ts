@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export { NotebookArticle as default } from './NotebookArticle';
+export { NotebookArticle as default } from './NotebookArticle.tsx';

@@ -6,8 +6,8 @@ import * as Clock from 'effect/Clock';
 import * as Effect from 'effect/Effect';
 import * as Stream from 'effect/Stream';
 
-import * as Stage from '../Stage';
-import { Metrics, useMetrics } from './metrics';
+import * as Stage from '../Stage.ts';
+import { Metrics, useMetrics } from './metrics.ts';
 
 /**
  * Wrap a {@link Stage.Stage} to auto-record per-stage metrics — `${name}.in`, `${name}.out`,

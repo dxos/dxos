@@ -7,8 +7,8 @@ import { EditorState } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
 import { afterEach, describe, test } from 'vitest';
 
-import { focus } from '../../state/focus';
-import { decorateMarkdown } from './decorate';
+import { focus } from '../../state/focus.ts';
+import { decorateMarkdown } from './decorate.ts';
 
 describe('decorateMarkdown links', () => {
   // Held by the suite so a failed assertion still releases the view.

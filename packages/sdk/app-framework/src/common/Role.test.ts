@@ -4,7 +4,7 @@
 
 import { describe, test } from 'vitest';
 
-import * as Role from './Role';
+import * as Role from './Role.ts';
 
 describe('Role.make', () => {
   test('creates a role token with the given NSID', ({ expect }) => {

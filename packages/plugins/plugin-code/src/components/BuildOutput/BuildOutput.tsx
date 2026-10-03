@@ -61,8 +61,8 @@ const BuildStatus = ({ build, run }: BuildStatusProps) => {
   const runLabel = run ? (run.ok ? null : t('run.failed.label')) : null;
   return (
     <div className='flex gap-2 px-2 py-1 border-b border-separator items-center'>
-      <span className={mx(build.ok ? 'text-success' : 'text-error')}>● {buildLabel}</span>
-      {runLabel && <span className='text-error'>● {runLabel}</span>}
+      <span className={mx(build.ok ? 'text-success-text' : 'text-error-text')}>● {buildLabel}</span>
+      {runLabel && <span className='text-error-text'>● {runLabel}</span>}
     </div>
   );
 };
@@ -85,7 +85,7 @@ const DiagnosticsList = ({ diagnostics }: DiagnosticsListProps) => {
               key={index}
               className={mx(
                 'px-2 py-1 border-b border-separator font-mono',
-                diagnostic.severity === 'error' ? 'text-error' : 'text-warning',
+                diagnostic.severity === 'error' ? 'text-error-text' : 'text-warning-text',
               )}
             >
               {diagnostic.path && (
@@ -124,7 +124,7 @@ const ConsoleView = ({ stdout, stderr }: ConsoleViewProps) => {
             <span key={`out-${index}`}>{line}</span>
           ))}
           {stderr.map((line, index) => (
-            <span key={`err-${index}`} className='text-error'>
+            <span key={`err-${index}`} className='text-error-text'>
               {line}
             </span>
           ))}

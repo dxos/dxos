@@ -3,6 +3,7 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as Layer from 'effect/Layer';
 import { afterEach, beforeEach, describe, test } from 'vitest';
 
 import { Database, Feed, Obj, Ref } from '@dxos/echo';
@@ -79,8 +80,7 @@ describe('runFactPipeline', () => {
       const second = yield* runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 10 });
       return { first, second, storedFacts, cursorValue: Cursor.parseKey(cursor.max) };
     }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(FactStoreLive.layerMemory),
+      Effect.provide(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory)),
       EffectEx.runAndForwardErrors,
     );
 
@@ -119,8 +119,7 @@ describe('runFactPipeline', () => {
       pageSize: 1,
       onProgress: (update) => progress.push(update),
     }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(FactStoreLive.layerMemory),
+      Effect.provide(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory)),
       EffectEx.runAndForwardErrors,
     );
 
@@ -151,8 +150,7 @@ describe('runFactPipeline', () => {
 
     const cursor = db.add(Cursor.makeFeed({ source: mailbox.feed, target: Ref.make(mailbox) }));
     const result = await runFactPipeline({ feed, cursor, extract: stubExtract, pageSize: 1 }).pipe(
-      Effect.provide(Database.layer(db)),
-      Effect.provide(FactStoreLive.layerMemory),
+      Effect.provide(Layer.provideMerge(Database.layer(db), FactStoreLive.layerMemory)),
       EffectEx.runAndForwardErrors,
     );
 

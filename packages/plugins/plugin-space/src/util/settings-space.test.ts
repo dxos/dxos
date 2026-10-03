@@ -14,8 +14,8 @@ import { Expando } from '@dxos/schema';
 
 import { SpaceSchema } from '#types';
 
-import { migrateToSettingsSpace, readSpacesOrder } from '../migrations/settings-space';
-import { healDuplicateSettingsSpaces, resolveSettingsSpace, runSettingsSpaceHealing } from './settings-space';
+import { migrateToSettingsSpace, readSpacesOrder } from '../migrations/settings-space.ts';
+import { healDuplicateSettingsSpaces, resolveSettingsSpace, runSettingsSpaceHealing } from './settings-space.ts';
 
 describe('resolveSettingsSpace', () => {
   it.effect('waits out identity genesis instead of racing it into a duplicate', () =>

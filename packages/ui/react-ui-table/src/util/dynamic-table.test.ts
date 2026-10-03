@@ -2,12 +2,12 @@
 // Copyright 2025 DXOS.org
 //
 
-import * as Registry from 'effect/unstable/reactivity/AtomRegistry';
+import * as Registry from 'effect/reactivity/AtomRegistry';
 import { describe, expect, test } from 'vitest';
 
 import { Format } from '@dxos/echo';
 
-import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from './dynamic-table';
+import { type TablePropertyDefinition, getBaseSchema, makeDynamicTable } from './dynamic-table.ts';
 
 describe('makeDynamicTable', () => {
   /**

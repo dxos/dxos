@@ -6,9 +6,9 @@
 
 import * as Schema from 'effect/Schema';
 
-import type { EntityId } from './entity-id';
-import type { SpaceId } from './space-id';
-import type * as URI from './URI';
+import type { EntityId } from './entity-id.ts';
+import type { SpaceId } from './space-id.ts';
+import type * as URI from './URI.ts';
 
 // Canonical-form regex covering all accepted EID shapes.
 //   echo://<spaceId>/<objectId>
@@ -60,22 +60,26 @@ export const isEID = (value: unknown): value is EID => typeof value === 'string'
  * compare equal.
  */
 export const parse = (uri: string): EID => {
-  if (!ECHO_URI_REGEXP.test(uri)) {
+  const eid = tryParse(uri);
+  if (eid === undefined) {
     throw new Error(`Invalid EID: ${uri}`);
   }
-  const legacy = LOCAL_LEGACY_RE.exec(uri);
-  return (legacy ? `echo:///${legacy[1]}` : uri) as EID;
+  return eid;
 };
 
 /**
  * Like `parse` but returns undefined on failure instead of throwing.
+ *
+ * Validates rather than catching `parse`, because rejection is the common case on the query path —
+ * every type filter tests each candidate's typename as an EID first — and the `Error` that used to
+ * allocate, with its stack, dominated it.
  */
 export const tryParse = (uri: string): EID | undefined => {
-  try {
-    return parse(uri);
-  } catch {
+  if (!ECHO_URI_REGEXP.test(uri)) {
     return undefined;
   }
+  const legacy = LOCAL_LEGACY_RE.exec(uri);
+  return (legacy ? `echo:///${legacy[1]}` : uri) as EID;
 };
 
 /**

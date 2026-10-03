@@ -2,11 +2,11 @@
 // Copyright 2025 DXOS.org
 //
 
+import * as Command from 'effect/cli/Command';
+import * as Options from 'effect/cli/Flag';
 import * as Console from 'effect/Console';
 import * as Effect from 'effect/Effect';
 import type * as Option from 'effect/Option';
-import * as Command from 'effect/unstable/cli/Command';
-import * as Options from 'effect/unstable/cli/Flag';
 
 import {
   CommandConfig,
@@ -99,9 +99,15 @@ export const share = Command.make(
   'share',
   {
     spaceId: Common.spaceId.pipe(Options.optional),
-    multiple: Options.boolean('multiple').pipe(Options.withDescription('Create a multi-use invitation.')),
-    open: Options.boolean('open').pipe(Options.withDescription('Open browser with invitation.')),
-    host: Options.string('host').pipe(
+    multiple: Options.Boolean('multiple').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Create a multi-use invitation.'),
+    ),
+    open: Options.Boolean('open').pipe(
+      Options.withDefault(false),
+      Options.withDescription('Open browser with invitation.'),
+    ),
+    host: Options.String('host').pipe(
       Options.withDescription('Application Host URL.'),
       Options.withDefault('https://composer.space'),
     ),

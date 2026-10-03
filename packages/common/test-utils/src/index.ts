@@ -2,4 +2,4 @@
 // Copyright 2024 DXOS.org
 //
 
-export * from './resource';
+export * from './resource.ts';

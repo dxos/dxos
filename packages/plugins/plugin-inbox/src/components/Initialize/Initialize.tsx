@@ -8,8 +8,8 @@ import { type Obj } from '@dxos/echo';
 import { Banner } from '@dxos/react-ui';
 import { composable } from '@dxos/react-ui';
 
-import { InitializeEmpty } from './InitializeEmpty';
-import { useTargetConnection } from './useTargetConnection';
+import { InitializeEmpty } from './InitializeEmpty.tsx';
+import { useTargetConnection } from './useTargetConnection.ts';
 
 export type InitializeProps<T extends Obj.Any> = {
   /** The object whose Connection we're connecting / syncing. */

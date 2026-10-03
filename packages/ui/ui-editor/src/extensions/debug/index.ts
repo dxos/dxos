@@ -2,4 +2,4 @@
 // Copyright 2025 DXOS.org
 //
 
-export * from './debug';
+export * from './debug.ts';

@@ -11,10 +11,10 @@ import { withTheme } from '@dxos/react-ui/testing';
 import { mx } from '@dxos/ui-theme';
 
 import ident from '../../../assets/sounds/ident-2.mp3';
-import { DXOS } from '../icons';
-import { brandColors } from './brand-colors';
-import { ComposerLogo as AltComposerLogo } from './ComposerLogo';
-import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental';
+import { DXOS } from '../icons/index.ts';
+import { brandColors } from './brand-colors.ts';
+import { ComposerLogo as AltComposerLogo } from './ComposerLogo.tsx';
+import { type AnimationController, ComposerLogo, ComposerSpinner } from './experimental.tsx';
 
 // https://pixabay.com/sound-effects/search/logo/?pagi=2
 
@@ -259,7 +259,7 @@ export const Oblique: Story = {
           <AltComposerLogo
             size={size}
             classNames={mx(
-              'opacity-0 scale-10 transition-all rotate-[540deg] __translate-x-[980px] duration-500 delay-0 ease-in',
+              'opacity-0 scale-10 transition-all rotate-[540deg] duration-700 delay-0 ease-in',
               visible && 'delay-200 opacity-10 scale-100 rotate-[180deg] translate-x-[8]',
             )}
           />
@@ -268,8 +268,8 @@ export const Oblique: Story = {
           <AltComposerLogo
             size={size}
             classNames={mx(
-              'opacity-0 blur-xs scale-10 rotate-360 __translate-y-[-100px]',
-              'transition-[opacity,filter,scale,rotate] duration-[500ms,500ms,500ms,750ms] ease-in-out',
+              'opacity-0 blur-xs scale-10 rotate-360',
+              'transition-[opacity,filter,scale,rotate] duration-700 ease-in-out',
               visible && 'opacity-100 blur-none scale-100 rotate-0 translate-y-0',
             )}
           />

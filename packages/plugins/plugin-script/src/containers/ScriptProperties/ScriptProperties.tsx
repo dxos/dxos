@@ -8,24 +8,24 @@ import { type AppSurface } from '@dxos/app-toolkit/ui';
 import type * as Script from '@dxos/compute/Script';
 import { Form } from '@dxos/react-ui-form';
 
-import { FunctionBinding } from './FunctionBinding';
-import { FunctionPublishing } from './FunctionPublishing';
-import { SkillEditor } from './SkillEditor';
+import { FunctionBinding } from './FunctionBinding.tsx';
+import { FunctionPublishing } from './FunctionPublishing.tsx';
+import { SkillEditor } from './SkillEditor.tsx';
 
 export type ScriptPropertiesProps = AppSurface.ObjectPropertiesProps<Script.Script>;
 
 export const ScriptProperties = ({ subject: object }: ScriptPropertiesProps) => {
   return (
     <>
-      <Form.Section>
+      <Form.FieldSet>
         <FunctionBinding object={object} />
-      </Form.Section>
-      <Form.Section>
+      </Form.FieldSet>
+      <Form.FieldSet>
         <SkillEditor object={object} />
-      </Form.Section>
-      <Form.Section>
+      </Form.FieldSet>
+      <Form.FieldSet>
         <FunctionPublishing object={object} />
-      </Form.Section>
+      </Form.FieldSet>
     </>
   );
 };

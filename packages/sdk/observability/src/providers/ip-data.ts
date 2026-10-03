@@ -3,17 +3,17 @@
 //
 
 import * as Effect from 'effect/Effect';
+import * as FetchHttpClient from 'effect/http/FetchHttpClient';
+import * as HttpClient from 'effect/http/HttpClient';
+import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Schema from 'effect/Schema';
-import * as FetchHttpClient from 'effect/unstable/http/FetchHttpClient';
-import * as HttpClient from 'effect/unstable/http/HttpClient';
-import * as HttpClientRequest from 'effect/unstable/http/HttpClientRequest';
 // NOTE: localStorage is not available in web workers.
 import * as localForage from 'localforage';
 
 import { type Config } from '@dxos/config';
 import { log } from '@dxos/log';
 
-import * as Observability from '../Observability';
+import * as Observability from '../Observability.ts';
 
 const IP_DATA_CACHE_TIMEOUT = 6 * 60 * 60 * 1000; // 6 hours
 
