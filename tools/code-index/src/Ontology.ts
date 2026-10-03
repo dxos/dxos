@@ -52,6 +52,10 @@ export const packageIri = (name: string): NamedNode => DataFactory.namedNode(`${
  * IRI of a named export of a module *as imported* — `module:effect/Layer#effect`. Follows the
  * specifier written in source, so rules keyed on it survive the implementation file moving.
  */
+/** IRI of a module as imported by a bare specifier; `memberIri` addresses its exports. */
+export const moduleIri = (specifier: string): NamedNode =>
+  DataFactory.namedNode(`${MODULE_BASE}${escapePath(specifier)}`);
+
 export const memberIri = (specifier: string, path: string): NamedNode =>
   DataFactory.namedNode(`${MODULE_BASE}${escapePath(specifier)}#${escapeFragment(path)}`);
 
@@ -81,6 +85,18 @@ export const derivedGraphIri = (reasoner: string): NamedNode =>
   DataFactory.namedNode(`${DERIVED_GRAPH_PREFIX}${escapePath(reasoner)}`);
 
 export const isDerivedGraph = (graph: string): boolean => graph.startsWith(DERIVED_GRAPH_PREFIX);
+
+/**
+ * The graph a JS pass writes. Outside the derived prefix, so both backends take it as a premise of
+ * every rule file (the native engine journals it like a file graph); `Reasoner.run` recomputes it
+ * before any rule runs, so it never outlives the file graphs it was read from.
+ */
+export const PASS_GRAPH_PREFIX = `${GRAPH_BASE}pass/`;
+
+export const passGraphIri = (pass: string): NamedNode =>
+  DataFactory.namedNode(`${PASS_GRAPH_PREFIX}${escapePath(pass)}`);
+
+export const isFileGraph = (graph: string): boolean => graph.startsWith(FILE_GRAPH_PREFIX);
 
 // Classes asserted by the parser.
 export const File = iri('File');
@@ -138,11 +154,28 @@ export const aliasOf = iri('aliasOf');
  * joins them — can only be concluded by a rule.
  */
 export const namespaceOf = iri('namespaceOf');
+/** A file the declaration imports dynamically (`() => import('./y')`): what a lazy shim defers. */
+export const loads = iri('loads');
+/** A reference the declaration passes into a call, as a `deus:Argument` node. */
+export const passes = iri('passes');
+/** A string literal the declaration passes into a call (slot `"0"`, or `"0.plugin.key"` under object keys), as a `deus:Argument` node. */
+export const passesLiteral = iri('passesLiteral');
+export const literal = iri('literal');
+/** Where an argument sits: `"0"`, or `"1.provides"` for a property of an object-literal argument. */
+export const slot = iri('slot');
+export const reference = iri('reference');
+/** The dotted path left over after the reference's symbol IRI: `NS.Cap` landing on `NS` leaves `Cap`. */
+export const referencePath = iri('referencePath');
+export const calleePath = iri('calleePath');
+/** The same leftover path for the `deus:constructedBy` callee: `Capability$.make` landing on `Capability$`. */
+export const constructedByPath = iri('constructedByPath');
 export const snippet = iri('snippet');
 export const doc = iri('doc');
 export const deprecated = iri('deprecated');
 /** The type of the value a symbol declares — `design/TYPES.md`. */
 export const hasType = iri('hasType');
+/** The symbol's type term as JSON, literal freshness included — what the cross-file pass binds. */
+export const typeTerm = iri('typeTerm');
 
 // Type term properties (`design/TYPES.md`).
 export const typeKind = iri('typeKind');
@@ -153,6 +186,14 @@ export const typeMember = iri('typeMember');
 export const typeProperty = iri('typeProperty');
 export const returnType = iri('returnType');
 export const literalValue = iri('literalValue');
+/** Why inference gave up at an `unresolved` term — the bucket an analyzer improvement moves. */
+export const unresolvedReason = iri('unresolvedReason');
+/** A `returnOf` term's callee, and the called function of a `deus:Argument`. */
+export const callee = iri('callee');
+/** Operations a deferred term owes once bound (`widen`, `settle`, `nonNullish`, `noUndefined`). */
+export const pending = iri('pending');
+/** A bare specifier's module node, and the repository file it resolves to. */
+export const moduleFile = iri('moduleFile');
 /** The term has an unknown position; its structure facts are then incomplete. */
 export const typePartial = iri('typePartial');
 export const optional = iri('optional');
@@ -185,9 +226,51 @@ export const providesService = iri('providesService');
 export const requiresService = iri('requiresService');
 /** A layer's `RIn`, read off its inferred type — exact, where `requiresService` is a heuristic. */
 export const layerRequires = iri('layerRequires');
+/** A reference IRI (`file:<barrel>#X`, `module:<specifier>#X`) and the declaration it denotes — concluded for service keys. */
+export const resolvesTo = iri('resolvesTo');
 export const implementsOperation = iri('implementsOperation');
+/** An ECHO type's typename and version: the literal `DXN.make(typename, version)` it is built from. */
+export const echoTypename = iri('echoTypename');
+export const echoVersion = iri('echoVersion');
+/** The named schema an ECHO type is built from. */
+export const echoSchema = iri('echoSchema');
+/** An ECHO type naming another in a `Ref.Ref(X)` field. */
+export const echoReferences = iri('echoReferences');
+/** An ECHO relation's endpoints. */
+export const relationSource = iri('relationSource');
+export const relationTarget = iri('relationTarget');
 export const bundlesHandler = iri('bundlesHandler');
 export const exposesOperation = iri('exposesOperation');
+/** An `OperationHandlerSet` and each operation it serves: its handlers', its merged sets', its lazy entries'. */
+export const handlesOperation = iri('handlesOperation');
+/** A symbol whose implementation names an operation — directly, through barrels, or as a namespace member. */
+export const referencesOperation = iri('referencesOperation');
+/** A reference IRI (re-export, star-barrel name) and the `Operation` declaration it stands for. */
+export const denotes = iri('denotes');
+/** A file exporting an operation by its bare name: declaring it, or through `export *`. */
+export const exportsOperation = iri('exportsOperation');
+/** A namespace (`export * as N`, or a re-export of one) whose module declares operations. */
+export const operationNamespace = iri('operationNamespace');
+/** An operation's `meta.key` literal. */
+export const operationKey = iri('operationKey');
+/** The named schema an operation's `input` / `output` is, and each service its `services` lists. */
+export const operationInput = iri('operationInput');
+export const operationOutput = iri('operationOutput');
+export const operationRequires = iri('operationRequires');
+/** A declaration and each `Capability` it fills (`contribute(X, …)`, `provides: [X]`, its maker's). */
+export const contributesCapability = iri('contributesCapability');
+/** A helper whose modules contribute a `Capability` (`Capability.moduleMaker(name, X)` and its wrappers). */
+export const buildsModuleFor = iri('buildsModuleFor');
+/** A `Plugin` and each module it registers with `Plugin.addModule`. */
+export const addsModule = iri('addsModule');
+/** A `Plugin` or `LazyPlugin` and the `PluginMeta` it is defined with. */
+export const pluginMeta = iri('pluginMeta');
+/** The plugin key string (`org.dxos.plugin.chess`), on a `PluginMeta` and the plugins defined with it. */
+export const pluginId = iri('pluginId');
+/** A `LazyPlugin` and the `Plugin` body it defers loading. */
+export const loadsPlugin = iri('loadsPlugin');
+/** A `Package` and each `Plugin` declared in it. */
+export const definesPlugin = iri('definesPlugin');
 export const describes = iri('describes');
 export const undocumented = iri('undocumented');
 export const phantom = iri('phantom');
@@ -259,10 +342,26 @@ export const CONTEXT = {
   implDependsOn: id('implDependsOn'),
   aliasOf: id('aliasOf'),
   namespaceOf: id('namespaceOf'),
+  loads: id('loads'),
+  passes: id('passes'),
+  passesLiteral: id('passesLiteral'),
+  literal: 'deus:literal',
+  Argument: 'deus:Argument',
+  reference: id('reference'),
+  slot: 'deus:slot',
+  referencePath: 'deus:referencePath',
+  calleePath: 'deus:calleePath',
+  constructedByPath: 'deus:constructedByPath',
   hasType: id('hasType'),
+  typeTerm: 'deus:typeTerm',
+  unresolvedReason: 'deus:unresolvedReason',
+  pending: 'deus:pending',
+  callee: id('callee'),
+  moduleFile: id('moduleFile'),
   // Type terms.
   Type: 'deus:Type',
   TypeProperty: 'deus:TypeProperty',
+  Module: 'deus:Module',
   typeKind: 'deus:typeKind',
   typeText: 'deus:typeText',
   literalValue: 'deus:literalValue',
@@ -283,6 +382,31 @@ export const CONTEXT = {
   mentions: 'deus:mentions',
 } as const;
 
+/** One reference passed into a call — see `deus:passes`. */
+export const ArgumentNode = Schema.Struct({
+  '@id': Schema.String,
+  '@type': Schema.Literal('Argument'),
+  'callee': Schema.Array(Schema.String),
+  'calleePath': Schema.optional(Schema.String),
+  'slot': Schema.String,
+  'reference': Schema.Array(Schema.String),
+  'referencePath': Schema.optional(Schema.String),
+});
+
+export type ArgumentNode = typeof ArgumentNode.Type;
+
+/** One string literal passed into a call — see `deus:passesLiteral`. */
+export const LiteralArgumentNode = Schema.Struct({
+  '@id': Schema.String,
+  '@type': Schema.Literal('Argument'),
+  'callee': Schema.Array(Schema.String),
+  'calleePath': Schema.optional(Schema.String),
+  'slot': Schema.String,
+  'literal': Schema.String,
+});
+
+export type LiteralArgumentNode = typeof LiteralArgumentNode.Type;
+
 /** The document shapes `design/ONTOLOGY.md` fixes, decoded by the RPC layer on the way in. */
 export const SymbolNode = Schema.Struct({
   '@id': Schema.String,
@@ -293,6 +417,7 @@ export const SymbolNode = Schema.Struct({
   'line': Schema.Number,
   'extends': Schema.Array(Schema.String),
   'constructedBy': Schema.Array(Schema.String),
+  'constructedByPath': Schema.optional(Schema.String),
   'pipedThrough': Schema.Array(Schema.String),
   'derivedFrom': Schema.Array(Schema.String),
   'argument': Schema.Array(Schema.String),
@@ -300,10 +425,14 @@ export const SymbolNode = Schema.Struct({
   'implDependsOn': Schema.Array(Schema.String),
   'aliasOf': Schema.Array(Schema.String),
   'namespaceOf': Schema.optional(Schema.Array(Schema.String)),
+  'loads': Schema.optional(Schema.Array(Schema.String)),
+  'passes': Schema.optional(Schema.Array(ArgumentNode)),
+  'passesLiteral': Schema.optional(Schema.Array(LiteralArgumentNode)),
   'snippet': Schema.optional(Schema.String),
   'doc': Schema.optional(Schema.String),
   'deprecated': Schema.optional(Schema.Boolean),
   'hasType': Schema.optional(Schema.String),
+  'typeTerm': Schema.optional(Schema.String),
 });
 
 export type SymbolNode = typeof SymbolNode.Type;
@@ -325,6 +454,9 @@ export const TypeNode = Schema.Struct({
   'returnType': Schema.optional(Schema.String),
   'literalValue': Schema.optional(Schema.String),
   'typePartial': Schema.optional(Schema.Boolean),
+  'callee': Schema.optional(Schema.String),
+  'pending': Schema.optional(Schema.String),
+  'unresolvedReason': Schema.optional(Schema.String),
   ...positionalFields('typeArg'),
   ...positionalFields('typeElement'),
   ...positionalFields('typeParam'),
@@ -343,6 +475,15 @@ export const TypePropertyNode = Schema.Struct({
 });
 
 export type TypePropertyNode = typeof TypePropertyNode.Type;
+
+/** A bare specifier that resolves inside the repository, and the file it resolves to. */
+export const ModuleNode = Schema.Struct({
+  '@id': Schema.String,
+  '@type': Schema.Literal('Module'),
+  'moduleFile': Schema.String,
+});
+
+export type ModuleNode = typeof ModuleNode.Type;
 
 export const PackageNode = Schema.Struct({
   '@id': Schema.String,
@@ -395,7 +536,7 @@ export const FileDocument = Schema.Struct({
   'declaresBlock': Schema.optional(Schema.Array(SpecBlockNode)),
   'parseError': Schema.optional(Schema.Array(Schema.String)),
   // Type terms the symbols' `hasType` point at: graph content with no edge from the file itself.
-  '@included': Schema.optional(Schema.Array(Schema.Union([TypeNode, TypePropertyNode]))),
+  '@included': Schema.optional(Schema.Array(Schema.Union([TypeNode, TypePropertyNode, ModuleNode]))),
 });
 
 export type FileDocument = typeof FileDocument.Type;

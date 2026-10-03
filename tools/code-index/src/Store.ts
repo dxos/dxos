@@ -132,6 +132,8 @@ export interface Api {
    * is the one they were computed with; see `design/NATIVE-BACKEND.md`.
    */
   readonly reasonAll: (reasoners: readonly Graph.ReasonerInput[]) => Effect.Effect<ReasonOutcome[], StoreError>;
+  /** Replace a JS pass's graph with these conclusions; see `Ontology.passGraphIri`. */
+  readonly writePass: (pass: string, quads: readonly Quad[]) => Effect.Effect<void, StoreError>;
   /** Every quad a reasoner concluded, as its graph currently stands. */
   readonly derived: (reasoner?: string) => Effect.Effect<Quad[], StoreError>;
   /** How many quads the reasoners' graphs hold, counted where they live rather than materialised. */
@@ -498,6 +500,26 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
             return outcomes;
           }),
         ),
+
+      writePass: (pass, quads) =>
+        Effect.gen(function* () {
+          const graph = Ontology.passGraphIri(pass);
+          const stale = yield* match(undefined, undefined, undefined, graph);
+          const next = quads.map((quad) => DataFactory.quad(quad.subject, quad.predicate, quad.object, graph));
+          // Only the difference is written, so the native journal sees what actually changed.
+          const key = (quad: Quad) =>
+            JSON.stringify([
+              quad.subject.value,
+              quad.predicate.value,
+              quad.object.termType,
+              quad.object.value,
+              quad.object.termType === 'Literal' ? [quad.object.datatype.value, quad.object.language] : [],
+            ]);
+          const kept = new Set(next.map(key));
+          const had = new Set(stale.map(key));
+          yield* graphs.delQuads(stale.filter((quad) => !kept.has(key(quad))));
+          yield* graphs.putQuads(next.filter((quad) => !had.has(key(quad))));
+        }),
 
       derived: (reasoner) =>
         reasoner === undefined

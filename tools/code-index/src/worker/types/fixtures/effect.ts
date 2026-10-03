@@ -57,6 +57,13 @@ export const merged = Layer.mergeAll(loggerLayer, storeLayer);
 export const provided = storeLayer.pipe(Layer.provide(clockLayer));
 export const providedDirect = Layer.provide(storeLayer, clockLayer);
 export const mergedTwo = Layer.merge(clockLayer, storeLayer);
+export const providedMerge = storeLayer.pipe(Layer.provideMerge(clockLayer));
+export const providedMergeDirect = Layer.provideMerge(storeLayer, clockLayer);
+export const discarded = Layer.effectDiscard(
+  Effect.gen(function* () {
+    yield* Clock;
+  }),
+);
 
 export const Person = Schema.Struct({ name: Schema.String, age: Schema.Number });
 export const Kind = Schema.Literal('person');

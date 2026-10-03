@@ -255,12 +255,21 @@ const types = Command.make(
       const Agreement = yield* Effect.promise(() => import('./worker/types/agreement.ts'));
       const { createResolver } = yield* Effect.promise(() => import('./worker/analyzers/resolver.ts'));
       const started = Date.now();
-      const { score, findings } = Agreement.compareFiles(targets, { root: repo, resolve: createResolver(repo) });
+      const { score, findings, bound, reasons } = Agreement.compareFiles(targets, {
+        root: repo,
+        resolve: createResolver(repo),
+      });
       const listed = new Set(Option.getOrElse(show, () => 'disagree').split(','));
       const scored = score.agree + score.partial + score.disagree;
       yield* emit(
         json,
-        { files: targets.length, score, findings: findings.filter((entry) => listed.has(entry.verdict)) },
+        {
+          files: targets.length,
+          score,
+          bound,
+          reasons,
+          findings: findings.filter((entry) => listed.has(entry.verdict)),
+        },
         () =>
           [
             ...findings
@@ -269,7 +278,11 @@ const types = Command.make(
                 (entry) =>
                   `${entry.verdict.padEnd(9)} ${entry.path}:${entry.line} ${entry.name}\n  mine:   ${entry.mine}\n  tsc:    ${entry.theirs}`,
               ),
-            `${targets.length} files in ${seconds(Date.now() - started)}: ${score.agree} agree, ${score.partial} partial, ${score.unknown} unknown, ${score.disagree} disagree, ${score.skipped} skipped` +
+            `unresolved reasons: ${reasons
+              .slice(0, 20)
+              .map(([reason, count]) => `${reason} ${count}`)
+              .join(', ')}`,
+            `${targets.length} files in ${seconds(Date.now() - started)}: ${score.agree} agree, ${score.partial} partial, ${score.unresolved} unresolved, ${score.deferred} deferred, ${score.disagree} disagree, ${score.skipped} skipped; ${bound} bound across files` +
               (scored > 0
                 ? ` — ${((100 * (score.agree + score.partial)) / scored).toFixed(1)}% of answered agree`
                 : ''),

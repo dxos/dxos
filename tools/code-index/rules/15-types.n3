@@ -2,26 +2,66 @@
 # can — `Layer.mergeAll(a, b)` is `Layer<A | B, E, R>` — so what `rules/10-effect.n3` approximates
 # from the constructor's first argument is exact here, and covers what that cannot see: merged,
 # provided and piped layers, and layers whose type is only written in an annotation.
+#
+# A type names a service as its file imported it (`file:<barrel>#Store`, `module:@dxos/x#Store`);
+# `deus:resolvesTo`, concluded by `rules/10-effect.n3` for exactly these names, gives the
+# declaration, which is what is stated when there is one.
 
 @prefix deus: <https://dxos.org/vocab/deus#>.
+@prefix rule: <https://dxos.org/vocab/deus/rule#>.
+@prefix Layer: <https://dxos.org/deus/module/effect/Layer#>.
+@prefix list: <http://www.w3.org/2000/10/swap/list#>.
+@prefix log: <http://www.w3.org/2000/10/swap/log#>.
 @prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>.
 
-# A layer is anything typed `Layer<…>`, however it was built.
-{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect/Layer#Layer> }
-  => { ?s rdf:type deus:EffectLayer }.
+# A layer is any symbol typed `Layer<…>`, however it was built. (Only a symbol has a kind: a property
+# of an object type has a type too, but is no declaration.)
+{ ?s rule:layerType ?t } <= { ?s deus:hasType ?t. ?t deus:typeHead Layer:Layer. ?s deus:kind ?kind }.
+{ ?s rule:layerType ?t } => { ?s rdf:type deus:EffectLayer }.
 
-# What it provides: `ROut`, the first type argument — one service, or each member of a union.
-{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect/Layer#Layer>; deus:typeArg0 ?out.
-  ?out deus:typeKind "ref"; deus:typeHead ?service }
-  => { ?s deus:providesService ?service }.
-{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect/Layer#Layer>; deus:typeArg0 ?out.
-  ?out deus:typeKind "union"; deus:typeMember ?member. ?member deus:typeKind "ref"; deus:typeHead ?service }
-  => { ?s deus:providesService ?service }.
+# The services named at a position of a `Layer` type: one service, or each member of a union.
+{ ?s rule:output ?at } <= { ?s rule:layerType ?t. ?t deus:typeArg0 ?at }.
+{ ?s rule:input ?at } <= { ?s rule:layerType ?t. ?t deus:typeArg2 ?at }.
+{ ?at rule:service ?service } <= { ?at deus:typeKind "ref"; deus:typeHead ?service }.
+{ ?at rule:service ?service } <= {
+  ?at deus:typeKind "union"; deus:typeMember ?member.
+  ?member deus:typeKind "ref"; deus:typeHead ?service.
+}.
 
-# What it still needs: `RIn`, the third — exact, where `deus:requiresService` is a reference heuristic.
-{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect/Layer#Layer>; deus:typeArg2 ?in.
-  ?in deus:typeKind "ref"; deus:typeHead ?service }
-  => { ?s deus:layerRequires ?service }.
-{ ?s deus:hasType ?t. ?t deus:typeHead <https://dxos.org/deus/module/effect/Layer#Layer>; deus:typeArg2 ?in.
-  ?in deus:typeKind "union"; deus:typeMember ?member. ?member deus:typeKind "ref"; deus:typeHead ?service }
-  => { ?s deus:layerRequires ?service }.
+# Its declaration when the name resolves to one, else the name as written.
+{ ?name rule:canonical ?declaration } <= { ?name deus:resolvesTo ?declaration }.
+{ ?name rule:canonical ?name } <= {
+  (?declaration { ?name deus:resolvesTo ?declaration } ?declarations) log:collectAllIn ?scope.
+  ?declarations list:length 0.
+}.
+
+# What it provides: `ROut`, the first type argument.
+{ ?s rule:output ?at. ?at rule:service ?service. ?service rule:canonical ?canonical }
+  => { ?s deus:providesService ?canonical }.
+
+# What it still needs: `RIn`, the third — exact, where `deus:requiresService` only says what the
+# implementation reads.
+{ ?s rule:input ?at. ?at rule:service ?service. ?service rule:canonical ?canonical }
+  => { ?s deus:layerRequires ?canonical }.
+
+# Where the type is unknown (a service imported from another file has no `Key` here), what a layer
+# provides still carries over from the layer it is built from, through the functions whose output
+# keeps their input's: `Store.layer.pipe(Layer.provide(Clock.layer))`, `Layer.mergeAll(storeLayer, …)`.
+{ ?f rule:keepsOutput true } <= {
+  ?f list:in (Layer:provide Layer:provideMerge Layer:merge Layer:orDie Layer:fresh Layer:tap Layer:tapError
+    Layer:tapCause Layer:catchTag Layer:catchCause Layer:catch Layer:withSpan Layer:withParentSpan Layer:updateService).
+}.
+{ ?s rule:keepsPipeline true } <= {
+  (?stage { ?s deus:pipedThrough ?stage } ?stages) log:collectAllIn ?scope.
+  (?stage { ?s deus:pipedThrough ?stage. ?stage rule:keepsOutput true } ?kept) log:collectAllIn ?scope.
+  ?stages list:length ?count.
+  ?kept list:length ?count.
+}.
+{ ?s deus:derivedFrom ?base; deus:pipedThrough ?stage. ?s rule:keepsPipeline true. ?base deus:providesService ?service }
+  => { ?s deus:providesService ?service }.
+# The first argument is `self` (or, for a curried `merge`/`provideMerge`, `that`, whose output is kept
+# too). `Layer.provide` is absent: curried, its first argument is the layer provided, not the output.
+{
+  ?s deus:constructedBy ?f. ?f list:in (Layer:mergeAll Layer:merge Layer:provideMerge Layer:orDie Layer:fresh).
+  ?s rule:keepsPipeline true. ?s deus:argument ?base. ?base deus:providesService ?service.
+} => { ?s deus:providesService ?service }.
