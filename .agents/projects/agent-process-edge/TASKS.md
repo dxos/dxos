@@ -421,7 +421,7 @@ harness defects, and then the agent got far enough to expose a real runtime bug.
 - [x] `ProcessObject` ran on `OperationHandlerSet.empty`, so an agent's tool call had no handler.
       `makeOperationServiceHandlerSet` dispatches each handler body over the existing
       `OPERATION_SERVICE` binding, under the same invocation timeout as the function-invoker path.
-      Only `getHandlerFor` is served: `OperationHandlerSet.toDurable` already holds the caller's definition
+      Only `getHandlerFor` is served: `DurableOperation.fromOperation` already holds the caller's definition
       and uses the resolved entry solely to invoke its handler, and tools resolve from the space's
       `PersistentOperation` records (`makeToolResolverFromOperations`) rather than from the set — so
       the synchronous `definitions()`, which a remote registry an RPC away cannot answer, is unused.

@@ -414,7 +414,7 @@ export class Impl<I, O, R> implements ProcessManager.Handle<I, O, any> {
         return Effect.gen({ self: this }, function* () {
           // The runtime assumes handlers are idempotent: an input whose handler was interrupted
           // is always re-delivered. Operations that are not idempotent guard against unsafe
-          // retries themselves (see `OperationHandlerSet.toDurable`).
+          // retries themselves (see `DurableOperation.fromOperation`).
           // event.value is persisted JSON; cast required at deserialization boundary since
           // Operation.Durable<I,O,R> does not expose the input Schema (runtime object does).
           const defWithSchema = definition as unknown as { input: Schema.Codec<I, unknown, never> };

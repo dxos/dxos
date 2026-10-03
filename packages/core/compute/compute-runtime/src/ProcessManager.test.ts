@@ -38,6 +38,7 @@ import { invariant } from '@dxos/invariant';
 import { type LogEntry, LogLevel, type LogProcessor, log } from '@dxos/log';
 import { Organization } from '@dxos/types';
 
+import * as DurableOperation from './DurableOperation.ts';
 import { ProcessStore } from './process-store.ts';
 import * as ProcessManager from './ProcessManager.ts';
 import * as ProcessMonitor from './ProcessMonitor.ts';
@@ -408,7 +409,7 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
 
-      const executable = OperationHandlerSet.toDurable(Double, handlers);
+      const executable = DurableOperation.fromOperation(Double, handlers);
 
       const handle = yield* manager.spawn(executable);
       expect(handle.pid).toBeDefined();
@@ -427,7 +428,7 @@ describe('ManagerImpl', () => {
     Effect.fn(
       function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(OperationHandlerSet.toDurable(Traced, handlers));
+        const handle = yield* manager.spawn(DurableOperation.fromOperation(Traced, handlers));
         yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
         expect(recordedSpans.map(({ name }) => name)).toContain('Handler.span');
       },
@@ -440,7 +441,7 @@ describe('ManagerImpl', () => {
     Effect.fn(
       function* ({ expect }) {
         const manager = yield* ProcessManager.Service;
-        const handle = yield* manager.spawn(OperationHandlerSet.toDurable(Traced, handlers), {
+        const handle = yield* manager.spawn(DurableOperation.fromOperation(Traced, handlers), {
           environment: { space: 'B7777777777777777777777777' as any },
         });
         yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect);
@@ -536,7 +537,7 @@ describe('ManagerImpl', () => {
               }),
           ),
         );
-        const child = yield* manager.spawn(OperationHandlerSet.toDurable(Double, handlers), {
+        const child = yield* manager.spawn(DurableOperation.fromOperation(Double, handlers), {
           parentProcessId: parent.pid,
         });
         yield* child.runAndExit({ inputs: [{ value: 1 }] }).pipe(Stream.runCollect);
@@ -596,7 +597,7 @@ describe('ManagerImpl', () => {
     'runAndExit submits inputs and completes the stream at IDLE or SUCCEEDED',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
-      const handle = yield* manager.spawn(OperationHandlerSet.toDurable(Double, handlers));
+      const handle = yield* manager.spawn(DurableOperation.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 7 }] }).pipe(Stream.runCollect);
       expect(outputs).toEqual([14]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
@@ -992,7 +993,7 @@ describe('ManagerImpl', () => {
         const manager = yield* ProcessManager.Service;
         const entries = yield* captureLogEntries(() =>
           Effect.gen(function* () {
-            const handle = yield* manager.spawn(OperationHandlerSet.toDurable(Failing, handlers));
+            const handle = yield* manager.spawn(DurableOperation.fromOperation(Failing, handlers));
             yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
           }),
         );
@@ -1060,7 +1061,7 @@ describe('ManagerImpl', () => {
     'runAndExit on successful operation',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
-      const handle = yield* manager.spawn(OperationHandlerSet.toDurable(Double, handlers));
+      const handle = yield* manager.spawn(DurableOperation.fromOperation(Double, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 11 }] }).pipe(Stream.runCollect);
       expect(outputs).toEqual([22]);
       expect(handle.status.state).toEqual(Process.State.SUCCEEDED);
@@ -1072,7 +1073,7 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
 
-      const handle = yield* manager.spawn(OperationHandlerSet.toDurable(ParentInvoker, handlers));
+      const handle = yield* manager.spawn(DurableOperation.fromOperation(ParentInvoker, handlers));
       const outputs = yield* handle.runAndExit({ inputs: [7] }).pipe(Stream.runCollect);
       expect(outputs).toEqual([7]);
 
@@ -1091,7 +1092,7 @@ describe('ManagerImpl', () => {
     'runAndExit on failing operation',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
-      const handle = yield* manager.spawn(OperationHandlerSet.toDurable(Failing, handlers));
+      const handle = yield* manager.spawn(DurableOperation.fromOperation(Failing, handlers));
       const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
       expect(Exit.isFailure(exit)).toEqual(true);
       // Compared by defect rather than by deep-equal Exit: v4 annotates causes with a stack trace,
@@ -1105,7 +1106,7 @@ describe('ManagerImpl', () => {
     'runAndExit propagates the process failure cause without stringifying or nesting',
     Effect.fn(function* ({ expect }) {
       const manager = yield* ProcessManager.Service;
-      const handle = yield* manager.spawn(OperationHandlerSet.toDurable(RunAgain, handlers));
+      const handle = yield* manager.spawn(DurableOperation.fromOperation(RunAgain, handlers));
       const exit = yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
 
       expect(Exit.isFailure(exit)).toBe(true);
@@ -1133,7 +1134,7 @@ describe('ManagerImpl', () => {
     Effect.fn(function* ({ expect }) {
       capturedTraceMessages.length = 0;
       const manager = yield* ProcessManager.Service;
-      const handle = yield* manager.spawn(OperationHandlerSet.toDurable(RunAgain, handlers));
+      const handle = yield* manager.spawn(DurableOperation.fromOperation(RunAgain, handlers));
       yield* handle.runAndExit({ inputs: [undefined] }).pipe(Stream.runCollect, Effect.exit);
 
       // `isOfType` inside the map narrows `event.data` to the OperationEnd payload without a cast.
@@ -2261,7 +2262,7 @@ describe('durability', () => {
       const traceSink = yield* Trace.TraceSink;
 
       let gate = true;
-      // No IdempotentAnnotation → treated as non-idempotent by `OperationHandlerSet.toDurable`.
+      // No IdempotentAnnotation → treated as non-idempotent by `DurableOperation.fromOperation`.
       const SlowOp = Operation.make({
         meta: { key: DXN.make('com.example.operation.test.slowNonIdempotent'), name: 'SlowNonIdempotent' },
         input: Schema.Struct({ value: Schema.Number }),
@@ -2278,7 +2279,7 @@ describe('durability', () => {
           ),
         ),
       );
-      const opProcess = OperationHandlerSet.toDurable(SlowOp, opHandlers);
+      const opProcess = DurableOperation.fromOperation(SlowOp, opHandlers);
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       // `submitInput` returns once the input and the operation's durable "started" marker are
@@ -2335,7 +2336,7 @@ describe('durability', () => {
           ),
         ),
       );
-      const opProcess = OperationHandlerSet.toDurable(SlowOp, opHandlers);
+      const opProcess = DurableOperation.fromOperation(SlowOp, opHandlers);
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       // See the sibling durability test above for why a plain, non-forked `submitInput` already
@@ -2492,7 +2493,7 @@ describe('durability', () => {
       const handlerSet = yield* OperationHandlerSet.OperationHandlerProvider;
       const traceSink = yield* Trace.TraceSink;
 
-      const opProcess = OperationHandlerSet.toDurable(Double, handlers);
+      const opProcess = DurableOperation.fromOperation(Double, handlers);
       const managerA = mkManager({ kv, registry, resolver, handlerSet, traceSink });
       const handle = yield* managerA.spawn(opProcess);
       const outputs = yield* handle.runAndExit({ inputs: [{ value: 5 }] }).pipe(Stream.runCollect);

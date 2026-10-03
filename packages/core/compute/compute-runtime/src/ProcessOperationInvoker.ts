@@ -28,6 +28,7 @@ import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
 import { type OperationInvoker } from '@dxos/operation';
 
+import * as DurableOperation from './DurableOperation.ts';
 import type { ProcessNotFoundError } from './errors.ts';
 import { ProcessManagerService } from './process-manager-service.ts';
 import type * as ProcessManager from './ProcessManager.ts';
@@ -170,7 +171,7 @@ export const make = (opts: {
     },
   ): Effect.Effect<OperationFiber<O>> =>
     Effect.gen(function* () {
-      const executable = OperationHandlerSet.toDurable(op, opts.handlerSet);
+      const executable = DurableOperation.fromOperation(op, opts.handlerSet);
 
       log('spawing process', { opKey: op.meta.key, ...options });
       const handle = yield* opts.manager.spawn(executable, {
