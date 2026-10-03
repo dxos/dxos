@@ -6,8 +6,9 @@
 
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { type ThemedClassName } from '@dxos/ui-types';
+
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 
 type SkeletonProps = ThemedClassName<ComponentPropsWithRef<'div'>> & {
   variant?: 'default' | 'circle' | 'text';

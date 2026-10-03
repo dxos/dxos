@@ -22,10 +22,10 @@ import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as DensityProvider from '../../providers/DensityProvider/DensityProvider.tsx';
 import { type ToolbarStyleProps } from '../../theme/index.ts';
-import { composable, composableProps, slottable } from '../../util/index.ts';
+import { composable, composableProps, slottable } from '../../util/slots.ts';
 import * as Button from '../Button/Button.tsx';
 import * as IconButton from '../Button/IconButton.tsx';
 import * as Toggle from '../Button/Toggle.tsx';

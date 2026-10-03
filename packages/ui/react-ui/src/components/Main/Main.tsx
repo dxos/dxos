@@ -23,14 +23,14 @@ import { addEventListener } from '@dxos/async';
 import { FOCUS_GROUP_ATTR, KEYBOARD_MODALITY_ATTR } from '@dxos/react-focus';
 import { useComposedRefs, useControllableState, useMediaQuery } from '@dxos/react-hooks';
 import { osTranslations } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as ThemeProvider from '../../providers/ThemeProvider/ThemeProvider.tsx';
 import { useTranslation } from '../../providers/ThemeProvider/TranslationsContext.ts';
 import { type MainStyleProps } from '../../theme/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
 import {
   DRAWER_DEFAULT_HEIGHT,
   DRAWER_MAX_HEIGHT,

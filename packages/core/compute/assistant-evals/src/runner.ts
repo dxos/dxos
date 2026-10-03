@@ -20,7 +20,7 @@ import * as Capability from '@dxos/app-framework/Capability';
 import * as Plugin from '@dxos/app-framework/Plugin';
 import { type TestHarness } from '@dxos/app-framework/testing';
 import { AiContext } from '@dxos/assistant';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import { Config } from '@dxos/client';
 import { FeedTraceSink } from '@dxos/compute-runtime';
@@ -195,7 +195,7 @@ const runInstructions = <I>(
       }
 
       return yield* Operation.invoke(
-        RunInstructions,
+        AgentOperation.RunInstructions,
         {
           instructions: Ref.make(instructions),
           input,

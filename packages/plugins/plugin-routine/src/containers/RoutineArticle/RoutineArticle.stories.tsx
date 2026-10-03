@@ -15,7 +15,7 @@ import { Feed, Filter, Json, Obj, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { type Space, useSpaces } from '@dxos/react-client/echo';
 import { ObjectProperties } from '@dxos/react-ui-form';
 import { Syntax } from '@dxos/react-ui-syntax-highlighter';
@@ -79,7 +79,7 @@ const seedWithTimerTrigger = (space: Space) => {
 const withAutomation = (seed: (space: Space) => void) =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>

@@ -15,7 +15,7 @@ import React, {
 
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as Icon from '../Icon/Icon.tsx';
 import {
   ACCORDION_ITEM_NAME,

@@ -11,7 +11,7 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -221,9 +221,9 @@ const runPrompt = Effect.fn(function* ({
   input: Record<string, any>;
   onResult: (result: string) => void;
 }) {
-  const inputData: Operation.Definition.Input<typeof RunInstructions> = { instructions, input };
+  const inputData: Operation.Definition.Input<typeof AgentOperation.RunInstructions> = { instructions, input };
   // Invoke the function.
-  const result = yield* Operation.invoke(RunInstructions, inputData).pipe(Effect.orDie, Effect.exit);
+  const result = yield* Operation.invoke(AgentOperation.RunInstructions, inputData).pipe(Effect.orDie, Effect.exit);
 
   Exit.match(result, {
     onFailure: (cause) => {

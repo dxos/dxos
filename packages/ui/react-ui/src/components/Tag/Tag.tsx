@@ -8,9 +8,9 @@ import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 
 type TagProps = ThemedClassName<ComponentPropsWithRef<typeof ark.span>> & {
   asChild?: boolean;

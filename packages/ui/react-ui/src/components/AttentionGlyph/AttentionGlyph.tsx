@@ -8,8 +8,8 @@ import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, type CSSProperties, forwardRef, useMemo } from 'react';
 
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { type ThemedClassName } from '../../util/index.ts';
 import * as Icon from '../Icon/Icon.tsx';
 const attentionGlyphStyles = mx(
   'inline-block rounded-xs size-3 bg-transparent text-accent-text transition-colors',

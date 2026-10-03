@@ -6,7 +6,8 @@
 
 import React, { Fragment, forwardRef } from 'react';
 
-import { type ThemedClassName } from '../../util/index.ts';
+import { type ThemedClassName } from '@dxos/ui-types';
+
 import * as IconButton from '../Button/IconButton.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import * as Menu from '../Menu/Menu.tsx';

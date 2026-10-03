@@ -15,12 +15,13 @@ import React, { type PropsWithChildren, type ReactNode, useMemo } from 'react';
 
 import { useFocusGroup } from '@dxos/react-focus';
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
 import { useTranslation } from '../../providers/ThemeProvider/TranslationsContext.ts';
 import { animationsDisabled, useReducedMotion } from '../../util/animation.ts';
-import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
+import { composable, composableProps } from '../../util/slots.ts';
 import * as IconButton from '../Button/IconButton.tsx';
 import * as MediaPlayer from '../MediaPlayer/MediaPlayer.tsx';
 //

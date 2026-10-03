@@ -5,7 +5,7 @@
 import { Field as FieldPrimitive } from '@ark-ui/react/field';
 import React, { type InputHTMLAttributes, type ReactNode } from 'react';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';
 

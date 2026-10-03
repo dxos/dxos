@@ -8,11 +8,11 @@ import React, { useCallback, useMemo } from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { Obj, Type, View } from '@dxos/echo';
-import { SelectionModel } from '@dxos/graph';
+import * as SelectionModel from '@dxos/graph/SelectionModel';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -36,7 +36,7 @@ const DefaultStory = () => {
   const [space] = useSpaces();
   const model = useGraphModel(space?.db);
 
-  const selection = useMemo(() => new SelectionModel({ mode: 'single' }), []);
+  const selection = useMemo(() => new SelectionModel.SelectionModel({ mode: 'single' }), []);
 
   const handleInspect = useCallback<NonNullable<GraphProps<SpaceGraphNode, SpaceGraphEdge>['onInspect']>>(
     (node, event) => {
@@ -81,7 +81,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [

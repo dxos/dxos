@@ -45,6 +45,11 @@
       "source": "./src/HiggsfieldPlugin.ts",
       "types": "./dist/types/src/HiggsfieldPlugin.d.ts",
       "import": "./dist/lib/HiggsfieldPlugin.mjs"
+    },
+    "./HiggsfieldEvents": {
+      "source": "./src/HiggsfieldEvents.ts",
+      "types": "./dist/types/src/HiggsfieldEvents.d.ts",
+      "import": "./dist/lib/ns/HiggsfieldEvents.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

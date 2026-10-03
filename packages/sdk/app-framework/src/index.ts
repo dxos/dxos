@@ -3,7 +3,6 @@
 //
 
 export * from './common/index.ts';
-export * from './config/index.ts';
 export * from './core/index.ts';
 export * from './plugin-process-manager/index.ts';
 export * as App from './App.ts';

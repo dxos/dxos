@@ -3,8 +3,6 @@
 //
 
 export * as StudioPlugin from './StudioPlugin.ts';
-export * from '#meta';
-export * from '#operations';
 export * from '#skills';
 export * from '#types';
 export * as Templates from './Templates.ts';

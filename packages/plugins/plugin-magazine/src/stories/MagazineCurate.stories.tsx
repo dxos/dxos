@@ -17,7 +17,7 @@ import * as Plugin from '@dxos/app-framework/Plugin';
 import * as Surface from '@dxos/app-framework/Surface';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { AgentHandlers } from '@dxos/assistant-toolkit';
+import * as AgentOperationHandlerSet from '@dxos/assistant-toolkit/AgentOperationHandlerSet';
 import { type Client } from '@dxos/client';
 import { type Space } from '@dxos/client/echo';
 import * as LayerSpec from '@dxos/compute/LayerSpec';
@@ -26,7 +26,7 @@ import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import * as RoutinePlugin from '@dxos/plugin-routine/RoutinePlugin';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import * as Panel from '@dxos/react-ui/Panel';
@@ -54,7 +54,7 @@ const AgentRuntimePlugin = Plugin.define(
 ).pipe(
   Plugin.addModule<void>(
     Capability.inlineModule('operation-handler', { provides: [Capabilities.OperationHandler] }, () =>
-      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, AgentHandlers)]),
+      Effect.succeed([Capability.contribute(Capabilities.OperationHandler, AgentOperationHandlerSet.handlers)]),
     ),
   ),
   Plugin.addModule({
@@ -155,7 +155,7 @@ const meta: Meta<typeof DefaultStory> = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Subscription.Subscription, Subscription.Post, Magazine.Magazine, Text.Text],
           onClientInitialized: seedRegisterMagazine,

@@ -8,7 +8,7 @@ import * as Effect from 'effect/Effect';
 import * as ProcessManagerPlugin from '@dxos/app-framework/ProcessManagerPlugin';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 
 import { NavTreeItemAction, type NavTreeItemActionMenuProps } from './NavTreeItemAction.tsx';
@@ -52,7 +52,7 @@ const meta = {
   } satisfies Partial<NavTreeItemActionMenuProps>,
   decorators: [
     withPluginManager({
-      plugins: [...corePlugins(), ProcessManagerPlugin.make()],
+      plugins: [...CorePlugins.make(), ProcessManagerPlugin.make()],
     }),
   ],
   parameters: {

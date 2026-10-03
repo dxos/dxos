@@ -14,9 +14,11 @@
 import { Steps as StepsPrimitive, useStepsContext } from '@ark-ui/react/steps';
 import React, { useEffect, useState } from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '@dxos/ui-types';
+
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import { type StepState } from '../../theme/index.ts';
-import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
+import { composable, composableProps } from '../../util/slots.ts';
 
 /** One stage of a plan that has identity — a stage the caller can address and select. */
 export type Step = {

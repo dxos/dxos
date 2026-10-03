@@ -16,12 +16,13 @@ import React, { type ComponentPropsWithRef, type FC, type ReactNode, useMemo } f
 import { useTranslation } from 'react-i18next';
 
 import { type SlottableProps } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as ElevationProvider from '../../providers/ElevationProvider/ElevationProvider.tsx';
-import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
+import { composableProps, slottable } from '../../util/slots.ts';
 import * as IconButton from '../Button/IconButton.tsx';
 type FloatingPanelPoint = { x: number; y: number };
 

@@ -6,7 +6,7 @@ import React, { type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 import { type ChromaticPalette, type MessageValence, type NeutralPalette } from '@dxos/ui-types';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { Icon } from '../Icon/index.ts';
 import { useToolbarItem } from '../Toolbar/index.ts';

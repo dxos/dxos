@@ -34,7 +34,8 @@ import { flushSync } from 'react-dom';
 
 import { useControllableState } from '@dxos/react-hooks';
 
-import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
+import { useElevationContext } from '../../hooks/useElevationContext.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import {
   DEFAULT_DELAY_DURATION,
   TOOLTIP_NAME,

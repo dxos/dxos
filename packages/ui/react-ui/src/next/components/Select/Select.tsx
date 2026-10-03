@@ -10,7 +10,7 @@ import React, { type ReactNode, type RefObject, createContext, forwardRef, useCo
 import { mx } from '@dxos/ui-theme';
 import { type ThemedClassName } from '@dxos/ui-types';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Icon, type IconHue, type IconProps } from '../Icon/index.ts';

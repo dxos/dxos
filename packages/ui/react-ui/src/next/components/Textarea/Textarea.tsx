@@ -5,7 +5,7 @@
 import { Field as FieldPrimitive } from '@ark-ui/react/field';
 import React, { type TextareaHTMLAttributes } from 'react';
 
-import { composable, composableProps } from '../../../util/index.ts';
+import { composable, composableProps } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 
 /** Fewest lines a textarea shows, so it never reads as a single-line Input. */

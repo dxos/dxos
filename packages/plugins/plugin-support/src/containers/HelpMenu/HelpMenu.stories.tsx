@@ -7,7 +7,7 @@ import React from 'react';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
 import * as StatusBar from '@dxos/plugin-status-bar/StatusBar';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Config } from '@dxos/react-client';
 import { withClientProvider } from '@dxos/react-client/testing';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -44,7 +44,7 @@ const meta = {
   title: 'plugins/plugin-support/containers/HelpMenu',
   component: HelpMenu,
   render: DefaultStory,
-  decorators: [withTheme(), withLayout({ layout: 'centered' }), withPluginManager({ plugins: corePlugins() })],
+  decorators: [withTheme(), withLayout({ layout: 'centered' }), withPluginManager({ plugins: CorePlugins.make() })],
   parameters: {
     layout: 'centered',
     translations,

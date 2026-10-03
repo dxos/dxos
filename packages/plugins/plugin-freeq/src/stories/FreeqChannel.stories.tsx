@@ -15,7 +15,7 @@ import { Feed, Query } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as ThreadPlugin from '@dxos/plugin-thread/ThreadPlugin';
 import { translations as threadTranslations } from '@dxos/plugin-thread/translations';
 import { useSpaces } from '@dxos/react-client/echo';
@@ -53,7 +53,7 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Schema, types)],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types,
           onClientInitialized: ({ client }) =>

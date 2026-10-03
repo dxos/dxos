@@ -11,9 +11,9 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
 import * as EffectEx from '@dxos/effect/EffectEx';
-import { PreviewEvents } from '@dxos/plugin-preview';
 import * as PreviewCapabilities from '@dxos/plugin-preview/PreviewCapabilities';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as PreviewEvents from '@dxos/plugin-preview/PreviewEvents';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import {
   EditorPreviewProvider,
   type EditorPreviewProviderProps,
@@ -130,7 +130,7 @@ const meta = {
     // No PreviewPlugin: its popover module would answer the anchors too, through the deck's layout
     // operation, which has no handler here. The start event alone activates this plugin's resolver.
     withPluginManager({
-      plugins: [...corePlugins(), GitHubPlugin(), FixtureLinkSourcePlugin()],
+      plugins: [...CorePlugins.make(), GitHubPlugin(), FixtureLinkSourcePlugin()],
       setupEvents: [PreviewEvents.Start],
     }),
   ],

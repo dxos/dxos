@@ -7,8 +7,9 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { type ThemedClassName } from '@dxos/ui-types';
+
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 
 type LinkProps = ThemedClassName<ComponentPropsWithRef<typeof ark.a>> &
   Partial<{

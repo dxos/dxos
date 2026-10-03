@@ -28,11 +28,13 @@ import { useTranslation } from 'react-i18next';
 
 import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import { type Density, type Elevation, type Size } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useDensityContext } from '../../hooks/useDensityContext.ts';
+import { useElevationContext } from '../../hooks/useElevationContext.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as IconButton from '../Button/IconButton.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import { FIELD_NAME, type FieldValence, FieldValenceProvider, useFieldValence } from './FieldContext.ts';

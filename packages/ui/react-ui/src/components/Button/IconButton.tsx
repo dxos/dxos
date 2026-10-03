@@ -6,8 +6,9 @@
 
 import React, { forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { type ThemedClassName } from '@dxos/ui-types';
+
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as Icon from '../Icon/Icon.tsx';
 import * as Tooltip from '../Tooltip/Tooltip.tsx';
 import * as Button from './Button.tsx';

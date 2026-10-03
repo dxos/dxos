@@ -28,10 +28,10 @@ import React, {
 } from 'react';
 
 import { useControllableState } from '@dxos/react-hooks';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as ElevationProvider from '../../providers/ElevationProvider/ElevationProvider.tsx';
-import { type ThemedClassName } from '../../util/index.ts';
 import { DrawerProvider, useDrawerContext } from './DrawerContext.ts';
 
 type DrawerSide = 'start' | 'end' | 'top' | 'bottom';

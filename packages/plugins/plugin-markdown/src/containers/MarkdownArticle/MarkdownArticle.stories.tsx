@@ -24,7 +24,7 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
 import { translations as spaceTranslations } from '@dxos/plugin-space/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
@@ -107,7 +107,7 @@ const meta = {
     withPluginManager<StoryArgs>(
       ({ args: { title = 'Testing', content = '', objects: showObjects = false, deleted = false } }) => ({
         plugins: [
-          ...corePlugins(),
+          ...CorePlugins.make(),
           StorybookPlugin.make({}),
           MarkdownExtensionsPlugin(),
           IllustratorPlugin.make(),

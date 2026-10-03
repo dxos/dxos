@@ -8,8 +8,8 @@ import ErrorStackParser from 'error-stack-parser';
 import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
+import { ThemedClassName } from '@dxos/ui-types';
 
-import { ThemedClassName } from '../../util/index.ts';
 import { type ParsedStackFrame } from './parse-stack.ts';
 
 /** A stack frame resolved to a local (workspace) source location. */

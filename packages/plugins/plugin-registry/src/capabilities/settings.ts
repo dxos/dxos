@@ -7,7 +7,7 @@ import * as Effect from 'effect/Effect';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as PluginManifest from '@dxos/app-framework/PluginManifest';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 
 import { meta } from '#meta';
 import { RegistryCapabilities, type RegistryPluginOptions, RegistrySettingsSchema } from '#types';
@@ -16,7 +16,7 @@ const DEFAULT_DEV_PLUGIN_URL = `http://localhost:${PluginManifest.DEV_SERVER_POR
 
 export default Capability.makeModule(({ externalPlugins = true }: RegistryPluginOptions = {}) =>
   Effect.sync(() => {
-    const settingsAtom = createKvsStore({
+    const settingsAtom = KvsStore.make({
       key: meta.profile.key,
       schema: RegistrySettingsSchema,
       defaultValue: () => ({ devPluginUrl: DEFAULT_DEV_PLUGIN_URL }),

@@ -16,11 +16,13 @@ import { useTranslation } from 'react-i18next';
 
 import { createContext, useId } from '@dxos/react-hooks';
 import { type ComposableProps, type Elevation, type MessageValence, type SlottableProps } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useElevationContext, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
+import { useElevationContext } from '../../hooks/useElevationContext.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
+import { composable, composableProps } from '../../util/slots.ts';
 import * as IconButton from '../Button/IconButton.tsx';
 import * as Column from '../Column/Column.tsx';
 import * as Icon from '../Icon/Icon.tsx';

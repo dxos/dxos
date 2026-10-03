@@ -12,8 +12,8 @@ import { type Database, Ref } from '@dxos/echo';
 import { type EntityNotFoundError } from '@dxos/echo/Error';
 import { type Resolver } from '@dxos/extractor';
 import { type Connection } from '@dxos/link';
-import { type ConnectionAuthExpiredError } from '@dxos/plugin-connector';
 import * as Binding from '@dxos/plugin-connector/Binding';
+import type * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as MailSync from '@dxos/plugin-inbox/MailSync';
 import { ambientSyncServices } from '@dxos/plugin-inbox/testing/sync';
 
@@ -31,7 +31,7 @@ export const runJmapSync = ({
   ...options
 }: { connection: Ref.Ref<Connection.Connection> } & Omit<MailSync.RunMailSyncOptions, 'binding'>): Effect.Effect<
   { newMessages: number },
-  MailSync.MailSyncError | EntityNotFoundError | ConnectionAuthExpiredError,
+  MailSync.MailSyncError | EntityNotFoundError | ConnectorError.ConnectionAuthExpiredError,
   Database.Service | Capability.Service | Operation.Service | Trace.TraceService | JmapMailApi | Resolver
 > =>
   Binding.syncAll({

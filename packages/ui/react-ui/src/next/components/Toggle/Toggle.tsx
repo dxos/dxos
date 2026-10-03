@@ -5,7 +5,7 @@
 import { Toggle as TogglePrimitive, useToggleContext } from '@ark-ui/react/toggle';
 import React from 'react';
 
-import { composable } from '../../../util/index.ts';
+import { composable } from '../../../util/slots.ts';
 import { Button, type ButtonProps } from '../Button/index.ts';
 
 type ToggleIconProps = {

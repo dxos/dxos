@@ -13,7 +13,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import type * as AppGraphNode from '@dxos/app-graph/AppGraphNode';
 import * as AppSurface from '@dxos/app-toolkit/AppSurface';
 import { Obj } from '@dxos/echo';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { withAttention } from '@dxos/react-ui-attention/testing';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -73,7 +73,7 @@ const DefaultStory = () => {
 const meta: Meta = {
   title: 'plugins/plugin-deck/components/Plank',
   decorators: [
-    withPluginManager({ plugins: [...corePlugins(), TestPlugin()], capabilities: [TestExtension] }),
+    withPluginManager({ plugins: [...CorePlugins.make(), TestPlugin()], capabilities: [TestExtension] }),
     withAttention(),
     withTheme(),
     withLayout({ layout: 'fullscreen' }),

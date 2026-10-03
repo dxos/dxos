@@ -10,7 +10,7 @@ import React, { type PropsWithChildren, useCallback, useEffect, useMemo, useRef,
 
 import * as AppHooks from '@dxos/app-framework/Hooks';
 import { Alarm } from '@dxos/assistant';
-import { resolveSlashCommand } from '@dxos/assistant-toolkit';
+import * as SlashCommand from '@dxos/assistant-toolkit/SlashCommand';
 import * as AssistantChat from '@dxos/assistant/Chat';
 import { Event } from '@dxos/async';
 import { type Database, Filter, Obj, Query } from '@dxos/echo';
@@ -206,7 +206,7 @@ const ChatRoot = ({
           if (text.length) {
             // A leading /command is a deterministic shortcut — executed directly, no model in
             // the loop; an unknown command falls through to the model as plain text.
-            const resolved = resolveSlashCommand(text, TaskSlashCommands);
+            const resolved = SlashCommand.resolveSlashCommand(text, TaskSlashCommands);
             if (resolved) {
               // One command at a time: `invokePromise` does not queue, so two quick submissions
               // would interleave their operations and land their summaries out of order.

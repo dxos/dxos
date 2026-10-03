@@ -28,9 +28,69 @@
       "import": "./dist/lib/Memory.mjs"
     },
     "./AgentOperation": {
-      "source": "./src/operations/definitions.ts",
-      "types": "./dist/types/src/operations/definitions.d.ts",
-      "import": "./dist/lib/AgentOperation.mjs"
+      "source": "./src/AgentOperation.ts",
+      "types": "./dist/types/src/AgentOperation.d.ts",
+      "import": "./dist/lib/ns/AgentOperation.mjs"
+    },
+    "./AgentOperationHandlerSet": {
+      "source": "./src/AgentOperationHandlerSet.ts",
+      "types": "./dist/types/src/AgentOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ns/AgentOperationHandlerSet.mjs"
+    },
+    "./AgentSkill": {
+      "source": "./src/AgentSkill.ts",
+      "types": "./dist/types/src/AgentSkill.d.ts",
+      "import": "./dist/lib/ns/AgentSkill.mjs"
+    },
+    "./AlarmSkill": {
+      "source": "./src/AlarmSkill.ts",
+      "types": "./dist/types/src/AlarmSkill.d.ts",
+      "import": "./dist/lib/ns/AlarmSkill.mjs"
+    },
+    "./AutomationSkill": {
+      "source": "./src/AutomationSkill.ts",
+      "types": "./dist/types/src/AutomationSkill.d.ts",
+      "import": "./dist/lib/ns/AutomationSkill.mjs"
+    },
+    "./BrowserSkill": {
+      "source": "./src/BrowserSkill.ts",
+      "types": "./dist/types/src/BrowserSkill.d.ts",
+      "import": "./dist/lib/ns/BrowserSkill.mjs"
+    },
+    "./ChatContextSkill": {
+      "source": "./src/ChatContextSkill.ts",
+      "types": "./dist/types/src/ChatContextSkill.d.ts",
+      "import": "./dist/lib/ns/ChatContextSkill.mjs"
+    },
+    "./DelegationSkill": {
+      "source": "./src/DelegationSkill.ts",
+      "types": "./dist/types/src/DelegationSkill.d.ts",
+      "import": "./dist/lib/ns/DelegationSkill.mjs"
+    },
+    "./MemorySkill": {
+      "source": "./src/MemorySkill.ts",
+      "types": "./dist/types/src/MemorySkill.d.ts",
+      "import": "./dist/lib/ns/MemorySkill.mjs"
+    },
+    "./PlanningSkill": {
+      "source": "./src/PlanningSkill.ts",
+      "types": "./dist/types/src/PlanningSkill.d.ts",
+      "import": "./dist/lib/ns/PlanningSkill.mjs"
+    },
+    "./SkillManagerSkill": {
+      "source": "./src/SkillManagerSkill.ts",
+      "types": "./dist/types/src/SkillManagerSkill.d.ts",
+      "import": "./dist/lib/ns/SkillManagerSkill.mjs"
+    },
+    "./SlashCommand": {
+      "source": "./src/SlashCommand.ts",
+      "types": "./dist/types/src/SlashCommand.d.ts",
+      "import": "./dist/lib/ns/SlashCommand.mjs"
+    },
+    "./WebSearchSkill": {
+      "source": "./src/WebSearchSkill.ts",
+      "types": "./dist/types/src/WebSearchSkill.d.ts",
+      "import": "./dist/lib/ns/WebSearchSkill.mjs"
     }
   },
   "files": [

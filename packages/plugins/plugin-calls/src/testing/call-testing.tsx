@@ -8,7 +8,7 @@ import { useLayoutEffect } from 'react';
 import * as Hooks from '@dxos/app-framework/Hooks';
 import { withPluginManager } from '@dxos/app-framework/testing';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { Config } from '@dxos/react-client';
 
 import { CallsPlugin } from '#plugin';
@@ -34,7 +34,7 @@ const storyConfig = new Config({
 export const withCallManager = () =>
   withPluginManager({
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         config: storyConfig,
         onClientInitialized: ({ client }) =>

@@ -8,9 +8,10 @@ import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithRef, forwardRef, memo, useMemo } from 'react';
 
 import { type Size } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useIconHref, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useIconHref } from '../../hooks/useIconHref.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 
 type IconProps = ThemedClassName<ComponentPropsWithRef<typeof ark.svg>> & {
   icon: string;

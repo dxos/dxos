@@ -18,7 +18,7 @@ import * as IllustratorPlugin from '@dxos/plugin-illustrator/IllustratorPlugin';
 import * as Markdown from '@dxos/plugin-markdown/Markdown';
 import { MarkdownPlugin } from '@dxos/plugin-markdown/testing';
 import { SpacePlugin } from '@dxos/plugin-space/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import * as Tldraw from '@dxos/plugin-tldraw/Tldraw';
 import * as TldrawModel from '@dxos/plugin-tldraw/TldrawModel';
@@ -60,7 +60,7 @@ const meta: Meta<typeof StackArticle> = {
     withPluginManager({
       capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Collection.Collection, Markdown.Document, Drawing.Drawing, Drawing.Canvas],
           onClientInitialized: ({ client }) =>

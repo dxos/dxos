@@ -12,7 +12,7 @@ import { createDidFromIdentityKey } from '@dxos/credentials';
 import * as EffectEx from '@dxos/effect/EffectEx';
 import { invariant } from '@dxos/invariant';
 import { log } from '@dxos/log';
-import { ClientOperation } from '@dxos/plugin-client';
+import * as ClientOperation from '@dxos/plugin-client/ClientOperation';
 import * as PasskeyError from '@dxos/plugin-client/PasskeyError';
 import { requirePublicKey } from '@dxos/protocols/buf';
 import { useClient } from '@dxos/react-client';

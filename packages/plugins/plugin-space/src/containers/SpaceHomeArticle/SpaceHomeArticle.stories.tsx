@@ -15,7 +15,7 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as Hooks from '@dxos/app-toolkit/Hooks';
 import { Annotation, DXN, Obj, Type } from '@dxos/echo';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -86,7 +86,7 @@ const meta = {
         ]),
       ],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         StorybookPlugin.make({}),
         ClientPlugin.make({
           types: [Task, Note],

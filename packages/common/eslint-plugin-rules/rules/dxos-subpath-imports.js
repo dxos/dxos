@@ -23,7 +23,6 @@ const DXOS_SUBPATH_PACKAGES = new Set([
   '@dxos/graph',
   '@dxos/observability',
   '@dxos/react-ui',
-  '@dxos/util',
 ]);
 
 /**

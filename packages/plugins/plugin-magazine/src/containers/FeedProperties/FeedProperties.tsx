@@ -12,7 +12,7 @@ import * as Operation from '@dxos/compute/Operation';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Filter, Obj, Query, Ref } from '@dxos/echo';
 import { useObject, useQuery } from '@dxos/echo-react';
-import { getRoutinesSettingsPath } from '@dxos/plugin-routine';
+import * as RoutinePath from '@dxos/plugin-routine/RoutinePath';
 import { Form } from '@dxos/react-ui-form';
 import * as Field from '@dxos/react-ui/Field';
 import * as Flex from '@dxos/react-ui/Flex';
@@ -74,7 +74,7 @@ export const FeedProperties = ({ subject }: FeedPropertiesProps) => {
     }
 
     void invokePromise(LayoutOperation.Open, {
-      subject: [getRoutinesSettingsPath(db.spaceId)],
+      subject: [RoutinePath.getRoutinesSettingsPath(db.spaceId)],
       workspace: GraphPath.getSpacePath(db.spaceId),
     });
   }, [invokePromise, db]);

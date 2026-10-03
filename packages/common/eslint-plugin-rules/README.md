@@ -49,10 +49,9 @@ checked and passed:
   and `./preview`. A `./hooks` becomes `./Hooks`, a `./components` one subpath per component set.
   The few entry points still pending a migration of their own are listed in the rule.
 - **`dxos-subpath-imports` applies to a fixed list** (`DXOS_SUBPATH_PACKAGES`) plus every
-  `@dxos/plugin-*` package; `dxos-subpath-exports` requires those packages' roots to re-export
-  every subpath. Adding a
-  package to that list requires the package to export `./package.json`, or the rule silently finds
-  nothing.
+  `@dxos/plugin-*` package; `dxos-subpath-exports` requires those packages' roots to export
+  namespaces only, one per subpath. Adding a package to that list requires the package to export
+  `./package.json`, or the rule silently finds nothing.
 - **`@dxos/app-framework` and `@dxos/app-toolkit` have no root import.** Their roots re-export
   every subpath, React components included, so `dxos-subpath-imports` also reports namespace,
   side-effect and dynamic imports of either root, and `export ... from` it.
@@ -63,13 +62,13 @@ checked and passed:
 
 ### `dxos-subpath-exports` findings
 
-Nine checks, of which only `missingNamespaceExport` and `missingSubpathExport` autofix — the rest describe a decision the
+Ten checks, of which only `missingNamespaceExport` autofixes — the rest describe a decision the
 rule cannot make for you:
 
 | Message | Meaning |
 | --- | --- |
 | `missingNamespaceExport` | A declared subpath has no matching namespace on the barrel. Inserted among its sorted siblings. |
-| `missingSubpathExport` | A package on the `dxos-subpath-imports` list does not re-export a subpath's module from its root. Appends `export * from` that module. |
+| `nonNamespaceSubpath` | A PascalCase subpath of a package on the `dxos-subpath-imports` list (or a plugin) points at a module that is not a namespace, so the root cannot re-export it. |
 | `namespaceTargetMismatch` | Barrel and subpath resolve to different modules, so a consumer rewritten to the subpath gets another module. |
 | `typeOnlyNamespaceExport` | Re-exported as a type where the subpath declares a value entrypoint. |
 | `undeclaredNamespace` | On the barrel but with no subpath, so importing it costs the whole package. |
@@ -77,6 +76,7 @@ rule cannot make for you:
 | `externalStarExport` | Bare `export *` of another package. Its names cannot be given subpaths, and its releases silently change this package's API. |
 | `pluginInstanceExported` | The barrel re-exports a plugin entrypoint; the root entry carries types and operations only. |
 | `nestedPathExport` | The barrel reaches a directory down. Declare it in that directory's own barrel and re-export the directory. |
+| `flatExport` | A name reaches the root of a package on the `dxos-subpath-imports` list (or a plugin) outside a namespace. The root exports namespaces only, each with its own subpath, so every named root import can be rewritten to a subpath. |
 
 Why it exists: `dxos-subpath-imports` rewrites a consumer's `import { Drawing } from '@dxos/plugin-illustrator'`
 into `import * as Drawing from '@dxos/plugin-illustrator/Drawing'` purely from the exports map, so

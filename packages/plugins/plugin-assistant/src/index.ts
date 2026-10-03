@@ -3,8 +3,6 @@
 //
 
 export * as AssistantPlugin from './AssistantPlugin.ts';
-export * from '#meta';
-export * from './paths.ts';
 export * from '#types';
 export * from '#skills';
 export * as Chat from './Chat.ts';

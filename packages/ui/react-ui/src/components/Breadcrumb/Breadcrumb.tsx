@@ -7,8 +7,9 @@
 import { ark } from '@ark-ui/react/factory';
 import React, { type ComponentPropsWithoutRef, type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { type ThemedClassName } from '@dxos/ui-types';
+
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as Icon from '../Icon/Icon.tsx';
 import * as Link from '../Link/Link.tsx';
 type BreadcrumbRootProps = ThemedClassName<ComponentPropsWithRef<typeof ark.div>> & {

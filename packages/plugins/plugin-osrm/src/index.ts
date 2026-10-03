@@ -3,5 +3,4 @@
 //
 
 export * as OsrmPlugin from './OsrmPlugin.ts';
-export * from './events.ts';
-export * from '#meta';
+export * as OsrmEvents from './OsrmEvents.ts';

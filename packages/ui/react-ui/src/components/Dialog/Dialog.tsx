@@ -19,11 +19,12 @@ import { useTranslation } from 'react-i18next';
 import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
 import { elevationAttrs, elevationSurface, osTranslations } from '@dxos/ui-theme';
 import { type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as ElevationProvider from '../../providers/ElevationProvider/ElevationProvider.tsx';
 import { type DialogSize } from '../../theme/index.ts';
-import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
+import { composableProps, slottable } from '../../util/slots.ts';
 import * as IconButton from '../Button/IconButton.tsx';
 import * as Column from '../Column/Column.tsx';
 import {

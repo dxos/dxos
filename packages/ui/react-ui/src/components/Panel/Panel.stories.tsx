@@ -7,7 +7,7 @@ import React from 'react';
 import { expect, within } from 'storybook/test';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { composable, composableProps } from '../../util/index.ts';
+import { composable, composableProps } from '../../util/slots.ts';
 import * as Card from '../Card/Card.tsx';
 import * as Field from '../Field/Field.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';

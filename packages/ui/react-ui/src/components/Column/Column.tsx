@@ -9,8 +9,8 @@ import React, { type CSSProperties } from 'react';
 
 import { type SlottableProps } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { composableProps, slottable } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
+import { composableProps, slottable } from '../../util/slots.ts';
 import { type ColumnGap } from './Column.theme.ts';
 import { ColumnContext } from './ColumnContext.ts';
 

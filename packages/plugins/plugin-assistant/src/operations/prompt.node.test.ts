@@ -6,7 +6,7 @@ import * as Array from 'effect/Array';
 import * as Effect from 'effect/Effect';
 import { describe, test } from 'vitest';
 
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
@@ -59,7 +59,7 @@ describe('Agent prompt (composer plugin harness)', () => {
           yield* Database.flush();
 
           const result = yield* Operation.invoke(
-            RunInstructions,
+            AgentOperation.RunInstructions,
             {
               instructions: Ref.make(instructions),
               input: {},

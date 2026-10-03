@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import { Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { random } from '@dxos/random';
 import { useSpaces } from '@dxos/react-client/echo';
 import { translations as editorTranslations } from '@dxos/react-ui-editor/translations';
@@ -55,7 +55,7 @@ const meta: Meta<typeof EditableMarkdownCardStory> = {
     withTheme(),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ProcessManagerPlugin.make(),
         ClientPlugin.make({
           types: [Markdown.Document, Text.Text],

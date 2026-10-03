@@ -20,13 +20,13 @@ import { useTranslation } from 'react-i18next';
 
 import { elevationAttrs, elevationSurface, iconSize } from '@dxos/ui-theme';
 import { type Density, type ElevationLevel, type SlottableProps } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as DensityProvider from '../../providers/DensityProvider/DensityProvider.tsx';
-import { composable, composableProps, slottable } from '../../util/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { composable, composableProps, slottable } from '../../util/slots.ts';
 import * as Button from '../Button/Button.tsx';
 import * as IconButton from '../Button/IconButton.tsx';
 import * as Column from '../Column/Column.tsx';

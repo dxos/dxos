@@ -99,6 +99,11 @@
       "source": "./src/SearchPlugin.ts",
       "types": "./dist/types/src/SearchPlugin.d.ts",
       "import": "./dist/lib/SearchPlugin.mjs"
+    },
+    "./Hooks": {
+      "source": "./src/Hooks.ts",
+      "types": "./dist/types/src/Hooks.d.ts",
+      "import": "./dist/lib/ns/Hooks.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

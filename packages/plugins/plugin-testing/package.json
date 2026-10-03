@@ -73,6 +73,16 @@
       "source": "./src/StorybookPlugin.ts",
       "types": "./dist/types/src/StorybookPlugin.d.ts",
       "import": "./dist/lib/StorybookPlugin.mjs"
+    },
+    "./Corpus": {
+      "source": "./src/Corpus.ts",
+      "types": "./dist/types/src/Corpus.d.ts",
+      "import": "./dist/lib/ns/Corpus.mjs"
+    },
+    "./CorePlugins": {
+      "source": "./src/CorePlugins.ts",
+      "types": "./dist/types/src/CorePlugins.d.ts",
+      "import": "./dist/lib/ns/CorePlugins.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

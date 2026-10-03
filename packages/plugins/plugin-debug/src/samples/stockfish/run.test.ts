@@ -10,12 +10,8 @@ import { Provider } from '@dxos/ai';
 import { LanguageModelFixture } from '@dxos/ai/testing';
 import * as SampleSpace from '@dxos/app-toolkit/SampleSpace';
 import { AiContext } from '@dxos/assistant';
-import {
-  ChatContextHandlers,
-  ChatContextSkill,
-  SkillManagerHandlers,
-  SkillManagerSkill,
-} from '@dxos/assistant-toolkit';
+import * as ChatContextSkill from '@dxos/assistant-toolkit/ChatContextSkill';
+import * as SkillManagerSkill from '@dxos/assistant-toolkit/SkillManagerSkill';
 import * as Chat from '@dxos/assistant/Chat';
 import { SpaceProperties } from '@dxos/client-protocol';
 import { getSession } from '@dxos/compute/AgentService';
@@ -28,7 +24,7 @@ import { invariant } from '@dxos/invariant';
 import { DXN, EntityId } from '@dxos/keys';
 import * as ProjectOperationHandlerSet from '@dxos/plugin-projects/ProjectOperationHandlerSet';
 import * as ProjectSkill from '@dxos/plugin-projects/ProjectSkill';
-import { SandboxSkill } from '@dxos/plugin-sandbox';
+import * as SandboxSkill from '@dxos/plugin-sandbox/SandboxSkill';
 import * as SpaceOperationHandlerSet from '@dxos/plugin-space/SpaceOperationHandlerSet';
 import * as TasksOperationHandlerSet from '@dxos/plugin-tasks/TasksOperationHandlerSet';
 import { Text } from '@dxos/schema';
@@ -90,8 +86,8 @@ const TestLayer = AssistantTestLayer({
     ProjectOperationHandlerSet.handlers,
     TasksOperationHandlerSet.handlers,
     SpaceOperationHandlerSet.handlers,
-    ChatContextHandlers,
-    SkillManagerHandlers,
+    ChatContextSkill.Handlers,
+    SkillManagerSkill.Handlers,
   ],
   // The template's own schemas plus what a chat over it persists: `SpaceProperties` carries the
   // root-collection annotation the sample builder writes.

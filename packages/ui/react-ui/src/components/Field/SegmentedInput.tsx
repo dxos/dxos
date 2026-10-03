@@ -23,9 +23,11 @@ import {
 } from 'react-aria-components';
 
 import { useComposedRefs, useControllableState } from '@dxos/react-hooks';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useDensityContext } from '../../hooks/useDensityContext.ts';
+import { useElevationContext } from '../../hooks/useElevationContext.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as DatePicker from '../DatePicker/DatePicker.tsx';
 import * as Popover from '../Popover/Popover.tsx';
 import type * as Field from './Field.tsx';

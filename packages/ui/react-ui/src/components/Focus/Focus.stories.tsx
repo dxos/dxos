@@ -6,9 +6,9 @@ import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React, { type PropsWithChildren, useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
 import { withLayout, withTheme } from '../../testing/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
 import * as Focus from './Focus.tsx';
 
 type Item = { id: string; label: string };

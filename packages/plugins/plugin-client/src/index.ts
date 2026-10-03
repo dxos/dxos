@@ -3,9 +3,7 @@
 //
 
 export * as ClientPlugin from './ClientPlugin.ts';
-export * from './progress/index.ts';
 export * from '#types';
-export { HaloServicesLayer } from './halo-services-layer.ts';
-export { meta } from '#meta';
-export * from '#operations';
 export * as ClientOptions from './ClientOptions.ts';
+export * as HaloServices from './HaloServices.ts';
+export * as ClientOperation from './ClientOperation.ts';

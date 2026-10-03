@@ -29,9 +29,12 @@ import React, {
 } from 'react';
 
 import { useComposedRefs } from '@dxos/react-hooks';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { toOverflowPadding, useElevationContext, useSafeCollisionPadding, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useElevationContext } from '../../hooks/useElevationContext.ts';
+import { toOverflowPadding } from '../../hooks/usePositioning.ts';
+import { useSafeCollisionPadding } from '../../hooks/useSafeCollisionPadding.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as Button from '../Button/Button.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';

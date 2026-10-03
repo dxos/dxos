@@ -7,7 +7,7 @@ import React from 'react';
 
 import { mx } from '@dxos/ui-theme';
 
-import { composableProps, slottable } from '../../../util/index.ts';
+import { composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { Container, type ContainerProps, type Level } from '../Container/index.ts';

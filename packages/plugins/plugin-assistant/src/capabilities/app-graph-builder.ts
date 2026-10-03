@@ -18,7 +18,7 @@ import * as GraphPath from '@dxos/app-toolkit/GraphPath';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import * as NavigationOperation from '@dxos/app-toolkit/NavigationOperation';
 import * as TypeSection from '@dxos/app-toolkit/TypeSection';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Chat from '@dxos/assistant/Chat';
 import { isSpace } from '@dxos/client/echo';
 import * as Instructions from '@dxos/compute/Instructions';
@@ -39,7 +39,7 @@ import { AssistantCapabilities, AssistantOperation } from '#types';
 import { currentChatRef } from '../util/current-chat.ts';
 
 /** Operation definitions to seed as `PersistentOperation` records for automation / triggers. */
-const computeOperationsToImport = [RunInstructions] as const;
+const computeOperationsToImport = [AgentOperation.RunInstructions] as const;
 
 /** Match ECHO objects that are NOT chats. */
 const whenNonChatObject = GraphNodeMatcher.whenAll(

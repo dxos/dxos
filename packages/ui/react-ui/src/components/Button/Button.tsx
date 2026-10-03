@@ -14,9 +14,11 @@ import {
   type MessageValence,
   type NeutralPalette,
 } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useDensityContext, useElevationContext, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useDensityContext } from '../../hooks/useDensityContext.ts';
+import { useElevationContext } from '../../hooks/useElevationContext.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as Icon from '../Icon/Icon.tsx';
 import { BUTTON_GROUP_NAME, BUTTON_NAME, ButtonGroupProvider, useButtonGroupContext } from './ButtonGroupContext.ts';
 

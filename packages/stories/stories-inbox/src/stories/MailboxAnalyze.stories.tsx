@@ -19,8 +19,8 @@ import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
 import * as ToolkitHooks from '@dxos/app-toolkit/Hooks';
 import * as Project from '@dxos/compute/Project';
 import { Feed, Filter, Obj, Query, Ref, Tag } from '@dxos/echo';
-import { createKvsStore } from '@dxos/effect';
 import * as EffectEx from '@dxos/effect/EffectEx';
+import * as KvsStore from '@dxos/effect/KvsStore';
 import { DXN, PublicKey } from '@dxos/keys';
 import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { log } from '@dxos/log';
@@ -591,7 +591,7 @@ const StoryProcessPlugin = Plugin.define(
       Effect.succeed([
         Capability.contribute(
           AssistantCapabilities.Settings,
-          createKvsStore({
+          KvsStore.make({
             key: 'org.dxos.plugin.inbox.story.assistant',
             schema: Assistant.Settings,
             defaultValue: () => ({}),

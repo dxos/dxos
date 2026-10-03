@@ -17,9 +17,10 @@ import {
 import { DxAvatar } from '@dxos/lit-ui/react';
 import { useId } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useIconHref, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useIconHref } from '../../hooks/useIconHref.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import { type AvatarContextValue, AvatarProvider, useAvatarContext } from './AvatarContext.ts';
 
 type AvatarRootProps = PropsWithChildren<Partial<AvatarContextValue>>;

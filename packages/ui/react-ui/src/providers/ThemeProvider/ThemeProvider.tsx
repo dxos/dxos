@@ -9,7 +9,7 @@ import React, { type PropsWithChildren, createContext, useEffect, useMemo } from
 import { trackKeyboardModality } from '@dxos/react-focus';
 import { type Density, type Elevation, type ThemeFunction, type ThemeMode } from '@dxos/ui-types';
 
-import { type SafeAreaPadding, useSafeArea } from '../../hooks/index.ts';
+import { type SafeAreaPadding, useSafeArea } from '../../hooks/useSafeArea.ts';
 import { hasIosKeyboard } from '../../util/mobile.ts';
 import * as DensityProvider from '../DensityProvider/DensityProvider.tsx';
 import * as ElevationProvider from '../ElevationProvider/ElevationProvider.tsx';

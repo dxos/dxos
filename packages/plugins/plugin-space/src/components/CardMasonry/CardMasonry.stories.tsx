@@ -17,7 +17,7 @@ import { type Database, Filter, Obj } from '@dxos/echo';
 import { useQuery } from '@dxos/echo-react';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { createMenuAction, useMenuContribution } from '@dxos/react-ui-menu';
@@ -64,7 +64,7 @@ const withPlugins = (extraPlugins: Plugin.Plugin[] = []) =>
   withPluginManager({
     capabilities: [Capability.contribute(AppCapabilities.Translations, translations)],
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ...extraPlugins,
       StorybookPlugin.make({}),
       // Contributes the `CardContent` surfaces the cards' bodies render through; without it a card

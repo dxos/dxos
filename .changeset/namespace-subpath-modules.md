@@ -1,19 +1,8 @@
 ---
 '@dxos/app-framework': minor
-'@dxos/app-solid': minor
-'@dxos/app-toolkit': minor
 '@dxos/plugin-space': minor
 ---
 
-Every PascalCase subpath of `@dxos/app-framework`, `@dxos/app-toolkit` and the plugins is now a namespace module: import it with `import * as Hooks from '@dxos/app-framework/Hooks'` and call `Hooks.useOperationInvoker()`. A component exports itself as `Root` (`<Surface.Root>`). `@dxos/compute/Errors` is removed: each error is exported by the namespace that owns it (`Operation.NoHandlerError`, `ServiceResolver.ServiceNotAvailableError`), and the functions-AI errors by `@dxos/compute/FunctionsAiError`. `ProcessManagerPlugin` is a namespace (`ProcessManagerPlugin.make()`), and `Registry.EdgePluginProvider` is the EDGE registry provider.
+The roots of `@dxos/app-framework`, `@dxos/app-graph`, `@dxos/app-toolkit`, `@dxos/assistant-toolkit`, `@dxos/compute`, `@dxos/graph`, `@dxos/observability` and every plugin now export namespaces only, and every namespace has its own subpath: import it with `import * as Hooks from '@dxos/app-framework/Hooks'` and call `Hooks.useOperationInvoker()`. A component exports itself as `Root` (`<Surface.Root>`), and errors live in the namespace that owns them (`Operation.NoHandlerError`, `Capability.NotFoundError`, `ConnectorSync.DatabaseMissingError`) or in a `<Domain>Error` module (`FunctionsAiError`, `ConnectorError`).
 
-The roots of `@dxos/app-framework` and `@dxos/app-toolkit` re-export every subpath, React components included, so import from the subpaths instead. Names that were only on the roots moved into namespaces:
-
-- `CapabilityNotFoundError` → `Capability.NotFoundError`; the activation errors (`DependencyCycleError`, `MissingProviderError`, ...) → `PluginManager.*`; `EmptyHistoryError` and `HistoryEntry` → `HistoryTracker.*`.
-- `PluginManagerContext` → `PluginManager.Context`; `PLUGIN_DEV_SERVER_PORT` → `PluginManifest.DEV_SERVER_PORT`; `processStorageLayer` → `ProcessManagerPlugin.storageLayer`.
-- `Label` → `@dxos/app-framework/Translations`; `setupDevtools` and the devtools types → `@dxos/app-framework/Devtools` (`Devtools.setup`).
-- `SyncDatabaseMissingError` → `ConnectorSync.DatabaseMissingError`.
-- The progress helpers → `@dxos/app-toolkit/Progress`: `Progress.STATUS_COMPLETE`, `Progress.makeTraceSink`, `Progress.makeRegistry`, ...
-- `RENAME_POPOVER` → `SpaceSurface.RENAME_POPOVER`.
-
-`@dxos/app-solid` no longer re-exports `@dxos/app-framework`.
+Breaking: names that were exported flat from a root moved into namespaces, e.g. `ProcessManagerPlugin.make()`, `PluginManager.Context`, `PluginManifest.DEV_SERVER_PORT`, `Progress.makeTraceSink`, `SpaceSurface.RENAME_POPOVER`, `Calendar.getRangeSelectionId`, `AgentSkill.Handlers`, `SlashCommand.resolveSlashCommand`, `SelectionModel.SelectionModel`, `HaloServices.layer`, `PluginStorage.loadPlugins`, `CorePlugins.make()`; a plugin's `meta` is `<Name>Plugin.meta`. Flat names nothing imported outside their package are no longer exported. `@dxos/compute/Errors` is removed, and `@dxos/app-solid` no longer re-exports `@dxos/app-framework`.

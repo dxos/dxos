@@ -26,6 +26,23 @@ const PLUGIN_ENTRYPOINTS = new Set(['./plugin', '#plugin']);
 
 const EXPORT_NAMESPACE = /export\s+(type\s+)?\*\s+as\s+([A-Za-z_$][\w$]*)\s+from\s*['"]([^'"]+)['"]/g;
 const EXPORT_STAR = /export\s+(type\s+)?\*\s+from\s*['"]([^'"]+)['"]/g;
+// Every other export form puts a name on the barrel outside a namespace.
+const EXPORT_FLAT =
+  /export\s+(?:declare\s+)?(?:(default)\b|(?:async\s+)?function\*?\s+([\w$]+)|(?:abstract\s+)?class\s+([\w$]+)|(?:const\s+)?enum\s+([\w$]+)|(?:const|let|var)\s+([\w$]+)|(?:type|interface|namespace)\s+([\w$]+)|(?:type\s+)?\{([^}]*)\})/g;
+
+/** Names a flat export statement matched by `EXPORT_FLAT` puts on the barrel. */
+const flatNames = (match) => {
+  const [, def, fn, cls, en, variable, type, list] = match;
+  const single = def ?? fn ?? cls ?? en ?? variable ?? type;
+  if (single) {
+    return [single];
+  }
+  return list
+    .split(',')
+    .map((part) => part.trim().replace(/^type\s+/, ''))
+    .filter(Boolean)
+    .map((part) => part.split(/\s+as\s+/).at(-1));
+};
 
 /**
  * Removes comments so a commented-out re-export is not mistaken for a live one. String literals are
@@ -123,10 +140,11 @@ const isNamespaceModule = (file, cache) => {
  * records the first-hop specifier it arrived through, which is the only node in the linted file
  * that can carry a report for a namespace declared in another file.
  */
-const analyzeBarrel = (entryFile, readFile, pkg) => {
+const analyzeBarrel = (entryFile, readFile, pkg, directiveCache) => {
   const ambiguous = new Map();
   const externalStars = [];
   const pluginStars = [];
+  const flatExports = [];
   const visited = new Set();
 
   const namespacesOf = (file, rootStar) => {
@@ -140,6 +158,15 @@ const analyzeBarrel = (entryFile, readFile, pkg) => {
       code = stripComments(readFile(file));
     } catch {
       return new Map();
+    }
+
+    // The linted file's own statements are reported from its AST, which carries real nodes.
+    if (file !== entryFile) {
+      for (const match of code.matchAll(EXPORT_FLAT)) {
+        for (const name of flatNames(match)) {
+          flatExports.push({ name, declaredIn: file, rootStar });
+        }
+      }
     }
 
     const own = new Map();
@@ -169,6 +196,11 @@ const analyzeBarrel = (entryFile, readFile, pkg) => {
         }
         continue;
       }
+      // A bare star of a namespace module spreads its members across the barrel.
+      if (isNamespaceModule(resolved, directiveCache)) {
+        flatExports.push({ name: `* from '${source}'`, declaredIn: file, rootStar: nextRootStar });
+        continue;
+      }
       for (const [name, entry] of namespacesOf(resolved, nextRootStar)) {
         viaStar.set(name, [...(viaStar.get(name) ?? []), entry]);
       }
@@ -192,7 +224,7 @@ const analyzeBarrel = (entryFile, readFile, pkg) => {
   };
 
   const namespaces = namespacesOf(entryFile, null);
-  return { namespaces, ambiguous, externalStars, pluginStars, reached: visited };
+  return { namespaces, ambiguous, externalStars, pluginStars, flatExports };
 };
 
 /** Reads the package.json governing a file, with its directory. */
@@ -266,8 +298,8 @@ export default {
     fixable: 'code',
     schema: [],
     messages: {
-      missingSubpathExport:
-        'Subpath "{{key}}" is declared in the exports map but this barrel does not re-export it. Add `export * from \'{{specifier}}\';` so the package root keeps its whole API.',
+      nonNamespaceSubpath:
+        'Subpath "{{key}}" points at a module that is not a namespace. Every subpath of this package is a namespace: mark the module `// @import-as-namespace` (or point the subpath at one) and re-export it from the root as `export * as {{name}} from ...`.',
       missingNamespaceExport:
         'Subpath "{{key}}" is declared in the exports map but no namespace "{{name}}" is exported from this barrel. Add: export * as {{name}} from \'{{specifier}}\';',
       namespaceTargetMismatch:
@@ -282,6 +314,8 @@ export default {
         'Barrel re-exports all of "{{source}}". Only package-internal modules may be star-exported; a foreign API cannot be given a subpath of its own.',
       pluginInstanceExported:
         'Barrel re-exports the plugin entrypoint "{{source}}". The root entry carries types and operations only; consumers load the plugin from the "./plugin" subpath.',
+      flatExport:
+        '"{{name}}" reaches the package root outside a namespace{{via}}. The root exports namespaces only, each with its own subpath: move it into the namespace module that owns it, or stop exporting it from the barrel.',
       nestedPathExport:
         'Namespace "{{name}}" reaches into "{{source}}". Declare it in "{{barrel}}" and re-export that directory from here with `export * from \'./{{dir}}\';`.',
     },
@@ -332,10 +366,11 @@ export default {
           return;
         }
 
-        const { namespaces, ambiguous, externalStars, pluginStars, reached } = analyzeBarrel(
+        const { namespaces, ambiguous, externalStars, pluginStars, flatExports } = analyzeBarrel(
           path.resolve(filename),
           readFile,
           pkg,
+          directiveCache,
         );
 
         // Index the linted file's own statements so a finding can point at a real node. A
@@ -395,21 +430,11 @@ export default {
             if (!target) {
               continue;
             }
-            // A package whose imports `dxos-subpath-imports` rewrites keeps its root the complete API,
-            // so any other subpath module must be reachable through the barrel's `export *` chain.
+            // A package whose imports `dxos-subpath-imports` rewrites exports namespaces only, so each of
+            // its PascalCase subpaths must be one the root can re-export as a namespace.
             if (!isNamespaceModule(target, directiveCache)) {
-              if (isSubpathPackage(pkg.json.name) && !reached.has(target)) {
-                const specifier =
-                  './' + path.relative(path.dirname(path.resolve(filename)), target).replace(/\\/g, '/');
-                context.report({
-                  node,
-                  messageId: 'missingSubpathExport',
-                  data: { key, specifier },
-                  fix: (fixer) => {
-                    const last = node.body.at(-1);
-                    return last ? fixer.insertTextAfter(last, `\nexport * from '${specifier}';`) : null;
-                  },
-                });
+              if (isSubpathPackage(pkg.json.name)) {
+                context.report({ node, messageId: 'nonNamespaceSubpath', data: { key, name } });
               }
               continue;
             }
@@ -514,6 +539,32 @@ export default {
             node: starNodes.get(star.rootStar) ?? node,
             messageId: 'pluginInstanceExported',
             data: { source: star.source },
+          });
+        }
+
+        if (!isSubpathPackage(pkg.json.name)) {
+          return;
+        }
+        for (const statement of node.body) {
+          if (statement.type === 'ExportDefaultDeclaration') {
+            context.report({ node: statement, messageId: 'flatExport', data: { name: 'default', via: '' } });
+          } else if (statement.type === 'ExportNamedDeclaration') {
+            const declaration = statement.declaration;
+            const names = declaration
+              ? declaration.type === 'VariableDeclaration'
+                ? declaration.declarations.map((declarator) => declarator.id.name ?? '?')
+                : [declaration.id?.name ?? '?']
+              : statement.specifiers.map((specifier) => specifier.exported.name ?? specifier.exported.value);
+            for (const name of names) {
+              context.report({ node: statement, messageId: 'flatExport', data: { name, via: '' } });
+            }
+          }
+        }
+        for (const entry of flatExports) {
+          context.report({
+            node: starNodes.get(entry.rootStar) ?? node,
+            messageId: 'flatExport',
+            data: { name: entry.name, via: ` (exported by ${path.relative(pkg.dir, entry.declaredIn)})` },
           });
         }
       },

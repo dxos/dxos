@@ -20,7 +20,7 @@ import { downloadBlob } from '@dxos/util';
 
 import { translationKey } from '#translations';
 
-import { composable } from '../../../util/index.ts';
+import { composable } from '../../../util/slots.ts';
 import { Button, type ButtonContentProps, type ButtonVariantProps } from '../Button/index.ts';
 import { Toggle } from '../Toggle/index.ts';
 import { type TooltipSide } from '../Tooltip/index.ts';

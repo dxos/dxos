@@ -6,7 +6,7 @@ import { ark } from '@ark-ui/react/factory';
 import { useMachine } from '@zag-js/react';
 import React, { type AnchorHTMLAttributes, type HTMLAttributes, forwardRef, useContext, useId } from 'react';
 
-import { composable, composableProps, slottable } from '../../../util/index.ts';
+import { composable, composableProps, slottable } from '../../../util/slots.ts';
 import { recipes } from '../../recipes.ts';
 import { type Size } from '../../sizes.ts';
 import { ScrollArea } from '../ScrollArea/index.ts';

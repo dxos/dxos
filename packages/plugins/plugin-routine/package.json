@@ -134,6 +134,11 @@
       "source": "./src/RoutinePlugin.ts",
       "types": "./dist/types/src/RoutinePlugin.d.ts",
       "import": "./dist/lib/RoutinePlugin.mjs"
+    },
+    "./RoutinePath": {
+      "source": "./src/RoutinePath.ts",
+      "types": "./dist/types/src/RoutinePath.d.ts",
+      "import": "./dist/lib/ns/RoutinePath.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

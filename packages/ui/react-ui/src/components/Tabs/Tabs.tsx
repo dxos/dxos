@@ -12,8 +12,9 @@ import { findFirstFocusable } from '@dxos/react-focus';
 import { createContext, useControllableState, useForwardedRef } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { type ThemedClassName, composableProps, slottable } from '../../util/index.ts';
+import { composableProps, slottable } from '../../util/slots.ts';
 import * as Button from '../Button/Button.tsx';
 import * as IconButton from '../Button/IconButton.tsx';
 type TabsActivePart = 'list' | 'panel';

@@ -5,8 +5,7 @@
 // Additive: lets other plugins embed the comments panel in their own companion surfaces.
 
 export * as ReviewPlugin from './ReviewPlugin.ts';
-export * from '#meta';
 export * from '#types';
-export { CommentsArticle } from '#containers';
+export * as Containers from './Containers.ts';
 export * from '#operations';
 export * from '#skills';

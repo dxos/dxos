@@ -32,7 +32,7 @@ import * as ClientEvents from '@dxos/plugin-client/ClientEvents';
 import type * as ClientOptions from '@dxos/plugin-client/ClientOptions';
 import * as ClientPlugin from '@dxos/plugin-client/ClientPlugin';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { withLayout, withTheme } from '@dxos/react-ui/testing';
 
@@ -131,7 +131,7 @@ const buildStoryPluginOptions = ({
   return {
     setupEvents,
     plugins: [
-      ...corePlugins(),
+      ...CorePlugins.make(),
       ClientPlugin.make({
         types,
         onClientInitialized: ({ client }) =>

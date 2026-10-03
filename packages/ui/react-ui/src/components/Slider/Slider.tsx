@@ -8,9 +8,9 @@ import { Slider as SliderPrimitive } from '@ark-ui/react/slider';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
 import { invariant } from '@dxos/invariant';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 
 type SliderProps = ThemedClassName<
   Omit<ComponentPropsWithRef<'div'>, 'defaultValue' | 'dir' | 'onChange' | 'aria-labelledby'>

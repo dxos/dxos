@@ -27,9 +27,11 @@ import React, {
 } from 'react';
 
 import { composeEventHandlers, useComposedRefs, useControllableState } from '@dxos/react-hooks';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { type Positioning, useElevationContext, usePositioning, useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useElevationContext } from '../../hooks/useElevationContext.ts';
+import { type Positioning, usePositioning } from '../../hooks/usePositioning.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import { ColumnContext } from '../Column/ColumnContext.ts';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import {

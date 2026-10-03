@@ -139,6 +139,11 @@
       "source": "./src/types/LegacySketch.ts",
       "types": "./dist/types/src/types/LegacySketch.d.ts",
       "import": "./dist/lib/LegacySketch.mjs"
+    },
+    "./IllustratorOperationHandlerSet": {
+      "source": "./src/IllustratorOperationHandlerSet.ts",
+      "types": "./dist/types/src/IllustratorOperationHandlerSet.d.ts",
+      "import": "./dist/lib/ns/IllustratorOperationHandlerSet.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

@@ -6,6 +6,8 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/ClientOperation': 'src/ClientOperation.ts',
+    'ns/HaloServices': 'src/HaloServices.ts',
     'ns/ClientOptions': 'src/ClientOptions.ts',
     'index': 'src/index.ts',
     'ClientPlugin': 'src/ClientPlugin.ts',

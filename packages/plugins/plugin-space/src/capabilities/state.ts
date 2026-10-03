@@ -8,7 +8,7 @@ import * as Atom from 'effect/reactivity/Atom';
 import * as Capabilities from '@dxos/app-framework/Capabilities';
 import * as Capability from '@dxos/app-framework/Capability';
 import * as AppCapabilities from '@dxos/app-toolkit/AppCapabilities';
-import { createKvsStore } from '@dxos/effect';
+import * as KvsStore from '@dxos/effect/KvsStore';
 import { PublicKey } from '@dxos/keys';
 import { ComplexMap } from '@dxos/util';
 
@@ -26,7 +26,7 @@ export default Capability.makeModule(
     const registry = yield* Capabilities.AtomRegistry;
 
     // Persisted state using KVS store.
-    const stateAtom = createKvsStore({
+    const stateAtom = KvsStore.make({
       key: `${meta.profile.key}.state`,
       schema: SpaceCapabilities.StateSchema,
       defaultValue: () => ({ ...defaultSpaceState }),

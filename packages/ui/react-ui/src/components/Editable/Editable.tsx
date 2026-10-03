@@ -25,9 +25,9 @@ import { Editable as EditablePrimitive, useEditableContext } from '@ark-ui/react
 import React, { type ComponentPropsWithRef, type PropsWithChildren, forwardRef, useEffect, useRef } from 'react';
 
 import { createContext } from '@dxos/react-hooks';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import * as Icon from '../Icon/Icon.tsx';
 import { type EditableActivationBinding, type UseEditableOptions, useEditable } from './useEditable.ts';
 

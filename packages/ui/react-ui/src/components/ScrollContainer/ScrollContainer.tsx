@@ -21,9 +21,9 @@ import { invariant } from '@dxos/invariant';
 import { useMergeRefs } from '@dxos/react-hooks';
 import { mx } from '@dxos/ui-theme';
 import { type SlottableProps } from '@dxos/ui-types';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { composable, composableProps, slottable } from '../../util/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
+import { composable, composableProps, slottable } from '../../util/slots.ts';
 import * as IconButton from '../Button/IconButton.tsx';
 import * as ScrollArea from '../ScrollArea/ScrollArea.tsx';
 import { ScrollContainerProvider, useScrollContainerContext } from './ScrollContainerContext.ts';

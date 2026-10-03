@@ -11,7 +11,7 @@ import { withPluginManager } from '@dxos/app-framework/testing';
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
 import { DeckStoryPlugin, storyItemId } from '@dxos/plugin-deck/testing';
 import { translations as deckTranslations } from '@dxos/plugin-deck/translations';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useAsyncEffect } from '@dxos/react-hooks';
 import { withLayout } from '@dxos/react-ui/testing';
 
@@ -37,7 +37,7 @@ const meta = {
   decorators: [
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
-      plugins: [...corePlugins(), DeckStoryPlugin()],
+      plugins: [...CorePlugins.make(), DeckStoryPlugin()],
     }),
   ],
   parameters: {

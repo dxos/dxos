@@ -15,7 +15,7 @@ import { withAuthorization } from '@dxos/compute-runtime';
 import * as Credential from '@dxos/compute/Credential';
 import * as Trigger from '@dxos/compute/Trigger';
 import { Obj, Type } from '@dxos/echo';
-import { ConnectionTestError } from '@dxos/plugin-connector';
+import * as ConnectorError from '@dxos/plugin-connector/ConnectorError';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import * as Calendar from '@dxos/plugin-inbox/Calendar';
 import * as Mailbox from '@dxos/plugin-inbox/Mailbox';
@@ -96,7 +96,7 @@ const testGoogleConnection: ConnectorSpec.TestConnection = ({ accessToken }) =>
   }).pipe(
     Effect.mapError(
       (error) =>
-        new ConnectionTestError({
+        new ConnectorError.ConnectionTestError({
           message: isGoogleAuthRejection(error)
             ? 'Google rejected the credential. Reauthenticate to continue syncing.'
             : 'Could not verify the connection. Check your network and try again.',

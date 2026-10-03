@@ -16,11 +16,12 @@ import React, {
   useState,
 } from 'react';
 
+import { type ThemedClassName } from '@dxos/ui-types';
+
 import { translationKey } from '#translations';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import { useTranslation } from '../../providers/ThemeProvider/TranslationsContext.ts';
-import { type ThemedClassName } from '../../util/index.ts';
 import * as Calendar from '../Calendar/Calendar.tsx';
 import * as Icon from '../Icon/Icon.tsx';
 import * as Popover from '../Popover/Popover.tsx';

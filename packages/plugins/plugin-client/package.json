@@ -123,9 +123,9 @@
       "import": "./dist/lib/ClientEvents.mjs"
     },
     "./ClientOperation": {
-      "source": "./src/operations/definitions.ts",
-      "types": "./dist/types/src/operations/definitions.d.ts",
-      "import": "./dist/lib/ClientOperation.mjs"
+      "source": "./src/ClientOperation.ts",
+      "types": "./dist/types/src/ClientOperation.d.ts",
+      "import": "./dist/lib/ns/ClientOperation.mjs"
     },
     "./ClientOptions": {
       "source": "./src/ClientOptions.ts",
@@ -141,6 +141,11 @@
       "source": "./src/types/PasskeyError.ts",
       "types": "./dist/types/src/types/PasskeyError.d.ts",
       "import": "./dist/lib/PasskeyError.mjs"
+    },
+    "./HaloServices": {
+      "source": "./src/HaloServices.ts",
+      "types": "./dist/types/src/HaloServices.d.ts",
+      "import": "./dist/lib/ns/HaloServices.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

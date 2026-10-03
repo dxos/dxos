@@ -6,7 +6,7 @@ import React, { useCallback, useRef } from 'react';
 
 import * as Hooks from '@dxos/app-framework/Hooks';
 import type * as AppSurface from '@dxos/app-toolkit/AppSurface';
-import { AgentSkillOperations } from '@dxos/assistant-toolkit';
+import * as AgentSkill from '@dxos/assistant-toolkit/AgentSkill';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Operation from '@dxos/compute/Operation';
 import { Obj, Ref } from '@dxos/echo';
@@ -27,7 +27,7 @@ export const AgentProperties = ({ subject: agent }: AgentPropertiesProps) => {
     spaceId,
     [] as const,
     () =>
-      Operation.invoke(AgentSkillOperations.SyncAutomation, {
+      Operation.invoke(AgentSkill.Operations.SyncAutomation, {
         agent: Ref.make(agent),
         subscriptions: pendingSubscriptions.current,
       }),

@@ -6,9 +6,10 @@
 
 import React, { type ComponentPropsWithRef, forwardRef, useEffect, useRef } from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { type ThemedClassName } from '@dxos/ui-types';
+
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import { type ProgressStyleProps } from '../../theme/index.ts';
-import { type ThemedClassName } from '../../util/index.ts';
 
 type ProgressProps = ThemedClassName<
   ComponentPropsWithRef<'span'> &

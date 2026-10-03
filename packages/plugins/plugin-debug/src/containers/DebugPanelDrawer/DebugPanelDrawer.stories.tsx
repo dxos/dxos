@@ -7,7 +7,7 @@ import React from 'react';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { withPluginManager } from '@dxos/app-framework/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import * as Main from '@dxos/react-ui/Main';
 import { withTheme } from '@dxos/react-ui/testing';
 
@@ -39,7 +39,7 @@ const meta = {
   // debug plugin contributes the console and log pages and their articles; the stubs add a branch
   // and the drawer's layout handler.
   decorators: [
-    withPluginManager({ plugins: [...corePlugins(), DebugPlugin.make(), StubToolsPlugin(), StubDrawerPlugin()] }),
+    withPluginManager({ plugins: [...CorePlugins.make(), DebugPlugin.make(), StubToolsPlugin(), StubDrawerPlugin()] }),
     withTheme(),
   ],
   parameters: { translations, layout: 'fullscreen' },

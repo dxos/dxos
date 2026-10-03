@@ -12,8 +12,10 @@
 import { Fieldset as FieldsetPrimitive } from '@ark-ui/react/fieldset';
 import React, { type ComponentPropsWithRef, forwardRef } from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
-import { type ThemedClassName, composable, composableProps } from '../../util/index.ts';
+import { type ThemedClassName } from '@dxos/ui-types';
+
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
+import { composable, composableProps } from '../../util/slots.ts';
 
 //
 // Root

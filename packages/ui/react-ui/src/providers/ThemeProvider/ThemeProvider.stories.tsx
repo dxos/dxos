@@ -5,7 +5,7 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import React from 'react';
 
-import { useThemeContext } from '../../hooks/index.ts';
+import { useThemeContext } from '../../hooks/useThemeContext.ts';
 import { withLayout, withTheme } from '../../testing/index.ts';
 import * as ThemeProvider from './ThemeProvider.tsx';
 

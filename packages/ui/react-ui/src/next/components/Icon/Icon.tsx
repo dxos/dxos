@@ -7,7 +7,7 @@ import React, { type SVGProps, forwardRef } from 'react';
 import { mx } from '@dxos/ui-theme';
 import { type ChromaticPalette, type MessageValence, type NeutralPalette, type ThemedClassName } from '@dxos/ui-types';
 
-import { useIconHref } from '../../../hooks/index.ts';
+import { useIconHref } from '../../../hooks/useIconHref.ts';
 import { recipes } from '../../recipes.ts';
 
 export type IconHue = NeutralPalette | ChromaticPalette | MessageValence;

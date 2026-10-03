@@ -19,7 +19,7 @@ import { log } from '@dxos/log';
 import { ClientPlugin } from '@dxos/plugin-client/testing';
 import { initializeIdentity } from '@dxos/plugin-client/testing';
 import { RoutinePlugin } from '@dxos/plugin-routine/testing';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ViewStateProvider } from '@dxos/react-ui-attention';
 import { JsonHighlighter } from '@dxos/react-ui-syntax-highlighter';
@@ -353,7 +353,7 @@ export const Default: Story = {
       // Fire SetupSettings so the assistant settings module activates and contributes
       // `AssistantCapabilities.Settings`, which `TracePanel` reads via `useAtomCapability`.
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: ({ client }) =>
@@ -382,7 +382,7 @@ export const WithSnapshot: Story = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(() => import('../../testing/data/trace-timeline.dx.json')),
@@ -400,7 +400,7 @@ export const WithRemoteSnapshot: Story = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(
@@ -420,7 +420,7 @@ export const WithRemoteMultipleSnapshot: Story = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Feed.Feed, Trace.Message],
           onClientInitialized: initClientFromSpaceSnapshot(

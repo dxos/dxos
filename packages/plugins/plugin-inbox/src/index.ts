@@ -3,7 +3,6 @@
 //
 
 export * as InboxPlugin from './InboxPlugin.ts';
-export * from '#meta';
 export * from '#types';
 export * from '#skills';
 export * from '#operations';

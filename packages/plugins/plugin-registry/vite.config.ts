@@ -6,6 +6,9 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/RegistryOperation': 'src/RegistryOperation.ts',
+    'ns/PluginStorage': 'src/PluginStorage.ts',
+    'ns/PluginLoader': 'src/PluginLoader.ts',
     'ns/Operations': 'src/Operations.ts',
     'index': 'src/index.ts',
     'RegistryPlugin': 'src/RegistryPlugin.ts',

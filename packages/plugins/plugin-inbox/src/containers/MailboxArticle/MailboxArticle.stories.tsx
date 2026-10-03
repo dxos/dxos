@@ -25,7 +25,8 @@ import { AccessToken, Connection, Cursor } from '@dxos/link';
 import { ClientPlugin, initializeIdentity } from '@dxos/plugin-client/testing';
 import { PreviewPlugin } from '@dxos/plugin-preview/testing';
 import * as ProgressPlugin from '@dxos/plugin-progress/ProgressPlugin';
-import { SAMPLE_MESSAGES, corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
+import * as Corpus from '@dxos/plugin-testing/Corpus';
 import * as StorybookPlugin from '@dxos/plugin-testing/StorybookPlugin';
 import { useSpaces } from '@dxos/react-client/echo';
 import { AttendableContainer } from '@dxos/react-ui-attention';
@@ -146,7 +147,7 @@ const meta = {
     withLayout({ layout: 'fullscreen' }),
     withPluginManager<StoryArgs>(({ args: { count = 0, threads = 10, seedSearchTerm = false, bound = false } }) => ({
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [
             Feed.Feed,
@@ -168,7 +169,7 @@ const meta = {
                 if (feed) {
                   // Synced JMAP mail always carries a `threadId` (server-set, RFC 8621); mirror that here
                   // by giving standalone samples a unique thread so they seed realistically.
-                  const messages = SAMPLE_MESSAGES.map(({ from, subject, body, threadId, daysAgo }, index) =>
+                  const messages = Corpus.SAMPLE_MESSAGES.map(({ from, subject, body, threadId, daysAgo }, index) =>
                     Message.make({
                       created: subDays(new Date(), daysAgo ?? 0).toISOString(),
                       sender: { email: from.email, name: from.name },

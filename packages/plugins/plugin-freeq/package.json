@@ -59,6 +59,11 @@
       "source": "./src/FreeqPlugin.ts",
       "types": "./dist/types/src/FreeqPlugin.d.ts",
       "import": "./dist/lib/FreeqPlugin.mjs"
+    },
+    "./FreeqEvents": {
+      "source": "./src/FreeqEvents.ts",
+      "types": "./dist/types/src/FreeqEvents.d.ts",
+      "import": "./dist/lib/ns/FreeqEvents.mjs"
     }
   },
   "types": "dist/types/src/index.d.ts",

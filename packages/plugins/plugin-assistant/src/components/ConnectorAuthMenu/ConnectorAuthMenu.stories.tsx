@@ -20,7 +20,7 @@ import * as ConnectorAuth from '@dxos/plugin-connector/ConnectorAuth';
 import * as ConnectorSpec from '@dxos/plugin-connector/ConnectorSpec';
 import { translations as connectorTranslations } from '@dxos/plugin-connector/translations';
 import * as GraphHooks from '@dxos/plugin-graph/Hooks';
-import { corePlugins } from '@dxos/plugin-testing';
+import * as CorePlugins from '@dxos/plugin-testing/CorePlugins';
 import { useSpaces } from '@dxos/react-client/echo';
 import { ActionToolbar, isToolbarAction, useGraphMenuActions } from '@dxos/react-ui-menu';
 import { Loading, withLayout, withTheme } from '@dxos/react-ui/testing';
@@ -132,7 +132,7 @@ const meta = {
     withPluginManager({
       capabilities: [Capability.contribute(ConnectorSpec.Connector, testConnectors)],
       plugins: [
-        ...corePlugins(),
+        ...CorePlugins.make(),
         ClientPlugin.make({
           types: [Connection.Connection, Cursor.Cursor, Expando.Expando],
           onClientInitialized: ({ client }) =>

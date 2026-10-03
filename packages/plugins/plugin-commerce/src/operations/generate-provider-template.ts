@@ -5,7 +5,7 @@
 import * as Effect from 'effect/Effect';
 
 import * as LayoutOperation from '@dxos/app-toolkit/LayoutOperation';
-import { RunInstructions } from '@dxos/assistant-toolkit';
+import * as AgentOperation from '@dxos/assistant-toolkit/AgentOperation';
 import * as Instructions from '@dxos/compute/Instructions';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
@@ -72,7 +72,7 @@ const handler: Operation.WithHandler<typeof SearchOperation.GenerateProviderTemp
 
           yield* Database.flush();
           yield* Operation.invoke(
-            RunInstructions,
+            AgentOperation.RunInstructions,
             { instructions: Ref.make(instructions), input: {} },
             { spaceId: db.spaceId, conversation: Obj.getURI(conversationFeed) },
           );

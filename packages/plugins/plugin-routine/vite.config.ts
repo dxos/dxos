@@ -6,6 +6,7 @@ import { defineConfig } from '../../../vite.base.config.ts';
 
 export default defineConfig({
   entry: {
+    'ns/RoutinePath': 'src/RoutinePath.ts',
     'ns/Wire': 'src/Wire.ts',
     'ns/TemplateEditor': 'src/TemplateEditor.ts',
     'ns/InstructionsEditor': 'src/InstructionsEditor.ts',

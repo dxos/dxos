@@ -7,8 +7,8 @@
 import React, { useState } from 'react';
 
 import { mx } from '@dxos/ui-theme';
+import { type ThemedClassName } from '@dxos/ui-types';
 
-import { type ThemedClassName } from '../../util/index.ts';
 import { type MediaKind, detectMediaKind, isEmbedUrl } from './media-kind.ts';
 
 export type MediaFit = 'cover' | 'contain' | 'fill' | 'none' | 'scale-down';
