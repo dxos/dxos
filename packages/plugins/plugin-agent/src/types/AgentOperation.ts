@@ -6,14 +6,15 @@
 
 import * as Schema from 'effect/Schema';
 
+import { AiService } from '@dxos/ai';
 import * as Agent from '@dxos/assistant/Agent';
 import * as Chat from '@dxos/assistant/Chat';
-import * as AgentService from '@dxos/compute/AgentService';
 import * as Operation from '@dxos/compute/Operation';
 import * as Skill from '@dxos/compute/Skill';
 import { Database, DXN, Feed, Obj, Ref } from '@dxos/echo';
 
 import * as DiscordBinding from './DiscordBinding.ts';
+import * as FactEntry from './FactEntry.ts';
 
 /** Creates an agent (instructions, feed and companion chat) in the space. */
 export const CreateAgent = Operation.make({
@@ -176,24 +177,30 @@ export const EnsureParticipantChat = Operation.make({
 });
 
 /**
- * Has the agent read a document (e.g. a transcript of an earlier conversation) and record what it
- * learns — people, goals, memories, rules and follow-ups — by running a model turn with its memory tools.
+ * Reads a source — a markdown document, text, chat transcript or web page — and appends the RDF facts
+ * it states to that source's annotation feed in the agent's space. A direct model call: no chat is created.
  */
-export const LearnFromDocument = Operation.make({
+export const ReadSource = Operation.make({
   meta: {
-    key: DXN.make('org.dxos.operation.agent.learnFromDocument'),
-    name: 'Learn from document',
-    description: 'Has the agent read a document and record the people, goals, memories and rules it describes.',
+    key: DXN.make('org.dxos.operation.agent.readSource'),
+    name: 'Read source',
+    description:
+      'Reads a document, chat transcript or web page and records the facts it states, with who said them and when.',
     icon: 'ph--book-open-text--regular',
   },
-  services: [Database.Service, AgentService.AgentService],
+  services: [Database.Service, AiService.AiService],
   input: Schema.Struct({
-    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that learns.' }),
-    document: Ref.Ref(Obj.Unknown).annotate({ description: 'A markdown document (or text) to learn from.' }),
+    agent: Ref.Ref(Agent.Agent).annotate({ description: 'The agent that reads.' }),
+    source: Schema.optional(
+      Ref.Ref(Obj.Unknown).annotate({ description: 'A markdown document, text or chat to read.' }),
+    ),
+    url: Schema.optional(Schema.String.annotate({ description: 'The URL of a web page; pass its text too.' })),
+    text: Schema.optional(
+      Schema.String.annotate({ description: 'The text to read, e.g. the content of the web page at url.' }),
+    ),
   }),
   output: Schema.Struct({
-    chat: Ref.Ref(Chat.Chat).annotate({ description: 'The chat the learning turn ran in.' }),
-    memories: Schema.Number.annotate({ description: 'Memories recorded by the turn.' }),
-    goals: Schema.Number.annotate({ description: 'Goals recorded by the turn.' }),
+    entry: Ref.Ref(FactEntry.FactEntry).annotate({ description: 'The annotation entry appended.' }),
+    facts: Schema.Number.annotate({ description: 'Facts recorded.' }),
   }),
 });

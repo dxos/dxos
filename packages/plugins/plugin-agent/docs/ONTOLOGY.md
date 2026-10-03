@@ -11,7 +11,7 @@ The agent's knowledge has five layers, from raw to curated:
 | Layer                  | Holds                                                      | Form                                                      |
 | ---------------------- | ---------------------------------------------------------- | --------------------------------------------------------- |
 | 1. Transcripts         | Every thread and chat, verbatim — the full-fidelity record | The chat's feed; never edited                             |
-| 2. Annotations         | RDF facts read from each transcript                        | A fact feed per transcript (§2)                           |
+| 2. Annotations         | RDF facts read from each source                            | A fact feed per source (§2)                               |
 | 3. Curated entities    | Profiles of people, organizations and projects             | Objects in the home space, ref'ing canonical objects (§3) |
 | 4. Per-user directives | Each user's instructions and preferences                   | Objects in the home space, keyed by user (§4)             |
 | 5. Intent              | Goals shared with users, tasks the agent owes, triggers    | Goal/Task objects; triggers in process memory (§5)        |
@@ -34,23 +34,36 @@ correct and delete it; it references objects in other spaces rather than copying
 Fact subjects and objects are entity IRIs that resolve to these objects (pipeline-rdf `Entity.ref`), so
 the RDF graph and ECHO share identity.
 
-## 2. Annotations — facts per transcript
+## 2. Annotations — facts per source
 
 **Decision:** facts are not ECHO objects. A fact is one low-level proposition and an agent records
 hundreds a day; an object per fact costs a document each and buries the objects people read. Each
-transcript instead gets an **annotation feed** beside it (the mailbox-enrichment pattern: derived data
-on a second feed, never on the immutable messages). The transcript remains the full-fidelity record.
+**source** the agent reads — a chat transcript, a document, or a web page — instead gets an
+**annotation feed** (the mailbox-enrichment pattern: derived data on a second feed, never on the
+immutable source). The source remains the full-fidelity record.
 
-An entry is one extraction pass — normally the agent's end-of-turn update — and carries a batch of
-facts in the `@dxos/pipeline-rdf` `Fact` shape, so its extraction stages and SPARQL engine are reused:
+**`readSource` is the one operation that writes annotations** (`org.dxos.operation.agent.readSource`,
+input `{ agent, source?, url?, text? }`). It reads the source's text — a chat renders as
+`[time] speaker: text` lines, a markdown transcript keeps its `**Speaker:**` paragraphs — runs
+pipeline-rdf's extraction (chunked) as a direct model call with no chat or session, attributes each
+fact to the utterance its quote comes from (speaker, message DXN, time), and appends one entry to the
+source's feed. The feed is a `Feed` parented to the agent in its home space, keyed by the foreign key
+`{ source: 'org.dxos.agent.annotations', id: <source object id or URL> }` (also its `kind`), so EDGE
+finds it with `Filter.foreignKeys`/`Filter.childOf` and no hierarchy traversal. The conversation skill
+calls it when asked to read a document or link; the playground calls it on its seed transcript.
+
+An entry is one extraction pass and carries a batch of facts in the `@dxos/pipeline-rdf` `Fact` shape,
+so its extraction stages and SPARQL engine are reused:
 
 ```ts
-FactEntry {                     // one feed item per extraction pass over the transcript
-  transcript: Ref<Chat>;        // the transcript this feed annotates
+FactEntry {                     // org.dxos.type.agent.factEntry 0.1.0; one feed item per extraction pass
+  source?: Ref<Obj>;            // the document or chat read (absent for a web page)
+  url?: string;                 // the web page read
+  name?: string;                // the source's display name
   recordedAt: string;           // when the agent extracted it
   extractor: { id: string; model: string; version: string };
-  facts: Fact[];
-}
+  facts: Fact[];                // subject/object stored as one { entity?, label?, literal? } struct:
+}                               // ECHO only stores discriminated unions, and pipeline-rdf's Term is not
 
 Fact {                          // pipeline-rdf
   assertion: { subject, predicate, object, validFrom?, validTo?, quote? };
@@ -66,8 +79,10 @@ Fact {                          // pipeline-rdf
 ```
 
 - **Every fact records timestamp, speaker and source.** pipeline-rdf requires `source` and
-  `generatedAtTime`; the agent always sets `agent` (speaker). Sources are DXN strings in RDF; the UI
-  resolves them to ECHO refs to jump to the message.
+  `generatedAtTime`; `readSource` sets `agent` (the speaker, as a pipeline-rdf entity id such as
+  `dima`) whenever the fact's quote locates the utterance. Sources are DXN strings (or a URL) in RDF;
+  the UI resolves them to ECHO refs to jump to the message. Later: the speaker's DXN once the sender
+  is a resolved `Person`.
 - **Append-only.** A correction is a new fact that supersedes (`wasDerivedFrom`); a retraction is a
   fact with negative polarity. The feed is an audit trail of what the agent believed and when.
 - **Expiry is a query concern.** `validTo` bounds a status ("on the Discord bot this week"); expired
@@ -75,9 +90,12 @@ Fact {                          // pipeline-rdf
 - **Predicates are open.** "commits", "owns", "is blocked by" — the RDF vocabulary grows freely.
   Anything that must behave reliably (triggers, rules) matches on `illocution.force` and
   `factuality.polarity`, which the extractor always fills, not on the predicate string.
-- **Recall** loads the annotation feeds of the transcripts in scope into pipeline-rdf's in-memory
-  store and queries with SPARQL; EDGE's FTS5 index over feed items serves text search. Scope follows
-  the audience rule (same space / Discord server by default).
+- **Recall** (v1, as built) reads every annotation feed in the space and filters in JS: by subject
+  (the entity's names as pipeline-rdf entity ids, matched against subject, object and speaker), by
+  text, and dropping facts past `validTo`; facts come back beside memories with their source and time.
+  Later: load the feeds in scope into pipeline-rdf's in-memory store and query with SPARQL; EDGE's FTS5
+  index over feed items serves text search. Scope follows the audience rule (same space / Discord
+  server by default).
 
 `Memory` (`org.dxos.type.agent.memory`) is retired once the feeds land: `recordMemory` writes facts,
 `retrieveMemories` queries them, notes become documents (§3), directives become §4 objects.

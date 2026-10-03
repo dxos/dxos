@@ -22,7 +22,7 @@ import { Text } from '@dxos/schema';
 import { HasSubject, Message, Organization, Person, Task, TaskSet } from '@dxos/types';
 
 import { AgentOperationHandlerSet } from '#operations';
-import { ConversationSkill, InterviewSkill, LearnSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
+import { ConversationSkill, InterviewSkill, ModesSkill, NoteTakerSkill, RelaySkill } from '#skills';
 import { AgentOperation, ChatParticipant, Goal, Memory, MemoryOperation, Mode, ModeOperation, Relay } from '#types';
 
 EntityId.dangerouslyDisableRandomness();
@@ -58,7 +58,6 @@ const SKILLS = [
   RelaySkill.make(),
   ModesSkill.make(),
   NoteTakerSkill.make(),
-  LearnSkill.make(),
 ];
 
 const TestLayer = AssistantTestLayer({
@@ -189,83 +188,5 @@ describe('Modes', () => {
       Effect.provide(TestLayer),
       TestHelpers.provideTestContext,
     ),
-  );
-});
-
-describe('LearnFromDocument', () => {
-  // Filled in by the test before the turn runs; the script reads them when it emits the tool calls.
-  const refs: { dima?: string; rich?: string; document?: string } = {};
-
-  /** The learning turn: the tool calls the document warrants, then a one-line summary. */
-  const script: ScriptedLanguageModel.ScriptedTurnGenerator = (request) => {
-    if (!request.text.includes(LearnSkill.PROMPT_MARKER)) {
-      return { parts: [text('Unexpected request.')] };
-    }
-    if (request.prompt.content.at(-1)?.role === 'tool') {
-      return { parts: [text('Recorded 2 memories and 1 goal.')] };
-    }
-    return {
-      parts: [
-        toolCall(tool(MemoryOperation.Remember), () => ({
-          content: 'Dima owns the indexer.',
-          kind: 'fact',
-          subjects: [refs.dima],
-          source: refs.document,
-        })),
-        toolCall(tool(MemoryOperation.Remember), () => ({
-          content: 'Do not page Dima after 6pm (set by Dima).',
-          kind: 'directive',
-          subjects: [refs.dima],
-          source: refs.document,
-        })),
-        toolCall(tool(MemoryOperation.ProposeGoal), () => ({
-          title: 'Fix the flaky CI caused by the indexer migration race',
-          horizon: 'now',
-          owners: [refs.dima],
-        })),
-      ],
-    };
-  };
-
-  it.effect(
-    'runs a model turn that records what the document says',
-    Effect.fnUntraced(
-      function* ({ expect }) {
-        const dima = yield* Database.add(Person.make({ fullName: 'Dima', preferredName: 'Dima' }));
-        const rich = yield* Database.add(Person.make({ fullName: 'Rich Burdon', preferredName: 'Rich' }));
-        const document = yield* Database.add(
-          Markdown.make({ name: 'CI triage', content: '**Rich:** Dima owns the indexer. Do not page her after 6pm.' }),
-        );
-        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
-        const agent = yield* Database.load(agentRef);
-        yield* Database.flush();
-        refs.dima = Obj.getURI(dima);
-        refs.rich = Obj.getURI(rich);
-        refs.document = Obj.getURI(document);
-
-        const result = yield* Operation.invoke(AgentOperation.LearnFromDocument, {
-          agent: agentRef,
-          document: Ref.make<Obj.Unknown>(document),
-        });
-        expect(result).toMatchObject({ memories: 2, goals: 1 });
-
-        const memories = yield* Database.query(Filter.type(Memory.Memory)).run;
-        expect(memories.map(({ kind }) => kind).sort()).toEqual(['directive', 'fact']);
-        const learning = yield* Database.load(result.chat);
-        expect(Obj.getParent(learning)?.id).toBe(agent.id);
-        // Keyed by the document, so it never displaces the agent's primary chat.
-        expect((yield* Agent.loadChat(agent))?.id).not.toBe(learning.id);
-      },
-      Effect.provide(
-        AssistantTestLayer({
-          operationHandlers: AgentOperationHandlerSet,
-          types: TYPES,
-          skills: SKILLS,
-          aiService: ScriptedLanguageModel.scriptedAiService(script),
-        }),
-      ),
-      TestHelpers.provideTestContext,
-    ),
-    { timeout: 60_000 },
   );
 });

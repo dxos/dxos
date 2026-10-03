@@ -19,7 +19,11 @@ import { MEMORY_ICONS } from '../ProfileGraph/index.ts';
 // Root
 //
 
-type AgentKnowledgeView = 'memories' | 'graph';
+const VIEWS = ['memories', 'facts', 'graph'] as const;
+
+type AgentKnowledgeView = (typeof VIEWS)[number];
+
+const isView = (value: string): value is AgentKnowledgeView => VIEWS.some((view) => view === value);
 
 const AgentKnowledgeContext = createContext<AgentKnowledgeView>('memories');
 
@@ -28,23 +32,21 @@ type AgentKnowledgeRootProps = PropsWithChildren<{
   defaultView?: AgentKnowledgeView;
 }>;
 
-/** What the agent knows, one view at a time: its memories and its knowledge graph. */
+/** What the agent knows, one view at a time: its memories, the facts it read and its knowledge graph. */
 const AgentKnowledgeRoot = ({ role, defaultView = 'memories', children }: AgentKnowledgeRootProps) => {
   const { t } = useTranslation(meta.profile.key);
   const [view, setView] = useState<AgentKnowledgeView>(defaultView);
   return (
-    <Tabs.Root
-      asChild
-      orientation='horizontal'
-      value={view}
-      onValueChange={(value) => setView(value === 'graph' ? 'graph' : 'memories')}
-    >
+    <Tabs.Root asChild orientation='horizontal' value={view} onValueChange={(value) => isView(value) && setView(value)}>
       <Panel.Root role={role}>
         <Panel.Toolbar asChild>
           <Toolbar.Root>
             <Tabs.Tablist>
               <Tabs.Button value='memories' data-testid='agent-knowledge-tab-memories'>
                 {t('agent-knowledge-memories.label')}
+              </Tabs.Button>
+              <Tabs.Button value='facts' data-testid='agent-knowledge-tab-facts'>
+                {t('agent-knowledge-facts.label')}
               </Tabs.Button>
               <Tabs.Button value='graph' data-testid='agent-knowledge-tab-graph'>
                 {t('agent-knowledge-graph.label')}
@@ -116,6 +118,67 @@ const AgentKnowledgeMemories = ({ memories, now }: AgentKnowledgeMemoriesProps) 
 AgentKnowledgeMemories.displayName = 'AgentKnowledge.Memories';
 
 //
+// Facts
+//
+
+type AgentKnowledgeFact = {
+  id: string;
+  /** Subject, predicate and object. */
+  text: string;
+  /** The name of the source it was read from. */
+  source?: string;
+  /** Who said it, when known. */
+  speaker?: string;
+  saidAt: string;
+};
+
+type AgentKnowledgeFactsProps = {
+  /** Newest first. */
+  facts: readonly AgentKnowledgeFact[];
+  /** Fixes the instant timestamps are measured against, so stories and tests do not drift. */
+  now?: TimestampProps['now'];
+};
+
+/** The facts the agent read from documents, pages and conversations, newest first. */
+const AgentKnowledgeFacts = ({ facts, now }: AgentKnowledgeFactsProps) => {
+  const { t } = useTranslation(meta.profile.key);
+  if (useContext(AgentKnowledgeContext) !== 'facts') {
+    return null;
+  }
+
+  return facts.length === 0 ? (
+    <Flex center classNames='p-2 text-description' role='status'>
+      {t('agent-knowledge-facts-empty.message')}
+    </Flex>
+  ) : (
+    <ScrollArea.Root orientation='vertical'>
+      <ScrollArea.Viewport>
+        <Listbox.Root>
+          <Listbox.Content>
+            {facts.map((fact) => (
+              <Listbox.Item key={fact.id} id={fact.id} data-testid='agent-knowledge-fact'>
+                <Listbox.ItemContent
+                  icon='ph--graph--regular'
+                  title={fact.text}
+                  description={
+                    <>
+                      {[fact.source, fact.speaker].flatMap((part) => (part ? [`${part} · `] : []))}
+                      <Timestamp date={fact.saidAt} now={now} />
+                    </>
+                  }
+                />
+              </Listbox.Item>
+            ))}
+          </Listbox.Content>
+        </Listbox.Root>
+      </ScrollArea.Viewport>
+    </ScrollArea.Root>
+  );
+};
+
+AgentKnowledgeFacts.displayName = 'AgentKnowledge.Facts';
+
+//
 // Graph
 //
 
@@ -181,11 +244,14 @@ AgentKnowledgeGraph.displayName = 'AgentKnowledge.Graph';
 export const AgentKnowledge = {
   Root: AgentKnowledgeRoot,
   Memories: AgentKnowledgeMemories,
+  Facts: AgentKnowledgeFacts,
   Graph: AgentKnowledgeGraph,
 };
 
 export type {
   AgentKnowledgeEdge,
+  AgentKnowledgeFact,
+  AgentKnowledgeFactsProps,
   AgentKnowledgeGraphProps,
   AgentKnowledgeMemoriesProps,
   AgentKnowledgeMemory,

@@ -13,6 +13,7 @@ const operations = [
   AgentOperation.CreateAgent,
   AgentOperation.EnsureThreadChat,
   AgentOperation.ListAgents,
+  AgentOperation.ReadSource,
   MemoryOperation.ResolveEntity,
   MemoryOperation.Remember,
   MemoryOperation.Recall,
@@ -41,6 +42,8 @@ export const make = (): Skill.Skill =>
         - When someone asks about another person, a team or a topic, call ${tool(MemoryOperation.ResolveEntity)}
           for them and ${tool(MemoryOperation.Recall)} before answering, and say who told you and when.
         - Share what you know with members of this space, unless a directive you recorded says not to.
+        - When asked to read a document or link, call ${tool(AgentOperation.ReadSource)}; facts you learn are shared
+          across conversations.
       `,
     }),
   });

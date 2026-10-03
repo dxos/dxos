@@ -15,9 +15,12 @@ import { HasSubject, Organization, Person } from '@dxos/types';
 import {
   AgentKnowledge as AgentKnowledgeComponent,
   type AgentKnowledgeEdge,
+  type AgentKnowledgeFact,
   type AgentKnowledgeNode,
 } from '#components';
-import { Goal, Memory, Profile } from '#types';
+import { FactEntry, Goal, Memory, Profile } from '#types';
+
+import { useFactEntries } from '../useFactEntries.ts';
 
 /** A memory past its `expiresAt`; memories without one never expire. */
 const isExpired = (memory: Memory.Memory, now: string): boolean =>
@@ -28,7 +31,7 @@ export type AgentKnowledgeProps = {
   agent: Agent.Agent;
 };
 
-/** What the agent knows: its active memories and its knowledge graph. */
+/** What the agent knows: its active memories, the facts it read and its knowledge graph. */
 export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
   const db = Obj.getDatabase(agent);
   const [name] = useObject(agent, 'name');
@@ -87,9 +90,28 @@ export const AgentKnowledge = ({ role, agent }: AgentKnowledgeProps) => {
   );
   const { memories: active, nodes, edges } = useAtomValue(graphAtom);
 
+  // Feed items are immutable, so the entries query alone tracks every change.
+  const { entries } = useFactEntries(agent);
+  const facts = useMemo(
+    () =>
+      entries
+        .flatMap((entry) =>
+          entry.facts.map((fact): AgentKnowledgeFact => ({
+            id: `${entry.id}:${fact.id}`,
+            text: FactEntry.factText(fact),
+            source: entry.name,
+            speaker: fact.attribution.agent,
+            saidAt: fact.attribution.generatedAtTime,
+          })),
+        )
+        .sort((left, right) => right.saidAt.localeCompare(left.saidAt)),
+    [entries],
+  );
+
   return (
     <AgentKnowledgeComponent.Root role={role}>
       <AgentKnowledgeComponent.Memories memories={active} />
+      <AgentKnowledgeComponent.Facts facts={facts} />
       <AgentKnowledgeComponent.Graph nodes={nodes} edges={edges} />
     </AgentKnowledgeComponent.Root>
   );

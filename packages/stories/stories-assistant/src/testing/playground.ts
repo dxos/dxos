@@ -19,7 +19,7 @@ import { trim } from '@dxos/util';
 
 //
 // The Agent playground: one agent (Kai), three people each with their own chat with it, and a
-// transcript of an earlier engineering conversation the agent learns from on load.
+// transcript of an earlier engineering conversation the agent reads on load.
 //
 
 export const AGENT_NAME = 'Kai';
@@ -116,8 +116,8 @@ export type SetupPlaygroundProps = {
   invoker: Capabilities.OperationInvoker;
   /** Runs every chat on this model; the scripted story leaves it to the scripted service. */
   model?: DXN.DXN;
-  /** Learns from the transcript once set up, without waiting for the turn to finish. */
-  learn?: boolean;
+  /** Reads the transcript into the agent's facts once set up, without waiting for the extraction to finish. */
+  read?: boolean;
   /** Receives the refs once the objects exist. */
   refs?: PlaygroundRefs;
 };
@@ -138,9 +138,9 @@ const invoke = async <I, O>(
 
 /**
  * Creates the agent through plugin-agent's operations (so it has its base skills and modes), gives
- * each person their own chat with it, and optionally starts learning from the transcript.
+ * each person their own chat with it, and optionally starts reading the transcript.
  */
-export const setupPlayground = async ({ db, invoker, model, learn, refs }: SetupPlaygroundProps) => {
+export const setupPlayground = async ({ db, invoker, model, read, refs }: SetupPlaygroundProps) => {
   const { people, team, document } = await seedPlayground(db);
   const { agent: agentRef } = await invoke(invoker, db, AgentOperation.CreateAgent, { name: AGENT_NAME });
   const agent = await agentRef.load();
@@ -182,11 +182,11 @@ export const setupPlayground = async ({ db, invoker, model, learn, refs }: Setup
     });
   }
 
-  if (learn) {
-    // Not awaited: the turn takes as long as the model does, and the story should render meanwhile.
-    void invoke(invoker, db, AgentOperation.LearnFromDocument, {
+  if (read) {
+    // Not awaited: extraction takes as long as the model does, and the story should render meanwhile.
+    void invoke(invoker, db, AgentOperation.ReadSource, {
       agent: agentRef,
-      document: Ref.make<Obj.Unknown>(document),
+      source: Ref.make<Obj.Unknown>(document),
     });
   }
 };
@@ -212,8 +212,39 @@ export const SCRIPTED_REPLIES = {
   thanked: 'Thanks, I let Rich know.',
   switched: 'Switched to Note-taker mode.',
   noted: 'Noted.',
-  learned: 'I recorded what I learned from the transcript.',
 } as const;
+
+/** The first line of pipeline-rdf's extraction prompt, which is how the script tells `readSource` calls apart. */
+const EXTRACTION_PROMPT = 'You extract atomic propositions';
+
+/**
+ * What the scripted extractor finds in {@link TRANSCRIPT}; each quote is verbatim from one speaker's
+ * line, so `readSource` attributes the fact to them.
+ */
+export const TRANSCRIPT_FACTS = [
+  { subject: 'Dima', predicate: 'owns', object: 'indexer', quote: "That's me." },
+  { subject: 'indexer migration race', predicate: 'has priority', object: 'P0', quote: 'Then this is P0.' },
+  {
+    subject: 'migration',
+    predicate: 'takes',
+    object: 'index write lock',
+    quote: 'the migration takes the write lock',
+  },
+  {
+    subject: 'Josiah',
+    predicate: 'reviews',
+    object: 'indexer fix',
+    quote: 'Josiah, you review it.',
+    force: 'directive',
+  },
+  {
+    subject: 'Kai',
+    predicate: 'must not page after 6pm',
+    object: 'Dima',
+    quote: "don't page me after 6pm",
+    force: 'directive',
+  },
+] as const;
 
 const tool = Operation.toolName;
 const { text, toolCall } = ScriptedLanguageModel;
@@ -253,13 +284,22 @@ const lastToolName = (request: ScriptedLanguageModel.ScriptedRequest): string | 
 };
 
 /**
- * A turn generator rather than a fixed script: four conversations (three panels and the learning
- * chat) interleave in an order the play function does not control, so each turn is chosen from the
- * request — the latest user message, or the tool whose result just came back.
+ * A turn generator rather than a fixed script: three conversations and the transcript's extraction
+ * interleave in an order the play function does not control, so each turn is chosen from the request —
+ * the extraction prompt, the latest user message, or the tool whose result just came back.
  */
 export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageModel.ScriptedTurnGenerator => {
   let relay: string | undefined;
   return (request) => {
+    if (request.text.includes(EXTRACTION_PROMPT)) {
+      // Extraction runs per chunk, so each chunk reports only the facts it quotes.
+      const facts = TRANSCRIPT_FACTS.filter(({ quote }) => request.text.includes(quote)).map((fact) => ({
+        ...fact,
+        factuality: 'CT+',
+        polarity: '+',
+      }));
+      return { parts: [text(JSON.stringify({ facts }))] };
+    }
     if (request.text.includes('Suggest a name for this chat')) {
       return { parts: [text('Playground')] };
     }
@@ -290,37 +330,12 @@ export const makePlaygroundScript = (refs: PlaygroundRefs): ScriptedLanguageMode
         case tool(ModeOperation.SwitchMode):
           return { parts: [text(SCRIPTED_REPLIES.switched)] };
         case tool(MemoryOperation.Remember):
-        case tool(MemoryOperation.ProposeGoal):
-          return { parts: [text(said.includes('<document') ? SCRIPTED_REPLIES.learned : SCRIPTED_REPLIES.noted)] };
+          return { parts: [text(SCRIPTED_REPLIES.noted)] };
         default:
           return { parts: [text('Done.')] };
       }
     }
 
-    if (said.includes('<document')) {
-      const fact = (content: string, subjects: (string | undefined)[], kind = 'fact') =>
-        toolCall(tool(MemoryOperation.Remember), {
-          content,
-          kind,
-          origin: 'stated',
-          subjects,
-          source: refs.document,
-        });
-      return {
-        parts: [
-          fact('Dima owns the indexer.', [refs.Dima]),
-          fact('The flaky CI is caused by a race in the v12 index migration.', [refs.team]),
-          fact('Josiah reviews the indexer migration fix.', [refs.Josiah, refs.Dima], 'relationship'),
-          fact('Do not page Dima after 6pm; post in #indexer instead (set by Dima).', [refs.Dima], 'directive'),
-          toolCall(tool(MemoryOperation.ProposeGoal), {
-            title: 'Fix the indexer migration race before the 0.12 release',
-            description: 'P0; the migration takes the write lock and the worker waits. Release on 10 October.',
-            horizon: 'now',
-            owners: [refs.team],
-          }),
-        ],
-      };
-    }
     // Each panel attributes its prompts, so the model sees who is speaking; a missing attribution
     // falls through to the plain reply and fails the play function's wait.
     if (said.includes(SCRIPTED_PROMPTS.relay) && said.includes('[From: Rich]')) {

@@ -96,22 +96,34 @@ export const RecalledGoal = Schema.Struct({
   status: Goal.Status,
 });
 
-/** Reads back what the agent knows: active memories, newest first, and live goals. */
+/** A fact the agent read in a source's annotation feed. */
+export const RecalledFact = Schema.Struct({
+  fact: Schema.String.annotate({ description: 'Subject, predicate and object.' }),
+  quote: Schema.optional(Schema.String),
+  speaker: Schema.optional(Schema.String.annotate({ description: 'Who stated it, when known.' })),
+  source: Schema.String.annotate({ description: 'DXN of the message or object it came from, or a URL.' }),
+  sourceName: Schema.optional(Schema.String),
+  saidAt: Schema.String.annotate({ description: 'When it was said.' }),
+});
+
+/** Reads back what the agent knows: active memories, newest first, facts it read, and live goals. */
 export const Recall = Operation.make({
   meta: {
     key: DXN.make('org.dxos.operation.agent.retrieveMemories'),
     name: 'Recall',
-    description: 'Returns the active memories about a subject (newest first) and the goals it owns.',
+    description:
+      'Returns the active memories and the facts read from documents and conversations about a subject (newest first), and the goals it owns.',
     icon: 'ph--magnifying-glass--regular',
   },
   services: [Database.Service],
   input: Schema.Struct({
     subject: Schema.optional(Ref.Ref(Obj.Unknown).annotate({ description: 'The entity to recall; all if omitted.' })),
-    query: Schema.optional(Schema.String.annotate({ description: 'Only memories containing this text.' })),
-    limit: Schema.optional(Schema.Number.annotate({ description: 'Maximum number of memories.' })),
+    query: Schema.optional(Schema.String.annotate({ description: 'Only memories and facts containing this text.' })),
+    limit: Schema.optional(Schema.Number.annotate({ description: 'Maximum number of memories, and of facts.' })),
   }),
   output: Schema.Struct({
     memories: Schema.Array(RecalledMemory),
+    facts: Schema.Array(RecalledFact),
     goals: Schema.Array(RecalledGoal),
   }),
 });

@@ -38,9 +38,9 @@ three chat panels — Rich, Dima, Josiah — plus the agent state panel. Each pa
 with Kai (`ensureParticipantChat`, `ChatParticipant`) and attributes every prompt to them: the panel
 passes a `sender` to `useChatProcessor`, the agent process records it on the user message, and the
 model sees `[From: Dima]`. On load the space holds the three people, the "DXOS Eng" team and a
-transcript of an earlier CI-triage conversation, which the agent learns from
-(`learnFromDocument`, a real model turn with the learn skill's memory tools); the Learn button in the
-state panel runs it again. Try "tell Dima the fix landed", Dima's reply, "take notes", "interview me".
+transcript of an earlier CI-triage conversation, which the agent reads on load (`readSource`: a
+direct pipeline-rdf extraction, no chat) into facts in the transcript's annotation feed — the state
+panel counts them and the knowledge panel's Facts tab lists them. Try "tell Dima the fix landed", Dima's reply, "take notes", "interview me".
 Tagged `!test`.
 
 ## 2. Tests and stories (CI)
@@ -55,9 +55,10 @@ Tagged `!test`.
   space. `pnpm exec vitest run --project=storybook src/stories/Interview.stories.tsx` in
   `packages/stories/stories-assistant`.
 - **Scripted playground** — **AgentPlayground › PlaygroundScripted**: a turn generator plays the
-  agent across all four conversations; the play function checks the learned graph, a relay from
-  Rich's panel into Dima's and back, and a switch to Note-taker that records a note.
-  `modes.test.ts` covers modes, notes, participant chats and `learnFromDocument` (scripted model).
+  agent across the three conversations and the transcript's extraction; the play function checks the
+  facts read (count, Dima's attributed directive, no extra conversation), a relay from Rich's panel
+  into Dima's and back, and a switch to Note-taker that records a note. `modes.test.ts` covers modes,
+  notes and participant chats; `read-source.test.ts` covers `readSource` and fact recall (scripted model).
 - **Components** — `moon run plugin-agent:test-storybook` renders the `AgentActivity`, `ProfileGraph`
   and `DiscordBindingForm` stories.
 - **Freezing a regression** — when an eval or a live run finds a bug, record that conversation as a

@@ -7745,6 +7745,9 @@ importers:
 
   packages/plugins/plugin-agent:
     dependencies:
+      '@dxos/ai':
+        specifier: workspace:*
+        version: link:../../core/compute/ai
       '@dxos/app-framework':
         specifier: workspace:*
         version: link:../../sdk/app-framework
@@ -7781,6 +7784,9 @@ importers:
       '@dxos/link':
         specifier: workspace:*
         version: link:../../core/compute/link
+      '@dxos/pipeline-rdf':
+        specifier: workspace:*
+        version: link:../../core/compute/pipeline-rdf
       '@dxos/plugin-crm':
         specifier: workspace:*
         version: link:../plugin-crm
@@ -7824,9 +7830,6 @@ importers:
       '@dxos/agent-runtime':
         specifier: workspace:*
         version: link:../../core/compute/agent-runtime
-      '@dxos/ai':
-        specifier: workspace:*
-        version: link:../../core/compute/ai
       '@dxos/echo-client':
         specifier: workspace:*
         version: link:../../core/echo/echo-client

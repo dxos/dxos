@@ -109,6 +109,11 @@
       "types": "./dist/types/src/types/DiscordOperation.d.ts",
       "import": "./dist/lib/DiscordOperation.mjs"
     },
+    "./FactEntry": {
+      "source": "./src/types/FactEntry.ts",
+      "types": "./dist/types/src/types/FactEntry.d.ts",
+      "import": "./dist/lib/FactEntry.mjs"
+    },
     "./Goal": {
       "source": "./src/types/Goal.ts",
       "types": "./dist/types/src/types/Goal.d.ts",
@@ -187,6 +192,9 @@
       "DiscordOperation": [
         "dist/types/src/types/DiscordOperation.d.ts"
       ],
+      "FactEntry": [
+        "dist/types/src/types/FactEntry.d.ts"
+      ],
       "Goal": [
         "dist/types/src/types/Goal.d.ts"
       ],
@@ -222,6 +230,7 @@
     "src"
   ],
   "dependencies": {
+    "@dxos/ai": "workspace:*",
     "@dxos/app-framework": "workspace:*",
     "@dxos/app-toolkit": "workspace:*",
     "@dxos/assistant": "workspace:*",
@@ -234,6 +243,7 @@
     "@dxos/errors": "workspace:*",
     "@dxos/keys": "workspace:*",
     "@dxos/link": "workspace:*",
+    "@dxos/pipeline-rdf": "workspace:*",
     "@dxos/plugin-crm": "workspace:*",
     "@dxos/plugin-explorer": "workspace:*",
     "@dxos/plugin-markdown": "workspace:*",
@@ -250,7 +260,6 @@
   },
   "devDependencies": {
     "@dxos/agent-runtime": "workspace:*",
-    "@dxos/ai": "workspace:*",
     "@dxos/echo-client": "workspace:*",
     "@dxos/plugin-testing": "workspace:*",
     "@dxos/react-client": "workspace:*",

@@ -21,6 +21,8 @@ import {
 } from '#components';
 import { AgentOperation, ChatParticipant, Goal, Memory, Mode, Profile } from '#types';
 
+import { useFactEntries } from '../useFactEntries.ts';
+
 /** Statuses after which a task no longer needs doing. */
 const CLOSED_TASK_STATUSES: readonly Task.Status[] = ['done', 'duplicate', 'cancelled', 'failed'];
 
@@ -56,6 +58,7 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
   const people = useQuery(db, Filter.type(Person.Person));
   const organizations = useQuery(db, Filter.type(Organization.Organization));
   const tasks = useQuery(db, Filter.type(Task.Task));
+  const { entries, sources } = useFactEntries(agent);
 
   // A query re-emits on membership only, so status, title and checklist changes need per-object subscriptions.
   const stateAtom = useMemo(
@@ -81,6 +84,10 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
 
         const counts: AgentStateCounts = {
           memories: { active: active.length, expired: expired.length },
+          facts:
+            sources > 0
+              ? { count: entries.reduce((count, entry) => count + entry.facts.length, 0), sources }
+              : undefined,
           goals: {
             proposed: goals.filter((goal) => goal.status === 'proposed').length,
             confirmed: goals.filter((goal) => goal.status === 'confirmed' || goal.status === 'active').length,
@@ -101,7 +108,7 @@ export const AgentState = ({ role, agent, actions }: AgentStateProps) => {
 
         return { counts };
       }),
-    [chats, memories, goals, people, organizations, tasks],
+    [chats, memories, goals, people, organizations, tasks, entries, sources],
   );
   const { counts } = useAtomValue(stateAtom);
 

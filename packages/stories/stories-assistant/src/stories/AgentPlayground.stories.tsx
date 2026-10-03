@@ -5,8 +5,9 @@
 import { type Meta, type StoryObj } from '@storybook/react-vite';
 import { expect, waitFor, within } from 'storybook/test';
 
-import { type Database, Filter } from '@dxos/echo';
+import { type Database, Feed, Filter, Query } from '@dxos/echo';
 import * as AgentPlugin from '@dxos/plugin-agent/AgentPlugin';
+import * as FactEntry from '@dxos/plugin-agent/FactEntry';
 import * as Goal from '@dxos/plugin-agent/Goal';
 import * as Memory from '@dxos/plugin-agent/Memory';
 import * as Mode from '@dxos/plugin-agent/Mode';
@@ -23,7 +24,7 @@ import {
   type PlaygroundRefs,
   SCRIPTED_PROMPTS,
   SCRIPTED_REPLIES,
-  TRANSCRIPT_NAME,
+  TRANSCRIPT_FACTS,
   createDecorators,
   makePlaygroundScript,
   setupPlayground,
@@ -49,6 +50,7 @@ const TYPES = [
   Organization.Organization,
   HasSubject.HasSubject,
   Memory.Memory,
+  FactEntry.FactEntry,
   Goal.Goal,
   Mode.Mode,
   Relay.Relay,
@@ -57,22 +59,22 @@ const TYPES = [
 
 const HUES = ['amber', 'emerald', 'sky'];
 
-/** One chat per person (each in its own hue), then the agent's state (with a Learn action) over its knowledge. */
+/** One chat per person (each in its own hue), then the agent's state over its knowledge. */
 const LAYOUT = [
   ...PARTICIPANTS.map((participant, index) => [
     { type: StoryRole.Chat, data: { participant, hue: HUES[index % HUES.length] }, id: `chat-${participant}` },
   ]),
-  [{ type: StoryRole.AgentState, data: { learnFrom: TRANSCRIPT_NAME } }, StoryRole.AgentKnowledge],
+  [StoryRole.AgentState, StoryRole.AgentKnowledge],
 ];
 
 /**
  * Rich, Dima and Josiah each talk to the same agent (Kai) in their own chat; every prompt is
- * attributed to the panel's person, so the agent knows who is speaking. The agent learns from a
- * transcript of an earlier CI-triage conversation on load (the Learn button re-runs it). Live AI
- * (DeepSeek V4 Pro through EDGE), so excluded from CI.
+ * attributed to the panel's person, so the agent knows who is speaking. The agent reads a transcript
+ * of an earlier CI-triage conversation on load (`readSource`), recording its facts in the transcript's
+ * annotation feed. Live AI (DeepSeek V4 Pro through EDGE), so excluded from CI.
  *
  * Try:
- * 1. Wait for the knowledge graph to fill: people, the release goal, the "don't page Dima after 6pm" rule.
+ * 1. Wait for the facts to fill: who owns the fix, the P0 priority, the "don't page Dima after 6pm" rule.
  * 2. As Rich: "Tell Dima the fix landed." — the message appears in Dima's panel.
  * 3. As Dima, reply — Kai reports back in Rich's panel.
  * 4. As Rich: "Take notes", then dictate (mic button) — the channel's mode becomes Note-taker and notes appear.
@@ -82,7 +84,7 @@ export const Playground: Story = {
   decorators: createDecorators({
     plugins: [AgentPlugin.make()],
     types: TYPES,
-    onReady: ({ db, invoker }) => setupPlayground({ db, invoker, model: PLAYGROUND_MODEL, learn: true }),
+    onReady: ({ db, invoker }) => setupPlayground({ db, invoker, model: PLAYGROUND_MODEL, read: true }),
   }),
   args: { layout: LAYOUT },
   tags: ['!test'],
@@ -124,7 +126,7 @@ const panel = async (canvasElement: HTMLElement, participant: string): Promise<H
   within(canvasElement).findByTestId(`chat-panel-${participant}`, {}, { timeout: 60_000 });
 
 /**
- * The same layout on a scripted model: learns the transcript on load, relays from Rich to Dima and
+ * The same layout on a scripted model: reads the transcript on load, relays from Rich to Dima and
  * back, and switches Rich's channel to note-taking.
  */
 export const PlaygroundScripted: Story = {
@@ -134,22 +136,35 @@ export const PlaygroundScripted: Story = {
     scripted: makePlaygroundScript(refs),
     onReady: async ({ db, invoker }) => {
       storyDb = db;
-      await setupPlayground({ db, invoker, learn: true, refs });
+      await setupPlayground({ db, invoker, read: true, refs });
     },
   }),
   args: { layout: LAYOUT },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // 1. The agent learned the transcript: the graph has people, memories, a rule and a goal.
-    await waitFor(() => expect(Number(canvas.getByTestId('agent-state-memories').textContent)).toBeGreaterThan(0), {
-      timeout: 60_000,
-    });
-    await waitFor(() => expect(Number(canvas.getByTestId('agent-state-goals').textContent)).toBeGreaterThan(0));
+    // 1. The agent read the transcript into its annotation feed, with no conversation of its own.
+    await waitFor(
+      () => expect(Number(canvas.getByTestId('agent-state-facts').textContent)).toBe(TRANSCRIPT_FACTS.length),
+      { timeout: 60_000 },
+    );
     await waitFor(() => expect(canvas.getByTestId('agent-state-people').textContent).toBe('3'));
+    await waitFor(() => expect(canvas.getByTestId('agent-state-conversations').textContent).toBe('3'));
     await waitForSpace(
-      (db) => db.query(Filter.type(Memory.Memory)).run(),
-      (memories) => memories.some(({ kind }) => kind === 'directive'),
+      async (db) => {
+        const feeds = await db.query(Filter.type(Feed.Feed, { kind: FactEntry.ANNOTATIONS_KEY })).run();
+        if (feeds.length === 0) {
+          return [];
+        }
+        const entries = await db.query(Query.select(Filter.type(FactEntry.FactEntry)).from(feeds)).run();
+        return entries.flatMap(({ facts }) => facts);
+      },
+      // The rule is Dima's, so the fact is attributed to her line of the transcript.
+      (facts) =>
+        facts.some(
+          ({ assertion, attribution, illocution }) =>
+            assertion.quote?.includes('6pm') && attribution.agent === 'dima' && illocution?.force === 'directive',
+        ),
     );
 
     // 2. Rich asks Kai to tell Dima; the message lands in Dima's panel.

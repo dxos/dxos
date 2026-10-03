@@ -147,6 +147,8 @@ AgentStateIdentity.displayName = 'AgentState.Identity';
 
 type AgentStateCounts = {
   memories: { active: number; expired: number };
+  /** Facts read from sources into annotation feeds; absent when none were read. */
+  facts?: { count: number; sources: number };
   goals: { proposed: number; confirmed: number };
   people: number;
   organizations: number;
@@ -168,6 +170,17 @@ const AgentStateSummary = ({ counts }: AgentStateSummaryProps) => {
       value: counts.memories.active + counts.memories.expired,
       description: t('agent-state-memories.description', counts.memories),
     },
+    ...(counts.facts
+      ? [
+          {
+            id: 'facts',
+            icon: 'ph--graph--regular',
+            title: t('agent-state-facts.label'),
+            value: counts.facts.count,
+            description: t('agent-state-facts.description', counts.facts),
+          },
+        ]
+      : []),
     {
       id: 'goals',
       icon: 'ph--target--regular',
