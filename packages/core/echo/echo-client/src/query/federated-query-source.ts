@@ -8,7 +8,7 @@ import { Entity, Obj, Ref, Relation } from '@dxos/echo';
 import { QueryAST } from '@dxos/echo-protocol';
 import { filterMatchEntity } from '@dxos/echo/internal';
 import { BaseError } from '@dxos/errors';
-import { EID, type SpaceId, type URI } from '@dxos/keys';
+import { EID, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { getDeep } from '@dxos/util';
 
@@ -125,7 +125,7 @@ export class FederatedQueryExecutor {
         const anchors = new Set((await this.#eval(node.anchor, scopes, options)).map(keyOf));
         const candidates = await this.#select(selectType(node.typename), scopes, options);
         return candidates.filter((candidate) =>
-          refsOf(candidate, node.property).some((ref) => anchors.has(refTargetKey(ref, spaceOf(candidate)))),
+          refsOf(candidate, node.property).some((ref) => hasKey(anchors, refTargetKey(ref, spaceOf(candidate)))),
         );
       }
       case 'relation': {
@@ -137,8 +137,8 @@ export class FederatedQueryExecutor {
             return false;
           }
           const space = spaceOf(relation);
-          const source = anchors.has(uriKey(Relation.getSourceURI(relation), space));
-          const target = anchors.has(uriKey(Relation.getTargetURI(relation), space));
+          const source = hasKey(anchors, uriKey(Relation.getSourceURI(relation), space));
+          const target = hasKey(anchors, uriKey(Relation.getTargetURI(relation), space));
           return node.direction === 'outgoing' ? source : node.direction === 'incoming' ? target : source || target;
         });
       }
@@ -344,14 +344,26 @@ const spaceOf = (entity: Entity.Unknown): SpaceId | undefined => Entity.getDatab
 /** Identity across databases: entity ids are unique, but a database qualifies them. */
 const keyOf = (entity: Entity.Unknown): string => `${spaceOf(entity) ?? ''}/${entity.id}`;
 
-/** The {@link keyOf} of a reference's target, reading a relative URI against the referrer's space. */
-const uriKey = (uri: string, referrerSpace: SpaceId | undefined): string => {
+/**
+ * The {@link keyOf} of a reference's target, reading a relative URI against the referrer's space; none
+ * for a replicated referrer pointing into a local space, which resolution refuses too.
+ */
+const uriKey = (uri: string, referrerSpace: SpaceId | undefined): string | undefined => {
   const eid = EID.tryParse(uri);
-  return eid ? `${EID.getSpaceId(eid) ?? referrerSpace ?? ''}/${EID.getEntityId(eid) ?? ''}` : uri;
+  if (!eid) {
+    return uri;
+  }
+  const targetSpace = EID.getSpaceId(eid) ?? referrerSpace;
+  if (targetSpace && SpaceId.isLocal(targetSpace) && referrerSpace && !SpaceId.isLocal(referrerSpace)) {
+    return undefined;
+  }
+  return `${targetSpace ?? ''}/${EID.getEntityId(eid) ?? ''}`;
 };
 
+const hasKey = (keys: ReadonlySet<string>, key: string | undefined): boolean => key !== undefined && keys.has(key);
+
 /** The {@link keyOf} of a ref's target: its live target when resolvable without a read, else its URI. */
-const refTargetKey = (ref: Ref.Ref<any>, referrerSpace: SpaceId | undefined): string => {
+const refTargetKey = (ref: Ref.Ref<any>, referrerSpace: SpaceId | undefined): string | undefined => {
   const target: unknown = ref.target;
   return isEntity(target) ? keyOf(target) : uriKey(ref.uri, referrerSpace);
 };

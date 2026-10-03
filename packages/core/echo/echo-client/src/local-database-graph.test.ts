@@ -6,11 +6,14 @@ import * as Layer from 'effect/Layer';
 import * as ManagedRuntime from 'effect/ManagedRuntime';
 import { describe, test } from 'vitest';
 
-import { type Database, Filter, Obj, Order, Query, Ref, Relation } from '@dxos/echo';
+import { type Database, Error as EchoError, Filter, Obj, Order, Query, Ref, Relation } from '@dxos/echo';
+import { DATA_NAMESPACE, EncodedReference } from '@dxos/echo-protocol';
 import { localDatabaseFactory } from '@dxos/echo-sqlite';
 import { TestSchema } from '@dxos/echo/testing';
+import { SpaceId } from '@dxos/keys';
 import { layerMemory } from '@dxos/sql-sqlite/platform';
 
+import { getObjectCore } from './echo-handler/index.ts';
 import { EchoTestBuilder } from './testing/index.ts';
 
 // End to end over a real peer: one replicated space and local databases on one graph, so every
@@ -71,31 +74,103 @@ describe('local databases on the graph', () => {
       expect(env.local.graph).toBe(env.graph);
       expect(env.space.graph).toBe(env.graph);
     });
+
+    test('local databases have local space ids, replicated spaces do not', async ({ expect }) => {
+      await using env = await setup();
+      expect(SpaceId.isLocal(env.local.spaceId)).toBe(true);
+      expect(SpaceId.isLocal(env.other.spaceId)).toBe(true);
+      expect(env.local.spaceId).not.toBe(env.other.spaceId);
+      expect(SpaceId.isLocal(env.space.spaceId)).toBe(false);
+    });
+  });
+
+  describe('references from replicated data into local databases', () => {
+    test('adding a space object that references a local object throws', async ({ expect }) => {
+      await using env = await setup();
+      const org = env.local.add(Obj.make(TestSchema.Organization, { name: 'Private' }));
+
+      expect(() => env.space.add(Obj.make(TestSchema.Person, { name: 'Ada', employer: Ref.make(org) }))).toThrow(
+        EchoError.LocalReferenceError,
+      );
+    });
+
+    test('assigning a ref to a local object on a space object throws', async ({ expect }) => {
+      await using env = await setup();
+      const org = env.local.add(Obj.make(TestSchema.Organization, { name: 'Private' }));
+      const person = env.space.add(Obj.make(TestSchema.Person, { name: 'Ada' }));
+
+      expect(() =>
+        Obj.update(person, (person) => {
+          person.employer = Ref.make(org);
+        }),
+      ).toThrow(EchoError.LocalReferenceError);
+      expect(() =>
+        Obj.update(person, (person) => {
+          person.tasks = [Ref.fromURI(Obj.getURI(org, { prefer: 'absolute' }))];
+        }),
+      ).toThrow(EchoError.LocalReferenceError);
+      expect(person.employer).toBeUndefined();
+    });
+
+    test('a relation in a space with a local endpoint throws', async ({ expect }) => {
+      await using env = await setup();
+      const person = env.space.add(Obj.make(TestSchema.Person, { name: 'Ada' }));
+      const org = env.local.add(Obj.make(TestSchema.Organization, { name: 'Private' }));
+
+      expect(() =>
+        env.space.add(
+          Relation.make(TestSchema.EmployedBy, { [Relation.Source]: person, [Relation.Target]: org, role: 'x' }),
+        ),
+      ).toThrow(EchoError.LocalReferenceError);
+    });
+
+    test('a ref into a local database already in replicated data does not resolve or match', async ({ expect }) => {
+      await using env = await setup();
+      const org = env.local.add(Obj.make(TestSchema.Organization, { name: 'Private' }));
+      const person = env.space.add(Obj.make(TestSchema.Person, { name: 'Ada' }));
+      await flushAll(env.local, env.space);
+      // Written below the API, as an older client or a hand-edited document could have.
+      getObjectCore(person).setDecoded(
+        [DATA_NAMESPACE, 'employer'],
+        EncodedReference.fromURI(Obj.getURI(org, { prefer: 'absolute' })),
+      );
+      await flushAll(env.space);
+
+      expect(person.employer?.target).toBeUndefined();
+      await expect(person.employer?.tryLoad()).resolves.toBeUndefined();
+      const employers = await env.graph.query(Query.select(Filter.id(person.id)).from(ALL).reference('employer')).run();
+      expect(employers).toEqual([]);
+      const staff = await env.graph
+        .query(Query.select(Filter.id(org.id)).from(ALL).referencedBy(TestSchema.Person, 'employer'))
+        .run();
+      expect(staff).toEqual([]);
+    });
+
+    test('a local object may still reference a space object, and the graph still resolves local URIs', async ({
+      expect,
+    }) => {
+      await using env = await setup();
+      const spaceOrg = env.space.add(Obj.make(TestSchema.Organization, { name: 'Acme' }));
+      const localOrg = env.local.add(Obj.make(TestSchema.Organization, { name: 'Private' }));
+      const person = env.local.add(Obj.make(TestSchema.Person, { name: 'Ada', employer: Ref.make(spaceOrg) }));
+      await flushAll(env.space, env.local);
+
+      expect(await person.employer?.load()).toBe(spaceOrg);
+      expect(await env.graph.makeRef(Obj.getURI(localOrg, { prefer: 'absolute' })).load()).toBe(localOrg);
+    });
   });
 
   describe('ref resolution', () => {
-    test('a space object resolves a ref to a local object', async ({ expect }) => {
+    test('the graph resolves a local URI after the local database reopens', async ({ expect }) => {
       await using env = await setup();
       const org = env.local.add(Obj.make(TestSchema.Organization, { name: 'Acme' }));
-      const person = env.space.add(Obj.make(TestSchema.Person, { name: 'Ada', employer: Ref.make(org) }));
-      await flushAll(env.local, env.space);
-
-      expect(await person.employer?.load()).toBe(org);
-      expect(await env.graph.makeRef(Obj.getURI(org, { prefer: 'absolute' })).load()).toBe(org);
-    });
-
-    test('a space object resolves a ref to a local object after the local database reopens', async ({ expect }) => {
-      await using env = await setup();
-      const org = env.local.add(Obj.make(TestSchema.Organization, { name: 'Acme' }));
-      const person = env.space.add(Obj.make(TestSchema.Person, { name: 'Ada', employer: Ref.make(org) }));
-      await flushAll(env.local, env.space);
+      await flushAll(env.local);
 
       const { local } = await env.reopen();
       const loaded = await env.graph.makeRef(Obj.getURI(org, { prefer: 'absolute' })).load();
       expect(loaded).not.toBe(org);
       expect(Obj.getDatabase(loaded)).toBe(local);
       expect(loaded).toMatchObject({ id: org.id, name: 'Acme' });
-      expect(Obj.getURI(person, { prefer: 'absolute' })).toBeDefined();
     });
 
     test('a local object resolves a ref to a space object', async ({ expect }) => {
@@ -181,13 +256,13 @@ describe('local databases on the graph', () => {
       expect(names(young)).toEqual(['Ada', 'Bob']);
     });
 
-    test('a forward reference traversal crosses from the space into a local database', async ({ expect }) => {
+    test('a forward reference traversal crosses from one local database into another', async ({ expect }) => {
       await using env = await setup();
-      const localOrg = env.local.add(Obj.make(TestSchema.Organization, { name: 'Local Org' }));
+      const localOrg = env.other.add(Obj.make(TestSchema.Organization, { name: 'Local Org' }));
       const spaceOrg = env.space.add(Obj.make(TestSchema.Organization, { name: 'Space Org' }));
-      env.space.add(Obj.make(TestSchema.Person, { name: 'Ada', employer: Ref.make(localOrg) }));
+      env.local.add(Obj.make(TestSchema.Person, { name: 'Ada', employer: Ref.make(localOrg) }));
       env.space.add(Obj.make(TestSchema.Person, { name: 'Bob', employer: Ref.make(spaceOrg) }));
-      await flushAll(env.local, env.space);
+      await flushAll(env.other, env.local, env.space);
 
       const employers = await env.graph
         .query(Query.select(Filter.type(TestSchema.Person)).from(ALL).reference('employer'))
@@ -221,11 +296,13 @@ describe('local databases on the graph', () => {
       expect(names(staff)).toEqual(['Local Bob', 'Space Ada']);
     });
 
-    test('an incoming reference traversal from a local anchor finds space referrers', async ({ expect }) => {
+    test('an incoming reference traversal from a local anchor finds referrers in another local database', async ({
+      expect,
+    }) => {
       await using env = await setup();
       const org = env.local.add(Obj.make(TestSchema.Organization, { name: 'Local Org' }));
-      env.space.add(Obj.make(TestSchema.Person, { name: 'Space Ada', employer: Ref.make(org) }));
-      await flushAll(env.local, env.space);
+      env.other.add(Obj.make(TestSchema.Person, { name: 'Draft Ada', employer: Ref.make(org) }));
+      await flushAll(env.local, env.other);
 
       const staff = await env.graph
         .query(
@@ -234,20 +311,20 @@ describe('local databases on the graph', () => {
             .referencedBy(TestSchema.Person, 'employer'),
         )
         .run();
-      expect(names(staff)).toEqual(['Space Ada']);
+      expect(names(staff)).toEqual(['Draft Ada']);
     });
 
     test('a two-hop traversal crosses databases twice', async ({ expect }) => {
       await using env = await setup();
-      const org = env.other.add(Obj.make(TestSchema.Organization, { name: 'Draft Org' }));
-      const manager = env.space.add(Obj.make(TestSchema.Person, { name: 'Manager', employer: Ref.make(org) }));
+      const org = env.space.add(Obj.make(TestSchema.Organization, { name: 'Space Org' }));
+      const manager = env.other.add(Obj.make(TestSchema.Person, { name: 'Manager', employer: Ref.make(org) }));
       env.local.add(Obj.make(TestSchema.Task, { title: 'Review', assignee: Ref.make(manager) }));
-      await flushAll(env.other, env.space, env.local);
+      await flushAll(env.space, env.other, env.local);
 
       const orgs = await env.graph
         .query(Query.select(Filter.type(TestSchema.Task)).from(ALL).reference('assignee').reference('employer'))
         .run();
-      expect(names(orgs)).toEqual(['Draft Org']);
+      expect(names(orgs)).toEqual(['Space Org']);
     });
 
     test('relations between databases are found from either endpoint', async ({ expect }) => {
@@ -393,11 +470,11 @@ describe('local databases on the graph', () => {
 
     test('a traversal does not reach a deleted target in another database', async ({ expect }) => {
       await using env = await setup();
-      const org = env.local.add(Obj.make(TestSchema.Organization, { name: 'Closed' }));
-      env.space.add(Obj.make(TestSchema.Person, { name: 'Ada', employer: Ref.make(org) }));
-      await flushAll(env.local, env.space);
-      env.local.remove(org);
-      await flushAll(env.local);
+      const org = env.space.add(Obj.make(TestSchema.Organization, { name: 'Closed' }));
+      env.local.add(Obj.make(TestSchema.Person, { name: 'Ada', employer: Ref.make(org) }));
+      await flushAll(env.space, env.local);
+      env.space.remove(org);
+      await flushAll(env.space);
 
       const employers = await env.graph
         .query(Query.select(Filter.type(TestSchema.Person)).from(ALL).reference('employer'))
@@ -426,11 +503,11 @@ describe('local databases on the graph', () => {
 
     test('a filter applies to the result of a traversal', async ({ expect }) => {
       await using env = await setup();
-      const big = env.local.add(Obj.make(TestSchema.Organization, { name: 'Big' }));
+      const big = env.other.add(Obj.make(TestSchema.Organization, { name: 'Big' }));
       const small = env.space.add(Obj.make(TestSchema.Organization, { name: 'Small' }));
-      env.space.add(Obj.make(TestSchema.Person, { name: 'Ada', employer: Ref.make(big) }));
+      env.local.add(Obj.make(TestSchema.Person, { name: 'Ada', employer: Ref.make(big) }));
       env.local.add(Obj.make(TestSchema.Person, { name: 'Bob', employer: Ref.make(small) }));
-      await flushAll(env.space, env.local);
+      await flushAll(env.other, env.space, env.local);
 
       const bigOnly = await env.graph
         .query(

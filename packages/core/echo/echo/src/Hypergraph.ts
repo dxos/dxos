@@ -92,9 +92,11 @@ export interface Hypergraph extends Database.Queryable {
 
   /**
    * The device-local database named `name`, opened on first use. Nothing in it replicates, but it is
-   * part of the graph like a space: {@link getDatabase} finds it by its `spaceId`, graph queries scan
-   * and traverse into and out of it, and references resolve in both directions. The same name reopens
-   * the same objects. Fails when the graph was built without a {@link LocalDatabaseFactory}.
+   * part of the graph like a space: {@link getDatabase} finds it by its `spaceId` (a local id, see
+   * `SpaceId.isLocal`), graph queries scan and traverse into and out of it, and its objects may reference
+   * any space. References from replicated data into it are refused: writing one throws
+   * `Error.LocalReferenceError`, and one already in replicated data resolves to nothing. The same name
+   * reopens the same objects. Fails when the graph was built without a {@link LocalDatabaseFactory}.
    *
    * @performance O(1); returns at once and opens storage on the database's first read or write. A
    * graph query whose scope includes a local database is evaluated across databases by the graph:
@@ -148,7 +150,8 @@ export type LocalDatabaseOptions = {
 };
 
 /**
- * Opens the local database for a name; supplied by the storage backend (e.g. `@dxos/echo-sqlite`).
+ * Opens the local database for a name; supplied by the storage backend (e.g. `@dxos/echo-sqlite`). The
+ * database's `spaceId` must be a local id (`SpaceId.local`), stable per name.
  */
 export type LocalDatabaseFactory = (name: string, options: LocalDatabaseOptions) => LocalDatabase;
 

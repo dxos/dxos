@@ -9,7 +9,7 @@ import { type InspectOptionsStylized } from 'node:util';
 
 import { Event } from '@dxos/async';
 import { inspectCustom } from '@dxos/debug';
-import { Entity, Obj, Type } from '@dxos/echo';
+import { Error as EchoError, Entity, Obj, Type } from '@dxos/echo';
 import { DATA_NAMESPACE, EncodedReference, PROPERTY_ID, isEncodedReference } from '@dxos/echo-protocol';
 import {
   type AnyProperties,
@@ -45,7 +45,7 @@ import {
   setProxyHandler,
 } from '@dxos/echo/internal';
 import { assertArgument, invariant } from '@dxos/invariant';
-import { EID, EntityId, type URI } from '@dxos/keys';
+import { EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { deepMapValues, defaultMap, getDeep, setDeep } from '@dxos/util';
 
@@ -500,11 +500,9 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
         throw new Error('Object references must be wrapped with `Ref.make`');
       } else if (Ref.isRef(value)) {
         const savedTarget = getRefSavedTarget(value);
-        if (savedTarget) {
-          return EncodedReference.fromURI(this.createRef(target, savedTarget));
-        } else {
-          return EncodedReference.fromURI(value.uri);
-        }
+        return EncodedReference.fromURI(
+          assertReplicable(savedTarget ? this.createRef(target, savedTarget) : value.uri),
+        );
       } else if (value instanceof Uint8Array) {
         return value;
       } else {
@@ -755,10 +753,10 @@ export class EchoReactiveHandler implements ReactiveHandler<ProxyTarget> {
     const sourceRef = Reflect.get(target, RelationSourceId);
     const targetRef = Reflect.get(target, RelationTargetId);
     if (isProxy(sourceRef)) {
-      core.setSource(EncodedReference.fromURI(this.createRef(target, sourceRef)));
+      core.setSource(EncodedReference.fromURI(assertReplicable(this.createRef(target, sourceRef))));
     }
     if (isProxy(targetRef)) {
-      core.setTarget(EncodedReference.fromURI(this.createRef(target, targetRef)));
+      core.setTarget(EncodedReference.fromURI(assertReplicable(this.createRef(target, targetRef))));
     }
   }
 
@@ -1118,8 +1116,12 @@ const setRelationSourceAndTarget = (target: ProxyTarget, core: ObjectCore, schem
       throw new TypeError('target must be an ECHO object');
     }
 
-    core.setSource(EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, sourceRef)));
-    core.setTarget(EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, targetRef)));
+    core.setSource(
+      EncodedReference.fromURI(assertReplicable(EchoReactiveHandler.instance.createRef(target, sourceRef))),
+    );
+    core.setTarget(
+      EncodedReference.fromURI(assertReplicable(EchoReactiveHandler.instance.createRef(target, targetRef))),
+    );
   }
 };
 
@@ -1181,9 +1183,20 @@ const linkMetaRefs = (target: ProxyTarget, meta: EntityMeta): EntityMeta =>
 
 const refToEncodedReference = (target: ProxyTarget, ref: Ref<any>): EncodedReference => {
   const savedTarget = getRefSavedTarget(ref);
-  if (savedTarget) {
-    return EncodedReference.fromURI(EchoReactiveHandler.instance.createRef(target, savedTarget));
-  } else {
-    return EncodedReference.fromURI(ref.uri);
+  return EncodedReference.fromURI(
+    assertReplicable(savedTarget ? EchoReactiveHandler.instance.createRef(target, savedTarget) : ref.uri),
+  );
+};
+
+/**
+ * Every object this handler serves is replicated, so a reference written into it must not name a local
+ * space: other peers could never resolve it, and the local entity's id would leak off the device.
+ */
+const assertReplicable = (uri: URI.URI): URI.URI => {
+  const eid = EID.tryParse(uri);
+  const spaceId = eid ? EID.getSpaceId(eid) : undefined;
+  if (spaceId !== undefined && SpaceId.isLocal(spaceId)) {
+    throw new EchoError.LocalReferenceError(uri);
   }
+  return uri;
 };

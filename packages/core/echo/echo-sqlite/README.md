@@ -30,7 +30,10 @@ last execution (empty before the first) and never blocks; use `run()` or `subscr
 
 `Hypergraph.localDatabase(name)` (in `@dxos/echo`) returns a device-local database: never replicated,
 reopened by name, and otherwise part of the graph like a space — graph queries scan and traverse across
-it, and references resolve into and out of it. This package supplies its storage:
+it. Its space id is a local one (`SpaceId.isLocal`: it starts with `BLOCALDB`). Local objects may reference
+anything; replicated objects may not reference local ones — writing such a ref throws
+`Error.LocalReferenceError`, and one already in replicated data does not resolve. This package supplies
+its storage:
 
 ```ts
 const echo = new EchoClient({ localDatabaseFactory: yield* localDatabaseFactory }); // needs SqlClient

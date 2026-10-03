@@ -16,9 +16,11 @@ import {
   batchEvents,
   getStrongDependencies,
   isInstanceOf,
+  makeSettledRequest,
   resolveMergeRedirect,
   setRefResolver,
 } from '@dxos/echo/internal';
+import { invariant } from '@dxos/invariant';
 import { DXN, EID, EntityId, SpaceId, type URI } from '@dxos/keys';
 import { log } from '@dxos/log';
 import { trace } from '@dxos/tracing';
@@ -278,6 +280,8 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       }
       // Static types registered so far; types added to the registry later are not seen by an open database.
       db = this.#localDatabaseFactory(name, { types: this._registry.list().filter(Type.isType), graph: this });
+      // Replicated data is checked against the id to keep local references out of it.
+      invariant(SpaceId.isLocal(db.spaceId), 'Local database factory must use a local space id (SpaceId.local).');
       this.#localDatabases.set(name, db);
       this.#localBySpace.set(db.spaceId, db);
       // Cached results were built for the previous set of databases.
@@ -331,14 +335,25 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       return obj;
     };
 
+    // Replicated data must not reach a local space; a reference that does (written by an older client, or
+    // by hand) resolves to nothing rather than to an object no other peer can see.
+    const blocked = (uri: URI.URI): boolean =>
+      context.space !== undefined && !SpaceId.isLocal(context.space) && isLocalSpaceUri(uri);
+
     return {
       resolve: (uri: URI.URI, { source }: { source: RefSource }): RefResolverRequest => {
+        if (blocked(uri)) {
+          return makeSettledRequest('unavailable', undefined);
+        }
         const root = this.#loadOpTable.acquire(this.#qualifyToContext(uri, context), source);
         return new RequestImpl(this.#loadOpTable, root, source);
       },
 
       // TODO(dmaretskyi): Respect `load` flag.
       resolveSync: (uri: URI.URI, load: boolean, onLoad?: () => void) => {
+        if (blocked(uri)) {
+          return undefined;
+        }
         if (EID.isEID(uri)) {
           const local = this.#resolveLocalSync(uri, context, load, onLoad);
           if (local) {
@@ -359,6 +374,9 @@ export class HypergraphImpl implements Hypergraph.Hypergraph {
       },
 
       resolveLegacy: async (uri, options) => {
+        if (blocked(uri)) {
+          return undefined;
+        }
         const obj = await this._resolveAsync(uri, context, options);
         return obj ? materializeStoredSchema(obj) : undefined;
       },
@@ -1143,6 +1161,13 @@ trace.diagnostic({
 });
 
 /** True when the query carries a scope clause naming nothing — `from('all-accessible-spaces')`. */
+/** Whether an `echo:` URI names an entity in a local space. */
+const isLocalSpaceUri = (uri: string): boolean => {
+  const eid = EID.tryParse(uri);
+  const spaceId = eid ? EID.getSpaceId(eid) : undefined;
+  return spaceId !== undefined && SpaceId.isLocal(spaceId);
+};
+
 const isAllSpacesScope = (ast: QueryAST.Query): boolean => {
   let found = false;
   QueryAST.visit(ast, (node) => {

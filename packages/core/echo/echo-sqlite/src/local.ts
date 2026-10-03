@@ -17,12 +17,13 @@ const LOCAL_SPACE_DOMAIN = 'dxos.local-database:';
  * The space id under which the local database `name` stores its rows, so reopening a name finds them.
  *
  * Derived synchronously because `Hypergraph.localDatabase` returns at once; names are chosen by the
- * application, not an adversary, so a fast non-cryptographic 160-bit digest is sufficient.
+ * application, not an adversary, so a fast non-cryptographic digest is sufficient. The id carries the
+ * local marker (`SpaceId.isLocal`), which is what keeps replicated data from referencing it.
  *
  * @performance O(name length).
  */
 export const localSpaceId = (name: string): SpaceId =>
-  SpaceId.encode(digest(new TextEncoder().encode(LOCAL_SPACE_DOMAIN + name), SpaceId.byteLength));
+  SpaceId.local(digest(new TextEncoder().encode(LOCAL_SPACE_DOMAIN + name), SpaceId.byteLength));
 
 /**
  * A {@link Hypergraph.LocalDatabaseFactory} whose databases store through `driverFor`, which may run
