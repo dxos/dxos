@@ -26,6 +26,7 @@ import {
   FactEntry,
   Goal,
   Memory,
+  MemoryOperation,
   Mode,
   Relay,
   RelayOperation,
@@ -388,6 +389,148 @@ describe('end-of-turn triggers', () => {
         expect(yield* texts(josiahChat)).not.toContain('Update on Dima: I am reviewing it.');
       },
       Effect.provide(TestLayer),
+      TestHelpers.provideTestContext,
+    ),
+    { timeout: 60_000 },
+  );
+});
+
+//
+// Keep me posted.
+//
+
+/** The live-story sequence that went wrong: Dima's update predates Josiah's watch, and a later one must reach him. */
+const POSTED = {
+  plugin: "I'm working on the agent plugin.",
+  ask: 'What is Dima working on?',
+  keepPosted: 'Keep me posted!',
+  relay: 'Switching to the relay tests now.',
+};
+
+const POSTED_FACTS = [
+  { subject: 'Dima', predicate: 'works on', object: 'agent plugin', quote: POSTED.plugin },
+  { subject: 'Dima', predicate: 'works on', object: 'relay tests', quote: POSTED.relay },
+];
+
+const UPDATE = 'Update on Dima: {fact}';
+
+type PostedRefs = { agent?: string; josiah?: string };
+
+/** Answers extraction calls from {@link POSTED_FACTS}; "keep me posted" becomes an ongoing watch on Dima. */
+const makePostedScript =
+  (refs: PostedRefs): ScriptedLanguageModel.ScriptedTurnGenerator =>
+  (request) => {
+    if (request.text.includes(EXTRACTION_PROMPT)) {
+      const facts = POSTED_FACTS.filter(({ quote }) => request.text.includes(quote)).map((fact) => ({
+        ...fact,
+        factuality: 'CT+',
+        polarity: '+',
+      }));
+      return { parts: [text(JSON.stringify({ facts }))] };
+    }
+    if (request.text.includes('Suggest a name for this chat')) {
+      return { parts: [text('Kai')] };
+    }
+    if (request.prompt.content.at(-1)?.role === 'tool') {
+      return { parts: [text('Will do.')] };
+    }
+    const lastUser = request.prompt.content.findLast((message) => message.role === 'user');
+    const said =
+      lastUser === undefined
+        ? ''
+        : typeof lastUser.content === 'string'
+          ? lastUser.content
+          : lastUser.content.map((part) => (part.type === 'text' ? part.text : '')).join('');
+    if (said.includes(POSTED.keepPosted)) {
+      return {
+        parts: [
+          toolCall(Operation.toolName(TriggerOperation.WatchFacts), {
+            agent: refs.agent,
+            requester: refs.josiah,
+            outcome: "Josiah is kept posted on Dima's work",
+            when: { speaker: 'Dima' },
+            message: UPDATE,
+            ongoing: true,
+          }),
+        ],
+      };
+    }
+    return { parts: [text('Noted.')] };
+  };
+
+const postedRefs: PostedRefs = {};
+
+const PostedTestLayer = AssistantTestLayer({
+  operationHandlers: AgentOperationHandlerSet,
+  types: [
+    Agent.Agent,
+    Chat.Chat,
+    Skill.Skill,
+    Feed.Feed,
+    Text.Text,
+    Instructions.Instructions,
+    Person.Person,
+    Organization.Organization,
+    HasSubject.HasSubject,
+    Memory.Memory,
+    Goal.Goal,
+    Mode.Mode,
+    Relay.Relay,
+    Message.Message,
+    FactEntry.FactEntry,
+  ],
+  skills: [ConversationSkill.make(), RelaySkill.make(), ModesSkill.make(), GoalsSkill.make()],
+  aiService: ScriptedLanguageModel.scriptedAiService(makePostedScript(postedRefs)),
+});
+
+describe('keep me posted', () => {
+  afterEach(() => {
+    triggerRegistry.snapshot.forEach(({ id }) => triggerRegistry.remove(id));
+  });
+
+  it.effect(
+    'records every turn as facts, recalls an earlier update, and forwards only updates said after the watch',
+    Effect.fnUntraced(
+      function* ({ expect }) {
+        const dima = yield* Database.add(Person.make({ fullName: 'Dima', preferredName: 'Dima' }));
+        const josiah = yield* Database.add(Person.make({ fullName: 'Josiah', preferredName: 'Josiah' }));
+        const { agent: agentRef } = yield* Operation.invoke(AgentOperation.CreateAgent, { name: 'Kai' });
+        const agent = yield* Database.load(agentRef);
+        const chatFor = (person: Person.Person) =>
+          Operation.invoke(AgentOperation.EnsureParticipantChat, {
+            agent: agentRef,
+            person: Ref.make<Obj.Unknown>(person),
+          }).pipe(Effect.flatMap(({ chat }) => Database.load(chat)));
+        const dimaChat = yield* chatFor(dima);
+        const josiahChat = yield* chatFor(josiah);
+        yield* Database.flush();
+        Object.assign(postedRefs, { agent: Obj.getURI(agent), josiah: Obj.getURI(josiah) });
+        const updates = Effect.map(texts(josiahChat), (sent) =>
+          sent.filter((line) => line.startsWith('Update on Dima')),
+        );
+
+        // 1. Dima says what she is on before anyone watches: the turn is still read into a fact.
+        yield* say(dimaChat, 'Dima', POSTED.plugin);
+        expect(triggerRegistry.list(agent.id)).toEqual([]);
+        const recalled = yield* Operation.invoke(MemoryOperation.Recall, { subject: Ref.make<Obj.Unknown>(dima) });
+        expect(recalled.facts.map(({ quote }) => quote)).toContain(POSTED.plugin);
+
+        // 2. Josiah asks to be kept posted: an ongoing watch on Dima, and nothing is forwarded yet.
+        yield* say(josiahChat, 'Josiah', POSTED.ask);
+        yield* say(josiahChat, 'Josiah', POSTED.keepPosted);
+        const [trigger, ...others] = triggerRegistry.list(agent.id);
+        expect(others).toHaveLength(0);
+        expect(trigger).toMatchObject({ ongoing: true, when: { speaker: 'Dima' } });
+        expect(yield* updates).toEqual([]);
+
+        // 3. Dima's next update reaches Josiah with what she said; the watch stays and its goal stays open.
+        yield* say(dimaChat, 'Dima', POSTED.relay);
+        expect(yield* updates).toEqual([`Update on Dima: ${POSTED.relay}`]);
+        expect(triggerRegistry.list(agent.id)).toHaveLength(1);
+        const goal = trigger.goal?.target;
+        expect(goal?.status).toBe('active');
+      },
+      Effect.provide(PostedTestLayer),
       TestHelpers.provideTestContext,
     ),
     { timeout: 60_000 },

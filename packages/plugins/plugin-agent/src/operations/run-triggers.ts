@@ -64,8 +64,8 @@ const handler: Operation.WithHandler<typeof GoalsSkill.RunTriggers> = GoalsSkill
     Effect.fnUntraced(function* () {
       const chat = yield* Harness.getChat.pipe(Effect.orElseSucceed(() => undefined));
       const agent = chat ? yield* Agent.loadForChat(chat) : undefined;
-      // Reading costs a model call, so a turn is only read while the agent is waiting for something.
-      if (!chat || !agent || triggerRegistry.list(agent.id).length === 0) {
+      // Every turn is read, not only while a watch is waiting: recall answers from these facts too.
+      if (!chat || !agent) {
         return { facts: 0, fired: [], undelivered: [] };
       }
 
