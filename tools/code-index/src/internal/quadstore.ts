@@ -237,12 +237,9 @@ export const make = <E>(
 
       count: () => Effect.map(match(), (quads) => quads.length),
 
-      clear: () =>
-        Effect.flatMap(match(), (quads) =>
-          quads.length === 0
-            ? Effect.void
-            : attempt('Failed to clear graph', () => quadstore.multiDel(quads).then(() => undefined)),
-        ),
+      countGraph: (name) => Effect.map(ofGraph(name), (quads) => quads.length),
+
+      clear: () => attempt('Failed to clear graph', () => quadstore.clear()),
     };
     return graph;
   });

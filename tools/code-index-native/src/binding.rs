@@ -189,6 +189,11 @@ impl NativeStore {
     }
 
     #[napi]
+    pub fn graph_length(&self, graph: String) -> Result<u32> {
+        self.inner()?.graph_len(&graph).map(count).map_err(error)
+    }
+
+    #[napi]
     pub fn journal_length(&self) -> Result<u32> {
         Ok(count(self.inner()?.journal_len()))
     }

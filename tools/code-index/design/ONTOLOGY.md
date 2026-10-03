@@ -331,9 +331,12 @@ Two kinds, one contract:
   with `deus:reexports+` in a query rather than a closure rule), string and path manipulation,
   anything needing a set, a sort, or a lookup table.
 
-Reasoners run in filename order after every indexing pass that changed something; each sees the
-file graphs plus the derived graphs of reasoners before it, never its own previous output. A pass
-that changed nothing runs none of them. Each reasoner's graph is replaced wholesale when it runs.
+Reasoners run in filename order at the end of an indexing pass; each sees the file graphs plus the
+derived graphs of reasoners before it, never its own previous output. A pass runs none of them when
+the ledger records that this exact rule set already ran over the facts the store holds (a rule-set
+signature and the store's write generation, in SQLite `meta`), so a pass run with `--no-reason`, or
+interrupted before reasoning, is caught up by the next one. Each reasoner's graph is replaced
+wholesale when it runs.
 The ordering is the only dependency mechanism — a JS reasoner that needs `deus:packagePublic`
 sorts after `public-api`.
 

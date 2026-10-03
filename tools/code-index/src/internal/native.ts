@@ -47,6 +47,7 @@ interface NativeStore {
   reason(graph: string, rules: string, materialize: boolean): string;
   reasonAll(strata: { graph: string; rules: string }[]): Outcome[];
   quadCount(): number;
+  graphLength(graph: string): number;
   journalLength(): number;
   invalidate(): void;
   clear(): void;
@@ -321,6 +322,8 @@ export const make = <E>(
         }),
 
       count: () => attempt('Failed to count quads', () => native.quadCount()),
+
+      countGraph: (name) => attempt('Failed to count quads', () => native.graphLength(name)),
 
       clear: () => attempt('Failed to clear graph', () => native.clear()),
     };

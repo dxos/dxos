@@ -84,6 +84,12 @@ the graph write is made idempotent:
 2. The old graph's quads and the new graph's quads are swapped in **one** Quadstore batch.
 3. The row is updated: `graph` becomes the new IRI and `pending_graph` is cleared — the commit.
 
+An indexing pass commits a worker batch at a time: step 1 for every file of the batch in one SQLite
+transaction, the per-file swaps, then step 3 for every file in another. SQLite runs in WAL mode
+with `synchronous=NORMAL`, which survives a process crash at any point; an OS crash can lose the
+last commits, but the quad stores never fsync their own writes, so the graphs were never durable
+against one either.
+
 A crash before step 3 leaves the previous revision live and the new graph reachable only through
 `pending_graph`; `reconcile` (run whenever the store opens) deletes exactly those graphs. Because
 the graph IRI carries the mtime, a half-written revision can never be mistaken for the live one.
@@ -115,6 +121,7 @@ module Store
 
     # Commits
     putDocument: (FileDocument) => Effect<void>       # graph swap + ledger advance (see above).
+    putDocuments: (FileDocument[]) => Effect<void>    # the same for a batch, one transaction a step.
     removeFile: (path) => Effect<void>
     reconcile: () => Effect<number>                   # drops graphs left by an interrupted commit.
 
@@ -125,7 +132,10 @@ module Store
     dump / load                               # N3 text in and out.
     reason: (reasoner, rules, { materialize? }) => Effect<Quad[]>  # premises exclude the reasoner's
                                                                    # own graph; materialize replaces it.
+    reasonAll: (reasoners) => Effect<Outcome[]>       # every reasoner in order; records the pass.
     derived: (reasoner?) => Effect<Quad[]>    # what a reasoner (or every reasoner) concluded.
+    derivedCount: () => Effect<number>        # the same, counted in the store.
+    isReasoned: (reasoners) => Effect<boolean>  # these rules already ran over the current facts.
     stats / clear
 ```
 
@@ -419,6 +429,9 @@ test T-1: Store
     - dump serializes and load restores
     - raw quads still round-trip
     - an interrupted commit is reconciled when the store reopens
+    - a batch commits every document in it
+    - a batch interrupted between its swaps is reconciled file by file
+    - any write after reasoning marks the conclusions stale, across reopening
     - clear empties both databases
 ```
 
@@ -438,6 +451,8 @@ test T-2: Indexer
     - an import removed from a file retracts what it entailed
     - a pass that changed nothing does not run the rules
     - --no-reason leaves the derived graph untouched
+    - the next pass with rules catches up, though no file changed
+    - a changed rule set reruns over unchanged files
     - every snippet the index holds is valid TypeScript
 ```
 

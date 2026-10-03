@@ -53,5 +53,7 @@ export interface Graph<E> {
   /** Every rule file in order, each replacing (or maintaining) its own derived graph. */
   readonly reasonAll: (reasoners: readonly ReasonerInput[]) => Effect.Effect<ReasonOutcome[], E>;
   readonly count: () => Effect.Effect<number, E>;
+  /** Quads in one named graph, without materialising them. */
+  readonly countGraph: (graph: string) => Effect.Effect<number, E>;
   readonly clear: () => Effect.Effect<void, E>;
 }

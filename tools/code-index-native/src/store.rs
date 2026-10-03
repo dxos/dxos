@@ -530,6 +530,20 @@ impl NativeStore {
         Ok(self.store.len()?)
     }
 
+    /// Quads in one named graph, counted here so none is serialised across the binding.
+    pub fn graph_len(&self, graph: &str) -> Result<usize> {
+        let graph = NamedNode::new(graph).map_err(|error| Error(error.to_string()))?;
+        let mut count = 0;
+        for quad in self
+            .store
+            .quads_for_pattern(None, None, None, Some(graph.as_ref().into()))
+        {
+            quad?;
+            count += 1;
+        }
+        Ok(count)
+    }
+
     pub fn clear(&self) -> Result<()> {
         self.store.clear()?;
         self.meta.clear()?;

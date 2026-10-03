@@ -312,6 +312,77 @@ describe('Store', () => {
     await withStore((store) => store.removeFile('src/kept.ts'));
   });
 
+  test('a batch commits every document in it', async () => {
+    await withStore((store) =>
+      store.putDocuments([document('src/one.ts', 1), document('src/two.ts', 1), document('src/one.ts', 2)]),
+    );
+    const states = await withStore((store) => store.fileStates());
+    // The later revision of a path in the same batch wins, and no graph is left pending.
+    expect(states.filter(({ path }) => path === 'src/one.ts' || path === 'src/two.ts')).toMatchObject([
+      { path: 'src/one.ts', mtime: 2, graph: Ontology.graphIri('src/one.ts', 2).value },
+      { path: 'src/two.ts', mtime: 1, graph: Ontology.graphIri('src/two.ts', 1).value },
+    ]);
+    expect(
+      await withStore((store) => store.match(undefined, undefined, undefined, Ontology.graphIri('src/one.ts', 1))),
+    ).toEqual([]);
+    expect(await withStore((store) => store.reconcile())).toEqual(0);
+    await withStore((store) => Effect.andThen(store.removeFile('src/one.ts'), store.removeFile('src/two.ts')));
+  });
+
+  test('a batch interrupted between its swaps is reconciled file by file', async () => {
+    await withStore((store) => store.putDocument(document('src/kept.ts', 1)));
+    const next = Ontology.graphIri('src/kept.ts', 2);
+    const fresh = Ontology.graphIri('src/fresh.ts', 1);
+
+    // The batch announced both files, then swapped only the first before the process died. The
+    // swap is written first here only because opening a store reconciles.
+    await withStore((store) =>
+      store.putQuads([DataFactory.quad(Ontology.fileIri('src/kept.ts'), Ontology.path, literal('src/kept.ts'), next)]),
+    );
+    const database = new DatabaseSync(join(dir, 'index.sqlite'));
+    database.prepare('UPDATE files SET pending_graph = ? WHERE path = ?').run(next.value, 'src/kept.ts');
+    database
+      .prepare(
+        'INSERT INTO files (path, language, size, hash, mtime, graph, pending_graph) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      )
+      .run('src/fresh.ts', 'typescript', 1, 'hash', 1, fresh.value, fresh.value);
+    database.close();
+
+    const [states, orphaned] = await withStore((store) =>
+      Effect.all([store.fileStates(), store.match(undefined, undefined, undefined, next)]),
+    );
+    // The swapped file keeps its old row, so its unchanged mtime no longer matches and the next
+    // pass reindexes it; the never-committed first write is forgotten entirely.
+    expect(states.map(({ path, mtime }) => ({ path, mtime }))).toEqual([{ path: 'src/kept.ts', mtime: 1 }]);
+    expect(orphaned).toEqual([]);
+    await withStore((store) => store.removeFile('src/kept.ts'));
+  });
+
+  test('any write after reasoning marks the conclusions stale, across reopening', async () => {
+    const reasoners = [{ name: REASONER, rules: RULES }];
+    await withStore((store) => store.putDocument(document('src/a.ts', 6, ['src/b.ts'])));
+    expect(await withStore((store) => store.isReasoned(reasoners))).toBe(false);
+
+    await withStore((store) => store.reasonAll(reasoners));
+    expect(await withStore((store) => store.isReasoned(reasoners))).toBe(true);
+    expect(await withStore((store) => store.derivedCount())).toEqual(1);
+    // Another rule set did not compute these graphs.
+    expect(await withStore((store) => store.isReasoned([{ name: REASONER, rules: `${RULES}\n` }]))).toBe(false);
+
+    await withStore((store) => store.putDocument(document('src/c.ts', 1)));
+    expect(await withStore((store) => store.isReasoned(reasoners))).toBe(false);
+    await withStore((store) => store.reasonAll(reasoners));
+
+    await withStore((store) => store.removeFile('src/c.ts'));
+    expect(await withStore((store) => store.isReasoned(reasoners))).toBe(false);
+    await withStore((store) => store.reasonAll(reasoners));
+
+    await withStore((store) =>
+      store.putQuads([DataFactory.quad(namedNode('urn:b'), namedNode('urn:p'), literal('v'))]),
+    );
+    expect(await withStore((store) => store.isReasoned(reasoners))).toBe(false);
+  });
+
   test('clear empties both databases', async () => {
     const stats = await withStore((store) => Effect.flatMap(store.clear(), () => store.stats()));
     expect(stats).toMatchObject({ files: 0, quads: 0 });

@@ -9,11 +9,14 @@ import * as Context from 'effect/Context';
 import * as Data from 'effect/Data';
 import * as Effect from 'effect/Effect';
 import * as Layer from 'effect/Layer';
+import * as Schema from 'effect/Schema';
 import type * as Scope from 'effect/Scope';
+import * as Semaphore from 'effect/Semaphore';
 import * as Migrator from 'effect/sql/Migrator';
 import * as SqlClient from 'effect/sql/SqlClient';
-import { type Lens, type Schema } from 'ldkit';
+import { type Lens, type Schema as LdkitSchema } from 'ldkit';
 import { DataFactory, Parser, Writer } from 'n3';
+import { createHash } from 'node:crypto';
 import { mkdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -92,6 +95,11 @@ export interface Api {
    * The ledger row is the commit marker, so a crash at any point leaves the previous revision live.
    */
   readonly putDocument: (document: Ontology.FileDocument) => Effect.Effect<void, StoreError>;
+  /**
+   * {@link Api.putDocument} for a batch: the ledger is announced and committed in one SQLite
+   * transaction each, around the per-file graph swaps, so a crash costs at most the batch in flight.
+   */
+  readonly putDocuments: (documents: readonly Ontology.FileDocument[]) => Effect.Effect<void, StoreError>;
   /** Drop a file's graph and ledger row (the file is gone from the working tree). */
   readonly removeFile: (path: string) => Effect.Effect<void, StoreError>;
   /** Discard graphs left behind by an interrupted commit. Runs automatically when the store opens. */
@@ -110,7 +118,7 @@ export interface Api {
   readonly ask: (sparql: string) => Effect.Effect<boolean, StoreError>;
   readonly construct: (sparql: string) => Effect.Effect<Quad[], StoreError>;
   /** Typed graph access — an LDkit lens bound to this store's quads. */
-  readonly lens: <T extends Schema>(schema: T) => Lens<T>;
+  readonly lens: <T extends LdkitSchema>(schema: T) => Lens<T>;
   readonly dump: () => Effect.Effect<string, StoreError>;
   readonly load: (turtle: string) => Effect.Effect<number, StoreError>;
   /**
@@ -126,6 +134,13 @@ export interface Api {
   readonly reasonAll: (reasoners: readonly Graph.ReasonerInput[]) => Effect.Effect<ReasonOutcome[], StoreError>;
   /** Every quad a reasoner concluded, as its graph currently stands. */
   readonly derived: (reasoner?: string) => Effect.Effect<Quad[], StoreError>;
+  /** How many quads the reasoners' graphs hold, counted where they live rather than materialised. */
+  readonly derivedCount: () => Effect.Effect<number, StoreError>;
+  /**
+   * Whether the derived graphs are what `reasonAll(reasoners)` would leave: they were last computed
+   * by this exact rule set over the facts the store holds now. False after any write since.
+   */
+  readonly isReasoned: (reasoners: readonly Graph.ReasonerInput[]) => Effect.Effect<boolean, StoreError>;
 
   readonly stats: () => Effect.Effect<Stats, StoreError>;
   readonly clear: () => Effect.Effect<void, StoreError>;
@@ -141,6 +156,25 @@ const fail = (message: string) => (cause: unknown) => new StoreError({ message, 
 const FILE_COLUMNS = 'path, language, size, hash, mtime';
 
 const VERSION_KEY = 'ontologyVersion';
+
+/** Advanced by every write, before it lands, so a reasoning pass can tell its premises moved since. */
+const GENERATION_KEY = 'generation';
+
+/** {@link Reasoned} of the last completed `reasonAll` — see {@link Api.isReasoned}. */
+const REASONED_KEY = 'reasoned';
+
+const Reasoned = Schema.fromJsonString(Schema.Struct({ signature: Schema.String, generation: Schema.Number }));
+
+/** The derived graphs any reasoning has written, so they are counted without scanning the store. */
+const DERIVED_GRAPHS_KEY = 'derivedGraphs';
+
+const DerivedGraphs = Schema.fromJsonString(Schema.Array(Schema.String));
+
+/** Identifies a rule set by its ordered names and texts; a changed rule file means stale conclusions. */
+const signatureOf = (reasoners: readonly Graph.ReasonerInput[]): string =>
+  createHash('sha256')
+    .update(JSON.stringify(reasoners.map(({ name, rules }) => [name, rules])))
+    .digest('hex');
 
 /**
  * Empty a store written under another {@link Ontology.VERSION} before the graph opens, so the next
@@ -174,6 +208,10 @@ const resetIfStale = (dir: string): Effect.Effect<void, StoreError, SqlClient.Sq
 const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, SqlClient.SqlClient | Scope.Scope> =>
   Effect.gen(function* () {
     const sql = yield* SqlClient.SqlClient;
+    // WAL with FULL fsyncs every commit; NORMAL fsyncs at checkpoints and still survives a process
+    // crash at any point. Only an OS crash can lose the last commits, and the quad stores (RocksDB,
+    // LevelDB) never fsync their own writes, so FULL bought no durability the graphs had.
+    yield* sql`PRAGMA synchronous = NORMAL`.pipe(Effect.mapError(fail('Failed to configure ledger')));
     yield* Migrator.make({})({ loader: Migrator.fromRecord(MIGRATIONS), table: MIGRATIONS_TABLE }).pipe(
       // A schema the store cannot create is a construction failure, not something a caller recovers from.
       Effect.orDie,
@@ -184,6 +222,71 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
       ? Native.make(dir, fail)
       : Quadstore.make(dir, fail);
     const { match } = graphs;
+
+    const getMeta: Api['getMeta'] = (key) =>
+      sql<{ value: string }>`SELECT value FROM meta WHERE key = ${key}`.pipe(
+        Effect.map((rows) => rows[0]?.value),
+        Effect.mapError(fail('Failed to read meta')),
+      );
+
+    const setMeta: Api['setMeta'] = (key, value) =>
+      sql`INSERT INTO meta (key, value) VALUES (${key}, ${value})
+          ON CONFLICT (key) DO UPDATE SET value = excluded.value`.pipe(
+        Effect.asVoid,
+        Effect.mapError(fail('Failed to write meta')),
+      );
+
+    const readMeta = <T>(key: string, schema: Schema.Codec<T, string>): Effect.Effect<T | undefined, StoreError> =>
+      Effect.flatMap(getMeta(key), (value) =>
+        value === undefined
+          ? Effect.succeed(undefined)
+          : Schema.decodeUnknownEffect(schema)(value).pipe(Effect.mapError(fail(`Corrupt meta entry: ${key}`))),
+      );
+
+    // Commits from concurrent batches would otherwise interleave inside each other's transactions.
+    const writeLock = yield* Semaphore.make(1);
+    const exclusive = <A>(effect: Effect.Effect<A, StoreError>): Effect.Effect<A, StoreError> =>
+      writeLock.withPermits(1)(effect);
+    const transaction = <A>(effect: Effect.Effect<A, StoreError>): Effect.Effect<A, StoreError> =>
+      sql
+        .withTransaction(effect)
+        .pipe(
+          Effect.mapError((error) =>
+            error instanceof StoreError
+              ? error
+              : new StoreError({ message: 'Ledger transaction failed', cause: error }),
+          ),
+        );
+
+    const generation = (): Effect.Effect<number, StoreError> =>
+      Effect.map(getMeta(GENERATION_KEY), (value) => Number(value ?? 0));
+
+    // Kept in the ledger rather than in memory, so it holds whoever wrote last. It moves before the
+    // write it covers: a crash between the two leaves the conclusions marked stale, never current.
+    const advance = (): Effect.Effect<void, StoreError> =>
+      sql`INSERT INTO meta (key, value) VALUES (${GENERATION_KEY}, '1')
+          ON CONFLICT (key) DO UPDATE SET value = CAST(value AS INTEGER) + 1`.pipe(
+        Effect.asVoid,
+        Effect.mapError(fail('Failed to advance the store generation')),
+      );
+
+    const derivedGraphs = (): Effect.Effect<readonly string[], StoreError> =>
+      Effect.map(readMeta(DERIVED_GRAPHS_KEY, DerivedGraphs), (names) => names ?? []);
+
+    // Recorded before the graphs are written, so a crash cannot leave a derived graph uncounted.
+    const recordDerived = (names: readonly string[]): Effect.Effect<void, StoreError> =>
+      Effect.gen(function* () {
+        const known = yield* derivedGraphs();
+        const merged = [...new Set([...known, ...names])];
+        if (merged.length !== known.length) {
+          yield* setMeta(
+            DERIVED_GRAPHS_KEY,
+            yield* Schema.encodeEffect(DerivedGraphs)(merged).pipe(
+              Effect.mapError(fail('Failed to record derived graphs')),
+            ),
+          );
+        }
+      });
 
     const serialize = (quads: readonly Quad[]): Effect.Effect<string, StoreError> =>
       Effect.callback<string, StoreError>((resume) => {
@@ -231,56 +334,91 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
 
     yield* reconcile();
 
-    const putDocument: Api['putDocument'] = (document) =>
-      Effect.gen(function* () {
-        const graph = Ontology.graphIri(document.path, document.mtime);
+    const putDocuments: Api['putDocuments'] = (documents) =>
+      documents.length === 0
+        ? Effect.void
+        : exclusive(
+            Effect.gen(function* () {
+              // 1. Announce every write in the batch. A crash from here on leaves each previous graph
+              //    live and each new one reachable only through `pending_graph`, which `reconcile`
+              //    deletes on the next open.
+              const plans = yield* transaction(
+                Effect.andThen(
+                  advance(),
+                  Effect.forEach(documents, (document) =>
+                    Effect.gen(function* () {
+                      const graph = Ontology.graphIri(document.path, document.mtime);
+                      const [current] = yield* sql<{
+                        graph: string;
+                      }>`SELECT graph FROM files WHERE path = ${document.path}`.pipe(
+                        Effect.mapError(fail('Failed to read ledger')),
+                      );
+                      yield* sql`INSERT INTO files (path, language, size, hash, mtime, graph, pending_graph)
+                               VALUES (${document.path}, ${document.language}, ${document.size}, ${document.hash},
+                                       ${document.mtime}, ${current?.graph ?? graph.value}, ${graph.value})
+                               ON CONFLICT (path) DO UPDATE SET pending_graph = excluded.pending_graph`.pipe(
+                        Effect.mapError(fail('Failed to begin file commit')),
+                      );
+                      return { document, graph, current: current?.graph };
+                    }),
+                  ),
+                ),
+              );
 
-        const [current] = yield* sql<{ graph: string }>`SELECT graph FROM files WHERE path = ${document.path}`.pipe(
-          Effect.mapError(fail('Failed to read ledger')),
-        );
+              // 2. Swap each file's graphs in one backend batch. Both the live graph and the target are
+              //    cleared: a reindex at an unchanged mtime targets the graph it is replacing, and
+              //    merging into it would leave the previous revision's quads behind forever.
+              for (const { document, graph, current } of plans) {
+                const clear = [...new Set([current, graph.value].filter((value) => value !== undefined))];
+                yield* graphs.swap(clear, graph, document);
+              }
 
-        // 1. Announce the write. A crash from here on leaves the previous graph live and the new one
-        //    reachable only through `pending_graph`, which `reconcile` deletes on the next open.
-        yield* sql`INSERT INTO files (path, language, size, hash, mtime, graph, pending_graph)
-                   VALUES (${document.path}, ${document.language}, ${document.size}, ${document.hash},
-                           ${document.mtime}, ${current?.graph ?? graph.value}, ${graph.value})
-                   ON CONFLICT (path) DO UPDATE SET pending_graph = excluded.pending_graph`.pipe(
-          Effect.mapError(fail('Failed to begin file commit')),
-        );
-
-        // 2. Swap the graphs in one backend batch. Both the live graph and the target are cleared:
-        //    a reindex at an unchanged mtime targets the graph it is replacing, and merging into it
-        //    would leave the previous revision's quads behind forever.
-        const clear = [...new Set([current?.graph, graph.value].filter((value) => value !== undefined))];
-        yield* graphs.swap(clear, graph, document);
-
-        // 3. Commit: the ledger row is what makes the new graph the live one.
-        yield* sql`UPDATE files SET language = ${document.language}, size = ${document.size},
-                     hash = ${document.hash}, mtime = ${document.mtime}, graph = ${graph.value},
-                     pending_graph = NULL
-                   WHERE path = ${document.path}`.pipe(Effect.mapError(fail('Failed to commit file')));
-      });
+              // 3. Commit: the ledger rows are what make the new graphs the live ones.
+              yield* transaction(
+                Effect.forEach(
+                  plans,
+                  ({ document, graph }) =>
+                    sql`UPDATE files SET language = ${document.language}, size = ${document.size},
+                          hash = ${document.hash}, mtime = ${document.mtime}, graph = ${graph.value},
+                          pending_graph = NULL
+                        WHERE path = ${document.path}`.pipe(Effect.mapError(fail('Failed to commit file'))),
+                  { discard: true },
+                ),
+              );
+            }),
+          );
 
     const removeFile: Api['removeFile'] = (path) =>
-      Effect.gen(function* () {
-        const [current] = yield* sql<{ graph: string }>`SELECT graph FROM files WHERE path = ${path}`.pipe(
-          Effect.mapError(fail('Failed to read ledger')),
-        );
-        if (!current) {
-          return;
-        }
-        // The graph is announced as pending *before* the row goes, so a crash between the two
-        // leaves it reachable through `pending_graph` and `reconcile` drops it on the next open.
-        // The row alone is not enough: `reconcile` scans pending rows, not the quad store, so a
-        // graph whose row is already gone would never be found — and its quads keep answering
-        // queries through the union default graph, making a deleted file's facts immortal.
-        yield* sql`UPDATE files SET pending_graph = ${current.graph} WHERE path = ${path}`.pipe(
-          Effect.mapError(fail('Failed to begin file removal')),
-        );
-        yield* graphs.drop(current.graph);
-        // A row without a graph would be a phantom file, so it goes last.
-        yield* sql`DELETE FROM files WHERE path = ${path}`.pipe(Effect.mapError(fail('Failed to delete ledger row')));
-      });
+      exclusive(
+        Effect.gen(function* () {
+          const [current] = yield* sql<{ graph: string }>`SELECT graph FROM files WHERE path = ${path}`.pipe(
+            Effect.mapError(fail('Failed to read ledger')),
+          );
+          if (!current) {
+            return;
+          }
+          yield* advance();
+          // The graph is announced as pending *before* the row goes, so a crash between the two
+          // leaves it reachable through `pending_graph` and `reconcile` drops it on the next open.
+          // The row alone is not enough: `reconcile` scans pending rows, not the quad store, so a
+          // graph whose row is already gone would never be found — and its quads keep answering
+          // queries through the union default graph, making a deleted file's facts immortal.
+          yield* sql`UPDATE files SET pending_graph = ${current.graph} WHERE path = ${path}`.pipe(
+            Effect.mapError(fail('Failed to begin file removal')),
+          );
+          yield* graphs.drop(current.graph);
+          // A row without a graph would be a phantom file, so it goes last.
+          yield* sql`DELETE FROM files WHERE path = ${path}`.pipe(Effect.mapError(fail('Failed to delete ledger row')));
+        }),
+      );
+
+    const derivedCount: Api['derivedCount'] = () =>
+      Effect.flatMap(derivedGraphs(), (names) =>
+        Effect.map(
+          Effect.forEach(names, (name) => graphs.countGraph(name)),
+          (counts) => counts.reduce((total, count) => total + count, 0),
+        ),
+      );
 
     return {
       dir,
@@ -306,24 +444,15 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
           Effect.mapError(fail('Failed to read ledger')),
         ),
 
-      getMeta: (key) =>
-        sql<{ value: string }>`SELECT value FROM meta WHERE key = ${key}`.pipe(
-          Effect.map((rows) => rows[0]?.value),
-          Effect.mapError(fail('Failed to read meta')),
-        ),
+      getMeta,
+      setMeta,
 
-      setMeta: (key, value) =>
-        sql`INSERT INTO meta (key, value) VALUES (${key}, ${value})
-            ON CONFLICT (key) DO UPDATE SET value = excluded.value`.pipe(
-          Effect.asVoid,
-          Effect.mapError(fail('Failed to write meta')),
-        ),
-
-      putDocument,
+      putDocument: (document) => putDocuments([document]),
+      putDocuments,
       removeFile,
       reconcile,
-      putQuads: graphs.putQuads,
-      delQuads: graphs.delQuads,
+      putQuads: (quads) => exclusive(Effect.andThen(advance(), graphs.putQuads(quads))),
+      delQuads: (quads) => exclusive(Effect.andThen(advance(), graphs.delQuads(quads))),
       match,
       select: graphs.select,
       ask: graphs.ask,
@@ -338,19 +467,59 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
             try: () => new Parser({ format: 'text/n3' }).parse(turtle),
             catch: fail('Failed to parse graph'),
           });
-          yield* graphs.putQuads(quads);
+          yield* exclusive(Effect.andThen(advance(), graphs.putQuads(quads)));
           return quads.length;
         }),
 
       reason: (reasoner, rules, options) =>
-        graphs.reason(Ontology.derivedGraphIri(reasoner), rules, options?.materialize ?? false),
+        options?.materialize
+          ? exclusive(
+              Effect.gen(function* () {
+                const graph = Ontology.derivedGraphIri(reasoner);
+                // One graph replaced on its own is not a pass of the whole rule set.
+                yield* advance();
+                yield* recordDerived([graph.value]);
+                return yield* graphs.reason(graph, rules, true);
+              }),
+            )
+          : graphs.reason(Ontology.derivedGraphIri(reasoner), rules, false),
 
-      reasonAll: graphs.reasonAll,
+      reasonAll: (reasoners) =>
+        exclusive(
+          Effect.gen(function* () {
+            yield* recordDerived(reasoners.map((reasoner) => Ontology.derivedGraphIri(reasoner.name).value));
+            const reasonedOver = yield* generation();
+            const outcomes = yield* graphs.reasonAll(reasoners);
+            const reasoned = yield* Schema.encodeEffect(Reasoned)({
+              signature: signatureOf(reasoners),
+              generation: reasonedOver,
+            }).pipe(Effect.mapError(fail('Failed to record the reasoning pass')));
+            yield* setMeta(REASONED_KEY, reasoned);
+            return outcomes;
+          }),
+        ),
 
       derived: (reasoner) =>
         reasoner === undefined
-          ? Effect.map(match(), (quads) => quads.filter((quad) => Ontology.isDerivedGraph(quad.graph.value)))
+          ? Effect.flatMap(derivedGraphs(), (names) =>
+              Effect.map(
+                Effect.forEach(names, (name) => match(undefined, undefined, undefined, DataFactory.namedNode(name))),
+                (quads) => quads.flat(),
+              ),
+            )
           : match(undefined, undefined, undefined, Ontology.derivedGraphIri(reasoner)),
+
+      derivedCount,
+
+      isReasoned: (reasoners) =>
+        Effect.gen(function* () {
+          const reasoned = yield* readMeta(REASONED_KEY, Reasoned);
+          return (
+            reasoned !== undefined &&
+            reasoned.generation === (yield* generation()) &&
+            reasoned.signature === signatureOf(reasoners)
+          );
+        }),
 
       stats: () =>
         Effect.gen(function* () {
@@ -361,10 +530,13 @@ const make = (dir: string, backend: Backend): Effect.Effect<Api, StoreError, Sql
         }),
 
       clear: () =>
-        Effect.gen(function* () {
-          yield* sql`DELETE FROM files`.pipe(Effect.mapError(fail('Failed to clear ledger')));
-          yield* graphs.clear();
-        }),
+        exclusive(
+          Effect.gen(function* () {
+            yield* advance();
+            yield* sql`DELETE FROM files`.pipe(Effect.mapError(fail('Failed to clear ledger')));
+            yield* graphs.clear();
+          }),
+        ),
       backend,
     } satisfies Api;
   });

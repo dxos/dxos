@@ -58,7 +58,7 @@ export type Result = {
   readonly skipped: readonly Protocol.SkippedFile[];
   /** Size of the derived graph after the pass, whether or not this pass recomputed it. */
   readonly derived: number;
-  /** Whether the reasoners ran; a pass that changed nothing leaves their graphs alone. */
+  /** Whether the reasoners ran; they are skipped when their graphs are already current. */
   readonly reasoned: boolean;
   /** What each reasoner concluded, in the order they ran. */
   readonly reasoners: readonly Reasoner.Outcome[];
@@ -130,23 +130,24 @@ export const run = (
     let indexed = 0;
 
     if (changed.length > 0) {
-      const client = yield* Pool.make(workers);
+      const batches = chunk(changed, batchSize);
+      // A worker costs its startup whether or not it gets a batch, which dominates a small pass.
+      const poolSize = Math.min(workers, batches.length);
+      const client = yield* Pool.make(poolSize);
       yield* Effect.forEach(
-        chunk(changed, batchSize),
+        batches,
         (batch) =>
           Effect.gen(function* () {
             const [batchParseMs, response] = yield* millis(client.AnalyzeBatch({ root, files: batch }));
             parseMs += batchParseMs;
             skipped.push(...response.skipped);
-            // Documents are committed one file at a time: each is its own graph swap plus ledger
-            // row, so an interruption costs at most the file in flight.
-            const [batchCommitMs] = yield* millis(
-              Effect.forEach(response.analyzed, (file) => store.putDocument(file.document), { discard: true }),
-            );
+            // One ledger transaction per batch rather than per file: an interruption costs at most
+            // the batch in flight, which the next pass reindexes.
+            const [batchCommitMs] = yield* millis(store.putDocuments(response.analyzed.map((file) => file.document)));
             commitMs += batchCommitMs;
             indexed += response.analyzed.length;
           }),
-        { concurrency: workers, discard: true },
+        { concurrency: poolSize, discard: true },
       );
     }
 
@@ -154,16 +155,16 @@ export const run = (
     yield* store.setMeta('indexedAt', new Date().toISOString());
 
     // Reasoning closes the pass: each reasoner's graph is recomputed from the facts this pass left
-    // behind, so a conclusion can never outlive the import or file that entailed it. A pass that
-    // changed nothing would derive exactly what is already there, so it is skipped — reasoning is
-    // whole-graph and by far the most expensive phase.
-    const dirty = indexed > 0 || removed.length > 0;
+    // behind, so a conclusion can never outlive the import or file that entailed it. It is skipped
+    // only when the store records that these rules already ran over exactly these facts — not when
+    // this pass changed nothing, which would strand a pass run with `--no-reason` or interrupted
+    // before reasoning, reporting stale conclusions until some file changed.
     const reasoners = options.reasoners ?? [];
-    const willReason = reasoners.length > 0 && dirty;
+    const willReason = reasoners.length > 0 && !(yield* store.isReasoned(reasoners));
     const [reasonMs, outcomes] = yield* millis(willReason ? Reasoner.run(reasoners) : Effect.succeed([]));
     const derived = willReason
       ? outcomes.reduce((total, outcome) => total + outcome.derived, 0)
-      : (yield* store.derived()).length;
+      : yield* store.derivedCount();
 
     return {
       root,
