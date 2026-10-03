@@ -124,6 +124,30 @@ describe('bundled rules', () => {
     ]);
     expect(names).toEqual([]);
   });
+
+  test('a non-test file importing a test file is flagged, and a test importing a test is not', async () => {
+    const testScript = (path: string, imports: string[]): Ontology.FileDocument => ({
+      ...document(path, []),
+      testFile: true,
+      imports: imports.map((each) => Ontology.fileIri(each).value),
+    });
+    const derived = await EffectEx.runPromise(
+      Effect.gen(function* () {
+        const store = yield* Store.Store;
+        yield* store.putDocument(testScript('src/a.test.ts', ['src/b.test.ts']));
+        yield* store.putDocument(testScript('src/b.test.ts', []));
+        yield* store.putDocument({
+          ...document('src/lib.ts', []),
+          imports: [Ontology.fileIri('src/b.test.ts').value],
+        });
+        const [reasoner] = yield* Reasoner.loadFile(join(Reasoner.BUNDLED_DIR, '50-example.n3'));
+        return yield* store.reason(reasoner.name, reasoner.rules);
+      }).pipe(Effect.provide(Store.layer(join(dir, `store-example-${Math.random()}`))), Effect.scoped),
+    );
+    expect(derived.map((quad) => `${quad.subject.value} ${quad.predicate.value} ${quad.object.value}`)).toEqual([
+      `${Ontology.fileIri('src/lib.ts').value} ${Ontology.importsTestFile.value} ${Ontology.fileIri('src/b.test.ts').value}`,
+    ]);
+  });
 });
 
 describe('type rules', () => {

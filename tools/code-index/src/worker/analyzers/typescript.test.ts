@@ -118,6 +118,9 @@ describe('typescript analyzer', () => {
     expect(document.parseError).toBeUndefined();
     expect(document.inPackage).toEqual(Ontology.packageIri('@dxos/code-index').value);
     expect(document.language).toEqual('typescript');
+    expect(document.testFile).toBeUndefined();
+    expect(analyzeTypeScript({ ...context, path: 'src/Store.test.ts' }).testFile).toBe(true);
+    expect(analyzeTypeScript({ ...context, path: 'src/view.spec.tsx' }).testFile).toBe(true);
   });
 
   test('imports split into value, type-only and external', () => {
