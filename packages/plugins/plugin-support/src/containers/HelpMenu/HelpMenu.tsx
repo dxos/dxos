@@ -15,12 +15,8 @@ import { isTauri } from '@dxos/util';
 
 import { meta } from '#meta';
 
-import { SHORTCUTS_DIALOG } from '../../constants.ts';
+import { ABOUT_DIALOG, SHORTCUTS_DIALOG } from '../../constants.ts';
 import { downloadUrl } from './download.ts';
-
-// Mirrors the welcome plugin's ABOUT_DIALOG constant (composer-app/src/plugins/welcome);
-// inlined because composer-app is not a workspace dependency.
-const ABOUT_DIALOG = 'org.dxos.plugin.welcome.component.about-dialog';
 
 const DOCS_URL = 'https://docs.dxos.org/composer/introduction/';
 const DISCORD_URL = 'https://dxos.org/discord';
